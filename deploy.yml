@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conbench-config
+  labels:
+    app: conbench
+data:
+  APPLICATION_NAME: "{{APPLICATION_NAME}}"
+  DB_HOST: "{{DB_HOST}}"
+  DB_PORT: "{{DB_PORT}}"
+  FLASK_APP: "{{FLASK_APP}}"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conbench-deployment
+spec:
+  selector:
+    matchLabels:
+      app: conbench
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: conbench
+    spec:
+      containers:
+      - name: conbench
+        image: "{{DOCKER_REGISTRY}}/{{FLASK_APP}}:{{BUILDKITE_COMMIT}}"
+        imagePullPolicy: "Always"
+        ports:
+          - containerPort: 5000
+        envFrom:
+          - configMapRef:
+              name: conbench-config
+          - secretRef:
+              name: conbench-secret
+        resources:
+          requests:
+            memory: '2Gi'
+            cpu: 0.5
+        readinessProbe:
+          failureThreshold: 1
+          httpGet:
+            path: /api/ping/
+            port: 5000
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 2
+          timeoutSeconds: 20
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/target-type: ip
+  name: "conbench-service"
+  namespace: "default"
+spec:
+  ports:
+  - port: 80
+    targetPort: 5000
+    protocol: TCP
+  type: NodePort
+  selector:
+    app: "conbench"
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: "conbench-ingress"
+  namespace: "default"
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/certificate-arn: {{CERTIFICATE_ARN}}
+  labels:
+    app: conbench-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /*
+        backend:
+          serviceName: ssl-redirect
+          servicePort: use-annotation
+      - path: /*
+        backend:
+          serviceName: "conbench-service"
+          servicePort: 80

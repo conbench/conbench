@@ -1,0 +1,32 @@
+version: '3.5'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      APPLICATION_NAME: "Conbench"
+      DB_USERNAME: "postgres"
+      DB_HOST: "db"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "postgres"
+      DB_PORT: "5432"
+      FLASK_APP: "conbench"
+      FLASK_ENV: "development"
+      REGISTRATION_KEY: "code"
+      SECRET_KEY: "Person, woman, man, camera, TV"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: library/postgres:12.4
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5

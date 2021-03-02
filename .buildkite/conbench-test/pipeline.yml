@@ -1,0 +1,25 @@
+steps:
+  - label: "Build"
+    key: "build"
+    command: docker-compose build
+
+  - label: "Test"
+    key: "test"
+    depends_on: "build"
+    command: docker-compose run app pytest -vv conbench/tests/
+
+  # This makes sure that deploys are triggered in the same order as the
+  # test builds, no matter which test builds finish first.
+  - label: "Concurrency Gate"
+    key: "concurrency-gate"
+    depends_on: "test"
+    command: "exit 0"
+    concurrency: 1
+    concurrency_group: "conbench-deploy"
+
+  - label: "Deploy"
+    depends_on: "concurrency-gate"
+    trigger: "conbench-deploy"
+    if: build.branch == 'main'
+    build:
+      commit: "$BUILDKITE_COMMIT"

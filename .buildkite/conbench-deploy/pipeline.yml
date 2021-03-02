@@ -1,0 +1,39 @@
+steps:
+  - label: "Build & Push"
+    key: "build-and-push"
+    if: build.branch == 'main'
+    concurrency: 1
+    concurrency_group: "conbench-deploy"
+    command:
+      - set -x
+      - docker build -t ${FLASK_APP} .
+      - docker tag ${FLASK_APP}:latest ${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}
+      - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin ${DOCKER_REGISTRY}
+      - docker push ${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}
+
+  - label: "Deploy"
+    key: "deploy"
+    depends_on: "build-and-push"
+    if: build.branch == 'main'
+    concurrency: 1
+    concurrency_group: "conbench-deploy"
+    command:
+      - set -x
+      - aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
+      - cat deploy.yml | sed "s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g; s/{{APPLICATION_NAME}}/${APPLICATION_NAME}/g; s/{{DB_HOST}}/${DB_HOST}/g; s/{{DB_PORT}}/${DB_PORT}/g; s/{{FLASK_APP}}/${FLASK_APP}/g; s/{{DOCKER_REGISTRY}}/${DOCKER_REGISTRY}/g; s/{{CERTIFICATE_ARN}}/${CERTIFICATE_ARN}/g; s/{{EKS_CLUSTER}}/${EKS_CLUSTER}/g" | kubectl apply -f -
+      - kubectl rollout status deployment/conbench-deployment
+
+  - label: "Test Deploy"
+    depends_on: "deploy"
+    if: build.branch == 'main'
+    command:
+      - set -x
+      - curl https://conbench.ursa.dev
+
+  - block: "Rollback"
+    if: build.branch == 'main'
+    prompt: "Do you want to rollback?"
+
+  - label: "Rollback"
+    trigger: "conbench-rollback"
+    if: build.branch == 'main'

@@ -1,0 +1,9 @@
+steps:
+  - label: "Rollback"
+    concurrency_group: "conbench-deploy"
+    concurrency: 1
+    command:
+      - set -x
+      - aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
+      - kubectl rollout undo deployment.v1.apps/conbench-deployment
+      - kubectl rollout status deployment/conbench-deployment
