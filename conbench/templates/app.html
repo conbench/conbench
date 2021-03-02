@@ -1,0 +1,153 @@
+{% extends 'bootstrap/base.html' %}
+
+{% block title %}
+    {% if title %}{{ title }} - {{ application }}{% else %}{{ application }}{% endif %}
+{% endblock %}
+
+{% block styles %}
+{{super()}}
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<link href="https://cdn.datatables.net/1.10.23/css/dataTables.bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="https://cdn.datatables.net/fixedheader/3.1.8/css/fixedHeader.bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="https://cdn.datatables.net/responsive/2.2.7/css/responsive.bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="{{ url_for('static', filename='app.css') }}" rel=stylesheet type=text/css />
+<link href="{{ url_for('static', filename='sidebar.css') }}" rel=stylesheet type=text/css />
+{% endblock %}
+
+{% block navbar %}
+<div id="wrapper">
+
+  <div id="sidebar-wrapper">
+    <ul class="sidebar-nav">
+      <li class="sidebar-brand"><a href="{{ url_for('app.index') }}">{{ application }}</a></li>
+      <li> <a href="{{ url_for('app.index') }}"><span class="glyphicon glyphicon-home"></span> &nbsp; &nbsp; Home</a></li>
+      <li> <a href="{{ url_for('app.users') }}"><span class="glyphicon glyphicon-user"></span> &nbsp; &nbsp; Users</a></li>
+      <li> <a href="/api/docs" target="_blank"><span class="glyphicon glyphicon-book"></span> &nbsp; &nbsp; API Docs</a></li>
+    </ul>
+  </div>
+
+  <!-- Page Content -->
+
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li><a href="#menu-toggle" id="menu-toggle"><span class="glyphicon glyphicon-arrow-left submenu"></span></a></li>
+                    <li><a href="{{ url_for('app.index') }}" id="menu-toggle"><span class="glyphicon glyphicon-home"></span></a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            <span class="glyphicon glyphicon-user"></span>
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{{ url_for('app.user', user_id=current_user.id) }}""><span class="glyphicon glyphicon-cog submenu"></span> &nbsp; Settings</a></li>
+                            <li><a href="{{ url_for('app.index') }}"><span class="glyphicon glyphicon-bell submenu"></span> &nbsp; Notifications</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="{{ url_for('app.logout') }}"><span class="glyphicon glyphicon-off submenu"></span> &nbsp; Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><span class="glyphicon glyphicon-trash submenu"></span>&nbsp; &nbsp; Confirm Delete</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure?</p>
+                    <p id="confirm-delete-message"></p>
+                    <input id="delete-form-id" type="hidden" value="">
+                    <input id="delete-form-action" type="hidden" value="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="confirm-delete-button" type="button" class="btn btn-primary" data-dismiss="modal">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block content %}
+  <div id="page-content-wrapper">
+    <div class="container-fluid">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+            {% for category, message in messages %}
+            <div align="center">
+                <span class="flash-message">
+                    <span class="glyphicon glyphicon-flash submenu"></span>
+                    {{ message }}
+                </span>
+                <br>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div align="center">
+                <span class="flash-message"></span>
+                <br>
+            </div>
+        {% endif %}
+        {% endwith %}
+
+        {# application content needs to be provided in the app_content block #}
+        {% block app_content %}{% endblock %}
+    </div>
+  </div>
+  <!-- /#page-content-wrapper -->
+</div>
+<!-- /#wrapper -->
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.23/js/dataTables.bootstrap.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/fixedheader/3.1.8/js/dataTables.fixedHeader.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.7/js/dataTables.responsive.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.7/js/responsive.bootstrap.min.js"></script>
+
+<script type="text/javascript">
+$("#menu-toggle").click(function(e) {
+    e.preventDefault();
+    $("#wrapper").toggleClass("toggled");
+});
+
+$(document).ready(function() {
+    setTimeout(function() {
+        $(".flash-message").fadeOut("slow");
+    }, 2000); // <-- time in milliseconds
+});
+
+$("#confirm-delete").on("show.bs.modal", function(e) {
+    $(this).find("#confirm-delete-message").html($(e.relatedTarget).data("message"));
+    $(this).find("#delete-form-id").attr("value", $(e.relatedTarget).data("form-id"));
+    $(this).find("#delete-form-action").attr("value", $(e.relatedTarget).data("href"));
+});
+
+$("#confirm-delete-button").click(function(e){
+    $($("#delete-form-id").attr("value")).find("#delete").attr("type", "submit");
+    $($("#delete-form-id").attr("value")).attr("action", $("#delete-form-action").attr("value"));
+    $("#delete").click();
+});
+</script>
+{% endblock %}

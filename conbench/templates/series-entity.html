@@ -1,0 +1,83 @@
+{% if current_user.is_anonymous %}
+    {% extends "base.html" %}
+{% else %}
+    {% extends "app.html" %}
+{% endif %}
+
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+        {% for group_by, plot_group in plots.items() %}
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item active"><a href="{{ url_for('app.series') }}">Time Series</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ benchmark_name }}</li>
+            {% if group_by %}
+            <li class="breadcrumb-item active" aria-current="page">{{ group_by }}</li>
+            {% endif %}
+          </ol>
+        </nav>
+        <div class="row">
+            {% for plot in plot_group %}
+            <div class="col-md-6">
+                <div id="tooltip{{ plot[3] }}" align="center" data-toggle="tooltip" data-placement="top" title="{{ plot[2] }}">{{ plot[1] }}</div>
+                <div id="plot{{ plot[3] }}" align="center"></div>
+                <br />
+                <br />
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+    <div class="col-md-12">
+        <table id="benchmarks" class="table table-striped table-bordered table-hover">
+        <caption>Benchmarks</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Batch</th>
+                    <th scope="col">Benchmark</th>
+                    <th scope="col">Mean</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for benchmark in benchmarks %}
+                <tr>
+                     <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
+                     <td style="white-space: nowrap;">
+                       <a href="{{ url_for('app.batch', batch_id=benchmark.stats.batch_id) }}">
+                         <div class="ellipsis-200">{{ benchmark.display_batch }}</div>
+                       </a>
+                     </td>
+                     <td><a href="{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}">
+                         <div class="ellipsis-300">{{ benchmark.display_name }}</div>
+                     </a></td>
+                     <td>{{ benchmark.display_mean }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+{{ resources | safe }}
+<script type="text/javascript">
+$(document).ready(function() {
+    {% for group_by, plot_group in plots.items() %}
+      {% for plot in plot_group %}
+        Bokeh.embed.embed_item({{ plot[0] | safe }});
+        $('#tooltip{{ plot[3] }}').tooltip()
+      {% endfor %}
+    {% endfor %}
+});
+var table = $('#benchmarks').dataTable( {
+    "responsive": true,
+    "order": [[0, 'desc']],
+    "columnDefs": [{ "orderable": false, "targets": [3] }]
+} );
+new $.fn.dataTable.FixedHeader( table );
+</script>
+{% endblock %}

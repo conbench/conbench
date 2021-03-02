@@ -1,0 +1,107 @@
+{% if current_user.is_anonymous %}
+    {% extends "base.html" %}
+{% else %}
+    {% extends "app.html" %}
+{% endif %}
+
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item active">Compare</li>
+        {% if type == "batch" %}
+        <li class="breadcrumb-item active">
+          <a href="{{ compare_runs_url }}">Runs</a>
+        </li>
+        <li class="breadcrumb-item active">Batches</li>
+        <li class="breadcrumb-item active" aria-current="page">
+          <a href="{{ url_for('app.batch', batch_id=baseline_id) }}">Baseline</a>
+           ...
+          <a href="{{ url_for('app.batch', batch_id=contender_id) }}">Contender</a>
+        </li>
+        {% elif type == "run" %}
+        <li class="breadcrumb-item active">Runs</li>
+        <li class="breadcrumb-item active" aria-current="page">
+          <a href="{{ url_for('app.run', run_id=baseline_id) }}">Baseline</a>
+           ...
+          <a href="{{ url_for('app.run', run_id=contender_id) }}">Contender</a>
+        </li>
+        {% endif %}
+      </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-12">
+            <table id="benchmarks" class="table table-striped table-bordered table-hover">
+              <caption>Comparisons{% include 'units-tooltip.html' %}</div>
+              </caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Change</th>
+                        <th scope="col">Benchmark</th>
+                        <th scope="col">Batch</th>
+                        <th scope="col">Baseline</th>
+                        <th scope="col">Contender</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in comparisons %}
+                    <tr>
+                         <td>{{ c.change }}%</td>
+                         <td>
+                           {% if c.contender is not none and c.baseline is not none %}
+                             <a href="{{ c.compare_benchmarks_url }}">
+                               <div class="ellipsis-300">{{ c.benchmark}}</div>
+                             </a>
+                           {% else %}
+                             <div class="ellipsis-300">{{ c.benchmark}}</div>
+                           {% endif %}
+                         </td>
+                         <td>
+                           {% if type == "batch" %}
+                             <div class="ellipsis-300">{{ c.batch }}</div>
+                           {% else %}
+                             {% if c.contender is not none and c.baseline is not none %}
+                               <a href="{{ c.compare_batches_url }}">
+                                 <div class="ellipsis-300">{{ c.batch }}</div>
+                               </a>
+                             {% else %}
+                               <div class="ellipsis-300">{{ c.batch }}</div>
+                             {% endif %}
+                           {% endif %}
+                         </td>
+                         {% if c.baseline is none %}
+                           <td>---</td>
+                         {% else %}
+                           <td>{{ c.baseline }}</td>
+                         {% endif %}
+                         {% if c.contender is none %}
+                           <td>---</td>
+                         {% else %}
+                           <td>{{ c.contender }}</td>
+                         {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+<script type="text/javascript">
+  var table = $('#benchmarks').dataTable( {
+      "responsive": true,
+      "order": [[0, 'asc']],
+      "columnDefs": [{ "orderable": false, "targets": [3, 4] }]
+  } );
+  new $.fn.dataTable.FixedHeader( table );
+
+  $(document).ready(function() {
+    $('#unit-tooltip').tooltip()
+   });
+  </script>
+{% endblock %}

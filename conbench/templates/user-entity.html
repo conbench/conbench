@@ -1,0 +1,30 @@
+{% extends "app.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item active"><a href="{{ url_for('app.users') }}">Users</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ user.name }}</li>
+      </ol>
+    </nav>
+    <div class="row">
+        <div class="col-md-4">
+            {{ wtf.quick_form(form, id="user-form", button_map={'submit': 'primary'}) }}
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+<script type="text/javascript">
+$(document).ready(function($) {
+    $("#user-form").find("#delete").attr("type", "button");
+    $("#user-form").find("#delete").attr("data-toggle", "modal");
+    $("#user-form").find("#delete").attr("data-target", "#confirm-delete");
+    $("#user-form").find("#delete").attr("data-form-id", "#user-form");
+    $("#user-form").find("#delete").attr("data-href", "{{ url_for('app.user', user_id=user.id) }}");
+    $("#user-form").find("#delete").attr("data-message", "<ul><li>Delete user: <strong>{{ user.email }}</strong></li></ul>");
+});
+</script>
+{% endblock %}
