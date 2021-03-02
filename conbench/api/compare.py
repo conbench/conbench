@@ -50,7 +50,7 @@ class CompareBenchmarksAPI(ApiEndpoint):
           - in: query
             name: threshold
             schema:
-              type: int
+              type: integer
         tags:
           - Compare
         """
@@ -111,7 +111,7 @@ class CompareBatchesAPI(ApiEndpoint):
           - in: query
             name: threshold
             schema:
-              type: int
+              type: integer
         tags:
           - Compare
         """
