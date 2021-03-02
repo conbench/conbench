@@ -27,7 +27,6 @@ class TestDocs(_asserts.ApiEndpointTest):
                 f.write(str(response.json))
             subprocess.run(["black", path])
 
-
-#         with open(path) as f:
-#             expected_docs = ast.literal_eval(f.read())
-#         validate_spec(expected_docs)
+        with open(path) as f:
+            expected_docs = ast.literal_eval(f.read())
+        validate_spec(expected_docs)
