@@ -155,6 +155,7 @@ for name, benchmark in BENCHMARKS.items():
                 click.echo(click.style("Benchmark result:", fg="yellow"))
                 json_result = json.dumps(result, indent=4, sort_keys=True)
                 click.echo(click.style(json_result, fg="green"))
+            del output
 
     conbench.add_command(
         click.Command(
