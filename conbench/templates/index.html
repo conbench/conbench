@@ -1,10 +1,15 @@
-{% extends "app.html" %}
-{% import 'bootstrap/wtf.html' as wtf %}
+{% if current_user.is_anonymous %}
+  {% extends "base.html" %}
+{% else %}
+  {% extends "app.html" %}
+{% endif %}
 
 {% block app_content %}
   <div class="row">
    <div class="col-md-12">
-     <h1>Conbench</h1>
+     <h1>Con·bench</h1>
+     <h4>/kənˈben(t)SH/</h4>
+     <h5><i>noun</i></h5>
      <h3>Language-independent Continuous Benchmarking (CB) Framework</h3>
    </div>
   </div>
