@@ -1,5 +1,3 @@
-import flask_login
-
 from ..app import rule
 from ..app._endpoint import AppEndpoint
 from ..config import Config
@@ -14,8 +12,6 @@ class Index(AppEndpoint):
         )
 
     def get(self):
-        if not flask_login.current_user.is_authenticated:
-            return self.redirect("app.login")
         return self.page()
 
 

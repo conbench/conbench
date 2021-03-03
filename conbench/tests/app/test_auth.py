@@ -105,27 +105,27 @@ class TestLogout(_asserts.AppEndpointTest):
     def test_logout_authenticated(self, client):
         self.authenticate(client)
 
-        # can get index page before
-        response = client.get("/index/", follow_redirects=True)
-        self.assert_index_page(response)
+        # can get users page before
+        response = client.get("/users/", follow_redirects=True)
+        self.assert_page(response, "Users")
 
         # logout
         response = client.get("/logout/", follow_redirects=True)
-        self.assert_login_page(response)
+        self.assert_index_page(response)
 
-        # cannot get index page after
-        response = client.get("/index/", follow_redirects=True)
+        # cannot get users page after
+        response = client.get("/users/", follow_redirects=True)
         self.assert_login_page(response)
 
     def test_logout_unauthenticated(self, client):
-        # cannot get index page before
-        response = client.get("/index/", follow_redirects=True)
+        # cannot get users page before
+        response = client.get("/users/", follow_redirects=True)
         self.assert_login_page(response)
 
         # logout
         response = client.get("/logout/", follow_redirects=True)
-        self.assert_login_page(response)
+        self.assert_index_page(response)
 
-        # cannot get index page after
-        response = client.get("/index/", follow_redirects=True)
+        # cannot get users page after
+        response = client.get("/users/", follow_redirects=True)
         self.assert_login_page(response)

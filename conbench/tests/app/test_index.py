@@ -15,6 +15,6 @@ class TestIndex(_asserts.AppEndpointTest):
 
     def test_index_unauthenticated(self, client):
         response = client.get("/", follow_redirects=True)
-        self.assert_login_page(response)
+        self.assert_index_page(response)
         response = client.get("/index/", follow_redirects=True)
-        self.assert_login_page(response)
+        self.assert_index_page(response)
