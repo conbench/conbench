@@ -23,7 +23,7 @@
 
 ### Clone the app
     (conbench) $ cd ~/workspace/
-    (conbench) $ git clone https://github.com/ursa-labs/conbench.git
+    (conbench) $ git clone https://github.com/ursacomputing/conbench.git
 
 
 ### Install the dependencies
