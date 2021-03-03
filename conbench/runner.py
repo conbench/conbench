@@ -97,28 +97,35 @@ class Conbench(Connection):
         # The benchmark measurement and execution time happen to be
         # the same in this case: both are execution time in seconds.
         # (since data == times, just record an empty list for times)
-        times, time_unit, unit = [], "s", "s"
+        result = {
+            "data": data,
+            "unit": "s",
+            "times": [],
+            "time_unit": "s",
+        }
 
         benchmark, _ = self.record(
+            result,
             name,
             tags,
             context,
-            data,
-            unit,
-            times,
-            time_unit,
             options,
         )
 
         return benchmark, output
 
-    def record(
-        self, name, tags, context, data, unit, time, time_unit, options, output=None
-    ):
+    def record(self, result, name, tags, context, options, output=None):
         tags["name"] = name
         timestamp = _now_formatted()
         run_id = options.get("run_id")
-        stats = self._stats(data, unit, time, time_unit, timestamp, run_id)
+        stats = self._stats(
+            result["data"],
+            result["unit"],
+            result["times"],
+            result["time_unit"],
+            timestamp,
+            run_id,
+        )
         benchmark = {
             "stats": stats,
             "machine_info": self.machine_info,
