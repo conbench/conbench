@@ -1,9 +1,18 @@
-# Conbench: Language-independent Continuous Benchmarking (CB) Framework
+<p align="right">
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+</p>
+
+# Conbench
+
+<b>Language-independent Continuous Benchmarking (CB) Framework</b>
+<br/>
+<br/>
+
 
 ### Create workspace
     $ cd
-    $ mkdir envs
-    $ mkdir workspace
+    $ mkdir -p envs
+    $ mkdir -p workspace
 
 
 ### Create a virualenv
@@ -53,10 +62,10 @@
 ### Formatting code (before committing)
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ git status
-        modified:   conbench/runner.py
-    (conbench) $ black conbench/runner.py
-        reformatted conbench/runner.py
-    (conbench) $ git add conbench/runner.py
+        modified: foo.py
+    (conbench) $ black foo.py
+        reformatted foo.py
+    (conbench) $ git add foo.py
 
 
 ### Generating a coverage report
