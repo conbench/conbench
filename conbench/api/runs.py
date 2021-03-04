@@ -34,8 +34,31 @@ class RunEntityAPI(ApiEndpoint):
         return self.serializer.one.dump(run)
 
 
-run_entity_view = RunEntityAPI.as_view("run")
+class RunListAPI(ApiEndpoint):
+    serializer = RunSerializer()
 
+    def get(self):
+        """
+        ---
+        description: Get a list of runs.
+        responses:
+            "200": "RunList"
+            "401": "401"
+        tags:
+          - Runs
+        """
+        runs = Run.all()
+        return self.serializer.many.dump(runs)
+
+
+run_entity_view = RunEntityAPI.as_view("run")
+run_list_view = RunListAPI.as_view("runs")
+
+rule(
+    "/runs/",
+    view_func=run_list_view,
+    methods=["GET"],
+)
 rule(
     "/runs/<run_id>/",
     view_func=run_entity_view,

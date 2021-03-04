@@ -29,3 +29,18 @@ class TestRunGet(_asserts.GetEnforcer):
         run = self._create()
         response = client.get(f"/api/runs/{run.id}/")
         self.assert_200_ok(response, _expected_entity(run))
+
+
+class TestRunList(_asserts.ListEnforcer):
+    url = "/api/runs/"
+    public = True
+
+    def _create(self):
+        summary = create_benchmark_summary()
+        return summary.run
+
+    def test_benchmark_list(self, client):
+        self.authenticate(client)
+        run = self._create()
+        response = client.get("/api/runs/")
+        self.assert_200_ok(response, contains=_expected_entity(run))

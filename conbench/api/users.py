@@ -185,10 +185,22 @@ class RegisterAPI(ApiEndpoint, UserValidationMixin):
 user_entity_view = UserEntityAPI.as_view("user")
 user_list_view = UserListAPI.as_view("users")
 
-rule("/users/", view_func=user_list_view, methods=["GET", "POST"])
-rule("/users/<user_id>/", view_func=user_entity_view, methods=["GET", "DELETE", "PUT"])
+rule(
+    "/users/",
+    view_func=user_list_view,
+    methods=["GET", "POST"],
+)
+rule(
+    "/users/<user_id>/",
+    view_func=user_entity_view,
+    methods=["GET", "DELETE", "PUT"],
+)
+rule(
+    "/register/",
+    view_func=RegisterAPI.as_view("register"),
+    methods=["POST"],
+)
+
 spec.components.schema("UserCreate", schema=UserSchema.create)
 spec.components.schema("UserUpdate", schema=UserSchema.update)
-
-rule("/register/", view_func=RegisterAPI.as_view("register"), methods=["POST"])
 spec.components.schema("Register", schema=RegisterSchema)

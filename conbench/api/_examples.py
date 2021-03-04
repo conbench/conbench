@@ -260,6 +260,10 @@ COMPARE_LIST = _api_compare_list(
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
 MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1")
 RUN_ENTITY = _api_run_entity("some-run-uuid-1", "some-machine-uuid-1")
+RUN_LIST = [
+    _api_run_entity("some-run-uuid-1", "some-machine-uuid-1"),
+    _api_run_entity("some-run-uuid-2", "some-machine-uuid-1"),
+]
 USER_ENTITY = _api_user_entity(FakeUser1())
 USER_LIST = [
     _api_user_entity(FakeUser1()),
@@ -289,6 +293,7 @@ API_INDEX = {
         "login": "http://localhost/api/login/",
         "logout": "http://localhost/api/logout/",
         "register": "http://localhost/api/register/",
+        "runs": "http://localhost/api/runs/",
         "ping": "http://localhost/api/ping/",
         "users": "http://localhost/api/users/",
     }

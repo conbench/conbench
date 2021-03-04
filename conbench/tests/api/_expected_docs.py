@@ -411,6 +411,7 @@
                                 "logout": "http://localhost/api/logout/",
                                 "ping": "http://localhost/api/ping/",
                                 "register": "http://localhost/api/register/",
+                                "runs": "http://localhost/api/runs/",
                                 "users": "http://localhost/api/users/",
                             }
                         }
@@ -464,6 +465,29 @@
                                 "self": "http://localhost/api/runs/some-run-uuid-1/",
                             },
                         }
+                    }
+                },
+                "description": "OK",
+            },
+            "RunList": {
+                "content": {
+                    "application/json": {
+                        "example": [
+                            {
+                                "id": "some-run-uuid-1",
+                                "links": {
+                                    "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                    "self": "http://localhost/api/runs/some-run-uuid-1/",
+                                },
+                            },
+                            {
+                                "id": "some-run-uuid-2",
+                                "links": {
+                                    "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                    "self": "http://localhost/api/runs/some-run-uuid-2/",
+                                },
+                            },
+                        ]
                     }
                 },
                 "description": "OK",
@@ -921,6 +945,16 @@
                     "400": {"$ref": "#/components/responses/400"},
                 },
                 "tags": ["Authentication"],
+            }
+        },
+        "/api/runs/": {
+            "get": {
+                "description": "Get a list of runs.",
+                "responses": {
+                    "200": {"$ref": "#/components/responses/RunList"},
+                    "401": {"$ref": "#/components/responses/401"},
+                },
+                "tags": ["Runs"],
             }
         },
         "/api/runs/{run_id}/": {

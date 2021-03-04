@@ -18,13 +18,14 @@ class IndexSerializer:
     def dump(self):
         return {
             "links": {
-                "docs": f.url_for("api.docs", _external=True),
-                "logout": f.url_for("api.logout", _external=True),
-                "login": f.url_for("api.login", _external=True),
-                "register": f.url_for("api.register", _external=True),
-                "ping": f.url_for("api.ping", _external=True),
-                "users": f.url_for("api.users", _external=True),
                 "benchmarks": f.url_for("api.benchmarks", _external=True),
+                "docs": f.url_for("api.docs", _external=True),
+                "login": f.url_for("api.login", _external=True),
+                "logout": f.url_for("api.logout", _external=True),
+                "ping": f.url_for("api.ping", _external=True),
+                "register": f.url_for("api.register", _external=True),
+                "runs": f.url_for("api.runs", _external=True),
+                "users": f.url_for("api.users", _external=True),
             }
         }
 
