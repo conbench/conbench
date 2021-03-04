@@ -107,7 +107,13 @@ class Summary(Base, EntityMixin):
         run_id = data["stats"]["run_id"]
         run = Run.first(id=run_id)
         if not run:
-            run = Run.create({"id": run_id, "github_id": github.id})
+            run = Run.create(
+                {
+                    "id": run_id,
+                    "github_id": github.id,
+                    "machine_id": machine.id,
+                }
+            )
 
         stats = data["stats"]
         values = stats.pop("data")

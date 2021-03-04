@@ -454,6 +454,20 @@
                 },
                 "description": "OK",
             },
+            "RunEntity": {
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "id": "some-run-uuid-1",
+                            "links": {
+                                "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                "self": "http://localhost/api/runs/some-run-uuid-1/",
+                            },
+                        }
+                    }
+                },
+                "description": "OK",
+            },
             "UserCreated": {
                 "content": {
                     "application/json": {
@@ -909,6 +923,25 @@
                 "tags": ["Authentication"],
             }
         },
+        "/api/runs/{run_id}/": {
+            "get": {
+                "description": "Get a run.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "run_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/RunEntity"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Runs"],
+            }
+        },
         "/api/users/": {
             "get": {
                 "description": "Get a list of users.",
@@ -1005,6 +1038,7 @@
         {"description": "Compare benchmarks", "name": "Compare"},
         {"description": "Benchmark contexts", "name": "Contexts"},
         {"description": "Benchmark machines", "name": "Machines"},
+        {"description": "Benchmark runs", "name": "Runs"},
         {"description": "Monitor status", "name": "Ping"},
     ],
 }

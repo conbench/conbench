@@ -200,6 +200,16 @@ def _api_machine_entity(machine_id):
     }
 
 
+def _api_run_entity(run_id, machine_id):
+    return {
+        "id": run_id,
+        "links": {
+            "self": "http://localhost/api/runs/%s/" % run_id,
+            "machine": "http://localhost/api/machines/%s/" % machine_id,
+        },
+    }
+
+
 BENCHMARK_ENTITY = _api_benchmark_entity(
     "some-benchmark-uuid-1",
     "some-machine-uuid-1",
@@ -249,6 +259,7 @@ COMPARE_LIST = _api_compare_list(
 )
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
 MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1")
+RUN_ENTITY = _api_run_entity("some-run-uuid-1", "some-machine-uuid-1")
 USER_ENTITY = _api_user_entity(FakeUser1())
 USER_LIST = [
     _api_user_entity(FakeUser1()),
