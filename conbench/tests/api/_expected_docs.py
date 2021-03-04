@@ -519,10 +519,11 @@
                 "properties": {
                     "context": {"type": "object"},
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
+                    "run": {"type": "object"},
                     "stats": {"$ref": "#/components/schemas/SummaryCreate"},
                     "tags": {"type": "object"},
                 },
-                "required": ["context", "machine_info", "stats", "tags"],
+                "required": ["context", "machine_info", "run", "stats", "tags"],
                 "type": "object",
             },
             "Error": {
