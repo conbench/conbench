@@ -182,6 +182,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     stats = marshmallow.fields.Nested(SummarySchema().create, required=True)
     tags = marshmallow.fields.Dict(required=True)
     context = marshmallow.fields.Dict(required=True)
+    run = marshmallow.fields.Dict(required=True)
 
 
 class BenchmarkFacadeSchema:

@@ -18,6 +18,10 @@ VALID_PAYLOAD = {
         "benchmark_language_version": "Python 3.8.5",
         "benchmark_language": "Python",
     },
+    "run": {
+        "commit": "478286658055bb91737394c2065b92a7e92fb0c1",
+        "repository": "https://github.com/apache/arrow",
+    },
     "machine_info": {
         "architecture_name": "x86_64",
         "cpu_l1d_cache_bytes": "32768",
@@ -183,7 +187,7 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
 class TestBenchmarkPost(_asserts.PostEnforcer):
     url = "/api/benchmarks/"
-    required_fields = ["machine_info", "stats", "tags", "context"]
+    required_fields = ["machine_info", "stats", "tags", "context", "run"]
     valid_payload = VALID_PAYLOAD
 
     def test_create_benchmark(self, client):

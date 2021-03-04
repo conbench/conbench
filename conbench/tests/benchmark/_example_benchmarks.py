@@ -12,11 +12,13 @@ class WithoutCasesBenchmark(conbench.runner.Benchmark):
         def func():
             return 1 + 1
 
+        run_info = {}
         benchmark, output = self.conbench.benchmark(
             func,
             self.name,
             {"year": "2020"},
             {"benchmark_language": "Python"},
+            run_info,
             {"iterations": 10},
         )
         self.conbench.publish(benchmark)
@@ -44,7 +46,7 @@ class WithCasesBenchmark(conbench.runner.Benchmark):
         def func():
             return 100 - 1
 
-        cases = self.get_cases(case, kwargs)
+        cases, run_info = self.get_cases(case, kwargs), {}
         for case in cases:
             color, fruit = case
             tags = {
@@ -58,6 +60,7 @@ class WithCasesBenchmark(conbench.runner.Benchmark):
                 self.name,
                 tags,
                 {"benchmark_language": "Python"},
+                run_info,
                 {"iterations": 10},
             )
             self.conbench.publish(benchmark)
