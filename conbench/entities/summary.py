@@ -20,6 +20,7 @@ from ..entities.context import Context
 from ..entities.data import Data
 from ..entities.github import GitHub, parse_commit
 from ..entities.machine import Machine, MachineSchema
+from ..entities.run import Run
 from ..entities.time import Time
 
 
@@ -29,9 +30,11 @@ class Summary(Base, EntityMixin):
     case_id = NotNull(s.String(50), s.ForeignKey("case.id"))
     machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
+    run_id = NotNull(s.Text, s.ForeignKey("run.id"))
     case = relationship("Case", lazy="joined")
     machine = relationship("Machine", lazy="select")
     context = relationship("Context", lazy="select")
+    run = relationship("Run", lazy="select")
     data = relationship(
         "Data",
         lazy="joined",
@@ -47,7 +50,6 @@ class Summary(Base, EntityMixin):
     unit = NotNull(s.Text)
     time_unit = NotNull(s.Text)
     batch_id = NotNull(s.Text)
-    run_id = NotNull(s.Text)
     timestamp = NotNull(s.DateTime(timezone=False))
     iterations = NotNull(s.Integer, check("iterations>=1"))
     min = Nullable(s.Numeric, check("min>=0"))
@@ -100,6 +102,12 @@ class Summary(Base, EntityMixin):
                     "author_avatar": commit["author_avatar"],
                 }
             )
+
+        # create if not exists
+        run_id = data["stats"]["run_id"]
+        run = Run.first(id=run_id)
+        if not run:
+            run = Run.create({"id": run_id, "github_id": github.id})
 
         stats = data["stats"]
         values = stats.pop("data")

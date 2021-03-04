@@ -1,12 +1,13 @@
 import dateutil.parser
 import sqlalchemy as s
 
-from ..entities._entity import Base, EntityMixin, NotNull
+from ..entities._entity import Base, EntityMixin, generate_uuid, NotNull
 
 
 class GitHub(Base, EntityMixin):
     __tablename__ = "github"
-    commit = NotNull(s.String(50), primary_key=True)
+    id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    commit = NotNull(s.String(50))
     repository = NotNull(s.String(100))
     url = NotNull(s.String(250))
     message = NotNull(s.String(250))

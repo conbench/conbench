@@ -202,12 +202,16 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         self.authenticate(client)
         response = client.post("/api/benchmarks/", json=self.valid_payload)
         summary_1 = Summary.one(id=response.json["id"])
-        response = client.post("/api/benchmarks/", json=self.valid_payload)
+        data = copy.deepcopy(self.valid_payload)
+        data["stats"]["run_id"] = data["stats"]["run_id"] + "_X"
+        response = client.post("/api/benchmarks/", json=data)
         summary_2 = Summary.one(id=response.json["id"])
         assert summary_1.id != summary_2.id
         assert summary_1.case_id == summary_2.case_id
         assert summary_1.context_id == summary_2.context_id
         assert summary_1.machine_id == summary_2.machine_id
+        assert summary_1.run_id != summary_2.run_id
+        assert summary_1.run.github_id == summary_2.run.github_id
 
     def test_nested_schema_validation(self, client):
         self.authenticate(client)
