@@ -2,6 +2,7 @@ import decimal
 
 import flask as f
 import marshmallow
+import requests
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy.orm import relationship
@@ -17,6 +18,7 @@ from ..entities._entity import (
 from ..entities.case import Case
 from ..entities.context import Context
 from ..entities.data import Data
+from ..entities.github import GitHub, parse_commit
 from ..entities.machine import Machine, MachineSchema
 from ..entities.time import Time
 
@@ -77,6 +79,27 @@ class Summary(Base, EntityMixin):
         context = Context.first(tags=data["context"])
         if not context:
             context = Context.create({"tags": data["context"]})
+
+        # create if not exists
+        sha, repository = data["run"]["commit"], data["run"]["repository"]
+        github = GitHub.first(commit=sha)
+        if not github:
+            name = repository.split("github.com/")[1]
+            url = f"https://api.github.com/repos/{name}/commits/{sha}"
+            response = requests.get(url)
+            commit = parse_commit(response.json())
+            github = GitHub.create(
+                {
+                    "commit": sha,
+                    "repository": repository,
+                    "url": commit["url"],
+                    "timestamp": commit["date"],
+                    "message": commit["message"],
+                    "author_name": commit["author_name"],
+                    "author_login": commit["author_login"],
+                    "author_avatar": commit["author_avatar"],
+                }
+            )
 
         stats = data["stats"]
         values = stats.pop("data")
