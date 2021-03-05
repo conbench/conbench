@@ -90,8 +90,8 @@ class RunMixin:
         return response.json, response
 
 
-class Benchmark(AppEndpoint, BenchmarkMixin):
-    def page(self, benchmark, form):
+class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin):
+    def page(self, benchmark, run, form):
         if not flask_login.current_user.is_authenticated:
             delattr(form, "delete")
 
@@ -103,12 +103,13 @@ class Benchmark(AppEndpoint, BenchmarkMixin):
             application=Config.APPLICATION_NAME,
             title="Benchmark",
             benchmark=benchmark,
+            run=run,
             form=form,
         )
 
     def get(self, benchmark_id):
-        benchmark = self.get_display_benchmark(benchmark_id)
-        return self.page(benchmark, DeleteForm())
+        benchmark, run = self._get_benchmark_and_run(benchmark_id)
+        return self.page(benchmark, run, DeleteForm())
 
     def post(self, benchmark_id):
         if not flask_login.current_user.is_authenticated:
@@ -134,8 +135,16 @@ class Benchmark(AppEndpoint, BenchmarkMixin):
         if form.errors == csrf:
             self.flash("The CSRF token is missing.")
 
+        benchmark, run = self._get_benchmark_and_run(benchmark_id)
+        return self.page(benchmark, run, form)
+
+    def _get_benchmark_and_run(self, benchmark_id):
         benchmark = self.get_display_benchmark(benchmark_id)
-        return self.page(benchmark, form)
+        run = None
+        if benchmark is not None:
+            run_id = benchmark["stats"]["run_id"]
+            run = self.get_display_run(run_id)
+        return benchmark, run
 
 
 class BenchmarkList(AppEndpoint):
