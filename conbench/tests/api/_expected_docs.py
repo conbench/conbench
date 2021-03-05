@@ -391,7 +391,7 @@
                             "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
                             "arrow_compiler_id": "AppleClang",
                             "arrow_compiler_version": "11.0.0.11000033",
-                            "arrow_git_revision": "478286658055bb91737394c2065b92a7e92fb0c1",
+                            "arrow_git_revision": "02addad336ba19a654f9c857ede546331be7b631",
                             "arrow_version": "2.0.0",
                             "benchmark_language": "Python",
                             "benchmark_language_version": "Python 3.8.5",
@@ -464,15 +464,15 @@
                     "application/json": {
                         "example": {
                             "commit": {
-                                "author_avatar": "https://avatars.githubusercontent.com/u/961747?v=4",
-                                "author_login": "kszucs",
-                                "author_name": "Krisztián Szűcs",
+                                "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                "author_login": "dianaclarke",
+                                "author_name": "Diana Clarke",
                                 "id": "some-commit-uuid-1",
-                                "message": "[maven-release-plugin] prepare release apache-arrow-2.0.0",
+                                "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
                                 "repository": "https://github.com/apache/arrow",
-                                "sha": "478286658055bb91737394c2065b92a7e92fb0c1",
-                                "timestamp": "2020-10-12T17:47:08",
-                                "url": "https://github.com/apache/arrow/commit/478286658055bb91737394c2065b92a7e92fb0c1",
+                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                "timestamp": "2021-02-24T18:02:51",
+                                "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                             },
                             "id": "some-run-uuid-1",
                             "links": {
@@ -511,15 +511,15 @@
                         "example": [
                             {
                                 "commit": {
-                                    "author_avatar": "https://avatars.githubusercontent.com/u/961747?v=4",
-                                    "author_login": "kszucs",
-                                    "author_name": "Krisztián Szűcs",
+                                    "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                    "author_login": "dianaclarke",
+                                    "author_name": "Diana Clarke",
                                     "id": "some-commit-uuid-1",
-                                    "message": "[maven-release-plugin] prepare release apache-arrow-2.0.0",
+                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
                                     "repository": "https://github.com/apache/arrow",
-                                    "sha": "478286658055bb91737394c2065b92a7e92fb0c1",
-                                    "timestamp": "2020-10-12T17:47:08",
-                                    "url": "https://github.com/apache/arrow/commit/478286658055bb91737394c2065b92a7e92fb0c1",
+                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                    "timestamp": "2021-02-24T18:02:51",
+                                    "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                                 },
                                 "id": "some-run-uuid-1",
                                 "links": {
@@ -550,15 +550,15 @@
                             },
                             {
                                 "commit": {
-                                    "author_avatar": "https://avatars.githubusercontent.com/u/961747?v=4",
-                                    "author_login": "kszucs",
-                                    "author_name": "Krisztián Szűcs",
+                                    "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                    "author_login": "dianaclarke",
+                                    "author_name": "Diana Clarke",
                                     "id": "some-commit-uuid-1",
-                                    "message": "[maven-release-plugin] prepare release apache-arrow-2.0.0",
+                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
                                     "repository": "https://github.com/apache/arrow",
-                                    "sha": "478286658055bb91737394c2065b92a7e92fb0c1",
-                                    "timestamp": "2020-10-12T17:47:08",
-                                    "url": "https://github.com/apache/arrow/commit/478286658055bb91737394c2065b92a7e92fb0c1",
+                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                    "timestamp": "2021-02-24T18:02:51",
+                                    "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                                 },
                                 "id": "some-run-uuid-2",
                                 "links": {
