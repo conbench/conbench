@@ -12,9 +12,9 @@ class Run(Base, EntityMixin):
     id = NotNull(s.String(50), primary_key=True)
     timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id"))
-    commit = relationship("Commit", lazy="select")
+    commit = relationship("Commit", lazy="joined")
     machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
-    machine = relationship("Machine", lazy="select")
+    machine = relationship("Machine", lazy="joined")
 
 
 class _Serializer(EntitySerializer):
