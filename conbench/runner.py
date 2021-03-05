@@ -78,7 +78,7 @@ class Conbench(Connection):
         self.language = language()
         self.batch_id = uuid.uuid4().hex
 
-    def benchmark(self, f, name, tags, context, options):
+    def benchmark(self, f, name, tags, context, run, options):
         iterations, gc_collect, gc_disable = self._get_options(options)
 
         if gc_collect:
@@ -109,12 +109,13 @@ class Conbench(Connection):
             name,
             tags,
             context,
+            run,
             options,
         )
 
         return benchmark, output
 
-    def record(self, result, name, tags, context, options, output=None):
+    def record(self, result, name, tags, context, run, options, output=None):
         tags["name"] = name
         timestamp = _now_formatted()
         run_id = options.get("run_id")
@@ -131,6 +132,7 @@ class Conbench(Connection):
             "machine_info": self.machine_info,
             "context": context,
             "tags": tags,
+            "run": run,
         }
         return benchmark, output
 

@@ -25,4 +25,51 @@
   </div>
 </div>
 
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="runs" class="table table-striped table-bordered table-hover">
+          <caption>Runs</div>
+          </caption>
+            <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Author</th>
+                    <th scope="col">Commit</th>
+                    <th scope="col">Machine</th>
+                    <th scope="col">Results</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in runs %}
+                <tr>
+                     <td>{{ run.display_timestamp }}</td>
+                     <td>
+                       <image src="{{ run.commit.author_avatar }}" height="30" style="border-radius: 50%;">
+                       &nbsp;&nbsp;{{ run.commit.author_name }}
+                     </td>
+                     <td>
+                       <a href="{{ run.commit.url }}">{{ run.commit.message }}</a>
+                     </td>
+                     <td>{{ run.machine.name }}</td>
+                     <td><a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.id[:7] }}</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+{{super()}}
+<script type="text/javascript">
+  var table = $('#runs').dataTable( {
+      "responsive": true,
+      "order": [[0, 'desc']],
+  } );
+  new $.fn.dataTable.FixedHeader( table );
+</script>
 {% endblock %}

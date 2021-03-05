@@ -13,10 +13,14 @@ VALID_PAYLOAD = {
         "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
         "arrow_compiler_id": "AppleClang",
         "arrow_compiler_version": "11.0.0.11000033",
-        "arrow_git_revision": "478286658055bb91737394c2065b92a7e92fb0c1",
+        "arrow_git_revision": "02addad336ba19a654f9c857ede546331be7b631",
         "arrow_version": "2.0.0",
         "benchmark_language_version": "Python 3.8.5",
         "benchmark_language": "Python",
+    },
+    "run": {
+        "commit": "02addad336ba19a654f9c857ede546331be7b631",
+        "repository": "https://github.com/apache/arrow",
     },
     "machine_info": {
         "architecture_name": "x86_64",
@@ -183,7 +187,7 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
 class TestBenchmarkPost(_asserts.PostEnforcer):
     url = "/api/benchmarks/"
-    required_fields = ["machine_info", "stats", "tags", "context"]
+    required_fields = ["machine_info", "stats", "tags", "context", "run"]
     valid_payload = VALID_PAYLOAD
 
     def test_create_benchmark(self, client):
@@ -198,12 +202,16 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         self.authenticate(client)
         response = client.post("/api/benchmarks/", json=self.valid_payload)
         summary_1 = Summary.one(id=response.json["id"])
-        response = client.post("/api/benchmarks/", json=self.valid_payload)
+        data = copy.deepcopy(self.valid_payload)
+        data["stats"]["run_id"] = data["stats"]["run_id"] + "_X"
+        response = client.post("/api/benchmarks/", json=data)
         summary_2 = Summary.one(id=response.json["id"])
         assert summary_1.id != summary_2.id
         assert summary_1.case_id == summary_2.case_id
         assert summary_1.context_id == summary_2.context_id
         assert summary_1.machine_id == summary_2.machine_id
+        assert summary_1.run_id != summary_2.run_id
+        assert summary_1.run.commit_id == summary_2.run.commit_id
 
     def test_nested_schema_validation(self, client):
         self.authenticate(client)

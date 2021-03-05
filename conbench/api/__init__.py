@@ -12,4 +12,5 @@ from .compare import *
 from .contexts import *
 from .index import *
 from .machines import *
+from .runs import *
 from .users import *

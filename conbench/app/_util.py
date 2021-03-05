@@ -16,10 +16,13 @@ def dataset_name(name):
     return name.replace("_", " ")
 
 
+def display_time(t):
+    return t.split(".")[0].replace("T", "  ")
+
+
 def set_display_time(benchmark):
     t = benchmark["stats"]["timestamp"]
-    simple_date = t.split(".")[0].replace("T", "  ")
-    benchmark["display_timestamp"] = simple_date
+    benchmark["display_timestamp"] = display_time(t)
 
 
 def set_display_mean(benchmark):

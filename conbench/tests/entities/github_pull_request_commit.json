@@ -1,0 +1,98 @@
+{
+  "sha": "bfe37ca73e7b387001ca009a262ad37df3457bd5",
+  "node_id": "MDY6Q29tbWl0NTE5MDUzNTM6YmZlMzdjYTczZTdiMzg3MDAxY2EwMDlhMjYyYWQzN2RmMzQ1N2JkNQ==",
+  "commit": {
+    "author": {
+      "name": "Diana Clarke",
+      "email": "diana.joan.clarke@gmail.com",
+      "date": "2021-02-24T20:59:04Z"
+    },
+    "committer": {
+      "name": "Diana Clarke",
+      "email": "diana.joan.clarke@gmail.com",
+      "date": "2021-02-24T20:59:04Z"
+    },
+    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+    "tree": {
+      "sha": "4e0ec0d7a2e28b29b01cbe91df3026ebbc28e654",
+      "url": "https://api.github.com/repos/apache/arrow/git/trees/4e0ec0d7a2e28b29b01cbe91df3026ebbc28e654"
+    },
+    "url": "https://api.github.com/repos/apache/arrow/git/commits/bfe37ca73e7b387001ca009a262ad37df3457bd5",
+    "comment_count": 0,
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null
+    }
+  },
+  "url": "https://api.github.com/repos/apache/arrow/commits/bfe37ca73e7b387001ca009a262ad37df3457bd5",
+  "html_url": "https://github.com/apache/arrow/commit/bfe37ca73e7b387001ca009a262ad37df3457bd5",
+  "comments_url": "https://api.github.com/repos/apache/arrow/commits/bfe37ca73e7b387001ca009a262ad37df3457bd5/comments",
+  "author": {
+    "login": "dianaclarke",
+    "id": 878798,
+    "node_id": "MDQ6VXNlcjg3ODc5OA==",
+    "avatar_url": "https://avatars.githubusercontent.com/u/878798?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/dianaclarke",
+    "html_url": "https://github.com/dianaclarke",
+    "followers_url": "https://api.github.com/users/dianaclarke/followers",
+    "following_url": "https://api.github.com/users/dianaclarke/following{/other_user}",
+    "gists_url": "https://api.github.com/users/dianaclarke/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/dianaclarke/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/dianaclarke/subscriptions",
+    "organizations_url": "https://api.github.com/users/dianaclarke/orgs",
+    "repos_url": "https://api.github.com/users/dianaclarke/repos",
+    "events_url": "https://api.github.com/users/dianaclarke/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/dianaclarke/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "committer": {
+    "login": "dianaclarke",
+    "id": 878798,
+    "node_id": "MDQ6VXNlcjg3ODc5OA==",
+    "avatar_url": "https://avatars.githubusercontent.com/u/878798?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/dianaclarke",
+    "html_url": "https://github.com/dianaclarke",
+    "followers_url": "https://api.github.com/users/dianaclarke/followers",
+    "following_url": "https://api.github.com/users/dianaclarke/following{/other_user}",
+    "gists_url": "https://api.github.com/users/dianaclarke/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/dianaclarke/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/dianaclarke/subscriptions",
+    "organizations_url": "https://api.github.com/users/dianaclarke/orgs",
+    "repos_url": "https://api.github.com/users/dianaclarke/repos",
+    "events_url": "https://api.github.com/users/dianaclarke/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/dianaclarke/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "parents": [
+    {
+      "sha": "81e9417eb68171e03a304097ae86e1fd83307130",
+      "url": "https://api.github.com/repos/apache/arrow/commits/81e9417eb68171e03a304097ae86e1fd83307130",
+      "html_url": "https://github.com/apache/arrow/commit/81e9417eb68171e03a304097ae86e1fd83307130"
+    }
+  ],
+  "stats": {
+    "total": 0,
+    "additions": 0,
+    "deletions": 0
+  },
+  "files": [
+    {
+      "sha": "b763ea3c86fba324cf4155a8473940d48c738599",
+      "filename": "dev/archery/archery/tests/test_benchmarks.py",
+      "status": "renamed",
+      "additions": 0,
+      "deletions": 0,
+      "changes": 0,
+      "blob_url": "https://github.com/apache/arrow/blob/bfe37ca73e7b387001ca009a262ad37df3457bd5/dev/archery/archery/tests/test_benchmarks.py",
+      "raw_url": "https://github.com/apache/arrow/raw/bfe37ca73e7b387001ca009a262ad37df3457bd5/dev/archery/archery/tests/test_benchmarks.py",
+      "contents_url": "https://api.github.com/repos/apache/arrow/contents/dev/archery/archery/tests/test_benchmarks.py?ref=bfe37ca73e7b387001ca009a262ad37df3457bd5",
+      "previous_filename": "dev/archery/tests/test_benchmarks.py"
+    }
+  ]
+}

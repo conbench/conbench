@@ -7,13 +7,13 @@ from openapi_spec_validator import validate_spec
 from ...tests.api import _asserts
 
 
-thisdir = os.path.abspath(os.path.dirname(__file__))
+this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestDocs(_asserts.ApiEndpointTest):
     def test_docs(self, client):
         response = client.get("/api/docs.json")
-        path = os.path.join(thisdir, "_expected_docs.py")
+        path = os.path.join(this_dir, "_expected_docs.py")
 
         with open(path) as f:
             expected_docs = ast.literal_eval(f.read())

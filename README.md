@@ -36,6 +36,13 @@
     (conbench) $ python setup.py develop
 
 
+### Create the databases
+
+    $ psql
+    # CREATE DATABASE conbench_test;
+    # CREATE DATABASE conbench_prod;
+
+
 ### Launch the app
     (conbench) $ flask run
      * Serving Flask app "api.py" (lazy loading)

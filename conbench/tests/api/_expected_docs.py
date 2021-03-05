@@ -51,6 +51,7 @@
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "list": "http://localhost/api/benchmarks/",
                                 "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
                             "stats": {
@@ -120,6 +121,7 @@
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "list": "http://localhost/api/benchmarks/",
                                 "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
                             "stats": {
@@ -190,6 +192,7 @@
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                     "list": "http://localhost/api/benchmarks/",
                                     "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                    "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                                 },
                                 "stats": {
@@ -252,6 +255,7 @@
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                     "list": "http://localhost/api/benchmarks/",
                                     "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                    "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-2/",
                                 },
                                 "stats": {
@@ -387,7 +391,7 @@
                             "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
                             "arrow_compiler_id": "AppleClang",
                             "arrow_compiler_version": "11.0.0.11000033",
-                            "arrow_git_revision": "478286658055bb91737394c2065b92a7e92fb0c1",
+                            "arrow_git_revision": "02addad336ba19a654f9c857ede546331be7b631",
                             "arrow_version": "2.0.0",
                             "benchmark_language": "Python",
                             "benchmark_language_version": "Python 3.8.5",
@@ -411,6 +415,7 @@
                                 "logout": "http://localhost/api/logout/",
                                 "ping": "http://localhost/api/ping/",
                                 "register": "http://localhost/api/register/",
+                                "runs": "http://localhost/api/runs/",
                                 "users": "http://localhost/api/users/",
                             }
                         }
@@ -454,15 +459,139 @@
                 },
                 "description": "OK",
             },
+            "RunEntity": {
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "commit": {
+                                "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                "author_login": "dianaclarke",
+                                "author_name": "Diana Clarke",
+                                "id": "some-commit-uuid-1",
+                                "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                "repository": "https://github.com/apache/arrow",
+                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                "timestamp": "2021-02-25T01:02:51",
+                                "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+                            },
+                            "id": "some-run-uuid-1",
+                            "links": {
+                                "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                "self": "http://localhost/api/runs/some-run-uuid-1/",
+                            },
+                            "machine": {
+                                "architecture_name": "x86_64",
+                                "cpu_core_count": 2,
+                                "cpu_frequency_max_hz": 3500000000,
+                                "cpu_l1d_cache_bytes": 32768,
+                                "cpu_l1i_cache_bytes": 32768,
+                                "cpu_l2_cache_bytes": 262144,
+                                "cpu_l3_cache_bytes": 4194304,
+                                "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                "cpu_thread_count": 4,
+                                "id": "some-machine-uuid-1",
+                                "kernel_name": "19.6.0",
+                                "memory_bytes": 17179869184,
+                                "name": "diana",
+                                "os_name": "macOS",
+                                "os_version": "10.15.7",
+                            },
+                            "timestamp": "2021-02-04T17:22:05.225583",
+                        }
+                    }
+                },
+                "description": "OK",
+            },
+            "RunList": {
+                "content": {
+                    "application/json": {
+                        "example": [
+                            {
+                                "commit": {
+                                    "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                    "author_login": "dianaclarke",
+                                    "author_name": "Diana Clarke",
+                                    "id": "some-commit-uuid-1",
+                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                    "repository": "https://github.com/apache/arrow",
+                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                    "timestamp": "2021-02-25T01:02:51",
+                                    "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+                                },
+                                "id": "some-run-uuid-1",
+                                "links": {
+                                    "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                    "self": "http://localhost/api/runs/some-run-uuid-1/",
+                                },
+                                "machine": {
+                                    "architecture_name": "x86_64",
+                                    "cpu_core_count": 2,
+                                    "cpu_frequency_max_hz": 3500000000,
+                                    "cpu_l1d_cache_bytes": 32768,
+                                    "cpu_l1i_cache_bytes": 32768,
+                                    "cpu_l2_cache_bytes": 262144,
+                                    "cpu_l3_cache_bytes": 4194304,
+                                    "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                    "cpu_thread_count": 4,
+                                    "id": "some-machine-uuid-1",
+                                    "kernel_name": "19.6.0",
+                                    "memory_bytes": 17179869184,
+                                    "name": "diana",
+                                    "os_name": "macOS",
+                                    "os_version": "10.15.7",
+                                },
+                                "timestamp": "2021-02-04T17:22:05.225583",
+                            },
+                            {
+                                "commit": {
+                                    "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                    "author_login": "dianaclarke",
+                                    "author_name": "Diana Clarke",
+                                    "id": "some-commit-uuid-1",
+                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                    "repository": "https://github.com/apache/arrow",
+                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                    "timestamp": "2021-02-25T01:02:51",
+                                    "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+                                },
+                                "id": "some-run-uuid-2",
+                                "links": {
+                                    "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                    "self": "http://localhost/api/runs/some-run-uuid-2/",
+                                },
+                                "machine": {
+                                    "architecture_name": "x86_64",
+                                    "cpu_core_count": 2,
+                                    "cpu_frequency_max_hz": 3500000000,
+                                    "cpu_l1d_cache_bytes": 32768,
+                                    "cpu_l1i_cache_bytes": 32768,
+                                    "cpu_l2_cache_bytes": 262144,
+                                    "cpu_l3_cache_bytes": 4194304,
+                                    "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                    "cpu_thread_count": 4,
+                                    "id": "some-machine-uuid-1",
+                                    "kernel_name": "19.6.0",
+                                    "memory_bytes": 17179869184,
+                                    "name": "diana",
+                                    "os_name": "macOS",
+                                    "os_version": "10.15.7",
+                                },
+                                "timestamp": "2021-03-04T17:18:05.715583",
+                            },
+                        ]
+                    }
+                },
+                "description": "OK",
+            },
             "UserCreated": {
                 "content": {
                     "application/json": {
                         "example": {
                             "email": "gwen@example.com",
-                            "id": "abc123",
+                            "id": "some-user-uuid-1",
                             "links": {
                                 "list": "http://localhost/api/users/",
-                                "self": "http://localhost/api/users/abc123/",
+                                "self": "http://localhost/api/users/some-user-uuid-1/",
                             },
                             "name": "Gwen Clarke",
                         }
@@ -475,10 +604,10 @@
                     "application/json": {
                         "example": {
                             "email": "gwen@example.com",
-                            "id": "abc123",
+                            "id": "some-user-uuid-1",
                             "links": {
                                 "list": "http://localhost/api/users/",
-                                "self": "http://localhost/api/users/abc123/",
+                                "self": "http://localhost/api/users/some-user-uuid-1/",
                             },
                             "name": "Gwen Clarke",
                         }
@@ -492,19 +621,19 @@
                         "example": [
                             {
                                 "email": "gwen@example.com",
-                                "id": "abc123",
+                                "id": "some-user-uuid-1",
                                 "links": {
                                     "list": "http://localhost/api/users/",
-                                    "self": "http://localhost/api/users/abc123/",
+                                    "self": "http://localhost/api/users/some-user-uuid-1/",
                                 },
                                 "name": "Gwen Clarke",
                             },
                             {
                                 "email": "casey@example.com",
-                                "id": "xyz123",
+                                "id": "some-user-uuid-2",
                                 "links": {
                                     "list": "http://localhost/api/users/",
-                                    "self": "http://localhost/api/users/xyz123/",
+                                    "self": "http://localhost/api/users/some-user-uuid-2/",
                                 },
                                 "name": "Casey Clarke",
                             },
@@ -519,10 +648,11 @@
                 "properties": {
                     "context": {"type": "object"},
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
+                    "run": {"type": "object"},
                     "stats": {"$ref": "#/components/schemas/SummaryCreate"},
                     "tags": {"type": "object"},
                 },
-                "required": ["context", "machine_info", "stats", "tags"],
+                "required": ["context", "machine_info", "run", "stats", "tags"],
                 "type": "object",
             },
             "Error": {
@@ -908,6 +1038,35 @@
                 "tags": ["Authentication"],
             }
         },
+        "/api/runs/": {
+            "get": {
+                "description": "Get a list of runs.",
+                "responses": {
+                    "200": {"$ref": "#/components/responses/RunList"},
+                    "401": {"$ref": "#/components/responses/401"},
+                },
+                "tags": ["Runs"],
+            }
+        },
+        "/api/runs/{run_id}/": {
+            "get": {
+                "description": "Get a run.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "run_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/RunEntity"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Runs"],
+            }
+        },
         "/api/users/": {
             "get": {
                 "description": "Get a list of users.",
@@ -1004,6 +1163,7 @@
         {"description": "Compare benchmarks", "name": "Compare"},
         {"description": "Benchmark contexts", "name": "Contexts"},
         {"description": "Benchmark machines", "name": "Machines"},
+        {"description": "Benchmark runs", "name": "Runs"},
         {"description": "Monitor status", "name": "Ping"},
     ],
 }

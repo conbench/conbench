@@ -1,11 +1,11 @@
 class FakeUser1:
-    id = "abc123"
+    id = "some-user-uuid-1"
     name = "Gwen Clarke"
     email = "gwen@example.com"
 
 
 class FakeUser2:
-    id = "xyz123"
+    id = "some-user-uuid-2"
     name = "Casey Clarke"
     email = "casey@example.com"
 
@@ -85,7 +85,22 @@ def _api_benchmark_entity(
             "self": "http://localhost/api/benchmarks/%s/" % summary_id,
             "context": "http://localhost/api/contexts/%s/" % context_id,
             "machine": "http://localhost/api/machines/%s/" % machine_id,
+            "run": "http://localhost/api/runs/%s/" % run_id,
         },
+    }
+
+
+def _api_commit_entity(commit_id):
+    return {
+        "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+        "author_login": "dianaclarke",
+        "author_name": "Diana Clarke",
+        "id": commit_id,
+        "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+        "repository": "https://github.com/apache/arrow",
+        "sha": "02addad336ba19a654f9c857ede546331be7b631",
+        "timestamp": "2021-02-25T01:02:51",
+        "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
     }
 
 
@@ -167,7 +182,7 @@ def _api_context_entity(context_id):
         "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
         "arrow_compiler_id": "AppleClang",
         "arrow_compiler_version": "11.0.0.11000033",
-        "arrow_git_revision": "478286658055bb91737394c2065b92a7e92fb0c1",
+        "arrow_git_revision": "02addad336ba19a654f9c857ede546331be7b631",
         "arrow_version": "2.0.0",
         "benchmark_language_version": "Python 3.8.5",
         "benchmark_language": "Python",
@@ -177,8 +192,8 @@ def _api_context_entity(context_id):
     }
 
 
-def _api_machine_entity(machine_id):
-    return {
+def _api_machine_entity(machine_id, links=True):
+    result = {
         "id": machine_id,
         "architecture_name": "x86_64",
         "cpu_l1d_cache_bytes": 32768,
@@ -196,6 +211,22 @@ def _api_machine_entity(machine_id):
         "os_version": "10.15.7",
         "links": {
             "self": "http://localhost/api/machines/%s/" % machine_id,
+        },
+    }
+    if not links:
+        result.pop("links", None)
+    return result
+
+
+def _api_run_entity(run_id, machine_id, commit_id, now):
+    return {
+        "id": run_id,
+        "timestamp": now,
+        "commit": _api_commit_entity(commit_id),
+        "machine": _api_machine_entity(machine_id, links=False),
+        "links": {
+            "self": "http://localhost/api/runs/%s/" % run_id,
+            "machine": "http://localhost/api/machines/%s/" % machine_id,
         },
     }
 
@@ -249,6 +280,26 @@ COMPARE_LIST = _api_compare_list(
 )
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
 MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1")
+RUN_ENTITY = _api_run_entity(
+    "some-run-uuid-1",
+    "some-machine-uuid-1",
+    "some-commit-uuid-1",
+    "2021-02-04T17:22:05.225583",
+)
+RUN_LIST = [
+    _api_run_entity(
+        "some-run-uuid-1",
+        "some-machine-uuid-1",
+        "some-commit-uuid-1",
+        "2021-02-04T17:22:05.225583",
+    ),
+    _api_run_entity(
+        "some-run-uuid-2",
+        "some-machine-uuid-1",
+        "some-commit-uuid-1",
+        "2021-03-04T17:18:05.715583",
+    ),
+]
 USER_ENTITY = _api_user_entity(FakeUser1())
 USER_LIST = [
     _api_user_entity(FakeUser1()),
@@ -278,6 +329,7 @@ API_INDEX = {
         "login": "http://localhost/api/login/",
         "logout": "http://localhost/api/logout/",
         "register": "http://localhost/api/register/",
+        "runs": "http://localhost/api/runs/",
         "ping": "http://localhost/api/ping/",
         "users": "http://localhost/api/users/",
     }
