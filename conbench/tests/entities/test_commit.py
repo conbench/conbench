@@ -3,7 +3,7 @@ import dateutil
 import json
 import os
 
-from ...entities.github import parse_commit
+from ...entities.commit import parse_commit
 
 
 this_dir = os.path.abspath(os.path.dirname(__file__))

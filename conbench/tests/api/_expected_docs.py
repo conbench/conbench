@@ -463,10 +463,41 @@
                 "content": {
                     "application/json": {
                         "example": {
+                            "commit": {
+                                "author_avatar": "https://avatars.githubusercontent.com/u/961747?v=4",
+                                "author_login": "kszucs",
+                                "author_name": "Krisztián Szűcs",
+                                "id": "some-commit-uuid-1",
+                                "message": "[maven-release-plugin] prepare release apache-arrow-2.0.0",
+                                "repository": "https://github.com/apache/arrow",
+                                "sha": "478286658055bb91737394c2065b92a7e92fb0c1",
+                                "timestamp": "2020-10-12T17:47:08",
+                                "url": "https://github.com/apache/arrow/commit/478286658055bb91737394c2065b92a7e92fb0c1",
+                            },
                             "id": "some-run-uuid-1",
                             "links": {
                                 "machine": "http://localhost/api/machines/some-machine-uuid-1/",
                                 "self": "http://localhost/api/runs/some-run-uuid-1/",
+                            },
+                            "machine": {
+                                "architecture_name": "x86_64",
+                                "cpu_core_count": 2,
+                                "cpu_frequency_max_hz": 3500000000,
+                                "cpu_l1d_cache_bytes": 32768,
+                                "cpu_l1i_cache_bytes": 32768,
+                                "cpu_l2_cache_bytes": 262144,
+                                "cpu_l3_cache_bytes": 4194304,
+                                "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                "cpu_thread_count": 4,
+                                "id": "some-machine-uuid-1",
+                                "kernel_name": "19.6.0",
+                                "links": {
+                                    "self": "http://localhost/api/machines/some-machine-uuid-1/"
+                                },
+                                "memory_bytes": 17179869184,
+                                "name": "diana",
+                                "os_name": "macOS",
+                                "os_version": "10.15.7",
                             },
                             "timestamp": "2021-02-04T17:22:05.225583",
                         }
@@ -479,18 +510,80 @@
                     "application/json": {
                         "example": [
                             {
+                                "commit": {
+                                    "author_avatar": "https://avatars.githubusercontent.com/u/961747?v=4",
+                                    "author_login": "kszucs",
+                                    "author_name": "Krisztián Szűcs",
+                                    "id": "some-commit-uuid-1",
+                                    "message": "[maven-release-plugin] prepare release apache-arrow-2.0.0",
+                                    "repository": "https://github.com/apache/arrow",
+                                    "sha": "478286658055bb91737394c2065b92a7e92fb0c1",
+                                    "timestamp": "2020-10-12T17:47:08",
+                                    "url": "https://github.com/apache/arrow/commit/478286658055bb91737394c2065b92a7e92fb0c1",
+                                },
                                 "id": "some-run-uuid-1",
                                 "links": {
                                     "machine": "http://localhost/api/machines/some-machine-uuid-1/",
                                     "self": "http://localhost/api/runs/some-run-uuid-1/",
                                 },
+                                "machine": {
+                                    "architecture_name": "x86_64",
+                                    "cpu_core_count": 2,
+                                    "cpu_frequency_max_hz": 3500000000,
+                                    "cpu_l1d_cache_bytes": 32768,
+                                    "cpu_l1i_cache_bytes": 32768,
+                                    "cpu_l2_cache_bytes": 262144,
+                                    "cpu_l3_cache_bytes": 4194304,
+                                    "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                    "cpu_thread_count": 4,
+                                    "id": "some-machine-uuid-1",
+                                    "kernel_name": "19.6.0",
+                                    "links": {
+                                        "self": "http://localhost/api/machines/some-machine-uuid-1/"
+                                    },
+                                    "memory_bytes": 17179869184,
+                                    "name": "diana",
+                                    "os_name": "macOS",
+                                    "os_version": "10.15.7",
+                                },
                                 "timestamp": "2021-02-04T17:22:05.225583",
                             },
                             {
+                                "commit": {
+                                    "author_avatar": "https://avatars.githubusercontent.com/u/961747?v=4",
+                                    "author_login": "kszucs",
+                                    "author_name": "Krisztián Szűcs",
+                                    "id": "some-commit-uuid-1",
+                                    "message": "[maven-release-plugin] prepare release apache-arrow-2.0.0",
+                                    "repository": "https://github.com/apache/arrow",
+                                    "sha": "478286658055bb91737394c2065b92a7e92fb0c1",
+                                    "timestamp": "2020-10-12T17:47:08",
+                                    "url": "https://github.com/apache/arrow/commit/478286658055bb91737394c2065b92a7e92fb0c1",
+                                },
                                 "id": "some-run-uuid-2",
                                 "links": {
                                     "machine": "http://localhost/api/machines/some-machine-uuid-1/",
                                     "self": "http://localhost/api/runs/some-run-uuid-2/",
+                                },
+                                "machine": {
+                                    "architecture_name": "x86_64",
+                                    "cpu_core_count": 2,
+                                    "cpu_frequency_max_hz": 3500000000,
+                                    "cpu_l1d_cache_bytes": 32768,
+                                    "cpu_l1i_cache_bytes": 32768,
+                                    "cpu_l2_cache_bytes": 262144,
+                                    "cpu_l3_cache_bytes": 4194304,
+                                    "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                    "cpu_thread_count": 4,
+                                    "id": "some-machine-uuid-1",
+                                    "kernel_name": "19.6.0",
+                                    "links": {
+                                        "self": "http://localhost/api/machines/some-machine-uuid-1/"
+                                    },
+                                    "memory_bytes": 17179869184,
+                                    "name": "diana",
+                                    "os_name": "macOS",
+                                    "os_version": "10.15.7",
                                 },
                                 "timestamp": "2021-03-04T17:18:05.715583",
                             },

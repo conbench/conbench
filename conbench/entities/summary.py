@@ -18,7 +18,7 @@ from ..entities._entity import (
 from ..entities.case import Case
 from ..entities.context import Context
 from ..entities.data import Data
-from ..entities.github import GitHub, parse_commit
+from ..entities.commit import Commit, parse_commit
 from ..entities.machine import Machine, MachineSchema
 from ..entities.run import Run
 from ..entities.time import Time
@@ -84,22 +84,22 @@ class Summary(Base, EntityMixin):
 
         # create if not exists
         sha, repository = data["run"]["commit"], data["run"]["repository"]
-        github = GitHub.first(commit=sha)
-        if not github:
+        commit = Commit.first(sha=sha)
+        if not commit:
             name = repository.split("github.com/")[1]
             url = f"https://api.github.com/repos/{name}/commits/{sha}"
             response = requests.get(url)
-            commit = parse_commit(response.json())
-            github = GitHub.create(
+            github = parse_commit(response.json())
+            commit = Commit.create(
                 {
-                    "commit": sha,
+                    "sha": sha,
                     "repository": repository,
-                    "url": commit["url"],
-                    "timestamp": commit["date"],
-                    "message": commit["message"],
-                    "author_name": commit["author_name"],
-                    "author_login": commit["author_login"],
-                    "author_avatar": commit["author_avatar"],
+                    "url": github["url"],
+                    "timestamp": github["date"],
+                    "message": github["message"],
+                    "author_name": github["author_name"],
+                    "author_login": github["author_login"],
+                    "author_avatar": github["author_avatar"],
                 }
             )
 
@@ -110,7 +110,7 @@ class Summary(Base, EntityMixin):
             run = Run.create(
                 {
                     "id": run_id,
-                    "github_id": github.id,
+                    "commit_id": commit.id,
                     "machine_id": machine.id,
                 }
             )

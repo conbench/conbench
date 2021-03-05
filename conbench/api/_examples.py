@@ -90,6 +90,20 @@ def _api_benchmark_entity(
     }
 
 
+def _api_commit_entity(commit_id):
+    return {
+        "author_avatar": "https://avatars.githubusercontent.com/u/961747?v=4",
+        "author_login": "kszucs",
+        "author_name": "Krisztián Szűcs",
+        "id": commit_id,
+        "message": "[maven-release-plugin] prepare release apache-arrow-2.0.0",
+        "repository": "https://github.com/apache/arrow",
+        "sha": "478286658055bb91737394c2065b92a7e92fb0c1",
+        "timestamp": "2020-10-12T17:47:08",
+        "url": "https://github.com/apache/arrow/commit/478286658055bb91737394c2065b92a7e92fb0c1",
+    }
+
+
 def _api_compare_entity(
     benchmark_ids,
     batch_ids,
@@ -201,10 +215,12 @@ def _api_machine_entity(machine_id):
     }
 
 
-def _api_run_entity(run_id, machine_id, now):
+def _api_run_entity(run_id, machine_id, commit_id, now):
     return {
         "id": run_id,
         "timestamp": now,
+        "commit": _api_commit_entity(commit_id),
+        "machine": _api_machine_entity(machine_id),
         "links": {
             "self": "http://localhost/api/runs/%s/" % run_id,
             "machine": "http://localhost/api/machines/%s/" % machine_id,
@@ -264,17 +280,20 @@ MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1")
 RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",
     "some-machine-uuid-1",
+    "some-commit-uuid-1",
     "2021-02-04T17:22:05.225583",
 )
 RUN_LIST = [
     _api_run_entity(
         "some-run-uuid-1",
         "some-machine-uuid-1",
+        "some-commit-uuid-1",
         "2021-02-04T17:22:05.225583",
     ),
     _api_run_entity(
         "some-run-uuid-2",
         "some-machine-uuid-1",
+        "some-commit-uuid-1",
         "2021-03-04T17:18:05.715583",
     ),
 ]

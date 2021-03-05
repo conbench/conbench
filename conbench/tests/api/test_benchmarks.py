@@ -211,7 +211,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         assert summary_1.context_id == summary_2.context_id
         assert summary_1.machine_id == summary_2.machine_id
         assert summary_1.run_id != summary_2.run_id
-        assert summary_1.run.github_id == summary_2.run.github_id
+        assert summary_1.run.commit_id == summary_2.run.commit_id
 
     def test_nested_schema_validation(self, client):
         self.authenticate(client)
