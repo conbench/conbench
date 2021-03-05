@@ -33,26 +33,26 @@
           </caption>
             <thead>
                 <tr>
-                    <th scope="col">Date</th>
+                    <th scope="col">Run</th>
                     <th scope="col">Author</th>
+                    <th scope="col">Repository</th>
                     <th scope="col">Commit</th>
+                    <th scope="col">Date</th>
                     <th scope="col">Machine</th>
-                    <th scope="col">Results</th>
                 </tr>
             </thead>
             <tbody>
                 {% for run in runs %}
                 <tr>
-                     <td>{{ run.display_timestamp }}</td>
+                     <td><a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.display_timestamp }}</a></td>
                      <td>
                        <image src="{{ run.commit.author_avatar }}" height="30" style="border-radius: 50%;">
                        &nbsp;&nbsp;{{ run.commit.author_name }}
                      </td>
-                     <td>
-                       <a href="{{ run.commit.url }}">{{ run.commit.message }}</a>
-                     </td>
+                     <td><a href="{{ run.commit.repository }}">{{ run.commit.repository.split("https://github.com/")[1] }}</a></td>
+                     <td><a href="{{ run.commit.url }}">{{ run.commit.message }}</a></td>
+                     <td>{{ run.commit.display_timestamp }}</td>
                      <td>{{ run.machine.name }}</td>
-                     <td><a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.id[:7] }}</a></td>
                 </tr>
                 {% endfor %}
             </tbody>
