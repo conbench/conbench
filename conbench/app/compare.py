@@ -7,16 +7,11 @@ import bokeh
 from ..app import rule
 from ..app._endpoint import AppEndpoint
 from ..app._plots import simple_bar_plot
-from ..app._util import display_time
-from ..app.benchmarks import BenchmarkMixin
+from ..app.benchmarks import BenchmarkMixin, RunMixin
 from ..config import Config
 
 
-def _display_time(obj, field):
-    obj[f"display_{field}"] = display_time(obj[field])
-
-
-class Compare(AppEndpoint, BenchmarkMixin):
+class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
     def page(self, comparisons, baseline_id, contender_id):
 
         unknown = f"unknown...unknown"
@@ -31,8 +26,8 @@ class Compare(AppEndpoint, BenchmarkMixin):
             compare = f"{baseline_run_id}...{contender_run_id}"
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
         elif comparisons and self.type == "benchmark":
-            baseline = self._get_full_benchmark(baseline_id)
-            contender = self._get_full_benchmark(contender_id)
+            baseline = self.get_display_benchmark(baseline_id)
+            contender = self.get_display_benchmark(contender_id)
             plot = self._get_plot(baseline, contender)
             b_stats, c_stats = baseline["stats"], contender["stats"]
             baseline_run_id = b_stats["run_id"]
@@ -41,12 +36,8 @@ class Compare(AppEndpoint, BenchmarkMixin):
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
             compare = f'{b_stats["batch_id"]}...{c_stats["batch_id"]}'
             compare_batches_url = f.url_for("app.compare-batches", compare_ids=compare)
-            baseline_run, reponse = self._get_run(baseline_run_id)
-            contender_run, reponse = self._get_run(contender_run_id)
-            _display_time(baseline_run, "timestamp")
-            _display_time(baseline_run["commit"], "timestamp")
-            _display_time(contender_run, "timestamp")
-            _display_time(contender_run["commit"], "timestamp")
+            baseline_run = self.get_display_run(baseline_run_id)
+            contender_run = self.get_display_run(contender_run_id)
 
         return self.render_template(
             self.html,
@@ -126,10 +117,6 @@ class Compare(AppEndpoint, BenchmarkMixin):
                     c["change"] = c["change"] * -1
 
         return comparisons
-
-    def _get_run(self, run_id):
-        response = self.api_get("api.run", run_id=run_id)
-        return response.json, response
 
 
 class CompareBenchmarks(Compare):

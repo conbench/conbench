@@ -45,10 +45,8 @@
                 {% for run in runs %}
                 <tr>
                      <td><a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.display_timestamp }}</a></td>
-                     <td>
-                       {{ run.commit.author_name }}
-                     </td>
-                     <td><a href="{{ run.commit.repository }}">{{ run.commit.repository.split("https://github.com/")[1] }}</a></td>
+                     <td>{{ run.commit.author_name }}</td>
+                     <td><a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a></td>
                      <td><a href="{{ run.commit.url }}">{{ run.commit.message }}</a></td>
                      <td>{{ run.commit.display_timestamp }}</td>
                      <td>{{ run.machine.name }}</td>

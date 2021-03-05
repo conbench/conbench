@@ -4,7 +4,7 @@ import wtforms as w
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint
-from ..app._util import augment
+from ..app._util import augment, display_time
 from ..config import Config
 
 
@@ -13,10 +13,8 @@ class DeleteForm(flask_wtf.FlaskForm):
 
 
 class BenchmarkMixin:
-    def _get_full_benchmark(self, benchmark_id):
-        response = self.api_get("api.benchmark", benchmark_id=benchmark_id)
-        benchmark = response.json
-
+    def get_display_benchmark(self, benchmark_id):
+        benchmark, response = self._get_benchmark(benchmark_id)
         if response.status_code != 200:
             self.flash("Error getting benchmark.")
             return None
@@ -31,6 +29,13 @@ class BenchmarkMixin:
 
         return benchmark
 
+    def _get_benchmark(self, benchmark_id):
+        response = self.api_get(
+            "api.benchmark",
+            benchmark_id=benchmark_id,
+        )
+        return response.json, response
+
     def _get_context(self, benchmark):
         response = self.api_get_url(benchmark["links"]["context"])
         if response.status_code != 200:
@@ -44,6 +49,45 @@ class BenchmarkMixin:
             self.flash("Error getting machine.")
             return {}
         return response.json
+
+
+class RunMixin:
+    def get_display_run(self, run_id):
+        run, response = self._get_run(run_id)
+        if response.status_code != 200:
+            self.flash("Error getting run.")
+            return None
+
+        self._augment(run)
+        return run
+
+    def get_display_runs(self):
+        runs, response = self._get_runs()
+        if response.status_code != 200:
+            self.flash("Error getting runs.")
+            return []
+
+        for run in runs:
+            self._augment(run)
+        return runs
+
+    def _augment(self, run):
+        self._display_time(run, "timestamp")
+        self._display_time(run["commit"], "timestamp")
+        repository = run["commit"]["repository"]
+        repository_name = repository.split("github.com/")[1]
+        run["commit"]["display_repository"] = repository_name
+
+    def _display_time(self, obj, field):
+        obj[f"display_{field}"] = display_time(obj[field])
+
+    def _get_run(self, run_id):
+        response = self.api_get("api.run", run_id=run_id)
+        return response.json, response
+
+    def _get_runs(self):
+        response = self.api_get("api.runs")
+        return response.json, response
 
 
 class Benchmark(AppEndpoint, BenchmarkMixin):
@@ -63,7 +107,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin):
         )
 
     def get(self, benchmark_id):
-        benchmark = self._get_full_benchmark(benchmark_id)
+        benchmark = self.get_display_benchmark(benchmark_id)
         return self.page(benchmark, DeleteForm())
 
     def post(self, benchmark_id):
@@ -75,7 +119,10 @@ class Benchmark(AppEndpoint, BenchmarkMixin):
         if form.delete.data:
             # delete button pressed
             if form.validate_on_submit():
-                response = self.api_delete("api.benchmark", benchmark_id=benchmark_id)
+                response = self.api_delete(
+                    "api.benchmark",
+                    benchmark_id=benchmark_id,
+                )
                 if response.status_code == 204:
                     self.flash("Benchmark deleted.")
                     return self.redirect("app.benchmarks")
@@ -87,7 +134,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin):
         if form.errors == csrf:
             self.flash("The CSRF token is missing.")
 
-        benchmark = self._get_full_benchmark(benchmark_id)
+        benchmark = self.get_display_benchmark(benchmark_id)
         return self.page(benchmark, form)
 
 
@@ -95,6 +142,7 @@ class BenchmarkList(AppEndpoint):
     def page(self, benchmarks):
         for benchmark in benchmarks:
             augment(benchmark)
+
         return self.render_template(
             "benchmark-list.html",
             application=Config.APPLICATION_NAME,

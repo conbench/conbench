@@ -106,7 +106,7 @@
             <li class="list-group-item" style="overflow-y: auto;">
               <b>repository</b>
               <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ baseline_run.commit.repository }}">{{ baseline_run.commit.repository.split("https://github.com/")[1] }}</a>
+                <a href="{{ baseline_run.commit.repository }}">{{ baseline_run.commit.display_repository }}</a>
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
@@ -197,7 +197,7 @@
             <li class="list-group-item" style="overflow-y: auto;">
               <b>repository</b>
               <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ contender_run.commit.repository }}">{{ contender_run.commit.repository.split("https://github.com/")[1] }}</a>
+                <a href="{{ contender_run.commit.repository }}">{{ contender_run.commit.display_repository }}</a>
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
