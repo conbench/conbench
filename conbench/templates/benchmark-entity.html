@@ -23,42 +23,97 @@
     <div class="row">
       <div class="col-md-6">
         <ul class="list-group">
-          <li class="list-group-item active">Result</li>
-          {% for k,v in benchmark.stats.items() %}
+          <li class="list-group-item active">Benchmark</li>
             <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
+              <b>run</b>
               <div align="right" style="display:inline-block; float: right;">
-            {% if k == "run_id" %}
-              <a href="{{ url_for('app.run', run_id=v) }}">{{ v }}</a>
-            {% elif k == "batch_id" %}
-              <a href="{{ url_for('app.batch', batch_id=v) }}">{{ v }}</a>
-            {% else %}
-              {{ v }}
-            {% endif %}
+                <a href="{{ url_for('app.run', run_id=benchmark.stats.run_id) }}">{{ benchmark.stats.run_id }}</a>
               </div>
             </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>batch</b>
+              <div align="right" style="display:inline-block; float: right;">
+                <a href="{{ url_for('app.batch', batch_id=benchmark.stats.batch_id ) }}">{{ benchmark.display_batch }}</a>
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>benchmark</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ benchmark.display_name }}
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>mean</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ benchmark.stats.mean }} {{ benchmark.stats.unit }}</a>
+              </div>
+            </li>
+            <li class="list-group-item active">Result</li>
+          {% for k,v in benchmark.stats.items() %}
+            {% if k != "run_id" and k != "batch_id" %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>{{ k }}</b>
+              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+            </li>
+            {% endif %}
           {% endfor %}
-          <li class="list-group-item active">Tags</li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>&nbsp;</b>
+              <div align="right" style="display:inline-block; float: right;">&nbsp;</div>
+            </li>
+            <li class="list-group-item active">Tags</li>
           {% for k,v in benchmark.tags.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
               <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
             </li>
           {% endfor %}
-          <li class="list-group-item active">Machine</li>
-          {% for k,v in benchmark.machine.items() %}
+        </ul>
+      </div>
+
+      <div class="col-md-6">
+        <ul class="list-group">
+            {% if run %}
+            <li class="list-group-item active">Commit</li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>commit</b>
+              <div align="right" style="display:inline-block; float: right;">
+                <a href="{{ run.commit.url }}">{{ run.commit.message }}</a>
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>date</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ run.commit.display_timestamp }}
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>author</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ run.commit.author_name }} &nbsp;
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>repository</b>
+              <div align="right" style="display:inline-block; float: right;">
+                <a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a>
+              </div>
+            </li>
+            {% endif %}
+            <li class="list-group-item active">Machine</li>
+            {% for k,v in benchmark.machine.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
               <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
             </li>
-          {% endfor %}
-          <li class="list-group-item active" >Context</li>
-          {% for k,v in benchmark.context.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-            </li>
-          {% endfor %}
+            {% endfor %}
+            <li class="list-group-item active" >Context</li>
+            {% for k,v in benchmark.context.items() %}
+              <li class="list-group-item" style="overflow-y: auto;">
+                <b>{{ k }}</b>
+                <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+              </li>
+            {% endfor %}
         </ul>
       </div>
     </div>
