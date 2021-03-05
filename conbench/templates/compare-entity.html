@@ -83,6 +83,39 @@
                 <a href="{{ url_for('app.benchmark', benchmark_id=baseline.id) }}">{{ baseline.display_name }}</a>
               </div>
             </li>
+            {% if baseline_run %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>commit</b>
+              <div align="right" style="display:inline-block; float: right;">
+                <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.message }}</a>
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>date</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ baseline_run.commit.display_timestamp }}
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>author</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ baseline_run.commit.author_name }} &nbsp;
+                <image src="{{ baseline_run.commit.author_avatar }}" height="30" style="border-radius: 50%;">
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>repository</b>
+              <div align="right" style="display:inline-block; float: right;">
+                <a href="{{ baseline_run.commit.repository }}">{{ baseline_run.commit.repository.split("https://github.com/")[1] }}</a>
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>machine</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ baseline_run.machine.name }}
+              </div>
+            </li>
+            {% endif %}
           <li class="list-group-item active">Result</li>
           {% for k,v in baseline.stats.items() %}
             {% if k != "run_id" and k != "batch_id" %}
@@ -141,6 +174,39 @@
                 <a href="{{ url_for('app.benchmark', benchmark_id=contender.id) }}">{{ contender.display_name }}</a>
               </div>
             </li>
+            {% if contender_run %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>commit</b>
+              <div align="right" style="display:inline-block; float: right;">
+                <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.message }}</a>
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>date</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ contender_run.commit.display_timestamp }}
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>author</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ contender_run.commit.author_name }} &nbsp;
+                <image src="{{ contender_run.commit.author_avatar }}" height="30" style="border-radius: 50%;">
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>repository</b>
+              <div align="right" style="display:inline-block; float: right;">
+                <a href="{{ contender_run.commit.repository }}">{{ contender_run.commit.repository.split("https://github.com/")[1] }}</a>
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>machine</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ contender_run.machine.name }}
+              </div>
+            </li>
+            {% endif %}
           <li class="list-group-item active">Result</li>
           {% for k,v in contender.stats.items() %}
             {% if k != "run_id" and k != "batch_id" %}

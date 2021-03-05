@@ -46,8 +46,7 @@
                 <tr>
                      <td><a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.display_timestamp }}</a></td>
                      <td>
-                       <image src="{{ run.commit.author_avatar }}" height="30" style="border-radius: 50%;">
-                       &nbsp;&nbsp;{{ run.commit.author_name }}
+                       {{ run.commit.author_name }}
                      </td>
                      <td><a href="{{ run.commit.repository }}">{{ run.commit.repository.split("https://github.com/")[1] }}</a></td>
                      <td><a href="{{ run.commit.url }}">{{ run.commit.message }}</a></td>
