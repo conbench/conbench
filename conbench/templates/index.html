@@ -34,6 +34,7 @@
             <thead>
                 <tr>
                     <th scope="col">Date</th>
+                    <th scope="col">Author</th>
                     <th scope="col">Commit</th>
                     <th scope="col">Machine</th>
                     <th scope="col">Results</th>
@@ -45,6 +46,9 @@
                      <td>{{ run.display_timestamp }}</td>
                      <td>
                        <image src="{{ run.commit.author_avatar }}" height="30" style="border-radius: 50%;">
+                       &nbsp;&nbsp;{{ run.commit.author_name }}
+                     </td>
+                     <td>
                        <a href="{{ run.commit.url }}">{{ run.commit.message }}</a>
                      </td>
                      <td>{{ run.machine.name }}</td>

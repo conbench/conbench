@@ -1,11 +1,11 @@
 class FakeUser1:
-    id = "abc123"
+    id = "some-user-uuid-1"
     name = "Gwen Clarke"
     email = "gwen@example.com"
 
 
 class FakeUser2:
-    id = "xyz123"
+    id = "some-user-uuid-2"
     name = "Casey Clarke"
     email = "casey@example.com"
 
@@ -192,8 +192,8 @@ def _api_context_entity(context_id):
     }
 
 
-def _api_machine_entity(machine_id):
-    return {
+def _api_machine_entity(machine_id, links=True):
+    result = {
         "id": machine_id,
         "architecture_name": "x86_64",
         "cpu_l1d_cache_bytes": 32768,
@@ -213,6 +213,9 @@ def _api_machine_entity(machine_id):
             "self": "http://localhost/api/machines/%s/" % machine_id,
         },
     }
+    if not links:
+        result.pop("links", None)
+    return result
 
 
 def _api_run_entity(run_id, machine_id, commit_id, now):
@@ -220,7 +223,7 @@ def _api_run_entity(run_id, machine_id, commit_id, now):
         "id": run_id,
         "timestamp": now,
         "commit": _api_commit_entity(commit_id),
-        "machine": _api_machine_entity(machine_id),
+        "machine": _api_machine_entity(machine_id, links=False),
         "links": {
             "self": "http://localhost/api/runs/%s/" % run_id,
             "machine": "http://localhost/api/machines/%s/" % machine_id,

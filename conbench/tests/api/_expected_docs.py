@@ -471,7 +471,7 @@
                                 "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
                                 "repository": "https://github.com/apache/arrow",
                                 "sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                "timestamp": "2021-02-24T18:02:51",
+                                "timestamp": "2021-02-25T01:02:51",
                                 "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                             },
                             "id": "some-run-uuid-1",
@@ -491,9 +491,6 @@
                                 "cpu_thread_count": 4,
                                 "id": "some-machine-uuid-1",
                                 "kernel_name": "19.6.0",
-                                "links": {
-                                    "self": "http://localhost/api/machines/some-machine-uuid-1/"
-                                },
                                 "memory_bytes": 17179869184,
                                 "name": "diana",
                                 "os_name": "macOS",
@@ -518,7 +515,7 @@
                                     "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
                                     "repository": "https://github.com/apache/arrow",
                                     "sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                    "timestamp": "2021-02-24T18:02:51",
+                                    "timestamp": "2021-02-25T01:02:51",
                                     "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                                 },
                                 "id": "some-run-uuid-1",
@@ -538,9 +535,6 @@
                                     "cpu_thread_count": 4,
                                     "id": "some-machine-uuid-1",
                                     "kernel_name": "19.6.0",
-                                    "links": {
-                                        "self": "http://localhost/api/machines/some-machine-uuid-1/"
-                                    },
                                     "memory_bytes": 17179869184,
                                     "name": "diana",
                                     "os_name": "macOS",
@@ -557,7 +551,7 @@
                                     "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
                                     "repository": "https://github.com/apache/arrow",
                                     "sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                    "timestamp": "2021-02-24T18:02:51",
+                                    "timestamp": "2021-02-25T01:02:51",
                                     "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                                 },
                                 "id": "some-run-uuid-2",
@@ -577,9 +571,6 @@
                                     "cpu_thread_count": 4,
                                     "id": "some-machine-uuid-1",
                                     "kernel_name": "19.6.0",
-                                    "links": {
-                                        "self": "http://localhost/api/machines/some-machine-uuid-1/"
-                                    },
                                     "memory_bytes": 17179869184,
                                     "name": "diana",
                                     "os_name": "macOS",
@@ -597,10 +588,10 @@
                     "application/json": {
                         "example": {
                             "email": "gwen@example.com",
-                            "id": "abc123",
+                            "id": "some-user-uuid-1",
                             "links": {
                                 "list": "http://localhost/api/users/",
-                                "self": "http://localhost/api/users/abc123/",
+                                "self": "http://localhost/api/users/some-user-uuid-1/",
                             },
                             "name": "Gwen Clarke",
                         }
@@ -613,10 +604,10 @@
                     "application/json": {
                         "example": {
                             "email": "gwen@example.com",
-                            "id": "abc123",
+                            "id": "some-user-uuid-1",
                             "links": {
                                 "list": "http://localhost/api/users/",
-                                "self": "http://localhost/api/users/abc123/",
+                                "self": "http://localhost/api/users/some-user-uuid-1/",
                             },
                             "name": "Gwen Clarke",
                         }
@@ -630,19 +621,19 @@
                         "example": [
                             {
                                 "email": "gwen@example.com",
-                                "id": "abc123",
+                                "id": "some-user-uuid-1",
                                 "links": {
                                     "list": "http://localhost/api/users/",
-                                    "self": "http://localhost/api/users/abc123/",
+                                    "self": "http://localhost/api/users/some-user-uuid-1/",
                                 },
                                 "name": "Gwen Clarke",
                             },
                             {
                                 "email": "casey@example.com",
-                                "id": "xyz123",
+                                "id": "some-user-uuid-2",
                                 "links": {
                                     "list": "http://localhost/api/users/",
-                                    "self": "http://localhost/api/users/xyz123/",
+                                    "self": "http://localhost/api/users/some-user-uuid-2/",
                                 },
                                 "name": "Casey Clarke",
                             },

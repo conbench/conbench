@@ -19,11 +19,15 @@ class Run(Base, EntityMixin):
 
 class _Serializer(EntitySerializer):
     def _dump(self, run):
+        commit = CommitSerializer().one.dump(run.commit)
+        machine = MachineSerializer().one.dump(run.machine)
+        commit.pop("links", None)
+        machine.pop("links", None)
         result = {
             "id": run.id,
             "timestamp": run.timestamp.isoformat(),
-            "commit": CommitSerializer().one.dump(run.commit),
-            "machine": MachineSerializer().one.dump(run.machine),
+            "commit": commit,
+            "machine": machine,
             "links": {
                 "self": f.url_for("api.run", run_id=run.id, _external=True),
                 "machine": f.url_for(
