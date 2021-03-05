@@ -16,6 +16,7 @@ def configure_engine(url):
         future=True,
         echo=False,
         pool_pre_ping=True,
+        connect_args={"options": "-c timezone=utc"},
     )
     session_maker.configure(bind=engine)
 

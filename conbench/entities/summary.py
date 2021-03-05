@@ -102,7 +102,6 @@ class Summary(Base, EntityMixin):
                     "author_avatar": github["author_avatar"],
                 }
             )
-        print(commit.timestamp)
 
         # create if not exists
         run_id = data["stats"]["run_id"]
