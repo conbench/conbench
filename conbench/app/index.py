@@ -4,10 +4,15 @@ from ..app._util import display_time
 from ..config import Config
 
 
+def _display_time(obj, field):
+    obj[f"display_{field}"] = display_time(obj[field])
+
+
 class Index(AppEndpoint):
     def page(self, runs):
         for run in runs:
-            run["display_timestamp"] = display_time(run["timestamp"])
+            _display_time(run, "timestamp")
+            _display_time(run["commit"], "timestamp")
         return self.render_template(
             "index.html",
             application=Config.APPLICATION_NAME,
