@@ -26,6 +26,8 @@ class Commit(Base, EntityMixin):
 
 class _Serializer(EntitySerializer):
     def _dump(self, commit):
+        print(commit.timestamp)
+        print(commit.timestamp.isoformat())
         return {
             "id": commit.id,
             "sha": commit.sha,
@@ -45,6 +47,8 @@ class CommitSerializer:
 
 
 def parse_commit(commit):
+    print(commit["commit"]["author"]["date"])
+    print(dateutil.parser.isoparse(commit["commit"]["author"]["date"]))
     return {
         "url": commit["html_url"],
         "date": dateutil.parser.isoparse(commit["commit"]["author"]["date"]),
