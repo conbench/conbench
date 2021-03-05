@@ -1,4 +1,5 @@
 import copy
+import pprint
 
 from ...api._errors import ErrorSchema, BadRequestSchema
 from ...tests.helpers import _create_fixture_user, create_random_user
@@ -25,6 +26,11 @@ class ApiEndpointTest:
         assert r.status_code == 200, r.status_code
         assert r.content_type == "application/json", r.content_type
         if expected:
+            print(50 * "-")
+            pprint.pprint(r.json)
+            print(50 * "-")
+            pprint.pprint(expected)
+            print(50 * "-")
             assert r.json == expected, r.json
         if contains:
             assert contains in r.json
