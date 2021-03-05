@@ -7,7 +7,11 @@ from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
 def _expected_entity(run):
-    return _api_run_entity(run.id, run.machine_id)
+    return _api_run_entity(
+        run.id,
+        run.machine_id,
+        run.timestamp.isoformat(),
+    )
 
 
 def create_benchmark_summary():

@@ -85,6 +85,7 @@ def _api_benchmark_entity(
             "self": "http://localhost/api/benchmarks/%s/" % summary_id,
             "context": "http://localhost/api/contexts/%s/" % context_id,
             "machine": "http://localhost/api/machines/%s/" % machine_id,
+            "run": "http://localhost/api/runs/%s/" % run_id,
         },
     }
 
@@ -200,9 +201,10 @@ def _api_machine_entity(machine_id):
     }
 
 
-def _api_run_entity(run_id, machine_id):
+def _api_run_entity(run_id, machine_id, now):
     return {
         "id": run_id,
+        "timestamp": now,
         "links": {
             "self": "http://localhost/api/runs/%s/" % run_id,
             "machine": "http://localhost/api/machines/%s/" % machine_id,
@@ -259,10 +261,22 @@ COMPARE_LIST = _api_compare_list(
 )
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
 MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1")
-RUN_ENTITY = _api_run_entity("some-run-uuid-1", "some-machine-uuid-1")
+RUN_ENTITY = _api_run_entity(
+    "some-run-uuid-1",
+    "some-machine-uuid-1",
+    "2021-02-04T17:22:05.225583",
+)
 RUN_LIST = [
-    _api_run_entity("some-run-uuid-1", "some-machine-uuid-1"),
-    _api_run_entity("some-run-uuid-2", "some-machine-uuid-1"),
+    _api_run_entity(
+        "some-run-uuid-1",
+        "some-machine-uuid-1",
+        "2021-02-04T17:22:05.225583",
+    ),
+    _api_run_entity(
+        "some-run-uuid-2",
+        "some-machine-uuid-1",
+        "2021-03-04T17:18:05.715583",
+    ),
 ]
 USER_ENTITY = _api_user_entity(FakeUser1())
 USER_LIST = [

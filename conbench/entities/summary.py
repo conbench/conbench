@@ -205,6 +205,7 @@ class _Serializer(EntitySerializer):
                 "machine": f.url_for(
                     "api.machine", machine_id=summary.machine_id, _external=True
                 ),
+                "run": f.url_for("api.run", run_id=summary.run_id, _external=True),
             },
         }
 

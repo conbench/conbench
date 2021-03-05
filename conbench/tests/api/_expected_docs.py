@@ -51,6 +51,7 @@
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "list": "http://localhost/api/benchmarks/",
                                 "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
                             "stats": {
@@ -120,6 +121,7 @@
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "list": "http://localhost/api/benchmarks/",
                                 "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
                             "stats": {
@@ -190,6 +192,7 @@
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                     "list": "http://localhost/api/benchmarks/",
                                     "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                    "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                                 },
                                 "stats": {
@@ -252,6 +255,7 @@
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                     "list": "http://localhost/api/benchmarks/",
                                     "machine": "http://localhost/api/machines/some-machine-uuid-1/",
+                                    "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-2/",
                                 },
                                 "stats": {
@@ -464,6 +468,7 @@
                                 "machine": "http://localhost/api/machines/some-machine-uuid-1/",
                                 "self": "http://localhost/api/runs/some-run-uuid-1/",
                             },
+                            "timestamp": "2021-02-04T17:22:05.225583",
                         }
                     }
                 },
@@ -479,6 +484,7 @@
                                     "machine": "http://localhost/api/machines/some-machine-uuid-1/",
                                     "self": "http://localhost/api/runs/some-run-uuid-1/",
                                 },
+                                "timestamp": "2021-02-04T17:22:05.225583",
                             },
                             {
                                 "id": "some-run-uuid-2",
@@ -486,6 +492,7 @@
                                     "machine": "http://localhost/api/machines/some-machine-uuid-1/",
                                     "self": "http://localhost/api/runs/some-run-uuid-2/",
                                 },
+                                "timestamp": "2021-03-04T17:18:05.715583",
                             },
                         ]
                     }
