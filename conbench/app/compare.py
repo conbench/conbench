@@ -113,7 +113,7 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
                 c["compare_batches_url"] = f.url_for(view, compare_ids=compare)
 
                 c["change"] = float(c["change"][:-1])
-                if c["less_is_better"]:
+                if c["less_is_better"] and c["change"] != 0:
                     c["change"] = c["change"] * -1
 
         return comparisons
