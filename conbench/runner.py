@@ -80,6 +80,8 @@ class Conbench(Connection):
 
     def benchmark(self, f, name, tags, context, run, options):
         iterations, gc_collect, gc_disable = self._get_options(options)
+        if iterations < 1:
+            raise ValueError(f"Invalid iterations: {iterations}")
 
         if gc_collect:
             gc.collect()
@@ -140,7 +142,7 @@ class Conbench(Connection):
         self.batch_id = uuid.uuid4().hex
 
     def _get_timing(self, f, iterations):
-        times = []
+        times, output = [], None
         for _ in range(iterations):
             iteration_start = time.time()
             output = f()
@@ -158,6 +160,9 @@ class Conbench(Connection):
 
         def _format(f, data, min_length=0):
             return fmt.format(f(data)) if len(data) > min_length else 0
+
+        if not data:
+            raise ValueError(f"Invalid data: {data}")
 
         q1, q3 = np.percentile(data, [25, 75])
 

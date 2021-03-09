@@ -97,9 +97,12 @@ class Connection:
 
     def _unexpected_response(self, method, response, url):
         self._print_error(f"\n{method} {url} failed", red=True)
-        message = json.loads(response.content)
         if response.content:
-            self._print_error(f"{json.dumps(message, indent=2)}\n")
+            try:
+                message = json.loads(response.content)
+                self._print_error(f"{json.dumps(message, indent=2)}\n")
+            except json.JSONDecodeError:
+                self._print_error(f"{response.content}\n")
         self.session = None
 
     def _print_error(self, msg, red=False):
