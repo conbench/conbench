@@ -125,13 +125,3 @@ def test_runner_with_cases():
     assert result["stats"]["iterations"] == 10
     assert len(result["stats"]["data"]) == 10
     assert result["context"]["benchmark_language"] == "Python"
-
-
-def test_runner_with_cases_when_hostname_env_var_present(monkeypatch):
-    hostname = "test-hostname"
-    monkeypatch.setenv("HOSTNAME", hostname)
-    benchmark = WithCasesBenchmark()
-    case = ("pink", "apple")
-    [(result, output)] = benchmark.run("sample", case=case)
-    assert not BenchmarkFacadeSchema.create.validate(result)
-    assert result["machine_info"]["name"] == hostname

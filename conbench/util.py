@@ -117,6 +117,7 @@ class Config:
         url = config.get("url", "http://localhost:5000")
         email = config.get("email", "conbench@example.com")
         password = config.get("password", "conbench")
+        self.host_name = config.get("host_name")
         self.login_url = urllib.parse.urljoin(url, "api/login/")
         self.benchmarks_url = urllib.parse.urljoin(url, "api/benchmarks/")
         self.compare_url = urllib.parse.urljoin(url, "api/compare/")
