@@ -25,4 +25,11 @@ setuptools.setup(
     maintainer="Apache Arrow Developers",
     maintainer_email="dev@arrow.apache.org",
     url="https://github.com/ursa-labs/conbench",
+    install_requires=[
+        "click",
+        "psutil",
+        "py-cpuinfo",
+        "PyYAML",
+        "requests",
+    ],
 )
