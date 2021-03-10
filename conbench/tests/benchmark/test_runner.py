@@ -125,13 +125,3 @@ def test_runner_with_cases():
     assert result["stats"]["iterations"] == 10
     assert len(result["stats"]["data"]) == 10
     assert result["context"]["benchmark_language"] == "Python"
-
-
-def test_runner_with_cases_when_host_name_is_set_in_conbench_config():
-    hostname = "test-hostname"
-    benchmark = WithCasesBenchmark()
-    benchmark.conbench.config.host_name = "test-hostname"
-    case = ("pink", "apple")
-    [(result, output)] = benchmark.run("sample", case=case)
-    assert not BenchmarkFacadeSchema.create.validate(result)
-    assert result["machine_info"]["name"] == hostname
