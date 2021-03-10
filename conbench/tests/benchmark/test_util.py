@@ -7,6 +7,7 @@ CONFIG = b"""
 url: https://conbench.io
 email: cole@example.com
 password: woofwoof
+host_name: machine100
 """
 
 
@@ -19,6 +20,7 @@ def test_get_config():
             "email": "cole@example.com",
             "password": "woofwoof",
             "url": "https://conbench.io",
+            "host_name": "machine100"
         }
 
 
@@ -28,6 +30,7 @@ def test_default_config():
     assert config.benchmarks_url == "http://localhost:5000/api/benchmarks/"
     credentials = {"email": "conbench@example.com", "password": "conbench"}
     assert config.credentials == credentials
+    assert not config.host_name
 
 
 def test_custom_config():
@@ -35,9 +38,11 @@ def test_custom_config():
         "email": "cole@example.com",
         "password": "woofwoof",
         "url": "https://conbench.io",
+        "host_name": "machine100"
     }
     config = Config(custom)
     assert config.login_url == "https://conbench.io/api/login/"
     assert config.benchmarks_url == "https://conbench.io/api/benchmarks/"
     credentials = {"email": "cole@example.com", "password": "woofwoof"}
     assert config.credentials == credentials
+    assert config.host_name == "machine100"

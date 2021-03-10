@@ -62,13 +62,11 @@ def language():
     }
 
 
-def machine_info():
+def machine_info(host_name):
     os_name, os_version = platform.platform(terse=1).split("-", maxsplit=1)
 
-    # When benchmarks are run inside of a docker container,
-    # platform.node() = docker container id (e.g., 56e4b0ac0fa9), so
-    # HOSTNAME env var trumps platform.node() when present.
-    host_name = os.getenv("HOSTNAME", platform.node())
+    if not host_name:
+        host_name = platform.node()
 
     info = {
         "name": host_name,

@@ -74,7 +74,7 @@ class Benchmark(abc.ABC):
 class Conbench(Connection):
     def __init__(self):
         super().__init__()
-        self.machine_info = machine_info()
+        self.machine_info = machine_info(self.config.host_name)
         self.language = language()
         self.batch_id = uuid.uuid4().hex
 
