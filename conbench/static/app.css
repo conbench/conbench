@@ -58,41 +58,6 @@ table.dataTable thead .sorting_desc {
   background-color: #282828;
 }
 
-.ellipsis-100 {
-  width: 100px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.ellipsis-200 {
-  width: 200px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.ellipsis-300 {
-  width: 300px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.ellipsis-400 {
-  width: 400px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.ellipsis-600 {
-  width: 600px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
 .carousel-control.left,.carousel-control.right {
   background:none;
   width:30px;

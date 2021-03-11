@@ -67,10 +67,10 @@
                 <tr>
                      <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
                      <td style="white-space: nowrap;">
-                         <div class="ellipsis-200">{{ benchmark.display_batch }}</div>
+                         <div>{{ benchmark.display_batch }}</div>
                      </td>
                      <td><a href="{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}">
-                         <div class="ellipsis-300">{{ benchmark.display_name }}</div>
+                         <div>{{ benchmark.display_name }}</div>
                      </a></td>
                      <td>{{ benchmark.display_mean }}</td>
                 </tr>

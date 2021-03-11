@@ -20,7 +20,7 @@ def test_get_config():
             "email": "cole@example.com",
             "password": "woofwoof",
             "url": "https://conbench.io",
-            "host_name": "machine100"
+            "host_name": "machine100",
         }
 
 
@@ -38,7 +38,7 @@ def test_custom_config():
         "email": "cole@example.com",
         "password": "woofwoof",
         "url": "https://conbench.io",
-        "host_name": "machine100"
+        "host_name": "machine100",
     }
     config = Config(custom)
     assert config.login_url == "https://conbench.io/api/login/"

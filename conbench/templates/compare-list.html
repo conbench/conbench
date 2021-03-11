@@ -39,8 +39,8 @@
                 <thead>
                     <tr>
                         <th scope="col">Change</th>
-                        <th scope="col">Benchmark</th>
                         <th scope="col">Batch</th>
+                        <th scope="col">Benchmark</th>
                         <th scope="col">Baseline</th>
                         <th scope="col">Contender</th>
                     </tr>
@@ -50,25 +50,25 @@
                     <tr>
                          <td>{{ c.change }}%</td>
                          <td>
-                           {% if c.contender is not none and c.baseline is not none %}
-                             <a href="{{ c.compare_benchmarks_url }}">
-                               <div class="ellipsis-300">{{ c.benchmark}}</div>
-                             </a>
-                           {% else %}
-                             <div class="ellipsis-300">{{ c.benchmark}}</div>
-                           {% endif %}
-                         </td>
-                         <td>
                            {% if type == "batch" %}
-                             <div class="ellipsis-300">{{ c.batch }}</div>
+                             <div>{{ c.batch }}</div>
                            {% else %}
                              {% if c.contender is not none and c.baseline is not none %}
                                <a href="{{ c.compare_batches_url }}">
-                                 <div class="ellipsis-300">{{ c.batch }}</div>
+                                 <div>{{ c.batch }}</div>
                                </a>
                              {% else %}
-                               <div class="ellipsis-300">{{ c.batch }}</div>
+                               <div>{{ c.batch }}</div>
                              {% endif %}
+                           {% endif %}
+                         </td>
+                         <td>
+                           {% if c.contender is not none and c.baseline is not none %}
+                             <a href="{{ c.compare_benchmarks_url }}">
+                               <div>{{ c.benchmark}}</div>
+                             </a>
+                           {% else %}
+                             <div>{{ c.benchmark}}</div>
                            {% endif %}
                          </td>
                          {% if c.baseline is none %}
