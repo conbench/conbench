@@ -2,7 +2,7 @@ import json
 
 import click
 
-from .runner import REGISTRY
+from .runner import REGISTRY, LIST
 from .util import Connection, register_benchmarks
 
 
@@ -53,6 +53,15 @@ def compare(baseline, contender, kind, threshold):
     print(json.dumps(result, indent=2))
 
 
+@conbench.command(name="list")
+def list_benchmarks():
+    """List of registered benchmarks to run (for orchestration)."""
+    benchmarks = []
+    if LIST:
+        benchmarks = LIST[0]().list(BENCHMARKS)
+    print(json.dumps(benchmarks, indent=2))
+
+
 def _option(params, name, default, _type, help_msg=None):
     params.append(
         click.Option(
@@ -100,8 +109,8 @@ for name, benchmark in BENCHMARKS.items():
 
     instance = benchmark()
     fields, cases = instance.fields, instance.cases
-    options = benchmark.options if hasattr(benchmark, "options") else {}
-    arguments = benchmark.arguments if hasattr(benchmark, "arguments") else []
+    options = getattr(benchmark, "options", {})
+    arguments = getattr(benchmark, "arguments", [])
     tags = [_to_cli_name(tag) for tag in fields]
     external = getattr(benchmark, "external", False)
 

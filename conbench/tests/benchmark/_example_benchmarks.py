@@ -1,6 +1,19 @@
 import conbench.runner
 
 
+@conbench.runner.register_list
+class BenchmarkList(conbench.runner.BenchmarkList):
+    def list(self, classes):
+        benchmarks = []
+        for name, benchmark in classes.items():
+            instance, parts = benchmark(), [name]
+            if instance.cases:
+                parts.append("--all=true")
+            parts.append(f"--iterations=2")
+            benchmarks.append({"command": " ".join(parts)})
+        return sorted(benchmarks, key=lambda k: k["command"])
+
+
 @conbench.runner.register_benchmark
 class WithoutCasesBenchmark(conbench.runner.Benchmark):
     name = "addition"
