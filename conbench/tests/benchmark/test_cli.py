@@ -14,7 +14,19 @@ Options:
 Commands:
   addition     Run addition benchmark.
   compare      Compare benchmark runs.
+  list         List of registered benchmarks to run (for orchestration).
   subtraction  Run subtraction benchmark(s).
+"""
+
+CONBENCH_LIST = """
+[
+  {
+    "command": "addition --iterations=2"
+  },
+  {
+    "command": "subtraction --all=true --iterations=2"
+  }
+]
 """
 
 
@@ -197,6 +209,13 @@ def test_conbench_command_with_cases_help(runner):
 
     result = runner.invoke(conbench, "subtraction --help")
     assert_command_output(result, CONBENCH_SUBTRACTION_HELP)
+
+
+def test_conbench_list(runner):
+    from conbench.cli import conbench
+
+    result = runner.invoke(conbench, "list")
+    assert_command_output(result, CONBENCH_LIST)
 
 
 def test_conbench_compare(runner):

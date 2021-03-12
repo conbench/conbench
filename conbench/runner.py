@@ -13,10 +13,17 @@ from .util import Connection
 
 
 REGISTRY = []
+LIST = []
 
 
 def register_benchmark(cls):
     REGISTRY.append(cls)
+    return cls
+
+
+def register_list(cls):
+    if not LIST:
+        LIST.append(cls)
     return cls
 
 
@@ -69,6 +76,12 @@ class Benchmark(abc.ABC):
             invalid_case = dict(zip(self.fields, case))
             raise ValueError(f"Invalid case: {invalid_case}")
         return case
+
+
+class BenchmarkList(abc.ABC):
+    @abc.abstractmethod
+    def list(self, classes):
+        pass
 
 
 class Conbench(Connection):

@@ -156,19 +156,25 @@ def register_benchmarks(directory=None):
     """Look for files matching the following patterns in the current
     working directory and import them.
 
-        bench_*.py
-        benchmark_*.py
-        *_bench.py
-        *_benchmark.py
-        *_benchmarks.py
+        benchmark*.py
+        *benchmark.py
+        *benchmarks.py
 
     This registers benchmarks that are decorated as conbench benchmarks.
 
         import conbench.runner
 
         @conbench.runner.register_benchmark
-        class ExampleBenchmark():
-            name = "example"
+        class ExampleBenchmark:
+            ...
+
+    It also registers the benchmark list class.
+
+        import conbench.runner
+
+        @conbench.runner.register_list
+        class ExampleBenchmarkList:
+            ...
     """
     if directory is None:
         directory = os.getcwd()
@@ -182,11 +188,9 @@ def register_benchmarks(directory=None):
             ):
                 continue
             if (
-                filename.startswith("bench_")
-                or filename.startswith("benchmark_")
-                or filename.endswith("_bench.py")
-                or filename.endswith("_benchmark.py")
-                or filename.endswith("_benchmarks.py")
+                filename.startswith("benchmark")
+                or filename.endswith("benchmark.py")
+                or filename.endswith("benchmarks.py")
             ):
                 import_module(directory, filename)
 
