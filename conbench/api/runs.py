@@ -47,7 +47,7 @@ class RunListAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        runs = Run.all()
+        runs = Run.all(order_by=Run.timestamp.desc(), limit=500)
         return self.serializer.many.dump(runs)
 
 

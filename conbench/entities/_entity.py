@@ -35,8 +35,15 @@ class EntityMixin:
         return q.filter(*filters).all()
 
     @classmethod
-    def all(cls, **kwargs):
-        return Session.query(cls).filter_by(**kwargs).all()
+    def all(cls, limit=None, order_by=None, **kwargs):
+        query = Session.query(cls)
+        if kwargs:
+            query = query.filter_by(**kwargs)
+        if order_by is not None:
+            query = query.order_by(order_by)
+        if limit is not None:
+            query = query.limit(limit)
+        return query.all()
 
     @classmethod
     def get(cls, _id):
