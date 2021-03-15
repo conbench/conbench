@@ -8,6 +8,7 @@ from ..entities._entity import (
     EntitySerializer,
     generate_uuid,
     NotNull,
+    Nullable,
 )
 
 
@@ -19,8 +20,8 @@ class Commit(Base, EntityMixin):
     url = NotNull(s.String(250))
     message = NotNull(s.String(250))
     author_name = NotNull(s.String(100))
-    author_login = NotNull(s.String(50))
-    author_avatar = NotNull(s.String(100))
+    author_login = Nullable(s.String(50))
+    author_avatar = Nullable(s.String(100))
     timestamp = NotNull(s.DateTime(timezone=False))
 
 
@@ -50,6 +51,6 @@ def parse_commit(commit):
         "date": dateutil.parser.isoparse(commit["commit"]["author"]["date"]),
         "message": commit["commit"]["message"].split("\n")[0],
         "author_name": commit["commit"]["author"]["name"],
-        "author_login": commit["author"]["login"],
-        "author_avatar": commit["author"]["avatar_url"],
+        "author_login": commit["author"]["login"] if commit["author"] else None,
+        "author_avatar": commit["author"]["avatar_url"] if commit["author"] else None,
     }

@@ -14,7 +14,7 @@ from requests.packages.urllib3.util.retry import Retry
 
 retry_strategy = Retry(
     total=5,
-    status_forcelist=[500, 502, 503, 504],
+    status_forcelist=[502, 503, 504],
     allowed_methods=frozenset(["GET", "POST"]),
     backoff_factor=4,  # will retry in 2, 4, 8, 16, 32 seconds
 )
