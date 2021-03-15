@@ -8,7 +8,7 @@ from ..entities._entity import (
     EntitySerializer,
     generate_uuid,
     NotNull,
-    Nullable
+    Nullable,
 )
 
 
