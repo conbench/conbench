@@ -50,6 +50,6 @@ def parse_commit(commit):
         "date": dateutil.parser.isoparse(commit["commit"]["author"]["date"]),
         "message": commit["commit"]["message"].split("\n")[0],
         "author_name": commit["commit"]["author"]["name"],
-        "author_login": commit["author"]["login"],
-        "author_avatar": commit["author"]["avatar_url"],
+        "author_login": commit["author"]["login"] if commit["author"] else None,
+        "author_avatar": commit["author"]["avatar_url"] if commit["author"] else None,
     }
