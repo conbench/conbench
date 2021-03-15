@@ -99,8 +99,10 @@
             <li class="list-group-item" style="overflow-y: auto;">
               <b>author</b>
               <div align="right" style="display:inline-block; float: right;">
-                {{ baseline_run.commit.author_name }} &nbsp;
-                <image src="{{ baseline_run.commit.author_avatar }}" height="30" style="border-radius: 50%;">
+                {{ baseline_run.commit.author_name }}
+                {% if baseline_run.commit.author_avatar %}
+                  &nbsp; <image src="{{ baseline_run.commit.author_avatar }}" height="30" style="border-radius: 50%;">
+                {% endif %}
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
@@ -190,8 +192,10 @@
             <li class="list-group-item" style="overflow-y: auto;">
               <b>author</b>
               <div align="right" style="display:inline-block; float: right;">
-                {{ contender_run.commit.author_name }} &nbsp;
-                <image src="{{ contender_run.commit.author_avatar }}" height="30" style="border-radius: 50%;">
+                {{ contender_run.commit.author_name }}
+                {% if contender_run.commit.author_avatar %}
+                  &nbsp; <image src="{{ contender_run.commit.author_avatar }}" height="30" style="border-radius: 50%;">
+                {% endif %}
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">

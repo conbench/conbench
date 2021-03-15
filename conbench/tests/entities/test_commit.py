@@ -27,6 +27,24 @@ def test_parse_commit():
     assert parse_commit(commit) == expected
 
 
+def test_parse_commit_no_author():
+    path = os.path.join(this_dir, "github_commit_no_author.json")
+    with open(path) as f:
+        commit = json.load(f)
+    tz = dateutil.tz.tzutc()
+    message = "Move benchmark tests (so CI runs them)"
+    sha = "02addad336ba19a654f9c857ede546331be7b631"
+    expected = {
+        "url": f"https://github.com/apache/arrow/commit/{sha}",
+        "message": f"ARROW-11771: [Developer][Archery] {message}",
+        "date": datetime.datetime(2021, 2, 25, 1, 2, 51, tzinfo=tz),
+        "author_name": "Diana Clarke",
+        "author_login": None,
+        "author_avatar": None,
+    }
+    assert parse_commit(commit) == expected
+
+
 def test_parse_pull_request_commit():
     path = os.path.join(this_dir, "github_pull_request_commit.json")
     with open(path) as f:

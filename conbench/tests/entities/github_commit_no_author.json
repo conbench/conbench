@@ -1,0 +1,79 @@
+{
+  "sha": "02addad336ba19a654f9c857ede546331be7b631",
+  "node_id": "MDY6Q29tbWl0NTE5MDUzNTM6MDJhZGRhZDMzNmJhMTlhNjU0ZjljODU3ZWRlNTQ2MzMxYmU3YjYzMQ==",
+  "commit": {
+    "author": {
+      "name": "Diana Clarke",
+      "email": "diana.joan.clarke@gmail.com",
+      "date": "2021-02-25T01:02:51Z"
+    },
+    "committer": {
+      "name": "Sutou Kouhei",
+      "email": "kou@clear-code.com",
+      "date": "2021-02-25T01:02:51Z"
+    },
+    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)\n\nI recently added additional tests to:\n\nhttps://github.com/apache/arrow/blob/master/dev/archery/tests/test_benchmarks.py\n\nBut just noticed that they aren't actually being executed by CI (because they aren't in the expected location):\n\n```\n      - name: Archery Unittests\n        working-directory: dev/archery\n        run: pytest -v archery\n```\n\nHere you can see them running now.\n\n<img width=\"866\" alt=\"archery_tests\" src=\"https://user-images.githubusercontent.com/878798/109078651-ed2bd700-76ba-11eb-910e-1fa9fb6308ec.png\">\n\nCloses #9564 from dianaclarke/ARROW-11771\n\nAuthored-by: Diana Clarke <diana.joan.clarke@gmail.com>\nSigned-off-by: Sutou Kouhei <kou@clear-code.com>",
+    "tree": {
+      "sha": "0d9231aad5e9c5d60bada2ca7ff20aa07b8ab0e6",
+      "url": "https://api.github.com/repos/apache/arrow/git/trees/0d9231aad5e9c5d60bada2ca7ff20aa07b8ab0e6"
+    },
+    "url": "https://api.github.com/repos/apache/arrow/git/commits/02addad336ba19a654f9c857ede546331be7b631",
+    "comment_count": 0,
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null
+    }
+  },
+  "url": "https://api.github.com/repos/apache/arrow/commits/02addad336ba19a654f9c857ede546331be7b631",
+  "html_url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+  "comments_url": "https://api.github.com/repos/apache/arrow/commits/02addad336ba19a654f9c857ede546331be7b631/comments",
+  "author": null,
+  "committer": {
+    "login": "kou",
+    "id": 27350,
+    "node_id": "MDQ6VXNlcjI3MzUw",
+    "avatar_url": "https://avatars.githubusercontent.com/u/27350?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/kou",
+    "html_url": "https://github.com/kou",
+    "followers_url": "https://api.github.com/users/kou/followers",
+    "following_url": "https://api.github.com/users/kou/following{/other_user}",
+    "gists_url": "https://api.github.com/users/kou/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/kou/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/kou/subscriptions",
+    "organizations_url": "https://api.github.com/users/kou/orgs",
+    "repos_url": "https://api.github.com/users/kou/repos",
+    "events_url": "https://api.github.com/users/kou/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/kou/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "parents": [
+    {
+      "sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+      "url": "https://api.github.com/repos/apache/arrow/commits/4beb514d071c9beec69b8917b5265e77ade22fb3",
+      "html_url": "https://github.com/apache/arrow/commit/4beb514d071c9beec69b8917b5265e77ade22fb3"
+    }
+  ],
+  "stats": {
+    "total": 0,
+    "additions": 0,
+    "deletions": 0
+  },
+  "files": [
+    {
+      "sha": "b763ea3c86fba324cf4155a8473940d48c738599",
+      "filename": "dev/archery/archery/tests/test_benchmarks.py",
+      "status": "renamed",
+      "additions": 0,
+      "deletions": 0,
+      "changes": 0,
+      "blob_url": "https://github.com/apache/arrow/blob/02addad336ba19a654f9c857ede546331be7b631/dev/archery/archery/tests/test_benchmarks.py",
+      "raw_url": "https://github.com/apache/arrow/raw/02addad336ba19a654f9c857ede546331be7b631/dev/archery/archery/tests/test_benchmarks.py",
+      "contents_url": "https://api.github.com/repos/apache/arrow/contents/dev/archery/archery/tests/test_benchmarks.py?ref=02addad336ba19a654f9c857ede546331be7b631",
+      "previous_filename": "dev/archery/tests/test_benchmarks.py"
+    }
+  ]
+}
