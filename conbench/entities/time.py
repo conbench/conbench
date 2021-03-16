@@ -12,4 +12,4 @@ class Time(Base, EntityMixin):
     result = NotNull(s.Numeric, check("result>=0"))
 
 
-s.Index("ix_time_summary_id", Time.summary_id)
+s.Index("time_summary_id_index", Time.summary_id)

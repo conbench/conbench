@@ -12,4 +12,4 @@ class Data(Base, EntityMixin):
     result = NotNull(s.Numeric, check("result>=0"))
 
 
-s.Index("ix_data_summary_id", Data.summary_id)
+s.Index("data_summary_id_index", Data.summary_id)
