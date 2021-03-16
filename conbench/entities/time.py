@@ -10,3 +10,6 @@ class Time(Base, EntityMixin):
     summary_id = NotNull(s.String(50), s.ForeignKey("summary.id", ondelete="CASCADE"))
     iteration = NotNull(s.Integer, check("iteration>=1"))
     result = NotNull(s.Numeric, check("result>=0"))
+
+
+s.Index("time_summary_id_index", Time.summary_id)
