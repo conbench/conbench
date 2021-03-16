@@ -2,6 +2,7 @@ import importlib.util
 import json
 import os
 import sys
+import time
 import urllib.parse
 import yaml
 
@@ -72,7 +73,9 @@ class Connection:
             if not self.session:
                 self.session = requests.Session()
                 self.session.mount("https://", adapter)
+            start = time.time()
             response = self.session.post(url, json=data)
+            print("Time to POST ", url, time.time() - start)
             if response.status_code != expected:
                 self._unexpected_response("POST", response, url)
         except requests.exceptions.ConnectionError:
