@@ -171,6 +171,8 @@ def _meminfo(info):
 
 def _fill_from_cpuinfo(info, cpu_info):
     for key, lookup in CPUINFO_MAPPING.items():
+        if lookup not in cpu_info:
+            continue
         try:
             if not info[key]:
                 if key == "cpu_model_name":
@@ -200,6 +202,8 @@ def _fill_from_lscpu(info, parts):
             lscpu_dict[k.strip()] = v.strip()
 
     for key, lookup in LSCPU_MAPPING.items():
+        if lookup not in lscpu_dict:
+            continue
         try:
             if not info[key]:
                 if lookup.endswith("MHz"):
@@ -219,6 +223,8 @@ def _fill_from_meminfo(info, parts):
             meminfo_dict[k.strip()] = v.strip().split(" ")[0]
 
     for key, lookup in MEMINFO_MAPPING.items():
+        if lookup not in meminfo_dict:
+            continue
         try:
             if not info[key]:
                 info[key] = int(float(meminfo_dict[lookup]) * 1000)
