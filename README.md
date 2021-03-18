@@ -6,9 +6,46 @@
 
 # Conbench
 
-<b>Language-independent Continuous Benchmarking (CB) Framework</b>
-<br/>
-<br/>
+
+<img src="https://github.com/ursacomputing/conbench/blob/main/conbench.png" alt="Language-independent Continuous Benchmarking (CB) Framework">
+
+
+Conbench allows you to write benchmarks in any language, publish the
+results as JSON via an API, and persist them for comparison while
+iterating on performance improvements or to guard against regressions.
+
+Conbench includes a runner which can be used as a stand-alone library
+for traditional benchmark authoring. The runner will time a unit of
+work, collect machine information that may be relevant for hardware
+specific optimizations, and return JSON formatted results.
+
+You can optionally host a Conbench server (API & dashboard) to share
+benchmark results more widely, explore the changes over time, and
+compare results across varying benchmark machines, languages, and cases.
+
+There is also a Conbench command line interface, useful for Continuous
+Benchmarking (CB) orchestration alongside your development pipeline.
+
+
+<p align="center">
+    <img src="https://arrow.apache.org/img/arrow.png" alt="Apache Arrow" height="100">
+</p>
+
+
+The [Apache Arrow](https://arrow.apache.org/) project is using Conbench
+for Continuous Benchmarking. They have both native Python Conbench
+benchmarks, and Conbench benchmarks written in Python that know how to
+execute their external C++ and R benchmarks and record those results
+too. Those benchmarks can be found in the
+[ursacomputing/benchmarks](https://github.com/ursacomputing/benchmarks)
+repository, and the results are hosted on the
+[Arrow Conbench Server](https://conbench.ursa.dev/).
+
+
+<hr>
+
+
+## Contributing
 
 
 ### Create workspace
