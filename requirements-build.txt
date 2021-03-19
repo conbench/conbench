@@ -20,4 +20,4 @@ py-cpuinfo
 python-dotenv
 PyYAML
 requests
-SQLAlchemy>=1.4.0b1
+SQLAlchemy
