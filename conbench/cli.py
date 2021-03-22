@@ -3,7 +3,7 @@ import json
 import click
 
 from .runner import REGISTRY, LIST
-from .util import Connection, register_benchmarks
+from .util import register_benchmarks
 
 
 register_benchmarks()
@@ -24,38 +24,9 @@ def conbench():
     pass
 
 
-@conbench.command(name="compare")
-@click.argument("baseline")
-@click.argument("contender")
-@click.option(
-    "--kind",
-    default="batch",
-    show_default=True,
-    type=click.Choice(["batch", "benchmark", "run"], case_sensitive=False),
-)
-@click.option(
-    "--threshold",
-    default=5,
-    show_default=True,
-    type=int,
-    help="(percent)",
-)
-def compare(baseline, contender, kind, threshold):
-    """Compare benchmark runs."""
-
-    connection = Connection()
-    if kind == "batch":
-        result = connection.compare_batches(baseline, contender, threshold)
-    elif kind == "benchmark":
-        result = connection.compare_benchmarks(baseline, contender, threshold)
-    elif kind == "run":
-        result = connection.compare_runs(baseline, contender, threshold)
-    print(json.dumps(result, indent=2))
-
-
 @conbench.command(name="list")
 def list_benchmarks():
-    """List of registered benchmarks to run (for orchestration)."""
+    """List of registered benchmarks (for orchestration)."""
     benchmarks = []
     if LIST:
         benchmarks = LIST[0]().list(BENCHMARKS)

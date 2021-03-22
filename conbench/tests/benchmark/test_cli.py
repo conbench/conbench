@@ -13,8 +13,7 @@ Options:
 
 Commands:
   addition     Run addition benchmark.
-  compare      Compare benchmark runs.
-  list         List of registered benchmarks to run (for orchestration).
+  list         List of registered benchmarks (for orchestration).
   subtraction  Run subtraction benchmark(s).
 """
 
@@ -27,23 +26,6 @@ CONBENCH_LIST = """
     "command": "subtraction --all=true --iterations=2"
   }
 ]
-"""
-
-
-CONBENCH_COMPARE = """
-TODO
-"""
-
-
-CONBENCH_COMPARE_HELP = """
-Usage: conbench compare [OPTIONS] BASELINE CONTENDER
-
-  Compare benchmark runs.
-
-Options:
-  --kind [batch|benchmark|run]  [default: batch]
-  --threshold INTEGER           (percent)  [default: 5]
-  --help                        Show this message and exit.
 """
 
 
@@ -216,18 +198,3 @@ def test_conbench_list(runner):
 
     result = runner.invoke(conbench, "list")
     assert_command_output(result, CONBENCH_LIST)
-
-
-def test_conbench_compare(runner):
-    from conbench.cli import conbench
-
-    baseline_id, contender_id = None, None  # TODO
-    result = runner.invoke(conbench, f"compare {baseline_id} {contender_id}")
-    # TODO assert_command_output(result, TODO)
-
-
-def test_conbench_compare_help(runner):
-    from conbench.cli import conbench
-
-    result = runner.invoke(conbench, "compare --help")
-    assert_command_output(result, CONBENCH_COMPARE_HELP)

@@ -30,22 +30,6 @@ class Connection:
     def publish(self, benchmark):
         self.post(self.config.benchmarks_url, benchmark)
 
-    def compare_benchmarks(self, baseline_id, contender_id, threshold):
-        compare_url = self.config.compare_benchmarks_url(
-            baseline_id, contender_id, threshold
-        )
-        return self.get(compare_url)
-
-    def compare_batches(self, baseline_id, contender_id, threshold):
-        compare_url = self.config.compare_batches_url(
-            baseline_id, contender_id, threshold
-        )
-        return self.get(compare_url)
-
-    def compare_runs(self, baseline_id, contender_id, threshold):
-        compare_url = self.config.compare_runs_url(baseline_id, contender_id, threshold)
-        return self.get(compare_url)
-
     def post(self, url, data):
         if self.session:
             # already authenticated, just do post
@@ -123,20 +107,7 @@ class Config:
         self.host_name = config.get("host_name")
         self.login_url = urllib.parse.urljoin(url, "api/login/")
         self.benchmarks_url = urllib.parse.urljoin(url, "api/benchmarks/")
-        self.compare_url = urllib.parse.urljoin(url, "api/compare/")
         self.credentials = {"email": email, "password": password}
-
-    def compare_benchmarks_url(self, baseline_id, contender_id, threshold):
-        compare = f"{contender_id}...{baseline_id}"
-        return f"{self.compare_url}benchmarks/{compare}/?threshold={threshold}"
-
-    def compare_batches_url(self, baseline_id, contender_id, threshold):
-        compare = f"{contender_id}...{baseline_id}"
-        return f"{self.compare_url}batches/{compare}/?threshold={threshold}"
-
-    def compare_runs_url(self, baseline_id, contender_id, threshold):
-        compare = f"{contender_id}...{baseline_id}"
-        return f"{self.compare_url}runs/{compare}/?threshold={threshold}"
 
 
 def get_config(filename=None):
