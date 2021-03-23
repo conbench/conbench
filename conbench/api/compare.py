@@ -2,8 +2,8 @@ import flask as f
 
 
 from ..api import rule
+from ..api._comparator import BenchmarkComparator, BenchmarkListComparator
 from ..api._endpoint import ApiEndpoint
-from ..compare import BenchmarkComparator, BenchmarkListComparator
 from ..entities._entity import NotFound
 from ..entities.summary import Summary
 from ..hacks import set_display_batch, set_display_name
