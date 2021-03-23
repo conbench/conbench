@@ -1,6 +1,6 @@
 import decimal
 
-from .units import formatter_for_unit
+from ..units import formatter_for_unit
 
 
 THRESHOLD = 5  # percent

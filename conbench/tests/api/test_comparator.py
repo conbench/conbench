@@ -1,4 +1,4 @@
-from ...compare import BenchmarkComparator, BenchmarkListComparator
+from ...api._comparator import BenchmarkComparator, BenchmarkListComparator
 
 
 def test_compare_no_change():
