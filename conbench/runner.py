@@ -33,8 +33,6 @@ def _now_formatted():
 
 
 class Benchmark(abc.ABC):
-    # TODO: options, arguments
-
     @abc.abstractmethod
     def run(self, **kwargs):
         pass

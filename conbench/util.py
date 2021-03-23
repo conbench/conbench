@@ -99,6 +99,14 @@ class Connection:
             click.echo(msg)
 
 
+def places_to_look():
+    current_dir = os.getcwd()
+    benchmarks_dir = os.path.join(current_dir, "benchmarks")
+    if os.path.exists(benchmarks_dir):
+        return [current_dir, benchmarks_dir]
+    return [current_dir]
+
+
 class Config:
     def __init__(self, config):
         url = config.get("url", "http://localhost:5000")
@@ -112,23 +120,23 @@ class Config:
 
 def get_config(filename=None):
     """Get config from a yaml file named .conbench in the current
-    working directory.
+    working directory, or a sub directory called "benchmarks".
     """
+    config = {}
     if filename is None:
         filename = ".conbench"
-    current_dir = os.getcwd()
-    file_path = os.path.join(current_dir, filename)
-    try:
-        with open(file_path) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
-    except FileNotFoundError:
-        config = {}
+    for directory in places_to_look():
+        file_path = os.path.join(directory, filename)
+        if os.path.exists(file_path):
+            with open(file_path) as f:
+                return yaml.load(f, Loader=yaml.FullLoader)
     return config
 
 
 def register_benchmarks(directory=None):
     """Look for files matching the following patterns in the current
-    working directory and import them.
+    working directory or a sub directory called "benchmarks", and
+    import them.
 
         benchmark*.py
         *benchmark.py
@@ -150,23 +158,23 @@ def register_benchmarks(directory=None):
         class ExampleBenchmarkList:
             ...
     """
-    if directory is None:
-        directory = os.getcwd()
-    with os.scandir(directory) as scan:
-        for entry in scan:
-            filename = entry.name
-            if (
-                filename.startswith(".")
-                or not entry.is_file()
-                or not filename.endswith(".py")
-            ):
-                continue
-            if (
-                filename.startswith("benchmark")
-                or filename.endswith("benchmark.py")
-                or filename.endswith("benchmarks.py")
-            ):
-                import_module(directory, filename)
+    dirs = places_to_look() if directory is None else [directory]
+    for directory in dirs:
+        with os.scandir(directory) as scan:
+            for entry in scan:
+                filename = entry.name
+                if (
+                    filename.startswith(".")
+                    or not entry.is_file()
+                    or not filename.endswith(".py")
+                ):
+                    continue
+                if (
+                    filename.startswith("benchmark")
+                    or filename.endswith("benchmark.py")
+                    or filename.endswith("benchmarks.py")
+                ):
+                    import_module(directory, filename)
 
 
 def import_module(directory, filename):
