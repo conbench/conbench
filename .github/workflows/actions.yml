@@ -6,10 +6,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:11
-
     strategy:
       matrix:
         python-version: [3.8, 3.9]
@@ -35,7 +31,6 @@ jobs:
 
       - name: Run tests
         run: |
-          psql -c 'create database conbench_test;' -U postgres
           coverage run --source conbench -m pytest conbench/tests/
 
       - name: Publish coverage
