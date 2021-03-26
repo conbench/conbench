@@ -12,6 +12,6 @@ jobs:
         uses: actions/setup-python@v2
       - name: Lint (black)
         uses: psf/black@stable
-          with:
-            args: ". --check"
+        with:
+          args: ". --check"
 
