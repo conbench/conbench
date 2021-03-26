@@ -30,9 +30,11 @@ jobs:
           pip install coveralls
       - name: Run tests
         run: |
-          coverage run --source conbench -m pytest -x conbench/tests/
+          coverage run --source conbench -m pytest conbench/tests/
         env:
           DB_USERNAME: postgres
       - name: Publish coverage
         run: |
           coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
