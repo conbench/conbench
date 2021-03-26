@@ -30,7 +30,7 @@ jobs:
           pip install coveralls
       - name: Run tests
         run: |
-          coverage run --source conbench -m pytest conbench/tests/
+          coverage run --source conbench -m pytest -x conbench/tests/
       - name: Publish coverage
         run: |
           coveralls
