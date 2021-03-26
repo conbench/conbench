@@ -35,6 +35,6 @@ jobs:
           DB_USERNAME: postgres
       - name: Publish coverage
         run: |
-          coveralls
+          coveralls --service=github
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
