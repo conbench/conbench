@@ -1,6 +1,6 @@
 <p align="right">
-<a href="https://travis-ci.com/ursacomputing/conbench"><img alt="Build Status" src="https://travis-ci.com/ursacomputing/conbench.svg?branch=main"></a>
-<a href="https://coveralls.io/github/ursacomputing/conbench?branch=main"><img src="https://coveralls.io/repos/github/ursacomputing/conbench/badge.svg?branch=main&kill_cache=1" alt="Coverage Status" /></a>
+<a href="https://github.com/ursacomputing/conbench/blob/main/.github/workflows/actions.yml"><img alt="Build Status" src="https://github.com/ursacomputing/conbench/actions/workflows/actions.yml/badge.svg?branch=main"></a>
+<a href="https://coveralls.io/github/ursacomputing/conbench?branch=main"><img src="https://coveralls.io/repos/github/ursacomputing/conbench/badge.svg?branch=main&kill_cache=06b9891a46827df564072ae831b13897599f7f3d" alt="Coverage Status" /></a>
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 

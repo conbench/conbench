@@ -1,0 +1,40 @@
+name: build
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:11
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: conbench_test
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - name: Checkout conbench
+        uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+      - name: Lint (black)
+        uses: psf/black@stable
+        with:
+          args: ". --check"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-test.txt
+          pip install -r requirements-cli.txt
+          pip install -r requirements-build.txt
+          pip install coveralls
+      - name: Run tests
+        run: |
+          coverage run --source conbench -m pytest conbench/tests/
+        env:
+          DB_USERNAME: postgres
+      - name: Publish coverage
+        run: |
+          coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
