@@ -14,4 +14,9 @@ jobs:
         uses: psf/black@stable
         with:
           args: ". --check"
-
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-test.txt
+          pip install -r requirements-cli.txt
+          pip install -r requirements-build.txt
+          pip install coveralls
