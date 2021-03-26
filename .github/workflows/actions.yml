@@ -3,18 +3,6 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:11
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - name: Checkout conbench
         uses: actions/checkout@v2
@@ -30,9 +18,13 @@ jobs:
           pip install -r requirements-cli.txt
           pip install -r requirements-build.txt
           pip install coveralls
+      - name: Set up PostgreSQL
+        run: |
+          sudo apt-get install postgresql
+          sudo service postgresql start
+          psql -c 'create database conbench_test;' -U postgres
       - name: Run tests
         run: |
-          psql -c 'create database conbench_test;' -U postgres
           coverage run --source conbench -m pytest conbench/tests/
       - name: Publish coverage
         run: |
