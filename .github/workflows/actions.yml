@@ -1,10 +1,11 @@
-name: Build
-
+name: Tests & Lint & Coverage
 on: [push, pull_request]
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:11
     steps:
       - name: Checkout conbench
         uses: actions/checkout@v2
@@ -20,3 +21,10 @@ jobs:
           pip install -r requirements-cli.txt
           pip install -r requirements-build.txt
           pip install coveralls
+      - name: Run tests
+        run: |
+          psql -c 'create database conbench_test;' -U postgres
+          coverage run --source conbench -m pytest conbench/tests/
+      - name: Publish coverage
+        run: |
+          coveralls
