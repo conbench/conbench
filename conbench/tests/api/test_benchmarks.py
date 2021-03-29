@@ -41,6 +41,7 @@ VALID_PAYLOAD = {
     "stats": {
         "batch_id": "7b2fdd9f929d47b9960152090d47f8e6",
         "run_id": "2a5709d179f349cba69ed242be3e6321",
+        "run_name": "pull request: 9564",
         "data": [
             "0.099094",
             "0.037129",

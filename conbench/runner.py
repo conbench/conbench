@@ -132,6 +132,7 @@ class Conbench(Connection):
         tags["name"] = name
         timestamp = _now_formatted()
         run_id = options.get("run_id")
+        run_name = options.get("run_name")
         stats = self._stats(
             result["data"],
             result["unit"],
@@ -139,6 +140,7 @@ class Conbench(Connection):
             result["time_unit"],
             timestamp,
             run_id,
+            run_name,
         )
         benchmark = {
             "stats": stats,
@@ -166,7 +168,7 @@ class Conbench(Connection):
         iterations = options.get("iterations", 1)
         return iterations, gc_collect, gc_disable
 
-    def _stats(self, data, unit, times, time_unit, timestamp, run_id):
+    def _stats(self, data, unit, times, time_unit, timestamp, run_id, run_name):
         fmt = "{:.6f}"
 
         def _format(f, data, min_length=0):
@@ -180,7 +182,7 @@ class Conbench(Connection):
         if not run_id:
             run_id = self.batch_id
 
-        return {
+        result = {
             "data": [fmt.format(x) for x in data],
             "times": [fmt.format(x) for x in times],
             "unit": unit,
@@ -198,3 +200,8 @@ class Conbench(Connection):
             "q3": fmt.format(q3),
             "iqr": fmt.format(q3 - q1),
         }
+
+        if run_name is not None:
+            result["run_name"] = run_name
+
+        return result

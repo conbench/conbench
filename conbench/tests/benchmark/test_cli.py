@@ -1,3 +1,4 @@
+import unittest.mock
 import os
 
 from ...util import register_benchmarks
@@ -30,25 +31,6 @@ CONBENCH_LIST = """
 
 
 CONBENCH_ADDITION = """
-POST http://localhost:5000/api/login/ failed
-{
-  "code": 400,
-  "description": {
-    "_errors": [
-      "Invalid email or password."
-    ]
-  },
-  "name": "Bad Request"
-}
-
-
-POST http://localhost:5000/api/benchmarks/ failed
-{
-  "code": 401,
-  "name": "Unauthorized"
-}
-
-
 Benchmark output:
 2
 """
@@ -66,30 +48,12 @@ Options:
   --show-result BOOLEAN  [default: true]
   --show-output BOOLEAN  [default: false]
   --run-id TEXT          Group executions together with a run id.
+  --run-name TEXT        Name of run (commit, pull request, etc).
   --help                 Show this message and exit.
 """
 
 
 CONBENCH_SUBTRACTION = """
-POST http://localhost:5000/api/login/ failed
-{
-  "code": 400,
-  "description": {
-    "_errors": [
-      "Invalid email or password."
-    ]
-  },
-  "name": "Bad Request"
-}
-
-
-POST http://localhost:5000/api/benchmarks/ failed
-{
-  "code": 401,
-  "name": "Unauthorized"
-}
-
-
 Benchmark output:
 99
 """
@@ -123,6 +87,7 @@ Options:
   --show-result BOOLEAN        [default: true]
   --show-output BOOLEAN        [default: false]
   --run-id TEXT                Group executions together with a run id.
+  --run-name TEXT              Name of run (commit, pull request, etc).
   --help                       Show this message and exit.
 """
 
@@ -160,11 +125,9 @@ def test_conbench_command_without_cases(runner):
     from conbench.cli import conbench
 
     command = "addition --show-result=false --show-output=true"
-    result = runner.invoke(conbench, command)
-    try:
-        assert_command_output(result, CONBENCH_ADDITION)
-    except AssertionError:
-        assert result.output == "\nBenchmark output:\n2\n"
+    with unittest.mock.patch("conbench.util.Connection.publish"):
+        result = runner.invoke(conbench, command)
+    assert_command_output(result, CONBENCH_ADDITION)
 
 
 def test_conbench_command_without_cases_help(runner):
@@ -179,11 +142,9 @@ def test_conbench_command_with_cases(runner):
 
     case = "sample --color=pink --fruit=apple"
     command = f"subtraction {case} --show-result=false --show-output=true"
-    result = runner.invoke(conbench, command)
-    try:
-        assert_command_output(result, CONBENCH_SUBTRACTION)
-    except AssertionError:
-        assert result.output == "\nBenchmark output:\n99\n"
+    with unittest.mock.patch("conbench.util.Connection.publish"):
+        result = runner.invoke(conbench, command)
+    assert_command_output(result, CONBENCH_SUBTRACTION)
 
 
 def test_conbench_command_with_cases_help(runner):
