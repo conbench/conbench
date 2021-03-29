@@ -118,6 +118,13 @@ for name, benchmark in BENCHMARKS.items():
             help="Group executions together with a run id.",
         )
     )
+    params.append(
+        click.Option(
+            ("--run-name",),
+            type=str,
+            help="Name of run (commit, pull request, etc).",
+        )
+    )
 
     def _benchmark(
         show_result,

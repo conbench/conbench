@@ -64,7 +64,10 @@ class Summary(Base, EntityMixin):
     @staticmethod
     def create(data):
         tags = data["tags"]
+        stats = data["stats"]
         name = tags.pop("name")
+        values = stats.pop("data")
+        times = stats.pop("times")
 
         # create if not exists
         c = {"name": name, "tags": tags}
@@ -105,19 +108,18 @@ class Summary(Base, EntityMixin):
 
         # create if not exists
         run_id = data["stats"]["run_id"]
+        run_name = stats.pop("run_name", None)
         run = Run.first(id=run_id)
         if not run:
             run = Run.create(
                 {
                     "id": run_id,
+                    "name": run_name,
                     "commit_id": commit.id,
                     "machine_id": machine.id,
                 }
             )
 
-        stats = data["stats"]
-        values = stats.pop("data")
-        times = stats.pop("times")
         stats["case_id"] = case.id
         stats["machine_id"] = machine.id
         stats["context_id"] = context.id
@@ -146,6 +148,7 @@ class SummaryCreate(marshmallow.Schema):
     time_unit = marshmallow.fields.String(required=True)
     batch_id = marshmallow.fields.String(required=True)
     run_id = marshmallow.fields.String(required=True)
+    run_name = marshmallow.fields.String(required=False)
     timestamp = marshmallow.fields.DateTime(required=True)
     iterations = marshmallow.fields.Integer(required=True)
     min = marshmallow.fields.Decimal(required=False)

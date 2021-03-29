@@ -2,7 +2,7 @@ import flask as f
 import sqlalchemy as s
 from sqlalchemy.orm import relationship
 
-from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull
+from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
 from ..entities.commit import CommitSerializer
 from ..entities.machine import MachineSerializer
 
@@ -10,6 +10,7 @@ from ..entities.machine import MachineSerializer
 class Run(Base, EntityMixin):
     __tablename__ = "run"
     id = NotNull(s.String(50), primary_key=True)
+    name = Nullable(s.String(250))
     timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id"))
     commit = relationship("Commit", lazy="joined")
@@ -25,6 +26,7 @@ class _Serializer(EntitySerializer):
         machine.pop("links", None)
         result = {
             "id": run.id,
+            "name": run.name,
             "timestamp": run.timestamp.isoformat(),
             "commit": commit,
             "machine": machine,
