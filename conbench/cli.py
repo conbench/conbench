@@ -141,7 +141,10 @@ for name, benchmark in BENCHMARKS.items():
                 click.echo()
                 click.echo(click.style("Benchmark result:", fg="yellow"))
                 json_result = json.dumps(result, indent=4, sort_keys=True)
-                click.echo(click.style(json_result, fg="green"))
+                if "error" in json_result:
+                    click.echo(click.style(json_result, fg="red"))
+                else:
+                    click.echo(click.style(json_result, fg="green"))
             del output
 
     conbench.add_command(
