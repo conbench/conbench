@@ -35,6 +35,30 @@ def _now_formatted():
 class Benchmark(abc.ABC):
     @abc.abstractmethod
     def run(self, **kwargs):
+        """
+        Parameters
+        ----------
+        all : boolean, optional
+            Run all benchmark cases.
+        case : sequence, optional
+            Benchmark options sequence (rather than individual params):
+            [<option1>, <option2>, ..., <option3>]
+        iterations : int, default 1
+            Number of times to run the benchmark.
+        gc_collect : boolean, default True
+            Whether to do garbage collection before each benchmark run.
+        gc_disable : boolean, default True
+            Whether to do disable collection during each benchmark run.
+        run_id : str, optional
+            Group executions together with a run id.
+        run_name : str, optional
+            Name of run (commit, pull request, etc).
+        Returns
+        -------
+        (result, output) : sequence
+            result : The benchmark result.
+            output : The output from the benchmarked function.
+        """
         pass
 
     @property
