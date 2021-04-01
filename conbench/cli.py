@@ -26,7 +26,7 @@ def conbench():
 
 @conbench.command(name="list")
 def list_benchmarks():
-    """List of registered benchmarks (for orchestration)."""
+    """List of benchmarks (for orchestration)."""
     benchmarks = []
     if LIST:
         benchmarks = LIST[0]().list(BENCHMARKS)

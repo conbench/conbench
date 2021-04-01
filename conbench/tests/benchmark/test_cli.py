@@ -14,7 +14,7 @@ Options:
 
 Commands:
   addition     Run addition benchmark.
-  list         List of registered benchmarks (for orchestration).
+  list         List of benchmarks (for orchestration).
   subtraction  Run subtraction benchmark(s).
 """
 
