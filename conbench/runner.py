@@ -3,6 +3,7 @@ import collections
 import datetime
 import gc
 import statistics
+import subprocess
 import time
 import uuid
 
@@ -45,6 +46,8 @@ class Benchmark(abc.ABC):
             [<option1>, <option2>, ..., <option3>]
         iterations : int, default 1
             Number of times to run the benchmark.
+        drop_caches : boolean, default True
+            Whether to drop caches before each benchmark run.
         gc_collect : boolean, default True
             Whether to do garbage collection before each benchmark run.
         gc_disable : boolean, default True
@@ -112,6 +115,8 @@ class Conbench(Connection):
         self.machine_info = machine_info(self.config.host_name)
         self.language = language()
         self.batch_id = uuid.uuid4().hex
+        self._drop_caches_failed = False
+        self._purge_failed = False
 
     def benchmark(self, f, name, tags, context, run, options):
         timing_options = self._get_timing_options(options)
@@ -170,10 +175,31 @@ class Conbench(Connection):
     def mark_new_batch(self):
         self.batch_id = uuid.uuid4().hex
 
+    def sync_and_drop_caches(self):
+        if not self._drop_caches_failed:
+            command = "sync; echo 3 | sudo tee /proc/sys/vm/drop_caches"
+            try:
+                subprocess.check_output(command, shell=True)
+                return True
+            except subprocess.CalledProcessError:
+                self._drop_caches_failed = True
+
+        if not self._purge_failed:
+            command = "sync; sudo purge"
+            try:
+                subprocess.check_output(command, shell=True)
+                return True
+            except subprocess.CalledProcessError:
+                self._purge_failed = True
+
+        return False
+
     def _get_timing(self, f, iterations, options):
         times, output = [], None
 
         for _ in range(iterations):
+            if options["drop_caches"]:
+                self.sync_and_drop_caches()
             if options["gc_collect"]:
                 gc.collect()
             if options["gc_disable"]:
@@ -191,6 +217,7 @@ class Conbench(Connection):
         return {
             "gc_collect": options.get("gc_collect", True),
             "gc_disable": options.get("gc_disable", True),
+            "drop_caches": options.get("drop_caches", True),
             "iterations": options.get("iterations", 1),
         }
 

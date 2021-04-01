@@ -68,6 +68,7 @@ example = {
     },
     "tags": {
         "year": "2020",
+        "drop_caches": True,
         "gc_collect": True,
         "gc_disable": True,
         "name": "addition",
@@ -85,6 +86,7 @@ def test_runner_without_cases():
     assert not BenchmarkFacadeSchema.create.validate(result)
     expected_tags = {
         "year": "2020",
+        "drop_caches": True,
         "gc_collect": True,
         "gc_disable": True,
         "name": "addition",
@@ -111,6 +113,7 @@ def test_runner_with_cases():
         "fruit": "apple",
         "count": 1,
         "dataset": "sample",
+        "drop_caches": True,
         "gc_collect": True,
         "gc_disable": True,
         "name": "subtraction",
