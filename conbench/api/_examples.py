@@ -75,7 +75,6 @@ def _api_benchmark_entity(
             "dataset_columns": 18,
             "dataset_rows": 998,
             "file_type": "parquet",
-            "drop_caches": True,
             "gc_collect": True,
             "gc_disable": True,
             "input_type": "arrow",

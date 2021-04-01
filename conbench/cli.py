@@ -106,7 +106,7 @@ for name, benchmark in BENCHMARKS.items():
             )
     if not external:
         _option(params, "--iterations", 1, int)
-        _option(params, "--drop-caches", "true", bool)
+        _option(params, "--drop-caches", "false", bool)
         _option(params, "--gc-collect", "true", bool)
         _option(params, "--gc-disable", "true", bool)
     _option(params, "--show-result", "true", bool)

@@ -46,7 +46,7 @@ class Benchmark(abc.ABC):
             [<option1>, <option2>, ..., <option3>]
         iterations : int, default 1
             Number of times to run the benchmark.
-        drop_caches : boolean, default True
+        drop_caches : boolean, default False
             Whether to drop caches before each benchmark run.
         gc_collect : boolean, default True
             Whether to do garbage collection before each benchmark run.
@@ -136,6 +136,9 @@ class Conbench(Connection):
             "time_unit": "s",
         }
 
+        # TODO: don't add to tags for now for backwards compatibility
+        del timing_options["drop_caches"]
+
         tags.update(timing_options)
         context.update(self.language)
         benchmark, _ = self.record(
@@ -217,7 +220,7 @@ class Conbench(Connection):
         return {
             "gc_collect": options.get("gc_collect", True),
             "gc_disable": options.get("gc_disable", True),
-            "drop_caches": options.get("drop_caches", True),
+            "drop_caches": options.get("drop_caches", False),
             "iterations": options.get("iterations", 1),
         }
 

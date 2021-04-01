@@ -43,7 +43,7 @@ Usage: conbench addition [OPTIONS]
 
 Options:
   --iterations INTEGER   [default: 1]
-  --drop-caches BOOLEAN  [default: true]
+  --drop-caches BOOLEAN  [default: false]
   --gc-collect BOOLEAN   [default: true]
   --gc-disable BOOLEAN   [default: true]
   --show-result BOOLEAN  [default: true]
@@ -83,7 +83,7 @@ Options:
   --all BOOLEAN                [default: false]
   --count INTEGER              [default: 1]
   --iterations INTEGER         [default: 1]
-  --drop-caches BOOLEAN        [default: true]
+  --drop-caches BOOLEAN        [default: false]
   --gc-collect BOOLEAN         [default: true]
   --gc-disable BOOLEAN         [default: true]
   --show-result BOOLEAN        [default: true]
