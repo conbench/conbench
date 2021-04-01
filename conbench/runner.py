@@ -114,22 +114,12 @@ class Conbench(Connection):
         self.batch_id = uuid.uuid4().hex
 
     def benchmark(self, f, name, tags, context, run, options):
-        iterations, gc_collect, gc_disable = self._get_options(options)
+        timing_options = self._get_timing_options(options)
+        iterations = timing_options.pop("iterations")
         if iterations < 1:
             raise ValueError(f"Invalid iterations: {iterations}")
 
-        if gc_collect:
-            gc.collect()
-        if gc_disable:
-            gc.disable()
-
-        data, output = self._get_timing(f, iterations)
-
-        gc.enable()
-
-        context.update(self.language)
-        tags["gc_collect"] = gc_collect
-        tags["gc_disable"] = gc_disable
+        data, output = self._get_timing(f, iterations, timing_options)
 
         # The benchmark measurement and execution time happen to be
         # the same in this case: both are execution time in seconds.
@@ -141,6 +131,8 @@ class Conbench(Connection):
             "time_unit": "s",
         }
 
+        tags.update(timing_options)
+        context.update(self.language)
         benchmark, _ = self.record(
             result,
             name,
@@ -178,19 +170,29 @@ class Conbench(Connection):
     def mark_new_batch(self):
         self.batch_id = uuid.uuid4().hex
 
-    def _get_timing(self, f, iterations):
+    def _get_timing(self, f, iterations, options):
         times, output = [], None
+
         for _ in range(iterations):
+            if options["gc_collect"]:
+                gc.collect()
+            if options["gc_disable"]:
+                gc.disable()
+
             iteration_start = time.time()
             output = f()
             times.append(time.time() - iteration_start)
+
+            gc.enable()
+
         return times, output
 
-    def _get_options(self, options):
-        gc_collect = options.get("gc_collect", True)
-        gc_disable = options.get("gc_disable", True)
-        iterations = options.get("iterations", 1)
-        return iterations, gc_collect, gc_disable
+    def _get_timing_options(self, options):
+        return {
+            "gc_collect": options.get("gc_collect", True),
+            "gc_disable": options.get("gc_disable", True),
+            "iterations": options.get("iterations", 1),
+        }
 
     def _stats(self, data, unit, times, time_unit, timestamp, run_id, run_name):
         fmt = "{:.6f}"
