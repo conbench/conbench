@@ -141,6 +141,11 @@ class Summary(Base, EntityMixin):
         return summary
 
 
+s.Index("summary_run_id_index", Summary.run_id)
+s.Index("summary_case_id_index", Summary.case_id)
+s.Index("summary_batch_id_index", Summary.batch_id)
+
+
 class SummaryCreate(marshmallow.Schema):
     data = marshmallow.fields.List(marshmallow.fields.Decimal, required=True)
     times = marshmallow.fields.List(marshmallow.fields.Decimal, required=True)
