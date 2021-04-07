@@ -34,6 +34,7 @@
             <thead>
                 <tr>
                     <th scope="col">Run</th>
+                    <th scope="col">Reason</th>
                     <th scope="col">Author</th>
                     <th scope="col">Repository</th>
                     <th scope="col">Commit</th>
@@ -45,6 +46,11 @@
                 {% for run in runs %}
                 <tr>
                      <td style="white-space: nowrap;"><a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.display_timestamp }}</a></td>
+                     {% if run.name %}
+                       <td>{{ run.name.split(":", 1)[0] }}</td>
+                     {% else %}
+                       <td></td>
+                     {% endif %}
                      <td style="white-space: nowrap;">
                        {% if run.commit.author_avatar %}
                          <image src="{{ run.commit.author_avatar }}" height="30" style="border-radius: 50%;">&nbsp;

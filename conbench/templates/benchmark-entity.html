@@ -38,15 +38,15 @@
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
-              <b>mean</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ benchmark.stats.mean }} {{ benchmark.stats.unit }}</a>
-              </div>
-            </li>
-            <li class="list-group-item" style="overflow-y: auto;">
               <b>run</b>
               <div align="right" style="display:inline-block; float: right;">
                 <a href="{{ url_for('app.run', run_id=benchmark.stats.run_id) }}">{{ benchmark.stats.run_id }}</a>
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>reason</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ run.name }}
               </div>
             </li>
             <li class="list-group-item active">Result</li>
