@@ -72,10 +72,12 @@ repository, and the results are hosted on the
     (conbench) $ pip install -r requirements-cli.txt
     (conbench) $ python setup.py develop
 
+### Start the database
+    $ brew services start postgres
 
 ### Create the databases
 
-    $ psql
+    $ psql -d postgres
     # CREATE DATABASE conbench_test;
     # CREATE DATABASE conbench_prod;
 
@@ -118,3 +120,10 @@ repository, and the results are hosted on the
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ coverage run --source conbench -m pytest conbench/tests/
     (conbench) $ coverage report -m
+
+### Testing migrates
+    (conbench) $ brew services start postgres
+    (conbench) $ dropdb conbench_prod
+    (conbench) $ createdb conbench_prod 
+    (conbench) $ alembic upgrade head
+
