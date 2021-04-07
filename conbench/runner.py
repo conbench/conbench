@@ -136,10 +136,6 @@ class Conbench(Connection):
             "time_unit": "s",
         }
 
-        # TODO: don't add to tags for now for backwards compatibility
-        del timing_options["drop_caches"]
-
-        tags.update(timing_options)
         context.update(self.language)
         benchmark, _ = self.record(
             result,
