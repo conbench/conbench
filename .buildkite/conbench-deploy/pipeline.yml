@@ -1,7 +1,6 @@
 steps:
   - label: "Build & Push"
     key: "build-and-push"
-#    if: build.branch == 'main'
     concurrency: 1
     concurrency_group: "conbench-deploy"
     command:
@@ -14,7 +13,6 @@ steps:
   - label: "Run Migrations"
     key: "run-migrations"
     depends_on: "build-and-push"
-#    if: build.branch == 'main'
     concurrency: 1
     concurrency_group: "conbench-deploy"
     command:
@@ -23,12 +21,11 @@ steps:
       - cat migration-job.yml | sed "s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g; s/{{APPLICATION_NAME}}/${APPLICATION_NAME}/g; s/{{DB_HOST}}/${DB_HOST}/g; s/{{DB_PORT}}/${DB_PORT}/g; s/{{FLASK_APP}}/${FLASK_APP}/g; s/{{DOCKER_REGISTRY}}/${DOCKER_REGISTRY}/g; s/{{CERTIFICATE_ARN}}/${CERTIFICATE_ARN}/g; s/{{EKS_CLUSTER}}/${EKS_CLUSTER}/g" | kubectl delete --ignore-not-found=true -f -
       - cat migration-job.yml | sed "s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g; s/{{APPLICATION_NAME}}/${APPLICATION_NAME}/g; s/{{DB_HOST}}/${DB_HOST}/g; s/{{DB_PORT}}/${DB_PORT}/g; s/{{FLASK_APP}}/${FLASK_APP}/g; s/{{DOCKER_REGISTRY}}/${DOCKER_REGISTRY}/g; s/{{CERTIFICATE_ARN}}/${CERTIFICATE_ARN}/g; s/{{EKS_CLUSTER}}/${EKS_CLUSTER}/g" | kubectl apply -f -
       - kubectl wait --for=condition=complete --timeout=600s job/conbench-migration
-      - (($(kubectl get job conbench-migration -o jsonpath={.status.succeeded}) == "1")); exit "$?"
+#      - (($(kubectl get job conbench-migration -o jsonpath={.status.succeeded}) == "1")); exit "$?"
 
   - label: "Deploy"
     key: "deploy"
     depends_on: "run-migrations"
-#    if: build.branch == 'main'
     concurrency: 1
     concurrency_group: "conbench-deploy"
     command:
@@ -39,7 +36,6 @@ steps:
 
   - label: "Test Deploy"
     depends_on: "deploy"
-#    if: build.branch == 'main'
     command:
       - set -x
       - curl https://conbench.ursa.dev
