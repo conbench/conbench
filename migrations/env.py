@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from conbench.config import Config
-from conbench.db import engine
+from conbench.db import engine, session_maker
 from conbench.entities import (
     case,
     commit,
@@ -79,6 +79,7 @@ def run_migrations_online():
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
+    session_maker.configure(bind=connectable)
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
