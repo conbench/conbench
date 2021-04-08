@@ -4,7 +4,6 @@ from alembic import command
 from alembic.config import Config
 
 from ...entities.summary import Summary
-from ...config import TestConfig
 
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
