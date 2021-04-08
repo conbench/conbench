@@ -11,7 +11,7 @@ spec:
         command:
         - /bin/sh
         - -c
-        - sleep 30; alembic ugrade head;
+        - sleep 30; alembic upgrade head;
         envFrom:
           - configMapRef:
               name: conbench-config
