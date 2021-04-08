@@ -376,8 +376,7 @@ def test_upgrade():
     assert summary_1.case_id != summary_2.case_id
     assert summary_3.case_id != summary_4.case_id
 
-    config_args = {"sqlalchemy.url": TestConfig.SQLALCHEMY_DATABASE_URI}
-    alembic_config = Config(config_path, config_args=config_args)
+    alembic_config = Config(config_path)
     command.stamp(alembic_config, "991493b6406a")
     command.upgrade(alembic_config, "854c3ba5abd6")
 
