@@ -3,6 +3,7 @@ kind: Job
 metadata:
   name: conbench-migration
 spec:
+  backoffLimit: 0
   template:
     spec:
       containers:
