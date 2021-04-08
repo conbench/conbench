@@ -4,6 +4,7 @@ from alembic import command
 from alembic.config import Config
 
 from ...entities.summary import Summary
+from ...config import TestConfig
 
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
@@ -376,6 +377,7 @@ def test_upgrade():
     assert summary_3.case_id != summary_4.case_id
 
     alembic_config = Config(config_path)
+    alembic_config.set_main_option("sqlalchemy.url", TestConfig.SQLALCHEMY_DATABASE_URI)
     command.stamp(alembic_config, "991493b6406a")
     command.upgrade(alembic_config, "854c3ba5abd6")
 
