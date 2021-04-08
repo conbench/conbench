@@ -29,8 +29,8 @@ def _init_application(application):
     )
     configure_engine(application.config["SQLALCHEMY_DATABASE_URI"])
 
-    # Do not create all tables when running alembic migrates in production (CREATE_ALL_TABLES=false)
-    # using k8s migration job
+    # Do not create all tables when running alembic migrations in
+    # production (CREATE_ALL_TABLES=false) using k8s migration job
     if Config.CREATE_ALL_TABLES:
         create_all()
 
