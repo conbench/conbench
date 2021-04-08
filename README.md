@@ -128,11 +128,20 @@ repository, and the results are hosted on the
     (conbench) $ createdb conbench_prod
     (conbench) $ alembic upgrade head
 
-Note that `flask run` and `pytest -vv conbench/tests/` will not run migrates
-
 ### Test migrates with the database running as a docker container
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ brew services stop postgres
     (conbench) $ docker-compose down
     (conbench) $ docker-compose build
     (conbench) $ docker-compose run migration
+
+### To autogenerate migrate
+    (conbench) $ cd ~/workspace/conbench/
+    (conbench) $ brew services start postgres
+    (conbench) $ dropdb conbench_prod
+    (conbench) $ createdb conbench_prod
+    (conbench) $ git checkout main && git pull    
+    (conbench) $ alembic upgrade head
+    (conbench) $ git checkout your-branch
+    (conbench) $ alembic revision --autogenerate -m "new"
+    
