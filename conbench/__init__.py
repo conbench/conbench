@@ -28,7 +28,11 @@ def _init_application(application):
         config={"app_name": Config.APPLICATION_NAME},
     )
     configure_engine(application.config["SQLALCHEMY_DATABASE_URI"])
-    create_all()
+    # Do not create all tables when running alembic migrates
+    print(Config.CREATE_ALL_TABLES)
+    if Config.CREATE_ALL_TABLES:
+        create_all()
+        raise Exception
     application.register_blueprint(app, url_prefix="/")
     application.register_blueprint(api, url_prefix="/api")
     application.register_blueprint(api_docs, url_prefix="/api/docs")

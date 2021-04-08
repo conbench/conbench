@@ -17,6 +17,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = (
         f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
+    CREATE_ALL_TABLES = os.environ.get("CREATE_ALL_TABLES", "true") == "true"
 
 
 class TestConfig(Config):

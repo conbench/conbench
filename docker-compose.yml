@@ -1,9 +1,11 @@
+
 version: '3.5'
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
+    command: ["gunicorn", "-b", "0.0.0.0:5000", "-w", "5", "conbench:application", "--access-logfile=-", "--error-logfile=-", "--preload"]
     environment:
       APPLICATION_NAME: "Conbench"
       DB_USERNAME: "postgres"
@@ -30,3 +32,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      APPLICATION_NAME: "Conbench"
+      CREATE_ALL_TABLES: "false"
+      DB_USERNAME: "postgres"
+      DB_HOST: "db"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "postgres"
+      DB_PORT: "5432"
+      FLASK_APP: "conbench"
+      FLASK_ENV: "development"
+      REGISTRATION_KEY: "code"
+      SECRET_KEY: "Person, woman, man, camera, TV"
+    depends_on:
+      db:
+        condition: service_healthy
