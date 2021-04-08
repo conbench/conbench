@@ -32,6 +32,7 @@ spec:
       containers:
       - name: conbench
         image: "{{DOCKER_REGISTRY}}/{{FLASK_APP}}:{{BUILDKITE_COMMIT}}"
+        command: ["gunicorn", "-b", "0.0.0.0:5000", "-w", "5", "conbench:application", "--access-logfile=-", "--error-logfile=-", "--preload"]
         imagePullPolicy: "Always"
         ports:
           - containerPort: 5000

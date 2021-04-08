@@ -7,4 +7,3 @@ RUN pip install -r /tmp/requirements-test.txt
 
 WORKDIR /app
 ADD . /app
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "5", "conbench:application", "--access-logfile=-", "--error-logfile=-", "--preload"]

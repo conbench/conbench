@@ -72,6 +72,8 @@ repository, and the results are hosted on the
     (conbench) $ pip install -r requirements-cli.txt
     (conbench) $ python setup.py develop
 
+### Start the database
+    $ brew services start postgres
 
 ### Create the databases
 
@@ -118,3 +120,28 @@ repository, and the results are hosted on the
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ coverage run --source conbench -m pytest conbench/tests/
     (conbench) $ coverage report -m
+
+### Test migrates with the database running using brew
+    (conbench) $ cd ~/workspace/conbench/
+    (conbench) $ brew services start postgres
+    (conbench) $ dropdb conbench_prod
+    (conbench) $ createdb conbench_prod
+    (conbench) $ alembic upgrade head
+
+### Test migrates with the database running as a docker container
+    (conbench) $ cd ~/workspace/conbench/
+    (conbench) $ brew services stop postgres
+    (conbench) $ docker-compose down
+    (conbench) $ docker-compose build
+    (conbench) $ docker-compose run migration
+
+### To autogenerate migrate
+    (conbench) $ cd ~/workspace/conbench/
+    (conbench) $ brew services start postgres
+    (conbench) $ dropdb conbench_prod
+    (conbench) $ createdb conbench_prod
+    (conbench) $ git checkout main && git pull    
+    (conbench) $ alembic upgrade head
+    (conbench) $ git checkout your-branch
+    (conbench) $ alembic revision --autogenerate -m "new"
+    
