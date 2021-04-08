@@ -9,7 +9,6 @@ class Case(Base, EntityMixin):
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     name = NotNull(s.Text)
     tags = NotNull(postgresql.JSONB)
-    test = NotNull(s.Text)
 
 
 s.Index("case_index", Case.name, Case.tags, unique=True)

@@ -121,7 +121,7 @@ repository, and the results are hosted on the
     (conbench) $ coverage run --source conbench -m pytest conbench/tests/
     (conbench) $ coverage report -m
 
-### Testing migrates with the database running using brew
+### Test migrates with the database running using brew
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ brew services start postgres
     (conbench) $ dropdb conbench_prod
@@ -130,7 +130,7 @@ repository, and the results are hosted on the
 
 Note that `flask run` and `pytest -vv conbench/tests/` will not run migrates
 
-### Testing migrates with the database running as a docker container
+### Test migrates with the database running as a docker container
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ brew services stop postgres
     (conbench) $ docker-compose down
