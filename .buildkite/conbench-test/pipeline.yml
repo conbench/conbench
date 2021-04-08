@@ -8,8 +8,8 @@ steps:
     depends_on: "build"
     command: docker-compose run app pytest -vv conbench/tests/
 
-  - label: "Test Migrates"
-    key: "test-migrates"
+  - label: "Test Migrations"
+    key: "test-migrations"
     depends_on: "test"
     command:
       - docker-compose down
@@ -19,7 +19,7 @@ steps:
   # test builds, no matter which test builds finish first.
   - label: "Concurrency Gate"
     key: "concurrency-gate"
-    depends_on: "test-migrates"
+    depends_on: "test-migrations"
     command: "exit 0"
     concurrency: 1
     concurrency_group: "conbench-deploy"

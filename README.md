@@ -121,14 +121,14 @@ repository, and the results are hosted on the
     (conbench) $ coverage run --source conbench -m pytest conbench/tests/
     (conbench) $ coverage report -m
 
-### Test migrates with the database running using brew
+### Test migrations with the database running using brew
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ brew services start postgres
     (conbench) $ dropdb conbench_prod
     (conbench) $ createdb conbench_prod
     (conbench) $ alembic upgrade head
 
-### Test migrates with the database running as a docker container
+### Test migrations with the database running as a docker container
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ brew services stop postgres
     (conbench) $ docker-compose down

@@ -11,8 +11,8 @@ steps:
       - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin ${DOCKER_REGISTRY}
       - docker push ${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}
 
-  - label: "Run Migrates"
-    key: "run-migrates"
+  - label: "Run Migrations"
+    key: "run-migrations"
     depends_on: "build-and-push"
     if: build.branch == 'main'
     concurrency: 1
@@ -25,7 +25,7 @@ steps:
 
   - label: "Deploy"
     key: "deploy"
-    depends_on: "run-migrates"
+    depends_on: "run-migrations"
     if: build.branch == 'main'
     concurrency: 1
     concurrency_group: "conbench-deploy"
