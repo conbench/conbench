@@ -8,10 +8,12 @@ steps:
     depends_on: "build"
     command: docker-compose run app pytest -vv conbench/tests/
 
-  - label: "Test migrates"
+  - label: "Test Migrates"
     key: "test-migrates"
     depends_on: "test"
-    command: docker-compose run migration
+    command:
+      - docker-compose down
+      - docker-compose run migration
 
   # This makes sure that deploys are triggered in the same order as the
   # test builds, no matter which test builds finish first.
