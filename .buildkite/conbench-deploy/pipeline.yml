@@ -1,7 +1,7 @@
 steps:
   - label: "Build & Push"
     key: "build-and-push"
-    if: build.branch == 'main'
+#    if: build.branch == 'main'
     concurrency: 1
     concurrency_group: "conbench-deploy"
     command:
@@ -14,7 +14,7 @@ steps:
   - label: "Run Migrations"
     key: "run-migrations"
     depends_on: "build-and-push"
-    if: build.branch == 'main'
+#    if: build.branch == 'main'
     concurrency: 1
     concurrency_group: "conbench-deploy"
     command:
@@ -28,7 +28,7 @@ steps:
   - label: "Deploy"
     key: "deploy"
     depends_on: "run-migrations"
-    if: build.branch == 'main'
+#    if: build.branch == 'main'
     concurrency: 1
     concurrency_group: "conbench-deploy"
     command:
@@ -39,7 +39,7 @@ steps:
 
   - label: "Test Deploy"
     depends_on: "deploy"
-    if: build.branch == 'main'
+#    if: build.branch == 'main'
     command:
       - set -x
       - curl https://conbench.ursa.dev
