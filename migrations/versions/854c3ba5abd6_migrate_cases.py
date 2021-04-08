@@ -38,6 +38,9 @@ def upgrade():
                 )
                 Session.execute(stmt)
                 case.delete()
+            else:
+                case.tags = new_tags
+                case.save()
 
 
 def downgrade():
