@@ -72,8 +72,6 @@ def _api_benchmark_entity(
             "compression": "snappy",
             "cpu_count": 2,
             "dataset": "nyctaxi_sample",
-            "dataset_columns": 18,
-            "dataset_rows": 998,
             "file_type": "parquet",
             "input_type": "arrow",
             "name": name,
