@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: conbench-migration
+spec:
+  template:
+    spec:
+      containers:
+      - name: conbench-migration
+        image: "{{DOCKER_REGISTRY}}/{{FLASK_APP}}:{{BUILDKITE_COMMIT}}"
+        command:
+        - /bin/sh
+        - -c
+        - sleep 30; alembic ugrade head;
+        envFrom:
+          - configMapRef:
+              name: conbench-config
+          - secretRef:
+              name: conbench-secret
+      restartPolicy: Never
