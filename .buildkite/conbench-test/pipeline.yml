@@ -8,11 +8,16 @@ steps:
     depends_on: "build"
     command: docker-compose run app pytest -vv conbench/tests/
 
+  - label: "Test migrates"
+    key: "test-migrates"
+    depends_on: "test"
+    command: docker-compose run migration
+
   # This makes sure that deploys are triggered in the same order as the
   # test builds, no matter which test builds finish first.
   - label: "Concurrency Gate"
     key: "concurrency-gate"
-    depends_on: "test"
+    depends_on: "test-migrates"
     command: "exit 0"
     concurrency: 1
     concurrency_group: "conbench-deploy"
