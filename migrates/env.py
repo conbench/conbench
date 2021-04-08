@@ -24,6 +24,7 @@ from conbench.entities._entity import Base
 config = context.config
 
 from conbench.config import Config
+
 config.set_main_option("sqlalchemy.url", Config.SQLALCHEMY_DATABASE_URI)
 
 
