@@ -159,27 +159,27 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
     def test_benchmark_list_filter_by_name(self, client):
         self.authenticate(client)
-        summary1 = create_benchmark_summary(name="aaa")
-        summary2 = create_benchmark_summary(name="bbb")
-        summary3 = create_benchmark_summary(name="ccc")
+        create_benchmark_summary(name="aaa")
+        summary = create_benchmark_summary(name="bbb")
+        create_benchmark_summary(name="ccc")
         response = client.get("/api/benchmarks/?name=bbb")
-        self.assert_200_ok(response, contains=_expected_entity(summary2))
+        self.assert_200_ok(response, contains=_expected_entity(summary))
 
     def test_benchmark_list_filter_by_batch_id(self, client):
         self.authenticate(client)
-        summary1 = create_benchmark_summary(batch_id="10")
-        summary2 = create_benchmark_summary(batch_id="20")
-        summary3 = create_benchmark_summary(batch_id="30")
+        create_benchmark_summary(batch_id="10")
+        summary = create_benchmark_summary(batch_id="20")
+        create_benchmark_summary(batch_id="30")
         response = client.get("/api/benchmarks/?batch_id=20")
-        self.assert_200_ok(response, contains=_expected_entity(summary2))
+        self.assert_200_ok(response, contains=_expected_entity(summary))
 
     def test_benchmark_list_filter_by_run_id(self, client):
         self.authenticate(client)
-        summary1 = create_benchmark_summary(run_id="100")
-        summary2 = create_benchmark_summary(run_id="200")
-        summary3 = create_benchmark_summary(run_id="300")
+        create_benchmark_summary(run_id="100")
+        summary = create_benchmark_summary(run_id="200")
+        create_benchmark_summary(run_id="300")
         response = client.get("/api/benchmarks/?run_id=200")
-        self.assert_200_ok(response, contains=_expected_entity(summary2))
+        self.assert_200_ok(response, contains=_expected_entity(summary))
 
 
 class TestBenchmarkPost(_asserts.PostEnforcer):

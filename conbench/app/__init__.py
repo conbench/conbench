@@ -5,11 +5,11 @@ app = f.Blueprint("app", __name__)
 rule = app.add_url_rule
 
 
-from .index import *
-from .auth import *
-from .batches import *
-from .benchmarks import *
-from .compare import *
-from .runs import *
-from .series import *
-from .users import *
+from .index import *  # noqa
+from .auth import *  # noqa
+from .batches import *  # noqa
+from .benchmarks import *  # noqa
+from .compare import *  # noqa
+from .runs import *  # noqa
+from .series import *  # noqa
+from .users import *  # noqa

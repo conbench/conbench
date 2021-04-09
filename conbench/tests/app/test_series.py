@@ -49,7 +49,7 @@ class TestSeries(_asserts.AppEndpointTest):
         self.logout(client)
 
     def _assert_view(self, client):
-        response = client.get(f"/series/file-write/")
+        response = client.get("/series/file-write/")
         self.assert_page(response, "Series")
         assert "file-write</li>".encode() in response.data
 

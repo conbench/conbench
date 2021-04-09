@@ -1,6 +1,6 @@
 import copy
 
-from ...api._errors import ErrorSchema, BadRequestSchema
+from ...api._errors import ErrorSchema
 from ...tests.helpers import _create_fixture_user, create_random_user
 
 

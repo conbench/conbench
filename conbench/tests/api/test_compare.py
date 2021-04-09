@@ -64,7 +64,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
 
     def test_compare_unknown_compare_ids(self, client):
         self.authenticate(client)
-        response = client.get(f"/api/compare/benchmarks/foo...bar/")
+        response = client.get("/api/compare/benchmarks/foo...bar/")
         self.assert_404_not_found(response)
 
 
@@ -109,7 +109,7 @@ class TestCompareBacthesGet(_asserts.GetEnforcer):
 
     def test_compare_unknown_compare_ids(self, client):
         self.authenticate(client)
-        response = client.get(f"/api/compare/batches/foo...bar/")
+        response = client.get("/api/compare/batches/foo...bar/")
         self.assert_404_not_found(response)
 
 
@@ -154,5 +154,5 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
 
     def test_compare_unknown_compare_ids(self, client):
         self.authenticate(client)
-        response = client.get(f"/api/compare/runs/foo...bar/")
+        response = client.get("/api/compare/runs/foo...bar/")
         self.assert_404_not_found(response)
