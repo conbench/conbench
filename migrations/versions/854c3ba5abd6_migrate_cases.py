@@ -6,11 +6,9 @@ Create Date: 2021-04-08 08:45:38.935858
 
 """
 from alembic import op
-from sqlalchemy import update
 
 from conbench.entities.case import Case
 from conbench.entities.summary import Summary
-from conbench.db import Session
 
 
 # revision identifiers, used by Alembic.
@@ -21,26 +19,35 @@ depends_on = None
 
 
 def upgrade():
-    cases = Case.all()
+    case_table = Case.__table__
+    summary_table = Summary.__table__
+    connection = op.get_bind()
+
+    cases = connection.execute(case_table.select())
     for case in cases:
         if "gc_collect" in case.tags or "gc_disable" in case.tags:
             new_tags = dict(case.tags)
             new_tags.pop("gc_collect")
             new_tags.pop("gc_disable")
-            c = {"name": case.name, "tags": new_tags}
-            other = Case.first(**c)
-            if other:
-                stmt = (
-                    update(Summary)
-                    .where(Summary.case_id == case.id)
-                    .values(case_id=other.id)
-                    .execution_options(synchronize_session="fetch")
+            other = connection.execute(
+                case_table.select().where(
+                    case_table.c.name == case.name,
+                    case_table.c.tags == new_tags,
                 )
-                Session.execute(stmt)
-                case.delete()
+            ).fetchone()
+            if other:
+                connection.execute(
+                    summary_table.update()
+                    .where(summary_table.c.case_id == case.id)
+                    .values(case_id=other.id)
+                )
+                case_table.delete().where(case_table.c.id == case.id)
             else:
-                case.tags = new_tags
-                case.save()
+                connection.execute(
+                    case_table.update()
+                    .where(case_table.c.id == case.id)
+                    .values(tags=new_tags)
+                )
 
 
 def downgrade():

@@ -3,6 +3,7 @@ import os
 from alembic import command
 from alembic.config import Config
 
+from ...db import Session
 from ...entities.summary import Summary
 
 
@@ -464,6 +465,12 @@ def test_upgrade():
     alembic_config = Config(config_path)
     command.stamp(alembic_config, "991493b6406a")
     command.upgrade(alembic_config, "854c3ba5abd6")
+
+    Session.refresh(summary_1)
+    Session.refresh(summary_2)
+    Session.refresh(summary_3)
+    Session.refresh(summary_4)
+    Session.refresh(summary_5)
 
     # assert after migration
     assert summary_1.case.name == "file-write"
