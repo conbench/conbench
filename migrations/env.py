@@ -1,11 +1,12 @@
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
-from alembic import context
-
 from conbench.config import Config
+from conbench.db import engine
+from conbench.entities._entity import Base
 from conbench.entities import (
     case,
     commit,
@@ -17,15 +18,13 @@ from conbench.entities import (
     time,
     user,
 )
-from conbench.entities._entity import Base
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-
-from conbench.config import Config
-
-config.set_main_option("sqlalchemy.url", Config.SQLALCHEMY_DATABASE_URI)
+sqlalchemy_url = str(engine.url) if engine else Config.SQLALCHEMY_DATABASE_URI
+config.set_main_option("sqlalchemy.url", sqlalchemy_url)
 
 
 # Interpret the config file for Python logging.
