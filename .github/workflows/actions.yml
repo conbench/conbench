@@ -28,6 +28,9 @@ jobs:
           pip install -r requirements-cli.txt
           pip install -r requirements-build.txt
           pip install coveralls
+      - name: Lint (flake8)
+        run: |
+          flake8
       - name: Run tests
         run: |
           coverage run --source conbench -m pytest conbench/tests/
