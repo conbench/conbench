@@ -1,7 +1,6 @@
 import apispec
 import apispec.ext.marshmallow
 import apispec_webframeworks.flask
-import marshmallow
 
 from ..api import _examples as ex
 from ..config import Config

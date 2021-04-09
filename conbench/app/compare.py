@@ -14,7 +14,7 @@ from ..config import Config
 class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
     def page(self, comparisons, baseline_id, contender_id):
 
-        unknown = f"unknown...unknown"
+        unknown = "unknown...unknown"
         compare_runs_url = f.url_for("app.compare-runs", compare_ids=unknown)
         compare_batches_url = f.url_for("app.compare-batches", compare_ids=unknown)
         baseline, contender, plot = None, None, None
@@ -71,7 +71,7 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
         plot = json.dumps(
             bokeh.embed.json_item(
                 simple_bar_plot([baseline_copy, contender_copy], height=200),
-                f"plot",
+                "plot",
             ),
         )
         return plot

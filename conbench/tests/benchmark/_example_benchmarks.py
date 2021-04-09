@@ -9,7 +9,7 @@ class BenchmarkList(conbench.runner.BenchmarkList):
             instance, parts = benchmark(), [name]
             if instance.cases:
                 parts.append("--all=true")
-            parts.append(f"--iterations=2")
+            parts.append("--iterations=2")
             benchmarks.append({"command": " ".join(parts)})
         return sorted(benchmarks, key=lambda k: k["command"])
 
