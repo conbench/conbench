@@ -7,7 +7,7 @@ from sqlalchemy import pool
 from conbench.config import Config
 from conbench.db import engine
 from conbench.entities._entity import Base
-from conbench.entities import (
+from conbench.entities import (  # noqa
     case,
     commit,
     context as _,
