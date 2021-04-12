@@ -12,7 +12,7 @@ from ..config import Config
 
 
 class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
-    def page(self, comparisons, baseline_id, contender_id):
+    def page(self, comparisons, regressions, improvements, baseline_id, contender_id):
 
         unknown = "unknown...unknown"
         compare_runs_url = f.url_for("app.compare-runs", compare_ids=unknown)
@@ -47,6 +47,8 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
             plot=plot,
             resources=bokeh.resources.CDN.render(),
             comparisons=comparisons,
+            regressions=regressions,
+            improvements=improvements,
             baseline_id=baseline_id,
             contender_id=contender_id,
             baseline=baseline,
@@ -84,20 +86,26 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
 
         try:
             baseline_id, contender_id = compare_ids.split("...", 1)
-            comparisons = self._compare(params)
+            comparisons, regressions, improvements = self._compare(params)
             if not comparisons:
                 self.flash("Data is still collecting (or failed).")
         except ValueError:
             baseline_id, contender_id = "unknown", "unknown"
-            comparisons = []
+            comparisons, regressions, improvements = [], None, None
             self.flash("Invalid contender and baseline.")
 
-        return self.page(comparisons, baseline_id, contender_id)
+        return self.page(
+            comparisons,
+            regressions,
+            improvements,
+            baseline_id,
+            contender_id,
+        )
 
     def _compare(self, params):
         response = self.api_get(self.api, **params)
 
-        comparisons = []
+        comparisons, regressions, improvements = [], 0, 0
         if response.status_code == 200:
             comparisons = [response.json]
             if isinstance(response.json, list):
@@ -116,7 +124,12 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
                 if c["less_is_better"] and c["change"] != 0:
                     c["change"] = c["change"] * -1
 
-        return comparisons
+                if c["regression"]:
+                    regressions += 1
+                if c["improvement"]:
+                    improvements += 1
+
+        return comparisons, regressions, improvements
 
 
 class CompareBenchmarks(Compare):
