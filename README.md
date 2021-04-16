@@ -135,7 +135,7 @@ repository, and the results are hosted on the
     (conbench) $ docker-compose build
     (conbench) $ docker-compose run migration
 
-### To autogenerate migrate
+### To autogenerate a migration
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ brew services start postgres
     (conbench) $ dropdb conbench_prod
