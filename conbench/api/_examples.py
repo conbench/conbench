@@ -95,8 +95,10 @@ def _api_commit_entity(commit_id):
         "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
         "repository": "https://github.com/apache/arrow",
         "sha": "02addad336ba19a654f9c857ede546331be7b631",
-        "timestamp": "2021-02-25T01:02:51",
         "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+        "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+        "parent_url": "https://github.com/apache/arrow/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
+        "timestamp": "2021-02-25T01:02:51",
     }
 
 
