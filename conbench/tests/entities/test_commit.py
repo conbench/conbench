@@ -15,9 +15,8 @@ def test_parse_commit():
         commit = json.load(f)
     tz = dateutil.tz.tzutc()
     message = "Move benchmark tests (so CI runs them)"
-    sha = "02addad336ba19a654f9c857ede546331be7b631"
     expected = {
-        "url": f"https://github.com/apache/arrow/commit/{sha}",
+        "parent": "4beb514d071c9beec69b8917b5265e77ade22fb3",
         "message": f"ARROW-11771: [Developer][Archery] {message}",
         "date": datetime.datetime(2021, 2, 25, 1, 2, 51, tzinfo=tz),
         "author_name": "Diana Clarke",
@@ -33,9 +32,8 @@ def test_parse_commit_no_author():
         commit = json.load(f)
     tz = dateutil.tz.tzutc()
     message = "Move benchmark tests (so CI runs them)"
-    sha = "02addad336ba19a654f9c857ede546331be7b631"
     expected = {
-        "url": f"https://github.com/apache/arrow/commit/{sha}",
+        "parent": "4beb514d071c9beec69b8917b5265e77ade22fb3",
         "message": f"ARROW-11771: [Developer][Archery] {message}",
         "date": datetime.datetime(2021, 2, 25, 1, 2, 51, tzinfo=tz),
         "author_name": "Diana Clarke",
@@ -51,9 +49,8 @@ def test_parse_pull_request_commit():
         commit = json.load(f)
     tz = dateutil.tz.tzutc()
     message = "Move benchmark tests (so CI runs them)"
-    sha = "bfe37ca73e7b387001ca009a262ad37df3457bd5"
     expected = {
-        "url": f"https://github.com/apache/arrow/commit/{sha}",
+        "parent": "81e9417eb68171e03a304097ae86e1fd83307130",
         "message": f"ARROW-11771: [Developer][Archery] {message}",
         "date": datetime.datetime(2021, 2, 24, 20, 59, 4, tzinfo=tz),
         "author_name": "Diana Clarke",

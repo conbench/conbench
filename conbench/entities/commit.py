@@ -15,8 +15,8 @@ class Commit(Base, EntityMixin):
     __tablename__ = "commit"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     sha = NotNull(s.String(50))
+    parent = Nullable(s.String(50))
     repository = NotNull(s.String(100))
-    url = NotNull(s.String(250))
     message = NotNull(s.String(250))
     author_name = NotNull(s.String(100))
     author_login = Nullable(s.String(50))
@@ -29,8 +29,10 @@ class _Serializer(EntitySerializer):
         return {
             "id": commit.id,
             "sha": commit.sha,
+            "url": f"{commit.repository}/commit/{commit.sha}",
+            "parent_sha": commit.parent,
+            "parent_url": f"{commit.repository}/commit/{commit.parent}",
             "repository": commit.repository,
-            "url": commit.url,
             "message": commit.message,
             "author_name": commit.author_name,
             "author_login": commit.author_login,
@@ -46,7 +48,7 @@ class CommitSerializer:
 
 def parse_commit(commit):
     return {
-        "url": commit["html_url"],
+        "parent": commit["parents"][0]["sha"],
         "date": dateutil.parser.isoparse(commit["commit"]["author"]["date"]),
         "message": commit["commit"]["message"].split("\n")[0],
         "author_name": commit["commit"]["author"]["name"],

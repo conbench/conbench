@@ -97,7 +97,7 @@ class Summary(Base, EntityMixin):
                 {
                     "sha": sha,
                     "repository": repository,
-                    "url": github["url"],
+                    "parent": github["parent"],
                     "timestamp": github["date"],
                     "message": github["message"],
                     "author_name": github["author_name"],
