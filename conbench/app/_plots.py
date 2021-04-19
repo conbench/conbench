@@ -24,7 +24,7 @@ def get_title(benchmarks, name):
 
 
 def simple_bar_plot(benchmarks, height=400, width=400):
-    if len(benchmarks) > 50:
+    if len(benchmarks) > 30:
         return None
     if len(benchmarks) == 1:
         return None
