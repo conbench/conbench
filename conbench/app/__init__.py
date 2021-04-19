@@ -11,5 +11,4 @@ from .batches import *  # noqa
 from .benchmarks import *  # noqa
 from .compare import *  # noqa
 from .runs import *  # noqa
-from .series import *  # noqa
 from .users import *  # noqa

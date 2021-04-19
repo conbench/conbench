@@ -34,26 +34,21 @@ def set_display_batch(benchmark):
         benchmark.display_batch = batch
 
 
-def sorted_data(benchmarks, fields, factor=False):
-    data, default_factor_bucket = [], None
+def sorted_data(benchmarks):
+    data = []
     for benchmark in benchmarks:
         tags = benchmark["tags"]
-        if not fields:
-            items = [
-                (k, v)
-                for k, v in sorted(tags.items())
-                if not isinstance(v, int)
-                and v is not None
-                and k != "id"
-                and k != "name"
-                and k != "dataset"
-                and k != "source"
-            ]
-            row = [v for k, v in items]
-            if factor:
-                default_factor_bucket = items[-1][0]
-        else:
-            row = [tags[name] for name in fields]
+        items = [
+            (k, v)
+            for k, v in sorted(tags.items())
+            if not isinstance(v, int)
+            and v is not None
+            and k != "id"
+            and k != "name"
+            and k != "dataset"
+            and k != "source"
+        ]
+        row = [v for k, v in items]
         row.append(benchmark["stats"]["mean"])
         data.append(row)
 
@@ -72,7 +67,4 @@ def sorted_data(benchmarks, fields, factor=False):
         new_data.append([parts, row])
     new_data = sorted(new_data)
 
-    data = [row[1] for row in new_data]
-    if factor:
-        return data, default_factor_bucket
-    return data
+    return [row[1] for row in new_data]
