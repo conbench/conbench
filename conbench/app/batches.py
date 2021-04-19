@@ -5,7 +5,7 @@ import bokeh
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint
-from ..app._plots import factor_bar_plot
+from ..app._plots import simple_bar_plot
 from ..app._util import augment
 from ..config import Config
 
@@ -15,7 +15,7 @@ class BatchPlot(AppEndpoint):
         plots, raw, i = [], [], 1
         for benchmarks in by_group.values():
             raw.extend(benchmarks)
-            for p in [factor_bar_plot(benchmarks)]:
+            for p in [simple_bar_plot(benchmarks, height=400, width=700)]:
                 if p:
                     plot = json.dumps(bokeh.embed.json_item(p, f"plot{i}"))
                     plots.append(plot)
