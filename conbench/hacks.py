@@ -6,8 +6,9 @@ def get_case(tags, include_dataset=False):
         and v is not None
         and k != "id"
         and k != "name"
-        and k != "dataset"
+        and k != "suite"
         and k != "source"
+        and k != "dataset"
         and k != "language"
     ]
     if include_dataset and "dataset" in tags:
