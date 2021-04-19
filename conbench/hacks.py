@@ -15,7 +15,8 @@ def get_case(tags, include_dataset=False):
     if "language" in tags:
         case.append(("language", tags["language"]))
     booleans = [True, False, "true", "false"]
-    return [f"{k}={v}" if v in booleans else str(v) for k, v in case]
+    case = [(k, f"{k}={v}") if v in booleans else (k, v) for k, v in case]
+    return [f"{k}={v}" if isinstance(v, int) else str(v) for k, v in case]
 
 
 def set_display_name(benchmark):
