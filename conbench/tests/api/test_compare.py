@@ -7,7 +7,7 @@ from ...tests.api import _asserts
 from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
-CASE = "snappy, nyctaxi_sample, parquet, arrow"
+CASE = "snappy, parquet, arrow, nyctaxi_sample"
 
 
 class FakeEntity:

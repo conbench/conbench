@@ -1,4 +1,4 @@
-def get_case(tags):
+def get_case(tags, include_dataset=False):
     case = [
         (k, v)
         for k, v in sorted(tags.items())
@@ -10,6 +10,8 @@ def get_case(tags):
         and k != "source"
         and k != "language"
     ]
+    if include_dataset and "dataset" in tags:
+        case.append(("dataset", tags["dataset"]))
     if "language" in tags:
         case.append(("language", tags["language"]))
     return [v for _, v in case]
@@ -21,7 +23,7 @@ def set_display_name(benchmark):
     name = tags.get("name") if is_api else benchmark.case.name
     if "name" not in tags:
         tags["name"] = name
-    case = get_case(tags)
+    case = get_case(tags, include_dataset=True)
     if "suite" in tags:
         case = [name] + case
     name = ", ".join(case) if case else name
