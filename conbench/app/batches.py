@@ -15,7 +15,7 @@ class BatchPlot(AppEndpoint):
         plots, raw, i = [], [], 1
         for benchmarks in by_group.values():
             raw.extend(benchmarks)
-            for p in [simple_bar_plot(benchmarks, height=350, width=700)]:
+            for p in [simple_bar_plot(benchmarks, height=400, width=700)]:
                 if p:
                     plot = json.dumps(bokeh.embed.json_item(p, f"plot{i}"))
                     plots.append(plot)

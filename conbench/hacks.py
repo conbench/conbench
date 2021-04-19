@@ -2,8 +2,7 @@ def get_case(tags, include_dataset=False):
     case = [
         (k, v)
         for k, v in sorted(tags.items())
-        if not isinstance(v, int)
-        and v is not None
+        if v is not None
         and k != "id"
         and k != "name"
         and k != "suite"
@@ -15,7 +14,7 @@ def get_case(tags, include_dataset=False):
         case.append(("dataset", tags["dataset"]))
     if "language" in tags:
         case.append(("language", tags["language"]))
-    return [v for _, v in case]
+    return [f"{k}={v}" if v in [True, False, "true", "false"] else v for k, v in case]
 
 
 def set_display_name(benchmark):
