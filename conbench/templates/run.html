@@ -13,6 +13,11 @@
         {% if benchmarks %}
         <li class="breadcrumb-item active" aria-current="page">{{ benchmarks[0].stats.run_id }}</li>
         {% endif %}
+        {% if compare_runs_url %}
+        <span align="right" style="display:inline-block; float: right;">
+          <a href="{{ compare_runs_url }}">compare <span class="glyphicon glyphicon-arrow-right"></span></a>
+        </span>
+        {% endif %}
       </ol>
     </nav>
 
