@@ -15,13 +15,20 @@ class Commit(Base, EntityMixin):
     __tablename__ = "commit"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     sha = NotNull(s.String(50))
-    parent = Nullable(s.String(50))
+    parent = NotNull(s.String(50))
     repository = NotNull(s.String(100))
     message = NotNull(s.String(250))
     author_name = NotNull(s.String(100))
     author_login = Nullable(s.String(50))
     author_avatar = Nullable(s.String(100))
     timestamp = NotNull(s.DateTime(timezone=False))
+
+
+s.Index(
+    "commit_index",
+    Commit.sha,
+    unique=True,
+)
 
 
 class _Serializer(EntitySerializer):
