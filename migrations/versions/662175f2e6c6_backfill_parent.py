@@ -24,7 +24,7 @@ def upgrade():
     connection = op.get_bind()
 
     commits = connection.execute(
-        commit_table.select().where(commit_table.c.parent == None)
+        commit_table.select().where(commit_table.c.parent == None)  # noqa
     )
     for commit in commits:
         url = f"https://api.github.com/repos/apache/arrow/commits/{commit.sha}"

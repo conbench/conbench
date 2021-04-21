@@ -16,7 +16,7 @@ def test_upgrade():
     repository = "https://github.com/apache/arrow"
     github = {
         "parent": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-        "message": f"ARROW-12429: [C++] Fix incorrectly registered test",
+        "message": "ARROW-12429: [C++] Fix incorrectly registered test",
         "date": datetime.datetime(2021, 4, 17, 14, 25, 26),
         "author_name": "David Li",
         "author_login": "lidavidm",
@@ -35,7 +35,7 @@ def test_upgrade():
     )
     github = {
         "parent": "66aa3e7c365a8d4c4eca6e23668f2988e714b493",
-        "message": f"ARROW-12421: [Rust] [DataFusion] Disable repartition rule",
+        "message": "ARROW-12421: [Rust] [DataFusion] Disable repartition rule",
         "date": datetime.datetime(2021, 4, 16, 17, 14, 16),
         "author_name": "Andy Grove",
         "author_login": "andygrove",
