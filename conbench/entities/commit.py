@@ -15,7 +15,7 @@ class Commit(Base, EntityMixin):
     __tablename__ = "commit"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     sha = NotNull(s.String(50))
-    parent = Nullable(s.String(50))
+    parent = NotNull(s.String(50))
     repository = NotNull(s.String(100))
     message = NotNull(s.String(250))
     author_name = NotNull(s.String(100))
