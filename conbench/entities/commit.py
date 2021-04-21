@@ -24,6 +24,13 @@ class Commit(Base, EntityMixin):
     timestamp = NotNull(s.DateTime(timezone=False))
 
 
+s.Index(
+    "commit_index",
+    Commit.sha,
+    unique=True,
+)
+
+
 class _Serializer(EntitySerializer):
     def _dump(self, commit):
         return {
