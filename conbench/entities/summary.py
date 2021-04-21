@@ -1,4 +1,5 @@
 import decimal
+import os
 
 import flask as f
 import marshmallow
@@ -91,7 +92,13 @@ class Summary(Base, EntityMixin):
         if not commit:
             name = repository.split("github.com/")[1]
             url = f"https://api.github.com/repos/{name}/commits/{sha}"
-            response = requests.get(url)
+
+            token, session = os.getenv("GITHUB_API_TOKEN"), None
+            if token:
+                session = requests.Session()
+                session.headers = {"Authorization": f"Bearer {token}"}
+
+            response = session.get(url) if session else requests.get(url)
             github = parse_commit(response.json())
             commit = Commit.create(
                 {
