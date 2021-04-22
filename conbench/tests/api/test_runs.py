@@ -1,4 +1,5 @@
 import copy
+import urllib
 
 from ...api._examples import _api_run_entity
 from ...entities.summary import Summary
@@ -44,8 +45,26 @@ class TestRunList(_asserts.ListEnforcer):
         summary = create_benchmark_summary()
         return summary.run
 
-    def test_benchmark_list(self, client):
+    def test_run_list(self, client):
         self.authenticate(client)
         run = self._create()
         response = client.get("/api/runs/")
         self.assert_200_ok(response, contains=_expected_entity(run))
+
+    def test_run_list_filter_by_sha_and_machine(self, client):
+        sha = "02addad336ba19a654f9c857ede546331be7b631"
+        self.authenticate(client)
+        run = self._create()
+        args = {"sha": sha, "machine_id": run.machine_id}
+        args = urllib.parse.urlencode(args)
+        response = client.get(f"/api/runs/?{args}")
+        self.assert_200_ok(response, contains=_expected_entity(run))
+
+    def test_run_list_filter_by_sha_and_machine_no_match(self, client):
+        sha = "02addad336ba19a654f9c857ede546331be7b631"
+        self.authenticate(client)
+        self._create()
+        args = {"sha": sha, "machine_id": "some other machine id"}
+        args = urllib.parse.urlencode(args)
+        response = client.get(f"/api/runs/?{args}")
+        self.assert_200_ok(response, [])

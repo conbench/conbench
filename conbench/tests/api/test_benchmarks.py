@@ -163,7 +163,7 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         summary = create_benchmark_summary(name="bbb")
         create_benchmark_summary(name="ccc")
         response = client.get("/api/benchmarks/?name=bbb")
-        self.assert_200_ok(response, contains=_expected_entity(summary))
+        self.assert_200_ok(response, [_expected_entity(summary)])
 
     def test_benchmark_list_filter_by_batch_id(self, client):
         self.authenticate(client)
@@ -171,7 +171,7 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         summary = create_benchmark_summary(batch_id="20")
         create_benchmark_summary(batch_id="30")
         response = client.get("/api/benchmarks/?batch_id=20")
-        self.assert_200_ok(response, contains=_expected_entity(summary))
+        self.assert_200_ok(response, [_expected_entity(summary)])
 
     def test_benchmark_list_filter_by_run_id(self, client):
         self.authenticate(client)
@@ -179,7 +179,7 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         summary = create_benchmark_summary(run_id="200")
         create_benchmark_summary(run_id="300")
         response = client.get("/api/benchmarks/?run_id=200")
-        self.assert_200_ok(response, contains=_expected_entity(summary))
+        self.assert_200_ok(response, [_expected_entity(summary)])
 
 
 class TestBenchmarkPost(_asserts.PostEnforcer):

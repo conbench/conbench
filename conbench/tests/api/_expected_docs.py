@@ -1035,6 +1035,10 @@
         "/api/runs/": {
             "get": {
                 "description": "Get a list of runs.",
+                "parameters": [
+                    {"in": "query", "name": "sha", "schema": {"type": "string"}},
+                    {"in": "query", "name": "machine_id", "schema": {"type": "string"}},
+                ],
                 "responses": {
                     "200": {"$ref": "#/components/responses/RunList"},
                     "401": {"$ref": "#/components/responses/401"},

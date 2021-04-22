@@ -99,6 +99,9 @@ class Summary(Base, EntityMixin):
                 session.headers = {"Authorization": f"Bearer {token}"}
 
             response = session.get(url) if session else requests.get(url)
+            if response.status_code != 200:
+                print(response.json())
+
             github = parse_commit(response.json())
             commit = Commit.create(
                 {
