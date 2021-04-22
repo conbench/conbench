@@ -110,7 +110,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
                 filters=[Summary.run_id == run_id],
             )
         else:
-            summaries = Summary.all()
+            summaries = Summary.all(order_by=Summary.timestamp.desc(), limit=500)
         return self.serializer.many.dump(summaries)
 
     @flask_login.login_required
