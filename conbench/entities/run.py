@@ -24,7 +24,7 @@ class Run(Base, EntityMixin):
 class _Serializer(EntitySerializer):
     def _dump(self, run):
         commit = CommitSerializer().one.dump(run.commit)
-        context = ContextSerializer().one.dump(run.context)
+        context = ContextSerializer().one.dump(run.context) if run.context else {}
         machine = MachineSerializer().one.dump(run.machine)
         commit.pop("links", None)
         context.pop("links", None)
