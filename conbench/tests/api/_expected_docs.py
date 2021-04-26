@@ -472,9 +472,7 @@
                             },
                             "id": "some-run-uuid-1",
                             "links": {
-                                "context": "http://localhost/api/contexts/some-context-uuid-1/",
-                                "machine": "http://localhost/api/machines/some-machine-uuid-1/",
-                                "self": "http://localhost/api/runs/some-run-uuid-1/",
+                                "self": "http://localhost/api/runs/some-run-uuid-1/"
                             },
                             "machine": {
                                 "architecture_name": "x86_64",
@@ -530,9 +528,7 @@
                                 },
                                 "id": "some-run-uuid-1",
                                 "links": {
-                                    "context": "http://localhost/api/contexts/some-context-uuid-1/",
-                                    "machine": "http://localhost/api/machines/some-machine-uuid-1/",
-                                    "self": "http://localhost/api/runs/some-run-uuid-1/",
+                                    "self": "http://localhost/api/runs/some-run-uuid-1/"
                                 },
                                 "machine": {
                                     "architecture_name": "x86_64",
@@ -580,9 +576,7 @@
                                 },
                                 "id": "some-run-uuid-2",
                                 "links": {
-                                    "context": "http://localhost/api/contexts/some-context-uuid-1/",
-                                    "machine": "http://localhost/api/machines/some-machine-uuid-1/",
-                                    "self": "http://localhost/api/runs/some-run-uuid-2/",
+                                    "self": "http://localhost/api/runs/some-run-uuid-2/"
                                 },
                                 "machine": {
                                     "architecture_name": "x86_64",

@@ -229,8 +229,6 @@ def _api_run_entity(run_id, commit_id, context_id, machine_id, now):
         "machine": _api_machine_entity(machine_id, links=False),
         "links": {
             "self": "http://localhost/api/runs/%s/" % run_id,
-            "context": "http://localhost/api/contexts/%s/" % context_id,
-            "machine": "http://localhost/api/machines/%s/" % machine_id,
         },
     }
 

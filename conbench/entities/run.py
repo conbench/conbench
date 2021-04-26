@@ -24,7 +24,7 @@ class Run(Base, EntityMixin):
 class _Serializer(EntitySerializer):
     def _dump(self, run):
         commit = CommitSerializer().one.dump(run.commit)
-        context = ContextSerializer().one.dump(run.context)
+        context = ContextSerializer().one.dump(run.context) if run.context else {}
         machine = MachineSerializer().one.dump(run.machine)
         commit.pop("links", None)
         context.pop("links", None)
@@ -38,12 +38,6 @@ class _Serializer(EntitySerializer):
             "machine": machine,
             "links": {
                 "self": f.url_for("api.run", run_id=run.id, _external=True),
-                "machine": f.url_for(
-                    "api.machine", machine_id=run.machine_id, _external=True
-                ),
-                "context": f.url_for(
-                    "api.context", context_id=run.context_id, _external=True
-                ),
             },
         }
         return result
