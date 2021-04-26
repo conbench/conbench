@@ -15,7 +15,7 @@ class Run(Base, EntityMixin):
     timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id"))
     commit = relationship("Commit", lazy="joined")
-    context_id = Nullable(s.String(50), s.ForeignKey("context.id"))
+    context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
     context = relationship("Context", lazy="joined")
     machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
     machine = relationship("Machine", lazy="joined")
@@ -24,7 +24,7 @@ class Run(Base, EntityMixin):
 class _Serializer(EntitySerializer):
     def _dump(self, run):
         commit = CommitSerializer().one.dump(run.commit)
-        context = ContextSerializer().one.dump(run.context) if run.context else {}
+        context = ContextSerializer().one.dump(run.context)
         machine = MachineSerializer().one.dump(run.machine)
         commit.pop("links", None)
         context.pop("links", None)

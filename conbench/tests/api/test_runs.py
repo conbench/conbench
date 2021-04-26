@@ -52,20 +52,28 @@ class TestRunList(_asserts.ListEnforcer):
         response = client.get("/api/runs/")
         self.assert_200_ok(response, contains=_expected_entity(run))
 
-    def test_run_list_filter_by_sha_and_machine(self, client):
+    def test_run_list_filter_by_run_keys(self, client):
         sha = "02addad336ba19a654f9c857ede546331be7b631"
         self.authenticate(client)
         run = self._create()
-        args = {"sha": sha, "machine_id": run.machine_id}
+        args = {
+            "sha": sha,
+            "machine_id": run.machine_id,
+            "context_id": run.context_id,
+        }
         args = urllib.parse.urlencode(args)
         response = client.get(f"/api/runs/?{args}")
         self.assert_200_ok(response, contains=_expected_entity(run))
 
-    def test_run_list_filter_by_sha_and_machine_no_match(self, client):
+    def test_run_list_filter_by_run_keys_no_match(self, client):
         sha = "02addad336ba19a654f9c857ede546331be7b631"
         self.authenticate(client)
-        self._create()
-        args = {"sha": sha, "machine_id": "some other machine id"}
+        run = self._create()
+        args = {
+            "sha": sha,
+            "machine_id": "some other machine id",
+            "context_id": run.context_id,
+        }
         args = urllib.parse.urlencode(args)
         response = client.get(f"/api/runs/?{args}")
         self.assert_200_ok(response, [])
