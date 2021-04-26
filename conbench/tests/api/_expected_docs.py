@@ -1064,6 +1064,7 @@
                 "description": "Get a list of runs.",
                 "parameters": [
                     {"in": "query", "name": "sha", "schema": {"type": "string"}},
+                    {"in": "query", "name": "context_id", "schema": {"type": "string"}},
                     {"in": "query", "name": "machine_id", "schema": {"type": "string"}},
                 ],
                 "responses": {

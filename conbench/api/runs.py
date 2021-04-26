@@ -53,6 +53,10 @@ class RunListAPI(ApiEndpoint):
             schema:
               type: string
           - in: query
+            name: context_id
+            schema:
+              type: string
+          - in: query
             name: machine_id
             schema:
               type: string
@@ -60,10 +64,15 @@ class RunListAPI(ApiEndpoint):
           - Runs
         """
         sha = f.request.args.get("sha")
+        context_id = f.request.args.get("context_id")
         machine_id = f.request.args.get("machine_id")
-        if sha and machine_id:
+        if sha and context_id and machine_id:
             runs = Run.search(
-                filters=[Run.machine_id == machine_id, Commit.sha == sha],
+                filters=[
+                    Run.context_id == context_id,
+                    Run.machine_id == machine_id,
+                    Commit.sha == sha,
+                ],
                 joins=[Commit],
             )
         else:
