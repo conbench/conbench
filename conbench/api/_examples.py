@@ -174,8 +174,8 @@ def _api_compare_list(
     ]
 
 
-def _api_context_entity(context_id):
-    return {
+def _api_context_entity(context_id, links=True):
+    result = {
         "id": context_id,
         "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
         "arrow_compiler_id": "AppleClang",
@@ -188,6 +188,9 @@ def _api_context_entity(context_id):
             "self": "http://localhost/api/contexts/%s/" % context_id,
         },
     }
+    if not links:
+        result.pop("links", None)
+    return result
 
 
 def _api_machine_entity(machine_id, links=True):
@@ -216,15 +219,17 @@ def _api_machine_entity(machine_id, links=True):
     return result
 
 
-def _api_run_entity(run_id, machine_id, commit_id, now):
+def _api_run_entity(run_id, commit_id, context_id, machine_id, now):
     return {
         "id": run_id,
         "name": "pull request: 9564",
         "timestamp": now,
         "commit": _api_commit_entity(commit_id),
+        "context": _api_context_entity(context_id, links=False),
         "machine": _api_machine_entity(machine_id, links=False),
         "links": {
             "self": "http://localhost/api/runs/%s/" % run_id,
+            "context": "http://localhost/api/contexts/%s/" % context_id,
             "machine": "http://localhost/api/machines/%s/" % machine_id,
         },
     }
@@ -281,21 +286,24 @@ CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
 MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1")
 RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",
-    "some-machine-uuid-1",
     "some-commit-uuid-1",
+    "some-context-uuid-1",
+    "some-machine-uuid-1",
     "2021-02-04T17:22:05.225583",
 )
 RUN_LIST = [
     _api_run_entity(
         "some-run-uuid-1",
-        "some-machine-uuid-1",
         "some-commit-uuid-1",
+        "some-context-uuid-1",
+        "some-machine-uuid-1",
         "2021-02-04T17:22:05.225583",
     ),
     _api_run_entity(
         "some-run-uuid-2",
-        "some-machine-uuid-1",
         "some-commit-uuid-1",
+        "some-context-uuid-1",
+        "some-machine-uuid-1",
         "2021-03-04T17:18:05.715583",
     ),
 ]
