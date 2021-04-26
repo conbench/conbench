@@ -27,11 +27,7 @@ class _Serializer(EntitySerializer):
         context = ContextSerializer().one.dump(run.context)
         machine = MachineSerializer().one.dump(run.machine)
         commit.pop("links", None)
-        foo = context.pop("links", None)
-        print("\n\n HELLO!")
-        print(foo)
-        print(context)
-        print("---------------")
+        context.pop("links", None)
         machine.pop("links", None)
         result = {
             "id": run.id,
