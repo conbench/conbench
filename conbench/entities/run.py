@@ -4,7 +4,6 @@ from sqlalchemy.orm import relationship
 
 from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
 from ..entities.commit import CommitSerializer
-from ..entities.context import ContextSerializer
 from ..entities.machine import MachineSerializer
 
 
@@ -15,8 +14,6 @@ class Run(Base, EntityMixin):
     timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id"))
     commit = relationship("Commit", lazy="joined")
-    context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
-    context = relationship("Context", lazy="joined")
     machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
     machine = relationship("Machine", lazy="joined")
 
@@ -24,17 +21,14 @@ class Run(Base, EntityMixin):
 class _Serializer(EntitySerializer):
     def _dump(self, run):
         commit = CommitSerializer().one.dump(run.commit)
-        context = ContextSerializer().one.dump(run.context) if run.context else {}
         machine = MachineSerializer().one.dump(run.machine)
         commit.pop("links", None)
-        context.pop("links", None)
         machine.pop("links", None)
         result = {
             "id": run.id,
             "name": run.name,
             "timestamp": run.timestamp.isoformat(),
             "commit": commit,
-            "context": context,
             "machine": machine,
             "links": {
                 "self": f.url_for("api.run", run_id=run.id, _external=True),

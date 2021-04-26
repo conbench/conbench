@@ -11,7 +11,6 @@ def _expected_entity(run):
     return _api_run_entity(
         run.id,
         run.commit_id,
-        run.context_id,
         run.machine_id,
         run.timestamp.isoformat(),
     )

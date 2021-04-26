@@ -460,16 +460,6 @@
                                 "timestamp": "2021-02-25T01:02:51",
                                 "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                             },
-                            "context": {
-                                "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
-                                "arrow_compiler_id": "AppleClang",
-                                "arrow_compiler_version": "11.0.0.11000033",
-                                "arrow_git_revision": "02addad336ba19a654f9c857ede546331be7b631",
-                                "arrow_version": "2.0.0",
-                                "benchmark_language": "Python",
-                                "benchmark_language_version": "Python 3.8.5",
-                                "id": "some-context-uuid-1",
-                            },
                             "id": "some-run-uuid-1",
                             "links": {
                                 "self": "http://localhost/api/runs/some-run-uuid-1/"
@@ -516,16 +506,6 @@
                                     "timestamp": "2021-02-25T01:02:51",
                                     "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                                 },
-                                "context": {
-                                    "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
-                                    "arrow_compiler_id": "AppleClang",
-                                    "arrow_compiler_version": "11.0.0.11000033",
-                                    "arrow_git_revision": "02addad336ba19a654f9c857ede546331be7b631",
-                                    "arrow_version": "2.0.0",
-                                    "benchmark_language": "Python",
-                                    "benchmark_language_version": "Python 3.8.5",
-                                    "id": "some-context-uuid-1",
-                                },
                                 "id": "some-run-uuid-1",
                                 "links": {
                                     "self": "http://localhost/api/runs/some-run-uuid-1/"
@@ -563,16 +543,6 @@
                                     "sha": "02addad336ba19a654f9c857ede546331be7b631",
                                     "timestamp": "2021-02-25T01:02:51",
                                     "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
-                                },
-                                "context": {
-                                    "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
-                                    "arrow_compiler_id": "AppleClang",
-                                    "arrow_compiler_version": "11.0.0.11000033",
-                                    "arrow_git_revision": "02addad336ba19a654f9c857ede546331be7b631",
-                                    "arrow_version": "2.0.0",
-                                    "benchmark_language": "Python",
-                                    "benchmark_language_version": "Python 3.8.5",
-                                    "id": "some-context-uuid-1",
                                 },
                                 "id": "some-run-uuid-2",
                                 "links": {
