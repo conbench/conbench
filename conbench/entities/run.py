@@ -18,13 +18,25 @@ class Run(Base, EntityMixin):
     machine = relationship("Machine", lazy="joined")
 
     def get_baseline_id(self):
+        from ..entities.summary import Summary
+
         parent = self.commit.parent
         runs = Run.search(
             filters=[Run.machine_id == self.machine_id, Commit.sha == parent],
             joins=[Commit],
         )
-        if runs:
-            return runs[0].id
+        run_contexts = Summary.distinct(
+            Summary.context_id, filters=[Summary.run_id == self.id]
+        )
+
+        # TODO: What if there are multiple matches? Pick by date?
+        for run in runs:
+            baseline_contexts = Summary.distinct(
+                Summary.context_id, filters=[Summary.run_id == run.id]
+            )
+            if set(run_contexts) == set(baseline_contexts):
+                return run.id
+
         return None
 
 
