@@ -1,5 +1,3 @@
-import flask as f
-
 from ..api import rule
 from ..api._endpoint import ApiEndpoint
 from ..entities._entity import NotFound
