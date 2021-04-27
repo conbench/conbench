@@ -61,19 +61,8 @@ class RunMixin:
         self._augment(run)
         return run
 
-    def get_display_baseline_run(self, sha, machine_id):
-        response = self.api_get("api.runs", sha=sha, machine_id=machine_id)
-        if response.status_code != 200:
-            self.flash("Error getting run.")
-            return None
-
-        runs = response.json
-        if runs:
-            run = runs[0]
-            self._augment(run)
-            return run
-
-        return None
+    def get_display_baseline_run(self, contender_run):
+        return contender_run  # TODO
 
     def get_display_runs(self):
         runs, response = self._get_runs()
