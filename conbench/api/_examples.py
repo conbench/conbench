@@ -180,7 +180,6 @@ def _api_context_entity(context_id, links=True):
         "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
         "arrow_compiler_id": "AppleClang",
         "arrow_compiler_version": "11.0.0.11000033",
-        "arrow_git_revision": "02addad336ba19a654f9c857ede546331be7b631",
         "arrow_version": "2.0.0",
         "benchmark_language_version": "Python 3.8.5",
         "benchmark_language": "Python",
