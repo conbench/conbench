@@ -34,6 +34,9 @@ class _Serializer(EntitySerializer):
                 "self": f.url_for("api.run", run_id=run.id, _external=True),
             },
         }
+        if not self.many:
+            baseline_url = f.url_for("api.run", run_id=run.id, _external=True)
+            result["links"]["baseline"] = baseline_url
         return result
 
 

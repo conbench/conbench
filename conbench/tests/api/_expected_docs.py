@@ -462,7 +462,8 @@
                             },
                             "id": "some-run-uuid-1",
                             "links": {
-                                "self": "http://localhost/api/runs/some-run-uuid-1/"
+                                "baseline": "http://localhost/api/runs/some-run-uuid-0/",
+                                "self": "http://localhost/api/runs/some-run-uuid-1/",
                             },
                             "machine": {
                                 "architecture_name": "x86_64",

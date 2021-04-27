@@ -7,12 +7,13 @@ from ...tests.api import _asserts
 from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
-def _expected_entity(run):
+def _expected_entity(run, baseline_id=None):
     return _api_run_entity(
         run.id,
         run.commit_id,
         run.machine_id,
         run.timestamp.isoformat(),
+        baseline_id,
     )
 
 
@@ -34,7 +35,7 @@ class TestRunGet(_asserts.GetEnforcer):
         self.authenticate(client)
         run = self._create()
         response = client.get(f"/api/runs/{run.id}/")
-        self.assert_200_ok(response, _expected_entity(run))
+        self.assert_200_ok(response, _expected_entity(run, run.id))  # TODO
 
 
 class TestRunList(_asserts.ListEnforcer):
