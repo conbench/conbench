@@ -25,8 +25,9 @@ class RunPlot(AppEndpoint, RunMixin):
     def get(self, run_id):
         contender_run, baseline_run = self.get_display_run(run_id), None
         if contender_run:
-            baseline_url = contender_run["links"]["baseline"]
-            baseline_run = self.get_display_baseline_run(baseline_url)
+            baseline_url = contender_run["links"].get("baseline")
+            if baseline_url:
+                baseline_run = self.get_display_baseline_run(baseline_url)
 
         benchmarks, response = self._get_benchmarks(run_id)
         if response.status_code != 200:

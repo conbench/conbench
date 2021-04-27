@@ -3,7 +3,7 @@ import sqlalchemy as s
 from sqlalchemy.orm import relationship
 
 from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
-from ..entities.commit import CommitSerializer
+from ..entities.commit import Commit, CommitSerializer
 from ..entities.machine import MachineSerializer
 
 
@@ -16,6 +16,16 @@ class Run(Base, EntityMixin):
     commit = relationship("Commit", lazy="joined")
     machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
     machine = relationship("Machine", lazy="joined")
+
+    def get_baseline_id(self):
+        parent = self.commit.parent
+        runs = Run.search(
+            filters=[Run.machine_id == self.machine_id, Commit.sha == parent],
+            joins=[Commit],
+        )
+        if runs:
+            return runs[0].id
+        return None
 
 
 class _Serializer(EntitySerializer):
@@ -35,7 +45,9 @@ class _Serializer(EntitySerializer):
             },
         }
         if not self.many:
-            baseline_url = f.url_for("api.run", run_id=run.id, _external=True)
+            baseline_id, baseline_url = run.get_baseline_id(), None
+            if baseline_id:
+                baseline_url = f.url_for("api.run", run_id=baseline_id, _external=True)
             result["links"]["baseline"] = baseline_url
         return result
 
