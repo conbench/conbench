@@ -6,9 +6,7 @@ Create Date: 2021-04-08 08:45:38.935858
 
 """
 from alembic import op
-
-from conbench.entities.case import Case
-from conbench.entities.summary import Summary
+from sqlalchemy import MetaData
 
 
 # revision identifiers, used by Alembic.
@@ -19,9 +17,11 @@ depends_on = None
 
 
 def upgrade():
-    case_table = Case.__table__
-    summary_table = Summary.__table__
     connection = op.get_bind()
+    meta = MetaData()
+    meta.reflect(bind=connection)
+    case_table = meta.tables["case"]
+    summary_table = meta.tables["summary"]
 
     cases = connection.execute(case_table.select())
     for case in cases:

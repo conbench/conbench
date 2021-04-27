@@ -6,9 +6,7 @@ Create Date: 2021-04-26 13:10:55.281793
 
 """
 from alembic import op
-
-from conbench.entities.run import Run
-from conbench.entities.summary import Summary
+from sqlalchemy import MetaData
 
 
 # revision identifiers, used by Alembic.
@@ -19,9 +17,11 @@ depends_on = None
 
 
 def upgrade():
-    run_table = Run.__table__
-    summary_table = Summary.__table__
     connection = op.get_bind()
+    meta = MetaData()
+    meta.reflect(bind=connection)
+    run_table = meta.tables["run"]
+    summary_table = meta.tables["summary"]
 
     runs = connection.execute(
         run_table.select().where(run_table.c.context_id == None)  # noqa

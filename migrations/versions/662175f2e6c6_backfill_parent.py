@@ -9,9 +9,7 @@ import os
 
 from alembic import op
 import requests
-
-
-from conbench.entities.commit import Commit
+from sqlalchemy import MetaData
 
 
 # revision identifiers, used by Alembic.
@@ -22,8 +20,10 @@ depends_on = None
 
 
 def upgrade():
-    commit_table = Commit.__table__
     connection = op.get_bind()
+    meta = MetaData()
+    meta.reflect(bind=connection)
+    commit_table = meta.tables["commit"]
 
     token, session = os.getenv("GITHUB_API_TOKEN"), None
     if token:
