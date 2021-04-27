@@ -219,18 +219,21 @@ def _api_machine_entity(machine_id, links=True):
     return result
 
 
-def _api_run_entity(run_id, commit_id, context_id, machine_id, now):
-    return {
+def _api_run_entity(run_id, commit_id, machine_id, now, baseline_id):
+    result = {
         "id": run_id,
         "name": "pull request: 9564",
         "timestamp": now,
         "commit": _api_commit_entity(commit_id),
-        "context": _api_context_entity(context_id, links=False),
         "machine": _api_machine_entity(machine_id, links=False),
         "links": {
             "self": "http://localhost/api/runs/%s/" % run_id,
         },
     }
+    if baseline_id:
+        baseline_url = "http://localhost/api/runs/%s/" % baseline_id
+        result["links"]["baseline"] = baseline_url
+    return result
 
 
 BENCHMARK_ENTITY = _api_benchmark_entity(
@@ -285,24 +288,24 @@ MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1")
 RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",
     "some-commit-uuid-1",
-    "some-context-uuid-1",
     "some-machine-uuid-1",
     "2021-02-04T17:22:05.225583",
+    "some-run-uuid-0",
 )
 RUN_LIST = [
     _api_run_entity(
         "some-run-uuid-1",
         "some-commit-uuid-1",
-        "some-context-uuid-1",
         "some-machine-uuid-1",
         "2021-02-04T17:22:05.225583",
+        None,
     ),
     _api_run_entity(
         "some-run-uuid-2",
         "some-commit-uuid-1",
-        "some-context-uuid-1",
         "some-machine-uuid-1",
         "2021-03-04T17:18:05.715583",
+        None,
     ),
 ]
 USER_ENTITY = _api_user_entity(FakeUser1())

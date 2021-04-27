@@ -126,7 +126,6 @@ class Summary(Base, EntityMixin):
                     "id": run_id,
                     "name": run_name,
                     "commit_id": commit.id,
-                    "context_id": context.id,
                     "machine_id": machine.id,
                 }
             )
