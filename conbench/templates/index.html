@@ -57,10 +57,10 @@
                        {% endif %}
                        {{ run.commit.author_name }}
                      </td>
-                     <td><a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a></td>
+                     <td style="white-space: nowrap;"><a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a></td>
                      <td><a href="{{ run.commit.url }}">{{ run.commit.message }}</a></td>
                      <td style="white-space: nowrap;">{{ run.commit.display_timestamp }}</td>
-                     <td>{{ run.machine.name }}</td>
+                     <td style="white-space: nowrap;">{{ run.machine.name }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
