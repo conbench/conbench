@@ -40,18 +40,6 @@ class Connection:
             self._post(self.config.login_url, self.config.credentials, 204)
             self._post(url, data, 201)
 
-    def get(self, url):
-        if self.session:
-            # already authenticated, just do get
-            response = self._get(url, 200)
-
-        if not self.session:
-            # not already authenticated, or authentication expired (try again)
-            self._post(self.config.login_url, self.config.credentials, 204)
-            response = self._get(url, 200)
-
-        return response
-
     def _post(self, url, data, expected):
         try:
             if not self.session:
@@ -64,23 +52,6 @@ class Connection:
                 self._unexpected_response("POST", response, url)
         except requests.exceptions.ConnectionError:
             self.session = None
-
-    def _get(self, url, expected):
-        result = None
-
-        try:
-            if not self.session:
-                self.session = requests.Session()
-                self.session.mount("https://", adapter)
-            response = self.session.get(url)
-            if response.status_code != expected:
-                self._unexpected_response("GET", response, url)
-            else:
-                result = json.loads(response.content)
-        except requests.exceptions.ConnectionError:
-            self.session = None
-
-        return result
 
     def _unexpected_response(self, method, response, url):
         self._print_error(f"\n{method} {url} failed", red=True)
