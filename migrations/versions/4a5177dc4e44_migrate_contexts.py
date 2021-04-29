@@ -39,7 +39,9 @@ def upgrade():
                     .where(summary_table.c.context_id == context.id)
                     .values(context_id=other.id)
                 )
-                context_table.delete().where(context_table.c.id == context.id)
+                connection.execute(
+                    context_table.delete().where(context_table.c.id == context.id)
+                )
             else:
                 connection.execute(
                     context_table.update()
