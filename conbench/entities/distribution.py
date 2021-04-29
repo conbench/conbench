@@ -29,7 +29,24 @@ def get_commits_up(repository, sha, limit):
 def get_distribution(repository, sha, limit):
     commits_up = get_commits_up(repository, sha, limit).subquery().alias("commits_up")
     return (
-        Session.query(Summary.id)
+        Session.query(
+            Summary.case_id,
+            Summary.context_id,
+            Summary.machine_id,
+            func.max(Summary.unit).label("unit"),
+            func.avg(Summary.mean).label("mean_mean"),
+            func.stddev(Summary.mean).label("mean_sd"),
+            func.avg(Summary.min).label("min_mean"),
+            func.stddev(Summary.min).label("min_sd"),
+            func.avg(Summary.max).label("max_mean"),
+            func.stddev(Summary.max).label("max_sd"),
+            func.avg(Summary.median).label("median_mean"),
+            func.stddev(Summary.median).label("median_sd"),
+            func.min(commits_up.c.timestamp).label("first_timestamp"),
+            func.max(commits_up.c.timestamp).label("last_timestamp"),
+            func.count(Summary.mean).label("n_observations_used"),
+        )
+        .group_by(Summary.case_id, Summary.context_id, Summary.machine_id)
         .join(Run, Run.id == Summary.run_id)
         .join(commits_up, commits_up.c.id == Run.commit_id)
     )

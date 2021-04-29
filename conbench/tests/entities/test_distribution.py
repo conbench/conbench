@@ -1,5 +1,6 @@
 import copy
 import datetime
+import decimal
 import uuid
 
 from ...entities.commit import Commit
@@ -51,7 +52,7 @@ DISTRIBUTION = """WITH ordered_commits AS
 (SELECT commit.id AS id, commit.sha AS sha, commit.parent AS parent, commit.timestamp AS timestamp 
 FROM commit 
 WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
- SELECT summary.id 
+ SELECT summary.case_id, summary.context_id, summary.machine_id, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS n_observations_used 
 FROM summary JOIN run ON run.id = summary.run_id JOIN (SELECT commit_index.id AS id, commit_index.sha AS sha, commit_index.parent AS parent, commit_index.timestamp AS timestamp, commit_index.row_number AS row_number 
 FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.parent AS parent, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
@@ -59,7 +60,7 @@ WHERE commit_index.row_number >= (SELECT commit_index.row_number
 FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.parent AS parent, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
 WHERE commit_index.sha = :sha_1)
- LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id"""  # noqa
+ LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id GROUP BY summary.case_id, summary.context_id, summary.machine_id"""  # noqa
 
 
 def create_benchmark_summary():
@@ -228,15 +229,226 @@ def test_distibution():
     # ----- get_distribution
 
     assert set(get_distribution(REPO, "55555", 3).all()) == set(
-        [(summary_5.id,), (summary_4.id,), (summary_3.id,)]
+        [
+            (
+                summary_5.case_id,
+                summary_5.context_id,
+                summary_5.machine_id,
+                "s",
+                decimal.Decimal("0.03636900000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00473300000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.14889600000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00898800000000000000"),
+                decimal.Decimal("0"),
+                datetime.datetime(2021, 11, 3, 0, 0),
+                datetime.datetime(2021, 11, 5, 0, 0),
+                3,
+            ),
+            (
+                summary_4.case_id,
+                summary_4.context_id,
+                summary_4.machine_id,
+                "s",
+                decimal.Decimal("0.03636900000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00473300000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.14889600000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00898800000000000000"),
+                decimal.Decimal("0"),
+                datetime.datetime(2021, 11, 3, 0, 0),
+                datetime.datetime(2021, 11, 5, 0, 0),
+                3,
+            ),
+            (
+                summary_3.case_id,
+                summary_3.context_id,
+                summary_3.machine_id,
+                "s",
+                decimal.Decimal("0.03636900000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00473300000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.14889600000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00898800000000000000"),
+                decimal.Decimal("0"),
+                datetime.datetime(2021, 11, 3, 0, 0),
+                datetime.datetime(2021, 11, 5, 0, 0),
+                3,
+            ),
+        ]
     )
     assert set(get_distribution(REPO, "44444", 3).all()) == set(
-        [(summary_4.id,), (summary_3.id,), (summary_2.id,)]
+        [
+            (
+                summary_4.case_id,
+                summary_4.context_id,
+                summary_4.machine_id,
+                "s",
+                decimal.Decimal("0.03636900000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00473300000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.14889600000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00898800000000000000"),
+                decimal.Decimal("0"),
+                datetime.datetime(2021, 11, 2, 0, 0),
+                datetime.datetime(2021, 11, 4, 0, 0),
+                3,
+            ),
+            (
+                summary_3.case_id,
+                summary_3.context_id,
+                summary_3.machine_id,
+                "s",
+                decimal.Decimal("0.03636900000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00473300000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.14889600000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00898800000000000000"),
+                decimal.Decimal("0"),
+                datetime.datetime(2021, 11, 2, 0, 0),
+                datetime.datetime(2021, 11, 4, 0, 0),
+                3,
+            ),
+            (
+                summary_2.case_id,
+                summary_2.context_id,
+                summary_2.machine_id,
+                "s",
+                decimal.Decimal("0.03636900000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00473300000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.14889600000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00898800000000000000"),
+                decimal.Decimal("0"),
+                datetime.datetime(2021, 11, 2, 0, 0),
+                datetime.datetime(2021, 11, 4, 0, 0),
+                3,
+            ),
+        ]
     )
     assert set(get_distribution(REPO, "33333", 3).all()) == set(
-        [(summary_3.id,), (summary_2.id,), (summary_1.id,)]
+        [
+            (
+                summary_3.case_id,
+                summary_3.context_id,
+                summary_3.machine_id,
+                "s",
+                decimal.Decimal("0.03636900000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00473300000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.14889600000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00898800000000000000"),
+                decimal.Decimal("0"),
+                datetime.datetime(2021, 11, 1, 0, 0),
+                datetime.datetime(2021, 11, 3, 0, 0),
+                3,
+            ),
+            (
+                summary_2.case_id,
+                summary_2.context_id,
+                summary_2.machine_id,
+                "s",
+                decimal.Decimal("0.03636900000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00473300000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.14889600000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00898800000000000000"),
+                decimal.Decimal("0"),
+                datetime.datetime(2021, 11, 1, 0, 0),
+                datetime.datetime(2021, 11, 3, 0, 0),
+                3,
+            ),
+            (
+                summary_1.case_id,
+                summary_1.context_id,
+                summary_1.machine_id,
+                "s",
+                decimal.Decimal("0.03636900000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00473300000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.14889600000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00898800000000000000"),
+                decimal.Decimal("0"),
+                datetime.datetime(2021, 11, 1, 0, 0),
+                datetime.datetime(2021, 11, 3, 0, 0),
+                3,
+            ),
+        ]
     )
     assert set(get_distribution(REPO, "22222", 3).all()) == set(
-        [(summary_2.id,), (summary_1.id,)]
+        [
+            (
+                summary_2.case_id,
+                summary_2.context_id,
+                summary_2.machine_id,
+                "s",
+                decimal.Decimal("0.03636900000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00473300000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.14889600000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00898800000000000000"),
+                decimal.Decimal("0"),
+                datetime.datetime(2021, 11, 1, 0, 0),
+                datetime.datetime(2021, 11, 2, 0, 0),
+                2,
+            ),
+            (
+                summary_1.case_id,
+                summary_1.context_id,
+                summary_1.machine_id,
+                "s",
+                decimal.Decimal("0.03636900000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00473300000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.14889600000000000000"),
+                decimal.Decimal("0"),
+                decimal.Decimal("0.00898800000000000000"),
+                decimal.Decimal("0"),
+                datetime.datetime(2021, 11, 1, 0, 0),
+                datetime.datetime(2021, 11, 2, 0, 0),
+                2,
+            ),
+        ]
     )
-    assert set(get_distribution(REPO, "11111", 3).all()) == set([(summary_1.id,)])
+    assert set(get_distribution(REPO, "11111", 3).all()) == set(
+        [
+            (
+                summary_1.case_id,
+                summary_1.context_id,
+                summary_1.machine_id,
+                "s",
+                decimal.Decimal("0.03636900000000000000"),
+                None,
+                decimal.Decimal("0.00473300000000000000"),
+                None,
+                decimal.Decimal("0.14889600000000000000"),
+                None,
+                decimal.Decimal("0.00898800000000000000"),
+                None,
+                datetime.datetime(2021, 11, 1, 0, 0),
+                datetime.datetime(2021, 11, 1, 0, 0),
+                1,
+            ),
+        ]
+    )
