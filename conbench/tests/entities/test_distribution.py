@@ -35,7 +35,10 @@ WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
  SELECT commit_index.id, commit_index.sha, commit_index.parent, commit_index.timestamp, commit_index.row_number 
 FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.parent AS parent, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
-WHERE commit_index.row_number >= :row_number_1
+WHERE commit_index.row_number >= (SELECT commit_index.row_number 
+FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.parent AS parent, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
+FROM ordered_commits) AS commit_index 
+WHERE commit_index.sha = :sha_1)
  LIMIT :param_1"""
 
 

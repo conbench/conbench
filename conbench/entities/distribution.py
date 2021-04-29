@@ -14,14 +14,11 @@ def get_commit_index(repository):
 
 
 def get_sha_row_number(repository, sha):
-    index = get_commit_index(repository)
-    index = index.subquery().alias("commit_index")
+    index = get_commit_index(repository).subquery().alias("commit_index")
     return Session.query(index.c.row_number).filter(index.c.sha == sha)
 
 
 def get_commits_up(repository, sha, limit):
-    index = get_commit_index(repository)
-    index = index.subquery().alias("commit_index")
-    result = Session.query(index.c.row_number).filter(index.c.sha == sha).all()
-    row_number = result[0][0] if result else float("inf")
+    index = get_commit_index(repository).subquery().alias("commit_index")
+    row_number = Session.query(index.c.row_number).filter(index.c.sha == sha)
     return Session.query(index).filter(index.c.row_number >= row_number).limit(limit)
