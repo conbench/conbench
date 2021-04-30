@@ -4,6 +4,7 @@ from alembic import command
 from alembic.config import Config
 
 from ...db import Session
+from ...entities.case import Case
 from ...entities.summary import Summary
 
 
@@ -424,6 +425,11 @@ def test_upgrade():
     summary_3 = Summary.create(VALID_PAYLOAD_3)
     summary_4 = Summary.create(VALID_PAYLOAD_4)
     summary_5 = Summary.create(VALID_PAYLOAD_5)
+    before_case_id_1 = summary_1.case_id
+    before_case_id_2 = summary_2.case_id
+    before_case_id_3 = summary_3.case_id
+    before_case_id_4 = summary_4.case_id
+    before_case_id_5 = summary_5.case_id
 
     expected = {
         "dataset": "nyctaxi_sample",
@@ -443,6 +449,12 @@ def test_upgrade():
     }
 
     # assert before migration
+    assert Case.get(before_case_id_1) is not None
+    assert Case.get(before_case_id_2) is not None
+    assert Case.get(before_case_id_3) is not None
+    assert Case.get(before_case_id_4) is not None
+    assert Case.get(before_case_id_5) is not None
+
     assert summary_1.case.name == "file-write"
     assert summary_1.case.tags == expected
     assert summary_2.case.name == "file-write"
@@ -469,6 +481,12 @@ def test_upgrade():
     Session.refresh(summary_5)
 
     # assert after migration
+    assert Case.get(before_case_id_1) is not None
+    assert Case.get(before_case_id_2) is None  # deleted
+    assert Case.get(before_case_id_3) is not None
+    assert Case.get(before_case_id_4) is None  # deleted
+    assert Case.get(before_case_id_5) is not None
+
     assert summary_1.case.name == "file-write"
     assert summary_1.case.tags == expected
     assert summary_2.case.name == "file-write"

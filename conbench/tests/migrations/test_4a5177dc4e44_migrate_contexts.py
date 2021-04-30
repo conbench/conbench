@@ -5,6 +5,7 @@ from alembic.config import Config
 
 from ...db import Session
 from ...entities.summary import Summary
+from ...entities.context import Context
 
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
@@ -259,8 +260,14 @@ def test_upgrade():
     summary_1 = Summary.create(VALID_PAYLOAD_1)
     summary_2 = Summary.create(VALID_PAYLOAD_2)
     summary_3 = Summary.create(VALID_PAYLOAD_3)
+    before_context_id_1 = summary_1.context_id
+    before_context_id_2 = summary_2.context_id
+    before_context_id_3 = summary_3.context_id
 
     # assert before migration
+    assert Context.get(before_context_id_1) is not None
+    assert Context.get(before_context_id_2) is not None
+    assert Context.get(before_context_id_3) is not None
     assert "arrow_git_revision" in summary_1.context.tags
     assert "arrow_git_revision" not in summary_2.context.tags
     assert "arrow_git_revision" in summary_3.context.tags
@@ -278,6 +285,9 @@ def test_upgrade():
     Session.refresh(summary_3)
 
     # assert after migration
+    assert Context.get(before_context_id_1) is None  # deleted
+    assert Context.get(before_context_id_2) is not None
+    assert Context.get(before_context_id_3) is not None
     assert "arrow_git_revision" not in summary_1.context.tags
     assert "arrow_git_revision" not in summary_2.context.tags
     assert "arrow_git_revision" not in summary_3.context.tags

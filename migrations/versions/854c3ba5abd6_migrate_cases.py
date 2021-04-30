@@ -41,7 +41,9 @@ def upgrade():
                     .where(summary_table.c.case_id == case.id)
                     .values(case_id=other.id)
                 )
-                case_table.delete().where(case_table.c.id == case.id)
+                connection.execute(
+                    case_table.delete().where(case_table.c.id == case.id)
+                )
             else:
                 connection.execute(
                     case_table.update()
