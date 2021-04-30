@@ -52,7 +52,7 @@ DISTRIBUTION = """WITH ordered_commits AS
 (SELECT commit.id AS id, commit.sha AS sha, commit.parent AS parent, commit.timestamp AS timestamp 
 FROM commit 
 WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
- SELECT summary.case_id, summary.context_id, summary.machine_id, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS n_observations_used 
+ SELECT text(:text_1) AS latest_sha, summary.case_id, summary.context_id, summary.machine_id, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS n_observations_used 
 FROM summary JOIN run ON run.id = summary.run_id JOIN (SELECT commit_index.id AS id, commit_index.sha AS sha, commit_index.parent AS parent, commit_index.timestamp AS timestamp, commit_index.row_number AS row_number 
 FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.parent AS parent, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
@@ -60,23 +60,27 @@ WHERE commit_index.row_number >= (SELECT commit_index.row_number
 FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.parent AS parent, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
 WHERE commit_index.sha = :sha_1)
- LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id GROUP BY summary.case_id, summary.context_id, summary.machine_id"""  # noqa
+ LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id 
+WHERE run.name LIKE :name_1 GROUP BY summary.case_id, summary.context_id, summary.machine_id"""  # noqa
 
 
 def create_benchmark_summary():
     data = copy.deepcopy(VALID_PAYLOAD)
     data["stats"]["run_id"] = uuid.uuid4().hex
+    data["stats"]["run_name"] = "commit: some commit"
     summary = Summary.create(data)
     return summary
 
 
 def test_distibution_queries():
-    assert str(get_commit_index(REPO).statement.compile()) == COMMIT_INDEX
-    assert str(get_sha_row_number(REPO, "SOME SHA").statement.compile()) == ROW_NUMBER
-    assert str(get_commits_up(REPO, "SOME SHA", 3).statement.compile()) == COMMITS_UP
-    assert (
-        str(get_distribution(REPO, "SOME SHA", 3).statement.compile()) == DISTRIBUTION
-    )
+    query = str(get_commit_index(REPO).statement.compile())
+    assert query == COMMIT_INDEX
+    query = str(get_sha_row_number(REPO, "SOME SHA").statement.compile())
+    assert query == ROW_NUMBER
+    query = str(get_commits_up(REPO, "SOME SHA", 3).statement.compile())
+    assert query == COMMITS_UP
+    query = str(get_distribution(REPO, "SOME SHA", 3).statement.compile())
+    assert query == DISTRIBUTION
 
 
 def test_distibution():
@@ -231,6 +235,7 @@ def test_distibution():
     assert set(get_distribution(REPO, "55555", 3).all()) == set(
         [
             (
+                "55555",
                 summary_5.case_id,
                 summary_5.context_id,
                 summary_5.machine_id,
@@ -248,6 +253,7 @@ def test_distibution():
                 3,
             ),
             (
+                "55555",
                 summary_4.case_id,
                 summary_4.context_id,
                 summary_4.machine_id,
@@ -265,6 +271,7 @@ def test_distibution():
                 3,
             ),
             (
+                "55555",
                 summary_3.case_id,
                 summary_3.context_id,
                 summary_3.machine_id,
@@ -286,6 +293,7 @@ def test_distibution():
     assert set(get_distribution(REPO, "44444", 3).all()) == set(
         [
             (
+                "44444",
                 summary_4.case_id,
                 summary_4.context_id,
                 summary_4.machine_id,
@@ -303,6 +311,7 @@ def test_distibution():
                 3,
             ),
             (
+                "44444",
                 summary_3.case_id,
                 summary_3.context_id,
                 summary_3.machine_id,
@@ -320,6 +329,7 @@ def test_distibution():
                 3,
             ),
             (
+                "44444",
                 summary_2.case_id,
                 summary_2.context_id,
                 summary_2.machine_id,
@@ -341,6 +351,7 @@ def test_distibution():
     assert set(get_distribution(REPO, "33333", 3).all()) == set(
         [
             (
+                "33333",
                 summary_3.case_id,
                 summary_3.context_id,
                 summary_3.machine_id,
@@ -358,6 +369,7 @@ def test_distibution():
                 3,
             ),
             (
+                "33333",
                 summary_2.case_id,
                 summary_2.context_id,
                 summary_2.machine_id,
@@ -375,6 +387,7 @@ def test_distibution():
                 3,
             ),
             (
+                "33333",
                 summary_1.case_id,
                 summary_1.context_id,
                 summary_1.machine_id,
@@ -396,6 +409,7 @@ def test_distibution():
     assert set(get_distribution(REPO, "22222", 3).all()) == set(
         [
             (
+                "22222",
                 summary_2.case_id,
                 summary_2.context_id,
                 summary_2.machine_id,
@@ -413,6 +427,7 @@ def test_distibution():
                 2,
             ),
             (
+                "22222",
                 summary_1.case_id,
                 summary_1.context_id,
                 summary_1.machine_id,
@@ -434,6 +449,7 @@ def test_distibution():
     assert set(get_distribution(REPO, "11111", 3).all()) == set(
         [
             (
+                "11111",
                 summary_1.case_id,
                 summary_1.context_id,
                 summary_1.machine_id,

@@ -30,6 +30,7 @@ def get_distribution(repository, sha, limit):
     commits_up = get_commits_up(repository, sha, limit).subquery().alias("commits_up")
     return (
         Session.query(
+            func.text(sha).label("latest_sha"),
             Summary.case_id,
             Summary.context_id,
             Summary.machine_id,
@@ -49,4 +50,5 @@ def get_distribution(repository, sha, limit):
         .group_by(Summary.case_id, Summary.context_id, Summary.machine_id)
         .join(Run, Run.id == Summary.run_id)
         .join(commits_up, commits_up.c.id == Run.commit_id)
+        .filter(Run.name.like("commit: %"))
     )
