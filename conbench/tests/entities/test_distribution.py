@@ -220,6 +220,7 @@ def test_distibution():
     assert get_sha_row_number(REPO, "33333").all() == [(3,)]
     assert get_sha_row_number(REPO, "22222").all() == [(4,)]
     assert get_sha_row_number(REPO, "11111").all() == [(5,)]
+    assert get_sha_row_number(REPO, "00000").all() == []
 
     # ----- get_commits_up
 
@@ -354,3 +355,4 @@ def test_distibution():
             1,
         )
     ]
+    assert get_distribution(REPO, "00000", 10).all() == []
