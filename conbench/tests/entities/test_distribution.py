@@ -182,7 +182,7 @@ def test_distibution():
     summary_4.run.commit_id = commit_4.id
     summary_4.save()
 
-    data = [3.1, 3.0, 2.99]  # got better
+    data = [3.1, 3.0, 2.99]  # got worse
     summary_5 = create_benchmark_summary(conbench, data)
     summary_5.run.commit_id = commit_5.id
     summary_5.save()
