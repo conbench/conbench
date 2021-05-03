@@ -29,12 +29,12 @@ class Summary(Base, EntityMixin):
     __tablename__ = "summary"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     case_id = NotNull(s.String(50), s.ForeignKey("case.id"))
-    machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
+    machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
     run_id = NotNull(s.Text, s.ForeignKey("run.id"))
     case = relationship("Case", lazy="joined")
-    machine = relationship("Machine", lazy="select")
     context = relationship("Context", lazy="select")
+    machine = relationship("Machine", lazy="select")
     run = relationship("Run", lazy="select")
     data = relationship(
         "Data",
