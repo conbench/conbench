@@ -25,6 +25,8 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
             contender_run_id = comparisons[0]["contender_run_id"]
             compare = f"{baseline_run_id}...{contender_run_id}"
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
+        elif comparisons and self.type == "run":
+            baseline_run_id, contender_run_id = baseline_id, contender_id
         elif comparisons and self.type == "benchmark":
             baseline = self.get_display_benchmark(baseline_id)
             contender = self.get_display_benchmark(contender_id)
@@ -36,6 +38,8 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
             compare = f'{b_stats["batch_id"]}...{c_stats["batch_id"]}'
             compare_batches_url = f.url_for("app.compare-batches", compare_ids=compare)
+
+        if comparisons:
             baseline_run = self.get_display_run(baseline_run_id)
             contender_run = self.get_display_run(contender_run_id)
 

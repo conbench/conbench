@@ -72,3 +72,10 @@ table.dataTable thead .sorting_desc {
  }
 .bokeh-carousel {
 }
+
+.ellipsis-175 {
+  width: 175px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}

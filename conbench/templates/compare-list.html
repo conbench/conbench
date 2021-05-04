@@ -31,6 +31,22 @@
       </ol>
     </nav>
 
+    {% if baseline_run and contender_run %}
+    <div class="row">
+      <div class="col-md-12">
+        <ul class="list-group">
+          <li class="list-group-item" align="right" style="border-style:none">
+          Baseline:
+          <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.message }}</a>
+          <br/>
+          Contender:
+          <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.message }}</a>
+          </li>
+         </ul>
+      </div>
+    </div>
+    {% endif %}
+
     <div class="row">
         <div class="col-md-12">
             <table id="benchmarks" class="table table-striped table-bordered table-hover">

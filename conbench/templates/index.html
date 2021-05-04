@@ -34,23 +34,17 @@
             <thead>
                 <tr>
                     <th scope="col">Run</th>
-                    <th scope="col">Reason</th>
                     <th scope="col">Author</th>
                     <th scope="col">Repository</th>
                     <th scope="col">Commit</th>
-                    <th scope="col">Date</th>
                     <th scope="col">Machine</th>
+                    <th scope="col">Reason</th>
                 </tr>
             </thead>
             <tbody>
                 {% for run in runs %}
                 <tr>
                      <td style="white-space: nowrap;"><a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.display_timestamp }}</a></td>
-                     {% if run.name %}
-                       <td>{{ run.name.split(":", 1)[0] }}</td>
-                     {% else %}
-                       <td></td>
-                     {% endif %}
                      <td style="white-space: nowrap;">
                        {% if run.commit.author_avatar %}
                          <image src="{{ run.commit.author_avatar }}" height="30" style="border-radius: 50%;">&nbsp;
@@ -59,8 +53,12 @@
                      </td>
                      <td style="white-space: nowrap;"><a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a></td>
                      <td><a href="{{ run.commit.url }}">{{ run.commit.message }}</a></td>
-                     <td style="white-space: nowrap;">{{ run.commit.display_timestamp }}</td>
-                     <td style="white-space: nowrap;">{{ run.machine.name }}</td>
+                     <td><div class="ellipsis-175">{{ run.machine.name }}</div></td>
+                     {% if run.name %}
+                       <td><div class="ellipsis-175">{{ run.name.split(":", 1)[0] }}</div></td>
+                     {% else %}
+                       <td></td>
+                     {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
