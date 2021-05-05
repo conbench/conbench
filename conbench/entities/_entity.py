@@ -2,7 +2,7 @@ import functools
 import uuid
 
 import flask as f
-from sqlalchemy import Column, distinct, func
+from sqlalchemy import Column, distinct
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm.exc import NoResultFound
 
