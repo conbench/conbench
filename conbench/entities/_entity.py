@@ -2,7 +2,7 @@ import functools
 import uuid
 
 import flask as f
-from sqlalchemy import Column, distinct
+from sqlalchemy import Column, distinct, func
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -25,6 +25,10 @@ def generate_uuid():
 class EntityMixin:
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.id}>"
+
+    @classmethod
+    def count(cls):
+        return Session.query(cls).count()
 
     @classmethod
     def distinct(cls, column, filters):

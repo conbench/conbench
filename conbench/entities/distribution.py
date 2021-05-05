@@ -12,7 +12,6 @@ from ..entities._entity import (
 )
 from ..entities.commit import Commit
 from ..entities.run import Run
-from ..entities.summary import Summary
 
 
 class Distribution(Base, EntityMixin):
@@ -63,6 +62,8 @@ def get_commits_up(repository, sha, limit):
 
 
 def get_distribution(repository, sha, limit):
+    from ..entities.summary import Summary
+
     commits_up = get_commits_up(repository, sha, limit).subquery().alias("commits_up")
     return (
         Session.query(
