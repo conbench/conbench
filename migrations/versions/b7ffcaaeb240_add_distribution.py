@@ -51,6 +51,12 @@ def upgrade():
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
+        "distribution_index",
+        "distribution",
+        ["sha", "case_id", "context_id", "machine_id"],
+        unique=True,
+    )
+    op.create_index(
         "distribution_case_id_index", "distribution", ["case_id"], unique=False
     )
     op.create_index(
@@ -63,6 +69,7 @@ def upgrade():
 
 
 def downgrade():
+    op.drop_index("distribution_index", table_name="distribution")
     op.drop_index("distribution_sha_index", table_name="distribution")
     op.drop_index("distribution_machine_id_index", table_name="distribution")
     op.drop_index("distribution_context_id_index", table_name="distribution")

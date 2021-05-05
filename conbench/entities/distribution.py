@@ -35,6 +35,15 @@ class Distribution(Base, EntityMixin):
     observations = NotNull(s.Integer, check("observations>=1"))
 
 
+s.Index(
+    "distribution_index",
+    Distribution.sha,
+    Distribution.case_id,
+    Distribution.context_id,
+    Distribution.machine_id,
+    unique=True,
+)
+
 s.Index("distribution_sha_index", Distribution.sha)
 s.Index("distribution_case_id_index", Distribution.case_id)
 s.Index("distribution_context_id_index", Distribution.context_id)
