@@ -356,3 +356,77 @@ def test_distibution():
         )
     ]
     assert get_distribution(REPO, "00000", 10).all() == []
+
+
+def test_distibution_multiple_runs_same_commit():
+    conbench = Conbench()
+
+    commit_1 = Commit.create(
+        {
+            "sha": "YYYYY",
+            "repository": REPO,
+            "parent": "XXXXX",
+            "timestamp": datetime.datetime(2021, 11, 1),
+            "message": "message 11111",
+            "author_name": "author_name",
+            "author_login": "author_login",
+            "author_avatar": "author_avatar",
+        }
+    )
+
+    data = [1, 2, 3]
+    summary_1 = create_benchmark_summary(conbench, data)
+    summary_1.run.commit_id = commit_1.id
+    summary_1.save()
+
+    assert get_distribution(REPO, "YYYYY", 10).all() == [
+        (
+            "YYYYY",
+            summary_1.case_id,
+            summary_1.context_id,
+            summary_1.machine_id,
+            "s",
+            decimal.Decimal("2.0000000000000000"),
+            None,
+            decimal.Decimal("1.00000000000000000000"),
+            None,
+            decimal.Decimal("3.0000000000000000"),
+            None,
+            decimal.Decimal("2.0000000000000000"),
+            None,
+            datetime.datetime(2021, 11, 1, 0, 0),
+            datetime.datetime(2021, 11, 1, 0, 0),
+            1,
+        )
+    ]
+
+    data = [4, 5, 6]
+    summary_2 = create_benchmark_summary(conbench, data)
+    summary_2.run.commit_id = commit_1.id
+    summary_2.save()
+
+    assert summary_1.case_id == summary_2.case_id
+    assert summary_1.context_id == summary_2.context_id
+    assert summary_1.run.commit_id == summary_2.run.commit_id
+    assert summary_1.machine_id == summary_2.machine_id
+
+    assert get_distribution(REPO, "YYYYY", 10).all() == [
+        (
+            "YYYYY",
+            summary_1.case_id,
+            summary_1.context_id,
+            summary_1.machine_id,
+            "s",
+            decimal.Decimal("3.5000000000000000"),
+            decimal.Decimal("2.1213203435596426"),
+            decimal.Decimal("2.5000000000000000"),
+            decimal.Decimal("2.1213203435596426"),
+            decimal.Decimal("4.5000000000000000"),
+            decimal.Decimal("2.1213203435596426"),
+            decimal.Decimal("3.5000000000000000"),
+            decimal.Decimal("2.1213203435596426"),
+            datetime.datetime(2021, 11, 1, 0, 0),
+            datetime.datetime(2021, 11, 1, 0, 0),
+            2,
+        )
+    ]
