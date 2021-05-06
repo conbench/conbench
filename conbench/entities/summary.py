@@ -6,6 +6,7 @@ import marshmallow
 import requests
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import relationship
 
 from ..entities._entity import (
@@ -24,6 +25,7 @@ from ..entities.distribution import Distribution, get_distribution
 from ..entities.machine import Machine, MachineSchema
 from ..entities.run import Run
 from ..entities.time import Time
+from ..db import Session
 
 
 class Summary(Base, EntityMixin):
@@ -149,32 +151,17 @@ class Summary(Base, EntityMixin):
             bulk.append(Time(result=x, summary_id=summary.id, iteration=i + 1))
         Time.bulk_save_objects(bulk)
 
-        d = get_distribution(repository, sha, 1000).first()
-        if d:
-            distribution = Distribution.first(
-                sha=sha,
-                case_id=case.id,
-                context_id=context.id,
-                machine_id=machine.id,
-            )
-            if distribution:
-                distribution.update(
-                    {
-                        "mean_mean": d["mean_mean"],
-                        "mean_sd": d["mean_sd"],
-                        "min_mean": d["min_mean"],
-                        "min_sd": d["min_sd"],
-                        "max_mean": d["max_mean"],
-                        "max_sd": d["max_sd"],
-                        "median_mean": d["median_mean"],
-                        "median_sd": d["median_sd"],
-                        "first_timestamp": d["first_timestamp"],
-                        "last_timestamp": d["last_timestamp"],
-                        "observations": d["observations"],
-                    }
+        distribution = get_distribution(repository, sha, 1000).first()
+        if distribution:
+            values = dict(distribution)
+            Session.execute(
+                insert(Distribution.__table__)
+                .values(values)
+                .on_conflict_do_update(
+                    index_elements=["sha", "case_id", "context_id", "machine_id"],
+                    set_=values,
                 )
-            else:
-                Distribution.create(d)
+            )
 
         return summary
 
