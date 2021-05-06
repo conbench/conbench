@@ -18,8 +18,9 @@ from ..entities._entity import (
 )
 from ..entities.case import Case
 from ..entities.context import Context
-from ..entities.data import Data
 from ..entities.commit import Commit, parse_commit
+from ..entities.data import Data
+from ..entities.distribution import Distribution, get_distribution
 from ..entities.machine import Machine, MachineSchema
 from ..entities.run import Run
 from ..entities.time import Time
@@ -131,8 +132,8 @@ class Summary(Base, EntityMixin):
             )
 
         stats["case_id"] = case.id
-        stats["machine_id"] = machine.id
         stats["context_id"] = context.id
+        stats["machine_id"] = machine.id
         summary = Summary(**stats)
         summary.save()
 
@@ -147,6 +148,33 @@ class Summary(Base, EntityMixin):
         for i, x in enumerate(times):
             bulk.append(Time(result=x, summary_id=summary.id, iteration=i + 1))
         Time.bulk_save_objects(bulk)
+
+        d = get_distribution(repository, sha, 1000).first()
+        if d:
+            distribution = Distribution.first(
+                sha=sha,
+                case_id=case.id,
+                context_id=context.id,
+                machine_id=machine.id,
+            )
+            if distribution:
+                distribution.update(
+                    {
+                        "mean_mean": d["mean_mean"],
+                        "mean_sd": d["mean_sd"],
+                        "min_mean": d["min_mean"],
+                        "min_sd": d["min_sd"],
+                        "max_mean": d["max_mean"],
+                        "max_sd": d["max_sd"],
+                        "median_mean": d["median_mean"],
+                        "median_sd": d["median_sd"],
+                        "first_timestamp": d["first_timestamp"],
+                        "last_timestamp": d["last_timestamp"],
+                        "observations": d["observations"],
+                    }
+                )
+            else:
+                Distribution.create(d)
 
         return summary
 
