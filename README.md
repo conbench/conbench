@@ -42,6 +42,8 @@ repository, and the results are hosted on the
 [Arrow Conbench Server](https://conbench.ursa.dev/).
 
 
+- May 2021: https://ursalabs.org/blog/announcing-conbench/
+
 <hr>
 
 
