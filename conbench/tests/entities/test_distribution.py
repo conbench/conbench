@@ -62,7 +62,7 @@ FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commi
 FROM ordered_commits) AS commit_index 
 WHERE commit_index.sha = :sha_1)
  LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id 
-WHERE run.name LIKE :name_1 GROUP BY summary.case_id, summary.context_id, summary.machine_id"""  # noqa
+WHERE run.name LIKE :name_1 AND summary.case_id = :case_id_1 AND summary.context_id = :context_id_1 AND summary.machine_id = :machine_id_1 GROUP BY summary.case_id, summary.context_id, summary.machine_id"""  # noqa
 
 
 def create_benchmark_summary(conbench, results):
@@ -83,7 +83,9 @@ def test_distibution_queries():
     assert query == ROW_NUMBER
     query = str(get_commits_up(REPO, "SOME SHA", 3).statement.compile())
     assert query == COMMITS_UP
-    query = str(get_distribution(REPO, "SOME SHA", 3).statement.compile())
+    query = str(
+        get_distribution(REPO, "SOME SHA", "ID", "ID", "ID", 3).statement.compile()
+    )
     assert query == DISTRIBUTION
 
 
@@ -202,6 +204,10 @@ def test_distibution():
     assert summary_1.machine_id == summary_4.machine_id
     assert summary_1.machine_id == summary_5.machine_id
 
+    case_id = summary_1.case_id
+    context_id = summary_1.context_id
+    machine_id = summary_1.machine_id
+
     # ----- get_commit_index
 
     expected = [
@@ -255,7 +261,9 @@ def test_distibution():
 
     # ----- get_distribution
 
-    assert get_distribution(REPO, "55555", 10).all() == [
+    assert get_distribution(
+        REPO, "55555", case_id, context_id, machine_id, 10
+    ).all() == [
         (
             "55555",
             summary_5.case_id,
@@ -275,7 +283,9 @@ def test_distibution():
             5,
         )
     ]
-    assert get_distribution(REPO, "44444", 10).all() == [
+    assert get_distribution(
+        REPO, "44444", case_id, context_id, machine_id, 10
+    ).all() == [
         (
             "44444",
             summary_4.case_id,
@@ -295,7 +305,9 @@ def test_distibution():
             4,
         )
     ]
-    assert get_distribution(REPO, "33333", 10).all() == [
+    assert get_distribution(
+        REPO, "33333", case_id, context_id, machine_id, 10
+    ).all() == [
         (
             "33333",
             summary_3.case_id,
@@ -315,7 +327,9 @@ def test_distibution():
             3,
         )
     ]
-    assert get_distribution(REPO, "22222", 10).all() == [
+    assert get_distribution(
+        REPO, "22222", case_id, context_id, machine_id, 10
+    ).all() == [
         (
             "22222",
             summary_2.case_id,
@@ -335,7 +349,9 @@ def test_distibution():
             2,
         )
     ]
-    assert get_distribution(REPO, "11111", 10).all() == [
+    assert get_distribution(
+        REPO, "11111", case_id, context_id, machine_id, 10
+    ).all() == [
         (
             "11111",
             summary_1.case_id,
@@ -355,7 +371,9 @@ def test_distibution():
             1,
         )
     ]
-    assert get_distribution(REPO, "00000", 10).all() == []
+    assert (
+        get_distribution(REPO, "00000", case_id, context_id, machine_id, 10).all() == []
+    )
 
 
 def test_distibution_multiple_runs_same_commit():
@@ -379,7 +397,13 @@ def test_distibution_multiple_runs_same_commit():
     summary_1.run.commit_id = commit_1.id
     summary_1.save()
 
-    assert get_distribution(REPO, "YYYYY", 10).all() == [
+    case_id = summary_1.case_id
+    context_id = summary_1.context_id
+    machine_id = summary_1.machine_id
+
+    assert get_distribution(
+        REPO, "YYYYY", case_id, context_id, machine_id, 10
+    ).all() == [
         (
             "YYYYY",
             summary_1.case_id,
@@ -410,7 +434,9 @@ def test_distibution_multiple_runs_same_commit():
     assert summary_1.run.commit_id == summary_2.run.commit_id
     assert summary_1.machine_id == summary_2.machine_id
 
-    assert get_distribution(REPO, "YYYYY", 10).all() == [
+    assert get_distribution(
+        REPO, "YYYYY", case_id, context_id, machine_id, 10
+    ).all() == [
         (
             "YYYYY",
             summary_1.case_id,

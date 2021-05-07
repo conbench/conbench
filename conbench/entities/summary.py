@@ -152,7 +152,14 @@ class Summary(Base, EntityMixin):
 
         from ..db import engine
 
-        distribution = get_distribution(repository, sha, 1000).first()
+        distribution = get_distribution(
+            repository,
+            sha,
+            summary.case_id,
+            summary.context_id,
+            summary.machine_id,
+            1000,
+        ).first()
         if distribution:
             values = dict(distribution)
             with engine.connect() as conn:

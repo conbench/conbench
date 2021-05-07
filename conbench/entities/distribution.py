@@ -69,7 +69,7 @@ def get_commits_up(repository, sha, limit):
     return Session.query(index).filter(index.c.row_number >= n).limit(limit)
 
 
-def get_distribution(repository, sha, limit):
+def get_distribution(repository, sha, case_id, context_id, machine_id, limit):
     from ..entities.summary import Summary
 
     commits_up = get_commits_up(repository, sha, limit).subquery().alias("commits_up")
@@ -95,5 +95,10 @@ def get_distribution(repository, sha, limit):
         .group_by(Summary.case_id, Summary.context_id, Summary.machine_id)
         .join(Run, Run.id == Summary.run_id)
         .join(commits_up, commits_up.c.id == Run.commit_id)
-        .filter(Run.name.like("commit: %"))
+        .filter(
+            Run.name.like("commit: %"),
+            Summary.case_id == case_id,
+            Summary.context_id == context_id,
+            Summary.machine_id == machine_id,
+        )
     )
