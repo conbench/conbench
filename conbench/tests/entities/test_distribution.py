@@ -65,10 +65,12 @@ WHERE commit_index.sha = :sha_1)
 WHERE run.name LIKE :name_1 AND summary.case_id = :case_id_1 AND summary.context_id = :context_id_1 AND summary.machine_id = :machine_id_1 GROUP BY summary.case_id, summary.context_id, summary.machine_id"""  # noqa
 
 
-def create_benchmark_summary(conbench, results):
+def create_benchmark_summary(conbench, results, benchmark_name=None):
     data = copy.deepcopy(VALID_PAYLOAD)
     now = datetime.datetime.now(datetime.timezone.utc)
     run_id, run_name = uuid.uuid4().hex, "commit: some commit"
+    if benchmark_name:
+        data["tags"]["name"] = benchmark_name
     data["stats"] = conbench._stats(
         results, "s", [], "s", now.isoformat(), run_id, run_name
     )
@@ -193,6 +195,11 @@ def test_distibution():
     summary_b = create_benchmark_summary(conbench, data)
     summary_b.run.commit_id = commit_b.id
     summary_b.save()
+
+    data = [5.1, 5.2, 5.3]  # n/a different case
+    summary_x = create_benchmark_summary(conbench, data, "different-benchmark")
+    summary_x.run.commit_id = commit_1.id
+    summary_x.save()
 
     assert summary_1.case_id == summary_2.case_id
     assert summary_1.case_id == summary_3.case_id
