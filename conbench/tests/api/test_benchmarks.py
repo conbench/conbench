@@ -239,8 +239,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
     def test_create_benchmark_distribution(self, client):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
-        random_value = uuid.uuid4().hex
-        data["tags"]["name"] = random_value
+        data["tags"]["name"] = uuid.uuid4().hex
 
         # first result
         response = client.post("/api/benchmarks/", json=data)
@@ -268,6 +267,8 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
         summary_2 = Summary.one(id=new_id)
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary_2), location)
         assert summary_1.case_id == summary_2.case_id
         assert summary_1.context_id == summary_2.context_id
         assert summary_1.machine_id == summary_2.machine_id

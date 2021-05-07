@@ -25,7 +25,6 @@ from ..entities.distribution import Distribution, get_distribution
 from ..entities.machine import Machine, MachineSchema
 from ..entities.run import Run
 from ..entities.time import Time
-from ..db import Session
 
 
 class Summary(Base, EntityMixin):
@@ -151,18 +150,21 @@ class Summary(Base, EntityMixin):
             bulk.append(Time(result=x, summary_id=summary.id, iteration=i + 1))
         Time.bulk_save_objects(bulk)
 
+        from ..db import engine
+
         distribution = get_distribution(repository, sha, 1000).first()
         if distribution:
             values = dict(distribution)
-            Session.execute(
-                insert(Distribution.__table__)
-                .values(values)
-                .on_conflict_do_update(
-                    index_elements=["sha", "case_id", "context_id", "machine_id"],
-                    set_=values,
+            with engine.connect() as conn:
+                conn.execute(
+                    insert(Distribution.__table__)
+                    .values(values)
+                    .on_conflict_do_update(
+                        index_elements=["sha", "case_id", "context_id", "machine_id"],
+                        set_=values,
+                    )
                 )
-            )
-
+                conn.commit()
         return summary
 
 
