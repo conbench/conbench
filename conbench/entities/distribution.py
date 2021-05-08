@@ -17,10 +17,10 @@ from ..entities.run import Run
 class Distribution(Base, EntityMixin):
     __tablename__ = "distribution"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
-    sha = NotNull(s.String(50))
-    case_id = NotNull(s.String(50), s.ForeignKey("case.id"))
-    context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
-    machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
+    sha = NotNull(s.String(50))  # TODO: should this be commit id?
+    case_id = NotNull(s.String(50), s.ForeignKey("case.id", ondelete="CASCADE"))
+    context_id = NotNull(s.String(50), s.ForeignKey("context.id", ondelete="CASCADE"))
+    machine_id = NotNull(s.String(50), s.ForeignKey("machine.id", ondelete="CASCADE"))
     unit = NotNull(s.Text)
     mean_mean = Nullable(s.Numeric, check("mean_mean>=0"))
     mean_sd = Nullable(s.Numeric, check("mean_sd>=0"))

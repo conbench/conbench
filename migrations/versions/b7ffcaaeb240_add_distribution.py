@@ -36,25 +36,10 @@ def upgrade():
         sa.Column("first_timestamp", sa.DateTime(), nullable=False),
         sa.Column("last_timestamp", sa.DateTime(), nullable=False),
         sa.Column("observations", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["case_id"],
-            ["case.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["context_id"],
-            ["context.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["machine_id"],
-            ["machine.id"],
-        ),
+        sa.ForeignKeyConstraint(["case_id"], ["case.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["context_id"], ["context.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["machine_id"], ["machine.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(
-        "distribution_index",
-        "distribution",
-        ["sha", "case_id", "context_id", "machine_id"],
-        unique=True,
     )
     op.create_index(
         "distribution_case_id_index", "distribution", ["case_id"], unique=False
@@ -63,15 +48,21 @@ def upgrade():
         "distribution_context_id_index", "distribution", ["context_id"], unique=False
     )
     op.create_index(
+        "distribution_index",
+        "distribution",
+        ["sha", "case_id", "context_id", "machine_id"],
+        unique=True,
+    )
+    op.create_index(
         "distribution_machine_id_index", "distribution", ["machine_id"], unique=False
     )
     op.create_index("distribution_sha_index", "distribution", ["sha"], unique=False)
 
 
 def downgrade():
-    op.drop_index("distribution_index", table_name="distribution")
     op.drop_index("distribution_sha_index", table_name="distribution")
     op.drop_index("distribution_machine_id_index", table_name="distribution")
+    op.drop_index("distribution_index", table_name="distribution")
     op.drop_index("distribution_context_id_index", table_name="distribution")
     op.drop_index("distribution_case_id_index", table_name="distribution")
     op.drop_table("distribution")

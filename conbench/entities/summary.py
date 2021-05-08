@@ -160,6 +160,7 @@ class Summary(Base, EntityMixin):
             summary.machine_id,
             1000,
         ).first()
+
         if distribution:
             values = dict(distribution)
             with engine.connect() as conn:
@@ -172,6 +173,7 @@ class Summary(Base, EntityMixin):
                     )
                 )
                 conn.commit()
+
         return summary
 
 
