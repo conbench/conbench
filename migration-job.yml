@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: conbench-migration
-        image: "415900421099.dkr.ecr.us-east-2.amazonaws.com/conbench:45e2539110fc3c8ee1362a0a018cc6303d4aaa01"
+        image: "{{DOCKER_REGISTRY}}/{{FLASK_APP}}:{{BUILDKITE_COMMIT}}"
         command:
         - /bin/sh
         - -c
