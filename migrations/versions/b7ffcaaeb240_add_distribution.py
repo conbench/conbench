@@ -58,10 +58,14 @@ def upgrade():
         "distribution_machine_id_index", "distribution", ["machine_id"], unique=False
     )
     op.create_index("distribution_sha_index", "distribution", ["sha"], unique=False)
+    op.create_index(
+        "distribution_repository_index", "distribution", ["repository"], unique=False
+    )
 
 
 def downgrade():
     op.drop_index("distribution_sha_index", table_name="distribution")
+    op.drop_index("distribution_repository_index", table_name="distribution")
     op.drop_index("distribution_machine_id_index", table_name="distribution")
     op.drop_index("distribution_index", table_name="distribution")
     op.drop_index("distribution_context_id_index", table_name="distribution")

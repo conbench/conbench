@@ -46,6 +46,7 @@ s.Index(
     unique=True,
 )
 s.Index("distribution_sha_index", Distribution.sha)
+s.Index("distribution_repository_index", Distribution.repository)
 s.Index("distribution_case_id_index", Distribution.case_id)
 s.Index("distribution_context_id_index", Distribution.context_id)
 s.Index("distribution_machine_id_index", Distribution.machine_id)
