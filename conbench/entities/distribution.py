@@ -1,6 +1,7 @@
 import sqlalchemy as s
 from sqlalchemy import func
 from sqlalchemy import CheckConstraint as check
+from sqlalchemy.dialects.postgresql import insert
 
 from ..db import Session
 from ..entities._entity import (
@@ -102,3 +103,31 @@ def get_distribution(repository, sha, case_id, context_id, machine_id, limit):
             Summary.machine_id == machine_id,
         )
     )
+
+
+def update_distribution(repository, sha, summary, limit):
+    from ..db import engine
+
+    distribution = get_distribution(
+        repository,
+        sha,
+        summary.case_id,
+        summary.context_id,
+        summary.machine_id,
+        limit,
+    ).first()
+
+    if not distribution:
+        return
+
+    values = dict(distribution)
+    with engine.connect() as conn:
+        conn.execute(
+            insert(Distribution.__table__)
+            .values(values)
+            .on_conflict_do_update(
+                index_elements=["sha", "case_id", "context_id", "machine_id"],
+                set_=values,
+            )
+        )
+        conn.commit()
