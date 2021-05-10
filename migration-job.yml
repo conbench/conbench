@@ -1,3 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conbench-migration-config
+  labels:
+    app: conbench-migration
+data:
+  CREATE_ALL_TABLES: "false"
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -8,7 +17,7 @@ spec:
     spec:
       containers:
       - name: conbench-migration
-        image: "{{DOCKER_REGISTRY}}/{{FLASK_APP}}:{{BUILDKITE_COMMIT}}"
+        image: "415900421099.dkr.ecr.us-east-2.amazonaws.com/conbench:45e2539110fc3c8ee1362a0a018cc6303d4aaa01"
         command:
         - /bin/sh
         - -c
@@ -16,6 +25,8 @@ spec:
         envFrom:
           - configMapRef:
               name: conbench-config
+          - configMapRef:
+              name: conbench-migration-config
           - secretRef:
               name: conbench-secret
       restartPolicy: Never
