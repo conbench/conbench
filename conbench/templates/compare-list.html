@@ -53,8 +53,8 @@
               <caption>
                 Comparisons
                 {% if comparisons %}
-                <span class="glyphicon glyphicon-arrow-down"></span> <b>{{100 * (regressions / comparisons|length) | round(2)}}%</b>
-                <span class="glyphicon glyphicon-arrow-up"></span> <b>{{100 * (improvements / comparisons|length) | round(2)}}%</b>
+                <span class="glyphicon glyphicon-arrow-down"></span> <b>{{(100 * regressions / comparisons|length) | int}}%</b>
+                <span class="glyphicon glyphicon-arrow-up"></span> <b>{{(100 * improvements / comparisons|length) | int}}%</b>
                 {% endif %}
                 {% include 'units-tooltip.html' %}
               </caption>
