@@ -27,6 +27,10 @@ class EntityMixin:
         return f"<{self.__class__.__name__} {self.id}>"
 
     @classmethod
+    def count(cls):
+        return Session.query(cls).count()
+
+    @classmethod
     def distinct(cls, column, filters):
         q = Session.query(distinct(column))
         return q.filter(*filters).all()

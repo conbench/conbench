@@ -1,9 +1,12 @@
 import copy
+import decimal
+import uuid
 
 import pytest
 
 from ...api._examples import _api_benchmark_entity
 from ...entities._entity import NotFound
+from ...entities.distribution import Distribution
 from ...entities.summary import Summary
 from ...tests.api import _asserts
 
@@ -40,7 +43,7 @@ VALID_PAYLOAD = {
     "stats": {
         "batch_id": "7b2fdd9f929d47b9960152090d47f8e6",
         "run_id": "2a5709d179f349cba69ed242be3e6321",
-        "run_name": "pull request: 9564",
+        "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
         "data": [
             "0.099094",
             "0.037129",
@@ -232,3 +235,55 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             },
         }
         self.assert_400_bad_request(response, message)
+
+    def test_create_benchmark_distribution(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["tags"]["name"] = uuid.uuid4().hex
+
+        # first result
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary_1 = Summary.one(id=new_id)
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary_1), location)
+        case_id = summary_1.case_id
+
+        # after one result
+        distributions = Distribution.search(filters=[Distribution.case_id == case_id])
+        assert len(distributions) == 1
+        assert distributions[0].unit == "s"
+        assert distributions[0].observations == 1
+        assert distributions[0].mean_mean == decimal.Decimal("0.03636900000000000000")
+        assert distributions[0].mean_sd is None
+        assert distributions[0].min_mean == decimal.Decimal("0.00473300000000000000")
+        assert distributions[0].min_sd is None
+        assert distributions[0].max_mean == decimal.Decimal("0.14889600000000000000")
+        assert distributions[0].max_sd is None
+        assert distributions[0].median_mean == decimal.Decimal("0.00898800000000000000")
+        assert distributions[0].median_sd is None
+
+        # second result
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary_2 = Summary.one(id=new_id)
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary_2), location)
+        assert summary_1.case_id == summary_2.case_id
+        assert summary_1.context_id == summary_2.context_id
+        assert summary_1.machine_id == summary_2.machine_id
+        assert summary_1.run.commit_id == summary_2.run.commit_id
+
+        # after two results
+        distributions = Distribution.search(filters=[Distribution.case_id == case_id])
+        assert len(distributions) == 1
+        assert distributions[0].unit == "s"
+        assert distributions[0].observations == 2
+        assert distributions[0].mean_mean == decimal.Decimal("0.03636900000000000000")
+        assert distributions[0].mean_sd == decimal.Decimal("0")
+        assert distributions[0].min_mean == decimal.Decimal("0.00473300000000000000")
+        assert distributions[0].min_sd == decimal.Decimal("0")
+        assert distributions[0].max_mean == decimal.Decimal("0.14889600000000000000")
+        assert distributions[0].max_sd == decimal.Decimal("0")
+        assert distributions[0].median_mean == decimal.Decimal("0.00898800000000000000")
+        assert distributions[0].median_sd == decimal.Decimal("0")

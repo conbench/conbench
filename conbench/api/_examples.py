@@ -221,7 +221,7 @@ def _api_machine_entity(machine_id, links=True):
 def _api_run_entity(run_id, commit_id, machine_id, now, baseline_id):
     result = {
         "id": run_id,
-        "name": "pull request: 9564",
+        "name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
         "timestamp": now,
         "commit": _api_commit_entity(commit_id),
         "machine": _api_machine_entity(machine_id, links=False),

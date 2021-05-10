@@ -481,7 +481,7 @@
                                 "os_name": "macOS",
                                 "os_version": "10.15.7",
                             },
-                            "name": "pull request: 9564",
+                            "name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
                             "timestamp": "2021-02-04T17:22:05.225583",
                         }
                     }
@@ -527,7 +527,7 @@
                                     "os_name": "macOS",
                                     "os_version": "10.15.7",
                                 },
-                                "name": "pull request: 9564",
+                                "name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
                                 "timestamp": "2021-02-04T17:22:05.225583",
                             },
                             {
@@ -565,7 +565,7 @@
                                     "os_name": "macOS",
                                     "os_version": "10.15.7",
                                 },
-                                "name": "pull request: 9564",
+                                "name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
                                 "timestamp": "2021-03-04T17:18:05.715583",
                             },
                         ]
