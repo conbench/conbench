@@ -53,7 +53,7 @@ s.Index("distribution_machine_id_index", Distribution.machine_id)
 
 def get_commit_index(repository):
     ordered = (
-        Session.query(Commit.id, Commit.sha, Commit.parent, Commit.timestamp)
+        Session.query(Commit.id, Commit.sha, Commit.timestamp)
         .filter(Commit.repository == repository)
         .order_by(Commit.timestamp.desc())
     ).cte("ordered_commits")

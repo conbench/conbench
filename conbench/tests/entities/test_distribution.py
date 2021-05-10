@@ -18,47 +18,47 @@ from ...tests.api.test_benchmarks import VALID_PAYLOAD
 REPO = "arrow"
 
 COMMIT_INDEX = """WITH ordered_commits AS 
-(SELECT commit.id AS id, commit.sha AS sha, commit.parent AS parent, commit.timestamp AS timestamp 
+(SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
 FROM commit 
 WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
- SELECT ordered_commits.id, ordered_commits.sha, ordered_commits.parent, ordered_commits.timestamp, row_number() OVER () AS row_number 
+ SELECT ordered_commits.id, ordered_commits.sha, ordered_commits.timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits"""  # noqa
 
 
 ROW_NUMBER = """WITH ordered_commits AS 
-(SELECT commit.id AS id, commit.sha AS sha, commit.parent AS parent, commit.timestamp AS timestamp 
+(SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
 FROM commit 
 WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
  SELECT commit_index.row_number 
-FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.parent AS parent, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
+FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
 WHERE commit_index.sha = :sha_1"""  # noqa
 
 
 COMMITS_UP = """WITH ordered_commits AS 
-(SELECT commit.id AS id, commit.sha AS sha, commit.parent AS parent, commit.timestamp AS timestamp 
+(SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
 FROM commit 
 WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
- SELECT commit_index.id, commit_index.sha, commit_index.parent, commit_index.timestamp, commit_index.row_number 
-FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.parent AS parent, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
+ SELECT commit_index.id, commit_index.sha, commit_index.timestamp, commit_index.row_number 
+FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
 WHERE commit_index.row_number >= (SELECT commit_index.row_number 
-FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.parent AS parent, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
+FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
 WHERE commit_index.sha = :sha_1)
  LIMIT :param_1"""  # noqa
 
 
 DISTRIBUTION = """WITH ordered_commits AS 
-(SELECT commit.id AS id, commit.sha AS sha, commit.parent AS parent, commit.timestamp AS timestamp 
+(SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
 FROM commit 
 WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
  SELECT text(:text_1) AS repository, text(:text_2) AS sha, summary.case_id, summary.context_id, summary.machine_id, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
-FROM summary JOIN run ON run.id = summary.run_id JOIN (SELECT commit_index.id AS id, commit_index.sha AS sha, commit_index.parent AS parent, commit_index.timestamp AS timestamp, commit_index.row_number AS row_number 
-FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.parent AS parent, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
+FROM summary JOIN run ON run.id = summary.run_id JOIN (SELECT commit_index.id AS id, commit_index.sha AS sha, commit_index.timestamp AS timestamp, commit_index.row_number AS row_number 
+FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
 WHERE commit_index.row_number >= (SELECT commit_index.row_number 
-FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.parent AS parent, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
+FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
 WHERE commit_index.sha = :sha_1)
  LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id 
@@ -218,11 +218,11 @@ def test_distibution():
     # ----- get_commit_index
 
     expected = [
-        (commit_5.id, commit_5.sha, commit_5.parent, commit_5.timestamp, 1),
-        (commit_4.id, commit_4.sha, commit_4.parent, commit_4.timestamp, 2),
-        (commit_3.id, commit_3.sha, commit_3.parent, commit_3.timestamp, 3),
-        (commit_2.id, commit_2.sha, commit_2.parent, commit_2.timestamp, 4),
-        (commit_1.id, commit_1.sha, commit_1.parent, commit_1.timestamp, 5),
+        (commit_5.id, commit_5.sha, commit_5.timestamp, 1),
+        (commit_4.id, commit_4.sha, commit_4.timestamp, 2),
+        (commit_3.id, commit_3.sha, commit_3.timestamp, 3),
+        (commit_2.id, commit_2.sha, commit_2.timestamp, 4),
+        (commit_1.id, commit_1.sha, commit_1.timestamp, 5),
     ]
     assert get_commit_index(REPO).all() == expected
 
@@ -238,30 +238,30 @@ def test_distibution():
     # ----- get_commits_up
 
     expected = [
-        (commit_5.id, commit_5.sha, commit_5.parent, commit_5.timestamp, 1),
-        (commit_4.id, commit_4.sha, commit_4.parent, commit_4.timestamp, 2),
-        (commit_3.id, commit_3.sha, commit_3.parent, commit_3.timestamp, 3),
+        (commit_5.id, commit_5.sha, commit_5.timestamp, 1),
+        (commit_4.id, commit_4.sha, commit_4.timestamp, 2),
+        (commit_3.id, commit_3.sha, commit_3.timestamp, 3),
     ]
     assert get_commits_up(REPO, "55555", 3).all() == expected
     expected = [
-        (commit_4.id, commit_4.sha, commit_4.parent, commit_4.timestamp, 2),
-        (commit_3.id, commit_3.sha, commit_3.parent, commit_3.timestamp, 3),
-        (commit_2.id, commit_2.sha, commit_2.parent, commit_2.timestamp, 4),
+        (commit_4.id, commit_4.sha, commit_4.timestamp, 2),
+        (commit_3.id, commit_3.sha, commit_3.timestamp, 3),
+        (commit_2.id, commit_2.sha, commit_2.timestamp, 4),
     ]
     assert get_commits_up(REPO, "44444", 3).all() == expected
     expected = [
-        (commit_3.id, commit_3.sha, commit_3.parent, commit_3.timestamp, 3),
-        (commit_2.id, commit_2.sha, commit_2.parent, commit_2.timestamp, 4),
-        (commit_1.id, commit_1.sha, commit_1.parent, commit_1.timestamp, 5),
+        (commit_3.id, commit_3.sha, commit_3.timestamp, 3),
+        (commit_2.id, commit_2.sha, commit_2.timestamp, 4),
+        (commit_1.id, commit_1.sha, commit_1.timestamp, 5),
     ]
     assert get_commits_up(REPO, "33333", 3).all() == expected
     expected = [
-        (commit_2.id, commit_2.sha, commit_2.parent, commit_2.timestamp, 4),
-        (commit_1.id, commit_1.sha, commit_1.parent, commit_1.timestamp, 5),
+        (commit_2.id, commit_2.sha, commit_2.timestamp, 4),
+        (commit_1.id, commit_1.sha, commit_1.timestamp, 5),
     ]
     assert get_commits_up(REPO, "22222", 3).all() == expected
     expected = [
-        (commit_1.id, commit_1.sha, commit_1.parent, commit_1.timestamp, 5),
+        (commit_1.id, commit_1.sha, commit_1.timestamp, 5),
     ]
     assert get_commits_up(REPO, "11111", 3).all() == expected
     assert get_commits_up(REPO, "00000", 3).all() == []
