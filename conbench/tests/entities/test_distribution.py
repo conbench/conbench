@@ -53,7 +53,7 @@ DISTRIBUTION = """WITH ordered_commits AS
 (SELECT commit.id AS id, commit.sha AS sha, commit.parent AS parent, commit.timestamp AS timestamp 
 FROM commit 
 WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
- SELECT text(:text_1) AS sha, summary.case_id, summary.context_id, summary.machine_id, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
+ SELECT text(:text_1) AS repository, text(:text_2) AS sha, summary.case_id, summary.context_id, summary.machine_id, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
 FROM summary JOIN run ON run.id = summary.run_id JOIN (SELECT commit_index.id AS id, commit_index.sha AS sha, commit_index.parent AS parent, commit_index.timestamp AS timestamp, commit_index.row_number AS row_number 
 FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.parent AS parent, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
@@ -272,6 +272,7 @@ def test_distibution():
         REPO, "55555", case_id, context_id, machine_id, 10
     ).all() == [
         (
+            REPO,
             "55555",
             summary_5.case_id,
             summary_5.context_id,
@@ -294,6 +295,7 @@ def test_distibution():
         REPO, "44444", case_id, context_id, machine_id, 10
     ).all() == [
         (
+            REPO,
             "44444",
             summary_4.case_id,
             summary_4.context_id,
@@ -316,6 +318,7 @@ def test_distibution():
         REPO, "33333", case_id, context_id, machine_id, 10
     ).all() == [
         (
+            REPO,
             "33333",
             summary_3.case_id,
             summary_3.context_id,
@@ -338,6 +341,7 @@ def test_distibution():
         REPO, "22222", case_id, context_id, machine_id, 10
     ).all() == [
         (
+            REPO,
             "22222",
             summary_2.case_id,
             summary_2.context_id,
@@ -360,6 +364,7 @@ def test_distibution():
         REPO, "11111", case_id, context_id, machine_id, 10
     ).all() == [
         (
+            REPO,
             "11111",
             summary_1.case_id,
             summary_1.context_id,
@@ -412,6 +417,7 @@ def test_distibution_multiple_runs_same_commit():
         REPO, "YYYYY", case_id, context_id, machine_id, 10
     ).all() == [
         (
+            REPO,
             "YYYYY",
             summary_1.case_id,
             summary_1.context_id,
@@ -445,6 +451,7 @@ def test_distibution_multiple_runs_same_commit():
         REPO, "YYYYY", case_id, context_id, machine_id, 10
     ).all() == [
         (
+            REPO,
             "YYYYY",
             summary_1.case_id,
             summary_1.context_id,

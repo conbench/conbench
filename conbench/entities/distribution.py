@@ -18,7 +18,8 @@ from ..entities.run import Run
 class Distribution(Base, EntityMixin):
     __tablename__ = "distribution"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
-    sha = NotNull(s.String(50))  # TODO: should this be commit id?
+    sha = NotNull(s.String(50))
+    repository = NotNull(s.String(100))
     case_id = NotNull(s.String(50), s.ForeignKey("case.id", ondelete="CASCADE"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id", ondelete="CASCADE"))
     machine_id = NotNull(s.String(50), s.ForeignKey("machine.id", ondelete="CASCADE"))
@@ -76,6 +77,7 @@ def get_distribution(repository, sha, case_id, context_id, machine_id, limit):
     commits_up = get_commits_up(repository, sha, limit).subquery().alias("commits_up")
     return (
         Session.query(
+            func.text(repository).label("repository"),
             func.text(sha).label("sha"),
             Summary.case_id,
             Summary.context_id,

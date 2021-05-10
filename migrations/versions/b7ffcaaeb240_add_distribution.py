@@ -21,6 +21,7 @@ def upgrade():
         "distribution",
         sa.Column("id", sa.String(length=50), nullable=False),
         sa.Column("sha", sa.String(length=50), nullable=False),
+        sa.Column("repository", sa.String(length=100), nullable=False),
         sa.Column("case_id", sa.String(length=50), nullable=False),
         sa.Column("context_id", sa.String(length=50), nullable=False),
         sa.Column("machine_id", sa.String(length=50), nullable=False),
