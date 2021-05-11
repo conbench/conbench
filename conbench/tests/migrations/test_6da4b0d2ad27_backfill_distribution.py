@@ -7,6 +7,7 @@ from alembic.config import Config
 
 from ...entities.distribution import Distribution
 from ...entities.summary import Summary
+from ...db import Session
 
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
@@ -116,6 +117,7 @@ def test_upgrade():
 
     Distribution.delete_all()
     assert Distribution.count() == 0
+    Session.commit()
 
     # do migration
     alembic_config = Config(config_path)

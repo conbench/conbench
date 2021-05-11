@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy import MetaData
 from sqlalchemy.dialects.postgresql import insert
 
-from conbench.entities.distribution import get_distribution
+from conbench.entities.distribution import Distribution, get_distribution
 
 # revision identifiers, used by Alembic.
 revision = "6da4b0d2ad27"
@@ -32,13 +32,22 @@ def upgrade():
 
     runs = connection.execute(run_table.select())
     commits = connection.execute(commit_table.select())
+    distributions = connection.execute(distribution_table.select())
     runs_by_id = {r["id"]: r for r in runs}
     commits_by_id = {c["id"]: c for c in commits}
+    seen = {
+        f'{d["sha"]}{d["case_id"]}{d["context_id"]}{d["machine_id"]}'
+        for d in distributions
+    }
 
     summaries = connection.execute(summary_table.select())
     for summary in summaries:
         run = runs_by_id[summary["run_id"]]
         commit = commits_by_id[run["commit_id"]]
+
+        hash_ = f'{commit["sha"]}{summary["case_id"]}{summary["context_id"]}{summary["machine_id"]}'
+        if hash_ in seen:
+            continue
 
         distribution = get_distribution(
             commit["repository"],
