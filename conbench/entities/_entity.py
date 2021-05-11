@@ -72,6 +72,7 @@ class EntityMixin:
     @classmethod
     def delete_all(cls):
         Session.query(cls).delete()
+        Session.commit()
 
     @classmethod
     def create(cls, data):
