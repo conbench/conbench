@@ -118,7 +118,7 @@ class Conbench(Connection):
         self._drop_caches_failed = False
         self._purge_failed = False
 
-    def benchmark(self, f, name, tags, context, run, options):
+    def benchmark(self, f, name, tags, context, github, options):
         timing_options = self._get_timing_options(options)
         iterations = timing_options.pop("iterations")
         if iterations < 1:
@@ -142,13 +142,13 @@ class Conbench(Connection):
             name,
             tags,
             context,
-            run,
+            github,
             options,
         )
 
         return benchmark, output
 
-    def record(self, result, name, tags, context, run, options, output=None):
+    def record(self, result, name, tags, context, github, options, output=None):
         tags["name"] = name
         timestamp = _now_formatted()
         run_id = options.get("run_id")
@@ -167,9 +167,18 @@ class Conbench(Connection):
             "machine_info": self.machine_info,
             "context": context,
             "tags": tags,
-            "run": run,
+            "github": github,
         }
         return benchmark, output
+
+    def get_github_info(self):
+        command = ["git", "rev-parse", "HEAD"]
+        result = subprocess.run(command, capture_output=True, check=True)
+        commit = result.stdout.decode("utf-8").strip()
+        command = ["git", "remote", "get-url", "origin"]
+        result = subprocess.run(command, capture_output=True, check=True)
+        repository = result.stdout.decode("utf-8").strip()
+        return {"repository": repository, "commit": commit}
 
     def mark_new_batch(self):
         self.batch_id = uuid.uuid4().hex
