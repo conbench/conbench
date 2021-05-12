@@ -125,20 +125,9 @@ class Conbench(Connection):
             raise ValueError(f"Invalid iterations: {iterations}")
 
         data, output = self._get_timing(f, iterations, timing_options)
-
-        # The benchmark measurement and execution time happen to be
-        # the same in this case: both are execution time in seconds.
-        # (since data == times, just record an empty list for times)
-        result = {
-            "data": data,
-            "unit": "s",
-            "times": [],
-            "time_unit": "s",
-        }
-
         context.update(self.language)
         benchmark, _ = self.record(
-            result,
+            {"data": data, "unit": "s"},
             name,
             tags,
             context,
@@ -156,8 +145,8 @@ class Conbench(Connection):
         stats = self._stats(
             result["data"],
             result["unit"],
-            result["times"],
-            result["time_unit"],
+            result.get("times", []),
+            result.get("time_unit", "s"),
             timestamp,
             run_id,
             run_name,
