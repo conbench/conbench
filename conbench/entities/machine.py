@@ -1,7 +1,9 @@
 import flask as f
 import marshmallow
 import sqlalchemy as s
+from sqlalchemy import func
 from sqlalchemy import CheckConstraint as check
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from ..entities._entity import (
     Base,
@@ -29,6 +31,30 @@ class Machine(Base, EntityMixin):
     cpu_thread_count = NotNull(s.Integer, check("cpu_thread_count>=0"))
     cpu_frequency_max_hz = NotNull(s.BigInteger, check("cpu_frequency_max_hz>=0"))
     memory_bytes = NotNull(s.BigInteger, check("memory_bytes>=0"))
+
+    @hybrid_property
+    def hash(self):
+        return (
+            self.name
+            + "-"
+            + str(self.cpu_core_count)
+            + "-"
+            + str(self.cpu_thread_count)
+            + "-"
+            + str(self.memory_bytes)
+        )
+
+    @hash.expression
+    def hash(cls):
+        return func.concat(
+            cls.name,
+            "-",
+            cls.cpu_core_count,
+            "-",
+            cls.cpu_thread_count,
+            "-",
+            cls.memory_bytes,
+        )
 
 
 s.Index(
