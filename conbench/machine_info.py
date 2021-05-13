@@ -97,10 +97,18 @@ def machine_info(host_name):
         except ValueError:
             info[key] = 0
 
+    info["memory_bytes"] = _round_memory(int(info["memory_bytes"]))
+
     for key in info:
         info[key] = str(info[key])
 
     return info
+
+
+def _round_memory(value):
+    # B -> GiB -> B
+    gigs = 1024 ** 3
+    return int("{:.0f}".format(value / gigs)) * gigs
 
 
 def _commands(info):
