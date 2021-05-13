@@ -1,4 +1,9 @@
-from ...machine_info import _fill_from_cpuinfo, _fill_from_lscpu, _fill_from_meminfo
+from ...machine_info import (
+    _fill_from_cpuinfo,
+    _fill_from_lscpu,
+    _fill_from_meminfo,
+    _round_memory,
+)
 
 
 L1D_CACHE = 524288
@@ -334,3 +339,13 @@ def test_fill_order():
         "cpu_l3_cache_bytes": L3_CACHE,
         "cpu_frequency_max_hz": FREQUENCY,
     }
+
+
+def test_round_memory():
+    before = [131590280000, 131593068000, 131593872000]
+    after = [132070244352, 132070244352, 132070244352]
+    assert list(map(_round_memory, before)) == after
+
+    before = [15855024000, 15855036000, 15855040000]
+    after = [16106127360, 16106127360, 16106127360]
+    assert list(map(_round_memory, before)) == after
