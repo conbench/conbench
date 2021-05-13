@@ -21,7 +21,7 @@ def _expected_entity(run, baseline_id=None):
 def create_benchmark_summary(parent_sha=None):
     data = copy.deepcopy(VALID_PAYLOAD)
     if parent_sha:
-        data["run"]["commit"] = parent_sha
+        data["github"]["commit"] = parent_sha
         data["stats"]["run_id"] = uuid.uuid4().hex
     summary = Summary.create(data)
     return summary

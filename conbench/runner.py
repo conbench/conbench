@@ -118,37 +118,26 @@ class Conbench(Connection):
         self._drop_caches_failed = False
         self._purge_failed = False
 
-    def benchmark(self, f, name, tags, context, run, options):
+    def benchmark(self, f, name, tags, context, github, options):
         timing_options = self._get_timing_options(options)
         iterations = timing_options.pop("iterations")
         if iterations < 1:
             raise ValueError(f"Invalid iterations: {iterations}")
 
         data, output = self._get_timing(f, iterations, timing_options)
-
-        # The benchmark measurement and execution time happen to be
-        # the same in this case: both are execution time in seconds.
-        # (since data == times, just record an empty list for times)
-        result = {
-            "data": data,
-            "unit": "s",
-            "times": [],
-            "time_unit": "s",
-        }
-
         context.update(self.language)
         benchmark, _ = self.record(
-            result,
+            {"data": data, "unit": "s"},
             name,
             tags,
             context,
-            run,
+            github,
             options,
         )
 
         return benchmark, output
 
-    def record(self, result, name, tags, context, run, options, output=None):
+    def record(self, result, name, tags, context, github, options, output=None):
         tags["name"] = name
         timestamp = _now_formatted()
         run_id = options.get("run_id")
@@ -156,8 +145,8 @@ class Conbench(Connection):
         stats = self._stats(
             result["data"],
             result["unit"],
-            result["times"],
-            result["time_unit"],
+            result.get("times", []),
+            result.get("time_unit", "s"),
             timestamp,
             run_id,
             run_name,
@@ -167,9 +156,18 @@ class Conbench(Connection):
             "machine_info": self.machine_info,
             "context": context,
             "tags": tags,
-            "run": run,
+            "github": github,
         }
         return benchmark, output
+
+    def get_github_info(self):
+        command = ["git", "rev-parse", "HEAD"]
+        result = subprocess.run(command, capture_output=True, check=True)
+        commit = result.stdout.decode("utf-8").strip()
+        command = ["git", "remote", "get-url", "origin"]
+        result = subprocess.run(command, capture_output=True, check=True)
+        repository = result.stdout.decode("utf-8").strip()
+        return {"repository": repository, "commit": commit}
 
     def mark_new_batch(self):
         self.batch_id = uuid.uuid4().hex

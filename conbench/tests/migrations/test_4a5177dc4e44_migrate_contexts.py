@@ -22,7 +22,7 @@ VALID_PAYLOAD_1 = {
         "benchmark_language_version": "Python 3.8.5",
         "benchmark_language": "Python",
     },
-    "run": {
+    "github": {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",
         "repository": "https://github.com/apache/arrow",
     },
@@ -103,7 +103,7 @@ VALID_PAYLOAD_2 = {
         "benchmark_language_version": "Python 3.8.5",
         "benchmark_language": "Python",
     },
-    "run": {
+    "github": {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",
         "repository": "https://github.com/apache/arrow",
     },
@@ -184,7 +184,7 @@ VALID_PAYLOAD_3 = {
         "benchmark_language_version": "Python 3.8.5",
         "benchmark_language": "Python",
     },
-    "run": {
+    "github": {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",
         "repository": "https://github.com/apache/arrow",
     },

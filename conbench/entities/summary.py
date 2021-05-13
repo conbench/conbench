@@ -88,7 +88,7 @@ class Summary(Base, EntityMixin):
             context = Context.create({"tags": data["context"]})
 
         # create if not exists
-        sha, repository = data["run"]["commit"], data["run"]["repository"]
+        sha, repository = data["github"]["commit"], data["github"]["repository"]
         commit = Commit.first(sha=sha)
         if not commit:
             name = repository.split("github.com/")[1]
@@ -241,7 +241,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     stats = marshmallow.fields.Nested(SummarySchema().create, required=True)
     tags = marshmallow.fields.Dict(required=True)
     context = marshmallow.fields.Dict(required=True)
-    run = marshmallow.fields.Dict(required=True)
+    github = marshmallow.fields.Dict(required=True)
 
 
 class BenchmarkFacadeSchema:

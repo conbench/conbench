@@ -637,12 +637,12 @@
             "BenchmarkCreate": {
                 "properties": {
                     "context": {"type": "object"},
+                    "github": {"type": "object"},
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
-                    "run": {"type": "object"},
                     "stats": {"$ref": "#/components/schemas/SummaryCreate"},
                     "tags": {"type": "object"},
                 },
-                "required": ["context", "machine_info", "run", "stats", "tags"],
+                "required": ["context", "github", "machine_info", "stats", "tags"],
                 "type": "object",
             },
             "Error": {

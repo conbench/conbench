@@ -6,7 +6,7 @@ example = {
         "benchmark_language": "Python",
         "benchmark_language_version": "Python 3.8.5",
     },
-    "run": {
+    "github": {
         "commit": "478286658055bb91737394c2065b92a7e92fb0c1",
         "repository": "https://github.com/apache/arrow",
     },

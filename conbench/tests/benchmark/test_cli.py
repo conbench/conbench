@@ -43,11 +43,11 @@ Usage: conbench addition [OPTIONS]
 
 Options:
   --iterations INTEGER   [default: 1]
-  --drop-caches BOOLEAN  [default: false]
-  --gc-collect BOOLEAN   [default: true]
-  --gc-disable BOOLEAN   [default: true]
-  --show-result BOOLEAN  [default: true]
-  --show-output BOOLEAN  [default: false]
+  --drop-caches BOOLEAN  [default: False]
+  --gc-collect BOOLEAN   [default: True]
+  --gc-disable BOOLEAN   [default: True]
+  --show-result BOOLEAN  [default: True]
+  --show-output BOOLEAN  [default: False]
   --run-id TEXT          Group executions together with a run id.
   --run-name TEXT        Name of run (commit, pull request, etc).
   --help                 Show this message and exit.
@@ -80,14 +80,14 @@ Usage: conbench subtraction [OPTIONS] SOURCE
 Options:
   --color [green|pink|yellow]
   --fruit [apple|orange]
-  --all BOOLEAN                [default: false]
+  --all BOOLEAN                [default: False]
   --count INTEGER              [default: 1]
   --iterations INTEGER         [default: 1]
-  --drop-caches BOOLEAN        [default: false]
-  --gc-collect BOOLEAN         [default: true]
-  --gc-disable BOOLEAN         [default: true]
-  --show-result BOOLEAN        [default: true]
-  --show-output BOOLEAN        [default: false]
+  --drop-caches BOOLEAN        [default: False]
+  --gc-collect BOOLEAN         [default: True]
+  --gc-disable BOOLEAN         [default: True]
+  --show-result BOOLEAN        [default: True]
+  --show-output BOOLEAN        [default: False]
   --run-id TEXT                Group executions together with a run id.
   --run-name TEXT              Name of run (commit, pull request, etc).
   --help                       Show this message and exit.
