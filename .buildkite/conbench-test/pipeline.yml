@@ -1,7 +1,9 @@
 steps:
   - label: "Build"
     key: "build"
-    command: docker-compose build
+    command:
+      - docker-compose down
+      - docker-compose build
 
   - label: "Test"
     key: "test"
