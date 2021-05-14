@@ -11,11 +11,10 @@ from ..db import Session, configure_engine, create_all, drop_all
 def create_db():
     configure_engine(TestConfig.SQLALCHEMY_DATABASE_URI)
 
-    try:
-        subprocess.run(["dropdb", TestConfig.DB_NAME])
-        subprocess.run(["createdb", TestConfig.DB_NAME])
-    except:
-        pass
+    command = ["dropdb", TestConfig.DB_NAME, "-U", "postgres", "--if-exists"]
+    subprocess.run(command, capture_output=True)
+    command = ["createdb", TestConfig.DB_NAME, "-U", "postgres"]
+    subprocess.run(command, capture_output=True)
 
     drop_all()
     create_all()
