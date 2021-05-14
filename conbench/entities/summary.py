@@ -30,6 +30,7 @@ class Summary(Base, EntityMixin):
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     case_id = NotNull(s.String(50), s.ForeignKey("case.id"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
+    # TODO: remove machine_id (it's on the run too)
     machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
     run_id = NotNull(s.Text, s.ForeignKey("run.id"))
     case = relationship("Case", lazy="joined")

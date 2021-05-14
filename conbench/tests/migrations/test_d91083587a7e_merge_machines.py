@@ -4,6 +4,7 @@ from alembic import command
 from alembic.config import Config
 
 from ...db import Session
+from ...entities.machine import Machine
 from ...entities.summary import Summary
 
 
@@ -35,14 +36,14 @@ VALID_PAYLOAD_1 = {
         "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
         "cpu_thread_count": "4",
         "kernel_name": "19.6.0",
-        "memory_bytes": "17179869184",
+        "memory_bytes": "131590280000",
         "name": "diana",
         "os_name": "macOS",
         "os_version": "10.15.7",
     },
     "stats": {
         "batch_id": "7b2fdd9f929d47b9960152090d47f8e6",
-        "run_id": "2a5709d179f349cba69ed242be3e6321",
+        "run_id": "test_d91083587a7e_merge_machines_1",
         "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
         "data": [
             "0.099094",
@@ -115,14 +116,14 @@ VALID_PAYLOAD_2 = {
         "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
         "cpu_thread_count": "4",
         "kernel_name": "19.6.0",
-        "memory_bytes": "17179869184",
+        "memory_bytes": "131593068000",
         "name": "diana",
         "os_name": "macOS",
         "os_version": "10.15.7",
     },
     "stats": {
         "batch_id": "7b2fdd9f929d47b9960152090d47f8e6",
-        "run_id": "2a5709d179f349cba69ed242be3e6321",
+        "run_id": "test_d91083587a7e_merge_machines_2",
         "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
         "data": [
             "0.099094",
@@ -195,14 +196,14 @@ VALID_PAYLOAD_3 = {
         "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
         "cpu_thread_count": "4",
         "kernel_name": "19.6.0",
-        "memory_bytes": "17179869184",
+        "memory_bytes": "131593872000",
         "name": "diana",
         "os_name": "macOS",
         "os_version": "10.15.7",
     },
     "stats": {
         "batch_id": "7b2fdd9f929d47b9960152090d47f8e6",
-        "run_id": "2a5709d179f349cba69ed242be3e6321",
+        "run_id": "test_d91083587a7e_merge_machines_3",
         "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
         "data": [
             "0.099094",
@@ -276,14 +277,14 @@ VALID_PAYLOAD_4 = {
         "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
         "cpu_thread_count": "4",
         "kernel_name": "19.6.0",
-        "memory_bytes": "17179869184",
-        "name": "diana",
+        "memory_bytes": "131593872000",
+        "name": "diana-x",
         "os_name": "macOS",
         "os_version": "10.15.7",
     },
     "stats": {
         "batch_id": "7b2fdd9f929d47b9960152090d47f8e6",
-        "run_id": "2a5709d179f349cba69ed242be3e6321",
+        "run_id": "test_d91083587a7e_merge_machines_4",
         "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
         "data": [
             "0.099094",
@@ -357,14 +358,14 @@ VALID_PAYLOAD_5 = {
         "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
         "cpu_thread_count": "4",
         "kernel_name": "19.6.0",
-        "memory_bytes": "17179869184",
-        "name": "diana",
+        "memory_bytes": "132070244352",
+        "name": "diana-y",
         "os_name": "macOS",
         "os_version": "10.15.7",
     },
     "stats": {
         "batch_id": "7b2fdd9f929d47b9960152090d47f8e6",
-        "run_id": "2a5709d179f349cba69ed242be3e6321",
+        "run_id": "test_d91083587a7e_merge_machines_5",
         "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
         "data": [
             "0.099094",
@@ -421,8 +422,41 @@ def test_upgrade():
     summary_4 = Summary.create(VALID_PAYLOAD_4)
     summary_5 = Summary.create(VALID_PAYLOAD_5)
 
+    before_machine_id_1 = summary_1.machine_id
+    before_machine_id_2 = summary_2.machine_id
+    before_machine_id_3 = summary_3.machine_id
+    before_machine_id_4 = summary_4.machine_id
+    before_machine_id_5 = summary_5.machine_id
+
     # assert before migration
-    # TODO
+    machines = set(
+        [
+            summary_1.machine_id,
+            summary_2.machine_id,
+            summary_3.machine_id,
+            summary_4.machine_id,
+            summary_5.machine_id,
+        ]
+    )
+    assert len(machines) == 5
+
+    assert summary_1.machine_id == summary_1.run.machine_id
+    assert summary_2.machine_id == summary_2.run.machine_id
+    assert summary_3.machine_id == summary_3.run.machine_id
+    assert summary_4.machine_id == summary_4.run.machine_id
+    assert summary_5.machine_id == summary_5.run.machine_id
+
+    assert summary_1.machine.memory_bytes == 131590280000
+    assert summary_2.machine.memory_bytes == 131593068000
+    assert summary_3.machine.memory_bytes == 131593872000
+    assert summary_4.machine.memory_bytes == 131593872000
+    assert summary_5.machine.memory_bytes == 132070244352
+
+    assert Machine.get(before_machine_id_1) is not None
+    assert Machine.get(before_machine_id_2) is not None
+    assert Machine.get(before_machine_id_3) is not None
+    assert Machine.get(before_machine_id_4) is not None
+    assert Machine.get(before_machine_id_5) is not None
 
     # do migration
     alembic_config = Config(config_path)
