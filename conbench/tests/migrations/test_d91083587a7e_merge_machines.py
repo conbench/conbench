@@ -446,6 +446,11 @@ def test_upgrade():
     assert summary_4.machine_id == summary_4.run.machine_id
     assert summary_5.machine_id == summary_5.run.machine_id
 
+    assert summary_1.machine_id != summary_2.machine_id
+    assert summary_1.machine_id != summary_3.machine_id
+    assert summary_1.machine_id != summary_4.machine_id
+    assert summary_1.machine_id != summary_5.machine_id
+
     assert summary_1.machine.memory_bytes == 131590280000
     assert summary_2.machine.memory_bytes == 131593068000
     assert summary_3.machine.memory_bytes == 131593872000
@@ -470,4 +475,36 @@ def test_upgrade():
     Session.refresh(summary_5)
 
     # assert after migration
-    # TODO
+    machines = set(
+        [
+            summary_1.machine_id,
+            summary_2.machine_id,
+            summary_3.machine_id,
+            summary_4.machine_id,
+            summary_5.machine_id,
+        ]
+    )
+    assert len(machines) == 3
+
+    assert summary_1.machine_id == summary_1.run.machine_id
+    assert summary_2.machine_id == summary_2.run.machine_id
+    assert summary_3.machine_id == summary_3.run.machine_id
+    assert summary_4.machine_id == summary_4.run.machine_id
+    assert summary_5.machine_id == summary_5.run.machine_id
+
+    assert summary_1.machine_id == summary_2.machine_id
+    assert summary_1.machine_id == summary_3.machine_id
+    assert summary_1.machine_id != summary_4.machine_id
+    assert summary_1.machine_id != summary_5.machine_id
+
+    assert summary_1.machine.memory_bytes == 132070244352
+    assert summary_2.machine.memory_bytes == 132070244352
+    assert summary_3.machine.memory_bytes == 132070244352
+    assert summary_4.machine.memory_bytes == 132070244352
+    assert summary_5.machine.memory_bytes == 132070244352
+
+    assert Machine.get(before_machine_id_1) is not None
+    assert Machine.get(before_machine_id_2) is None  # deleted
+    assert Machine.get(before_machine_id_3) is None  # deleted
+    assert Machine.get(before_machine_id_4) is not None
+    assert Machine.get(before_machine_id_5) is not None
