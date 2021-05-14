@@ -54,7 +54,7 @@ class Machine(Base, EntityMixin):
             cls.cpu_thread_count,
             "-",
             cls.memory_bytes,
-        )
+        ).label("hash")
 
 
 s.Index(
