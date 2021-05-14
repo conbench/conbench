@@ -122,7 +122,7 @@ def upgrade():
     machines_by_id = {m["id"]: m for m in machines}
 
     seen = {
-        f'{d["sha"]}{d["case_id"]}{d["context_id"]}{d["machine_id"]}'
+        f'{d["sha"]}{d["case_id"]}{d["context_id"]}{d["machine_hash"]}'
         for d in distributions
     }
 
@@ -140,14 +140,18 @@ def upgrade():
         if not commit:
             continue
 
-        hash_ = f'{commit["sha"]}{summary["case_id"]}{summary["context_id"]}{summary["machine_id"]}'
-        if hash_ in seen:
-            continue
-
         m = machines_by_id[summary["machine_id"]]
         machine_hash = (
             f"{m.name}-{m.cpu_core_count}-{m.cpu_thread_count}-{m.memory_bytes}"
         )
+
+        hash_ = (
+            f'{commit["sha"]}{summary["case_id"]}{summary["context_id"]}{machine_hash}'
+        )
+        if hash_ in seen:
+            continue
+
+        seen.add(hash_)
 
         distributions = list(
             connection.execute(
