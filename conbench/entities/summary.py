@@ -20,6 +20,7 @@ from ..entities.case import Case
 from ..entities.context import Context
 from ..entities.commit import Commit, parse_commit
 from ..entities.data import Data
+from ..entities.distribution import update_distribution
 from ..entities.machine import Machine, MachineSchema
 from ..entities.run import Run
 from ..entities.time import Time
@@ -148,6 +149,8 @@ class Summary(Base, EntityMixin):
         for i, x in enumerate(times):
             bulk.append(Time(result=x, summary_id=summary.id, iteration=i + 1))
         Time.bulk_save_objects(bulk)
+
+        update_distribution(repository, sha, summary, 1000)
 
         return summary
 
