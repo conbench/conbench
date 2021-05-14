@@ -1,15 +1,7 @@
-"""migrate cases
-
-Revision ID: 854c3ba5abd6
-Revises: 991493b6406a
-Create Date: 2021-04-08 08:45:38.935858
-
-"""
 from alembic import op
 from sqlalchemy import MetaData
 
 
-# revision identifiers, used by Alembic.
 revision = "854c3ba5abd6"
 down_revision = "991493b6406a"
 branch_labels = None

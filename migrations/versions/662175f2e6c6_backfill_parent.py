@@ -1,10 +1,3 @@
-"""backfill parent
-
-Revision ID: 662175f2e6c6
-Revises: 782f4533db71
-Create Date: 2021-04-21 09:23:28.589522
-
-"""
 import os
 
 from alembic import op
@@ -12,7 +5,6 @@ import requests
 from sqlalchemy import MetaData
 
 
-# revision identifiers, used by Alembic.
 revision = "662175f2e6c6"
 down_revision = "782f4533db71"
 branch_labels = None

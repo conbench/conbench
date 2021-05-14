@@ -1,15 +1,7 @@
-"""drop distribution
-
-Revision ID: 1946eac73ac4
-Revises: d91083587a7e
-Create Date: 2021-05-14 09:05:29.915955
-
-"""
 from alembic import op
 from sqlalchemy import MetaData
 
 
-# revision identifiers, used by Alembic.
 revision = "1946eac73ac4"
 down_revision = "6da4b0d2ad27"
 branch_labels = None

@@ -1,15 +1,7 @@
-"""old case context
-
-Revision ID: 8411faeebc1f
-Revises: 4a5177dc4e44
-Create Date: 2021-04-30 08:46:48.985283
-
-"""
 from alembic import op
 from sqlalchemy import MetaData
 
 
-# revision identifiers, used by Alembic.
 revision = "8411faeebc1f"
 down_revision = "4a5177dc4e44"
 branch_labels = None
