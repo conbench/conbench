@@ -1,5 +1,3 @@
-import subprocess
-
 import pytest
 
 from .. import create_application
@@ -10,12 +8,6 @@ from ..db import Session, configure_engine, create_all, drop_all
 @pytest.fixture(scope="session", autouse=True)
 def create_db():
     configure_engine(TestConfig.SQLALCHEMY_DATABASE_URI)
-
-    command = ["dropdb", TestConfig.DB_NAME, "-U", "postgres", "--if-exists"]
-    subprocess.run(command, capture_output=True)
-    command = ["createdb", TestConfig.DB_NAME, "-U", "postgres"]
-    subprocess.run(command, capture_output=True)
-
     drop_all()
     create_all()
 
