@@ -126,7 +126,11 @@ def upgrade():
         for d in distributions
     }
 
-    summaries = connection.execute(summary_table.select())
+    summaries = connection.execute(
+        summary_table.select()
+        .join(run_table, run_table.c.id == summary_table.c.run_id)
+        .filter(run_table.c.name.like("commit: %"))
+    )
     for summary in summaries:
         run = runs_by_id.get(summary["run_id"])
         if not run:
