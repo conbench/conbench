@@ -54,7 +54,7 @@ DISTRIBUTION = """WITH ordered_commits AS
 (SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
 FROM commit 
 WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
- SELECT text(:text_1) AS repository, text(:text_2) AS sha, summary.case_id, summary.context_id, concat(machine.name, :concat_2, machine.cpu_core_count, :concat_3, machine.cpu_thread_count, :concat_4, machine.memory_bytes) AS concat_1, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
+ SELECT text(:text_1) AS repository, text(:text_2) AS sha, summary.case_id, summary.context_id, concat(machine.name, :concat_1, machine.cpu_core_count, :concat_2, machine.cpu_thread_count, :concat_3, machine.memory_bytes) AS hash, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
 FROM summary JOIN run ON run.id = summary.run_id JOIN machine ON machine.id = summary.machine_id JOIN (SELECT commit_index.id AS id, commit_index.sha AS sha, commit_index.timestamp AS timestamp, commit_index.row_number AS row_number 
 FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
@@ -63,7 +63,7 @@ FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commi
 FROM ordered_commits) AS commit_index 
 WHERE commit_index.sha = :sha_1)
  LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id 
-WHERE run.name LIKE :name_1 AND summary.case_id = :case_id_1 AND summary.context_id = :context_id_1 AND concat(machine.name, :concat_5, machine.cpu_core_count, :concat_6, machine.cpu_thread_count, :concat_7, machine.memory_bytes) = :concat_8 GROUP BY summary.case_id, summary.context_id, summary.machine_id, machine.name, machine.cpu_core_count, machine.cpu_thread_count, machine.memory_bytes"""  # noqa
+WHERE run.name LIKE :name_1 AND summary.case_id = :case_id_1 AND summary.context_id = :context_id_1 AND concat(machine.name, :concat_4, machine.cpu_core_count, :concat_5, machine.cpu_thread_count, :concat_6, machine.memory_bytes) = :param_2 GROUP BY summary.case_id, summary.context_id, summary.machine_id, machine.name, machine.cpu_core_count, machine.cpu_thread_count, machine.memory_bytes"""  # noqa
 
 
 def create_benchmark_summary(conbench, results, benchmark_name=None):
