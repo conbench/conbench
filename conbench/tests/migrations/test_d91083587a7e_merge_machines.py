@@ -465,7 +465,7 @@ def test_upgrade():
 
     # do migration
     alembic_config = Config(config_path)
-    command.stamp(alembic_config, "6da4b0d2ad27")
+    command.stamp(alembic_config, "1946eac73ac4")
     command.upgrade(alembic_config, "d91083587a7e")
 
     Session.refresh(summary_1)
