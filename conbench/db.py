@@ -31,4 +31,5 @@ def create_all():
 def drop_all():
     from .entities._entity import Base
 
-    Base.metadata.drop_all(engine)
+    for table in reversed(Base.metadata.sorted_tables):
+        table.drop(engine)
