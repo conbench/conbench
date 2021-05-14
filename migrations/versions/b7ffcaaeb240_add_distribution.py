@@ -1,15 +1,7 @@
-"""add distribution
-
-Revision ID: b7ffcaaeb240
-Revises: 8411faeebc1f
-Create Date: 2021-05-03 15:13:40.733836
-
-"""
 from alembic import op
 import sqlalchemy as sa
 
 
-# revision identifiers, used by Alembic.
 revision = "b7ffcaaeb240"
 down_revision = "8411faeebc1f"
 branch_labels = None

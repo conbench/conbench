@@ -1,15 +1,7 @@
-"""migrate contexts
-
-Revision ID: 4a5177dc4e44
-Revises: b5657b751fb5
-Create Date: 2021-04-28 09:29:13.186747
-
-"""
 from alembic import op
 from sqlalchemy import MetaData
 
 
-# revision identifiers, used by Alembic.
 revision = "4a5177dc4e44"
 down_revision = "b5657b751fb5"
 branch_labels = None

@@ -1,15 +1,8 @@
-"""Initial schema
-
-Revision ID: 991493b6406a
-Revises:
-Create Date: 2021-04-07 13:57:22.257052
-
-"""
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-# revision identifiers, used by Alembic.
+
 revision = "991493b6406a"
 down_revision = None
 branch_labels = None

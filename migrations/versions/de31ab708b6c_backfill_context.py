@@ -1,15 +1,7 @@
-"""backfill context
-
-Revision ID: de31ab708b6c
-Revises: 52b6915e289a
-Create Date: 2021-04-26 13:10:55.281793
-
-"""
 from alembic import op
 from sqlalchemy import MetaData
 
 
-# revision identifiers, used by Alembic.
 revision = "de31ab708b6c"
 down_revision = "52b6915e289a"
 branch_labels = None

@@ -1,15 +1,7 @@
-"""drop context_id
-
-Revision ID: b5657b751fb5
-Revises: 4e5ee23705ca
-Create Date: 2021-04-26 15:23:17.012335
-
-"""
 from alembic import op
 import sqlalchemy as sa
 
 
-# revision identifiers, used by Alembic.
 revision = "b5657b751fb5"
 down_revision = "4e5ee23705ca"
 branch_labels = None

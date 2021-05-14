@@ -1,15 +1,7 @@
-"""add parent drop url
-
-Revision ID: 782f4533db71
-Revises: 854c3ba5abd6
-Create Date: 2021-04-16 10:38:04.994000
-
-"""
 from alembic import op
 import sqlalchemy as sa
 
 
-# revision identifiers, used by Alembic.
 revision = "782f4533db71"
 down_revision = "854c3ba5abd6"
 branch_labels = None
