@@ -108,13 +108,15 @@ def upgrade():
     run_table = meta.tables["run"]
     summary_table = meta.tables["summary"]
 
-    runs = connection.execute(run_table.select())
     commits = connection.execute(commit_table.select())
     distributions = connection.execute(distribution_table.select())
     machines = connection.execute(machine_table.select())
     commits_by_id = {c["id"]: c for c in commits}
     machines_by_id = {m["id"]: m for m in machines}
 
+    runs = connection.execute(
+        run_table.select().filter(run_table.c.name.like("commit: %"))
+    )
     for run in runs:
         commit = commits_by_id.get(run["commit_id"])
         if not commit:
