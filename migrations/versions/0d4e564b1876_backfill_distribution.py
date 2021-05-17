@@ -75,7 +75,6 @@ def get_distribution(
         .group_by(
             summary_table.c.case_id,
             summary_table.c.context_id,
-            summary_table.c.machine_id,
             machine_table.c.name,
             machine_table.c.cpu_core_count,
             machine_table.c.cpu_thread_count,

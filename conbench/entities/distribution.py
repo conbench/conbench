@@ -100,7 +100,6 @@ def get_distribution(repository, sha, case_id, context_id, machine_hash, limit):
         .group_by(
             Summary.case_id,
             Summary.context_id,
-            Summary.machine_id,
             Machine.name,
             Machine.cpu_core_count,
             Machine.cpu_thread_count,
