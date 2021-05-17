@@ -140,9 +140,6 @@ def upgrade():
             )
         )
 
-        if not distributions:
-            continue
-
         for distribution in distributions:
             values = dict(distribution)
             machine_hash = values.pop("hash")
