@@ -34,6 +34,8 @@ def get_distribution(
     commit_table,
     repository,
     sha,
+    case_id,
+    context_id,
     machine_hash,
     limit,
 ):
@@ -83,6 +85,8 @@ def get_distribution(
         .join(commits_up, commits_up.c.id == run_table.c.commit_id)
         .filter(
             run_table.c.name.like("commit: %"),
+            summary_table.c.case_id == case_id,
+            summary_table.c.context_id == context_id,
             func.concat(
                 machine_table.c.name,
                 "-",
@@ -108,21 +112,29 @@ def upgrade():
     run_table = meta.tables["run"]
     summary_table = meta.tables["summary"]
 
+    runs = connection.execute(run_table.select())
     commits = connection.execute(commit_table.select())
     distributions = connection.execute(distribution_table.select())
     machines = connection.execute(machine_table.select())
+    runs_by_id = {r["id"]: r for r in runs}
     commits_by_id = {c["id"]: c for c in commits}
     machines_by_id = {m["id"]: m for m in machines}
 
-    runs = connection.execute(
-        run_table.select().filter(run_table.c.name.like("commit: %"))
+    summaries = connection.execute(
+        summary_table.select()
+        .join(run_table, run_table.c.id == summary_table.c.run_id)
+        .filter(run_table.c.name.like("commit: %"))
     )
-    for run in runs:
+    for summary in summaries:
+        run = runs_by_id.get(summary["run_id"])
+        if not run:
+            continue
+
         commit = commits_by_id.get(run["commit_id"])
         if not commit:
             continue
 
-        m = machines_by_id[run.machine_id]
+        m = machines_by_id[summary["machine_id"]]
         machine_hash = (
             f"{m.name}-{m.cpu_core_count}-{m.cpu_thread_count}-{m.memory_bytes}"
         )
@@ -136,27 +148,32 @@ def upgrade():
                     commit_table,
                     commit["repository"],
                     commit["sha"],
+                    summary["case_id"],
+                    summary["context_id"],
                     machine_hash,
                     1000,
                 )
             )
         )
 
-        for distribution in distributions:
-            values = dict(distribution)
-            machine_hash = values.pop("hash")
-            values["id"] = uuid.uuid4().hex
-            values["machine_hash"] = machine_hash
+        if not distributions:
+            continue
 
-            connection.execute(
-                insert(distribution_table)
-                .values(values)
-                .on_conflict_do_update(
-                    index_elements=["sha", "case_id", "context_id", "machine_hash"],
-                    set_=values,
-                )
+        distribution = distributions[0]
+        values = dict(distribution)
+        machine_hash = values.pop("hash")
+        values["id"] = uuid.uuid4().hex
+        values["machine_hash"] = machine_hash
+
+        connection.execute(
+            insert(distribution_table)
+            .values(values)
+            .on_conflict_do_update(
+                index_elements=["sha", "case_id", "context_id", "machine_hash"],
+                set_=values,
             )
-            connection.commit()
+        )
+        connection.commit()
 
 
 def downgrade():
