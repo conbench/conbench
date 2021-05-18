@@ -32,8 +32,6 @@ jobs:
         run: |
           alembic upgrade head
         env:
-          APPLICATION_NAME: "Conbench"
-          CREATE_ALL_TABLES: "false"
           DB_USERNAME: "postgres"
           DB_HOST: "localhost"
           DB_PASSWORD: "postgres"
