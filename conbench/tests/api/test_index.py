@@ -23,5 +23,5 @@ class TestAPI(_asserts.ApiEndpointTest):
         data = response.json
         assert response.status_code == 200
         assert response.content_type == "application/json"
-        assert list(data) == ["date"]
+        assert set(data) == {"date", "alembic_version"}
         assert str(datetime.datetime.today().year) in data["date"]

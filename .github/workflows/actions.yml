@@ -28,6 +28,15 @@ jobs:
           pip install -r requirements-cli.txt
           pip install -r requirements-build.txt
           pip install coveralls
+      - name: Migrations
+        run: |
+          alembic upgrade head
+        env:
+          DB_USERNAME: "postgres"
+          DB_HOST: "localhost"
+          DB_PASSWORD: "postgres"
+          DB_NAME: "conbench_test"
+          DB_PORT: "5432"
       - name: Lint (flake8)
         run: |
           flake8
