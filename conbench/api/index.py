@@ -9,7 +9,6 @@ from ..api import api, rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint
 from ..db import Session
-from _ast import excepthandler
 
 
 @api.route("/docs.json")
