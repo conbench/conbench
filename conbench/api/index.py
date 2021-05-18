@@ -9,6 +9,7 @@ from ..api import api, rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint
 from ..db import Session
+from _ast import excepthandler
 
 
 @api.route("/docs.json")
@@ -65,10 +66,13 @@ class PingAPI(ApiEndpoint):
         """
         now = datetime.datetime.now(datetime.timezone.utc)
         query = text("SELECT version_num FROM alembic_version")
-        alembic_version = list(Session.execute(query))[0]["version_num"]
+        try:
+            version = list(Session.execute(query))[0]["version_num"]
+        except:
+            version = "unknown"
         return {
             "date": now.strftime("%a, %d %b %Y %H:%M:%S %Z"),
-            "alembic_version": alembic_version,
+            "alembic_version": version,
         }
 
 
