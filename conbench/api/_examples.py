@@ -328,7 +328,10 @@ API_400 = {
     },
 }
 
-API_PING = {"date": "Thu, 22 Oct 2020 15:53:55 UTC"}
+API_PING = {
+    "alembic_version": "0d4e564b1876",
+    "date": "Thu, 22 Oct 2020 15:53:55 UTC",
+}
 API_INDEX = {
     "links": {
         "benchmarks": "http://localhost/api/benchmarks/",

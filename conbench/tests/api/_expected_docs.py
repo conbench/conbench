@@ -436,7 +436,10 @@
             "Ping": {
                 "content": {
                     "application/json": {
-                        "example": {"date": "Thu, 22 Oct 2020 15:53:55 UTC"},
+                        "example": {
+                            "alembic_version": "0d4e564b1876",
+                            "date": "Thu, 22 Oct 2020 15:53:55 UTC",
+                        },
                         "schema": {"$ref": "#/components/schemas/Ping"},
                     }
                 },
