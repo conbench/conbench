@@ -125,6 +125,9 @@ def upgrade():
         .join(run_table, run_table.c.id == summary_table.c.run_id)
         .filter(run_table.c.name.like("commit: %"))
     )
+
+    i = 1
+
     for summary in summaries:
         run = runs_by_id.get(summary["run_id"])
         if not run:
@@ -174,6 +177,10 @@ def upgrade():
             )
         )
         connection.commit()
+        print(f"Processed {i} summary")
+        i += 1
+
+    print("Done with migration")
 
 
 def downgrade():
