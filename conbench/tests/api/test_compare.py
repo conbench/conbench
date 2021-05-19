@@ -212,7 +212,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         self.assert_404_not_found(response)
 
 
-class TestCompareRunsGet(_asserts.GetEnforcer):
+class TestCompareRunsWithTagsGet(_asserts.GetEnforcer):
     url = "/api/compare/runs/{}/"
     public = True
 
