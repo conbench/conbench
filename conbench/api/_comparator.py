@@ -15,7 +15,7 @@ def change_fmt(value):
 
 
 class BenchmarkResult:
-    def __init__(self, id, batch_id, run_id, unit, value, batch, benchmark):
+    def __init__(self, id, batch_id, run_id, unit, value, batch, benchmark, tags=None):
         self.id = id
         self.batch_id = batch_id
         self.run_id = run_id
@@ -23,13 +23,15 @@ class BenchmarkResult:
         self.batch = batch
         self.benchmark = benchmark
         self.value = decimal.Decimal(value)
+        self.tags = tags
 
 
 class BenchmarkComparator:
-    def __init__(self, baseline, contender, threshold=None):
+    def __init__(self, baseline, contender, threshold=None, include_tags=False):
         self.baseline = BenchmarkResult(**baseline) if baseline else None
         self.contender = BenchmarkResult(**contender) if contender else None
         self.threshold = threshold if threshold is not None else THRESHOLD
+        self.include_tags = include_tags
 
     @property
     def batch(self):
@@ -88,6 +90,14 @@ class BenchmarkComparator:
         adjusted_change = -change if self.less_is_better else change
         return adjusted_change * 100 > self.threshold
 
+    @property
+    def tags(self):
+        if self.baseline is not None:
+            return self.baseline.tags
+        if self.contender is not None:
+            return self.contender.tags
+        return "unknown"
+
     def formatted(self):
         fmt = formatter_for_unit(self.unit)
         baseline = self.baseline.value if self.baseline else None
@@ -108,6 +118,7 @@ class BenchmarkComparator:
             "contender_run_id": self.contender.run_id if self.contender else None,
             "unit": self.unit,
             "less_is_better": self.less_is_better,
+            **({"tags": self.tags} if self.include_tags else {}),
         }
 
     def compare(self):
@@ -129,6 +140,7 @@ class BenchmarkComparator:
             "contender_run_id": self.contender.run_id if self.contender else None,
             "unit": self.unit,
             "less_is_better": self.less_is_better,
+            **({"tags": self.tags} if self.include_tags else {}),
         }
 
 

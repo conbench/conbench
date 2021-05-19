@@ -1,4 +1,5 @@
 import copy
+import urllib
 import uuid
 
 from ...api._examples import _api_compare_entity, _api_compare_list
@@ -68,7 +69,60 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         self.assert_404_not_found(response)
 
 
-class TestCompareBacthesGet(_asserts.GetEnforcer):
+class TestCompareBenchmarksWithTagsGet(_asserts.GetEnforcer):
+    url = "/api/compare/benchmarks/{}/"
+    public = True
+
+    def _create(self, with_ids=False):
+        summary = create_benchmark_summary("read")
+        entity = FakeEntity(f"{summary.id}...{summary.id}")
+        if with_ids:
+            return summary.id, entity
+        else:
+            return entity
+
+    def test_compare(self, client):
+        self.authenticate(client)
+        new_id, compare = self._create(with_ids=True)
+        args = {"tags": True}
+        args = urllib.parse.urlencode(args)
+        response = client.get(f"/api/compare/benchmarks/{compare.id}/?{args}")
+
+        # cheating by comparing benchmark to same benchmark
+        benchmark_ids = [new_id, new_id]
+        batch_ids = [
+            "7b2fdd9f929d47b9960152090d47f8e6",
+            "7b2fdd9f929d47b9960152090d47f8e6",
+        ]
+        run_ids = [
+            "2a5709d179f349cba69ed242be3e6321",
+            "2a5709d179f349cba69ed242be3e6321",
+        ]
+        expected = _api_compare_entity(
+            benchmark_ids,
+            batch_ids,
+            run_ids,
+            "read",
+            CASE,
+            tags={
+                "dataset": "nyctaxi_sample",
+                "cpu_count": 2,
+                "file_type": "parquet",
+                "input_type": "arrow",
+                "compression": "snappy",
+                "name": "read",
+            },
+        )
+        # import pdb; pdb.set_trace()
+        self.assert_200_ok(response, expected)
+
+    def test_compare_unknown_compare_ids(self, client):
+        self.authenticate(client)
+        response = client.get("/api/compare/benchmarks/foo...bar/")
+        self.assert_404_not_found(response)
+
+
+class TestCompareBatchesGet(_asserts.GetEnforcer):
     url = "/api/compare/batches/{}/"
     public = True
 

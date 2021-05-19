@@ -102,13 +102,7 @@ def _api_commit_entity(commit_id):
     }
 
 
-def _api_compare_entity(
-    benchmark_ids,
-    batch_ids,
-    run_ids,
-    batch,
-    benchmark,
-):
+def _api_compare_entity(benchmark_ids, batch_ids, run_ids, batch, benchmark, tags=None):
     return {
         "baseline": "0.036 s",
         "baseline_id": benchmark_ids[0],
@@ -125,6 +119,7 @@ def _api_compare_entity(
         "regression": False,
         "improvement": False,
         "unit": "s",
+        **({"tags": tags} if tags is not None else {}),
     }
 
 
