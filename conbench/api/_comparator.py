@@ -145,16 +145,21 @@ class BenchmarkComparator:
 
 
 class BenchmarkListComparator:
-    def __init__(self, pairs, threshold=None):
+    def __init__(self, pairs, threshold=None, include_tags=False):
         self.pairs = pairs
         self.threshold = threshold if threshold is not None else THRESHOLD
+        self.include_tags = include_tags
 
     def formatted(self):
         for pair in self.pairs.values():
             baseline, contender = pair.get("baseline"), pair.get("contender")
-            yield BenchmarkComparator(baseline, contender, self.threshold).formatted()
+            yield BenchmarkComparator(
+                baseline, contender, self.threshold, include_tags=self.include_tags
+            ).formatted()
 
     def compare(self):
         for pair in self.pairs.values():
             baseline, contender = pair.get("baseline"), pair.get("contender")
-            yield BenchmarkComparator(baseline, contender, self.threshold).compare()
+            yield BenchmarkComparator(
+                baseline, contender, self.threshold, include_tags=self.include_tags
+            ).compare()

@@ -888,6 +888,7 @@
                         "schema": {"type": "string"},
                     },
                     {"in": "query", "name": "raw", "schema": {"type": "boolean"}},
+                    {"in": "query", "name": "tags", "schema": {"type": "boolean"}},
                     {"in": "query", "name": "threshold", "schema": {"type": "integer"}},
                 ],
                 "responses": {
@@ -933,6 +934,7 @@
                         "schema": {"type": "string"},
                     },
                     {"in": "query", "name": "raw", "schema": {"type": "boolean"}},
+                    {"in": "query", "name": "tags", "schema": {"type": "boolean"}},
                     {"in": "query", "name": "threshold", "schema": {"type": "integer"}},
                 ],
                 "responses": {

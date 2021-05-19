@@ -121,6 +121,10 @@ class CompareBatchesAPI(ApiEndpoint):
             schema:
               type: boolean
           - in: query
+            name: tags
+            schema:
+              type: boolean
+          - in: query
             name: threshold
             schema:
               type: integer
@@ -128,6 +132,7 @@ class CompareBatchesAPI(ApiEndpoint):
           - Compare
         """
         raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
+        tags = f.request.args.get("tags", "false").lower() in ["true", "1"]
         threshold = f.request.args.get("threshold")
         if threshold is not None:
             threshold = int(threshold)
@@ -153,9 +158,13 @@ class CompareBatchesAPI(ApiEndpoint):
             self._add_pair(pairs, summary, "contender")
 
         if raw:
-            result = BenchmarkListComparator(pairs, threshold).compare()
+            result = BenchmarkListComparator(
+                pairs, threshold, include_tags=tags
+            ).compare()
         else:
-            result = BenchmarkListComparator(pairs, threshold).formatted()
+            result = BenchmarkListComparator(
+                pairs, threshold, include_tags=tags
+            ).formatted()
 
         return f.jsonify(list(result))
 

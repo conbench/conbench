@@ -130,6 +130,7 @@ def _api_compare_list(
     run_ids,
     batches,
     benchmarks,
+    tags=None,
 ):
     return [
         {
@@ -148,6 +149,7 @@ def _api_compare_list(
             "regression": False,
             "improvement": False,
             "unit": "s",
+            **({"tags": tags[0]} if tags is not None else {}),
         },
         {
             "baseline": "0.036 s",
@@ -165,6 +167,7 @@ def _api_compare_list(
             "regression": False,
             "improvement": False,
             "unit": "s",
+            **({"tags": tags[1]} if tags is not None else {}),
         },
     ]
 
