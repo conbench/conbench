@@ -317,8 +317,10 @@
                             "contender_id": "some-benchmark-uuid-2",
                             "contender_run_id": "some-run-uuid-2",
                             "improvement": False,
+                            "improvement_z": False,
                             "less_is_better": True,
                             "regression": False,
+                            "regression_z": False,
                             "tags": {
                                 "compression": "snappy",
                                 "cpu_count": 2,
@@ -329,6 +331,7 @@
                             },
                             "threshold": 5,
                             "unit": "s",
+                            "z_score": "0.000",
                         }
                     }
                 },
@@ -351,8 +354,10 @@
                                 "contender_id": "some-benchmark-uuid-3",
                                 "contender_run_id": "some-run-uuid-2",
                                 "improvement": False,
+                                "improvement_z": False,
                                 "less_is_better": True,
                                 "regression": False,
+                                "regression_z": False,
                                 "tags": {
                                     "compression": "snappy",
                                     "cpu_count": 2,
@@ -363,6 +368,7 @@
                                 },
                                 "threshold": 5,
                                 "unit": "s",
+                                "z_score": "0.000",
                             },
                             {
                                 "baseline": "0.036 s",
@@ -377,8 +383,10 @@
                                 "contender_id": "some-benchmark-uuid-4",
                                 "contender_run_id": "some-run-uuid-2",
                                 "improvement": False,
+                                "improvement_z": False,
                                 "less_is_better": True,
                                 "regression": False,
+                                "regression_z": False,
                                 "tags": {
                                     "compression": "snappy",
                                     "cpu_count": 2,
@@ -389,6 +397,7 @@
                                 },
                                 "threshold": 5,
                                 "unit": "s",
+                                "z_score": "0.000",
                             },
                         ]
                     }

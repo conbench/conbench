@@ -90,6 +90,18 @@ class BenchmarkComparator:
         return adjusted_change * 100 > self.threshold
 
     @property
+    def z_score(self):
+        return 0.0  # TODO
+
+    @property
+    def regression_z(self):
+        return False  # TODO
+
+    @property
+    def improvement_z(self):
+        return False  # TODO
+
+    @property
     def tags(self):
         if self.baseline is not None:
             return self.baseline.tags
@@ -98,18 +110,21 @@ class BenchmarkComparator:
         return "unknown"
 
     def formatted(self):
-        fmt = formatter_for_unit(self.unit)
+        fmt_unit = formatter_for_unit(self.unit)
         baseline = self.baseline.value if self.baseline else None
         contender = self.contender.value if self.contender else None
         return {
             "batch": self.batch,
             "benchmark": self.benchmark,
             "change": change_fmt(self.change),
-            "threshold": self.threshold,
+            "threshold": self.threshold,  # TODO: change_fmt?
             "regression": self.regression,
             "improvement": self.improvement,
-            "baseline": fmt(baseline, self.unit),
-            "contender": fmt(contender, self.unit),
+            "z_score": fmt(self.z_score),
+            "regression_z": self.regression_z,
+            "improvement_z": self.improvement_z,
+            "baseline": fmt_unit(baseline, self.unit),
+            "contender": fmt_unit(contender, self.unit),
             "baseline_id": self.baseline.id if self.baseline else None,
             "contender_id": self.contender.id if self.contender else None,
             "baseline_batch_id": self.baseline.batch_id if self.baseline else None,
@@ -131,6 +146,9 @@ class BenchmarkComparator:
             "threshold": self.threshold,
             "regression": self.regression,
             "improvement": self.improvement,
+            "z_score": fmt(self.z_score),
+            "regression_z": self.regression_z,
+            "improvement_z": self.improvement_z,
             "baseline": fmt(baseline),
             "contender": fmt(contender),
             "baseline_id": self.baseline.id if self.baseline else None,
