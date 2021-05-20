@@ -91,6 +91,9 @@ class BenchmarkComparator:
 
     @property
     def z_score(self):
+        if self.baseline is None or self.contender is None:
+            return 0.0
+
         return 0.0  # TODO
 
     @property
@@ -166,7 +169,7 @@ class BenchmarkComparator:
 class BenchmarkListComparator:
     def __init__(self, pairs, threshold=None):
         self.pairs = pairs
-        self.threshold = threshold if threshold is not None else THRESHOLD
+        self.threshold = float(threshold) if threshold is not None else THRESHOLD
 
     def formatted(self):
         for pair in self.pairs.values():
