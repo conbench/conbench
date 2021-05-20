@@ -202,6 +202,12 @@ class Conbench(Connection):
             if options["gc_disable"]:
                 gc.disable()
 
+            if output is not None:
+                # We only need output from the final run.
+                # For other runs delete before we run the next
+                # iteration to avoid doubling memory
+                del output
+
             iteration_start = time.time()
             output = f()
             times.append(time.time() - iteration_start)
