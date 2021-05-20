@@ -146,3 +146,52 @@ def update_distribution(repository, sha, summary, limit):
             )
         )
         conn.commit()
+
+
+q = """SELECT
+run_id,
+summary.case_id,
+summary.machine_id,
+machine.name AS machine_name,
+summary.unit,
+summary.time_unit,
+summary.min,
+summary.max,
+summary.mean,
+summary.median,
+commit.timestamp AS commit_timestamp,
+commit.repository AS commit_repository,
+(summary.mean - distribution.mean_mean) / distribution.mean_sd AS mean_z,
+(summary.min - distribution.min_mean) / distribution.min_sd AS min_z,
+(summary.max - distribution.max_mean) / distribution.max_sd AS max_z,
+(summary.median - distribution.median_mean) / distribution.median_sd AS median_z,
+commit.timestamp AS commit_timestamp,
+commit.repository AS commit_repository,
+distribution.*
+FROM summary
+INNER JOIN run
+ON summary.run_id = run.id
+INNER JOIN commit
+ON commit.id = run.commit_id
+INNER JOIN machine
+ON summary.machine_id = machine.id
+LEFT JOIN distribution
+ON summary.case_id = distribution.case_id AND machine.name = distribution.machine_name
+WHERE run.name = 'commit: {{to_compare_sha}}'"""
+
+
+def get_z_score(repository, sha, case_id, context_id, machine_hash, mean):
+    result = list(
+        Session.query(Distribution.mean_mean, Distribution.mean_sd).filter(
+            Distribution.repository == repository,
+            Distribution.sha == sha,
+            Distribution.case_id == case_id,
+            Distribution.context_id == context_id,
+            Distribution.machine_hash == machine_hash,
+        )
+    )
+    if result:
+        distribution_mean = result[0]["mean_mean"]
+        distribution_sd = result[0]["mean_sd"]
+        return (mean - distribution_mean) / distribution_sd
+    return None
