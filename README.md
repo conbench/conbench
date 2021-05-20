@@ -78,6 +78,7 @@ repository, and the results are hosted on the
     $ brew services start postgres
 
 ### Create the databases
+After first installing postgres with brew, you may need to run `createdb` if you get errors about databases not existing.
 
     $ psql
     # CREATE DATABASE conbench_test;
