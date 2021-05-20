@@ -10,8 +10,8 @@ from sqlalchemy import func, MetaData
 import sqlalchemy as sa
 
 
-revision = '6f7657ee9b18'
-down_revision = '8ade76a4ebc0'
+revision = "6f7657ee9b18"
+down_revision = "8ade76a4ebc0"
 branch_labels = None
 depends_on = None
 
