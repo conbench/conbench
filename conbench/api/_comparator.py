@@ -151,17 +151,9 @@ class BenchmarkListComparator:
     def formatted(self):
         for pair in self.pairs.values():
             baseline, contender = pair.get("baseline"), pair.get("contender")
-            yield BenchmarkComparator(
-                baseline,
-                contender,
-                self.threshold,
-            ).formatted()
+            yield BenchmarkComparator(baseline, contender, self.threshold).formatted()
 
     def compare(self):
         for pair in self.pairs.values():
             baseline, contender = pair.get("baseline"), pair.get("contender")
-            yield BenchmarkComparator(
-                baseline,
-                contender,
-                self.threshold,
-            ).compare()
+            yield BenchmarkComparator(baseline, contender, self.threshold).compare()

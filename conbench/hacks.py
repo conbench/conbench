@@ -46,15 +46,6 @@ def set_display_batch(benchmark):
         benchmark.display_batch = batch
 
 
-def set_tags(benchmark):
-    is_api = isinstance(benchmark, dict)
-    tags = benchmark["tags"] if is_api else benchmark.case.tags
-    if is_api:
-        benchmark["tags"] = tags
-    else:
-        benchmark.tags = tags
-
-
 def sorted_data(benchmarks):
     data = []
     for benchmark in benchmarks:

@@ -6,7 +6,7 @@ from ..api._comparator import BenchmarkComparator, BenchmarkListComparator
 from ..api._endpoint import ApiEndpoint
 from ..entities._entity import NotFound
 from ..entities.summary import Summary
-from ..hacks import set_display_batch, set_display_name, set_tags
+from ..hacks import set_display_batch, set_display_name
 
 
 def _compare_entity(summary):
@@ -18,7 +18,7 @@ def _compare_entity(summary):
         "unit": summary.unit,
         "benchmark": summary.display_name,
         "batch": summary.display_batch,
-        "tags": summary.tags,
+        "tags": summary.case.tags,
     }
 
 
@@ -71,24 +71,14 @@ class CompareBenchmarksAPI(ApiEndpoint):
         set_display_name(contender_summary)
         set_display_batch(baseline_summary)
         set_display_batch(contender_summary)
-        set_tags(baseline_summary)
-        set_tags(contender_summary)
 
         baseline = _compare_entity(baseline_summary)
         contender = _compare_entity(contender_summary)
 
         if raw:
-            return BenchmarkComparator(
-                baseline,
-                contender,
-                threshold,
-            ).compare()
+            return BenchmarkComparator(baseline, contender, threshold).compare()
         else:
-            return BenchmarkComparator(
-                baseline,
-                contender,
-                threshold,
-            ).formatted()
+            return BenchmarkComparator(baseline, contender, threshold).formatted()
 
 
 class CompareBatchesAPI(ApiEndpoint):
@@ -143,24 +133,16 @@ class CompareBatchesAPI(ApiEndpoint):
         for summary in baselines:
             set_display_name(summary)
             set_display_batch(summary)
-            set_tags(summary)
             self._add_pair(pairs, summary, "baseline")
         for summary in contenders:
             set_display_name(summary)
             set_display_batch(summary)
-            set_tags(summary)
             self._add_pair(pairs, summary, "contender")
 
         if raw:
-            result = BenchmarkListComparator(
-                pairs,
-                threshold,
-            ).compare()
+            result = BenchmarkListComparator(pairs, threshold).compare()
         else:
-            result = BenchmarkListComparator(
-                pairs,
-                threshold,
-            ).formatted()
+            result = BenchmarkListComparator(pairs, threshold).formatted()
 
         return f.jsonify(list(result))
 
