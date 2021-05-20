@@ -103,11 +103,19 @@ class BenchmarkComparator:
         return self.contender.z_score
 
     @property
-    def regression_z(self):
+    def baseline_regression_z(self):
         return False  # TODO
 
     @property
-    def improvement_z(self):
+    def baseline_improvement_z(self):
+        return False  # TODO
+
+    @property
+    def contender_regression_z(self):
+        return False  # TODO
+
+    @property
+    def contender_improvement_z(self):
         return False  # TODO
 
     @property
@@ -131,8 +139,10 @@ class BenchmarkComparator:
             "improvement": self.improvement,
             "baseline_z_score": fmt(self.baseline_z_score),
             "contender_z_score": fmt(self.contender_z_score),
-            "regression_z": self.regression_z,
-            "improvement_z": self.improvement_z,
+            "baseline_regression_z": self.baseline_regression_z,
+            "baseline_improvement_z": self.baseline_improvement_z,
+            "contender_regression_z": self.contender_regression_z,
+            "contender_improvement_z": self.contender_improvement_z,
             "baseline": fmt_unit(baseline, self.unit),
             "contender": fmt_unit(contender, self.unit),
             "baseline_id": self.baseline.id if self.baseline else None,
@@ -158,8 +168,10 @@ class BenchmarkComparator:
             "improvement": self.improvement,
             "baseline_z_score": fmt(self.baseline_z_score),
             "contender_z_score": fmt(self.contender_z_score),
-            "regression_z": self.regression_z,
-            "improvement_z": self.improvement_z,
+            "baseline_regression_z": self.baseline_regression_z,
+            "baseline_improvement_z": self.baseline_improvement_z,
+            "contender_regression_z": self.contender_regression_z,
+            "contender_improvement_z": self.contender_improvement_z,
             "baseline": fmt(baseline),
             "contender": fmt(contender),
             "baseline_id": self.baseline.id if self.baseline else None,
