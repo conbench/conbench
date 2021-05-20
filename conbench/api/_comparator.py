@@ -24,6 +24,7 @@ class BenchmarkResult:
         self.benchmark = benchmark
         self.value = decimal.Decimal(value)
         self.tags = tags
+        self.z_score = 0.0  # TODO
 
 
 class BenchmarkComparator:
@@ -90,11 +91,16 @@ class BenchmarkComparator:
         return adjusted_change * 100 > self.threshold
 
     @property
-    def z_score(self):
-        if self.baseline is None or self.contender is None:
+    def baseline_z_score(self):
+        if self.baseline is None:
             return 0.0
+        return self.baseline.z_score
 
-        return 0.0  # TODO
+    @property
+    def contender_z_score(self):
+        if self.contender is None:
+            return 0.0
+        return self.contender.z_score
 
     @property
     def regression_z(self):
@@ -123,7 +129,8 @@ class BenchmarkComparator:
             "threshold": fmt(self.threshold) + "%",
             "regression": self.regression,
             "improvement": self.improvement,
-            "z_score": fmt(self.z_score),
+            "baseline_z_score": fmt(self.baseline_z_score),
+            "contender_z_score": fmt(self.contender_z_score),
             "regression_z": self.regression_z,
             "improvement_z": self.improvement_z,
             "baseline": fmt_unit(baseline, self.unit),
@@ -149,7 +156,8 @@ class BenchmarkComparator:
             "threshold": fmt(self.threshold),
             "regression": self.regression,
             "improvement": self.improvement,
-            "z_score": fmt(self.z_score),
+            "baseline_z_score": fmt(self.baseline_z_score),
+            "contender_z_score": fmt(self.contender_z_score),
             "regression_z": self.regression_z,
             "improvement_z": self.improvement_z,
             "baseline": fmt(baseline),
