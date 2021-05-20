@@ -11,7 +11,7 @@ def test_compare_no_change():
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": 0.0,
+        "z_score": "0.0",
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -22,7 +22,7 @@ def test_compare_no_change():
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": 0.0,
+        "z_score": "0.0",
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -90,7 +90,7 @@ def test_compare_regression():
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": 0.0,
+        "z_score": "-3.0",
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -101,7 +101,7 @@ def test_compare_regression():
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": 0.0,
+        "z_score": "-3.0",
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -114,11 +114,11 @@ def test_compare_regression():
         "threshold": "5.000",
         "regression": True,
         "improvement": False,
-        "baseline_z_score": "0.000",
-        "contender_z_score": "0.000",
-        "baseline_regression_z": False,
+        "baseline_z_score": "-3.000",
+        "contender_z_score": "-3.000",
+        "baseline_regression_z": True,
         "baseline_improvement_z": False,
-        "contender_regression_z": False,
+        "contender_regression_z": True,
         "contender_improvement_z": False,
         "baseline": "1000.000",
         "contender": "940.000",
@@ -139,11 +139,11 @@ def test_compare_regression():
         "threshold": "5.000%",
         "regression": True,
         "improvement": False,
-        "baseline_z_score": "0.000",
-        "contender_z_score": "0.000",
-        "baseline_regression_z": False,
+        "baseline_z_score": "-3.000",
+        "contender_z_score": "-3.000",
+        "baseline_regression_z": True,
         "baseline_improvement_z": False,
-        "contender_regression_z": False,
+        "contender_regression_z": True,
         "contender_improvement_z": False,
         "baseline": "1.000K i/s",
         "contender": "940 i/s",
@@ -169,7 +169,7 @@ def test_compare_regression_but_under_threshold():
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": 0.0,
+        "z_score": "-2.0",
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -180,7 +180,7 @@ def test_compare_regression_but_under_threshold():
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": 0.0,
+        "z_score": "-2.0",
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -193,8 +193,8 @@ def test_compare_regression_but_under_threshold():
         "threshold": "5.000",
         "regression": False,
         "improvement": False,
-        "baseline_z_score": "0.000",
-        "contender_z_score": "0.000",
+        "baseline_z_score": "-2.000",
+        "contender_z_score": "-2.000",
         "baseline_regression_z": False,
         "baseline_improvement_z": False,
         "contender_regression_z": False,
@@ -218,8 +218,8 @@ def test_compare_regression_but_under_threshold():
         "threshold": "5.000%",
         "regression": False,
         "improvement": False,
-        "baseline_z_score": "0.000",
-        "contender_z_score": "0.000",
+        "baseline_z_score": "-2.000",
+        "contender_z_score": "-2.000",
         "baseline_regression_z": False,
         "baseline_improvement_z": False,
         "contender_regression_z": False,
@@ -248,7 +248,7 @@ def test_compare_improvement():
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": 0.0,
+        "z_score": "3.0",
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -259,7 +259,7 @@ def test_compare_improvement():
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": 0.0,
+        "z_score": "3.0",
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -272,12 +272,12 @@ def test_compare_improvement():
         "threshold": "5.000",
         "regression": False,
         "improvement": True,
-        "baseline_z_score": "0.000",
-        "contender_z_score": "0.000",
+        "baseline_z_score": "3.000",
+        "contender_z_score": "3.000",
         "baseline_regression_z": False,
-        "baseline_improvement_z": False,
+        "baseline_improvement_z": True,
         "contender_regression_z": False,
-        "contender_improvement_z": False,
+        "contender_improvement_z": True,
         "baseline": "1000.000",
         "contender": "1060.000",
         "baseline_id": "some-benchmark-id-1",
@@ -297,12 +297,12 @@ def test_compare_improvement():
         "threshold": "5.000%",
         "regression": False,
         "improvement": True,
-        "baseline_z_score": "0.000",
-        "contender_z_score": "0.000",
+        "baseline_z_score": "3.000",
+        "contender_z_score": "3.000",
         "baseline_regression_z": False,
-        "baseline_improvement_z": False,
+        "baseline_improvement_z": True,
         "contender_regression_z": False,
-        "contender_improvement_z": False,
+        "contender_improvement_z": True,
         "baseline": "1.000K i/s",
         "contender": "1.060K i/s",
         "baseline_id": "some-benchmark-id-1",
@@ -327,7 +327,7 @@ def test_compare_improvement_but_under_threshold():
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": 0.0,
+        "z_score": "2.0",
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -338,7 +338,7 @@ def test_compare_improvement_but_under_threshold():
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": 0.0,
+        "z_score": "2.0",
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -351,8 +351,8 @@ def test_compare_improvement_but_under_threshold():
         "threshold": "5.000",
         "regression": False,
         "improvement": False,
-        "baseline_z_score": "0.000",
-        "contender_z_score": "0.000",
+        "baseline_z_score": "2.000",
+        "contender_z_score": "2.000",
         "baseline_regression_z": False,
         "baseline_improvement_z": False,
         "contender_regression_z": False,
@@ -376,8 +376,8 @@ def test_compare_improvement_but_under_threshold():
         "threshold": "5.000%",
         "regression": False,
         "improvement": False,
-        "baseline_z_score": "0.000",
-        "contender_z_score": "0.000",
+        "baseline_z_score": "2.000",
+        "contender_z_score": "2.000",
         "baseline_regression_z": False,
         "baseline_improvement_z": False,
         "contender_regression_z": False,
@@ -408,7 +408,7 @@ def test_compare_list():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "one", "tag_two": "two"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
             "contender": {
                 "batch": "math",
@@ -419,7 +419,7 @@ def test_compare_list():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "one", "tag_two": "two"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
         },
         "some-case-id-2": {
@@ -432,7 +432,7 @@ def test_compare_list():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "1", "tag_two": "2"},
-                "z_score": 0.0,
+                "z_score": "3.0",
             },
             "contender": {
                 "batch": "math",
@@ -443,7 +443,7 @@ def test_compare_list():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "1", "tag_two": "2"},
-                "z_score": 0.0,
+                "z_score": "-3.0",
             },
         },
     }
@@ -484,12 +484,12 @@ def test_compare_list():
             "threshold": "5.000",
             "regression": False,
             "improvement": True,
-            "baseline_z_score": "0.000",
-            "contender_z_score": "0.000",
-            "baseline_regression_z": False,
+            "baseline_z_score": "3.000",
+            "contender_z_score": "-3.000",
+            "baseline_regression_z": True,
             "baseline_improvement_z": False,
             "contender_regression_z": False,
-            "contender_improvement_z": False,
+            "contender_improvement_z": True,
             "baseline": "1.036",
             "contender": "0.036",
             "baseline_id": "some-benchmark-id-3",
@@ -536,12 +536,12 @@ def test_compare_list():
             "threshold": "5.000%",
             "regression": False,
             "improvement": True,
-            "baseline_z_score": "0.000",
-            "contender_z_score": "0.000",
-            "baseline_regression_z": False,
+            "baseline_z_score": "3.000",
+            "contender_z_score": "-3.000",
+            "baseline_regression_z": True,
             "baseline_improvement_z": False,
             "contender_regression_z": False,
-            "contender_improvement_z": False,
+            "contender_improvement_z": True,
             "baseline": "1.036 s",
             "contender": "0.036 s",
             "baseline_id": "some-benchmark-id-3",
@@ -569,7 +569,7 @@ def test_compare_list_missing_contender():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "one", "tag_two": "two"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
         },
         "some-case-id-2": {
@@ -582,7 +582,7 @@ def test_compare_list_missing_contender():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "1", "tag_two": "2"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
             "contender": {
                 "batch": "math",
@@ -593,7 +593,7 @@ def test_compare_list_missing_contender():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "1", "tag_two": "2"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
         },
     }
@@ -719,7 +719,7 @@ def test_compare_list_empty_contender():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "one", "tag_two": "two"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
             "contender": {},
         },
@@ -733,7 +733,7 @@ def test_compare_list_empty_contender():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "1", "tag_two": "2"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
             "contender": {
                 "batch": "math",
@@ -744,7 +744,7 @@ def test_compare_list_empty_contender():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "1", "tag_two": "2"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
         },
     }
@@ -870,7 +870,7 @@ def test_compare_list_missing_baseline():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "one", "tag_two": "two"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
         },
         "some-case-id-2": {
@@ -883,7 +883,7 @@ def test_compare_list_missing_baseline():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "1", "tag_two": "2"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
             "contender": {
                 "batch": "math",
@@ -894,7 +894,7 @@ def test_compare_list_missing_baseline():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "1", "tag_two": "2"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
         },
     }
@@ -1021,7 +1021,7 @@ def test_compare_list_empty_baseline():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "one", "tag_two": "two"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
         },
         "some-case-id-2": {
@@ -1034,7 +1034,7 @@ def test_compare_list_empty_baseline():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "1", "tag_two": "2"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
             "contender": {
                 "batch": "math",
@@ -1045,7 +1045,7 @@ def test_compare_list_empty_baseline():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "1", "tag_two": "2"},
-                "z_score": 0.0,
+                "z_score": "0.0",
             },
         },
     }

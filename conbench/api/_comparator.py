@@ -36,7 +36,7 @@ class BenchmarkResult:
         self.benchmark = benchmark
         self.value = decimal.Decimal(value)
         self.tags = tags
-        self.z_score = z_score
+        self.z_score = decimal.Decimal(z_score)
 
 
 class BenchmarkComparator:
@@ -117,19 +117,27 @@ class BenchmarkComparator:
 
     @property
     def baseline_regression_z(self):
-        return False  # TODO
+        z_score = self.baseline_z_score
+        adjusted_z_score = z_score if self.less_is_better else -z_score
+        return adjusted_z_score > self.deviations
 
     @property
     def baseline_improvement_z(self):
-        return False  # TODO
+        z_score = self.baseline_z_score
+        adjusted_z_score = -z_score if self.less_is_better else z_score
+        return adjusted_z_score > self.deviations
 
     @property
     def contender_regression_z(self):
-        return False  # TODO
+        z_score = self.contender_z_score
+        adjusted_z_score = z_score if self.less_is_better else -z_score
+        return adjusted_z_score > self.deviations
 
     @property
     def contender_improvement_z(self):
-        return False  # TODO
+        z_score = self.contender_z_score
+        adjusted_z_score = -z_score if self.less_is_better else z_score
+        return adjusted_z_score > self.deviations
 
     @property
     def tags(self):
