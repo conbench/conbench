@@ -43,6 +43,7 @@ def test_compare_no_change():
         "unit": "i/s",
         "less_is_better": False,
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "threshold": 5,
     }
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -61,6 +62,7 @@ def test_compare_no_change():
         "unit": "i/s",
         "less_is_better": False,
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "threshold": 5,
     }
 
 
@@ -106,6 +108,7 @@ def test_compare_regression():
         "unit": "i/s",
         "less_is_better": False,
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "threshold": 5,
     }
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -124,6 +127,7 @@ def test_compare_regression():
         "unit": "i/s",
         "less_is_better": False,
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "threshold": 5,
     }
 
 
@@ -169,6 +173,7 @@ def test_compare_regression_but_under_threshold():
         "unit": "i/s",
         "less_is_better": False,
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "threshold": 5,
     }
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -187,6 +192,7 @@ def test_compare_regression_but_under_threshold():
         "unit": "i/s",
         "less_is_better": False,
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "threshold": 5,
     }
 
 
@@ -232,6 +238,7 @@ def test_compare_improvement():
         "unit": "i/s",
         "less_is_better": False,
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "threshold": 5,
     }
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -250,6 +257,7 @@ def test_compare_improvement():
         "unit": "i/s",
         "less_is_better": False,
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "threshold": 5,
     }
 
 
@@ -295,6 +303,7 @@ def test_compare_improvement_but_under_threshold():
         "unit": "i/s",
         "less_is_better": False,
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "threshold": 5,
     }
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -313,6 +322,7 @@ def test_compare_improvement_but_under_threshold():
         "unit": "i/s",
         "less_is_better": False,
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "threshold": 5,
     }
 
 
@@ -385,6 +395,7 @@ def test_compare_list():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "one", "tag_two": "two"},
+            "threshold": 5,
         },
         {
             "batch": "math",
@@ -403,6 +414,7 @@ def test_compare_list():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "1", "tag_two": "2"},
+            "threshold": 5,
         },
     ]
     assert list(formatted) == [
@@ -423,6 +435,7 @@ def test_compare_list():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "one", "tag_two": "two"},
+            "threshold": 5,
         },
         {
             "batch": "math",
@@ -441,6 +454,7 @@ def test_compare_list():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "1", "tag_two": "2"},
+            "threshold": 5,
         },
     ]
 
@@ -504,6 +518,7 @@ def test_compare_list_missing_contender():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "one", "tag_two": "two"},
+            "threshold": 5,
         },
         {
             "batch": "math",
@@ -522,6 +537,7 @@ def test_compare_list_missing_contender():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "1", "tag_two": "2"},
+            "threshold": 5,
         },
     ]
     assert list(formatted) == [
@@ -542,6 +558,7 @@ def test_compare_list_missing_contender():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "one", "tag_two": "two"},
+            "threshold": 5,
         },
         {
             "batch": "math",
@@ -560,6 +577,7 @@ def test_compare_list_missing_contender():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "1", "tag_two": "2"},
+            "threshold": 5,
         },
     ]
 
@@ -624,6 +642,7 @@ def test_compare_list_empty_contender():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "one", "tag_two": "two"},
+            "threshold": 5,
         },
         {
             "batch": "math",
@@ -642,6 +661,7 @@ def test_compare_list_empty_contender():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "1", "tag_two": "2"},
+            "threshold": 5,
         },
     ]
     assert list(formatted) == [
@@ -662,6 +682,7 @@ def test_compare_list_empty_contender():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "one", "tag_two": "two"},
+            "threshold": 5,
         },
         {
             "batch": "math",
@@ -680,6 +701,7 @@ def test_compare_list_empty_contender():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "1", "tag_two": "2"},
+            "threshold": 5,
         },
     ]
 
@@ -743,6 +765,7 @@ def test_compare_list_missing_baseline():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "one", "tag_two": "two"},
+            "threshold": 5,
         },
         {
             "batch": "math",
@@ -761,6 +784,7 @@ def test_compare_list_missing_baseline():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "1", "tag_two": "2"},
+            "threshold": 5,
         },
     ]
     assert list(formatted) == [
@@ -781,6 +805,7 @@ def test_compare_list_missing_baseline():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "one", "tag_two": "two"},
+            "threshold": 5,
         },
         {
             "batch": "math",
@@ -799,6 +824,7 @@ def test_compare_list_missing_baseline():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "1", "tag_two": "2"},
+            "threshold": 5,
         },
     ]
 
@@ -863,6 +889,7 @@ def test_compare_list_empty_baseline():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "one", "tag_two": "two"},
+            "threshold": 5,
         },
         {
             "batch": "math",
@@ -881,6 +908,7 @@ def test_compare_list_empty_baseline():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "1", "tag_two": "2"},
+            "threshold": 5,
         },
     ]
     assert list(formatted) == [
@@ -901,6 +929,7 @@ def test_compare_list_empty_baseline():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "one", "tag_two": "two"},
+            "threshold": 5,
         },
         {
             "batch": "math",
@@ -919,6 +948,7 @@ def test_compare_list_empty_baseline():
             "unit": "s",
             "less_is_better": True,
             "tags": {"tag_one": "1", "tag_two": "2"},
+            "threshold": 5,
         },
     ]
 
@@ -956,6 +986,7 @@ def test_compare_list_empty_pair():
             "unit": "unknown",
             "less_is_better": True,
             "tags": "unknown",
+            "threshold": 5,
         },
         {
             "batch": "unknown",
@@ -974,6 +1005,7 @@ def test_compare_list_empty_pair():
             "unit": "unknown",
             "less_is_better": True,
             "tags": "unknown",
+            "threshold": 5,
         },
     ]
     assert list(formatted) == [
@@ -994,6 +1026,7 @@ def test_compare_list_empty_pair():
             "unit": "unknown",
             "less_is_better": True,
             "tags": "unknown",
+            "threshold": 5,
         },
         {
             "batch": "unknown",
@@ -1012,5 +1045,6 @@ def test_compare_list_empty_pair():
             "unit": "unknown",
             "less_is_better": True,
             "tags": "unknown",
+            "threshold": 5,
         },
     ]

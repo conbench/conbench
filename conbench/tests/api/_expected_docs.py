@@ -327,6 +327,7 @@
                                 "input_type": "arrow",
                                 "name": "file-read",
                             },
+                            "threshold": 5,
                             "unit": "s",
                         }
                     }
@@ -360,6 +361,7 @@
                                     "input_type": "arrow",
                                     "name": "file-read",
                                 },
+                                "threshold": 5,
                                 "unit": "s",
                             },
                             {
@@ -385,6 +387,7 @@
                                     "input_type": "arrow",
                                     "name": "file-write",
                                 },
+                                "threshold": 5,
                                 "unit": "s",
                             },
                         ]

@@ -120,6 +120,7 @@ def _api_compare_entity(benchmark_ids, batch_ids, run_ids, batch, benchmark, tag
         "improvement": False,
         "unit": "s",
         "tags": tags,
+        "threshold": 5,
     }
 
 
@@ -150,6 +151,7 @@ def _api_compare_list(
             "improvement": False,
             "unit": "s",
             "tags": tags[0],
+            "threshold": 5,
         },
         {
             "baseline": "0.036 s",
@@ -168,6 +170,7 @@ def _api_compare_list(
             "improvement": False,
             "unit": "s",
             "tags": tags[1],
+            "threshold": 5,
         },
     ]
 
