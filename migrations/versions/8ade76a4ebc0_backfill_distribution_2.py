@@ -176,7 +176,6 @@ def upgrade():
                 set_=values,
             )
         )
-        connection.commit()
         print(f"Processed {i} summary")
         i += 1
 

@@ -186,7 +186,6 @@ def upgrade():
                 set_=values,
             )
         )
-        connection.commit()
 
 
 def downgrade():
