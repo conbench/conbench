@@ -4,6 +4,7 @@ from ..units import formatter_for_unit
 
 
 THRESHOLD = 5.0  # percent
+DEVIATIONS = 2.0  # standard deviations
 
 
 def fmt(value):
@@ -39,10 +40,11 @@ class BenchmarkResult:
 
 
 class BenchmarkComparator:
-    def __init__(self, baseline, contender, threshold=None):
+    def __init__(self, baseline, contender, threshold=None, deviations=None):
         self.baseline = BenchmarkResult(**baseline) if baseline else None
         self.contender = BenchmarkResult(**contender) if contender else None
         self.threshold = float(threshold) if threshold is not None else THRESHOLD
+        self.deviations = float(deviations) if deviations is not None else DEVIATIONS
 
     @property
     def batch(self):
@@ -198,16 +200,27 @@ class BenchmarkComparator:
 
 
 class BenchmarkListComparator:
-    def __init__(self, pairs, threshold=None):
+    def __init__(self, pairs, threshold=None, deviations=None):
         self.pairs = pairs
         self.threshold = float(threshold) if threshold is not None else THRESHOLD
+        self.deviations = float(deviations) if deviations is not None else DEVIATIONS
 
     def formatted(self):
         for pair in self.pairs.values():
             baseline, contender = pair.get("baseline"), pair.get("contender")
-            yield BenchmarkComparator(baseline, contender, self.threshold).formatted()
+            yield BenchmarkComparator(
+                baseline,
+                contender,
+                self.threshold,
+                self.deviations,
+            ).formatted()
 
     def compare(self):
         for pair in self.pairs.values():
             baseline, contender = pair.get("baseline"), pair.get("contender")
-            yield BenchmarkComparator(baseline, contender, self.threshold).compare()
+            yield BenchmarkComparator(
+                baseline,
+                contender,
+                self.threshold,
+                self.deviations,
+            ).compare()
