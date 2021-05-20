@@ -19,6 +19,7 @@ def _compare_entity(summary):
         "benchmark": summary.display_name,
         "batch": summary.display_batch,
         "tags": summary.case.tags,
+        "z_score": 0.0,  # TODO
     }
 
 

@@ -11,6 +11,7 @@ def test_compare_no_change():
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": 0.0,
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -21,6 +22,7 @@ def test_compare_no_change():
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": 0.0,
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -88,6 +90,7 @@ def test_compare_regression():
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": 0.0,
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -98,6 +101,7 @@ def test_compare_regression():
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": 0.0,
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -165,6 +169,7 @@ def test_compare_regression_but_under_threshold():
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": 0.0,
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -175,6 +180,7 @@ def test_compare_regression_but_under_threshold():
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": 0.0,
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -242,6 +248,7 @@ def test_compare_improvement():
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": 0.0,
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -252,6 +259,7 @@ def test_compare_improvement():
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": 0.0,
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -319,6 +327,7 @@ def test_compare_improvement_but_under_threshold():
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": 0.0,
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -329,6 +338,7 @@ def test_compare_improvement_but_under_threshold():
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
         "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": 0.0,
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -398,6 +408,7 @@ def test_compare_list():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "one", "tag_two": "two"},
+                "z_score": 0.0,
             },
             "contender": {
                 "batch": "math",
@@ -408,6 +419,7 @@ def test_compare_list():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "one", "tag_two": "two"},
+                "z_score": 0.0,
             },
         },
         "some-case-id-2": {
@@ -420,6 +432,7 @@ def test_compare_list():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "1", "tag_two": "2"},
+                "z_score": 0.0,
             },
             "contender": {
                 "batch": "math",
@@ -430,6 +443,7 @@ def test_compare_list():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "1", "tag_two": "2"},
+                "z_score": 0.0,
             },
         },
     }
@@ -555,6 +569,7 @@ def test_compare_list_missing_contender():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "one", "tag_two": "two"},
+                "z_score": 0.0,
             },
         },
         "some-case-id-2": {
@@ -567,6 +582,7 @@ def test_compare_list_missing_contender():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "1", "tag_two": "2"},
+                "z_score": 0.0,
             },
             "contender": {
                 "batch": "math",
@@ -577,6 +593,7 @@ def test_compare_list_missing_contender():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "1", "tag_two": "2"},
+                "z_score": 0.0,
             },
         },
     }
@@ -702,6 +719,7 @@ def test_compare_list_empty_contender():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "one", "tag_two": "two"},
+                "z_score": 0.0,
             },
             "contender": {},
         },
@@ -715,6 +733,7 @@ def test_compare_list_empty_contender():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "1", "tag_two": "2"},
+                "z_score": 0.0,
             },
             "contender": {
                 "batch": "math",
@@ -725,6 +744,7 @@ def test_compare_list_empty_contender():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "1", "tag_two": "2"},
+                "z_score": 0.0,
             },
         },
     }
@@ -850,6 +870,7 @@ def test_compare_list_missing_baseline():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "one", "tag_two": "two"},
+                "z_score": 0.0,
             },
         },
         "some-case-id-2": {
@@ -862,6 +883,7 @@ def test_compare_list_missing_baseline():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "1", "tag_two": "2"},
+                "z_score": 0.0,
             },
             "contender": {
                 "batch": "math",
@@ -872,6 +894,7 @@ def test_compare_list_missing_baseline():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "1", "tag_two": "2"},
+                "z_score": 0.0,
             },
         },
     }
@@ -998,6 +1021,7 @@ def test_compare_list_empty_baseline():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "one", "tag_two": "two"},
+                "z_score": 0.0,
             },
         },
         "some-case-id-2": {
@@ -1010,6 +1034,7 @@ def test_compare_list_empty_baseline():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "1", "tag_two": "2"},
+                "z_score": 0.0,
             },
             "contender": {
                 "batch": "math",
@@ -1020,6 +1045,7 @@ def test_compare_list_empty_baseline():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "1", "tag_two": "2"},
+                "z_score": 0.0,
             },
         },
     }

@@ -15,7 +15,18 @@ def change_fmt(value):
 
 
 class BenchmarkResult:
-    def __init__(self, id, batch_id, run_id, unit, value, batch, benchmark, tags):
+    def __init__(
+        self,
+        id,
+        batch_id,
+        run_id,
+        unit,
+        value,
+        batch,
+        benchmark,
+        tags,
+        z_score,
+    ):
         self.id = id
         self.batch_id = batch_id
         self.run_id = run_id
@@ -24,7 +35,7 @@ class BenchmarkResult:
         self.benchmark = benchmark
         self.value = decimal.Decimal(value)
         self.tags = tags
-        self.z_score = 0.0  # TODO
+        self.z_score = z_score
 
 
 class BenchmarkComparator:
