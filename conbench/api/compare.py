@@ -53,13 +53,22 @@ class CompareBenchmarksAPI(ApiEndpoint):
             name: threshold
             schema:
               type: integer
+          - in: query
+            name: deviations
+            schema:
+              type: integer
         tags:
           - Compare
         """
         raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
+
         threshold = f.request.args.get("threshold")
         if threshold is not None:
             threshold = int(threshold)
+
+        deviations = f.request.args.get("deviations")
+        if deviations is not None:
+            deviations = int(deviations)
 
         try:
             baseline_id, contender_id = compare_ids.split("...", 1)
@@ -77,9 +86,19 @@ class CompareBenchmarksAPI(ApiEndpoint):
         contender = _compare_entity(contender_summary)
 
         if raw:
-            return BenchmarkComparator(baseline, contender, threshold).compare()
+            return BenchmarkComparator(
+                baseline,
+                contender,
+                threshold,
+                deviations,
+            ).compare()
         else:
-            return BenchmarkComparator(baseline, contender, threshold).formatted()
+            return BenchmarkComparator(
+                baseline,
+                contender,
+                threshold,
+                deviations,
+            ).formatted()
 
 
 class CompareBatchesAPI(ApiEndpoint):
@@ -114,13 +133,22 @@ class CompareBatchesAPI(ApiEndpoint):
             name: threshold
             schema:
               type: integer
+          - in: query
+            name: deviations
+            schema:
+              type: integer
         tags:
           - Compare
         """
         raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
+
         threshold = f.request.args.get("threshold")
         if threshold is not None:
             threshold = int(threshold)
+
+        deviations = f.request.args.get("deviations")
+        if deviations is not None:
+            deviations = int(deviations)
 
         try:
             baseline_id, contender_id = compare_ids.split("...", 1)
@@ -141,9 +169,17 @@ class CompareBatchesAPI(ApiEndpoint):
             self._add_pair(pairs, summary, "contender")
 
         if raw:
-            result = BenchmarkListComparator(pairs, threshold).compare()
+            result = BenchmarkListComparator(
+                pairs,
+                threshold,
+                deviations,
+            ).compare()
         else:
-            result = BenchmarkListComparator(pairs, threshold).formatted()
+            result = BenchmarkListComparator(
+                pairs,
+                threshold,
+                deviations,
+            ).formatted()
 
         return f.jsonify(list(result))
 

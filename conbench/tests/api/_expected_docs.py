@@ -940,6 +940,11 @@
                     },
                     {"in": "query", "name": "raw", "schema": {"type": "boolean"}},
                     {"in": "query", "name": "threshold", "schema": {"type": "integer"}},
+                    {
+                        "in": "query",
+                        "name": "deviations",
+                        "schema": {"type": "integer"},
+                    },
                 ],
                 "responses": {
                     "200": {"$ref": "#/components/responses/CompareList"},
@@ -962,6 +967,11 @@
                     },
                     {"in": "query", "name": "raw", "schema": {"type": "boolean"}},
                     {"in": "query", "name": "threshold", "schema": {"type": "integer"}},
+                    {
+                        "in": "query",
+                        "name": "deviations",
+                        "schema": {"type": "integer"},
+                    },
                 ],
                 "responses": {
                     "200": {"$ref": "#/components/responses/CompareEntity"},
@@ -984,6 +994,11 @@
                     },
                     {"in": "query", "name": "raw", "schema": {"type": "boolean"}},
                     {"in": "query", "name": "threshold", "schema": {"type": "integer"}},
+                    {
+                        "in": "query",
+                        "name": "deviations",
+                        "schema": {"type": "integer"},
+                    },
                 ],
                 "responses": {
                     "200": {"$ref": "#/components/responses/CompareList"},
