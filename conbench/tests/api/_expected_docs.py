@@ -319,6 +319,14 @@
                             "improvement": False,
                             "less_is_better": True,
                             "regression": False,
+                            "tags": {
+                                "compression": "snappy",
+                                "cpu_count": 2,
+                                "dataset": "nyctaxi_sample",
+                                "file_type": "parquet",
+                                "input_type": "arrow",
+                                "name": "read",
+                            },
                             "unit": "s",
                         }
                     }
@@ -344,6 +352,14 @@
                                 "improvement": False,
                                 "less_is_better": True,
                                 "regression": False,
+                                "tags": {
+                                    "compression": "snappy",
+                                    "cpu_count": 2,
+                                    "dataset": "nyctaxi_sample",
+                                    "file_type": "parquet",
+                                    "input_type": "arrow",
+                                    "name": "read",
+                                },
                                 "unit": "s",
                             },
                             {
@@ -361,6 +377,14 @@
                                 "improvement": False,
                                 "less_is_better": True,
                                 "regression": False,
+                                "tags": {
+                                    "compression": "snappy",
+                                    "cpu_count": 2,
+                                    "dataset": "nyctaxi_sample",
+                                    "file_type": "parquet",
+                                    "input_type": "arrow",
+                                    "name": "write",
+                                },
                                 "unit": "s",
                             },
                         ]
@@ -888,7 +912,6 @@
                         "schema": {"type": "string"},
                     },
                     {"in": "query", "name": "raw", "schema": {"type": "boolean"}},
-                    {"in": "query", "name": "tags", "schema": {"type": "boolean"}},
                     {"in": "query", "name": "threshold", "schema": {"type": "integer"}},
                 ],
                 "responses": {
@@ -911,7 +934,6 @@
                         "schema": {"type": "string"},
                     },
                     {"in": "query", "name": "raw", "schema": {"type": "boolean"}},
-                    {"in": "query", "name": "tags", "schema": {"type": "boolean"}},
                     {"in": "query", "name": "threshold", "schema": {"type": "integer"}},
                 ],
                 "responses": {
@@ -934,7 +956,6 @@
                         "schema": {"type": "string"},
                     },
                     {"in": "query", "name": "raw", "schema": {"type": "boolean"}},
-                    {"in": "query", "name": "tags", "schema": {"type": "boolean"}},
                     {"in": "query", "name": "threshold", "schema": {"type": "integer"}},
                 ],
                 "responses": {

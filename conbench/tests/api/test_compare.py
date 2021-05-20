@@ -60,50 +60,6 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
             run_ids,
             "read",
             CASE,
-        )
-        self.assert_200_ok(response, expected)
-
-    def test_compare_unknown_compare_ids(self, client):
-        self.authenticate(client)
-        response = client.get("/api/compare/benchmarks/foo...bar/")
-        self.assert_404_not_found(response)
-
-
-class TestCompareBenchmarksWithTagsGet(_asserts.GetEnforcer):
-    url = "/api/compare/benchmarks/{}/"
-    public = True
-
-    def _create(self, with_ids=False):
-        summary = create_benchmark_summary("read")
-        entity = FakeEntity(f"{summary.id}...{summary.id}")
-        if with_ids:
-            return summary.id, entity
-        else:
-            return entity
-
-    def test_compare(self, client):
-        self.authenticate(client)
-        new_id, compare = self._create(with_ids=True)
-        args = {"tags": True}
-        args = urllib.parse.urlencode(args)
-        response = client.get(f"/api/compare/benchmarks/{compare.id}/?{args}")
-
-        # cheating by comparing benchmark to same benchmark
-        benchmark_ids = [new_id, new_id]
-        batch_ids = [
-            "7b2fdd9f929d47b9960152090d47f8e6",
-            "7b2fdd9f929d47b9960152090d47f8e6",
-        ]
-        run_ids = [
-            "2a5709d179f349cba69ed242be3e6321",
-            "2a5709d179f349cba69ed242be3e6321",
-        ]
-        expected = _api_compare_entity(
-            benchmark_ids,
-            batch_ids,
-            run_ids,
-            "read",
-            CASE,
             tags={
                 "dataset": "nyctaxi_sample",
                 "cpu_count": 2,
@@ -158,6 +114,24 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
             run_ids,
             batches,
             benchmarks,
+            tags=[
+                {
+                    "dataset": "nyctaxi_sample",
+                    "cpu_count": 2,
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "compression": "snappy",
+                    "name": "read",
+                },
+                {
+                    "dataset": "nyctaxi_sample",
+                    "cpu_count": 2,
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "compression": "snappy",
+                    "name": "write",
+                },
+            ],
         )
         self.assert_200_ok(response, expected)
 
@@ -187,53 +161,6 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         run_id = uuid.uuid4().hex
         new_ids, compare = self._create(with_ids=True, run_id=run_id)
         response = client.get(f"/api/compare/runs/{compare.id}/")
-
-        # cheating by comparing run to same run
-        run_ids = [run_id, run_id]
-        batch_ids = [
-            "7b2fdd9f929d47b9960152090d47f8e6",
-            "7b2fdd9f929d47b9960152090d47f8e6",
-        ]
-        batches = ["read", "write"]
-        benchmarks = [CASE, CASE]
-        expected = _api_compare_list(
-            new_ids,
-            new_ids,
-            batch_ids,
-            run_ids,
-            batches,
-            benchmarks,
-        )
-        self.assert_200_ok(response, expected)
-
-    def test_compare_unknown_compare_ids(self, client):
-        self.authenticate(client)
-        response = client.get("/api/compare/runs/foo...bar/")
-        self.assert_404_not_found(response)
-
-
-class TestCompareRunsWithTagsGet(_asserts.GetEnforcer):
-    url = "/api/compare/runs/{}/"
-    public = True
-
-    def _create(self, with_ids=False, run_id=None):
-        if run_id is None:
-            run_id = uuid.uuid4().hex
-        summary1 = create_benchmark_summary("read", run_id=run_id)
-        summary2 = create_benchmark_summary("write", run_id=run_id)
-        entity = FakeEntity(f"{run_id}...{run_id}")
-        if with_ids:
-            return [summary1.id, summary2.id], entity
-        else:
-            return entity
-
-    def test_compare(self, client):
-        self.authenticate(client)
-        run_id = uuid.uuid4().hex
-        new_ids, compare = self._create(with_ids=True, run_id=run_id)
-        args = {"tags": True}
-        args = urllib.parse.urlencode(args)
-        response = client.get(f"/api/compare/runs/{compare.id}/?{args}")
 
         # cheating by comparing run to same run
         run_ids = [run_id, run_id]

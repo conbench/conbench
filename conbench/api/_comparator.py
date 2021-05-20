@@ -15,7 +15,7 @@ def change_fmt(value):
 
 
 class BenchmarkResult:
-    def __init__(self, id, batch_id, run_id, unit, value, batch, benchmark, tags=None):
+    def __init__(self, id, batch_id, run_id, unit, value, batch, benchmark, tags):
         self.id = id
         self.batch_id = batch_id
         self.run_id = run_id
@@ -27,11 +27,10 @@ class BenchmarkResult:
 
 
 class BenchmarkComparator:
-    def __init__(self, baseline, contender, threshold=None, include_tags=False):
+    def __init__(self, baseline, contender, threshold=None):
         self.baseline = BenchmarkResult(**baseline) if baseline else None
         self.contender = BenchmarkResult(**contender) if contender else None
         self.threshold = threshold if threshold is not None else THRESHOLD
-        self.include_tags = include_tags
 
     @property
     def batch(self):
@@ -118,7 +117,7 @@ class BenchmarkComparator:
             "contender_run_id": self.contender.run_id if self.contender else None,
             "unit": self.unit,
             "less_is_better": self.less_is_better,
-            **({"tags": self.tags} if self.include_tags else {}),
+            "tags": self.tags,
         }
 
     def compare(self):
@@ -140,26 +139,29 @@ class BenchmarkComparator:
             "contender_run_id": self.contender.run_id if self.contender else None,
             "unit": self.unit,
             "less_is_better": self.less_is_better,
-            **({"tags": self.tags} if self.include_tags else {}),
+            "tags": self.tags,
         }
 
 
 class BenchmarkListComparator:
-    def __init__(self, pairs, threshold=None, include_tags=False):
+    def __init__(self, pairs, threshold=None):
         self.pairs = pairs
         self.threshold = threshold if threshold is not None else THRESHOLD
-        self.include_tags = include_tags
 
     def formatted(self):
         for pair in self.pairs.values():
             baseline, contender = pair.get("baseline"), pair.get("contender")
             yield BenchmarkComparator(
-                baseline, contender, self.threshold, include_tags=self.include_tags
+                baseline,
+                contender,
+                self.threshold,
             ).formatted()
 
     def compare(self):
         for pair in self.pairs.values():
             baseline, contender = pair.get("baseline"), pair.get("contender")
             yield BenchmarkComparator(
-                baseline, contender, self.threshold, include_tags=self.include_tags
+                baseline,
+                contender,
+                self.threshold,
             ).compare()

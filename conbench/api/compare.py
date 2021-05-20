@@ -49,10 +49,6 @@ class CompareBenchmarksAPI(ApiEndpoint):
             schema:
               type: boolean
           - in: query
-            name: tags
-            schema:
-              type: boolean
-          - in: query
             name: threshold
             schema:
               type: integer
@@ -60,7 +56,6 @@ class CompareBenchmarksAPI(ApiEndpoint):
           - Compare
         """
         raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
-        tags = f.request.args.get("tags", "false").lower() in ["true", "1"]
         threshold = f.request.args.get("threshold")
         if threshold is not None:
             threshold = int(threshold)
@@ -84,11 +79,15 @@ class CompareBenchmarksAPI(ApiEndpoint):
 
         if raw:
             return BenchmarkComparator(
-                baseline, contender, threshold, include_tags=tags
+                baseline,
+                contender,
+                threshold,
             ).compare()
         else:
             return BenchmarkComparator(
-                baseline, contender, threshold, include_tags=tags
+                baseline,
+                contender,
+                threshold,
             ).formatted()
 
 
@@ -121,10 +120,6 @@ class CompareBatchesAPI(ApiEndpoint):
             schema:
               type: boolean
           - in: query
-            name: tags
-            schema:
-              type: boolean
-          - in: query
             name: threshold
             schema:
               type: integer
@@ -132,7 +127,6 @@ class CompareBatchesAPI(ApiEndpoint):
           - Compare
         """
         raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
-        tags = f.request.args.get("tags", "false").lower() in ["true", "1"]
         threshold = f.request.args.get("threshold")
         if threshold is not None:
             threshold = int(threshold)
@@ -159,11 +153,13 @@ class CompareBatchesAPI(ApiEndpoint):
 
         if raw:
             result = BenchmarkListComparator(
-                pairs, threshold, include_tags=tags
+                pairs,
+                threshold,
             ).compare()
         else:
             result = BenchmarkListComparator(
-                pairs, threshold, include_tags=tags
+                pairs,
+                threshold,
             ).formatted()
 
         return f.jsonify(list(result))
