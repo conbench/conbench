@@ -7,7 +7,6 @@ Create Date: 2021-05-20 09:50:18.039645
 """
 from alembic import op
 from sqlalchemy import func, MetaData
-import sqlalchemy as sa
 
 
 revision = "6f7657ee9b18"
