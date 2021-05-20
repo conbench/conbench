@@ -68,7 +68,6 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "name": "read",
             },
         )
-        # import pdb; pdb.set_trace()
         self.assert_200_ok(response, expected)
 
     def test_compare_unknown_compare_ids(self, client):

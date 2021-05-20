@@ -274,7 +274,7 @@ COMPARE_ENTITY = _api_compare_entity(
         "dataset": "nyctaxi_sample",
         "file_type": "parquet",
         "input_type": "arrow",
-        "name": "read",
+        "name": "file-read",
     },
 )
 COMPARE_LIST = _api_compare_list(
@@ -294,7 +294,7 @@ COMPARE_LIST = _api_compare_list(
             "dataset": "nyctaxi_sample",
             "file_type": "parquet",
             "input_type": "arrow",
-            "name": "read",
+            "name": "file-read",
         },
         {
             "compression": "snappy",
@@ -302,7 +302,7 @@ COMPARE_LIST = _api_compare_list(
             "dataset": "nyctaxi_sample",
             "file_type": "parquet",
             "input_type": "arrow",
-            "name": "write",
+            "name": "file-write",
         },
     ],
 )
