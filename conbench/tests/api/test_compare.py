@@ -1,5 +1,4 @@
 import copy
-import urllib
 import uuid
 
 from ...api._examples import _api_compare_entity, _api_compare_list
