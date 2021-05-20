@@ -59,6 +59,14 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
             run_ids,
             "read",
             CASE,
+            tags={
+                "dataset": "nyctaxi_sample",
+                "cpu_count": 2,
+                "file_type": "parquet",
+                "input_type": "arrow",
+                "compression": "snappy",
+                "name": "read",
+            },
         )
         self.assert_200_ok(response, expected)
 
@@ -68,7 +76,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         self.assert_404_not_found(response)
 
 
-class TestCompareBacthesGet(_asserts.GetEnforcer):
+class TestCompareBatchesGet(_asserts.GetEnforcer):
     url = "/api/compare/batches/{}/"
     public = True
 
@@ -104,6 +112,24 @@ class TestCompareBacthesGet(_asserts.GetEnforcer):
             run_ids,
             batches,
             benchmarks,
+            tags=[
+                {
+                    "dataset": "nyctaxi_sample",
+                    "cpu_count": 2,
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "compression": "snappy",
+                    "name": "read",
+                },
+                {
+                    "dataset": "nyctaxi_sample",
+                    "cpu_count": 2,
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "compression": "snappy",
+                    "name": "write",
+                },
+            ],
         )
         self.assert_200_ok(response, expected)
 
@@ -149,6 +175,24 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             run_ids,
             batches,
             benchmarks,
+            tags=[
+                {
+                    "dataset": "nyctaxi_sample",
+                    "cpu_count": 2,
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "compression": "snappy",
+                    "name": "read",
+                },
+                {
+                    "dataset": "nyctaxi_sample",
+                    "cpu_count": 2,
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "compression": "snappy",
+                    "name": "write",
+                },
+            ],
         )
         self.assert_200_ok(response, expected)
 

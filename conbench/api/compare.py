@@ -18,6 +18,7 @@ def _compare_entity(summary):
         "unit": summary.unit,
         "benchmark": summary.display_name,
         "batch": summary.display_batch,
+        "tags": summary.case.tags,
     }
 
 

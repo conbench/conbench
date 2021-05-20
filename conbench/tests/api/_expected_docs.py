@@ -319,6 +319,14 @@
                             "improvement": False,
                             "less_is_better": True,
                             "regression": False,
+                            "tags": {
+                                "compression": "snappy",
+                                "cpu_count": 2,
+                                "dataset": "nyctaxi_sample",
+                                "file_type": "parquet",
+                                "input_type": "arrow",
+                                "name": "file-read",
+                            },
                             "unit": "s",
                         }
                     }
@@ -344,6 +352,14 @@
                                 "improvement": False,
                                 "less_is_better": True,
                                 "regression": False,
+                                "tags": {
+                                    "compression": "snappy",
+                                    "cpu_count": 2,
+                                    "dataset": "nyctaxi_sample",
+                                    "file_type": "parquet",
+                                    "input_type": "arrow",
+                                    "name": "file-read",
+                                },
                                 "unit": "s",
                             },
                             {
@@ -361,6 +377,14 @@
                                 "improvement": False,
                                 "less_is_better": True,
                                 "regression": False,
+                                "tags": {
+                                    "compression": "snappy",
+                                    "cpu_count": 2,
+                                    "dataset": "nyctaxi_sample",
+                                    "file_type": "parquet",
+                                    "input_type": "arrow",
+                                    "name": "file-write",
+                                },
                                 "unit": "s",
                             },
                         ]

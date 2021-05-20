@@ -102,13 +102,7 @@ def _api_commit_entity(commit_id):
     }
 
 
-def _api_compare_entity(
-    benchmark_ids,
-    batch_ids,
-    run_ids,
-    batch,
-    benchmark,
-):
+def _api_compare_entity(benchmark_ids, batch_ids, run_ids, batch, benchmark, tags):
     return {
         "baseline": "0.036 s",
         "baseline_id": benchmark_ids[0],
@@ -125,6 +119,7 @@ def _api_compare_entity(
         "regression": False,
         "improvement": False,
         "unit": "s",
+        "tags": tags,
     }
 
 
@@ -135,6 +130,7 @@ def _api_compare_list(
     run_ids,
     batches,
     benchmarks,
+    tags,
 ):
     return [
         {
@@ -153,6 +149,7 @@ def _api_compare_list(
             "regression": False,
             "improvement": False,
             "unit": "s",
+            "tags": tags[0],
         },
         {
             "baseline": "0.036 s",
@@ -170,6 +167,7 @@ def _api_compare_list(
             "regression": False,
             "improvement": False,
             "unit": "s",
+            "tags": tags[1],
         },
     ]
 
@@ -270,6 +268,14 @@ COMPARE_ENTITY = _api_compare_entity(
     ["some-run-uuid-1", "some-run-uuid-2"],
     "file-read",
     "snappy, nyctaxi_sample, parquet, arrow",
+    {
+        "compression": "snappy",
+        "cpu_count": 2,
+        "dataset": "nyctaxi_sample",
+        "file_type": "parquet",
+        "input_type": "arrow",
+        "name": "file-read",
+    },
 )
 COMPARE_LIST = _api_compare_list(
     ["some-benchmark-uuid-1", "some-benchmark-uuid-2"],
@@ -280,6 +286,24 @@ COMPARE_LIST = _api_compare_list(
     [
         "snappy, nyctaxi_sample, parquet, arrow",
         "snappy, nyctaxi_sample, parquet, arrow",
+    ],
+    [
+        {
+            "compression": "snappy",
+            "cpu_count": 2,
+            "dataset": "nyctaxi_sample",
+            "file_type": "parquet",
+            "input_type": "arrow",
+            "name": "file-read",
+        },
+        {
+            "compression": "snappy",
+            "cpu_count": 2,
+            "dataset": "nyctaxi_sample",
+            "file_type": "parquet",
+            "input_type": "arrow",
+            "name": "file-write",
+        },
     ],
 )
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")

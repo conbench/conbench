@@ -10,6 +10,7 @@ def test_compare_no_change():
         "id": "some-benchmark-id-1",
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -19,6 +20,7 @@ def test_compare_no_change():
         "id": "some-benchmark-id-2",
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -40,6 +42,7 @@ def test_compare_no_change():
         "contender_run_id": "some-run-id-2",
         "unit": "i/s",
         "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -57,6 +60,7 @@ def test_compare_no_change():
         "contender_run_id": "some-run-id-2",
         "unit": "i/s",
         "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
 
 
@@ -69,6 +73,7 @@ def test_compare_regression():
         "id": "some-benchmark-id-1",
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -78,6 +83,7 @@ def test_compare_regression():
         "id": "some-benchmark-id-2",
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -99,6 +105,7 @@ def test_compare_regression():
         "contender_run_id": "some-run-id-2",
         "unit": "i/s",
         "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -116,6 +123,7 @@ def test_compare_regression():
         "contender_run_id": "some-run-id-2",
         "unit": "i/s",
         "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
 
 
@@ -128,6 +136,7 @@ def test_compare_regression_but_under_threshold():
         "id": "some-benchmark-id-1",
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -137,6 +146,7 @@ def test_compare_regression_but_under_threshold():
         "id": "some-benchmark-id-2",
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -158,6 +168,7 @@ def test_compare_regression_but_under_threshold():
         "contender_run_id": "some-run-id-2",
         "unit": "i/s",
         "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -175,6 +186,7 @@ def test_compare_regression_but_under_threshold():
         "contender_run_id": "some-run-id-2",
         "unit": "i/s",
         "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
 
 
@@ -187,6 +199,7 @@ def test_compare_improvement():
         "id": "some-benchmark-id-1",
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -196,6 +209,7 @@ def test_compare_improvement():
         "id": "some-benchmark-id-2",
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -217,6 +231,7 @@ def test_compare_improvement():
         "contender_run_id": "some-run-id-2",
         "unit": "i/s",
         "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -234,6 +249,7 @@ def test_compare_improvement():
         "contender_run_id": "some-run-id-2",
         "unit": "i/s",
         "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
 
 
@@ -246,6 +262,7 @@ def test_compare_improvement_but_under_threshold():
         "id": "some-benchmark-id-1",
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -255,6 +272,7 @@ def test_compare_improvement_but_under_threshold():
         "id": "some-benchmark-id-2",
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -276,6 +294,7 @@ def test_compare_improvement_but_under_threshold():
         "contender_run_id": "some-run-id-2",
         "unit": "i/s",
         "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -293,6 +312,7 @@ def test_compare_improvement_but_under_threshold():
         "contender_run_id": "some-run-id-2",
         "unit": "i/s",
         "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
     }
 
 
@@ -307,6 +327,7 @@ def test_compare_list():
                 "id": "some-benchmark-id-1",
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
+                "tags": {"tag_one": "one", "tag_two": "two"},
             },
             "contender": {
                 "batch": "math",
@@ -316,6 +337,7 @@ def test_compare_list():
                 "id": "some-benchmark-id-2",
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
+                "tags": {"tag_one": "one", "tag_two": "two"},
             },
         },
         "some-case-id-2": {
@@ -327,6 +349,7 @@ def test_compare_list():
                 "id": "some-benchmark-id-3",
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
+                "tags": {"tag_one": "1", "tag_two": "2"},
             },
             "contender": {
                 "batch": "math",
@@ -336,6 +359,7 @@ def test_compare_list():
                 "id": "some-benchmark-id-4",
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
+                "tags": {"tag_one": "1", "tag_two": "2"},
             },
         },
     }
@@ -360,6 +384,7 @@ def test_compare_list():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "one", "tag_two": "two"},
         },
         {
             "batch": "math",
@@ -377,6 +402,7 @@ def test_compare_list():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "1", "tag_two": "2"},
         },
     ]
     assert list(formatted) == [
@@ -396,6 +422,7 @@ def test_compare_list():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "one", "tag_two": "two"},
         },
         {
             "batch": "math",
@@ -413,6 +440,7 @@ def test_compare_list():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "1", "tag_two": "2"},
         },
     ]
 
@@ -428,6 +456,7 @@ def test_compare_list_missing_contender():
                 "id": "some-benchmark-id-1",
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
+                "tags": {"tag_one": "one", "tag_two": "two"},
             },
         },
         "some-case-id-2": {
@@ -439,6 +468,7 @@ def test_compare_list_missing_contender():
                 "id": "some-benchmark-id-3",
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
+                "tags": {"tag_one": "1", "tag_two": "2"},
             },
             "contender": {
                 "batch": "math",
@@ -448,6 +478,7 @@ def test_compare_list_missing_contender():
                 "id": "some-benchmark-id-4",
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
+                "tags": {"tag_one": "1", "tag_two": "2"},
             },
         },
     }
@@ -472,6 +503,7 @@ def test_compare_list_missing_contender():
             "contender_run_id": None,
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "one", "tag_two": "two"},
         },
         {
             "batch": "math",
@@ -489,6 +521,7 @@ def test_compare_list_missing_contender():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "1", "tag_two": "2"},
         },
     ]
     assert list(formatted) == [
@@ -508,6 +541,7 @@ def test_compare_list_missing_contender():
             "contender_run_id": None,
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "one", "tag_two": "two"},
         },
         {
             "batch": "math",
@@ -525,6 +559,7 @@ def test_compare_list_missing_contender():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "1", "tag_two": "2"},
         },
     ]
 
@@ -540,6 +575,7 @@ def test_compare_list_empty_contender():
                 "id": "some-benchmark-id-1",
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
+                "tags": {"tag_one": "one", "tag_two": "two"},
             },
             "contender": {},
         },
@@ -552,6 +588,7 @@ def test_compare_list_empty_contender():
                 "id": "some-benchmark-id-3",
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
+                "tags": {"tag_one": "1", "tag_two": "2"},
             },
             "contender": {
                 "batch": "math",
@@ -561,6 +598,7 @@ def test_compare_list_empty_contender():
                 "id": "some-benchmark-id-4",
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
+                "tags": {"tag_one": "1", "tag_two": "2"},
             },
         },
     }
@@ -585,6 +623,7 @@ def test_compare_list_empty_contender():
             "contender_run_id": None,
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "one", "tag_two": "two"},
         },
         {
             "batch": "math",
@@ -602,6 +641,7 @@ def test_compare_list_empty_contender():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "1", "tag_two": "2"},
         },
     ]
     assert list(formatted) == [
@@ -621,6 +661,7 @@ def test_compare_list_empty_contender():
             "contender_run_id": None,
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "one", "tag_two": "two"},
         },
         {
             "batch": "math",
@@ -638,6 +679,7 @@ def test_compare_list_empty_contender():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "1", "tag_two": "2"},
         },
     ]
 
@@ -653,6 +695,7 @@ def test_compare_list_missing_baseline():
                 "id": "some-benchmark-id-2",
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
+                "tags": {"tag_one": "one", "tag_two": "two"},
             },
         },
         "some-case-id-2": {
@@ -664,6 +707,7 @@ def test_compare_list_missing_baseline():
                 "id": "some-benchmark-id-3",
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
+                "tags": {"tag_one": "1", "tag_two": "2"},
             },
             "contender": {
                 "batch": "math",
@@ -673,6 +717,7 @@ def test_compare_list_missing_baseline():
                 "id": "some-benchmark-id-4",
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
+                "tags": {"tag_one": "1", "tag_two": "2"},
             },
         },
     }
@@ -697,6 +742,7 @@ def test_compare_list_missing_baseline():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "one", "tag_two": "two"},
         },
         {
             "batch": "math",
@@ -714,6 +760,7 @@ def test_compare_list_missing_baseline():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "1", "tag_two": "2"},
         },
     ]
     assert list(formatted) == [
@@ -733,6 +780,7 @@ def test_compare_list_missing_baseline():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "one", "tag_two": "two"},
         },
         {
             "batch": "math",
@@ -750,6 +798,7 @@ def test_compare_list_missing_baseline():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "1", "tag_two": "2"},
         },
     ]
 
@@ -766,6 +815,7 @@ def test_compare_list_empty_baseline():
                 "id": "some-benchmark-id-2",
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
+                "tags": {"tag_one": "one", "tag_two": "two"},
             },
         },
         "some-case-id-2": {
@@ -777,6 +827,7 @@ def test_compare_list_empty_baseline():
                 "id": "some-benchmark-id-3",
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
+                "tags": {"tag_one": "1", "tag_two": "2"},
             },
             "contender": {
                 "batch": "math",
@@ -786,6 +837,7 @@ def test_compare_list_empty_baseline():
                 "id": "some-benchmark-id-4",
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
+                "tags": {"tag_one": "1", "tag_two": "2"},
             },
         },
     }
@@ -810,6 +862,7 @@ def test_compare_list_empty_baseline():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "one", "tag_two": "two"},
         },
         {
             "batch": "math",
@@ -827,6 +880,7 @@ def test_compare_list_empty_baseline():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "1", "tag_two": "2"},
         },
     ]
     assert list(formatted) == [
@@ -846,6 +900,7 @@ def test_compare_list_empty_baseline():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "one", "tag_two": "two"},
         },
         {
             "batch": "math",
@@ -863,6 +918,7 @@ def test_compare_list_empty_baseline():
             "contender_run_id": "some-run-id-2",
             "unit": "s",
             "less_is_better": True,
+            "tags": {"tag_one": "1", "tag_two": "2"},
         },
     ]
 
@@ -899,6 +955,7 @@ def test_compare_list_empty_pair():
             "contender_run_id": None,
             "unit": "unknown",
             "less_is_better": True,
+            "tags": "unknown",
         },
         {
             "batch": "unknown",
@@ -916,6 +973,7 @@ def test_compare_list_empty_pair():
             "contender_run_id": None,
             "unit": "unknown",
             "less_is_better": True,
+            "tags": "unknown",
         },
     ]
     assert list(formatted) == [
@@ -935,6 +993,7 @@ def test_compare_list_empty_pair():
             "contender_run_id": None,
             "unit": "unknown",
             "less_is_better": True,
+            "tags": "unknown",
         },
         {
             "batch": "unknown",
@@ -952,5 +1011,6 @@ def test_compare_list_empty_pair():
             "contender_run_id": None,
             "unit": "unknown",
             "less_is_better": True,
+            "tags": "unknown",
         },
     ]
