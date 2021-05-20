@@ -3,7 +3,7 @@ import decimal
 from ..units import formatter_for_unit
 
 
-THRESHOLD = 5  # percent
+THRESHOLD = 5.0  # percent
 
 
 def fmt(value):
@@ -30,7 +30,7 @@ class BenchmarkComparator:
     def __init__(self, baseline, contender, threshold=None):
         self.baseline = BenchmarkResult(**baseline) if baseline else None
         self.contender = BenchmarkResult(**contender) if contender else None
-        self.threshold = threshold if threshold is not None else THRESHOLD
+        self.threshold = float(threshold) if threshold is not None else THRESHOLD
 
     @property
     def batch(self):
@@ -117,7 +117,7 @@ class BenchmarkComparator:
             "batch": self.batch,
             "benchmark": self.benchmark,
             "change": change_fmt(self.change),
-            "threshold": self.threshold,  # TODO: change_fmt?
+            "threshold": fmt(self.threshold) + "%",
             "regression": self.regression,
             "improvement": self.improvement,
             "z_score": fmt(self.z_score),
@@ -143,7 +143,7 @@ class BenchmarkComparator:
             "batch": self.batch,
             "benchmark": self.benchmark,
             "change": fmt(self.change * 100),
-            "threshold": self.threshold,
+            "threshold": fmt(self.threshold),
             "regression": self.regression,
             "improvement": self.improvement,
             "z_score": fmt(self.z_score),
