@@ -384,34 +384,31 @@ def test_distibution():
 
     # first commit, no distribution history
     set_z_scores([summary_1])
-    assert getattr(summary_1, "z_score", None) is None
+    assert summary_1.z_score == 0
 
     # second commit, no change
     set_z_scores([summary_2])
-    assert getattr(summary_2, "z_score", None) is None
+    assert summary_2.z_score == 0
 
     # third commit, got better
     set_z_scores([summary_3])
-    expected = decimal.Decimal("-1.154700538379251586751622041")
-    assert getattr(summary_3, "z_score") == expected
+    assert summary_3.z_score == decimal.Decimal("-1.154700538379251586751622041")
 
     # forth commit, stayed about the same
     set_z_scores([summary_4])
-    expected = decimal.Decimal("-0.8021503952795387425767458943")
-    assert getattr(summary_4, "z_score") == expected
+    assert summary_4.z_score == decimal.Decimal("-0.8021503952795387425767458943")
 
     # fifth commit, got worse
     set_z_scores([summary_5])
-    expected = decimal.Decimal("1.445718072770755055613474796")
-    assert getattr(summary_5, "z_score") == expected
+    assert summary_5.z_score == decimal.Decimal("1.445718072770755055613474796")
 
     # n/a different repo, no distribution history
     set_z_scores([summary_b])
-    assert getattr(summary_b, "z_score", None) is None
+    assert summary_b.z_score == 0
 
     # n/a different case, no distribution history
     set_z_scores([summary_x])
-    assert getattr(summary_x, "z_score", None) is None
+    assert summary_x.z_score == 0
 
 
 def test_distibution_multiple_runs_same_commit():
@@ -461,6 +458,9 @@ def test_distibution_multiple_runs_same_commit():
         )
     ]
 
+    set_z_scores([summary_1])
+    assert summary_1.z_score == 0
+
     data = [4, 5, 6]
     summary_2 = create_benchmark_summary(conbench, data, commit_1)
 
@@ -492,3 +492,9 @@ def test_distibution_multiple_runs_same_commit():
             2,
         )
     ]
+
+    set_z_scores([summary_1])
+    assert summary_1.z_score == decimal.Decimal("-0.7071067811865475154683553909")
+
+    set_z_scores([summary_2])
+    assert summary_2.z_score == decimal.Decimal("0.7071067811865475154683553909")
