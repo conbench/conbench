@@ -5,6 +5,10 @@ from ..config import TestConfig
 from ..db import Session, configure_engine, create_all, drop_all
 
 
+pytest.register_assert_rewrite("conbench.tests.api._asserts")
+pytest.register_assert_rewrite("conbench.tests.app._asserts")
+
+
 @pytest.fixture(scope="session", autouse=True)
 def create_db():
     configure_engine(TestConfig.SQLALCHEMY_DATABASE_URI)
