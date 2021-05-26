@@ -1,8 +1,10 @@
 import copy
+import datetime
 import uuid
 
 from ...api._examples import _api_compare_entity, _api_compare_list
 from ...entities.summary import Summary
+from ...runner import Conbench
 from ...tests.api import _asserts
 from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
@@ -15,13 +17,23 @@ class FakeEntity:
         self.id = _id
 
 
-def create_benchmark_summary(name, batch_id=None, run_id=None):
+def create_benchmark_summary(name, batch_id=None, run_id=None, results=None):
     data = copy.deepcopy(VALID_PAYLOAD)
     data["tags"]["name"] = name
     if batch_id:
         data["stats"]["batch_id"] = batch_id
     if run_id:
         data["stats"]["run_id"] = run_id
+    if results is not None:
+        conbench = Conbench()
+        run_id = data["stats"]["run_id"]
+        run_name = data["stats"]["run_name"]
+        batch_id = data["stats"]["batch_id"]
+        now = datetime.datetime.now(datetime.timezone.utc)
+        data["stats"] = conbench._stats(
+            results, "s", [], "s", now.isoformat(), run_id, run_name
+        )
+        data["stats"]["batch_id"] = batch_id
     summary = Summary.create(data)
     return summary
 
@@ -31,20 +43,25 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
     public = True
 
     def _create(self, with_ids=False):
-        summary = create_benchmark_summary("read")
-        entity = FakeEntity(f"{summary.id}...{summary.id}")
+        # create a distribution history
+        for _ in range(10):
+            summary_1 = create_benchmark_summary("read", results=[1, 2, 3])
+
+        # create a regression
+        summary_2 = create_benchmark_summary("read", results=[4, 5, 6])
+
+        entity = FakeEntity(f"{summary_1.id}...{summary_2.id}")
         if with_ids:
-            return summary.id, entity
+            return summary_1.id, summary_2.id, entity
         else:
             return entity
 
     def test_compare(self, client):
         self.authenticate(client)
-        new_id, compare = self._create(with_ids=True)
+        id_1, id_2, compare = self._create(with_ids=True)
         response = client.get(f"/api/compare/benchmarks/{compare.id}/")
 
-        # cheating by comparing benchmark to same benchmark
-        benchmark_ids = [new_id, new_id]
+        benchmark_ids = [id_1, id_2]
         batch_ids = [
             "7b2fdd9f929d47b9960152090d47f8e6",
             "7b2fdd9f929d47b9960152090d47f8e6",
@@ -67,6 +84,17 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "compression": "snappy",
                 "name": "read",
             },
+        )
+        expected.update(
+            {
+                "baseline": "2.000 s",
+                "contender": "5.000 s",
+                "change": "150.000%",
+                "regression": True,
+                "baseline_z_score": "-0.309",
+                "contender_z_score": "3.090",
+                "contender_regression_z": True,
+            }
         )
         self.assert_200_ok(response, expected)
 
