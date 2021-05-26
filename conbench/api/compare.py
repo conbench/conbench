@@ -5,6 +5,7 @@ from ..api import rule
 from ..api._comparator import BenchmarkComparator, BenchmarkListComparator
 from ..api._endpoint import ApiEndpoint
 from ..entities._entity import NotFound
+from ..entities.distribution import set_z_scores
 from ..entities.summary import Summary
 from ..hacks import set_display_batch, set_display_name
 
@@ -19,7 +20,7 @@ def _compare_entity(summary):
         "benchmark": summary.display_name,
         "batch": summary.display_batch,
         "tags": summary.case.tags,
-        "z_score": 0.0,  # TODO
+        "z_score": getattr(summary, "z_score", 0.0),
     }
 
 
@@ -29,6 +30,7 @@ class CompareBenchmarksAPI(ApiEndpoint):
             summary = Summary.one(id=benchmark_id)
         except NotFound:
             self.abort_404_not_found()
+        set_z_scores([summary])
         return summary
 
     def get(self, compare_ids):
@@ -103,12 +105,10 @@ class CompareBenchmarksAPI(ApiEndpoint):
 
 class CompareBatchesAPI(ApiEndpoint):
     def _get(self, batch_id):
-        try:
-            summaries = Summary.all(batch_id=batch_id)
-        except NotFound:
-            self.abort_404_not_found()
+        summaries = Summary.all(batch_id=batch_id)
         if not summaries:
             self.abort_404_not_found()
+        set_z_scores(summaries)
         return summaries
 
     def get(self, compare_ids):
@@ -205,12 +205,10 @@ class CompareBatchesAPI(ApiEndpoint):
 
 class CompareRunsAPI(CompareBatchesAPI):
     def _get(self, run_id):
-        try:
-            summaries = Summary.all(run_id=run_id)
-        except NotFound:
-            self.abort_404_not_found()
+        summaries = Summary.all(run_id=run_id)
         if not summaries:
             self.abort_404_not_found()
+        set_z_scores(summaries)
         return summaries
 
 
