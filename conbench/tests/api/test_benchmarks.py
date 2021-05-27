@@ -198,7 +198,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "5.500000",
                 "stdev": "1.000000",
                 "times": [],
-                "z_score": "3.015113",
+                "z_score": "-3.015113",
                 "z_regression": True,
             }
         )
@@ -261,7 +261,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "2.500000",
                 "stdev": "1.000000",
                 "times": [],
-                "z_score": "-3.015113",
+                "z_score": "3.015113",
                 "z_improvement": True,
             }
         )

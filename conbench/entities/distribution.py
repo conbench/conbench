@@ -11,6 +11,7 @@ from ..entities._entity import (
     NotNull,
     Nullable,
 )
+from ..entities._comparator import _less_is_better
 from ..entities.commit import Commit
 from ..entities.machine import Machine
 from ..entities.run import Run
@@ -184,3 +185,5 @@ def set_z_scores(summaries):
         d = lookup.get(f"{summary.case_id}-{summary.context_id}")
         if d and d.mean_sd:
             summary.z_score = (summary.mean - d.mean_mean) / d.mean_sd
+        if _less_is_better(summary.unit) and summary.z_score != 0:
+            summary.z_score = summary.z_score * -1

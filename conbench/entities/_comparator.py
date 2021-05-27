@@ -21,18 +21,14 @@ def _less_is_better(unit):
     return True
 
 
-def z_regression(z_score, unit, deviations=None):
-    if deviations is None:
-        deviations = DEVIATIONS
-    adjusted_z_score = z_score if _less_is_better(unit) else -z_score
-    return adjusted_z_score > deviations
+def z_regression(z_score, deviations=None):
+    deviations = deviations if deviations else DEVIATIONS
+    return -z_score > deviations
 
 
-def z_improvement(z_score, unit, deviations=None):
-    if deviations is None:
-        deviations = DEVIATIONS
-    adjusted_z_score = -z_score if _less_is_better(unit) else z_score
-    return adjusted_z_score > deviations
+def z_improvement(z_score, deviations=None):
+    deviations = deviations if deviations else DEVIATIONS
+    return z_score > deviations
 
 
 class BenchmarkResult:
@@ -135,23 +131,19 @@ class BenchmarkComparator:
 
     @property
     def baseline_z_regression(self):
-        z_score = self.baseline_z_score
-        return z_regression(z_score, self.unit, self.deviations)
+        return z_regression(self.baseline_z_score, self.deviations)
 
     @property
     def baseline_z_improvement(self):
-        z_score = self.baseline_z_score
-        return z_improvement(z_score, self.unit, self.deviations)
+        return z_improvement(self.baseline_z_score, self.deviations)
 
     @property
     def contender_z_regression(self):
-        z_score = self.contender_z_score
-        return z_regression(z_score, self.unit, self.deviations)
+        return z_regression(self.contender_z_score, self.deviations)
 
     @property
     def contender_z_improvement(self):
-        z_score = self.contender_z_score
-        return z_improvement(z_score, self.unit, self.deviations)
+        return z_improvement(self.contender_z_score, self.deviations)
 
     @property
     def tags(self):

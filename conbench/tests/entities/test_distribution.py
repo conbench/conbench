@@ -391,15 +391,15 @@ def test_distibution():
 
     # third commit, got better
     set_z_scores([summary_3])
-    assert summary_3.z_score == decimal.Decimal("-1.154700538379251586751622041")
+    assert summary_3.z_score == decimal.Decimal("1.154700538379251586751622041")
 
     # forth commit, stayed about the same
     set_z_scores([summary_4])
-    assert summary_4.z_score == decimal.Decimal("-0.8021503952795387425767458943")
+    assert summary_4.z_score == decimal.Decimal("0.8021503952795387425767458943")
 
     # fifth commit, got worse
     set_z_scores([summary_5])
-    assert summary_5.z_score == decimal.Decimal("1.445718072770755055613474796")
+    assert summary_5.z_score == decimal.Decimal("-1.445718072770755055613474796")
 
     # n/a different repo, no distribution history
     set_z_scores([summary_b])
@@ -491,7 +491,7 @@ def test_distibution_multiple_runs_same_commit():
     ]
 
     set_z_scores([summary_1])
-    assert summary_1.z_score == decimal.Decimal("-0.7071067811865475154683553909")
+    assert summary_1.z_score == decimal.Decimal("0.7071067811865475154683553909")
 
     set_z_scores([summary_2])
-    assert summary_2.z_score == decimal.Decimal("0.7071067811865475154683553909")
+    assert summary_2.z_score == decimal.Decimal("-0.7071067811865475154683553909")

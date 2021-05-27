@@ -173,7 +173,7 @@ def test_compare_regression_less_is_better():
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": "3.0",
+        "z_score": "-3.0",
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -184,7 +184,7 @@ def test_compare_regression_less_is_better():
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": "3.0",
+        "z_score": "-3.0",
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -198,8 +198,8 @@ def test_compare_regression_less_is_better():
         "regression": True,
         "improvement": False,
         "deviations": "2.000",
-        "baseline_z_score": "3.000",
-        "contender_z_score": "3.000",
+        "baseline_z_score": "-3.000",
+        "contender_z_score": "-3.000",
         "baseline_z_regression": True,
         "baseline_z_improvement": False,
         "contender_z_regression": True,
@@ -224,8 +224,8 @@ def test_compare_regression_less_is_better():
         "regression": True,
         "improvement": False,
         "deviations": "2.000",
-        "baseline_z_score": "3.000",
-        "contender_z_score": "3.000",
+        "baseline_z_score": "-3.000",
+        "contender_z_score": "-3.000",
         "baseline_z_regression": True,
         "baseline_z_improvement": False,
         "contender_z_regression": True,
@@ -500,7 +500,7 @@ def test_compare_improvement_less_is_better():
         "batch_id": "some-batch-id-1",
         "run_id": "some-run-id-1",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": "-3.0",
+        "z_score": "3.0",
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -511,7 +511,7 @@ def test_compare_improvement_less_is_better():
         "batch_id": "some-batch-id-2",
         "run_id": "some-run-id-2",
         "tags": {"tag_one": "one", "tag_two": "two"},
-        "z_score": "-3.0",
+        "z_score": "3.0",
     }
 
     result = BenchmarkComparator(baseline, contender).compare()
@@ -525,8 +525,8 @@ def test_compare_improvement_less_is_better():
         "regression": False,
         "improvement": True,
         "deviations": "2.000",
-        "baseline_z_score": "-3.000",
-        "contender_z_score": "-3.000",
+        "baseline_z_score": "3.000",
+        "contender_z_score": "3.000",
         "baseline_z_regression": False,
         "baseline_z_improvement": True,
         "contender_z_regression": False,
@@ -551,8 +551,8 @@ def test_compare_improvement_less_is_better():
         "regression": False,
         "improvement": True,
         "deviations": "2.000",
-        "baseline_z_score": "-3.000",
-        "contender_z_score": "-3.000",
+        "baseline_z_score": "3.000",
+        "contender_z_score": "3.000",
         "baseline_z_regression": False,
         "baseline_z_improvement": True,
         "contender_z_regression": False,
@@ -772,7 +772,7 @@ def test_compare_list():
                 "batch_id": "some-batch-id-1",
                 "run_id": "some-run-id-1",
                 "tags": {"tag_one": "1", "tag_two": "2"},
-                "z_score": "3.0",
+                "z_score": "-3.0",
             },
             "contender": {
                 "batch": "math",
@@ -783,7 +783,7 @@ def test_compare_list():
                 "batch_id": "some-batch-id-2",
                 "run_id": "some-run-id-2",
                 "tags": {"tag_one": "1", "tag_two": "2"},
-                "z_score": "-3.0",
+                "z_score": "3.0",
             },
         },
     }
@@ -826,8 +826,8 @@ def test_compare_list():
             "regression": False,
             "improvement": True,
             "deviations": "2.000",
-            "baseline_z_score": "3.000",
-            "contender_z_score": "-3.000",
+            "baseline_z_score": "-3.000",
+            "contender_z_score": "3.000",
             "baseline_z_regression": True,
             "baseline_z_improvement": False,
             "contender_z_regression": False,
@@ -880,8 +880,8 @@ def test_compare_list():
             "regression": False,
             "improvement": True,
             "deviations": "2.000",
-            "baseline_z_score": "3.000",
-            "contender_z_score": "-3.000",
+            "baseline_z_score": "-3.000",
+            "contender_z_score": "3.000",
             "baseline_z_regression": True,
             "baseline_z_improvement": False,
             "contender_z_regression": False,
