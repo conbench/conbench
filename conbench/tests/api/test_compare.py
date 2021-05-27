@@ -44,11 +44,9 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         if name is None:
             name = uuid.uuid4().hex
 
-        # create a distribution history
+        # create a distribution history & a regression
         for _ in range(10):
             summary_1 = create_benchmark_summary(name, results=[1, 2, 3])
-
-        # create a regression
         summary_2 = create_benchmark_summary(name, results=[4, 5, 6])
 
         entity = FakeEntity(f"{summary_1.id}...{summary_2.id}")

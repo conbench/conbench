@@ -1,4 +1,4 @@
-from ...api._comparator import BenchmarkComparator, BenchmarkListComparator
+from ...entities._comparator import BenchmarkComparator, BenchmarkListComparator
 
 
 def test_compare_no_change():
@@ -244,6 +244,90 @@ def test_compare_regression_but_under_threshold():
     }
 
 
+def test_compare_regression_custom_threshold_and_deviations():
+    baseline = {
+        "batch": "arrow-compute-scalar-cast-benchmark",
+        "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "value": "1000",
+        "unit": "i/s",
+        "id": "some-benchmark-id-1",
+        "batch_id": "some-batch-id-1",
+        "run_id": "some-run-id-1",
+        "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": "-2.0",
+    }
+    contender = {
+        "batch": "arrow-compute-scalar-cast-benchmark",
+        "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "value": "950",
+        "unit": "i/s",
+        "id": "some-benchmark-id-2",
+        "batch_id": "some-batch-id-2",
+        "run_id": "some-run-id-2",
+        "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": "-2.0",
+    }
+
+    threshold, deviations = 4, 1
+    result = BenchmarkComparator(baseline, contender, threshold, deviations).compare()
+    formatted = BenchmarkComparator(
+        baseline, contender, threshold, deviations
+    ).formatted()
+
+    assert result == {
+        "batch": "arrow-compute-scalar-cast-benchmark",
+        "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "change": "-5.000",
+        "threshold": "4.000",
+        "regression": True,
+        "improvement": False,
+        "deviations": "1.000",
+        "baseline_z_score": "-2.000",
+        "contender_z_score": "-2.000",
+        "baseline_z_regression": True,
+        "baseline_z_improvement": False,
+        "contender_z_regression": True,
+        "contender_z_improvement": False,
+        "baseline": "1000.000",
+        "contender": "950.000",
+        "baseline_id": "some-benchmark-id-1",
+        "contender_id": "some-benchmark-id-2",
+        "baseline_batch_id": "some-batch-id-1",
+        "contender_batch_id": "some-batch-id-2",
+        "baseline_run_id": "some-run-id-1",
+        "contender_run_id": "some-run-id-2",
+        "unit": "i/s",
+        "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
+    }
+    assert formatted == {
+        "batch": "arrow-compute-scalar-cast-benchmark",
+        "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "change": "-5.000%",
+        "threshold": "4.000%",
+        "regression": True,
+        "improvement": False,
+        "deviations": "1.000",
+        "baseline_z_score": "-2.000",
+        "contender_z_score": "-2.000",
+        "baseline_z_regression": True,
+        "baseline_z_improvement": False,
+        "contender_z_regression": True,
+        "contender_z_improvement": False,
+        "baseline": "1.000K i/s",
+        "contender": "950 i/s",
+        "baseline_id": "some-benchmark-id-1",
+        "contender_id": "some-benchmark-id-2",
+        "baseline_batch_id": "some-batch-id-1",
+        "contender_batch_id": "some-batch-id-2",
+        "baseline_run_id": "some-run-id-1",
+        "contender_run_id": "some-run-id-2",
+        "unit": "i/s",
+        "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
+    }
+
+
 def test_compare_improvement():
     baseline = {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -325,7 +409,7 @@ def test_compare_improvement():
     }
 
 
-def test_compare_improvement_but_under_threshold():
+def test_compare_improvement_custom_threshold_and_deviations():
     baseline = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
@@ -392,6 +476,90 @@ def test_compare_improvement_but_under_threshold():
         "baseline_z_improvement": False,
         "contender_z_regression": False,
         "contender_z_improvement": False,
+        "baseline": "1.000K i/s",
+        "contender": "1.050K i/s",
+        "baseline_id": "some-benchmark-id-1",
+        "contender_id": "some-benchmark-id-2",
+        "baseline_batch_id": "some-batch-id-1",
+        "contender_batch_id": "some-batch-id-2",
+        "baseline_run_id": "some-run-id-1",
+        "contender_run_id": "some-run-id-2",
+        "unit": "i/s",
+        "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
+    }
+
+
+def test_compare_improvement_but_under_threshold():
+    baseline = {
+        "batch": "arrow-compute-scalar-cast-benchmark",
+        "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "value": "1000",
+        "unit": "i/s",
+        "id": "some-benchmark-id-1",
+        "batch_id": "some-batch-id-1",
+        "run_id": "some-run-id-1",
+        "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": "2.0",
+    }
+    contender = {
+        "batch": "arrow-compute-scalar-cast-benchmark",
+        "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "value": "1050",
+        "unit": "i/s",
+        "id": "some-benchmark-id-2",
+        "batch_id": "some-batch-id-2",
+        "run_id": "some-run-id-2",
+        "tags": {"tag_one": "one", "tag_two": "two"},
+        "z_score": "2.0",
+    }
+
+    threshold, deviations = 4, 1
+    result = BenchmarkComparator(baseline, contender, threshold, deviations).compare()
+    formatted = BenchmarkComparator(
+        baseline, contender, threshold, deviations
+    ).formatted()
+
+    assert result == {
+        "batch": "arrow-compute-scalar-cast-benchmark",
+        "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "change": "5.000",
+        "threshold": "4.000",
+        "regression": False,
+        "improvement": True,
+        "deviations": "1.000",
+        "baseline_z_score": "2.000",
+        "contender_z_score": "2.000",
+        "baseline_z_regression": False,
+        "baseline_z_improvement": True,
+        "contender_z_regression": False,
+        "contender_z_improvement": True,
+        "baseline": "1000.000",
+        "contender": "1050.000",
+        "baseline_id": "some-benchmark-id-1",
+        "contender_id": "some-benchmark-id-2",
+        "baseline_batch_id": "some-batch-id-1",
+        "contender_batch_id": "some-batch-id-2",
+        "baseline_run_id": "some-run-id-1",
+        "contender_run_id": "some-run-id-2",
+        "unit": "i/s",
+        "less_is_better": False,
+        "tags": {"tag_one": "one", "tag_two": "two"},
+    }
+    assert formatted == {
+        "batch": "arrow-compute-scalar-cast-benchmark",
+        "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "change": "5.000%",
+        "threshold": "4.000%",
+        "regression": False,
+        "improvement": True,
+        "deviations": "1.000",
+        "baseline_z_score": "2.000",
+        "contender_z_score": "2.000",
+        "baseline_z_regression": False,
+        "baseline_z_improvement": True,
+        "contender_z_regression": False,
+        "contender_z_improvement": True,
         "baseline": "1.000K i/s",
         "contender": "1.050K i/s",
         "baseline_id": "some-benchmark-id-1",

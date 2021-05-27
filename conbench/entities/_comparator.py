@@ -15,6 +15,26 @@ def change_fmt(value):
     return "{:.3%}".format(value)
 
 
+def _less_is_better(unit):
+    if unit in ["B/s", "i/s"]:
+        return False
+    return True
+
+
+def z_regression(z_score, unit, deviations=None):
+    if deviations is None:
+        deviations = DEVIATIONS
+    adjusted_z_score = z_score if _less_is_better(unit) else -z_score
+    return adjusted_z_score > deviations
+
+
+def z_improvement(z_score, unit, deviations=None):
+    if deviations is None:
+        deviations = DEVIATIONS
+    adjusted_z_score = -z_score if _less_is_better(unit) else z_score
+    return adjusted_z_score > deviations
+
+
 class BenchmarkResult:
     def __init__(
         self,
@@ -72,9 +92,7 @@ class BenchmarkComparator:
 
     @property
     def less_is_better(self):
-        if self.unit in ["B/s", "i/s"]:
-            return False
-        return True
+        return _less_is_better(self.unit)
 
     @property
     def change(self):
@@ -118,26 +136,22 @@ class BenchmarkComparator:
     @property
     def baseline_z_regression(self):
         z_score = self.baseline_z_score
-        adjusted_z_score = z_score if self.less_is_better else -z_score
-        return adjusted_z_score > self.deviations
+        return z_regression(z_score, self.unit, self.deviations)
 
     @property
     def baseline_z_improvement(self):
         z_score = self.baseline_z_score
-        adjusted_z_score = -z_score if self.less_is_better else z_score
-        return adjusted_z_score > self.deviations
+        return z_improvement(z_score, self.unit, self.deviations)
 
     @property
     def contender_z_regression(self):
         z_score = self.contender_z_score
-        adjusted_z_score = z_score if self.less_is_better else -z_score
-        return adjusted_z_score > self.deviations
+        return z_regression(z_score, self.unit, self.deviations)
 
     @property
     def contender_z_improvement(self):
         z_score = self.contender_z_score
-        adjusted_z_score = -z_score if self.less_is_better else z_score
-        return adjusted_z_score > self.deviations
+        return z_improvement(z_score, self.unit, self.deviations)
 
     @property
     def tags(self):
