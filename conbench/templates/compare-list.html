@@ -63,6 +63,8 @@
                         <th scope="col">Change</th>
                         <th scope="col">Batch</th>
                         <th scope="col">Benchmark</th>
+                        <th scope="col">Baseline Z-Score</th>
+                        <th scope="col">Contender Z-Score</th>
                         <th scope="col">Baseline</th>
                         <th scope="col">Contender</th>
                     </tr>
@@ -93,11 +95,25 @@
                              <div>{{ c.benchmark}}</div>
                            {% endif %}
                          </td>
+
+                         {% if c.baseline is none %}
+                           <td>---</td>
+                         {% else %}
+                           <td>{{ c.baseline_z_score }}</td>
+                         {% endif %}
+
+                         {% if c.contender is none %}
+                           <td>---</td>
+                         {% else %}
+                           <td>{{ c.contender_z_score }}</td>
+                         {% endif %}
+
                          {% if c.baseline is none %}
                            <td>---</td>
                          {% else %}
                            <td>{{ c.baseline }}</td>
                          {% endif %}
+
                          {% if c.contender is none %}
                            <td>---</td>
                          {% else %}
@@ -118,7 +134,7 @@
   var table = $('#benchmarks').dataTable( {
       "responsive": true,
       "order": [[0, 'asc']],
-      "columnDefs": [{ "orderable": false, "targets": [3, 4] }]
+      "columnDefs": [{ "orderable": false, "targets": [5, 6] }]
   } );
   new $.fn.dataTable.FixedHeader( table );
 
