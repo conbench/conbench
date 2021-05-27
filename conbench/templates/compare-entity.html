@@ -49,7 +49,36 @@
                     <tr>
                          <td>{{ c.baseline }}</td>
                          <td>{{ c.contender }}</td>
-                         <td>{{ c.change }}%</td>
+                         <td>
+                           {{ c.change }}
+                           {% if c.regression %}
+                           <span class="glyphicon glyphicon-arrow-down"></span></b>
+                           {% endif %}
+                           {% if c.improvement %}
+                           <span class="glyphicon glyphicon-arrow-up"></span></b>
+                           {% endif %}
+                         </td>
+                    </tr>
+                    <tr>
+                         <td>
+                           {{ c.baseline_z_score }} z
+                           {% if c.baseline_z_regression %}
+                           <span class="glyphicon glyphicon-arrow-down"></span></b>
+                           {% endif %}
+                           {% if c.baseline_z_improvement %}
+                           <span class="glyphicon glyphicon-arrow-up"></span></b>
+                           {% endif %}
+                         </td>
+                         <td>
+                           {{ c.contender_z_score }} z
+                           {% if c.baseline_z_regression %}
+                           <span class="glyphicon glyphicon-arrow-down"></span></b>
+                           {% endif %}
+                           {% if c.baseline_z_improvement %}
+                           <span class="glyphicon glyphicon-arrow-up"></span></b>
+                           {% endif %}
+                         </td>
+                         <td>&nbsp;</td>
                     </tr>
                     {% endfor %}
                 </tbody>

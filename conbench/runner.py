@@ -149,6 +149,7 @@ class Conbench(Connection):
             result.get("time_unit", "s"),
             timestamp,
             run_id,
+            self.batch_id,
             run_name,
         )
         benchmark = {
@@ -224,7 +225,8 @@ class Conbench(Connection):
             "iterations": options.get("iterations", 1),
         }
 
-    def _stats(self, data, unit, times, time_unit, timestamp, run_id, run_name):
+    @staticmethod
+    def _stats(data, unit, times, time_unit, timestamp, run_id, batch_id, run_name):
         fmt = "{:.6f}"
 
         def _format(f, data, min_length=0):
@@ -236,7 +238,7 @@ class Conbench(Connection):
         q1, q3 = np.percentile(data, [25, 75])
 
         if not run_id:
-            run_id = self.batch_id
+            run_id = batch_id
 
         result = {
             "data": [fmt.format(x) for x in data],
@@ -245,7 +247,7 @@ class Conbench(Connection):
             "time_unit": time_unit,
             "iterations": len(data),
             "timestamp": timestamp,
-            "batch_id": self.batch_id,
+            "batch_id": batch_id,
             "run_id": run_id,
             "mean": _format(statistics.mean, data),
             "median": _format(statistics.median, data),

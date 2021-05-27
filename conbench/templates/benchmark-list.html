@@ -60,6 +60,7 @@
   var table =  $('#benchmarks').dataTable( {
     "responsive": true,
     "order": [[0, 'desc']],
+    "columnDefs": [{ "orderable": false, "targets": [3] }]
   } );
 {% else %}
   var table = $('#benchmarks').dataTable( {

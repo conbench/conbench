@@ -30,6 +30,7 @@
                     <th scope="col">Batch</th>
                     <th scope="col">Benchmark</th>
                     <th scope="col">Mean</th>
+                    <th scope="col">Z-Score</th>
                 </tr>
             </thead>
             <tbody>
@@ -45,6 +46,7 @@
                          <div>{{ benchmark.display_name }}</div>
                      </a></td>
                      <td>{{ benchmark.display_mean }}</td>
+                     <td>{{ benchmark.stats.z_score }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

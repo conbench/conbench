@@ -25,15 +25,13 @@ def create_benchmark_summary(name, batch_id=None, run_id=None, results=None):
     if run_id:
         data["stats"]["run_id"] = run_id
     if results is not None:
-        conbench = Conbench()
         run_id = data["stats"]["run_id"]
         run_name = data["stats"]["run_name"]
         batch_id = data["stats"]["batch_id"]
         now = datetime.datetime.now(datetime.timezone.utc)
-        data["stats"] = conbench._stats(
-            results, "s", [], "s", now.isoformat(), run_id, run_name
+        data["stats"] = Conbench._stats(
+            results, "s", [], "s", now.isoformat(), run_id, batch_id, run_name
         )
-        data["stats"]["batch_id"] = batch_id
     summary = Summary.create(data)
     return summary
 
@@ -46,11 +44,9 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         if name is None:
             name = uuid.uuid4().hex
 
-        # create a distribution history
+        # create a distribution history & a regression
         for _ in range(10):
             summary_1 = create_benchmark_summary(name, results=[1, 2, 3])
-
-        # create a regression
         summary_2 = create_benchmark_summary(name, results=[4, 5, 6])
 
         entity = FakeEntity(f"{summary_1.id}...{summary_2.id}")
@@ -93,11 +89,11 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
             {
                 "baseline": "2.000 s",
                 "contender": "5.000 s",
-                "change": "150.000%",
+                "change": "-150.000%",
                 "regression": True,
-                "baseline_z_score": "-0.302",
-                "contender_z_score": "3.015",
-                "contender_regression_z": True,
+                "baseline_z_score": "0.302",
+                "contender_z_score": "-3.015",
+                "contender_z_regression": True,
             }
         )
         self.assert_200_ok(response, expected)

@@ -15,6 +15,22 @@ def change_fmt(value):
     return "{:.3%}".format(value)
 
 
+def _less_is_better(unit):
+    if unit in ["B/s", "i/s"]:
+        return False
+    return True
+
+
+def z_regression(z_score, deviations=None):
+    deviations = deviations if deviations else DEVIATIONS
+    return -z_score > deviations
+
+
+def z_improvement(z_score, deviations=None):
+    deviations = deviations if deviations else DEVIATIONS
+    return z_score > deviations
+
+
 class BenchmarkResult:
     def __init__(
         self,
@@ -72,9 +88,7 @@ class BenchmarkComparator:
 
     @property
     def less_is_better(self):
-        if self.unit in ["B/s", "i/s"]:
-            return False
-        return True
+        return _less_is_better(self.unit)
 
     @property
     def change(self):
@@ -89,19 +103,19 @@ class BenchmarkComparator:
         if old == 0:
             return 0.0
 
-        return (new - old) / abs(old)
+        result = (new - old) / abs(old)
+        if self.less_is_better and result != 0:
+            result = result * -1
+
+        return result
 
     @property
     def regression(self):
-        change = self.change
-        adjusted_change = change if self.less_is_better else -change
-        return adjusted_change * 100 > self.threshold
+        return -self.change * 100 > self.threshold
 
     @property
     def improvement(self):
-        change = self.change
-        adjusted_change = -change if self.less_is_better else change
-        return adjusted_change * 100 > self.threshold
+        return self.change * 100 > self.threshold
 
     @property
     def baseline_z_score(self):
@@ -116,28 +130,20 @@ class BenchmarkComparator:
         return self.contender.z_score
 
     @property
-    def baseline_regression_z(self):
-        z_score = self.baseline_z_score
-        adjusted_z_score = z_score if self.less_is_better else -z_score
-        return adjusted_z_score > self.deviations
+    def baseline_z_regression(self):
+        return z_regression(self.baseline_z_score, self.deviations)
 
     @property
-    def baseline_improvement_z(self):
-        z_score = self.baseline_z_score
-        adjusted_z_score = -z_score if self.less_is_better else z_score
-        return adjusted_z_score > self.deviations
+    def baseline_z_improvement(self):
+        return z_improvement(self.baseline_z_score, self.deviations)
 
     @property
-    def contender_regression_z(self):
-        z_score = self.contender_z_score
-        adjusted_z_score = z_score if self.less_is_better else -z_score
-        return adjusted_z_score > self.deviations
+    def contender_z_regression(self):
+        return z_regression(self.contender_z_score, self.deviations)
 
     @property
-    def contender_improvement_z(self):
-        z_score = self.contender_z_score
-        adjusted_z_score = -z_score if self.less_is_better else z_score
-        return adjusted_z_score > self.deviations
+    def contender_z_improvement(self):
+        return z_improvement(self.contender_z_score, self.deviations)
 
     @property
     def tags(self):
@@ -161,10 +167,10 @@ class BenchmarkComparator:
             "deviations": fmt(self.deviations),
             "baseline_z_score": fmt(self.baseline_z_score),
             "contender_z_score": fmt(self.contender_z_score),
-            "baseline_regression_z": self.baseline_regression_z,
-            "baseline_improvement_z": self.baseline_improvement_z,
-            "contender_regression_z": self.contender_regression_z,
-            "contender_improvement_z": self.contender_improvement_z,
+            "baseline_z_regression": self.baseline_z_regression,
+            "baseline_z_improvement": self.baseline_z_improvement,
+            "contender_z_regression": self.contender_z_regression,
+            "contender_z_improvement": self.contender_z_improvement,
             "baseline": fmt_unit(baseline, self.unit),
             "contender": fmt_unit(contender, self.unit),
             "baseline_id": self.baseline.id if self.baseline else None,
@@ -191,10 +197,10 @@ class BenchmarkComparator:
             "deviations": fmt(self.deviations),
             "baseline_z_score": fmt(self.baseline_z_score),
             "contender_z_score": fmt(self.contender_z_score),
-            "baseline_regression_z": self.baseline_regression_z,
-            "baseline_improvement_z": self.baseline_improvement_z,
-            "contender_regression_z": self.contender_regression_z,
-            "contender_improvement_z": self.contender_improvement_z,
+            "baseline_z_regression": self.baseline_z_regression,
+            "baseline_z_improvement": self.baseline_z_improvement,
+            "contender_z_regression": self.contender_z_regression,
+            "contender_z_improvement": self.contender_z_improvement,
             "baseline": fmt(baseline),
             "contender": fmt(contender),
             "baseline_id": self.baseline.id if self.baseline else None,

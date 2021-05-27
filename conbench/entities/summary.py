@@ -16,6 +16,7 @@ from ..entities._entity import (
     NotNull,
     Nullable,
 )
+from ..entities._comparator import z_improvement, z_regression
 from ..entities.case import Case
 from ..entities.context import Context
 from ..entities.commit import Commit, parse_commit
@@ -215,6 +216,9 @@ class _Serializer(EntitySerializer):
                 "q3": self.decimal_fmt.format(summary.q3),
                 "iqr": self.decimal_fmt.format(summary.iqr),
                 "timestamp": summary.timestamp.isoformat(),
+                "z_score": self.decimal_fmt.format(summary.z_score),
+                "z_regression": z_regression(summary.z_score),
+                "z_improvement": z_improvement(summary.z_score),
             },
             "links": {
                 "list": f.url_for("api.benchmarks", _external=True),

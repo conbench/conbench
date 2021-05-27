@@ -8,6 +8,7 @@ from ...api._examples import _api_benchmark_entity
 from ...entities._entity import NotFound
 from ...entities.distribution import Distribution
 from ...entities.summary import Summary
+from ...runner import Conbench
 from ...tests.api import _asserts
 
 
@@ -104,7 +105,9 @@ def _expected_entity(summary):
     )
 
 
-def create_benchmark_summary(name=None, batch_id=None, run_id=None):
+def create_benchmark_summary(
+    name=None, batch_id=None, run_id=None, results=None, unit=None
+):
     data = copy.deepcopy(VALID_PAYLOAD)
     if name:
         data["tags"]["name"] = name
@@ -112,6 +115,17 @@ def create_benchmark_summary(name=None, batch_id=None, run_id=None):
         data["stats"]["batch_id"] = batch_id
     if run_id:
         data["stats"]["run_id"] = run_id
+
+    if results is not None:
+        unit = unit if unit else "s"
+        run_id = data["stats"]["run_id"]
+        run_name = data["stats"]["run_name"]
+        batch_id = data["stats"]["batch_id"]
+        timestamp = data["stats"]["timestamp"]
+        data["stats"] = Conbench._stats(
+            results, unit, [], "s", timestamp, run_id, batch_id, run_name
+        )
+
     summary = Summary.create(data)
     return summary
 
@@ -120,14 +134,140 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     url = "/api/benchmarks/{}/"
     public = True
 
-    def _create(self):
-        return create_benchmark_summary()
+    def _create(self, name=None, results=None, unit=None):
+        return create_benchmark_summary(name=name, results=results, unit=unit)
 
     def test_get_benchmark(self, client):
         self.authenticate(client)
         summary = self._create()
         response = client.get(f"/api/benchmarks/{summary.id}/")
         self.assert_200_ok(response, _expected_entity(summary))
+
+    def test_get_benchmark_regression(self, client):
+        self.authenticate(client)
+
+        # create a distribution history & a regression
+        name = uuid.uuid4().hex
+        for _ in range(10):
+            self._create(name=name, results=[4, 5, 6], unit="i/s")
+        summary = self._create(name=name, results=[1, 2, 3], unit="i/s")
+
+        expected = _expected_entity(summary)
+        expected["stats"].update(
+            {
+                "data": ["1.000000", "2.000000", "3.000000"],
+                "iqr": "1.000000",
+                "iterations": 3,
+                "max": "3.000000",
+                "mean": "2.000000",
+                "median": "2.000000",
+                "min": "1.000000",
+                "q1": "1.500000",
+                "q3": "2.500000",
+                "stdev": "1.000000",
+                "times": [],
+                "z_score": "-3.015113",
+                "z_regression": True,
+                "unit": "i/s",
+            }
+        )
+
+        response = client.get(f"/api/benchmarks/{summary.id}/")
+        self.assert_200_ok(response, expected)
+
+    def test_get_benchmark_regression_less_is_better(self, client):
+        self.authenticate(client)
+
+        # create a distribution history & a regression
+        name = uuid.uuid4().hex
+        for _ in range(10):
+            self._create(name=name, results=[1, 2, 3], unit="s")
+        summary = self._create(name=name, results=[4, 5, 6], unit="s")
+
+        expected = _expected_entity(summary)
+        expected["stats"].update(
+            {
+                "data": ["4.000000", "5.000000", "6.000000"],
+                "iqr": "1.000000",
+                "iterations": 3,
+                "max": "6.000000",
+                "mean": "5.000000",
+                "median": "5.000000",
+                "min": "4.000000",
+                "q1": "4.500000",
+                "q3": "5.500000",
+                "stdev": "1.000000",
+                "times": [],
+                "z_score": "-3.015113",
+                "z_regression": True,
+            }
+        )
+
+        response = client.get(f"/api/benchmarks/{summary.id}/")
+        self.assert_200_ok(response, expected)
+
+    def test_get_benchmark_improvement(self, client):
+        self.authenticate(client)
+
+        # create a distribution history & a improvement
+        name = uuid.uuid4().hex
+        for _ in range(10):
+            self._create(name=name, results=[1, 2, 3], unit="i/s")
+        summary = self._create(name=name, results=[4, 5, 6], unit="i/s")
+
+        expected = _expected_entity(summary)
+        expected["stats"].update(
+            {
+                "data": ["4.000000", "5.000000", "6.000000"],
+                "iqr": "1.000000",
+                "iterations": 3,
+                "max": "6.000000",
+                "mean": "5.000000",
+                "median": "5.000000",
+                "min": "4.000000",
+                "q1": "4.500000",
+                "q3": "5.500000",
+                "stdev": "1.000000",
+                "times": [],
+                "z_score": "3.015113",
+                "z_improvement": True,
+                "unit": "i/s",
+            }
+        )
+
+        response = client.get(f"/api/benchmarks/{summary.id}/")
+        self.assert_200_ok(response, expected)
+
+    def test_get_benchmark_improvement_less_is_better(self, client):
+        self.authenticate(client)
+
+        # create a distribution history & a improvement
+        name = uuid.uuid4().hex
+        for _ in range(10):
+            self._create(name=name, results=[4, 5, 6], unit="s")
+        summary = self._create(name=name, results=[1, 2, 3], unit="s")
+
+        expected = _expected_entity(summary)
+        expected["stats"].update(
+            {
+                "data": ["1.000000", "2.000000", "3.000000"],
+                "iqr": "1.000000",
+                "iterations": 3,
+                "max": "3.000000",
+                "mean": "2.000000",
+                "median": "2.000000",
+                "min": "1.000000",
+                "q1": "1.500000",
+                "q3": "2.500000",
+                "stdev": "1.000000",
+                "times": [],
+                "z_score": "3.015113",
+                "z_improvement": True,
+            }
+        )
+
+        response = client.get(f"/api/benchmarks/{summary.id}/")
+        self.assert_200_ok(response, expected)
 
 
 class TestBenchmarkDelete(_asserts.DeleteEnforcer):

@@ -58,10 +58,6 @@
             </li>
             {% endif %}
           {% endfor %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>&nbsp;</b>
-              <div align="right" style="display:inline-block; float: right;">&nbsp;</div>
-            </li>
             <li class="list-group-item active">Tags</li>
           {% for k,v in benchmark.tags.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
@@ -109,6 +105,14 @@
               <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
             </li>
             {% endfor %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>&nbsp;</b>
+              <div align="right" style="display:inline-block; float: right;">&nbsp;</div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>&nbsp;</b>
+              <div align="right" style="display:inline-block; float: right;">&nbsp;</div>
+            </li>
             <li class="list-group-item active" >Context</li>
             {% for k,v in benchmark.context.items() %}
               <li class="list-group-item" style="overflow-y: auto;">
