@@ -93,6 +93,9 @@
                                 ],
                                 "timestamp": "2020-11-25T21:02:42.706806",
                                 "unit": "s",
+                                "z_improvement": False,
+                                "z_regression": False,
+                                "z_score": "0.000000",
                             },
                             "tags": {
                                 "compression": "snappy",
@@ -159,6 +162,9 @@
                                 ],
                                 "timestamp": "2020-11-25T21:02:42.706806",
                                 "unit": "s",
+                                "z_improvement": False,
+                                "z_regression": False,
+                                "z_score": "0.000000",
                             },
                             "tags": {
                                 "compression": "snappy",
@@ -226,6 +232,9 @@
                                     ],
                                     "timestamp": "2020-11-25T21:02:42.706806",
                                     "unit": "s",
+                                    "z_improvement": False,
+                                    "z_regression": False,
+                                    "z_score": "0.000000",
                                 },
                                 "tags": {
                                     "compression": "snappy",
@@ -285,6 +294,9 @@
                                     ],
                                     "timestamp": "2020-11-25T21:02:42.706806",
                                     "unit": "s",
+                                    "z_improvement": False,
+                                    "z_regression": False,
+                                    "z_score": "0.000000",
                                 },
                                 "tags": {
                                     "compression": "snappy",

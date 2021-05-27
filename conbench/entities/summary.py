@@ -215,6 +215,9 @@ class _Serializer(EntitySerializer):
                 "q3": self.decimal_fmt.format(summary.q3),
                 "iqr": self.decimal_fmt.format(summary.iqr),
                 "timestamp": summary.timestamp.isoformat(),
+                "z_score": self.decimal_fmt.format(summary.z_score),
+                "z_regression": False,
+                "z_improvement": False,
             },
             "links": {
                 "list": f.url_for("api.benchmarks", _external=True),

@@ -66,6 +66,9 @@ def _api_benchmark_entity(
             "q3": "0.036942",
             "stdev": "0.049194",
             "timestamp": "2020-11-25T21:02:42.706806",
+            "z_score": "0.000000",
+            "z_regression": False,
+            "z_improvement": False,
         },
         "tags": {
             "id": case_id,

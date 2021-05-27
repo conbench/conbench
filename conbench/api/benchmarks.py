@@ -7,6 +7,7 @@ from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint
 from ..entities._entity import NotFound
 from ..entities.case import Case
+from ..entities.distribution import set_z_scores
 from ..entities.summary import BenchmarkFacadeSchema, Summary, SummarySerializer
 
 
@@ -42,6 +43,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
           - Benchmarks
         """
         summary = self._get(benchmark_id)
+        set_z_scores([summary])
         return self.serializer.one.dump(summary)
 
     @flask_login.login_required
@@ -101,16 +103,26 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
                 filters=[Case.name == name],
                 joins=[Case],
             )
+            # TODO: cannot currently compute z_score on an arbitrary
+            # list of summaries - assumes same machine/sha/repository.
+            for summary in summaries:
+                summary.z_score = 0
         elif batch_id:
             summaries = Summary.search(
                 filters=[Summary.batch_id == batch_id],
             )
+            set_z_scores(summaries)
         elif run_id:
             summaries = Summary.search(
                 filters=[Summary.run_id == run_id],
             )
+            set_z_scores(summaries)
         else:
             summaries = Summary.all(order_by=Summary.timestamp.desc(), limit=500)
+            # TODO: cannot currently compute z_score on an arbitrary
+            # list of summaries - assumes same machine/sha/repository.s
+            for summary in summaries:
+                summary.z_score = 0
         return self.serializer.many.dump(summaries)
 
     @flask_login.login_required
@@ -131,6 +143,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         """
         data = self.validate_benchmark(self.schema.create)
         summary = Summary.create(data)
+        set_z_scores([summary])
         return self.response_201_created(self.serializer.one.dump(summary))
 
 
