@@ -97,7 +97,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "regression": True,
                 "baseline_z_score": "-0.302",
                 "contender_z_score": "3.015",
-                "contender_regression_z": True,
+                "contender_z_regression": True,
             }
         )
         self.assert_200_ok(response, expected)
