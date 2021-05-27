@@ -89,7 +89,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
             {
                 "baseline": "2.000 s",
                 "contender": "5.000 s",
-                "change": "150.000%",
+                "change": "-150.000%",
                 "regression": True,
                 "baseline_z_score": "-0.302",
                 "contender_z_score": "3.015",

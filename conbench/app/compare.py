@@ -124,10 +124,6 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
                 compare = f'{c["baseline_batch_id"]}...{c["contender_batch_id"]}'
                 c["compare_batches_url"] = f.url_for(view, compare_ids=compare)
 
-                c["change"] = float(c["change"][:-1])
-                if c["less_is_better"] and c["change"] != 0:
-                    c["change"] = c["change"] * -1
-
                 if c["regression"]:
                     regressions += 1
                 if c["improvement"]:

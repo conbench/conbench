@@ -107,19 +107,19 @@ class BenchmarkComparator:
         if old == 0:
             return 0.0
 
-        return (new - old) / abs(old)
+        result = (new - old) / abs(old)
+        if self.less_is_better and result != 0:
+            result = result * -1
+
+        return result
 
     @property
     def regression(self):
-        change = self.change
-        adjusted_change = change if self.less_is_better else -change
-        return adjusted_change * 100 > self.threshold
+        return -self.change * 100 > self.threshold
 
     @property
     def improvement(self):
-        change = self.change
-        adjusted_change = -change if self.less_is_better else change
-        return adjusted_change * 100 > self.threshold
+        return self.change * 100 > self.threshold
 
     @property
     def baseline_z_score(self):

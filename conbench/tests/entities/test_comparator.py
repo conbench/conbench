@@ -193,7 +193,7 @@ def test_compare_regression_less_is_better():
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
-        "change": "6.000",
+        "change": "-6.000",
         "threshold": "5.000",
         "regression": True,
         "improvement": False,
@@ -219,7 +219,7 @@ def test_compare_regression_less_is_better():
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
-        "change": "6.000%",
+        "change": "-6.000%",
         "threshold": "5.000%",
         "regression": True,
         "improvement": False,
@@ -520,7 +520,7 @@ def test_compare_improvement_less_is_better():
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
-        "change": "-6.000",
+        "change": "6.000",
         "threshold": "5.000",
         "regression": False,
         "improvement": True,
@@ -546,7 +546,7 @@ def test_compare_improvement_less_is_better():
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
-        "change": "-6.000%",
+        "change": "6.000%",
         "threshold": "5.000%",
         "regression": False,
         "improvement": True,
@@ -821,7 +821,7 @@ def test_compare_list():
         {
             "batch": "math",
             "benchmark": "subtraction",
-            "change": "-96.491",
+            "change": "96.491",
             "threshold": "5.000",
             "regression": False,
             "improvement": True,
@@ -875,7 +875,7 @@ def test_compare_list():
         {
             "batch": "math",
             "benchmark": "subtraction",
-            "change": "-96.491%",
+            "change": "96.491%",
             "threshold": "5.000%",
             "regression": False,
             "improvement": True,
@@ -975,7 +975,7 @@ def test_compare_list_missing_contender():
         {
             "batch": "math",
             "benchmark": "subtraction",
-            "change": "-96.491",
+            "change": "96.491",
             "threshold": "5.000",
             "regression": False,
             "improvement": True,
@@ -1029,7 +1029,7 @@ def test_compare_list_missing_contender():
         {
             "batch": "math",
             "benchmark": "subtraction",
-            "change": "-96.491%",
+            "change": "96.491%",
             "threshold": "5.000%",
             "regression": False,
             "improvement": True,
@@ -1130,7 +1130,7 @@ def test_compare_list_empty_contender():
         {
             "batch": "math",
             "benchmark": "subtraction",
-            "change": "-96.491",
+            "change": "96.491",
             "threshold": "5.000",
             "regression": False,
             "improvement": True,
@@ -1184,7 +1184,7 @@ def test_compare_list_empty_contender():
         {
             "batch": "math",
             "benchmark": "subtraction",
-            "change": "-96.491%",
+            "change": "96.491%",
             "threshold": "5.000%",
             "regression": False,
             "improvement": True,
@@ -1284,7 +1284,7 @@ def test_compare_list_missing_baseline():
         {
             "batch": "math",
             "benchmark": "subtraction",
-            "change": "-96.491",
+            "change": "96.491",
             "threshold": "5.000",
             "regression": False,
             "improvement": True,
@@ -1338,7 +1338,7 @@ def test_compare_list_missing_baseline():
         {
             "batch": "math",
             "benchmark": "subtraction",
-            "change": "-96.491%",
+            "change": "96.491%",
             "threshold": "5.000%",
             "regression": False,
             "improvement": True,
@@ -1439,7 +1439,7 @@ def test_compare_list_empty_baseline():
         {
             "batch": "math",
             "benchmark": "subtraction",
-            "change": "-96.491",
+            "change": "96.491",
             "threshold": "5.000",
             "regression": False,
             "improvement": True,
@@ -1493,7 +1493,7 @@ def test_compare_list_empty_baseline():
         {
             "batch": "math",
             "benchmark": "subtraction",
-            "change": "-96.491%",
+            "change": "96.491%",
             "threshold": "5.000%",
             "regression": False,
             "improvement": True,
