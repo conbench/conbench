@@ -42,13 +42,16 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
     url = "/api/compare/benchmarks/{}/"
     public = True
 
-    def _create(self, with_ids=False):
+    def _create(self, name=None, with_ids=False):
+        if name is None:
+            name = uuid.uuid4().hex
+
         # create a distribution history
         for _ in range(10):
-            summary_1 = create_benchmark_summary("read", results=[1, 2, 3])
+            summary_1 = create_benchmark_summary(name, results=[1, 2, 3])
 
         # create a regression
-        summary_2 = create_benchmark_summary("read", results=[4, 5, 6])
+        summary_2 = create_benchmark_summary(name, results=[4, 5, 6])
 
         entity = FakeEntity(f"{summary_1.id}...{summary_2.id}")
         if with_ids:
@@ -58,7 +61,8 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
 
     def test_compare(self, client):
         self.authenticate(client)
-        id_1, id_2, compare = self._create(with_ids=True)
+        name = uuid.uuid4().hex
+        id_1, id_2, compare = self._create(name, with_ids=True)
         response = client.get(f"/api/compare/benchmarks/{compare.id}/")
 
         benchmark_ids = [id_1, id_2]
@@ -74,7 +78,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
             benchmark_ids,
             batch_ids,
             run_ids,
-            "read",
+            name,
             CASE,
             tags={
                 "dataset": "nyctaxi_sample",
@@ -82,7 +86,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "file_type": "parquet",
                 "input_type": "arrow",
                 "compression": "snappy",
-                "name": "read",
+                "name": name,
             },
         )
         expected.update(
@@ -91,8 +95,8 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "contender": "5.000 s",
                 "change": "150.000%",
                 "regression": True,
-                "baseline_z_score": "-0.309",
-                "contender_z_score": "3.090",
+                "baseline_z_score": "-0.302",
+                "contender_z_score": "3.015",
                 "contender_regression_z": True,
             }
         )
