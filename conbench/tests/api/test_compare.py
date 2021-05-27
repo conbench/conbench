@@ -25,15 +25,13 @@ def create_benchmark_summary(name, batch_id=None, run_id=None, results=None):
     if run_id:
         data["stats"]["run_id"] = run_id
     if results is not None:
-        conbench = Conbench()
         run_id = data["stats"]["run_id"]
         run_name = data["stats"]["run_name"]
         batch_id = data["stats"]["batch_id"]
         now = datetime.datetime.now(datetime.timezone.utc)
-        data["stats"] = conbench._stats(
-            results, "s", [], "s", now.isoformat(), run_id, run_name
+        data["stats"] = Conbench._stats(
+            results, "s", [], "s", now.isoformat(), run_id, batch_id, run_name
         )
-        data["stats"]["batch_id"] = batch_id
     summary = Summary.create(data)
     return summary
 
