@@ -39,26 +39,14 @@
             <caption>{% include 'units-tooltip.html' %}</caption>
                 <thead>
                     <tr>
+                        <th width="25%" scope="col">Change</th>
+                        <th width="25%" scope="col">Z-Score</th>
                         <th width="25%" scope="col">Baseline</th>
                         <th width="25%" scope="col">Contender</th>
-                        <th width="25%" scope="col">Change</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for c in comparisons %}
-                    <tr>
-                         <td>{{ c.baseline }}</td>
-                         <td>{{ c.contender }}</td>
-                         <td>
-                           {{ c.change }}
-                           {% if c.regression %}
-                           <span class="glyphicon glyphicon-arrow-down"></span></b>
-                           {% endif %}
-                           {% if c.improvement %}
-                           <span class="glyphicon glyphicon-arrow-up"></span></b>
-                           {% endif %}
-                         </td>
-                    </tr>
                     <tr>
                          <td>
                            {{ c.baseline_z_score }} z
@@ -70,15 +58,16 @@
                            {% endif %}
                          </td>
                          <td>
-                           {{ c.contender_z_score }} z
-                           {% if c.contender_z_regression %}
+                           {{ c.change }}
+                           {% if c.regression %}
                            <span class="glyphicon glyphicon-arrow-down"></span></b>
                            {% endif %}
-                           {% if c.contender_z_improvement %}
+                           {% if c.improvement %}
                            <span class="glyphicon glyphicon-arrow-up"></span></b>
                            {% endif %}
                          </td>
-                         <td>&nbsp;</td>
+                         <td>{{ c.baseline }}</td>
+                         <td>{{ c.contender }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

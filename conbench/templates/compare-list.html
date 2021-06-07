@@ -60,11 +60,10 @@
               </caption>
                 <thead>
                     <tr>
+                        <th scope="col">Z-Score</th>
                         <th scope="col">Change</th>
                         <th scope="col">Batch</th>
                         <th scope="col">Benchmark</th>
-                        <th scope="col">Baseline Z-Score</th>
-                        <th scope="col">Contender Z-Score</th>
                         <th scope="col">Baseline</th>
                         <th scope="col">Contender</th>
                     </tr>
@@ -72,7 +71,14 @@
                 <tbody>
                     {% for c in comparisons %}
                     <tr>
+                         {% if c.contender is none %}
+                           <td>---</td>
+                         {% else %}
+                           <td>{{ c.contender_z_score }}</td>
+                         {% endif %}
+
                          <td>{{ c.change }}</td>
+
                          <td>
                            {% if type == "batch" %}
                              <div>{{ c.batch }}</div>
@@ -86,6 +92,7 @@
                              {% endif %}
                            {% endif %}
                          </td>
+
                          <td>
                            {% if c.contender is not none and c.baseline is not none %}
                              <a href="{{ c.compare_benchmarks_url }}">
@@ -95,18 +102,6 @@
                              <div>{{ c.benchmark}}</div>
                            {% endif %}
                          </td>
-
-                         {% if c.baseline is none %}
-                           <td>---</td>
-                         {% else %}
-                           <td>{{ c.baseline_z_score }}</td>
-                         {% endif %}
-
-                         {% if c.contender is none %}
-                           <td>---</td>
-                         {% else %}
-                           <td>{{ c.contender_z_score }}</td>
-                         {% endif %}
 
                          {% if c.baseline is none %}
                            <td>---</td>
@@ -134,7 +129,7 @@
   var table = $('#benchmarks').dataTable( {
       "responsive": true,
       "order": [[0, 'asc']],
-      "columnDefs": [{ "orderable": false, "targets": [5, 6] }]
+      "columnDefs": [{ "orderable": false, "targets": [4, 5] }]
   } );
   new $.fn.dataTable.FixedHeader( table );
 
