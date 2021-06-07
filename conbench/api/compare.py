@@ -56,7 +56,7 @@ class CompareBenchmarksAPI(ApiEndpoint):
             schema:
               type: integer
           - in: query
-            name: deviations
+            name: threshold_z
             schema:
               type: integer
         tags:
@@ -68,9 +68,9 @@ class CompareBenchmarksAPI(ApiEndpoint):
         if threshold is not None:
             threshold = int(threshold)
 
-        deviations = f.request.args.get("deviations")
-        if deviations is not None:
-            deviations = int(deviations)
+        threshold_z = f.request.args.get("threshold_z")
+        if threshold_z is not None:
+            threshold_z = int(threshold_z)
 
         try:
             baseline_id, contender_id = compare_ids.split("...", 1)
@@ -92,14 +92,14 @@ class CompareBenchmarksAPI(ApiEndpoint):
                 baseline,
                 contender,
                 threshold,
-                deviations,
+                threshold_z,
             ).compare()
         else:
             return BenchmarkComparator(
                 baseline,
                 contender,
                 threshold,
-                deviations,
+                threshold_z,
             ).formatted()
 
 
@@ -134,7 +134,7 @@ class CompareBatchesAPI(ApiEndpoint):
             schema:
               type: integer
           - in: query
-            name: deviations
+            name: threshold_z
             schema:
               type: integer
         tags:
@@ -146,9 +146,9 @@ class CompareBatchesAPI(ApiEndpoint):
         if threshold is not None:
             threshold = int(threshold)
 
-        deviations = f.request.args.get("deviations")
-        if deviations is not None:
-            deviations = int(deviations)
+        threshold_z = f.request.args.get("threshold_z")
+        if threshold_z is not None:
+            threshold_z = int(threshold_z)
 
         try:
             baseline_id, contender_id = compare_ids.split("...", 1)
@@ -172,13 +172,13 @@ class CompareBatchesAPI(ApiEndpoint):
             result = BenchmarkListComparator(
                 pairs,
                 threshold,
-                deviations,
+                threshold_z,
             ).compare()
         else:
             result = BenchmarkListComparator(
                 pairs,
                 threshold,
-                deviations,
+                threshold_z,
             ).formatted()
 
         return f.jsonify(list(result))

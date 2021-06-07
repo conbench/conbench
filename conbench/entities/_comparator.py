@@ -3,8 +3,8 @@ import decimal
 from ..units import formatter_for_unit
 
 
-THRESHOLD = 5.0  # percent
-DEVIATIONS = 2.0  # standard deviations
+CHANGE = 5.0  # percent changed threshold
+Z_SCORE = 2.0  # z-score threshold
 
 
 def fmt(value):
@@ -21,14 +21,14 @@ def _less_is_better(unit):
     return True
 
 
-def z_regression(z_score, deviations=None):
-    deviations = deviations if deviations else DEVIATIONS
-    return -z_score > deviations
+def z_regression(z_score, threshold_z=None):
+    threshold_z = threshold_z if threshold_z else Z_SCORE
+    return -z_score > threshold_z
 
 
-def z_improvement(z_score, deviations=None):
-    deviations = deviations if deviations else DEVIATIONS
-    return z_score > deviations
+def z_improvement(z_score, threshold_z=None):
+    threshold_z = threshold_z if threshold_z else Z_SCORE
+    return z_score > threshold_z
 
 
 class BenchmarkResult:
@@ -56,11 +56,11 @@ class BenchmarkResult:
 
 
 class BenchmarkComparator:
-    def __init__(self, baseline, contender, threshold=None, deviations=None):
+    def __init__(self, baseline, contender, threshold=None, threshold_z=None):
         self.baseline = BenchmarkResult(**baseline) if baseline else None
         self.contender = BenchmarkResult(**contender) if contender else None
-        self.threshold = float(threshold) if threshold is not None else THRESHOLD
-        self.deviations = float(deviations) if deviations is not None else DEVIATIONS
+        self.threshold = float(threshold) if threshold is not None else CHANGE
+        self.threshold_z = float(threshold_z) if threshold_z is not None else Z_SCORE
 
     @property
     def batch(self):
@@ -131,19 +131,19 @@ class BenchmarkComparator:
 
     @property
     def baseline_z_regression(self):
-        return z_regression(self.baseline_z_score, self.deviations)
+        return z_regression(self.baseline_z_score, self.threshold_z)
 
     @property
     def baseline_z_improvement(self):
-        return z_improvement(self.baseline_z_score, self.deviations)
+        return z_improvement(self.baseline_z_score, self.threshold_z)
 
     @property
     def contender_z_regression(self):
-        return z_regression(self.contender_z_score, self.deviations)
+        return z_regression(self.contender_z_score, self.threshold_z)
 
     @property
     def contender_z_improvement(self):
-        return z_improvement(self.contender_z_score, self.deviations)
+        return z_improvement(self.contender_z_score, self.threshold_z)
 
     @property
     def tags(self):
@@ -164,7 +164,7 @@ class BenchmarkComparator:
             "threshold": fmt(self.threshold) + "%",
             "regression": self.regression,
             "improvement": self.improvement,
-            "deviations": fmt(self.deviations),
+            "threshold_z": fmt(self.threshold_z),
             "baseline_z_score": fmt(self.baseline_z_score),
             "contender_z_score": fmt(self.contender_z_score),
             "baseline_z_regression": self.baseline_z_regression,
@@ -194,7 +194,7 @@ class BenchmarkComparator:
             "threshold": fmt(self.threshold),
             "regression": self.regression,
             "improvement": self.improvement,
-            "deviations": fmt(self.deviations),
+            "threshold_z": fmt(self.threshold_z),
             "baseline_z_score": fmt(self.baseline_z_score),
             "contender_z_score": fmt(self.contender_z_score),
             "baseline_z_regression": self.baseline_z_regression,
@@ -216,10 +216,10 @@ class BenchmarkComparator:
 
 
 class BenchmarkListComparator:
-    def __init__(self, pairs, threshold=None, deviations=None):
+    def __init__(self, pairs, threshold=None, threshold_z=None):
         self.pairs = pairs
-        self.threshold = float(threshold) if threshold is not None else THRESHOLD
-        self.deviations = float(deviations) if deviations is not None else DEVIATIONS
+        self.threshold = float(threshold) if threshold is not None else CHANGE
+        self.threshold_z = float(threshold_z) if threshold_z is not None else Z_SCORE
 
     def formatted(self):
         for pair in self.pairs.values():
@@ -228,7 +228,7 @@ class BenchmarkListComparator:
                 baseline,
                 contender,
                 self.threshold,
-                self.deviations,
+                self.threshold_z,
             ).formatted()
 
     def compare(self):
@@ -238,5 +238,5 @@ class BenchmarkListComparator:
                 baseline,
                 contender,
                 self.threshold,
-                self.deviations,
+                self.threshold_z,
             ).compare()
