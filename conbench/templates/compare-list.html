@@ -51,10 +51,19 @@
         <div class="col-md-12">
             <table id="benchmarks" class="table table-striped table-bordered table-hover">
               <caption>
-                Comparisons
                 {% if comparisons %}
+                <span id="comparisons-tooltip" data-toggle="tooltip" data-html="true" data-placement="bottom" title="
+                Based on the z-score,
+                {{(100 * regressions / comparisons|length) | round(2) }}%
+                of these {{comparisons|length}} benchmarks were regressions,
+                and {{(100 * improvements / comparisons|length) | round(2) }}% were improvements."
+                >
+                Comparisons
                 <span class="glyphicon glyphicon-arrow-down"></span> <b>{{(100 * regressions / comparisons|length) | int}}%</b>
                 <span class="glyphicon glyphicon-arrow-up"></span> <b>{{(100 * improvements / comparisons|length) | int}}%</b>
+                </span>
+                {% else %}
+                Comparisons
                 {% endif %}
                 {% include 'units-tooltip.html' %}
               </caption>
@@ -135,6 +144,10 @@
 
   $(document).ready(function() {
     $('#unit-tooltip').tooltip()
-   });
+  });
+
+  $(document).ready(function() {
+    $('#comparisons-tooltip').tooltip()
+  });
   </script>
 {% endblock %}
