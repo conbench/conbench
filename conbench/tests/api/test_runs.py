@@ -5,6 +5,7 @@ import uuid
 from ...api._examples import _api_run_entity
 from ...entities.summary import Summary
 from ...tests.api import _asserts
+from ...tests.api import _fixtures
 from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
@@ -18,11 +19,15 @@ def _expected_entity(run, baseline_id=None):
     )
 
 
-def create_benchmark_summary(parent_sha=None):
+def create_benchmark_summary(sha=None, language=None, run_id=None):
     data = copy.deepcopy(VALID_PAYLOAD)
-    if parent_sha:
-        data["github"]["commit"] = parent_sha
+    if sha:
+        data["github"]["commit"] = sha
         data["stats"]["run_id"] = uuid.uuid4().hex
+    if language:
+        data["context"]["benchmark_language"] = language
+    if run_id:
+        data["stats"]["run_id"] = run_id
     summary = Summary.create(data)
     return summary
 
@@ -32,11 +37,22 @@ class TestRunGet(_asserts.GetEnforcer):
     public = True
 
     def _create(self, baseline=False):
-        contender = create_benchmark_summary()
         if baseline:
-            parent_sha = "4beb514d071c9beec69b8917b5265e77ade22fb3"
-            baseline = create_benchmark_summary(parent_sha)
+            # change anything about the context so we get only one baseline
+            language = uuid.uuid4().hex
+            contender = create_benchmark_summary(
+                sha=_fixtures.CHILD,
+                language=language,
+                run_id=uuid.uuid4().hex,
+            )
+            baseline = create_benchmark_summary(
+                sha=_fixtures.PARENT,
+                language=language,
+                run_id=uuid.uuid4().hex,
+            )
             return contender.run, baseline.run
+        else:
+            contender = create_benchmark_summary()
         return contender.run
 
     def test_get_run(self, client):
@@ -61,7 +77,7 @@ class TestRunList(_asserts.ListEnforcer):
         self.assert_200_ok(response, contains=_expected_entity(run))
 
     def test_run_list_filter_by_sha_and_machine(self, client):
-        sha = "02addad336ba19a654f9c857ede546331be7b631"
+        sha = _fixtures.CHILD
         self.authenticate(client)
         run = self._create()
         args = {"sha": sha, "machine_id": run.machine_id}
@@ -70,7 +86,7 @@ class TestRunList(_asserts.ListEnforcer):
         self.assert_200_ok(response, contains=_expected_entity(run))
 
     def test_run_list_filter_by_sha_and_machine_no_match(self, client):
-        sha = "02addad336ba19a654f9c857ede546331be7b631"
+        sha = _fixtures.CHILD
         self.authenticate(client)
         self._create()
         args = {"sha": sha, "machine_id": "some other machine id"}

@@ -30,6 +30,7 @@ class Run(Base, EntityMixin):
         )
 
         # TODO: What if there are multiple matches? Pick by date?
+        # TODO: Should be using machine hash?
         for run in runs:
             baseline_contexts = Summary.distinct(
                 Summary.context_id, filters=[Summary.run_id == run.id]
