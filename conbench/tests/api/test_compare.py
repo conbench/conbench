@@ -6,7 +6,7 @@ from ...api._examples import _api_compare_entity, _api_compare_list
 from ...entities.summary import Summary
 from ...runner import Conbench
 from ...tests.api import _asserts
-from ...tests.api._fixtures import RESULTS_UP, Z_SCORE_UP
+from ...tests.api import _fixtures
 from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
@@ -54,19 +54,19 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
         create_benchmark_summary(
             name,
-            results=RESULTS_UP[0],
+            results=_fixtures.RESULTS_UP[0],
             run_id=run_0,
             sha=grandparent,
         )
         summary_1 = create_benchmark_summary(
             name,
-            results=RESULTS_UP[1],
+            results=_fixtures.RESULTS_UP[1],
             run_id=run_1,
             sha=parent,
         )
         summary_2 = create_benchmark_summary(
             name,
-            results=RESULTS_UP[2],
+            results=_fixtures.RESULTS_UP[2],
             run_id=run_2,
         )
 
@@ -110,7 +110,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "change": "-566.667%",
                 "regression": True,
                 "baseline_z_score": "0.000",
-                "contender_z_score": "-{:.3f}".format(Z_SCORE_UP),
+                "contender_z_score": "-{:.3f}".format(_fixtures.Z_SCORE_UP),
                 "contender_z_regression": True,
             }
         )

@@ -15,7 +15,7 @@ from ...entities.distribution import (
 )
 from ...entities.summary import Summary
 from ...runner import Conbench
-from ...tests.api._fixtures import RESULTS_DOWN, RESULTS_UP, Z_SCORE_DOWN, Z_SCORE_UP
+from ...tests.api import _fixtures
 from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
@@ -75,11 +75,11 @@ def test_z_score_calculations():
 
     # ----- RESULTS_UP
 
-    summary_mean_0 = statistics.mean(RESULTS_UP[0])
+    summary_mean_0 = statistics.mean(_fixtures.RESULTS_UP[0])
     assert summary_mean_0 == 2.0
-    summary_mean_1 = statistics.mean(RESULTS_UP[1])
+    summary_mean_1 = statistics.mean(_fixtures.RESULTS_UP[1])
     assert summary_mean_1 == 3.0
-    summary_mean_2 = statistics.mean(RESULTS_UP[2])
+    summary_mean_2 = statistics.mean(_fixtures.RESULTS_UP[2])
     assert summary_mean_2 == 20.0
 
     distribution_mean_0 = statistics.mean([summary_mean_0])
@@ -90,16 +90,16 @@ def test_z_score_calculations():
     distribution_stdev_1 = statistics.stdev([summary_mean_0, summary_mean_1])
     assert distribution_stdev_1 == 0.7071067811865476
 
-    Z_SCORE_DOWN = (summary_mean_2 - distribution_mean_1) / distribution_stdev_1
-    assert Z_SCORE_DOWN == Z_SCORE_UP
+    z_score = (summary_mean_2 - distribution_mean_1) / distribution_stdev_1
+    assert z_score == _fixtures.Z_SCORE_UP
 
     # ----- RESULTS_DOWN
 
-    summary_mean_0 = statistics.mean(RESULTS_DOWN[0])
+    summary_mean_0 = statistics.mean(_fixtures.RESULTS_DOWN[0])
     assert summary_mean_0 == 11.0
-    summary_mean_1 = statistics.mean(RESULTS_DOWN[1])
+    summary_mean_1 = statistics.mean(_fixtures.RESULTS_DOWN[1])
     assert summary_mean_1 == 12.0
-    summary_mean_2 = statistics.mean(RESULTS_DOWN[2])
+    summary_mean_2 = statistics.mean(_fixtures.RESULTS_DOWN[2])
     assert summary_mean_2 == 2.0
 
     distribution_mean_0 = statistics.mean([summary_mean_0])
@@ -110,8 +110,8 @@ def test_z_score_calculations():
     distribution_stdev_1 = statistics.stdev([summary_mean_0, summary_mean_1])
     assert distribution_stdev_1 == 0.7071067811865476
 
-    Z_SCORE_DOWN = (summary_mean_2 - distribution_mean_1) / distribution_stdev_1
-    assert Z_SCORE_DOWN == Z_SCORE_DOWN
+    z_score = (summary_mean_2 - distribution_mean_1) / distribution_stdev_1
+    assert z_score == _fixtures.Z_SCORE_DOWN
 
 
 def create_benchmark_summary(results, commit, benchmark_name=None):

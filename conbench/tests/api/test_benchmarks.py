@@ -10,7 +10,7 @@ from ...entities.distribution import Distribution
 from ...entities.summary import Summary
 from ...runner import Conbench
 from ...tests.api import _asserts
-from ...tests.api._fixtures import RESULTS_DOWN, RESULTS_UP, Z_SCORE_DOWN, Z_SCORE_UP
+from ...tests.api import _fixtures
 
 
 VALID_PAYLOAD = {
@@ -159,21 +159,21 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
         # create a distribution history & a regression
         self._create(
             name=name,
-            results=RESULTS_DOWN[0],
+            results=_fixtures.RESULTS_DOWN[0],
             unit="i/s",
             run_id=run_0,
             sha=grandparent,
         )
         self._create(
             name=name,
-            results=RESULTS_DOWN[1],
+            results=_fixtures.RESULTS_DOWN[1],
             unit="i/s",
             run_id=run_1,
             sha=parent,
         )
         summary = self._create(
             name=name,
-            results=RESULTS_DOWN[2],
+            results=_fixtures.RESULTS_DOWN[2],
             unit="i/s",
             run_id=run_2,
         )
@@ -192,7 +192,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "2.500000",
                 "stdev": "1.000000",
                 "times": [],
-                "z_score": "-{:.6f}".format(abs(Z_SCORE_DOWN)),
+                "z_score": "-{:.6f}".format(abs(_fixtures.Z_SCORE_DOWN)),
                 "z_regression": True,
                 "unit": "i/s",
             }
@@ -212,21 +212,21 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
         # create a distribution history & a regression
         self._create(
             name=name,
-            results=RESULTS_UP[0],
+            results=_fixtures.RESULTS_UP[0],
             unit="s",
             run_id=run_0,
             sha=grandparent,
         )
         self._create(
             name=name,
-            results=RESULTS_UP[1],
+            results=_fixtures.RESULTS_UP[1],
             unit="s",
             run_id=run_1,
             sha=parent,
         )
         summary = self._create(
             name=name,
-            results=RESULTS_UP[2],
+            results=_fixtures.RESULTS_UP[2],
             unit="s",
             run_id=run_2,
         )
@@ -245,7 +245,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "25.000000",
                 "stdev": "10.000000",
                 "times": [],
-                "z_score": "-{:.6f}".format(abs(Z_SCORE_UP)),
+                "z_score": "-{:.6f}".format(abs(_fixtures.Z_SCORE_UP)),
                 "z_regression": True,
             }
         )
@@ -264,21 +264,21 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
         # create a distribution history & a improvement
         self._create(
             name=name,
-            results=RESULTS_UP[0],
+            results=_fixtures.RESULTS_UP[0],
             unit="i/s",
             run_id=run_0,
             sha=grandparent,
         )
         self._create(
             name=name,
-            results=RESULTS_UP[1],
+            results=_fixtures.RESULTS_UP[1],
             unit="i/s",
             run_id=run_1,
             sha=parent,
         )
         summary = self._create(
             name=name,
-            results=RESULTS_UP[2],
+            results=_fixtures.RESULTS_UP[2],
             unit="i/s",
             run_id=run_2,
         )
@@ -297,7 +297,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "25.000000",
                 "stdev": "10.000000",
                 "times": [],
-                "z_score": "{:.6f}".format(abs(Z_SCORE_UP)),
+                "z_score": "{:.6f}".format(abs(_fixtures.Z_SCORE_UP)),
                 "z_improvement": True,
                 "unit": "i/s",
             }
@@ -317,21 +317,21 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
         # create a distribution history & a improvement
         self._create(
             name=name,
-            results=RESULTS_DOWN[0],
+            results=_fixtures.RESULTS_DOWN[0],
             unit="s",
             run_id=run_0,
             sha=grandparent,
         )
         self._create(
             name=name,
-            results=RESULTS_DOWN[1],
+            results=_fixtures.RESULTS_DOWN[1],
             unit="s",
             run_id=run_1,
             sha=parent,
         )
         summary = self._create(
             name=name,
-            results=RESULTS_DOWN[2],
+            results=_fixtures.RESULTS_DOWN[2],
             unit="s",
             run_id=run_2,
         )
@@ -350,7 +350,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "2.500000",
                 "stdev": "1.000000",
                 "times": [],
-                "z_score": "{:.6f}".format(abs(Z_SCORE_DOWN)),
+                "z_score": "{:.6f}".format(abs(_fixtures.Z_SCORE_DOWN)),
                 "z_improvement": True,
             }
         )
