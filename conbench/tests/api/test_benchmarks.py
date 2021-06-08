@@ -10,6 +10,7 @@ from ...entities.distribution import Distribution
 from ...entities.summary import Summary
 from ...runner import Conbench
 from ...tests.api import _asserts
+from ...tests.api._fixtures import RESULTS_DOWN, RESULTS_UP, Z_SCORE_DOWN, Z_SCORE_UP
 
 
 VALID_PAYLOAD = {
@@ -190,21 +191,21 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
         # create a distribution history & a regression
         self._create(
             name=name,
-            results=[1, 2, 3],
+            results=RESULTS_UP[0],
             unit="s",
             run_id=run_0,
             sha=grandparent,
         )
         self._create(
             name=name,
-            results=[2, 3, 4],
+            results=RESULTS_UP[1],
             unit="s",
             run_id=run_1,
             sha=parent,
         )
         summary = self._create(
             name=name,
-            results=[10, 20, 30],
+            results=RESULTS_UP[2],
             unit="s",
             run_id=run_2,
         )
@@ -223,7 +224,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "25.000000",
                 "stdev": "10.000000",
                 "times": [],
-                "z_score": "-24.748737",
+                "z_score": "-{:.6f}".format(Z_SCORE_UP),
                 "z_regression": True,
             }
         )
@@ -266,11 +267,32 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_improvement_less_is_better(self, client):
         self.authenticate(client)
 
-        # create a distribution history & a improvement
         name = uuid.uuid4().hex
-        for _ in range(10):
-            self._create(name=name, results=[4, 5, 6], unit="s")
-        summary = self._create(name=name, results=[1, 2, 3], unit="s")
+        grandparent = "6d703c4c7b15be630af48d5e9ef61628751674b2"
+        parent = "4beb514d071c9beec69b8917b5265e77ade22fb3"
+        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+
+        # create a distribution history & a improvement
+        self._create(
+            name=name,
+            results=RESULTS_DOWN[0],
+            unit="s",
+            run_id=run_0,
+            sha=grandparent,
+        )
+        self._create(
+            name=name,
+            results=RESULTS_DOWN[1],
+            unit="s",
+            run_id=run_1,
+            sha=parent,
+        )
+        summary = self._create(
+            name=name,
+            results=RESULTS_DOWN[2],
+            unit="s",
+            run_id=run_2,
+        )
 
         expected = _expected_entity(summary)
         expected["stats"].update(
@@ -286,7 +308,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "2.500000",
                 "stdev": "1.000000",
                 "times": [],
-                "z_score": "3.015113",
+                "z_score": "{:.6f}".format(-1 * Z_SCORE_DOWN),
                 "z_improvement": True,
             }
         )
