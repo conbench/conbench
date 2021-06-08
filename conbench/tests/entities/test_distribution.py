@@ -566,7 +566,7 @@ def test_distibution_multiple_runs_same_commit():
     set_z_scores([summary_4])
     assert summary_4.z_score == 0
 
-    # after, summary_3 z-score channges with more info
+    # after, summary_3 z-score changes with more info
     set_z_scores([summary_1])
     assert summary_1.z_score == 0
     set_z_scores([summary_2])
