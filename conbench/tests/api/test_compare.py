@@ -47,22 +47,19 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         if name is None:
             name = uuid.uuid4().hex
 
-        grandparent = "6d703c4c7b15be630af48d5e9ef61628751674b2"
-        parent = "4beb514d071c9beec69b8917b5265e77ade22fb3"
-
         # create a distribution history & a regression
         run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
         create_benchmark_summary(
             name,
             results=_fixtures.RESULTS_UP[0],
             run_id=run_0,
-            sha=grandparent,
+            sha=_fixtures.GRANDPARENT,
         )
         summary_1 = create_benchmark_summary(
             name,
             results=_fixtures.RESULTS_UP[1],
             run_id=run_1,
-            sha=parent,
+            sha=_fixtures.PARENT,
         )
         summary_2 = create_benchmark_summary(
             name,

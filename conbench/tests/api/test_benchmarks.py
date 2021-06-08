@@ -152,8 +152,6 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
         self.authenticate(client)
 
         name = uuid.uuid4().hex
-        grandparent = "6d703c4c7b15be630af48d5e9ef61628751674b2"
-        parent = "4beb514d071c9beec69b8917b5265e77ade22fb3"
         run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
 
         # create a distribution history & a regression
@@ -162,14 +160,14 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             results=_fixtures.RESULTS_DOWN[0],
             unit="i/s",
             run_id=run_0,
-            sha=grandparent,
+            sha=_fixtures.GRANDPARENT,
         )
         self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[1],
             unit="i/s",
             run_id=run_1,
-            sha=parent,
+            sha=_fixtures.PARENT,
         )
         summary = self._create(
             name=name,
@@ -205,8 +203,6 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
         self.authenticate(client)
 
         name = uuid.uuid4().hex
-        grandparent = "6d703c4c7b15be630af48d5e9ef61628751674b2"
-        parent = "4beb514d071c9beec69b8917b5265e77ade22fb3"
         run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
 
         # create a distribution history & a regression
@@ -215,14 +211,14 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             results=_fixtures.RESULTS_UP[0],
             unit="s",
             run_id=run_0,
-            sha=grandparent,
+            sha=_fixtures.GRANDPARENT,
         )
         self._create(
             name=name,
             results=_fixtures.RESULTS_UP[1],
             unit="s",
             run_id=run_1,
-            sha=parent,
+            sha=_fixtures.PARENT,
         )
         summary = self._create(
             name=name,
@@ -257,8 +253,6 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
         self.authenticate(client)
 
         name = uuid.uuid4().hex
-        grandparent = "6d703c4c7b15be630af48d5e9ef61628751674b2"
-        parent = "4beb514d071c9beec69b8917b5265e77ade22fb3"
         run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
 
         # create a distribution history & a improvement
@@ -267,14 +261,14 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             results=_fixtures.RESULTS_UP[0],
             unit="i/s",
             run_id=run_0,
-            sha=grandparent,
+            sha=_fixtures.GRANDPARENT,
         )
         self._create(
             name=name,
             results=_fixtures.RESULTS_UP[1],
             unit="i/s",
             run_id=run_1,
-            sha=parent,
+            sha=_fixtures.PARENT,
         )
         summary = self._create(
             name=name,
@@ -310,8 +304,6 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
         self.authenticate(client)
 
         name = uuid.uuid4().hex
-        grandparent = "6d703c4c7b15be630af48d5e9ef61628751674b2"
-        parent = "4beb514d071c9beec69b8917b5265e77ade22fb3"
         run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
 
         # create a distribution history & a improvement
@@ -320,14 +312,14 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             results=_fixtures.RESULTS_DOWN[0],
             unit="s",
             run_id=run_0,
-            sha=grandparent,
+            sha=_fixtures.GRANDPARENT,
         )
         self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[1],
             unit="s",
             run_id=run_1,
-            sha=parent,
+            sha=_fixtures.PARENT,
         )
         summary = self._create(
             name=name,
