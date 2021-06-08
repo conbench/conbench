@@ -151,11 +151,32 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_regression(self, client):
         self.authenticate(client)
 
-        # create a distribution history & a regression
         name = uuid.uuid4().hex
+        grandparent = "6d703c4c7b15be630af48d5e9ef61628751674b2"
         parent = "4beb514d071c9beec69b8917b5265e77ade22fb3"
-        self._create(name=name, results=[4, 5, 6], unit="i/s", sha=parent)
-        summary = self._create(name=name, results=[1, 2, 3], unit="i/s")
+        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+
+        # create a distribution history & a regression
+        self._create(
+            name=name,
+            results=RESULTS_DOWN[0],
+            unit="i/s",
+            run_id=run_0,
+            sha=grandparent,
+        )
+        self._create(
+            name=name,
+            results=RESULTS_DOWN[1],
+            unit="i/s",
+            run_id=run_1,
+            sha=parent,
+        )
+        summary = self._create(
+            name=name,
+            results=RESULTS_DOWN[2],
+            unit="i/s",
+            run_id=run_2,
+        )
 
         expected = _expected_entity(summary)
         expected["stats"].update(
@@ -171,7 +192,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "2.500000",
                 "stdev": "1.000000",
                 "times": [],
-                "z_score": "-3.015113",
+                "z_score": "-{:.6f}".format(abs(Z_SCORE_DOWN)),
                 "z_regression": True,
                 "unit": "i/s",
             }
@@ -224,7 +245,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "25.000000",
                 "stdev": "10.000000",
                 "times": [],
-                "z_score": "-{:.6f}".format(Z_SCORE_UP),
+                "z_score": "-{:.6f}".format(abs(Z_SCORE_UP)),
                 "z_regression": True,
             }
         )
@@ -235,27 +256,48 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_improvement(self, client):
         self.authenticate(client)
 
-        # create a distribution history & a improvement
         name = uuid.uuid4().hex
-        for _ in range(10):
-            self._create(name=name, results=[1, 2, 3], unit="i/s")
-        summary = self._create(name=name, results=[4, 5, 6], unit="i/s")
+        grandparent = "6d703c4c7b15be630af48d5e9ef61628751674b2"
+        parent = "4beb514d071c9beec69b8917b5265e77ade22fb3"
+        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+
+        # create a distribution history & a improvement
+        self._create(
+            name=name,
+            results=RESULTS_UP[0],
+            unit="i/s",
+            run_id=run_0,
+            sha=grandparent,
+        )
+        self._create(
+            name=name,
+            results=RESULTS_UP[1],
+            unit="i/s",
+            run_id=run_1,
+            sha=parent,
+        )
+        summary = self._create(
+            name=name,
+            results=RESULTS_UP[2],
+            unit="i/s",
+            run_id=run_2,
+        )
 
         expected = _expected_entity(summary)
         expected["stats"].update(
             {
-                "data": ["4.000000", "5.000000", "6.000000"],
-                "iqr": "1.000000",
+                "data": ["10.000000", "20.000000", "30.000000"],
+                "iqr": "10.000000",
                 "iterations": 3,
-                "max": "6.000000",
-                "mean": "5.000000",
-                "median": "5.000000",
-                "min": "4.000000",
-                "q1": "4.500000",
-                "q3": "5.500000",
-                "stdev": "1.000000",
+                "max": "30.000000",
+                "mean": "20.000000",
+                "median": "20.000000",
+                "min": "10.000000",
+                "q1": "15.000000",
+                "q3": "25.000000",
+                "stdev": "10.000000",
                 "times": [],
-                "z_score": "3.015113",
+                "z_score": "{:.6f}".format(abs(Z_SCORE_UP)),
                 "z_improvement": True,
                 "unit": "i/s",
             }
@@ -308,7 +350,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "2.500000",
                 "stdev": "1.000000",
                 "times": [],
-                "z_score": "{:.6f}".format(-1 * Z_SCORE_DOWN),
+                "z_score": "{:.6f}".format(abs(Z_SCORE_DOWN)),
                 "z_improvement": True,
             }
         )
