@@ -155,7 +155,7 @@ def set_z_scores(summaries):
 
     first = summaries[0]
     repository = first.run.commit.repository
-    sha = first.run.commit.sha
+    sha = first.run.commit.parent
     machine_hash = first.machine.hash
 
     where = [

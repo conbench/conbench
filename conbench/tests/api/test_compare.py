@@ -6,6 +6,7 @@ from ...api._examples import _api_compare_entity, _api_compare_list
 from ...entities.summary import Summary
 from ...runner import Conbench
 from ...tests.api import _asserts
+from ...tests.api import _fixtures
 from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
@@ -17,13 +18,15 @@ class FakeEntity:
         self.id = _id
 
 
-def create_benchmark_summary(name, batch_id=None, run_id=None, results=None):
+def create_benchmark_summary(name, batch_id=None, run_id=None, results=None, sha=None):
     data = copy.deepcopy(VALID_PAYLOAD)
     data["tags"]["name"] = name
     if batch_id:
         data["stats"]["batch_id"] = batch_id
     if run_id:
         data["stats"]["run_id"] = run_id
+    if sha:
+        data["github"]["commit"] = sha
     if results is not None:
         run_id = data["stats"]["run_id"]
         run_name = data["stats"]["run_name"]
@@ -45,30 +48,42 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
             name = uuid.uuid4().hex
 
         # create a distribution history & a regression
-        for _ in range(10):
-            summary_1 = create_benchmark_summary(name, results=[1, 2, 3])
-        summary_2 = create_benchmark_summary(name, results=[4, 5, 6])
+        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+        create_benchmark_summary(
+            name,
+            results=_fixtures.RESULTS_UP[0],
+            run_id=run_0,
+            sha=_fixtures.GRANDPARENT,
+        )
+        summary_1 = create_benchmark_summary(
+            name,
+            results=_fixtures.RESULTS_UP[1],
+            run_id=run_1,
+            sha=_fixtures.PARENT,
+        )
+        summary_2 = create_benchmark_summary(
+            name,
+            results=_fixtures.RESULTS_UP[2],
+            run_id=run_2,
+        )
 
         entity = FakeEntity(f"{summary_1.id}...{summary_2.id}")
         if with_ids:
-            return summary_1.id, summary_2.id, entity
+            return summary_1.id, summary_2.id, run_1, run_2, entity
         else:
             return entity
 
     def test_compare(self, client):
         self.authenticate(client)
         name = uuid.uuid4().hex
-        id_1, id_2, compare = self._create(name, with_ids=True)
+        id_1, id_2, run_1, run_2, compare = self._create(name, with_ids=True)
         response = client.get(f"/api/compare/benchmarks/{compare.id}/")
 
         benchmark_ids = [id_1, id_2]
+        run_ids = [run_1, run_2]
         batch_ids = [
             "7b2fdd9f929d47b9960152090d47f8e6",
             "7b2fdd9f929d47b9960152090d47f8e6",
-        ]
-        run_ids = [
-            "2a5709d179f349cba69ed242be3e6321",
-            "2a5709d179f349cba69ed242be3e6321",
         ]
         expected = _api_compare_entity(
             benchmark_ids,
@@ -87,12 +102,12 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         )
         expected.update(
             {
-                "baseline": "2.000 s",
-                "contender": "5.000 s",
-                "change": "-150.000%",
+                "baseline": "3.000 s",
+                "contender": "20.000 s",
+                "change": "-566.667%",
                 "regression": True,
-                "baseline_z_score": "0.302",
-                "contender_z_score": "-3.015",
+                "baseline_z_score": "0.000",
+                "contender_z_score": "-{:.3f}".format(_fixtures.Z_SCORE_UP),
                 "contender_z_regression": True,
             }
         )

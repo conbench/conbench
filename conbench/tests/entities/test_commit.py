@@ -4,6 +4,7 @@ import json
 import os
 
 from ...entities.commit import parse_commit
+from ...tests.api import _fixtures
 
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
@@ -16,7 +17,7 @@ def test_parse_commit():
     tz = dateutil.tz.tzutc()
     message = "Move benchmark tests (so CI runs them)"
     expected = {
-        "parent": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+        "parent": _fixtures.PARENT,
         "message": f"ARROW-11771: [Developer][Archery] {message}",
         "date": datetime.datetime(2021, 2, 25, 1, 2, 51, tzinfo=tz),
         "author_name": "Diana Clarke",
@@ -33,7 +34,7 @@ def test_parse_commit_no_author():
     tz = dateutil.tz.tzutc()
     message = "Move benchmark tests (so CI runs them)"
     expected = {
-        "parent": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+        "parent": _fixtures.PARENT,
         "message": f"ARROW-11771: [Developer][Archery] {message}",
         "date": datetime.datetime(2021, 2, 25, 1, 2, 51, tzinfo=tz),
         "author_name": "Diana Clarke",

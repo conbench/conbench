@@ -10,6 +10,7 @@ from ...entities.distribution import Distribution
 from ...entities.summary import Summary
 from ...runner import Conbench
 from ...tests.api import _asserts
+from ...tests.api import _fixtures
 
 
 VALID_PAYLOAD = {
@@ -106,7 +107,7 @@ def _expected_entity(summary):
 
 
 def create_benchmark_summary(
-    name=None, batch_id=None, run_id=None, results=None, unit=None
+    name=None, batch_id=None, run_id=None, results=None, unit=None, sha=None
 ):
     data = copy.deepcopy(VALID_PAYLOAD)
     if name:
@@ -115,6 +116,8 @@ def create_benchmark_summary(
         data["stats"]["batch_id"] = batch_id
     if run_id:
         data["stats"]["run_id"] = run_id
+    if sha:
+        data["github"]["commit"] = sha
 
     if results is not None:
         unit = unit if unit else "s"
@@ -134,8 +137,10 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     url = "/api/benchmarks/{}/"
     public = True
 
-    def _create(self, name=None, results=None, unit=None):
-        return create_benchmark_summary(name=name, results=results, unit=unit)
+    def _create(self, name=None, run_id=None, results=None, unit=None, sha=None):
+        return create_benchmark_summary(
+            name=name, run_id=run_id, results=results, unit=unit, sha=sha
+        )
 
     def test_get_benchmark(self, client):
         self.authenticate(client)
@@ -146,11 +151,30 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_regression(self, client):
         self.authenticate(client)
 
-        # create a distribution history & a regression
         name = uuid.uuid4().hex
-        for _ in range(10):
-            self._create(name=name, results=[4, 5, 6], unit="i/s")
-        summary = self._create(name=name, results=[1, 2, 3], unit="i/s")
+        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+
+        # create a distribution history & a regression
+        self._create(
+            name=name,
+            results=_fixtures.RESULTS_DOWN[0],
+            unit="i/s",
+            run_id=run_0,
+            sha=_fixtures.GRANDPARENT,
+        )
+        self._create(
+            name=name,
+            results=_fixtures.RESULTS_DOWN[1],
+            unit="i/s",
+            run_id=run_1,
+            sha=_fixtures.PARENT,
+        )
+        summary = self._create(
+            name=name,
+            results=_fixtures.RESULTS_DOWN[2],
+            unit="i/s",
+            run_id=run_2,
+        )
 
         expected = _expected_entity(summary)
         expected["stats"].update(
@@ -166,7 +190,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "2.500000",
                 "stdev": "1.000000",
                 "times": [],
-                "z_score": "-3.015113",
+                "z_score": "-{:.6f}".format(abs(_fixtures.Z_SCORE_DOWN)),
                 "z_regression": True,
                 "unit": "i/s",
             }
@@ -178,27 +202,46 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_regression_less_is_better(self, client):
         self.authenticate(client)
 
-        # create a distribution history & a regression
         name = uuid.uuid4().hex
-        for _ in range(10):
-            self._create(name=name, results=[1, 2, 3], unit="s")
-        summary = self._create(name=name, results=[4, 5, 6], unit="s")
+        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+
+        # create a distribution history & a regression
+        self._create(
+            name=name,
+            results=_fixtures.RESULTS_UP[0],
+            unit="s",
+            run_id=run_0,
+            sha=_fixtures.GRANDPARENT,
+        )
+        self._create(
+            name=name,
+            results=_fixtures.RESULTS_UP[1],
+            unit="s",
+            run_id=run_1,
+            sha=_fixtures.PARENT,
+        )
+        summary = self._create(
+            name=name,
+            results=_fixtures.RESULTS_UP[2],
+            unit="s",
+            run_id=run_2,
+        )
 
         expected = _expected_entity(summary)
         expected["stats"].update(
             {
-                "data": ["4.000000", "5.000000", "6.000000"],
-                "iqr": "1.000000",
+                "data": ["10.000000", "20.000000", "30.000000"],
+                "iqr": "10.000000",
                 "iterations": 3,
-                "max": "6.000000",
-                "mean": "5.000000",
-                "median": "5.000000",
-                "min": "4.000000",
-                "q1": "4.500000",
-                "q3": "5.500000",
-                "stdev": "1.000000",
+                "max": "30.000000",
+                "mean": "20.000000",
+                "median": "20.000000",
+                "min": "10.000000",
+                "q1": "15.000000",
+                "q3": "25.000000",
+                "stdev": "10.000000",
                 "times": [],
-                "z_score": "-3.015113",
+                "z_score": "-{:.6f}".format(abs(_fixtures.Z_SCORE_UP)),
                 "z_regression": True,
             }
         )
@@ -209,27 +252,46 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_improvement(self, client):
         self.authenticate(client)
 
-        # create a distribution history & a improvement
         name = uuid.uuid4().hex
-        for _ in range(10):
-            self._create(name=name, results=[1, 2, 3], unit="i/s")
-        summary = self._create(name=name, results=[4, 5, 6], unit="i/s")
+        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+
+        # create a distribution history & a improvement
+        self._create(
+            name=name,
+            results=_fixtures.RESULTS_UP[0],
+            unit="i/s",
+            run_id=run_0,
+            sha=_fixtures.GRANDPARENT,
+        )
+        self._create(
+            name=name,
+            results=_fixtures.RESULTS_UP[1],
+            unit="i/s",
+            run_id=run_1,
+            sha=_fixtures.PARENT,
+        )
+        summary = self._create(
+            name=name,
+            results=_fixtures.RESULTS_UP[2],
+            unit="i/s",
+            run_id=run_2,
+        )
 
         expected = _expected_entity(summary)
         expected["stats"].update(
             {
-                "data": ["4.000000", "5.000000", "6.000000"],
-                "iqr": "1.000000",
+                "data": ["10.000000", "20.000000", "30.000000"],
+                "iqr": "10.000000",
                 "iterations": 3,
-                "max": "6.000000",
-                "mean": "5.000000",
-                "median": "5.000000",
-                "min": "4.000000",
-                "q1": "4.500000",
-                "q3": "5.500000",
-                "stdev": "1.000000",
+                "max": "30.000000",
+                "mean": "20.000000",
+                "median": "20.000000",
+                "min": "10.000000",
+                "q1": "15.000000",
+                "q3": "25.000000",
+                "stdev": "10.000000",
                 "times": [],
-                "z_score": "3.015113",
+                "z_score": "{:.6f}".format(abs(_fixtures.Z_SCORE_UP)),
                 "z_improvement": True,
                 "unit": "i/s",
             }
@@ -241,11 +303,30 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_improvement_less_is_better(self, client):
         self.authenticate(client)
 
-        # create a distribution history & a improvement
         name = uuid.uuid4().hex
-        for _ in range(10):
-            self._create(name=name, results=[4, 5, 6], unit="s")
-        summary = self._create(name=name, results=[1, 2, 3], unit="s")
+        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+
+        # create a distribution history & a improvement
+        self._create(
+            name=name,
+            results=_fixtures.RESULTS_DOWN[0],
+            unit="s",
+            run_id=run_0,
+            sha=_fixtures.GRANDPARENT,
+        )
+        self._create(
+            name=name,
+            results=_fixtures.RESULTS_DOWN[1],
+            unit="s",
+            run_id=run_1,
+            sha=_fixtures.PARENT,
+        )
+        summary = self._create(
+            name=name,
+            results=_fixtures.RESULTS_DOWN[2],
+            unit="s",
+            run_id=run_2,
+        )
 
         expected = _expected_entity(summary)
         expected["stats"].update(
@@ -261,7 +342,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": "2.500000",
                 "stdev": "1.000000",
                 "times": [],
-                "z_score": "3.015113",
+                "z_score": "{:.6f}".format(abs(_fixtures.Z_SCORE_DOWN)),
                 "z_improvement": True,
             }
         )

@@ -4,7 +4,7 @@ from ..units import formatter_for_unit
 
 
 CHANGE = 5.0  # percent changed threshold
-Z_SCORE = 2.0  # z-score threshold
+Z_SCORE = 5.0  # z-score threshold
 
 
 def fmt(value):

@@ -1,6 +1,7 @@
 import copy
 import datetime
 import decimal
+import statistics
 import uuid
 
 from ...entities.commit import Commit
@@ -14,6 +15,7 @@ from ...entities.distribution import (
 )
 from ...entities.summary import Summary
 from ...runner import Conbench
+from ...tests.api import _fixtures
 from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
@@ -68,14 +70,58 @@ WHERE commit_index.sha = :sha_1)
 WHERE run.name LIKE :name_1 AND summary.case_id = :case_id_1 AND summary.context_id = :context_id_1 AND concat(machine.name, :concat_4, machine.cpu_core_count, :concat_5, machine.cpu_thread_count, :concat_6, machine.memory_bytes) = :param_2 GROUP BY summary.case_id, summary.context_id, machine.name, machine.cpu_core_count, machine.cpu_thread_count, machine.memory_bytes"""  # noqa
 
 
-def create_benchmark_summary(results, commit, benchmark_name=None):
+def test_z_score_calculations():
+    """Manually santity check the calculations used in the z-score tests."""
+
+    # ----- RESULTS_UP
+
+    summary_mean_0 = statistics.mean(_fixtures.RESULTS_UP[0])
+    assert summary_mean_0 == 2.0
+    summary_mean_1 = statistics.mean(_fixtures.RESULTS_UP[1])
+    assert summary_mean_1 == 3.0
+    summary_mean_2 = statistics.mean(_fixtures.RESULTS_UP[2])
+    assert summary_mean_2 == 20.0
+
+    distribution_mean_0 = statistics.mean([summary_mean_0])
+    distribution_mean_1 = statistics.mean([summary_mean_0, summary_mean_1])
+    assert distribution_mean_0 == 2.0
+    assert distribution_mean_1 == 2.5
+
+    distribution_stdev_1 = statistics.stdev([summary_mean_0, summary_mean_1])
+    assert distribution_stdev_1 == 0.7071067811865476
+
+    z_score = (summary_mean_2 - distribution_mean_1) / distribution_stdev_1
+    assert z_score == _fixtures.Z_SCORE_UP
+
+    # ----- RESULTS_DOWN
+
+    summary_mean_0 = statistics.mean(_fixtures.RESULTS_DOWN[0])
+    assert summary_mean_0 == 11.0
+    summary_mean_1 = statistics.mean(_fixtures.RESULTS_DOWN[1])
+    assert summary_mean_1 == 12.0
+    summary_mean_2 = statistics.mean(_fixtures.RESULTS_DOWN[2])
+    assert summary_mean_2 == 2.0
+
+    distribution_mean_0 = statistics.mean([summary_mean_0])
+    distribution_mean_1 = statistics.mean([summary_mean_0, summary_mean_1])
+    assert distribution_mean_0 == 11.0
+    assert distribution_mean_1 == 11.5
+
+    distribution_stdev_1 = statistics.stdev([summary_mean_0, summary_mean_1])
+    assert distribution_stdev_1 == 0.7071067811865476
+
+    z_score = (summary_mean_2 - distribution_mean_1) / distribution_stdev_1
+    assert z_score == _fixtures.Z_SCORE_DOWN
+
+
+def create_benchmark_summary(results, commit, name=None):
     data = copy.deepcopy(VALID_PAYLOAD)
     now = datetime.datetime.now(datetime.timezone.utc)
     run_id, run_name = uuid.uuid4().hex, "commit: some commit"
     data["github"]["commit"] = commit.sha
     data["github"]["repository"] = commit.repository
-    if benchmark_name:
-        data["tags"]["name"] = benchmark_name
+    if name:
+        data["tags"]["name"] = name
     batch_id = data["stats"]["batch_id"]
     data["stats"] = Conbench._stats(
         results, "s", [], "s", now.isoformat(), run_id, batch_id, run_name
@@ -169,26 +215,27 @@ def test_distibution():
         }
     )
 
+    name = uuid.uuid4().hex
     data = [2.1, 2.0, 1.99]  # first commit
-    summary_1 = create_benchmark_summary(data, commit_1)
+    summary_1 = create_benchmark_summary(data, commit_1, name=name)
 
     data = [1.99, 2.0, 2.1]  # stayed the same
-    summary_2 = create_benchmark_summary(data, commit_2)
+    summary_2 = create_benchmark_summary(data, commit_2, name=name)
 
     data = [1.1, 1.0, 0.99]  # got better
-    summary_3 = create_benchmark_summary(data, commit_3)
+    summary_3 = create_benchmark_summary(data, commit_3, name=name)
 
     data = [1.2, 1.1, 1.0]  # stayed about the same
-    summary_4 = create_benchmark_summary(data, commit_4)
+    summary_4 = create_benchmark_summary(data, commit_4, name=name)
 
     data = [3.1, 3.0, 2.99]  # got worse
-    summary_5 = create_benchmark_summary(data, commit_5)
+    summary_5 = create_benchmark_summary(data, commit_5, name=name)
 
     data = [5.1, 5.2, 5.3]  # n/a different repo
-    summary_b = create_benchmark_summary(data, commit_b)
+    summary_b = create_benchmark_summary(data, commit_b, name=name)
 
     data, case = [5.1, 5.2, 5.3], "different-case"  # n/a different case
-    summary_x = create_benchmark_summary(data, commit_1, case)
+    summary_x = create_benchmark_summary(data, commit_1, name=case)
 
     assert summary_1.case_id == summary_2.case_id
     assert summary_1.case_id == summary_3.case_id
@@ -389,17 +436,17 @@ def test_distibution():
     set_z_scores([summary_2])
     assert summary_2.z_score == 0
 
-    # third commit, got better
+    # third commit, got better, but distribution stdev was 0
     set_z_scores([summary_3])
-    assert summary_3.z_score == decimal.Decimal("1.154700538379251586751622041")
+    assert summary_3.z_score == 0
 
-    # forth commit, stayed about the same
+    # forth commit, stayed about the same (but still better)
     set_z_scores([summary_4])
-    assert summary_4.z_score == decimal.Decimal("0.8021503952795387425767458943")
+    assert summary_4.z_score == decimal.Decimal("1.033456981849430176204879553")
 
     # fifth commit, got worse
     set_z_scores([summary_5])
-    assert summary_5.z_score == decimal.Decimal("-1.445718072770755055613474796")
+    assert summary_5.z_score == decimal.Decimal("-2.657403264808751253340839750")
 
     # n/a different repo, no distribution history
     set_z_scores([summary_b])
@@ -413,32 +460,58 @@ def test_distibution():
 def test_distibution_multiple_runs_same_commit():
     commit_1 = Commit.create(
         {
-            "sha": "YYYYY",
+            "sha": "xxxxx",
             "repository": REPO,
-            "parent": "XXXXX",
+            "parent": "wwwww",
             "timestamp": datetime.datetime(2021, 11, 1),
-            "message": "message 11111",
+            "message": "message xxxxx",
+            "author_name": "author_name",
+            "author_login": "author_login",
+            "author_avatar": "author_avatar",
+        }
+    )
+    commit_2 = Commit.create(
+        {
+            "sha": "yyyyy",
+            "repository": REPO,
+            "parent": "xxxxx",
+            "timestamp": datetime.datetime(2021, 11, 2),
+            "message": "message 22222",
+            "author_name": "author_name",
+            "author_login": "author_login",
+            "author_avatar": "author_avatar",
+        }
+    )
+    commit_3 = Commit.create(
+        {
+            "sha": "zzzzz",
+            "repository": REPO,
+            "parent": "yyyyy",
+            "timestamp": datetime.datetime(2021, 11, 3),
+            "message": "message 33333",
             "author_name": "author_name",
             "author_login": "author_login",
             "author_avatar": "author_avatar",
         }
     )
 
-    data = [1, 2, 3]
-    summary_1 = create_benchmark_summary(data, commit_1)
+    name = uuid.uuid4().hex
+    summary_1 = create_benchmark_summary(_fixtures.RESULTS_UP[0], commit_1, name=name)
+    summary_2 = create_benchmark_summary(_fixtures.RESULTS_UP[1], commit_2, name=name)
+    summary_3 = create_benchmark_summary(_fixtures.RESULTS_UP[2], commit_3, name=name)
 
     case_id = summary_1.case_id
     context_id = summary_1.context_id
     machine_hash = summary_1.machine.hash
 
     assert get_distribution(
-        REPO, "YYYYY", case_id, context_id, machine_hash, 10
+        REPO, "xxxxx", case_id, context_id, machine_hash, 10
     ).all() == [
         (
             REPO,
-            "YYYYY",
-            summary_1.case_id,
-            summary_1.context_id,
+            "xxxxx",
+            case_id,
+            context_id,
             MACHINE,
             "s",
             decimal.Decimal("2.0000000000000000"),
@@ -455,43 +528,49 @@ def test_distibution_multiple_runs_same_commit():
         )
     ]
 
-    set_z_scores([summary_1])
-    assert summary_1.z_score == 0
-
-    data = [4, 5, 6]
-    summary_2 = create_benchmark_summary(data, commit_1)
-
-    assert summary_1.case_id == summary_2.case_id
-    assert summary_1.context_id == summary_2.context_id
-    assert summary_1.run.commit_id == summary_2.run.commit_id
-    assert summary_1.machine_id == summary_2.machine_id
-
     assert get_distribution(
-        REPO, "YYYYY", case_id, context_id, machine_hash, 10
+        REPO, "yyyyy", case_id, context_id, machine_hash, 10
     ).all() == [
         (
             REPO,
-            "YYYYY",
-            summary_1.case_id,
-            summary_1.context_id,
+            "yyyyy",
+            case_id,
+            context_id,
             MACHINE,
             "s",
-            decimal.Decimal("3.5000000000000000"),
-            decimal.Decimal("2.1213203435596426"),
             decimal.Decimal("2.5000000000000000"),
-            decimal.Decimal("2.1213203435596426"),
-            decimal.Decimal("4.5000000000000000"),
-            decimal.Decimal("2.1213203435596426"),
+            decimal.Decimal("0.70710678118654752440"),
+            decimal.Decimal("1.5000000000000000"),
+            decimal.Decimal("0.70710678118654752440"),
             decimal.Decimal("3.5000000000000000"),
-            decimal.Decimal("2.1213203435596426"),
+            decimal.Decimal("0.70710678118654752440"),
+            decimal.Decimal("2.5000000000000000"),
+            decimal.Decimal("0.70710678118654752440"),
             datetime.datetime(2021, 11, 1, 0, 0),
-            datetime.datetime(2021, 11, 1, 0, 0),
+            datetime.datetime(2021, 11, 2, 0, 0),
             2,
         )
     ]
 
+    # before
     set_z_scores([summary_1])
-    assert summary_1.z_score == decimal.Decimal("0.7071067811865475154683553909")
-
+    assert summary_1.z_score == 0
     set_z_scores([summary_2])
-    assert summary_2.z_score == decimal.Decimal("-0.7071067811865475154683553909")
+    assert summary_2.z_score == 0
+    set_z_scores([summary_3])
+    Z_SCORE_UP_DECIMAL = decimal.Decimal(_fixtures.Z_SCORE_UP)
+    assert round(summary_3.z_score, 10) == -1 * round(Z_SCORE_UP_DECIMAL, 10)
+
+    # re-run commit 2
+    summary_4 = create_benchmark_summary([0, 1, 2], commit_2, name=name)
+    set_z_scores([summary_4])
+    assert summary_4.z_score == 0
+
+    # after, summary_3 z-score changes with more info
+    set_z_scores([summary_1])
+    assert summary_1.z_score == 0
+    set_z_scores([summary_2])
+    assert summary_2.z_score == 0
+    set_z_scores([summary_3])
+    Z_SCORE_UP_DECIMAL = decimal.Decimal("18.0000000000")
+    assert round(summary_3.z_score, 10) == -1 * round(Z_SCORE_UP_DECIMAL, 10)
