@@ -1,6 +1,7 @@
 import copy
 import datetime
 import decimal
+import statistics
 import uuid
 
 from ...entities.commit import Commit
@@ -14,6 +15,7 @@ from ...entities.distribution import (
 )
 from ...entities.summary import Summary
 from ...runner import Conbench
+from ...tests.api._fixtures import RESULTS_DOWN, RESULTS_UP, Z_SCORE_DOWN, Z_SCORE_UP
 from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
@@ -66,6 +68,50 @@ FROM ordered_commits) AS commit_index
 WHERE commit_index.sha = :sha_1)
  LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id 
 WHERE run.name LIKE :name_1 AND summary.case_id = :case_id_1 AND summary.context_id = :context_id_1 AND concat(machine.name, :concat_4, machine.cpu_core_count, :concat_5, machine.cpu_thread_count, :concat_6, machine.memory_bytes) = :param_2 GROUP BY summary.case_id, summary.context_id, machine.name, machine.cpu_core_count, machine.cpu_thread_count, machine.memory_bytes"""  # noqa
+
+
+def test_z_score_calculations():
+    """Manually santity check the calculations used in the z-score tests."""
+
+    # ----- RESULTS_UP
+
+    summary_mean_0 = statistics.mean(RESULTS_UP[0])
+    assert summary_mean_0 == 2.0
+    summary_mean_1 = statistics.mean(RESULTS_UP[1])
+    assert summary_mean_1 == 3.0
+    summary_mean_2 = statistics.mean(RESULTS_UP[2])
+    assert summary_mean_2 == 20.0
+
+    distribution_mean_0 = statistics.mean([summary_mean_0])
+    distribution_mean_1 = statistics.mean([summary_mean_0, summary_mean_1])
+    assert distribution_mean_0 == 2.0
+    assert distribution_mean_1 == 2.5
+
+    distribution_stdev_1 = statistics.stdev([summary_mean_0, summary_mean_1])
+    assert distribution_stdev_1 == 0.7071067811865476
+
+    Z_SCORE_DOWN = (summary_mean_2 - distribution_mean_1) / distribution_stdev_1
+    assert Z_SCORE_DOWN == Z_SCORE_UP
+
+    # ----- RESULTS_DOWN
+
+    summary_mean_0 = statistics.mean(RESULTS_DOWN[0])
+    assert summary_mean_0 == 11.0
+    summary_mean_1 = statistics.mean(RESULTS_DOWN[1])
+    assert summary_mean_1 == 12.0
+    summary_mean_2 = statistics.mean(RESULTS_DOWN[2])
+    assert summary_mean_2 == 2.0
+
+    distribution_mean_0 = statistics.mean([summary_mean_0])
+    distribution_mean_1 = statistics.mean([summary_mean_0, summary_mean_1])
+    assert distribution_mean_0 == 11.0
+    assert distribution_mean_1 == 11.5
+
+    distribution_stdev_1 = statistics.stdev([summary_mean_0, summary_mean_1])
+    assert distribution_stdev_1 == 0.7071067811865476
+
+    Z_SCORE_DOWN = (summary_mean_2 - distribution_mean_1) / distribution_stdev_1
+    assert Z_SCORE_DOWN == Z_SCORE_DOWN
 
 
 def create_benchmark_summary(results, commit, benchmark_name=None):

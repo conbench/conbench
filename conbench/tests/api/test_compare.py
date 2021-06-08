@@ -1,18 +1,16 @@
 import copy
 import datetime
-import statistics
 import uuid
 
 from ...api._examples import _api_compare_entity, _api_compare_list
 from ...entities.summary import Summary
 from ...runner import Conbench
 from ...tests.api import _asserts
+from ...tests.api._fixtures import RESULTS_UP, Z_SCORE_UP
 from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
 CASE = "snappy, cpu_count=2, parquet, arrow, nyctaxi_sample"
-RESULTS = [[1, 2, 3], [2, 3, 4], [10, 20, 30]]
-Z_SCORE = 24.74873734152916
 
 
 class FakeEntity:
@@ -41,28 +39,6 @@ def create_benchmark_summary(name, batch_id=None, run_id=None, results=None, sha
     return summary
 
 
-def test_z_score_calculations():
-    """Manually santity check the calculations used in the compare test."""
-
-    summary_mean_0 = statistics.mean(RESULTS[0])
-    assert summary_mean_0 == 2.0
-    summary_mean_1 = statistics.mean(RESULTS[1])
-    assert summary_mean_1 == 3.0
-    summary_mean_2 = statistics.mean(RESULTS[2])
-    assert summary_mean_2 == 20.0
-
-    distribution_mean_0 = statistics.mean([summary_mean_0])
-    distribution_mean_1 = statistics.mean([summary_mean_0, summary_mean_1])
-    assert distribution_mean_0 == 2.0
-    assert distribution_mean_1 == 2.5
-
-    distribution_stdev_1 = statistics.stdev([summary_mean_0, summary_mean_1])
-    assert distribution_stdev_1 == 0.7071067811865476
-
-    z_score_2 = (summary_mean_2 - distribution_mean_1) / distribution_stdev_1
-    assert z_score_2 == Z_SCORE
-
-
 class TestCompareBenchmarksGet(_asserts.GetEnforcer):
     url = "/api/compare/benchmarks/{}/"
     public = True
@@ -78,19 +54,19 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
         create_benchmark_summary(
             name,
-            results=RESULTS[0],
+            results=RESULTS_UP[0],
             run_id=run_0,
             sha=grandparent,
         )
         summary_1 = create_benchmark_summary(
             name,
-            results=RESULTS[1],
+            results=RESULTS_UP[1],
             run_id=run_1,
             sha=parent,
         )
         summary_2 = create_benchmark_summary(
             name,
-            results=RESULTS[2],
+            results=RESULTS_UP[2],
             run_id=run_2,
         )
 
@@ -134,7 +110,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "change": "-566.667%",
                 "regression": True,
                 "baseline_z_score": "0.000",
-                "contender_z_score": "-{:.3f}".format(Z_SCORE),
+                "contender_z_score": "-{:.3f}".format(Z_SCORE_UP),
                 "contender_z_regression": True,
             }
         )
