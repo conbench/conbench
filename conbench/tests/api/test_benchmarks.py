@@ -1,6 +1,5 @@
 import copy
 import decimal
-import uuid
 
 import pytest
 
@@ -11,6 +10,7 @@ from ...entities.summary import Summary
 from ...runner import Conbench
 from ...tests.api import _asserts
 from ...tests.api import _fixtures
+from ...tests.helpers import _uuid
 
 
 def _expected_entity(summary):
@@ -70,8 +70,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_regression(self, client):
         self.authenticate(client)
 
-        name = uuid.uuid4().hex
-        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+        name, run_0, run_1, run_2 = _uuid(), _uuid(), _uuid(), _uuid()
 
         # create a distribution history & a regression
         self._create(
@@ -121,8 +120,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_regression_less_is_better(self, client):
         self.authenticate(client)
 
-        name = uuid.uuid4().hex
-        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+        name, run_0, run_1, run_2 = _uuid(), _uuid(), _uuid(), _uuid()
 
         # create a distribution history & a regression
         self._create(
@@ -171,8 +169,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_improvement(self, client):
         self.authenticate(client)
 
-        name = uuid.uuid4().hex
-        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+        name, run_0, run_1, run_2 = _uuid(), _uuid(), _uuid(), _uuid()
 
         # create a distribution history & a improvement
         self._create(
@@ -222,8 +219,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_improvement_less_is_better(self, client):
         self.authenticate(client)
 
-        name = uuid.uuid4().hex
-        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+        name, run_0, run_1, run_2 = _uuid(), _uuid(), _uuid(), _uuid()
 
         # create a distribution history & a improvement
         self._create(
@@ -379,7 +375,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
     def test_create_benchmark_distribution(self, client):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
-        data["tags"]["name"] = uuid.uuid4().hex
+        data["tags"]["name"] = _uuid()
 
         # first result
         response = client.post("/api/benchmarks/", json=data)

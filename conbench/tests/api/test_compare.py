@@ -1,12 +1,12 @@
 import copy
 import datetime
-import uuid
 
 from ...api._examples import _api_compare_entity, _api_compare_list
 from ...entities.summary import Summary
 from ...runner import Conbench
 from ...tests.api import _asserts
 from ...tests.api import _fixtures
+from ...tests.helpers import _uuid
 
 
 CASE = "snappy, cpu_count=2, parquet, arrow, nyctaxi_sample"
@@ -43,11 +43,9 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
     public = True
 
     def _create(self, name=None, with_ids=False):
-        if name is None:
-            name = uuid.uuid4().hex
-
         # create a distribution history & a regression
-        run_0, run_1, run_2 = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+        name = name if name is not None else _uuid()
+        run_0, run_1, run_2 = _uuid(), _uuid(), _uuid()
         create_benchmark_summary(
             name,
             results=_fixtures.RESULTS_UP[0],
@@ -74,7 +72,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
 
     def test_compare(self, client):
         self.authenticate(client)
-        name = uuid.uuid4().hex
+        name = _uuid()
         id_1, id_2, run_1, run_2, compare = self._create(name, with_ids=True)
         response = client.get(f"/api/compare/benchmarks/{compare.id}/")
 
@@ -123,8 +121,7 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
     public = True
 
     def _create(self, with_ids=False, run_id=None, batch_id=None):
-        if batch_id is None:
-            batch_id = uuid.uuid4().hex
+        batch_id = batch_id if batch_id is not None else _uuid()
         summary1 = create_benchmark_summary(
             "read",
             run_id=run_id,
@@ -143,7 +140,7 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
 
     def test_compare(self, client):
         self.authenticate(client)
-        run_id, batch_id = uuid.uuid4().hex, uuid.uuid4().hex
+        run_id, batch_id = _uuid(), _uuid()
         new_ids, compare = self._create(
             with_ids=True,
             run_id=run_id,
@@ -195,8 +192,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
     public = True
 
     def _create(self, with_ids=False, run_id=None, batch_id=None):
-        if run_id is None:
-            run_id = uuid.uuid4().hex
+        run_id = run_id if run_id is not None else _uuid()
         summary1 = create_benchmark_summary(
             "read",
             run_id=run_id,
@@ -215,7 +211,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
 
     def test_compare(self, client):
         self.authenticate(client)
-        run_id, batch_id = uuid.uuid4().hex, uuid.uuid4().hex
+        run_id, batch_id = _uuid(), _uuid()
         new_ids, compare = self._create(
             with_ids=True,
             run_id=run_id,
