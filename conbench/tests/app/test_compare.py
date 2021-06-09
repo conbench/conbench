@@ -1,9 +1,9 @@
-from ...tests.api.test_benchmarks import VALID_PAYLOAD
+from ...tests.api import _fixtures
 from ...tests.app import _asserts
 
 
 def create_benchmark(client):
-    response = client.post("/api/benchmarks/", json=VALID_PAYLOAD)
+    response = client.post("/api/benchmarks/", json=_fixtures.VALID_PAYLOAD)
     new_id = response.json["id"]
     return new_id
 
@@ -56,13 +56,13 @@ class TestCompareBatches(_asserts.AppEndpointTest):
         assert f"{batch_id}".encode() in response.data
 
     def test_compare_authenticated(self, client):
-        batch_id = VALID_PAYLOAD["stats"]["batch_id"]
+        batch_id = _fixtures.VALID_PAYLOAD["stats"]["batch_id"]
         self._create(client)
         self.authenticate(client)
         self._assert_view(client, batch_id)
 
     def test_compare_unauthenticated(self, client):
-        batch_id = VALID_PAYLOAD["stats"]["batch_id"]
+        batch_id = _fixtures.VALID_PAYLOAD["stats"]["batch_id"]
         self._create(client)
         self.logout(client)
         self._assert_view(client, batch_id)
@@ -93,13 +93,13 @@ class TestCompareRuns(_asserts.AppEndpointTest):
         assert f"{run_id}".encode() in response.data
 
     def test_compare_authenticated(self, client):
-        run_id = VALID_PAYLOAD["stats"]["run_id"]
+        run_id = _fixtures.VALID_PAYLOAD["stats"]["run_id"]
         self._create(client)
         self.authenticate(client)
         self._assert_view(client, run_id)
 
     def test_compare_unauthenticated(self, client):
-        run_id = VALID_PAYLOAD["stats"]["run_id"]
+        run_id = _fixtures.VALID_PAYLOAD["stats"]["run_id"]
         self._create(client)
         self.logout(client)
         self._assert_view(client, run_id)

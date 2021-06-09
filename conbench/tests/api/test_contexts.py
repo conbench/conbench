@@ -3,7 +3,7 @@ import copy
 from ...api._examples import _api_context_entity
 from ...entities.summary import Summary
 from ...tests.api import _asserts
-from ...tests.api.test_benchmarks import VALID_PAYLOAD
+from ...tests.api import _fixtures
 
 
 def _expected_entity(context):
@@ -11,7 +11,7 @@ def _expected_entity(context):
 
 
 def create_benchmark_summary():
-    data = copy.deepcopy(VALID_PAYLOAD)
+    data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     summary = Summary.create(data)
     return summary
 

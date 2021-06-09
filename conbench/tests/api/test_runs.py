@@ -1,12 +1,11 @@
 import copy
 import urllib
-import uuid
 
 from ...api._examples import _api_run_entity
 from ...entities.summary import Summary
 from ...tests.api import _asserts
 from ...tests.api import _fixtures
-from ...tests.api.test_benchmarks import VALID_PAYLOAD
+from ...tests.helpers import _uuid
 
 
 def _expected_entity(run, baseline_id=None):
@@ -20,10 +19,10 @@ def _expected_entity(run, baseline_id=None):
 
 
 def create_benchmark_summary(sha=None, language=None, run_id=None):
-    data = copy.deepcopy(VALID_PAYLOAD)
+    data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     if sha:
         data["github"]["commit"] = sha
-        data["stats"]["run_id"] = uuid.uuid4().hex
+        data["stats"]["run_id"] = _uuid()
     if language:
         data["context"]["benchmark_language"] = language
     if run_id:
@@ -39,16 +38,16 @@ class TestRunGet(_asserts.GetEnforcer):
     def _create(self, baseline=False):
         if baseline:
             # change anything about the context so we get only one baseline
-            language = uuid.uuid4().hex
+            language = _uuid()
             contender = create_benchmark_summary(
                 sha=_fixtures.CHILD,
                 language=language,
-                run_id=uuid.uuid4().hex,
+                run_id=_uuid(),
             )
             baseline = create_benchmark_summary(
                 sha=_fixtures.PARENT,
                 language=language,
-                run_id=uuid.uuid4().hex,
+                run_id=_uuid(),
             )
             return contender.run, baseline.run
         else:

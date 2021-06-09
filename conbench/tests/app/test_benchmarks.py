@@ -1,9 +1,9 @@
-from ...tests.api.test_benchmarks import VALID_PAYLOAD
 from ...tests.app import _asserts
+from ...tests.api import _fixtures
 
 
 def create_benchmark(client):
-    response = client.post("/api/benchmarks/", json=VALID_PAYLOAD)
+    response = client.post("/api/benchmarks/", json=_fixtures.VALID_PAYLOAD)
     new_id = response.json["id"]
     return new_id
 

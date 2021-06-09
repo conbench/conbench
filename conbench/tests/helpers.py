@@ -3,6 +3,10 @@ import uuid
 from ..entities.user import User
 
 
+def _uuid():
+    return uuid.uuid4().hex
+
+
 def _create_fixture_user():
     email = "fixture@example.com"
     user = User.first(email=email)

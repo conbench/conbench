@@ -2,7 +2,6 @@ import copy
 import datetime
 import decimal
 import statistics
-import uuid
 
 from ...entities.commit import Commit
 from ...entities.distribution import (
@@ -16,7 +15,7 @@ from ...entities.distribution import (
 from ...entities.summary import Summary
 from ...runner import Conbench
 from ...tests.api import _fixtures
-from ...tests.api.test_benchmarks import VALID_PAYLOAD
+from ...tests.helpers import _uuid
 
 
 REPO = "arrow"
@@ -115,9 +114,9 @@ def test_z_score_calculations():
 
 
 def create_benchmark_summary(results, commit, name=None):
-    data = copy.deepcopy(VALID_PAYLOAD)
+    data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     now = datetime.datetime.now(datetime.timezone.utc)
-    run_id, run_name = uuid.uuid4().hex, "commit: some commit"
+    run_id, run_name = _uuid(), "commit: some commit"
     data["github"]["commit"] = commit.sha
     data["github"]["repository"] = commit.repository
     if name:
@@ -215,7 +214,7 @@ def test_distibution():
         }
     )
 
-    name = uuid.uuid4().hex
+    name = _uuid()
     data = [2.1, 2.0, 1.99]  # first commit
     summary_1 = create_benchmark_summary(data, commit_1, name=name)
 
@@ -495,7 +494,7 @@ def test_distibution_multiple_runs_same_commit():
         }
     )
 
-    name = uuid.uuid4().hex
+    name = _uuid()
     summary_1 = create_benchmark_summary(_fixtures.RESULTS_UP[0], commit_1, name=name)
     summary_2 = create_benchmark_summary(_fixtures.RESULTS_UP[1], commit_2, name=name)
     summary_3 = create_benchmark_summary(_fixtures.RESULTS_UP[2], commit_3, name=name)
