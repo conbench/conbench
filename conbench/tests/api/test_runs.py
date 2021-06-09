@@ -6,7 +6,6 @@ from ...api._examples import _api_run_entity
 from ...entities.summary import Summary
 from ...tests.api import _asserts
 from ...tests.api import _fixtures
-from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
 def _expected_entity(run, baseline_id=None):
@@ -20,7 +19,7 @@ def _expected_entity(run, baseline_id=None):
 
 
 def create_benchmark_summary(sha=None, language=None, run_id=None):
-    data = copy.deepcopy(VALID_PAYLOAD)
+    data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     if sha:
         data["github"]["commit"] = sha
         data["stats"]["run_id"] = uuid.uuid4().hex

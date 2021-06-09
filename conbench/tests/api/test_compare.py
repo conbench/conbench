@@ -7,7 +7,6 @@ from ...entities.summary import Summary
 from ...runner import Conbench
 from ...tests.api import _asserts
 from ...tests.api import _fixtures
-from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
 CASE = "snappy, cpu_count=2, parquet, arrow, nyctaxi_sample"
@@ -19,7 +18,7 @@ class FakeEntity:
 
 
 def create_benchmark_summary(name, batch_id=None, run_id=None, results=None, sha=None):
-    data = copy.deepcopy(VALID_PAYLOAD)
+    data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     data["tags"]["name"] = name
     if batch_id:
         data["stats"]["batch_id"] = batch_id

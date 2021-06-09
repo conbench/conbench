@@ -1,19 +1,19 @@
 import copy
 
-from ...tests.api.test_benchmarks import VALID_PAYLOAD
+from ...tests.api import _fixtures
 from ...tests.app import _asserts
 
 
 def create_benchmark(client):
     # also create a benchmark with a different name & batch_id
-    other = copy.deepcopy(VALID_PAYLOAD)
+    other = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     other["stats"]["batch_id"] = other["stats"]["batch_id"] + "-other"
     other["tags"]["name"] = other["tags"]["name"] + "-other"
     other["stats"]["timestamp"] = "2019-11-25T21:02:42.706806+00:00"
     client.post("/api/benchmarks/", json=other)
 
     # create a benchmark
-    data = copy.deepcopy(VALID_PAYLOAD)
+    data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     response = client.post("/api/benchmarks/", json=data)
     new_id = response.json["id"]
     batch_id = response.json["stats"]["batch_id"]

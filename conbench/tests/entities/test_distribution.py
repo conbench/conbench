@@ -16,7 +16,6 @@ from ...entities.distribution import (
 from ...entities.summary import Summary
 from ...runner import Conbench
 from ...tests.api import _fixtures
-from ...tests.api.test_benchmarks import VALID_PAYLOAD
 
 
 REPO = "arrow"
@@ -115,7 +114,7 @@ def test_z_score_calculations():
 
 
 def create_benchmark_summary(results, commit, name=None):
-    data = copy.deepcopy(VALID_PAYLOAD)
+    data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     now = datetime.datetime.now(datetime.timezone.utc)
     run_id, run_name = uuid.uuid4().hex, "commit: some commit"
     data["github"]["commit"] = commit.sha
