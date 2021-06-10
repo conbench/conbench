@@ -27,11 +27,6 @@ table.dataTable thead .sorting_desc {
   cursor: pointer;
 }
 
-.tooltip-inner {
-    max-width: 250px;
-    width: 250px;
-}
-
 .table.dataTable a {
   color: #1F77B4;
 }
@@ -56,6 +51,16 @@ table.dataTable thead .sorting_desc {
 
 .tooltip-inner {
   background-color: #282828;
+  max-width: 250px;
+  width: 250px;
+}
+
+.tooltip.bottom .tooltip-arrow {
+  top: 0;
+  left: 50%;
+  margin-left: -5px;
+  border-bottom-color: #282828;
+  border-width: 0 5px 5px;
 }
 
 .carousel-control.left,.carousel-control.right {
@@ -75,6 +80,13 @@ table.dataTable thead .sorting_desc {
 
 .ellipsis-175 {
   width: 175px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.ellipsis-500 {
+  width: 500px;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
