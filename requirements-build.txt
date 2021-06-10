@@ -6,7 +6,7 @@ click
 python-dateutil
 email-validator
 Flask
-Flask-Bootstrap
+Flask-BS4
 Flask-Login
 flask-swagger-ui
 Flask-WTF

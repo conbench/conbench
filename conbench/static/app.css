@@ -6,17 +6,13 @@ html {
   color: #777777;
 }
 
-/* fix datatable sorting icons */
-table.dataTable thead .sorting, 
-table.dataTable thead .sorting_asc, 
-table.dataTable thead .sorting_desc {
-  background : none;
-}
-
-/* fix blue border on button click */
-.btn:focus,.btn:active {
-  outline: none !important;
-  box-shadow: none;
+.jumbotron {
+  padding: 2rem 1rem;
+  margin-bottom: 2rem;
+  background-color: #e9ecef;
+  border-radius: .3rem;
+  padding-right: 60px;
+  padding-left: 60px;
 }
 
 .breadcrumb a {
@@ -25,6 +21,10 @@ table.dataTable thead .sorting_desc {
 
 [data-href] {
   cursor: pointer;
+}
+
+.table.dataTable {
+  caption-side: top;
 }
 
 .table.dataTable a {
