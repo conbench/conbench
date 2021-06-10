@@ -80,13 +80,17 @@
                 <tbody>
                     {% for c in comparisons %}
                     <tr>
-                         {% if c.contender is none %}
-                           <td>---</td>
-                         {% else %}
+                         {% if c.contender is not none and c.baseline is not none %}
                            <td>{{ c.contender_z_score }}</td>
+                         {% else %}
+                           <td>---</td>
                          {% endif %}
 
-                         <td>{{ c.change }}</td>
+                         {% if c.contender is not none and c.baseline is not none %}
+                           <td>{{ c.change }}</td>
+                         {% else %}
+                           <td>---</td>
+                         {% endif %}
 
                          <td>
                            {% if type == "batch" %}
