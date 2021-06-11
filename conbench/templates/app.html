@@ -11,25 +11,11 @@
 <link href="https://cdn.datatables.net/1.10.23/css/dataTables.bootstrap.min.css" rel="stylesheet" type="text/css">
 <link href="https://cdn.datatables.net/responsive/2.2.7/css/responsive.bootstrap.min.css" rel="stylesheet" type="text/css">
 <link href="{{ url_for('static', filename='app.css') }}" rel=stylesheet type=text/css />
-<link href="{{ url_for('static', filename='sidebar.css') }}" rel=stylesheet type=text/css />
 {% endblock %}
 
 {% block navbar %}
-<div id="wrapper">
-
-  <div id="sidebar-wrapper">
-    <ul class="sidebar-nav">
-      <li class="sidebar-brand"><a href="{{ url_for('app.index') }}">{{ application }}</a></li>
-      <li> <a href="{{ url_for('app.index') }}"><span class="glyphicon glyphicon-home"></span> &nbsp; &nbsp; Home</a></li>
-      <li> <a href="{{ url_for('app.users') }}"><span class="glyphicon glyphicon-user"></span> &nbsp; &nbsp; Users</a></li>
-      <li> <a href="/api/docs" target="_blank"><span class="glyphicon glyphicon-book"></span> &nbsp; &nbsp; API Docs</a></li>
-    </ul>
-  </div>
-
-  <!-- Page Content -->
-
     <nav class="navbar navbar-default">
-        <div class="container-fluid">
+        <div class="container">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
                     <span class="sr-only">Toggle navigation</span>
@@ -37,26 +23,29 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
+                <a class="navbar-brand" href="{{ url_for('app.index') }}">{{ application }}</a>
             </div>
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav">
-                    <li><a href="#menu-toggle" id="menu-toggle"><span class="glyphicon glyphicon-arrow-left submenu"></span></a></li>
-                    <li><a href="{{ url_for('app.index') }}" id="menu-toggle"><span class="glyphicon glyphicon-home"></span></a></li>
+                {% if current_user.is_anonymous %}
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="{{ url_for('app.login') }}">Login</a></li>
+                    </ul>
+                {% else %}
+                    <ul class="nav navbar-nav navbar-right">
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                            <span class="glyphicon glyphicon-user"></span>
+                            <span class="glyphicon glyphicon-cog"></span>
                             <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a href="{{ url_for('app.user', user_id=current_user.id) }}""><span class="glyphicon glyphicon-cog submenu"></span> &nbsp; Settings</a></li>
-                            <li><a href="{{ url_for('app.index') }}"><span class="glyphicon glyphicon-bell submenu"></span> &nbsp; Notifications</a></li>
+                            <li><a href="{{ url_for('app.users') }}""><span class="glyphicon glyphicon-user submenu"></span> &nbsp; Users</a></li>
                             <li role="separator" class="divider"></li>
-                            <li><a href="{{ url_for('app.logout') }}"><span class="glyphicon glyphicon-off submenu"></span> &nbsp; Logout</a></li>
+                            <li><a href="/api/docs"><span class="glyphicon glyphicon-book submenu"></span> &nbsp; API Docs</a></li>
                         </ul>
                     </li>
-                </ul>
-                <ul class="nav navbar-nav navbar-right">
-                </ul>
+                         <li><a href="{{ url_for('app.logout') }}">Logout</a></li>
+                    </ul>
+                {% endif %}
             </div>
         </div>
     </nav>
@@ -85,8 +74,8 @@
 
 
 {% block content %}
-  <div id="page-content-wrapper">
-    <div class="container-fluid">
+    <div class="container">
+        <br>
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
@@ -110,10 +99,6 @@
         {# application content needs to be provided in the app_content block #}
         {% block app_content %}{% endblock %}
     </div>
-  </div>
-  <!-- /#page-content-wrapper -->
-</div>
-<!-- /#wrapper -->
 {% endblock %}
 
 {% block scripts %}
@@ -125,11 +110,6 @@
 <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.7/js/responsive.bootstrap.min.js"></script>
 
 <script type="text/javascript">
-$("#menu-toggle").click(function(e) {
-    e.preventDefault();
-    $("#wrapper").toggleClass("toggled");
-});
-
 $(document).ready(function() {
     setTimeout(function() {
         $(".flash-message").fadeOut("slow");

@@ -1,8 +1,4 @@
-{% if current_user.is_anonymous %}
-  {% extends "base.html" %}
-{% else %}
-  {% extends "app.html" %}
-{% endif %}
+{% extends "app.html" %}
 
 {% block app_content %}
 <div class="row">
