@@ -1,8 +1,4 @@
-{% if current_user.is_anonymous %}
-  {% extends "base.html" %}
-{% else %}
-  {% extends "app.html" %}
-{% endif %}
+{% extends "app.html" %}
 
 {% block app_content %}
 <div class="row">
@@ -76,6 +72,5 @@
       "responsive": true,
       "order": [[0, 'desc']],
   } );
-  new $.fn.dataTable.FixedHeader( table );
 </script>
 {% endblock %}

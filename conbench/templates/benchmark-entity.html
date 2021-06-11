@@ -1,9 +1,4 @@
-{% if current_user.is_anonymous %}
-    {% extends "base.html" %}
-{% else %}
-    {% extends "app.html" %}
-{% endif %}
-
+{% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}

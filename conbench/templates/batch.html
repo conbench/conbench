@@ -1,8 +1,4 @@
-{% if current_user.is_anonymous %}
-    {% extends "base.html" %}
-{% else %}
-    {% extends "app.html" %}
-{% endif %}
+{% extends "app.html" %}
 
 {% block app_content %}
     <nav aria-label="breadcrumb">
@@ -99,7 +95,6 @@ var table = $('#benchmarks').dataTable( {
     "order": [[0, 'desc']],
     "columnDefs": [{ "orderable": false, "targets": [3] }]
 } );
-new $.fn.dataTable.FixedHeader( table );
 
 $(document).ready(function() {
     $('#unit-tooltip').tooltip()

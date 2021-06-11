@@ -1,10 +1,4 @@
-{% if current_user.is_anonymous %}
-    {% extends "base.html" %}
-{% else %}
-    {% extends "app.html" %}
-{% endif %}
-
-{% import 'bootstrap/wtf.html' as wtf %}
+{% extends "app.html" %}
 
 {% block app_content %}
     <nav aria-label="breadcrumb">
@@ -144,7 +138,6 @@
       "order": [[0, 'asc']],
       "columnDefs": [{ "orderable": false, "targets": [4, 5] }]
   } );
-  new $.fn.dataTable.FixedHeader( table );
 
   $(document).ready(function() {
     $('#unit-tooltip').tooltip()

@@ -1,9 +1,4 @@
-{% if current_user.is_anonymous %}
-    {% extends "base.html" %}
-{% else %}
-    {% extends "app.html" %}
-{% endif %}
-
+{% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
@@ -68,7 +63,6 @@
     "order": [[0, 'desc']],
     "columnDefs": [{ "orderable": false, "targets": [3, 4] }]
   } );
-new $.fn.dataTable.FixedHeader( table );
 {% endif %}
 </script>
 {% endblock %}
