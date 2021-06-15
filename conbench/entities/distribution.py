@@ -37,6 +37,7 @@ class Distribution(Base, EntityMixin):
     first_timestamp = NotNull(s.DateTime(timezone=False))
     last_timestamp = NotNull(s.DateTime(timezone=False))
     observations = NotNull(s.Integer, check("observations>=1"))
+    limit = Nullable(s.Integer)
 
 
 s.Index(
@@ -136,6 +137,7 @@ def update_distribution(repository, sha, summary, limit):
     values = dict(distribution)
     machine_hash = values.pop("hash")
     values["machine_hash"] = machine_hash
+    values["limit"] = limit
 
     with engine.connect() as conn:
         conn.execute(
