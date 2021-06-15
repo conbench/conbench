@@ -16,7 +16,6 @@ from ...tests.helpers import _uuid
 def _expected_entity(summary):
     return _api_benchmark_entity(
         summary.id,
-        summary.machine_id,
         summary.context_id,
         summary.case.id,
         summary.batch_id,
@@ -344,7 +343,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         assert summary_1.id != summary_2.id
         assert summary_1.case_id == summary_2.case_id
         assert summary_1.context_id == summary_2.context_id
-        assert summary_1.machine_id == summary_2.machine_id
+        assert summary_1.run.machine_id == summary_2.run.machine_id
         assert summary_1.run_id != summary_2.run_id
         assert summary_1.run.commit_id == summary_2.run.commit_id
 
@@ -407,7 +406,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         self.assert_201_created(response, _expected_entity(summary_2), location)
         assert summary_1.case_id == summary_2.case_id
         assert summary_1.context_id == summary_2.context_id
-        assert summary_1.machine_id == summary_2.machine_id
+        assert summary_1.run.machine_id == summary_2.run.machine_id
         assert summary_1.run.commit_id == summary_2.run.commit_id
 
         # after two results

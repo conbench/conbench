@@ -20,11 +20,8 @@ class BenchmarkMixin:
             return None
 
         augment(benchmark)
-        machine = self._get_machine(benchmark)
         context = self._get_context(benchmark)
-        machine.pop("links", None)
         context.pop("links", None)
-        benchmark["machine"] = machine
         benchmark["context"] = context
 
         return benchmark

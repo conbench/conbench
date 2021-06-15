@@ -22,7 +22,7 @@ class TestMachineGet(_asserts.GetEnforcer):
 
     def _create(self):
         summary = create_benchmark_summary()
-        return summary.machine
+        return summary.run.machine
 
     def test_get_machine(self, client):
         self.authenticate(client)

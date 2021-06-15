@@ -50,7 +50,6 @@
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "list": "http://localhost/api/benchmarks/",
-                                "machine": "http://localhost/api/machines/some-machine-uuid-1/",
                                 "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
@@ -119,7 +118,6 @@
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "list": "http://localhost/api/benchmarks/",
-                                "machine": "http://localhost/api/machines/some-machine-uuid-1/",
                                 "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
@@ -189,7 +187,6 @@
                                 "links": {
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                     "list": "http://localhost/api/benchmarks/",
-                                    "machine": "http://localhost/api/machines/some-machine-uuid-1/",
                                     "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                                 },
@@ -251,7 +248,6 @@
                                 "links": {
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                     "list": "http://localhost/api/benchmarks/",
-                                    "machine": "http://localhost/api/machines/some-machine-uuid-1/",
                                     "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-2/",
                                 },
