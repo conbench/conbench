@@ -40,13 +40,6 @@ class BenchmarkMixin:
             return {}
         return response.json
 
-    def _get_machine(self, benchmark):
-        response = self.api_get_url(benchmark["links"]["machine"])
-        if response.status_code != 200:
-            self.flash("Error getting machine.")
-            return {}
-        return response.json
-
 
 class RunMixin:
     def get_display_run(self, run_id):
