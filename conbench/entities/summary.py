@@ -151,7 +151,7 @@ class Summary(Base, EntityMixin):
             bulk.append(Time(result=x, summary_id=summary.id, iteration=i + 1))
         Time.bulk_save_objects(bulk)
 
-        update_distribution(repository, sha, summary, 1000)
+        update_distribution(repository, sha, summary, 100)
 
         return summary
 
