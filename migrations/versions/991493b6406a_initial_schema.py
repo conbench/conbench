@@ -1,16 +1,9 @@
-"""initial schema
-
-Revision ID: afc565181834
-Revises:
-Create Date: 2021-06-15 12:53:16.869841
-
-"""
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-# revision identifiers, used by Alembic.
-revision = "afc565181834"
+
+revision = "991493b6406a"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -29,8 +22,8 @@ def upgrade():
         "commit",
         sa.Column("id", sa.String(length=50), nullable=False),
         sa.Column("sha", sa.String(length=50), nullable=False),
-        sa.Column("parent", sa.String(length=50), nullable=False),
         sa.Column("repository", sa.String(length=100), nullable=False),
+        sa.Column("url", sa.String(length=250), nullable=False),
         sa.Column("message", sa.String(length=250), nullable=False),
         sa.Column("author_name", sa.String(length=100), nullable=False),
         sa.Column("author_login", sa.String(length=50), nullable=True),
@@ -38,7 +31,6 @@ def upgrade():
         sa.Column("timestamp", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("commit_index", "commit", ["sha"], unique=True)
     op.create_table(
         "context",
         sa.Column("id", sa.String(length=50), nullable=False),
@@ -96,53 +88,6 @@ def upgrade():
     )
     op.create_index(op.f("ix_user_email"), "user", ["email"], unique=True)
     op.create_table(
-        "distribution",
-        sa.Column("id", sa.String(length=50), nullable=False),
-        sa.Column("sha", sa.String(length=50), nullable=False),
-        sa.Column("repository", sa.String(length=100), nullable=False),
-        sa.Column("case_id", sa.String(length=50), nullable=False),
-        sa.Column("context_id", sa.String(length=50), nullable=False),
-        sa.Column("machine_hash", sa.String(length=250), nullable=False),
-        sa.Column("unit", sa.Text(), nullable=False),
-        sa.Column("mean_mean", sa.Numeric(), nullable=True),
-        sa.Column("mean_sd", sa.Numeric(), nullable=True),
-        sa.Column("min_mean", sa.Numeric(), nullable=True),
-        sa.Column("min_sd", sa.Numeric(), nullable=True),
-        sa.Column("max_mean", sa.Numeric(), nullable=True),
-        sa.Column("max_sd", sa.Numeric(), nullable=True),
-        sa.Column("median_mean", sa.Numeric(), nullable=True),
-        sa.Column("median_sd", sa.Numeric(), nullable=True),
-        sa.Column("first_timestamp", sa.DateTime(), nullable=False),
-        sa.Column("last_timestamp", sa.DateTime(), nullable=False),
-        sa.Column("observations", sa.Integer(), nullable=False),
-        sa.Column("limit", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(["case_id"], ["case.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["context_id"], ["context.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(
-        "distribution_case_id_index", "distribution", ["case_id"], unique=False
-    )
-    op.create_index(
-        "distribution_context_id_index", "distribution", ["context_id"], unique=False
-    )
-    op.create_index(
-        "distribution_index",
-        "distribution",
-        ["sha", "case_id", "context_id", "machine_hash"],
-        unique=True,
-    )
-    op.create_index(
-        "distribution_machine_hash_index",
-        "distribution",
-        ["machine_hash"],
-        unique=False,
-    )
-    op.create_index(
-        "distribution_repository_index", "distribution", ["repository"], unique=False
-    )
-    op.create_index("distribution_sha_index", "distribution", ["sha"], unique=False)
-    op.create_table(
         "run",
         sa.Column("id", sa.String(length=50), nullable=False),
         sa.Column("name", sa.String(length=250), nullable=True),
@@ -165,8 +110,8 @@ def upgrade():
         "summary",
         sa.Column("id", sa.String(length=50), nullable=False),
         sa.Column("case_id", sa.String(length=50), nullable=False),
-        sa.Column("context_id", sa.String(length=50), nullable=False),
         sa.Column("machine_id", sa.String(length=50), nullable=False),
+        sa.Column("context_id", sa.String(length=50), nullable=False),
         sa.Column("run_id", sa.Text(), nullable=False),
         sa.Column("unit", sa.Text(), nullable=False),
         sa.Column("time_unit", sa.Text(), nullable=False),
@@ -234,20 +179,12 @@ def downgrade():
     op.drop_index("summary_batch_id_index", table_name="summary")
     op.drop_table("summary")
     op.drop_table("run")
-    op.drop_index("distribution_sha_index", table_name="distribution")
-    op.drop_index("distribution_repository_index", table_name="distribution")
-    op.drop_index("distribution_machine_hash_index", table_name="distribution")
-    op.drop_index("distribution_index", table_name="distribution")
-    op.drop_index("distribution_context_id_index", table_name="distribution")
-    op.drop_index("distribution_case_id_index", table_name="distribution")
-    op.drop_table("distribution")
     op.drop_index(op.f("ix_user_email"), table_name="user")
     op.drop_table("user")
     op.drop_index("machine_index", table_name="machine")
     op.drop_table("machine")
     op.drop_index("context_index", table_name="context")
     op.drop_table("context")
-    op.drop_index("commit_index", table_name="commit")
     op.drop_table("commit")
     op.drop_index("case_index", table_name="case")
     op.drop_table("case")
