@@ -154,7 +154,7 @@ def upgrade():
                     summary["case_id"],
                     summary["context_id"],
                     machine_hash,
-                    1000,
+                    100,
                 )
             )
         )
@@ -167,6 +167,7 @@ def upgrade():
         machine_hash = values.pop("hash")
         values["id"] = uuid.uuid4().hex
         values["machine_hash"] = machine_hash
+        values["limit"] = 100
 
         connection.execute(
             insert(distribution_table)
