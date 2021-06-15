@@ -37,7 +37,7 @@ class Distribution(Base, EntityMixin):
     first_timestamp = NotNull(s.DateTime(timezone=False))
     last_timestamp = NotNull(s.DateTime(timezone=False))
     observations = NotNull(s.Integer, check("observations>=1"))
-    limit = Nullable(s.Integer)
+    limit = NotNull(s.Integer, check('"limit">=1'))
 
 
 s.Index(
