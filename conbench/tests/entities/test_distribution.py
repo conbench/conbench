@@ -58,7 +58,7 @@ DISTRIBUTION = """WITH ordered_commits AS
 FROM commit 
 WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
  SELECT text(:text_1) AS repository, text(:text_2) AS sha, summary.case_id, summary.context_id, concat(machine.name, :concat_1, machine.cpu_core_count, :concat_2, machine.cpu_thread_count, :concat_3, machine.memory_bytes) AS hash, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
-FROM summary JOIN run ON run.id = summary.run_id JOIN machine ON machine.id = summary.machine_id JOIN (SELECT commit_index.id AS id, commit_index.sha AS sha, commit_index.timestamp AS timestamp, commit_index.row_number AS row_number 
+FROM summary JOIN run ON run.id = summary.run_id JOIN machine ON machine.id = run.machine_id JOIN (SELECT commit_index.id AS id, commit_index.sha AS sha, commit_index.timestamp AS timestamp, commit_index.row_number AS row_number 
 FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
 WHERE commit_index.row_number >= (SELECT commit_index.row_number 
@@ -241,14 +241,14 @@ def test_distibution():
     assert summary_1.case_id == summary_4.case_id
     assert summary_1.case_id == summary_5.case_id
 
-    assert summary_1.machine_id == summary_2.machine_id
-    assert summary_1.machine_id == summary_3.machine_id
-    assert summary_1.machine_id == summary_4.machine_id
-    assert summary_1.machine_id == summary_5.machine_id
+    assert summary_1.run.machine_id == summary_2.run.machine_id
+    assert summary_1.run.machine_id == summary_3.run.machine_id
+    assert summary_1.run.machine_id == summary_4.run.machine_id
+    assert summary_1.run.machine_id == summary_5.run.machine_id
 
     case_id = summary_1.case_id
     context_id = summary_1.context_id
-    machine_hash = summary_1.machine.hash
+    machine_hash = summary_1.run.machine.hash
 
     assert Distribution.count() >= 7
 
@@ -501,7 +501,7 @@ def test_distibution_multiple_runs_same_commit():
 
     case_id = summary_1.case_id
     context_id = summary_1.context_id
-    machine_hash = summary_1.machine.hash
+    machine_hash = summary_1.run.machine.hash
 
     assert get_distribution(
         REPO, "xxxxx", case_id, context_id, machine_hash, 10

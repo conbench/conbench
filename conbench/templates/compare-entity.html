@@ -149,7 +149,7 @@
             </li>
           {% endfor %}
           <li class="list-group-item active">Machine</li>
-          {% for k,v in baseline.machine.items() %}
+          {% for k,v in baseline_run.machine.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
               <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
@@ -242,7 +242,7 @@
             </li>
           {% endfor %}
           <li class="list-group-item active">Machine</li>
-          {% for k,v in contender.machine.items() %}
+          {% for k,v in contender_run.machine.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
               <div align="right" style="display:inline-block; float: right;">{{ v }}</div>

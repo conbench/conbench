@@ -22,9 +22,7 @@ def _api_user_entity(user):
     }
 
 
-def _api_benchmark_entity(
-    summary_id, machine_id, context_id, case_id, batch_id, run_id, name
-):
+def _api_benchmark_entity(summary_id, context_id, case_id, batch_id, run_id, name):
     return {
         "id": summary_id,
         "stats": {
@@ -83,7 +81,6 @@ def _api_benchmark_entity(
             "list": "http://localhost/api/benchmarks/",
             "self": "http://localhost/api/benchmarks/%s/" % summary_id,
             "context": "http://localhost/api/contexts/%s/" % context_id,
-            "machine": "http://localhost/api/machines/%s/" % machine_id,
             "run": "http://localhost/api/runs/%s/" % run_id,
         },
     }
@@ -262,7 +259,6 @@ def _api_run_entity(run_id, commit_id, machine_id, now, baseline_id):
 
 BENCHMARK_ENTITY = _api_benchmark_entity(
     "some-benchmark-uuid-1",
-    "some-machine-uuid-1",
     "some-context-uuid-1",
     "some-case-uuid-1",
     "some-batch-uuid-1",
@@ -272,7 +268,6 @@ BENCHMARK_ENTITY = _api_benchmark_entity(
 BENCHMARK_LIST = [
     _api_benchmark_entity(
         "some-benchmark-uuid-1",
-        "some-machine-uuid-1",
         "some-context-uuid-1",
         "some-case-uuid-1",
         "some-batch-uuid-1",
@@ -281,7 +276,6 @@ BENCHMARK_LIST = [
     ),
     _api_benchmark_entity(
         "some-benchmark-uuid-2",
-        "some-machine-uuid-1",
         "some-context-uuid-1",
         "some-case-uuid-1",
         "some-batch-uuid-1",

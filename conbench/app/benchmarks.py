@@ -20,11 +20,8 @@ class BenchmarkMixin:
             return None
 
         augment(benchmark)
-        machine = self._get_machine(benchmark)
         context = self._get_context(benchmark)
-        machine.pop("links", None)
         context.pop("links", None)
-        benchmark["machine"] = machine
         benchmark["context"] = context
 
         return benchmark
@@ -40,13 +37,6 @@ class BenchmarkMixin:
         response = self.api_get_url(benchmark["links"]["context"])
         if response.status_code != 200:
             self.flash("Error getting context.")
-            return {}
-        return response.json
-
-    def _get_machine(self, benchmark):
-        response = self.api_get_url(benchmark["links"]["machine"])
-        if response.status_code != 200:
-            self.flash("Error getting machine.")
             return {}
         return response.json
 

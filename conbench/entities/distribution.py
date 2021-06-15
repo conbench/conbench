@@ -108,7 +108,7 @@ def get_distribution(repository, sha, case_id, context_id, machine_hash, limit):
             Machine.memory_bytes,
         )
         .join(Run, Run.id == Summary.run_id)
-        .join(Machine, Machine.id == Summary.machine_id)
+        .join(Machine, Machine.id == Run.machine_id)
         .join(commits_up, commits_up.c.id == Run.commit_id)
         .filter(
             Run.name.like("commit: %"),
@@ -127,7 +127,7 @@ def update_distribution(repository, sha, summary, limit):
         sha,
         summary.case_id,
         summary.context_id,
-        summary.machine.hash,
+        summary.run.machine.hash,
         limit,
     ).first()
 
@@ -158,7 +158,7 @@ def set_z_scores(summaries):
     first = summaries[0]
     repository = first.run.commit.repository
     sha = first.run.commit.parent
-    machine_hash = first.machine.hash
+    machine_hash = first.run.machine.hash
 
     where = [
         Distribution.repository == repository,

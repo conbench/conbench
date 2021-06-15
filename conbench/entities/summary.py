@@ -32,12 +32,9 @@ class Summary(Base, EntityMixin):
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     case_id = NotNull(s.String(50), s.ForeignKey("case.id"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
-    # TODO: remove machine_id (it's on the run too)
-    machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
     run_id = NotNull(s.Text, s.ForeignKey("run.id"))
     case = relationship("Case", lazy="joined")
     context = relationship("Context", lazy="select")
-    machine = relationship("Machine", lazy="select")
     run = relationship("Run", lazy="select")
     data = relationship(
         "Data",
@@ -135,7 +132,6 @@ class Summary(Base, EntityMixin):
 
         stats["case_id"] = case.id
         stats["context_id"] = context.id
-        stats["machine_id"] = machine.id
         summary = Summary(**stats)
         summary.save()
 
@@ -227,9 +223,6 @@ class _Serializer(EntitySerializer):
                 ),
                 "context": f.url_for(
                     "api.context", context_id=summary.context_id, _external=True
-                ),
-                "machine": f.url_for(
-                    "api.machine", machine_id=summary.machine_id, _external=True
                 ),
                 "run": f.url_for("api.run", run_id=summary.run_id, _external=True),
             },
