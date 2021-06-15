@@ -1,7 +1,7 @@
 """initial schema
 
 Revision ID: afc565181834
-Revises: 
+Revises:
 Create Date: 2021-06-15 12:53:16.869841
 
 """
