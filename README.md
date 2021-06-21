@@ -190,6 +190,9 @@ method, and registers itself with the `@conbench.runner.register_benchmark`
 decorator.
 
 ```
+import conbench.runner
+
+
 @conbench.runner.register_benchmark
 class SimpleBenchmark(conbench.runner.Benchmark):
     """Example simple benchmark.
@@ -294,7 +297,7 @@ Benchmark result:
 ### Example external benchmarks
 
 An "external benchmark" records results that were obtained from some other
-benchmarking tool (like executing an R benchmarks from command line, parsing
+benchmarking tool (like executing an R benchmark from command line, parsing
 the resulting JSON, and recording those results).
 
 Implementation details: Note that the following benchmark sets
@@ -302,6 +305,9 @@ Implementation details: Note that the following benchmark sets
 example above does.
 
 ```
+import conbench.runner
+
+
 @conbench.runner.register_benchmark
 class ExternalBenchmark(conbench.runner.Benchmark):
     """Example benchmark that just records external results.
@@ -427,6 +433,9 @@ the cases names). This benchmark example also accepts a data source argument
 command line interface.
 
 ```
+import conbench.runner
+
+
 @conbench.runner.register_benchmark
 class CasesBenchmark(conbench.runner.Benchmark):
     """Example benchmark with cases, an option, and an argument.
