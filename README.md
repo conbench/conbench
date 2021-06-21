@@ -125,7 +125,7 @@ repository, and the results are hosted on the
 
 
 ### Lint code (before committing)
-    (qa) $ cd ~/workspace/benchmarks/
+    (qa) $ cd ~/workspace/conbench/
     (qa) $ flake8
     ./foo/bar/__init__.py:1:1: F401 'FooBar' imported but unused
 
