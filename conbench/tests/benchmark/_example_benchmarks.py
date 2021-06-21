@@ -15,7 +15,9 @@ class BenchmarkList(conbench.runner.BenchmarkList):
 
 
 @conbench.runner.register_benchmark
-class WithoutCasesBenchmark(conbench.runner.Benchmark):
+class SimpleBenchmark(conbench.runner.Benchmark):
+    """Example benchmark without cases."""
+
     name = "addition"
 
     def __init__(self):
@@ -25,21 +27,30 @@ class WithoutCasesBenchmark(conbench.runner.Benchmark):
         def func():
             return 1 + 1
 
-        github_info = {}
+        tags = {"year": "2020"}
+        options = {"iterations": 10}
+        context = {"benchmark_language": "Python"}
+        github_info = {
+            "commit": "02addad336ba19a654f9c857ede546331be7b631",
+            "repository": "https://github.com/apache/arrow",
+        }
+
         benchmark, output = self.conbench.benchmark(
             func,
             self.name,
-            {"year": "2020"},
-            {"benchmark_language": "Python"},
+            tags,
+            context,
             github_info,
-            {"iterations": 10},
+            options,
         )
         self.conbench.publish(benchmark)
         yield benchmark, output
 
 
 @conbench.runner.register_benchmark
-class WithCasesBenchmark(conbench.runner.Benchmark):
+class CasesBenchmark(conbench.runner.Benchmark):
+    """Example benchmark with cases."""
+
     name = "subtraction"
     valid_cases = (
         ("color", "fruit"),
@@ -59,6 +70,9 @@ class WithCasesBenchmark(conbench.runner.Benchmark):
         def func():
             return 100 - 1
 
+        options = {"iterations": 10}
+        context = {"benchmark_language": "Python"}
+
         cases, github_info = self.get_cases(case, kwargs), {}
         for case in cases:
             color, fruit = case
@@ -72,9 +86,9 @@ class WithCasesBenchmark(conbench.runner.Benchmark):
                 func,
                 self.name,
                 tags,
-                {"benchmark_language": "Python"},
+                context,
                 github_info,
-                {"iterations": 10},
+                options,
             )
             self.conbench.publish(benchmark)
             yield benchmark, output

@@ -185,12 +185,58 @@ example benchmarks and their tests can be found here:
 A "simple benchmark" runs and records the execution time of a unit of work.
 
 Implementation details: Note that this benchmark extends
-`benchmarks._benchmark.Benchmark`, implements the minimum required `run()`
+`conbench.runner.Benchmark`, implements the minimum required `run()`
 method, and registers itself with the `@conbench.runner.register_benchmark`
 decorator.
 
 ```
-TODO
+@conbench.runner.register_benchmark
+class SimpleBenchmark(conbench.runner.Benchmark):
+    """Example simple benchmark.
+
+    Usage: conbench addition [OPTIONS]
+
+      Run addition benchmark.
+
+    Options:
+      --iterations INTEGER   [default: 1]
+      --drop-caches BOOLEAN  [default: False]
+      --gc-collect BOOLEAN   [default: True]
+      --gc-disable BOOLEAN   [default: True]
+      --show-result BOOLEAN  [default: True]
+      --show-output BOOLEAN  [default: False]
+      --run-id TEXT          Group executions together with a run id.
+      --run-name TEXT        Name of run (commit, pull request, etc).
+      --help                 Show this message and exit.
+    """
+
+    name = "addition"
+
+    def __init__(self):
+        self.conbench = conbench.runner.Conbench()
+
+    def run(self, **kwargs):
+        def func():
+            return 1 + 1
+
+        tags = {"year": "2020"}
+        options = {"iterations": 10}
+        context = {"benchmark_language": "Python"}
+        github_info = {
+            "commit": "02addad336ba19a654f9c857ede546331be7b631",
+            "repository": "https://github.com/apache/arrow",
+        }
+
+        benchmark, output = self.conbench.benchmark(
+            func,
+            self.name,
+            tags,
+            context,
+            github_info,
+            options,
+        )
+        self.conbench.publish(benchmark)
+        yield benchmark, output
 ```
 
 ### Example external benchmarks
@@ -219,5 +265,81 @@ the cases names). This benchmark example also accepts a data source argument
 command line interface.
 
 ```
-TODO
+@conbench.runner.register_benchmark
+class CasesBenchmark(conbench.runner.Benchmark):
+    """Example benchmark with cases.
+
+    Usage: conbench subtraction [OPTIONS] SOURCE
+
+      Run subtraction benchmark(s).
+
+      For each benchmark option, the first option value is the default.
+
+      Valid benchmark combinations:
+      --color=pink --fruit=apple
+      --color=yellow --fruit=apple
+      --color=green --fruit=apple
+      --color=yellow --fruit=orange
+      --color=pink --fruit=orange
+
+      To run all combinations:
+      $ conbench subtraction --all=true
+
+    Options:
+      --color [green|pink|yellow]
+      --fruit [apple|orange]
+      --all BOOLEAN                [default: False]
+      --count INTEGER              [default: 1]
+      --iterations INTEGER         [default: 1]
+      --drop-caches BOOLEAN        [default: False]
+      --gc-collect BOOLEAN         [default: True]
+      --gc-disable BOOLEAN         [default: True]
+      --show-result BOOLEAN        [default: True]
+      --show-output BOOLEAN        [default: False]
+      --run-id TEXT                Group executions together with a run id.
+      --run-name TEXT              Name of run (commit, pull request, etc).
+      --help                       Show this message and exit.
+    """
+
+    name = "subtraction"
+    valid_cases = (
+        ("color", "fruit"),
+        ("pink", "apple"),
+        ("yellow", "apple"),
+        ("green", "apple"),
+        ("yellow", "orange"),
+        ("pink", "orange"),
+    )
+    arguments = ["source"]
+    options = {"count": {"default": 1, "type": int}}
+
+    def __init__(self):
+        self.conbench = conbench.runner.Conbench()
+
+    def run(self, source, case=None, count=1, **kwargs):
+        def func():
+            return 100 - 1
+
+        options = {"iterations": 10}
+        context = {"benchmark_language": "Python"}
+
+        cases, github_info = self.get_cases(case, kwargs), {}
+        for case in cases:
+            color, fruit = case
+            tags = {
+                "color": color,
+                "fruit": fruit,
+                "count": count,
+                "dataset": source,
+            }
+            benchmark, output = self.conbench.benchmark(
+                func,
+                self.name,
+                tags,
+                context,
+                github_info,
+                options,
+            )
+            self.conbench.publish(benchmark)
+            yield benchmark, output
 ```

@@ -1,4 +1,4 @@
-from ._example_benchmarks import WithCasesBenchmark, WithoutCasesBenchmark
+from ._example_benchmarks import CasesBenchmark, SimpleBenchmark
 from ...entities.summary import BenchmarkFacadeSchema
 
 example = {
@@ -78,7 +78,7 @@ def assert_keys_equal(a, b):
 
 
 def test_runner_without_cases():
-    benchmark = WithoutCasesBenchmark()
+    benchmark = SimpleBenchmark()
     [(result, output)] = benchmark.run()
     assert not BenchmarkFacadeSchema.create.validate(result)
     expected_tags = {
@@ -98,7 +98,7 @@ def test_runner_without_cases():
 
 
 def test_runner_with_cases():
-    benchmark = WithCasesBenchmark()
+    benchmark = CasesBenchmark()
     case = ("pink", "apple")
     [(result, output)] = benchmark.run("sample", case=case)
     assert not BenchmarkFacadeSchema.create.validate(result)
