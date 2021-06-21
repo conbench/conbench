@@ -14,6 +14,7 @@ Options:
 
 Commands:
   addition     Run addition benchmark.
+  external     Run external benchmark.
   list         List of benchmarks (for orchestration).
   subtraction  Run subtraction benchmark(s).
 """
@@ -22,6 +23,9 @@ CONBENCH_LIST = """
 [
   {
     "command": "addition --iterations=2"
+  },
+  {
+    "command": "external --iterations=2"
   },
   {
     "command": "subtraction --all=true --iterations=2"
@@ -94,6 +98,26 @@ Options:
 """
 
 
+CONBENCH_EXTERNAL = """
+Benchmark output:
+[100, 200, 300]
+"""
+
+
+CONBENCH_EXTERNAL_HELP = """
+Usage: conbench external [OPTIONS]
+
+  Run external benchmark.
+
+Options:
+  --show-result BOOLEAN  [default: True]
+  --show-output BOOLEAN  [default: False]
+  --run-id TEXT          Group executions together with a run id.
+  --run-name TEXT        Name of run (commit, pull request, etc).
+  --help                 Show this message and exit.
+"""
+
+
 this_dir = os.path.dirname(os.path.abspath(__file__))
 register_benchmarks(this_dir)
 
@@ -154,6 +178,22 @@ def test_conbench_command_with_cases_help(runner):
 
     result = runner.invoke(conbench, "subtraction --help")
     assert_command_output(result, CONBENCH_SUBTRACTION_HELP)
+
+
+def test_conbench_command_external(runner):
+    from conbench.cli import conbench
+
+    command = "external --show-result=false --show-output=true"
+    with unittest.mock.patch("conbench.util.Connection.publish"):
+        result = runner.invoke(conbench, command)
+    assert_command_output(result, CONBENCH_EXTERNAL)
+
+
+def test_conbench_command_external_help(runner):
+    from conbench.cli import conbench
+
+    result = runner.invoke(conbench, "external --help")
+    assert_command_output(result, CONBENCH_EXTERNAL_HELP)
 
 
 def test_conbench_list(runner):

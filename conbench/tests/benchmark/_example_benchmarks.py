@@ -15,7 +15,9 @@ class BenchmarkList(conbench.runner.BenchmarkList):
 
 
 @conbench.runner.register_benchmark
-class WithoutCasesBenchmark(conbench.runner.Benchmark):
+class SimpleBenchmark(conbench.runner.Benchmark):
+    """Example benchmark without cases."""
+
     name = "addition"
 
     def __init__(self):
@@ -25,21 +27,66 @@ class WithoutCasesBenchmark(conbench.runner.Benchmark):
         def func():
             return 1 + 1
 
-        github_info = {}
+        tags, context = {"year": "2020"}, {}
+        github_info = {
+            "commit": "02addad336ba19a654f9c857ede546331be7b631",
+            "repository": "https://github.com/apache/arrow",
+        }
         benchmark, output = self.conbench.benchmark(
             func,
             self.name,
-            {"year": "2020"},
-            {"benchmark_language": "Python"},
+            tags,
+            context,
             github_info,
-            {"iterations": 10},
+            kwargs,
         )
         self.conbench.publish(benchmark)
         yield benchmark, output
 
 
 @conbench.runner.register_benchmark
-class WithCasesBenchmark(conbench.runner.Benchmark):
+class ExternalBenchmark(conbench.runner.Benchmark):
+    """Example benchmark that just records external results."""
+
+    external = True
+    name = "external"
+
+    def __init__(self):
+        self.conbench = conbench.runner.Conbench()
+
+    def run(self, **kwargs):
+        tags, context = {"year": "2020"}, {"benchmark_language": "C++"}
+        github_info = {
+            "commit": "02addad336ba19a654f9c857ede546331be7b631",
+            "repository": "https://github.com/apache/arrow",
+        }
+
+        # external results from somewhere
+        # (an API call, command line execution, etc)
+        result = {
+            "data": [100, 200, 300],
+            "unit": "i/s",
+            "times": [0.100, 0.200, 0.300],
+            "time_unit": "s",
+        }
+
+        benchmark, output = self.conbench.record(
+            result,
+            self.name,
+            tags,
+            context,
+            github_info,
+            kwargs,
+            output=result["data"],
+        )
+        self.conbench.publish(benchmark)
+        yield benchmark, output
+
+
+@conbench.runner.register_benchmark
+class CasesBenchmark(conbench.runner.Benchmark):
+    """Example benchmark with cases, an option, and an argument."""
+
     name = "subtraction"
     valid_cases = (
         ("color", "fruit"),
@@ -59,8 +106,12 @@ class WithCasesBenchmark(conbench.runner.Benchmark):
         def func():
             return 100 - 1
 
-        cases, github_info = self.get_cases(case, kwargs), {}
-        for case in cases:
+        context = {}
+        github_info = {
+            "commit": "02addad336ba19a654f9c857ede546331be7b631",
+            "repository": "https://github.com/apache/arrow",
+        }
+        for case in self.get_cases(case, kwargs):
             color, fruit = case
             tags = {
                 "color": color,
@@ -72,9 +123,9 @@ class WithCasesBenchmark(conbench.runner.Benchmark):
                 func,
                 self.name,
                 tags,
-                {"benchmark_language": "Python"},
+                context,
                 github_info,
-                {"iterations": 10},
+                kwargs,
             )
             self.conbench.publish(benchmark)
             yield benchmark, output

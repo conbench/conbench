@@ -1,4 +1,4 @@
-from ._example_benchmarks import WithCasesBenchmark, WithoutCasesBenchmark
+from ._example_benchmarks import CasesBenchmark, ExternalBenchmark, SimpleBenchmark
 from ...entities.summary import BenchmarkFacadeSchema
 
 example = {
@@ -77,9 +77,9 @@ def assert_keys_equal(a, b):
     assert set(a.keys()) == set(b.keys())
 
 
-def test_runner_without_cases():
-    benchmark = WithoutCasesBenchmark()
-    [(result, output)] = benchmark.run()
+def test_runner_simple_benchmark():
+    benchmark = SimpleBenchmark()
+    [(result, output)] = benchmark.run(iterations=10)
     assert not BenchmarkFacadeSchema.create.validate(result)
     expected_tags = {
         "year": "2020",
@@ -97,10 +97,10 @@ def test_runner_without_cases():
     assert result["context"]["benchmark_language"] == "Python"
 
 
-def test_runner_with_cases():
-    benchmark = WithCasesBenchmark()
+def test_runner_case_benchmark():
+    benchmark = CasesBenchmark()
     case = ("pink", "apple")
-    [(result, output)] = benchmark.run("sample", case=case)
+    [(result, output)] = benchmark.run("sample", case=case, iterations=10)
     assert not BenchmarkFacadeSchema.create.validate(result)
     expected_tags = {
         "color": "pink",
@@ -119,3 +119,22 @@ def test_runner_with_cases():
     assert result["stats"]["iterations"] == 10
     assert len(result["stats"]["data"]) == 10
     assert result["context"]["benchmark_language"] == "Python"
+
+
+def test_runner_external_benchmark():
+    benchmark = ExternalBenchmark()
+    [(result, output)] = benchmark.run()
+    assert not BenchmarkFacadeSchema.create.validate(result)
+    expected_tags = {
+        "year": "2020",
+        "name": "external",
+    }
+    assert output == [100, 200, 300]
+    assert_keys_equal(result, example)
+    assert_keys_equal(result["tags"], expected_tags)
+    assert_keys_equal(result["stats"], example["stats"])
+    assert_keys_equal(result["machine_info"], example["machine_info"])
+    assert result["tags"] == expected_tags
+    assert result["stats"]["iterations"] == 3
+    assert len(result["stats"]["data"]) == 3
+    assert result["context"] == {"benchmark_language": "C++"}
