@@ -240,15 +240,68 @@ class SimpleBenchmark(conbench.runner.Benchmark):
 ### Example external benchmarks
 
 An "external benchmark" records results that were obtained from some other
-benchmarking tool (like executing the Arrow C++ micro benchmarks from command
-line, parsing the resulting JSON, and recording those results).
+benchmarking tool (like executing an R benchmarks from command line, parsing
+the resulting JSON, and recording those results).
 
 Implementation details: Note that the following benchmark sets
 `external = True`, and calls `record()` rather than `benchmark()` as the
 example above does.
 
 ```
-TODO
+@conbench.runner.register_benchmark
+class ExternalBenchmark(conbench.runner.Benchmark):
+    """Example benchmark that just records external results.
+
+    Usage: conbench external [OPTIONS]
+
+      Run external benchmark.
+
+    Options:
+      --iterations INTEGER   [default: 1]
+      --drop-caches BOOLEAN  [default: False]
+      --gc-collect BOOLEAN   [default: True]
+      --gc-disable BOOLEAN   [default: True]
+      --show-result BOOLEAN  [default: True]
+      --show-output BOOLEAN  [default: False]
+      --run-id TEXT          Group executions together with a run id.
+      --run-name TEXT        Name of run (commit, pull request, etc).
+      --help                 Show this message and exit.
+    """
+
+    external = True
+    name = "external"
+
+    def __init__(self):
+        self.conbench = conbench.runner.Conbench()
+
+    def run(self, **kwargs):
+        tags = {"year": "2020"}
+        context = {"benchmark_language": "Python"}
+        github_info = {
+            "commit": "02addad336ba19a654f9c857ede546331be7b631",
+            "repository": "https://github.com/apache/arrow",
+        }
+
+        # external results from somewhere
+        # (an API call, command line execution, etc)
+        result = {
+            "data": [100, 200, 300],
+            "unit": "i/s",
+            "times": [0.100, 0.200, 0.300],
+            "time_unit": "s",
+        }
+
+        benchmark, output = self.conbench.record(
+            result,
+            self.name,
+            tags,
+            context,
+            github_info,
+            kwargs,
+            output=result["data"],
+        )
+        self.conbench.publish(benchmark)
+        yield benchmark, output
 ```
 
 ### Example case benchmarks

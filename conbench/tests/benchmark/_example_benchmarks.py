@@ -46,6 +46,46 @@ class SimpleBenchmark(conbench.runner.Benchmark):
 
 
 @conbench.runner.register_benchmark
+class ExternalBenchmark(conbench.runner.Benchmark):
+    """Example benchmark that just records external results."""
+
+    external = True
+    name = "external"
+
+    def __init__(self):
+        self.conbench = conbench.runner.Conbench()
+
+    def run(self, **kwargs):
+        tags = {"year": "2020"}
+        context = {"benchmark_language": "Python"}
+        github_info = {
+            "commit": "02addad336ba19a654f9c857ede546331be7b631",
+            "repository": "https://github.com/apache/arrow",
+        }
+
+        # external results from somewhere
+        # (an API call, command line execution, etc)
+        result = {
+            "data": [100, 200, 300],
+            "unit": "i/s",
+            "times": [0.100, 0.200, 0.300],
+            "time_unit": "s",
+        }
+
+        benchmark, output = self.conbench.record(
+            result,
+            self.name,
+            tags,
+            context,
+            github_info,
+            kwargs,
+            output=result["data"],
+        )
+        self.conbench.publish(benchmark)
+        yield benchmark, output
+
+
+@conbench.runner.register_benchmark
 class CasesBenchmark(conbench.runner.Benchmark):
     """Example benchmark with cases, an option, and an argument."""
 
