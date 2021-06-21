@@ -89,6 +89,7 @@ def test_runner_simple_benchmark():
     assert_keys_equal(result, example)
     assert_keys_equal(result["tags"], expected_tags)
     assert_keys_equal(result["stats"], example["stats"])
+    assert_keys_equal(result["context"], example["context"])
     assert_keys_equal(result["machine_info"], example["machine_info"])
     assert result["tags"] == expected_tags
     assert result["stats"]["iterations"] == 10
@@ -112,6 +113,7 @@ def test_runner_case_benchmark():
     assert_keys_equal(result, example)
     assert_keys_equal(result["tags"], expected_tags)
     assert_keys_equal(result["stats"], example["stats"])
+    assert_keys_equal(result["context"], example["context"])
     assert_keys_equal(result["machine_info"], example["machine_info"])
     assert result["tags"] == expected_tags
     assert result["stats"]["iterations"] == 10

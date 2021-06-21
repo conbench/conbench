@@ -219,12 +219,7 @@ class SimpleBenchmark(conbench.runner.Benchmark):
         def func():
             return 1 + 1
 
-        tags = {"year": "2020"}
-        context = {"benchmark_language": "Python"}
-        github_info = {
-            "commit": "02addad336ba19a654f9c857ede546331be7b631",
-            "repository": "https://github.com/apache/arrow",
-        }
+        tags, context, github_info = {}, {}, {}  # user defined
         benchmark, output = self.conbench.benchmark(
             func,
             self.name,
@@ -275,13 +270,6 @@ class ExternalBenchmark(conbench.runner.Benchmark):
         self.conbench = conbench.runner.Conbench()
 
     def run(self, **kwargs):
-        tags = {"year": "2020"}
-        context = {"benchmark_language": "Python"}
-        github_info = {
-            "commit": "02addad336ba19a654f9c857ede546331be7b631",
-            "repository": "https://github.com/apache/arrow",
-        }
-
         # external results from somewhere
         # (an API call, command line execution, etc)
         result = {
@@ -291,6 +279,7 @@ class ExternalBenchmark(conbench.runner.Benchmark):
             "time_unit": "s",
         }
 
+        tags, context, github_info = {}, {}, {}  # user defined
         benchmark, output = self.conbench.record(
             result,
             self.name,
@@ -371,19 +360,9 @@ class CasesBenchmark(conbench.runner.Benchmark):
         def func():
             return 100 - 1
 
-        context = {"benchmark_language": "Python"}
-        github_info = {
-            "commit": "02addad336ba19a654f9c857ede546331be7b631",
-            "repository": "https://github.com/apache/arrow",
-        }
+        tags, context, github_info = {}, {}, {}  # user defined
         for case in self.get_cases(case, kwargs):
             color, fruit = case
-            tags = {
-                "color": color,
-                "fruit": fruit,
-                "count": count,
-                "dataset": source,
-            }
             benchmark, output = self.conbench.benchmark(
                 func,
                 self.name,
