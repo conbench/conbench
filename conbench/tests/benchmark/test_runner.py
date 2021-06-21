@@ -118,7 +118,7 @@ def test_runner_case_benchmark():
     assert result["tags"] == expected_tags
     assert result["stats"]["iterations"] == 10
     assert len(result["stats"]["data"]) == 10
-    assert result["context"]["benchmark_language"] == "C++"
+    assert result["context"]["benchmark_language"] == "Python"
 
 
 def test_runner_external_benchmark():
@@ -137,4 +137,4 @@ def test_runner_external_benchmark():
     assert result["tags"] == expected_tags
     assert result["stats"]["iterations"] == 3
     assert len(result["stats"]["data"]) == 3
-    assert result["context"]["benchmark_language"] == "Python"
+    assert result["context"] == {"benchmark_language": "C++"}

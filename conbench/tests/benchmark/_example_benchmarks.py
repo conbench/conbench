@@ -27,8 +27,7 @@ class SimpleBenchmark(conbench.runner.Benchmark):
         def func():
             return 1 + 1
 
-        tags = {"year": "2020"}
-        context = {"benchmark_language": "Python"}
+        tags, context = {"year": "2020"}, {}
         github_info = {
             "commit": "02addad336ba19a654f9c857ede546331be7b631",
             "repository": "https://github.com/apache/arrow",
@@ -56,8 +55,7 @@ class ExternalBenchmark(conbench.runner.Benchmark):
         self.conbench = conbench.runner.Conbench()
 
     def run(self, **kwargs):
-        tags = {"year": "2020"}
-        context = {"benchmark_language": "C++"}
+        tags, context = {"year": "2020"}, {"benchmark_language": "C++"}
         github_info = {
             "commit": "02addad336ba19a654f9c857ede546331be7b631",
             "repository": "https://github.com/apache/arrow",
@@ -108,7 +106,7 @@ class CasesBenchmark(conbench.runner.Benchmark):
         def func():
             return 100 - 1
 
-        context = {"benchmark_language": "Python"}
+        context = {}
         github_info = {
             "commit": "02addad336ba19a654f9c857ede546331be7b631",
             "repository": "https://github.com/apache/arrow",

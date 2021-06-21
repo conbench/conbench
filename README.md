@@ -232,6 +232,65 @@ class SimpleBenchmark(conbench.runner.Benchmark):
         yield benchmark, output
 ```
 
+```
+$ cd ~/workspace/conbench/conbench/tests/benchmark/
+$ conbench addition
+
+Benchmark result:
+{
+    "context": {
+        "benchmark_language": "Python",
+        "benchmark_language_version": "Python 3.9.2"
+    },
+    "github": {
+        "commit": "02addad336ba19a654f9c857ede546331be7b631",
+        "repository": "https://github.com/apache/arrow"
+    },
+    "machine_info": {
+        "architecture_name": "x86_64",
+        "cpu_core_count": "2",
+        "cpu_frequency_max_hz": "3500000000",
+        "cpu_l1d_cache_bytes": "32768",
+        "cpu_l1i_cache_bytes": "32768",
+        "cpu_l2_cache_bytes": "262144",
+        "cpu_l3_cache_bytes": "4194304",
+        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+        "cpu_thread_count": "4",
+        "kernel_name": "20.5.0",
+        "memory_bytes": "17179869184",
+        "name": "machine-abc",
+        "os_name": "macOS",
+        "os_version": "10.16"
+    },
+    "stats": {
+        "batch_id": "c7e5280e65d24ec19d64a7636cef1bd4",
+        "data": [
+            "0.000003"
+        ],
+        "iqr": "0.000000",
+        "iterations": 1,
+        "max": "0.000003",
+        "mean": "0.000003",
+        "median": "0.000003",
+        "min": "0.000003",
+        "q1": "0.000003",
+        "q3": "0.000003",
+        "run_id": "c7e5280e65d24ec19d64a7636cef1bd4",
+        "stdev": 0,
+        "time_unit": "s",
+        "times": [],
+        "timestamp": "2021-06-21T22:18:16.752993+00:00",
+        "unit": "s"
+    },
+    "tags": {
+        "name": "addition",
+        "year": "2020"
+    }
+}
+
+```
+
+
 ### Example external benchmarks
 
 An "external benchmark" records results that were obtained from some other
@@ -291,6 +350,69 @@ class ExternalBenchmark(conbench.runner.Benchmark):
         )
         self.conbench.publish(benchmark)
         yield benchmark, output
+```
+
+```
+$ cd ~/workspace/conbench/conbench/tests/benchmark/
+$ conbench external
+
+Benchmark result:
+{
+    "context": {
+        "benchmark_language": "C++"
+    },
+    "github": {
+        "commit": "02addad336ba19a654f9c857ede546331be7b631",
+        "repository": "https://github.com/apache/arrow"
+    },
+    "machine_info": {
+        "architecture_name": "x86_64",
+        "cpu_core_count": "2",
+        "cpu_frequency_max_hz": "3500000000",
+        "cpu_l1d_cache_bytes": "32768",
+        "cpu_l1i_cache_bytes": "32768",
+        "cpu_l2_cache_bytes": "262144",
+        "cpu_l3_cache_bytes": "4194304",
+        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+        "cpu_thread_count": "4",
+        "kernel_name": "20.5.0",
+        "memory_bytes": "17179869184",
+        "name": "machine-abc",
+        "os_name": "macOS",
+        "os_version": "10.16"
+    },
+    "stats": {
+        "batch_id": "8058dde1491b49e5bd514646797c2a20",
+        "data": [
+            "100.000000",
+            "200.000000",
+            "300.000000"
+        ],
+        "iqr": "100.000000",
+        "iterations": 3,
+        "max": "300.000000",
+        "mean": "200.000000",
+        "median": "200.000000",
+        "min": "100.000000",
+        "q1": "150.000000",
+        "q3": "250.000000",
+        "run_id": "8058dde1491b49e5bd514646797c2a20",
+        "stdev": "100.000000",
+        "time_unit": "s",
+        "times": [
+            "0.100000",
+            "0.200000",
+            "0.300000"
+        ],
+        "timestamp": "2021-06-21T22:16:54.786499+00:00",
+        "unit": "i/s"
+    },
+    "tags": {
+        "name": "external",
+        "year": "2020"
+    }
+}
+
 ```
 
 ### Example case benchmarks
@@ -373,4 +495,65 @@ class CasesBenchmark(conbench.runner.Benchmark):
             )
             self.conbench.publish(benchmark)
             yield benchmark, output
+```
+
+```
+$ cd ~/workspace/conbench/conbench/tests/benchmark/
+$ conbench subtraction foo.csv
+
+Benchmark result:
+{
+    "context": {
+        "benchmark_language": "Python",
+        "benchmark_language_version": "Python 3.9.2"
+    },
+    "github": {
+        "commit": "02addad336ba19a654f9c857ede546331be7b631",
+        "repository": "https://github.com/apache/arrow"
+    },
+    "machine_info": {
+        "architecture_name": "x86_64",
+        "cpu_core_count": "2",
+        "cpu_frequency_max_hz": "3500000000",
+        "cpu_l1d_cache_bytes": "32768",
+        "cpu_l1i_cache_bytes": "32768",
+        "cpu_l2_cache_bytes": "262144",
+        "cpu_l3_cache_bytes": "4194304",
+        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+        "cpu_thread_count": "4",
+        "kernel_name": "20.5.0",
+        "memory_bytes": "17179869184",
+        "name": "machine-abc",
+        "os_name": "macOS",
+        "os_version": "10.16"
+    },
+    "stats": {
+        "batch_id": "eee5880b9d944586a2f24b931b4a770b",
+        "data": [
+            "0.000007"
+        ],
+        "iqr": "0.000000",
+        "iterations": 1,
+        "max": "0.000007",
+        "mean": "0.000007",
+        "median": "0.000007",
+        "min": "0.000007",
+        "q1": "0.000007",
+        "q3": "0.000007",
+        "run_id": "eee5880b9d944586a2f24b931b4a770b",
+        "stdev": 0,
+        "time_unit": "s",
+        "times": [],
+        "timestamp": "2021-06-21T22:19:07.274226+00:00",
+        "unit": "s"
+    },
+    "tags": {
+        "color": "green",
+        "count": 1,
+        "dataset": "foo.csv",
+        "fruit": "apple",
+        "name": "subtraction"
+    }
+}
+
 ```
