@@ -57,7 +57,7 @@ class ExternalBenchmark(conbench.runner.Benchmark):
 
     def run(self, **kwargs):
         tags = {"year": "2020"}
-        context = {"benchmark_language": "Python"}
+        context = {"benchmark_language": "C++"}
         github_info = {
             "commit": "02addad336ba19a654f9c857ede546331be7b631",
             "repository": "https://github.com/apache/arrow",
