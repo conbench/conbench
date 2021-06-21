@@ -220,20 +220,18 @@ class SimpleBenchmark(conbench.runner.Benchmark):
             return 1 + 1
 
         tags = {"year": "2020"}
-        options = {"iterations": 10}
         context = {"benchmark_language": "Python"}
         github_info = {
             "commit": "02addad336ba19a654f9c857ede546331be7b631",
             "repository": "https://github.com/apache/arrow",
         }
-
         benchmark, output = self.conbench.benchmark(
             func,
             self.name,
             tags,
             context,
             github_info,
-            options,
+            kwargs,
         )
         self.conbench.publish(benchmark)
         yield benchmark, output
@@ -267,7 +265,7 @@ command line interface.
 ```
 @conbench.runner.register_benchmark
 class CasesBenchmark(conbench.runner.Benchmark):
-    """Example benchmark with cases.
+    """Example benchmark with cases, an option, and an argument.
 
     Usage: conbench subtraction [OPTIONS] SOURCE
 
@@ -320,11 +318,12 @@ class CasesBenchmark(conbench.runner.Benchmark):
         def func():
             return 100 - 1
 
-        options = {"iterations": 10}
         context = {"benchmark_language": "Python"}
-
-        cases, github_info = self.get_cases(case, kwargs), {}
-        for case in cases:
+        github_info = {
+            "commit": "02addad336ba19a654f9c857ede546331be7b631",
+            "repository": "https://github.com/apache/arrow",
+        }
+        for case in self.get_cases(case, kwargs):
             color, fruit = case
             tags = {
                 "color": color,
@@ -338,7 +337,7 @@ class CasesBenchmark(conbench.runner.Benchmark):
                 tags,
                 context,
                 github_info,
-                options,
+                kwargs,
             )
             self.conbench.publish(benchmark)
             yield benchmark, output

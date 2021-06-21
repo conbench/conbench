@@ -79,7 +79,7 @@ def assert_keys_equal(a, b):
 
 def test_runner_without_cases():
     benchmark = SimpleBenchmark()
-    [(result, output)] = benchmark.run()
+    [(result, output)] = benchmark.run(iterations=10)
     assert not BenchmarkFacadeSchema.create.validate(result)
     expected_tags = {
         "year": "2020",
@@ -100,7 +100,7 @@ def test_runner_without_cases():
 def test_runner_with_cases():
     benchmark = CasesBenchmark()
     case = ("pink", "apple")
-    [(result, output)] = benchmark.run("sample", case=case)
+    [(result, output)] = benchmark.run("sample", case=case, iterations=10)
     assert not BenchmarkFacadeSchema.create.validate(result)
     expected_tags = {
         "color": "pink",
