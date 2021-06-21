@@ -47,6 +47,12 @@ repository, and the results are hosted on the
 <hr>
 
 
+## Index
+
+* [Contributing](https://github.com/ursacomputing/connbench#contributing)
+* [Authoring benchmarks](https://github.com/ursacomputing/conbench#authoring-benchmarks)
+
+
 ## Contributing
 
 
@@ -56,35 +62,36 @@ repository, and the results are hosted on the
     $ mkdir -p workspace
 
 
-### Create a virualenv
+### Create virualenv
     $ cd ~/envs
     $ python3 -m venv conbench
     $ source conbench/bin/activate
 
 
-### Clone the app
+### Clone repo
     (conbench) $ cd ~/workspace/
     (conbench) $ git clone https://github.com/ursacomputing/conbench.git
 
 
-### Install the dependencies
+### Install dependencies
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ pip install -r requirements-test.txt
     (conbench) $ pip install -r requirements-build.txt
     (conbench) $ pip install -r requirements-cli.txt
     (conbench) $ python setup.py develop
 
-### Start the database
+
+### Start postgres
     $ brew services start postgres
 
-### Create the databases
 
+### Create databases
     $ psql
     # CREATE DATABASE conbench_test;
     # CREATE DATABASE conbench_prod;
 
 
-### Launch the app
+### Launch app
     (conbench) $ flask run
      * Serving Flask app "api.py" (lazy loading)
      * Environment: development
@@ -92,24 +99,23 @@ repository, and the results are hosted on the
      * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
 
 
-### Test the app
+### Test app
     $ curl http://127.0.0.1:5000/api/ping/
     {
       "date": "Fri, 23 Oct 2020 03:09:58 UTC"
     }
 
 
-### View the API docs
-
+### View API docs
     http://localhost:5000/api/docs/
 
 
-### Running tests
+### Run tests
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ pytest -vv conbench/tests/
 
 
-### Formatting code (before committing)
+### Format code (before committing)
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ git status
         modified: foo.py
@@ -118,10 +124,17 @@ repository, and the results are hosted on the
     (conbench) $ git add foo.py
 
 
-### Generating a coverage report
+### Lint code (before committing)
+    (qa) $ cd ~/workspace/benchmarks/
+    (qa) $ flake8
+    ./foo/bar/__init__.py:1:1: F401 'FooBar' imported but unused
+
+
+### Generate coverage report
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ coverage run --source conbench -m pytest conbench/tests/
     (conbench) $ coverage report -m
+
 
 ### Test migrations with the database running using brew
     (conbench) $ cd ~/workspace/conbench/
@@ -130,12 +143,14 @@ repository, and the results are hosted on the
     (conbench) $ createdb conbench_prod
     (conbench) $ alembic upgrade head
 
+
 ### Test migrations with the database running as a docker container
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ brew services stop postgres
     (conbench) $ docker-compose down
     (conbench) $ docker-compose build
     (conbench) $ docker-compose run migration
+
 
 ### To autogenerate a migration
     (conbench) $ cd ~/workspace/conbench/
@@ -146,4 +161,63 @@ repository, and the results are hosted on the
     (conbench) $ alembic upgrade head
     (conbench) $ git checkout your-branch
     (conbench) $ alembic revision --autogenerate -m "new"
-    
+
+
+## Authoring benchmarks
+
+There are three main types of benchmarks: "simple benchmarks" that time the
+execution of a unit of work, "external benchmarks" that just record benchmark
+results that were obtained from some other benchmarking tool, and "case
+benchmarks" which benchmark a unit of work under different scenarios.
+
+Included in this repository are contrived, minimal examples of these different
+kinds of benchmarks to be used as templates for benchmark authoring. These
+example benchmarks and their tests can be found here:
+
+
+* [_example_benchmarks.py] https://github.com/ursacomputing/conbench/blob/main/conbench/tests/benchmark/_example_benchmarks.py
+* [test_cli.py] https://github.com/ursacomputing/conbench/blob/main/conbench/tests/benchmark/test_runner.py
+* [test_runner.py] https://github.com/ursacomputing/conbench/blob/main/conbench/tests/benchmark/test_cli.py
+
+
+### Example simple benchmarks
+
+A "simple benchmark" runs and records the execution time of a unit of work.
+
+Implementation details: Note that this benchmark extends
+`benchmarks._benchmark.Benchmark`, implements the minimum required `run()`
+method, and registers itself with the `@conbench.runner.register_benchmark`
+decorator.
+
+```
+TODO
+```
+
+### Example external benchmarks
+
+An "external benchmark" records results that were obtained from some other
+benchmarking tool (like executing the Arrow C++ micro benchmarks from command
+line, parsing the resulting JSON, and recording those results).
+
+Implementation details: Note that the following benchmark sets
+`external = True`, and calls `record()` rather than `benchmark()` as the
+example above does.
+
+```
+TODO
+```
+
+### Example case benchmarks
+
+A "case benchmark" is a either a "simple benchmark" or an "external benchmark"
+executed under various predefined scenarios (cases).
+
+Implementation details: Note that the following benchmark declares the valid
+combinations in `valid_cases`, which reads like a CSV (the first row contains
+the cases names). This benchmark example also accepts a data source argument
+(see `arguments`), and additional `options` that are reflected in the resulting
+command line interface.
+
+```
+TODO
+```
