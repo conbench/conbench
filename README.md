@@ -333,7 +333,7 @@ class ExternalBenchmark(conbench.runner.Benchmark):
             result,
             self.name,
             options=kwargs,
-            output=result["data"],
+            output=result,
         )
         self.conbench.publish(benchmark)
         yield benchmark, output
