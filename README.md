@@ -204,10 +204,12 @@ class SimpleBenchmark(conbench.runner.Benchmark):
         self.conbench = conbench.runner.Conbench()
 
     def run(self, **kwargs):
-        def func():
-            return 1 + 1
+        return self.conbench.run(
+            self._get_benchmark_function(), self.name, options=kwargs
+        )
 
-        return self.conbench.run(func, self.name, options=kwargs)
+    def _get_benchmark_function(self):
+        return lambda: 1 + 1
 ```
 
 
@@ -215,20 +217,20 @@ class SimpleBenchmark(conbench.runner.Benchmark):
 $ cd ~/workspace/conbench/conbench/tests/benchmark/
 $ conbench addition --help
 
-    Usage: conbench addition [OPTIONS]
+Usage: conbench addition [OPTIONS]
 
-      Run addition benchmark.
+  Run addition benchmark.
 
-    Options:
-      --iterations INTEGER   [default: 1]
-      --drop-caches BOOLEAN  [default: False]
-      --gc-collect BOOLEAN   [default: True]
-      --gc-disable BOOLEAN   [default: True]
-      --show-result BOOLEAN  [default: True]
-      --show-output BOOLEAN  [default: False]
-      --run-id TEXT          Group executions together with a run id.
-      --run-name TEXT        Name of run (commit, pull request, etc).
-      --help                 Show this message and exit.
+Options:
+  --iterations INTEGER   [default: 1]
+  --drop-caches BOOLEAN  [default: False]
+  --gc-collect BOOLEAN   [default: True]
+  --gc-disable BOOLEAN   [default: True]
+  --show-result BOOLEAN  [default: True]
+  --show-output BOOLEAN  [default: False]
+  --run-id TEXT          Group executions together with a run id.
+  --run-name TEXT        Name of run (commit, pull request, etc).
+  --help                 Show this message and exit.
 ```
 
 
@@ -333,16 +335,16 @@ class ExternalBenchmark(conbench.runner.Benchmark):
 $ cd ~/workspace/conbench/conbench/tests/benchmark/
 $ conbench external --help
 
-    Usage: conbench external [OPTIONS]
+Usage: conbench external [OPTIONS]
 
-      Run external benchmark.
+  Run external benchmark.
 
-    Options:
-      --show-result BOOLEAN  [default: True]
-      --show-output BOOLEAN  [default: False]
-      --run-id TEXT          Group executions together with a run id.
-      --run-name TEXT        Name of run (commit, pull request, etc).
-      --help                 Show this message and exit.
+Options:
+  --show-result BOOLEAN  [default: True]
+  --show-output BOOLEAN  [default: False]
+  --run-id TEXT          Group executions together with a run id.
+  --run-name TEXT        Name of run (commit, pull request, etc).
+  --help                 Show this message and exit.
 ```
 
 
@@ -414,9 +416,7 @@ executed under various predefined scenarios (cases).
 
 Implementation details: Note that the following benchmark declares the valid
 combinations in `valid_cases`, which reads like a CSV (the first row contains
-the cases names). This benchmark example also accepts a data source argument
-(see `arguments`), and additional `options` that are reflected in the resulting
-command line interface.
+the cases names).
 
 
 ```
@@ -425,87 +425,81 @@ import conbench.runner
 
 @conbench.runner.register_benchmark
 class CasesBenchmark(conbench.runner.Benchmark):
-    """Example benchmark with cases, an option, and an argument."""
+    """Example benchmark with cases."""
 
-    name = "subtraction"
+    name = "matrix"
     valid_cases = (
-        ("color", "fruit"),
-        ("pink", "apple"),
-        ("yellow", "apple"),
-        ("green", "apple"),
-        ("yellow", "orange"),
-        ("pink", "orange"),
+        ("rows", "columns"),
+        ("10", "10"),
+        ("2", "10"),
+        ("10", "2"),
     )
-    arguments = ["source"]
-    options = {"count": {"default": 1, "type": int}}
-
     def __init__(self):
         self.conbench = conbench.runner.Conbench()
 
-    def run(self, source, case=None, count=1, **kwargs):
-        def func():
-            return 100 - 1
-
+    def run(self, case=None, **kwargs):
+        context = {}
+        github_info = {
+            "commit": "02addad336ba19a654f9c857ede546331be7b631",
+            "repository": "https://github.com/apache/arrow",
+        }
         for case in self.get_cases(case, kwargs):
-            color, fruit = case
-            tags = {
-                "color": color,
-                "fruit": fruit,
-                "count": count,
-                "dataset": source,
-            }
+            rows, columns = case
+            tags = {"rows": rows, "columns": columns}
+            func = self._get_benchmark_function(rows, columns)
             benchmark, output = self.conbench.benchmark(
                 func,
                 self.name,
                 tags=tags,
+                context=context,
+                github=github_info,
                 options=kwargs,
             )
             self.conbench.publish(benchmark)
             yield benchmark, output
+
+    def _get_benchmark_function(self, rows, columns):
+        return lambda: int(rows) * [int(columns) * [0]]
 ```
 
 
 ```
 $ cd ~/workspace/conbench/conbench/tests/benchmark/
-$ conbench subtraction --help
+$ conbench matrix --help
+Usage: conbench matrix [OPTIONS]
 
-    Usage: conbench subtraction [OPTIONS] SOURCE
+  Run matrix benchmark(s).
 
-      Run subtraction benchmark(s).
+  For each benchmark option, the first option value is the default.
 
-      For each benchmark option, the first option value is the default.
+  Valid benchmark combinations:
+  --rows=10 --columns=10
+  --rows=2 --columns=10
+  --rows=10 --columns=2
 
-      Valid benchmark combinations:
-      --color=pink --fruit=apple
-      --color=yellow --fruit=apple
-      --color=green --fruit=apple
-      --color=yellow --fruit=orange
-      --color=pink --fruit=orange
+  To run all combinations:
+  $ conbench matrix --all=true
 
-      To run all combinations:
-      $ conbench subtraction --all=true
-
-    Options:
-      --color [green|pink|yellow]
-      --fruit [apple|orange]
-      --all BOOLEAN                [default: False]
-      --count INTEGER              [default: 1]
-      --iterations INTEGER         [default: 1]
-      --drop-caches BOOLEAN        [default: False]
-      --gc-collect BOOLEAN         [default: True]
-      --gc-disable BOOLEAN         [default: True]
-      --show-result BOOLEAN        [default: True]
-      --show-output BOOLEAN        [default: False]
-      --run-id TEXT                Group executions together with a run id.
-      --run-name TEXT              Name of run (commit, pull request, etc).
-      --help                       Show this message and exit.
+Options:
+  --rows [10|2]
+  --columns [10|2]
+  --all BOOLEAN          [default: False]
+  --iterations INTEGER   [default: 1]
+  --drop-caches BOOLEAN  [default: False]
+  --gc-collect BOOLEAN   [default: True]
+  --gc-disable BOOLEAN   [default: True]
+  --show-result BOOLEAN  [default: True]
+  --show-output BOOLEAN  [default: False]
+  --run-id TEXT          Group executions together with a run id.
+  --run-name TEXT        Name of run (commit, pull request, etc).
+  --help                 Show this message and exit.
     """
 ```
 
 
 ```
 $ cd ~/workspace/conbench/conbench/tests/benchmark/
-$ conbench subtraction foo.csv
+$ conbench matrix --all=true
 
 Benchmark result:
 {
@@ -534,7 +528,113 @@ Benchmark result:
         "os_version": "10.16"
     },
     "stats": {
-        "batch_id": "eee5880b9d944586a2f24b931b4a770b",
+        "batch_id": "d509f6e80ed440a09af60fe1847dc033",
+        "data": [
+            "0.000010"
+        ],
+        "iqr": "0.000000",
+        "iterations": 1,
+        "max": "0.000010",
+        "mean": "0.000010",
+        "median": "0.000010",
+        "min": "0.000010",
+        "q1": "0.000010",
+        "q3": "0.000010",
+        "run_id": "d509f6e80ed440a09af60fe1847dc033",
+        "stdev": 0,
+        "time_unit": "s",
+        "times": [],
+        "timestamp": "2021-06-22T18:39:53.805714+00:00",
+        "unit": "s"
+    },
+    "tags": {
+        "columns": "10",
+        "name": "matrix",
+        "rows": "10"
+    }
+}
+
+Benchmark result:
+{
+    "context": {
+        "benchmark_language": "Python",
+        "benchmark_language_version": "Python 3.9.2"
+    },
+    "github": {
+        "commit": "02addad336ba19a654f9c857ede546331be7b631",
+        "repository": "https://github.com/apache/arrow"
+    },
+    "machine_info": {
+        "architecture_name": "x86_64",
+        "cpu_core_count": "2",
+        "cpu_frequency_max_hz": "3500000000",
+        "cpu_l1d_cache_bytes": "32768",
+        "cpu_l1i_cache_bytes": "32768",
+        "cpu_l2_cache_bytes": "262144",
+        "cpu_l3_cache_bytes": "4194304",
+        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+        "cpu_thread_count": "4",
+        "kernel_name": "20.5.0",
+        "memory_bytes": "17179869184",
+        "name": "machine-abc",
+        "os_name": "macOS",
+        "os_version": "10.16"
+    },
+    "stats": {
+        "batch_id": "d509f6e80ed440a09af60fe1847dc033",
+        "data": [
+            "0.000006"
+        ],
+        "iqr": "0.000000",
+        "iterations": 1,
+        "max": "0.000006",
+        "mean": "0.000006",
+        "median": "0.000006",
+        "min": "0.000006",
+        "q1": "0.000006",
+        "q3": "0.000006",
+        "run_id": "d509f6e80ed440a09af60fe1847dc033",
+        "stdev": 0,
+        "time_unit": "s",
+        "times": [],
+        "timestamp": "2021-06-22T18:39:53.830928+00:00",
+        "unit": "s"
+    },
+    "tags": {
+        "columns": "10",
+        "name": "matrix",
+        "rows": "2"
+    }
+}
+
+Benchmark result:
+{
+    "context": {
+        "benchmark_language": "Python",
+        "benchmark_language_version": "Python 3.9.2"
+    },
+    "github": {
+        "commit": "02addad336ba19a654f9c857ede546331be7b631",
+        "repository": "https://github.com/apache/arrow"
+    },
+    "machine_info": {
+        "architecture_name": "x86_64",
+        "cpu_core_count": "2",
+        "cpu_frequency_max_hz": "3500000000",
+        "cpu_l1d_cache_bytes": "32768",
+        "cpu_l1i_cache_bytes": "32768",
+        "cpu_l2_cache_bytes": "262144",
+        "cpu_l3_cache_bytes": "4194304",
+        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+        "cpu_thread_count": "4",
+        "kernel_name": "20.5.0",
+        "memory_bytes": "17179869184",
+        "name": "machine-abc",
+        "os_name": "macOS",
+        "os_version": "10.16"
+    },
+    "stats": {
+        "batch_id": "d509f6e80ed440a09af60fe1847dc033",
         "data": [
             "0.000007"
         ],
@@ -546,19 +646,17 @@ Benchmark result:
         "min": "0.000007",
         "q1": "0.000007",
         "q3": "0.000007",
-        "run_id": "eee5880b9d944586a2f24b931b4a770b",
+        "run_id": "d509f6e80ed440a09af60fe1847dc033",
         "stdev": 0,
         "time_unit": "s",
         "times": [],
-        "timestamp": "2021-06-21T22:19:07.274226+00:00",
+        "timestamp": "2021-06-22T18:39:53.843815+00:00",
         "unit": "s"
     },
     "tags": {
-        "color": "green",
-        "count": 1,
-        "dataset": "foo.csv",
-        "fruit": "apple",
-        "name": "subtraction"
+        "columns": "2",
+        "name": "matrix",
+        "rows": "10"
     }
 }
 ```

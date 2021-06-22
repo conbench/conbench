@@ -24,10 +24,12 @@ class SimpleBenchmark(conbench.runner.Benchmark):
         self.conbench = conbench.runner.Conbench()
 
     def run(self, **kwargs):
-        def func():
-            return 1 + 1
+        return self.conbench.run(
+            self._get_benchmark_function(), self.name, options=kwargs
+        )
 
-        return self.conbench.run(func, self.name, options=kwargs)
+    def _get_benchmark_function(self):
+        return lambda: 1 + 1
 
 
 @conbench.runner.register_benchmark
@@ -57,40 +59,29 @@ class ExternalBenchmark(conbench.runner.Benchmark):
 
 @conbench.runner.register_benchmark
 class CasesBenchmark(conbench.runner.Benchmark):
-    """Example benchmark with cases, an option, and an argument."""
+    """Example benchmark with cases."""
 
-    name = "subtraction"
+    name = "matrix"
     valid_cases = (
-        ("color", "fruit"),
-        ("pink", "apple"),
-        ("yellow", "apple"),
-        ("green", "apple"),
-        ("yellow", "orange"),
-        ("pink", "orange"),
+        ("rows", "columns"),
+        ("10", "10"),
+        ("2", "10"),
+        ("10", "2"),
     )
-    arguments = ["source"]
-    options = {"count": {"default": 1, "type": int}}
 
     def __init__(self):
         self.conbench = conbench.runner.Conbench()
 
-    def run(self, source, case=None, count=1, **kwargs):
-        def func():
-            return 100 - 1
-
+    def run(self, case=None, **kwargs):
         context = {}
         github_info = {
             "commit": "02addad336ba19a654f9c857ede546331be7b631",
             "repository": "https://github.com/apache/arrow",
         }
         for case in self.get_cases(case, kwargs):
-            color, fruit = case
-            tags = {
-                "color": color,
-                "fruit": fruit,
-                "count": count,
-                "dataset": source,
-            }
+            rows, columns = case
+            tags = {"rows": rows, "columns": columns}
+            func = self._get_benchmark_function(rows, columns)
             benchmark, output = self.conbench.benchmark(
                 func,
                 self.name,
@@ -101,3 +92,6 @@ class CasesBenchmark(conbench.runner.Benchmark):
             )
             self.conbench.publish(benchmark)
             yield benchmark, output
+
+    def _get_benchmark_function(self, rows, columns):
+        return lambda: int(rows) * [int(columns) * [0]]

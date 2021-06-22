@@ -13,10 +13,10 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  addition     Run addition benchmark.
-  external     Run external benchmark.
-  list         List of benchmarks (for orchestration).
-  subtraction  Run subtraction benchmark(s).
+  addition  Run addition benchmark.
+  external  Run external benchmark.
+  list      List of benchmarks (for orchestration).
+  matrix    Run matrix benchmark(s).
 """
 
 CONBENCH_LIST = """
@@ -28,7 +28,7 @@ CONBENCH_LIST = """
     "command": "external --iterations=2"
   },
   {
-    "command": "subtraction --all=true --iterations=2"
+    "command": "matrix --all=true --iterations=2"
   }
 ]
 """
@@ -58,43 +58,40 @@ Options:
 """
 
 
-CONBENCH_SUBTRACTION = """
+CONBENCH_MATRIX = """
 Benchmark output:
-99
+[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 """
 
 
-CONBENCH_SUBTRACTION_HELP = """
-Usage: conbench subtraction [OPTIONS] SOURCE
+CONBENCH_MATRIX_HELP = """
+Usage: conbench matrix [OPTIONS]
 
-  Run subtraction benchmark(s).
+  Run matrix benchmark(s).
 
   For each benchmark option, the first option value is the default.
 
   Valid benchmark combinations:
-  --color=pink --fruit=apple
-  --color=yellow --fruit=apple
-  --color=green --fruit=apple
-  --color=yellow --fruit=orange
-  --color=pink --fruit=orange
+  --rows=10 --columns=10
+  --rows=2 --columns=10
+  --rows=10 --columns=2
 
   To run all combinations:
-  $ conbench subtraction --all=true
+  $ conbench matrix --all=true
 
 Options:
-  --color [green|pink|yellow]
-  --fruit [apple|orange]
-  --all BOOLEAN                [default: False]
-  --count INTEGER              [default: 1]
-  --iterations INTEGER         [default: 1]
-  --drop-caches BOOLEAN        [default: False]
-  --gc-collect BOOLEAN         [default: True]
-  --gc-disable BOOLEAN         [default: True]
-  --show-result BOOLEAN        [default: True]
-  --show-output BOOLEAN        [default: False]
-  --run-id TEXT                Group executions together with a run id.
-  --run-name TEXT              Name of run (commit, pull request, etc).
-  --help                       Show this message and exit.
+  --rows [10|2]
+  --columns [10|2]
+  --all BOOLEAN          [default: False]
+  --iterations INTEGER   [default: 1]
+  --drop-caches BOOLEAN  [default: False]
+  --gc-collect BOOLEAN   [default: True]
+  --gc-disable BOOLEAN   [default: True]
+  --show-result BOOLEAN  [default: True]
+  --show-output BOOLEAN  [default: False]
+  --run-id TEXT          Group executions together with a run id.
+  --run-name TEXT        Name of run (commit, pull request, etc).
+  --help                 Show this message and exit.
 """
 
 
@@ -166,18 +163,18 @@ def test_conbench_command_without_cases_help(runner):
 def test_conbench_command_with_cases(runner):
     from conbench.cli import conbench
 
-    case = "sample --color=pink --fruit=apple"
-    command = f"subtraction {case} --show-result=false --show-output=true"
+    case = "--rows=2 --columns=10"
+    command = f"matrix {case} --show-result=false --show-output=true"
     with unittest.mock.patch("conbench.util.Connection.publish"):
         result = runner.invoke(conbench, command)
-    assert_command_output(result, CONBENCH_SUBTRACTION)
+    assert_command_output(result, CONBENCH_MATRIX)
 
 
 def test_conbench_command_with_cases_help(runner):
     from conbench.cli import conbench
 
-    result = runner.invoke(conbench, "subtraction --help")
-    assert_command_output(result, CONBENCH_SUBTRACTION_HELP)
+    result = runner.invoke(conbench, "matrix --help")
+    assert_command_output(result, CONBENCH_MATRIX_HELP)
 
 
 def test_conbench_command_external(runner):

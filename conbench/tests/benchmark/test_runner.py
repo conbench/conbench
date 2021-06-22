@@ -99,17 +99,14 @@ def test_runner_simple_benchmark():
 
 def test_runner_case_benchmark():
     benchmark = CasesBenchmark()
-    case = ("pink", "apple")
-    [(result, output)] = benchmark.run("sample", case=case, iterations=10)
+    case = ("2", "10")
+    [(result, output)] = benchmark.run(case=case, iterations=10)
     assert not BenchmarkFacadeSchema.create.validate(result)
-    expected_tags = {
-        "color": "pink",
-        "fruit": "apple",
-        "count": 1,
-        "dataset": "sample",
-        "name": "subtraction",
-    }
-    assert output == 99
+    expected_tags = {"name": "matrix", "rows": "2", "columns": "10"}
+    assert output == [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ]
     assert_keys_equal(result, example)
     assert_keys_equal(result["tags"], expected_tags)
     assert_keys_equal(result["stats"], example["stats"])
