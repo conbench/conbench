@@ -100,7 +100,7 @@ Options:
 
 CONBENCH_EXTERNAL = """
 Benchmark output:
-[100, 200, 300]
+{'data': [100, 200, 300], 'unit': 'i/s', 'times': [0.1, 0.2, 0.3], 'time_unit': 's'}
 """
 
 

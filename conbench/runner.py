@@ -118,7 +118,45 @@ class Conbench(Connection):
         self._drop_caches_failed = False
         self._purge_failed = False
 
+    def run(self, f, name, **kwargs):
+        """Benchmark a function and publish the result."""
+        tags, context, github, options, _ = self._init(kwargs)
+        benchmark, output = self.benchmark(
+            f,
+            name,
+            tags=tags,
+            context=context,
+            github=github,
+            options=options,
+        )
+        self.publish(benchmark)
+        return [(benchmark, output)]
+
+    def external(self, r, name, **kwargs):
+        """Record and publish an external benchmark result."""
+        tags, context, github, options, output = self._init(kwargs)
+        benchmark, output = self.record(
+            r,
+            name,
+            tags=tags,
+            context=context,
+            github=github,
+            options=options,
+            output=output,
+        )
+        self.publish(benchmark)
+        return [(benchmark, output)]
+
+    def _init(self, kwargs):
+        tags = kwargs.get("tags", {})
+        context = kwargs.get("context", {})
+        github = kwargs.get("github", {})
+        options = kwargs.get("options", {})
+        github = github if github else self.get_github_info()
+        return tags, context, github, options, kwargs.get("output")
+
     def benchmark(self, f, name, tags, context, github, options):
+        """Benchmark a function."""
         timing_options = self._get_timing_options(options)
         iterations = timing_options.pop("iterations")
         if iterations < 1:
@@ -134,10 +172,10 @@ class Conbench(Connection):
             github,
             options,
         )
-
         return benchmark, output
 
     def record(self, result, name, tags, context, github, options, output=None):
+        """Create a record for an external benchmark result."""
         tags["name"] = name
         timestamp = _now_formatted()
         run_id = options.get("run_id")
@@ -167,7 +205,7 @@ class Conbench(Connection):
         commit = result.stdout.decode("utf-8").strip()
         command = ["git", "remote", "get-url", "origin"]
         result = subprocess.run(command, capture_output=True, check=True)
-        repository = result.stdout.decode("utf-8").strip()
+        repository = result.stdout.decode("utf-8").strip().rsplit(".git")[0]
         return {"repository": repository, "commit": commit}
 
     def mark_new_batch(self):

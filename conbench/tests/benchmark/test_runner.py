@@ -1,6 +1,8 @@
 from ._example_benchmarks import CasesBenchmark, ExternalBenchmark, SimpleBenchmark
 from ...entities.summary import BenchmarkFacadeSchema
 
+
+REPO = "https://github.com/ursacomputing/conbench"
 example = {
     "context": {
         "benchmark_language": "Python",
@@ -67,7 +69,6 @@ example = {
         "timestamp": "2020-12-16T03:40:29.819878+00:00",
     },
     "tags": {
-        "year": "2020",
         "name": "addition",
     },
 }
@@ -81,20 +82,19 @@ def test_runner_simple_benchmark():
     benchmark = SimpleBenchmark()
     [(result, output)] = benchmark.run(iterations=10)
     assert not BenchmarkFacadeSchema.create.validate(result)
-    expected_tags = {
-        "year": "2020",
-        "name": "addition",
-    }
+    expected_tags = {"name": "addition"}
     assert output == 2
     assert_keys_equal(result, example)
     assert_keys_equal(result["tags"], expected_tags)
     assert_keys_equal(result["stats"], example["stats"])
     assert_keys_equal(result["context"], example["context"])
+    assert_keys_equal(result["github"], example["github"])
     assert_keys_equal(result["machine_info"], example["machine_info"])
     assert result["tags"] == expected_tags
     assert result["stats"]["iterations"] == 10
     assert len(result["stats"]["data"]) == 10
     assert result["context"]["benchmark_language"] == "Python"
+    assert result["github"]["repository"] == REPO
 
 
 def test_runner_case_benchmark():
@@ -114,27 +114,33 @@ def test_runner_case_benchmark():
     assert_keys_equal(result["tags"], expected_tags)
     assert_keys_equal(result["stats"], example["stats"])
     assert_keys_equal(result["context"], example["context"])
+    assert_keys_equal(result["github"], example["github"])
     assert_keys_equal(result["machine_info"], example["machine_info"])
     assert result["tags"] == expected_tags
     assert result["stats"]["iterations"] == 10
     assert len(result["stats"]["data"]) == 10
     assert result["context"]["benchmark_language"] == "Python"
+    assert result["github"]["repository"] == "https://github.com/apache/arrow"
 
 
 def test_runner_external_benchmark():
     benchmark = ExternalBenchmark()
     [(result, output)] = benchmark.run()
     assert not BenchmarkFacadeSchema.create.validate(result)
-    expected_tags = {
-        "year": "2020",
-        "name": "external",
+    expected_tags = {"name": "external"}
+    assert output == {
+        "data": [100, 200, 300],
+        "unit": "i/s",
+        "times": [0.1, 0.2, 0.3],
+        "time_unit": "s",
     }
-    assert output == [100, 200, 300]
     assert_keys_equal(result, example)
     assert_keys_equal(result["tags"], expected_tags)
     assert_keys_equal(result["stats"], example["stats"])
+    assert_keys_equal(result["github"], example["github"])
     assert_keys_equal(result["machine_info"], example["machine_info"])
     assert result["tags"] == expected_tags
     assert result["stats"]["iterations"] == 3
     assert len(result["stats"]["data"]) == 3
     assert result["context"] == {"benchmark_language": "C++"}
+    assert result["github"]["repository"] == REPO
