@@ -200,9 +200,6 @@ class SimpleBenchmark(conbench.runner.Benchmark):
 
     name = "addition"
 
-    def __init__(self):
-        self.conbench = conbench.runner.Conbench()
-
     def run(self, **kwargs):
         return self.conbench.run(
             self._get_benchmark_function(), self.name, options=kwargs
@@ -311,9 +308,6 @@ class ExternalBenchmark(conbench.runner.Benchmark):
 
     external = True
     name = "external"
-
-    def __init__(self):
-        self.conbench = conbench.runner.Conbench()
 
     def run(self, **kwargs):
         # external results from an API call, command line execution, etc
@@ -434,8 +428,6 @@ class CasesBenchmark(conbench.runner.Benchmark):
         ("2", "10"),
         ("10", "2"),
     )
-    def __init__(self):
-        self.conbench = conbench.runner.Conbench()
 
     def run(self, case=None, **kwargs):
         context = {}

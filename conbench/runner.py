@@ -34,6 +34,9 @@ def _now_formatted():
 
 
 class Benchmark(abc.ABC):
+    def __init__(self):
+        self.conbench = Conbench()
+
     @abc.abstractmethod
     def run(self, **kwargs):
         """
@@ -132,11 +135,11 @@ class Conbench(Connection):
         self.publish(benchmark)
         return [(benchmark, output)]
 
-    def external(self, r, name, **kwargs):
+    def external(self, result, name, **kwargs):
         """Record and publish an external benchmark result."""
         tags, context, github, options, output = self._init(kwargs)
         benchmark, output = self.record(
-            r,
+            result,
             name,
             tags=tags,
             context=context,
