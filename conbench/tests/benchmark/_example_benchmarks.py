@@ -27,18 +27,11 @@ class SimpleBenchmark(conbench.runner.Benchmark):
         def func():
             return 1 + 1
 
-        tags, context = {"year": "2020"}, {}
-        github_info = {
-            "commit": "02addad336ba19a654f9c857ede546331be7b631",
-            "repository": "https://github.com/apache/arrow",
-        }
         benchmark, output = self.conbench.benchmark(
             func,
             self.name,
-            tags,
-            context,
-            github_info,
-            kwargs,
+            tags={"year": "2020"},
+            options=kwargs,
         )
         self.conbench.publish(benchmark)
         yield benchmark, output
@@ -55,12 +48,6 @@ class ExternalBenchmark(conbench.runner.Benchmark):
         self.conbench = conbench.runner.Conbench()
 
     def run(self, **kwargs):
-        tags, context = {"year": "2020"}, {"benchmark_language": "C++"}
-        github_info = {
-            "commit": "02addad336ba19a654f9c857ede546331be7b631",
-            "repository": "https://github.com/apache/arrow",
-        }
-
         # external results from somewhere
         # (an API call, command line execution, etc)
         result = {
@@ -73,10 +60,9 @@ class ExternalBenchmark(conbench.runner.Benchmark):
         benchmark, output = self.conbench.record(
             result,
             self.name,
-            tags,
-            context,
-            github_info,
-            kwargs,
+            tags={"year": "2020"},
+            context={"benchmark_language": "C++"},
+            options=kwargs,
             output=result["data"],
         )
         self.conbench.publish(benchmark)
@@ -106,11 +92,6 @@ class CasesBenchmark(conbench.runner.Benchmark):
         def func():
             return 100 - 1
 
-        context = {}
-        github_info = {
-            "commit": "02addad336ba19a654f9c857ede546331be7b631",
-            "repository": "https://github.com/apache/arrow",
-        }
         for case in self.get_cases(case, kwargs):
             color, fruit = case
             tags = {
@@ -122,10 +103,8 @@ class CasesBenchmark(conbench.runner.Benchmark):
             benchmark, output = self.conbench.benchmark(
                 func,
                 self.name,
-                tags,
-                context,
-                github_info,
-                kwargs,
+                tags=tags,
+                options=kwargs,
             )
             self.conbench.publish(benchmark)
             yield benchmark, output

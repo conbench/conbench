@@ -195,7 +195,30 @@ import conbench.runner
 
 @conbench.runner.register_benchmark
 class SimpleBenchmark(conbench.runner.Benchmark):
-    """Example simple benchmark.
+    """Example simple benchmark."""
+
+    name = "addition"
+
+    def __init__(self):
+        self.conbench = conbench.runner.Conbench()
+
+    def run(self, **kwargs):
+        def func():
+            return 1 + 1
+
+        benchmark, output = self.conbench.benchmark(
+            func,
+            self.name,
+            options=kwargs,
+        )
+        self.conbench.publish(benchmark)
+        yield benchmark, output
+```
+
+
+```
+$ cd ~/workspace/conbench/conbench/tests/benchmark/
+$ conbench addition --help
 
     Usage: conbench addition [OPTIONS]
 
@@ -211,29 +234,8 @@ class SimpleBenchmark(conbench.runner.Benchmark):
       --run-id TEXT          Group executions together with a run id.
       --run-name TEXT        Name of run (commit, pull request, etc).
       --help                 Show this message and exit.
-    """
-
-    name = "addition"
-
-    def __init__(self):
-        self.conbench = conbench.runner.Conbench()
-
-    def run(self, **kwargs):
-        def func():
-            return 1 + 1
-
-        tags, context, github_info = {}, {}, {}  # user defined
-        benchmark, output = self.conbench.benchmark(
-            func,
-            self.name,
-            tags,
-            context,
-            github_info,
-            kwargs,
-        )
-        self.conbench.publish(benchmark)
-        yield benchmark, output
 ```
+
 
 ```
 $ cd ~/workspace/conbench/conbench/tests/benchmark/
@@ -290,7 +292,6 @@ Benchmark result:
         "year": "2020"
     }
 }
-
 ```
 
 
@@ -310,23 +311,7 @@ import conbench.runner
 
 @conbench.runner.register_benchmark
 class ExternalBenchmark(conbench.runner.Benchmark):
-    """Example benchmark that just records external results.
-
-    Usage: conbench external [OPTIONS]
-
-      Run external benchmark.
-
-    Options:
-      --iterations INTEGER   [default: 1]
-      --drop-caches BOOLEAN  [default: False]
-      --gc-collect BOOLEAN   [default: True]
-      --gc-disable BOOLEAN   [default: True]
-      --show-result BOOLEAN  [default: True]
-      --show-output BOOLEAN  [default: False]
-      --run-id TEXT          Group executions together with a run id.
-      --run-name TEXT        Name of run (commit, pull request, etc).
-      --help                 Show this message and exit.
-    """
+    """Example benchmark that just records external results."""
 
     external = True
     name = "external"
@@ -344,19 +329,37 @@ class ExternalBenchmark(conbench.runner.Benchmark):
             "time_unit": "s",
         }
 
-        tags, context, github_info = {}, {}, {}  # user defined
         benchmark, output = self.conbench.record(
             result,
             self.name,
-            tags,
-            context,
-            github_info,
-            kwargs,
+            options=kwargs,
             output=result["data"],
         )
         self.conbench.publish(benchmark)
         yield benchmark, output
 ```
+
+
+```
+$ cd ~/workspace/conbench/conbench/tests/benchmark/
+$ conbench external --help
+
+    Usage: conbench external [OPTIONS]
+
+      Run external benchmark.
+
+    Options:
+      --iterations INTEGER   [default: 1]
+      --drop-caches BOOLEAN  [default: False]
+      --gc-collect BOOLEAN   [default: True]
+      --gc-disable BOOLEAN   [default: True]
+      --show-result BOOLEAN  [default: True]
+      --show-output BOOLEAN  [default: False]
+      --run-id TEXT          Group executions together with a run id.
+      --run-name TEXT        Name of run (commit, pull request, etc).
+      --help                 Show this message and exit.
+```
+
 
 ```
 $ cd ~/workspace/conbench/conbench/tests/benchmark/
@@ -418,7 +421,6 @@ Benchmark result:
         "year": "2020"
     }
 }
-
 ```
 
 ### Example case benchmarks
@@ -432,13 +434,56 @@ the cases names). This benchmark example also accepts a data source argument
 (see `arguments`), and additional `options` that are reflected in the resulting
 command line interface.
 
+
 ```
 import conbench.runner
 
 
 @conbench.runner.register_benchmark
 class CasesBenchmark(conbench.runner.Benchmark):
-    """Example benchmark with cases, an option, and an argument.
+    """Example benchmark with cases, an option, and an argument."""
+
+    name = "subtraction"
+    valid_cases = (
+        ("color", "fruit"),
+        ("pink", "apple"),
+        ("yellow", "apple"),
+        ("green", "apple"),
+        ("yellow", "orange"),
+        ("pink", "orange"),
+    )
+    arguments = ["source"]
+    options = {"count": {"default": 1, "type": int}}
+
+    def __init__(self):
+        self.conbench = conbench.runner.Conbench()
+
+    def run(self, source, case=None, count=1, **kwargs):
+        def func():
+            return 100 - 1
+
+        for case in self.get_cases(case, kwargs):
+            color, fruit = case
+            tags = {
+                "color": color,
+                "fruit": fruit,
+                "count": count,
+                "dataset": source,
+            }
+            benchmark, output = self.conbench.benchmark(
+                func,
+                self.name,
+                tags=tags,
+                options=kwargs,
+            )
+            self.conbench.publish(benchmark)
+            yield benchmark, output
+```
+
+
+```
+$ cd ~/workspace/conbench/conbench/tests/benchmark/
+$ conbench subtraction --help
 
     Usage: conbench subtraction [OPTIONS] SOURCE
 
@@ -471,40 +516,8 @@ class CasesBenchmark(conbench.runner.Benchmark):
       --run-name TEXT              Name of run (commit, pull request, etc).
       --help                       Show this message and exit.
     """
-
-    name = "subtraction"
-    valid_cases = (
-        ("color", "fruit"),
-        ("pink", "apple"),
-        ("yellow", "apple"),
-        ("green", "apple"),
-        ("yellow", "orange"),
-        ("pink", "orange"),
-    )
-    arguments = ["source"]
-    options = {"count": {"default": 1, "type": int}}
-
-    def __init__(self):
-        self.conbench = conbench.runner.Conbench()
-
-    def run(self, source, case=None, count=1, **kwargs):
-        def func():
-            return 100 - 1
-
-        tags, context, github_info = {}, {}, {}  # user defined
-        for case in self.get_cases(case, kwargs):
-            color, fruit = case
-            benchmark, output = self.conbench.benchmark(
-                func,
-                self.name,
-                tags,
-                context,
-                github_info,
-                kwargs,
-            )
-            self.conbench.publish(benchmark)
-            yield benchmark, output
 ```
+
 
 ```
 $ cd ~/workspace/conbench/conbench/tests/benchmark/
@@ -564,5 +577,4 @@ Benchmark result:
         "name": "subtraction"
     }
 }
-
 ```
