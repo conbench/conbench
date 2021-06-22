@@ -118,12 +118,59 @@ class Conbench(Connection):
         self._drop_caches_failed = False
         self._purge_failed = False
 
-    def benchmark(self, f, name, tags=None, context=None, github=None, options=None):
+    def run(
+        self,
+        f,
+        name,
+        tags=None,
+        context=None,
+        github=None,
+        options=None,
+    ):
         tags = tags if tags is not None else {}
         context = context if context is not None else {}
         options = options if options is not None else {}
         github = github if github is not None else self.get_github_info()
 
+        benchmark, output = self.benchmark(
+            f,
+            name,
+            tags=tags,
+            context=context,
+            github=github,
+            options=options,
+        )
+        self.publish(benchmark)
+        return [(benchmark, output)]
+
+    def external(
+        self,
+        r,
+        name,
+        tags=None,
+        context=None,
+        github=None,
+        options=None,
+        output=None,
+    ):
+        tags = tags if tags is not None else {}
+        context = context if context is not None else {}
+        options = options if options is not None else {}
+        github = github if github is not None else self.get_github_info()
+
+        benchmark, output = self.record(
+            r,
+            name,
+            tags=tags,
+            context=context,
+            github=github,
+            options=options,
+            output=output,
+        )
+        self.publish(benchmark)
+        return [(benchmark, output)]
+
+    def benchmark(self, f, name, tags, context, github, options):
         timing_options = self._get_timing_options(options)
         iterations = timing_options.pop("iterations")
         if iterations < 1:
@@ -139,24 +186,9 @@ class Conbench(Connection):
             github,
             options,
         )
-
         return benchmark, output
 
-    def record(
-        self,
-        result,
-        name,
-        tags=None,
-        context=None,
-        github=None,
-        options=None,
-        output=None,
-    ):
-        tags = tags if tags is not None else {}
-        context = context if context is not None else {}
-        options = options if options is not None else {}
-        github = github if github is not None else self.get_github_info()
-
+    def record(self, result, name, tags, context, github, options, output=None):
         tags["name"] = name
         timestamp = _now_formatted()
         run_id = options.get("run_id")

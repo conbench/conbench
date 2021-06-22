@@ -27,14 +27,7 @@ class SimpleBenchmark(conbench.runner.Benchmark):
         def func():
             return 1 + 1
 
-        benchmark, output = self.conbench.benchmark(
-            func,
-            self.name,
-            tags={"year": "2020"},
-            options=kwargs,
-        )
-        self.conbench.publish(benchmark)
-        yield benchmark, output
+        return self.conbench.run(func, self.name, options=kwargs)
 
 
 @conbench.runner.register_benchmark
@@ -48,25 +41,18 @@ class ExternalBenchmark(conbench.runner.Benchmark):
         self.conbench = conbench.runner.Conbench()
 
     def run(self, **kwargs):
-        # external results from somewhere
-        # (an API call, command line execution, etc)
-        result = {
+        # external results from an API call, command line execution, etc
+        data = {
             "data": [100, 200, 300],
             "unit": "i/s",
             "times": [0.100, 0.200, 0.300],
             "time_unit": "s",
         }
 
-        benchmark, output = self.conbench.record(
-            result,
-            self.name,
-            tags={"year": "2020"},
-            context={"benchmark_language": "C++"},
-            options=kwargs,
-            output=result["data"],
+        context = {"benchmark_language": "C++"}
+        return self.conbench.external(
+            data, self.name, context=context, options=kwargs, output=data
         )
-        self.conbench.publish(benchmark)
-        yield benchmark, output
 
 
 @conbench.runner.register_benchmark
@@ -92,6 +78,11 @@ class CasesBenchmark(conbench.runner.Benchmark):
         def func():
             return 100 - 1
 
+        context = {}
+        github_info = {
+            "commit": "02addad336ba19a654f9c857ede546331be7b631",
+            "repository": "https://github.com/apache/arrow",
+        }
         for case in self.get_cases(case, kwargs):
             color, fruit = case
             tags = {
@@ -104,6 +95,8 @@ class CasesBenchmark(conbench.runner.Benchmark):
                 func,
                 self.name,
                 tags=tags,
+                context=context,
+                github=github_info,
                 options=kwargs,
             )
             self.conbench.publish(benchmark)

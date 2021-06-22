@@ -206,13 +206,7 @@ class SimpleBenchmark(conbench.runner.Benchmark):
         def func():
             return 1 + 1
 
-        benchmark, output = self.conbench.benchmark(
-            func,
-            self.name,
-            options=kwargs,
-        )
-        self.conbench.publish(benchmark)
-        yield benchmark, output
+        return self.conbench.run(func, self.name, options=kwargs)
 ```
 
 
@@ -288,8 +282,7 @@ Benchmark result:
         "unit": "s"
     },
     "tags": {
-        "name": "addition",
-        "year": "2020"
+        "name": "addition"
     }
 }
 ```
@@ -302,8 +295,8 @@ benchmarking tool (like executing an R benchmark from command line, parsing
 the resulting JSON, and recording those results).
 
 Implementation details: Note that the following benchmark sets
-`external = True`, and calls `record()` rather than `benchmark()` as the
-example above does.
+`external = True`, and calls `self.conbench.external()` rather than
+`self.conbench.run()` as the example above does.
 
 ```
 import conbench.runner
@@ -320,23 +313,15 @@ class ExternalBenchmark(conbench.runner.Benchmark):
         self.conbench = conbench.runner.Conbench()
 
     def run(self, **kwargs):
-        # external results from somewhere
-        # (an API call, command line execution, etc)
-        result = {
+        # external results from an API call, command line execution, etc
+        data = {
             "data": [100, 200, 300],
             "unit": "i/s",
             "times": [0.100, 0.200, 0.300],
             "time_unit": "s",
         }
 
-        benchmark, output = self.conbench.record(
-            result,
-            self.name,
-            options=kwargs,
-            output=result,
-        )
-        self.conbench.publish(benchmark)
-        yield benchmark, output
+        return self.conbench.external(data, self.name, options=kwargs, output=data)
 ```
 
 
@@ -417,8 +402,7 @@ Benchmark result:
         "unit": "i/s"
     },
     "tags": {
-        "name": "external",
-        "year": "2020"
+        "name": "external"
     }
 }
 ```

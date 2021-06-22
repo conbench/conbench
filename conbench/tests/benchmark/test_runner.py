@@ -67,7 +67,6 @@ example = {
         "timestamp": "2020-12-16T03:40:29.819878+00:00",
     },
     "tags": {
-        "year": "2020",
         "name": "addition",
     },
 }
@@ -81,10 +80,7 @@ def test_runner_simple_benchmark():
     benchmark = SimpleBenchmark()
     [(result, output)] = benchmark.run(iterations=10)
     assert not BenchmarkFacadeSchema.create.validate(result)
-    expected_tags = {
-        "year": "2020",
-        "name": "addition",
-    }
+    expected_tags = {"name": "addition"}
     assert output == 2
     assert_keys_equal(result, example)
     assert_keys_equal(result["tags"], expected_tags)
@@ -125,11 +121,13 @@ def test_runner_external_benchmark():
     benchmark = ExternalBenchmark()
     [(result, output)] = benchmark.run()
     assert not BenchmarkFacadeSchema.create.validate(result)
-    expected_tags = {
-        "year": "2020",
-        "name": "external",
+    expected_tags = {"name": "external"}
+    assert output == {
+        "data": [100, 200, 300],
+        "unit": "i/s",
+        "times": [0.1, 0.2, 0.3],
+        "time_unit": "s",
     }
-    assert output == [100, 200, 300]
     assert_keys_equal(result, example)
     assert_keys_equal(result["tags"], expected_tags)
     assert_keys_equal(result["stats"], example["stats"])
