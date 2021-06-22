@@ -44,7 +44,8 @@ repository, and the results are hosted on the
 
 - May 2021: https://ursalabs.org/blog/announcing-conbench/
 
-<hr>
+
+<br>
 
 
 ## Index
@@ -321,7 +322,10 @@ class ExternalBenchmark(conbench.runner.Benchmark):
             "time_unit": "s",
         }
 
-        return self.conbench.external(data, self.name, options=kwargs, output=data)
+        context = {"benchmark_language": "C++"}
+        return self.conbench.external(
+            data, self.name, context=context, options=kwargs, output=data
+        )
 ```
 
 
@@ -334,10 +338,6 @@ $ conbench external --help
       Run external benchmark.
 
     Options:
-      --iterations INTEGER   [default: 1]
-      --drop-caches BOOLEAN  [default: False]
-      --gc-collect BOOLEAN   [default: True]
-      --gc-disable BOOLEAN   [default: True]
       --show-result BOOLEAN  [default: True]
       --show-output BOOLEAN  [default: False]
       --run-id TEXT          Group executions together with a run id.
