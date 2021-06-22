@@ -190,7 +190,7 @@ Implementation details: Note that this benchmark extends
 method, and registers itself with the `@conbench.runner.register_benchmark`
 decorator.
 
-```
+```python
 import conbench.runner
 
 
@@ -298,7 +298,7 @@ Implementation details: Note that the following benchmark sets
 `external = True`, and calls `self.conbench.external()` rather than
 `self.conbench.run()` as the example above does.
 
-```
+```python
 import conbench.runner
 
 
@@ -413,7 +413,7 @@ combinations in `valid_cases`, which reads like a CSV (the first row contains
 the cases names).
 
 
-```
+```python
 import conbench.runner
 
 
