@@ -64,11 +64,6 @@ class CasesBenchmark(conbench.runner.Benchmark):
     )
 
     def run(self, case=None, **kwargs):
-        context = {}
-        github_info = {
-            "commit": "02addad336ba19a654f9c857ede546331be7b631",
-            "repository": "https://github.com/apache/arrow",
-        }
         for case in self.get_cases(case, kwargs):
             rows, columns = case
             tags = {"rows": rows, "columns": columns}
@@ -77,8 +72,6 @@ class CasesBenchmark(conbench.runner.Benchmark):
                 func,
                 self.name,
                 tags=tags,
-                context=context,
-                github=github_info,
                 options=kwargs,
             )
             self.conbench.publish(benchmark)

@@ -117,7 +117,7 @@ def test_runner_case_benchmark():
     assert result["stats"]["iterations"] == 10
     assert len(result["stats"]["data"]) == 10
     assert result["context"]["benchmark_language"] == "Python"
-    assert result["github"]["repository"] == "https://github.com/apache/arrow"
+    assert result["github"]["repository"] == REPO
 
 
 def test_runner_external_benchmark():
