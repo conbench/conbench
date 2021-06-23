@@ -280,7 +280,7 @@ def test_conbench_command_external_options_r(runner):
     command = "external-r-options --show-result=false --show-output=true"
     with unittest.mock.patch("conbench.util.Connection.publish"):
         result = runner.invoke(conbench, command)
-    assert_command_contains(result, '"result": [')
+    assert_command_contains(result, '"result"')
 
 
 def test_conbench_command_external_options_r_help(runner):

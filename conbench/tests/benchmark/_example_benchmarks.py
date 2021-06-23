@@ -108,11 +108,11 @@ class ExternalBenchmarkR(conbench.runner.Benchmark):
     def _get_r_command(self):
         return (
             f"addition <- function() { 1 + 1 }; "
-            f"start_time <- Sys.time();"
-            f"addition(); "
-            f"end_time <- Sys.time(); "
-            f"result <- end_time - start_time; "
-            f"as.numeric(result); "
+            "start_time <- Sys.time();"
+            "addition(); "
+            "end_time <- Sys.time(); "
+            "result <- end_time - start_time; "
+            "as.numeric(result); "
         )
 
 
@@ -153,7 +153,7 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
 
     def _get_r_command(self):
         return (
-            f"library(arrowbench); "
-            f"out <- run_one(arrowbench:::placebo); "
-            f"cat(jsonlite::toJSON(out), file='placebo.json'); "
+            "library(arrowbench); "
+            "out <- run_one(arrowbench:::placebo); "
+            "cat(jsonlite::toJSON(out), file='placebo.json'); "
         )
