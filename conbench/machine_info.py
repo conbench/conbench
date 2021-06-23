@@ -54,11 +54,29 @@ CPUINFO_MAPPING = {
 }
 
 
-def language():
+def python_info():
     version = _exec_command(["python", "--version"])
     return {
         "benchmark_language": "Python",
         "benchmark_language_version": version,
+    }
+
+
+def r_info():
+    r = "cat(version[['version.string']], '\n')"
+    version = _exec_command(["R", "-s", "-q", "-e", r])
+    return {
+        "benchmark_language": "R",
+        "benchmark_language_version": version,
+    }
+
+
+def github_info():
+    commit = _exec_command(["git", "rev-parse", "HEAD"])
+    repository = _exec_command(["git", "remote", "get-url", "origin"])
+    return {
+        "commit": commit,
+        "repository": repository.rsplit(".git")[0],
     }
 
 
