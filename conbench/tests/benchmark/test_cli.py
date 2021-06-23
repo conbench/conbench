@@ -13,10 +13,11 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  addition  Run addition benchmark.
-  external  Run external benchmark.
-  list      List of benchmarks (for orchestration).
-  matrix    Run matrix benchmark(s).
+  addition    Run addition benchmark.
+  external    Run external benchmark.
+  external-r  Run external-r benchmark.
+  list        List of benchmarks (for orchestration).
+  matrix      Run matrix benchmark(s).
 """
 
 CONBENCH_LIST = """
@@ -26,6 +27,9 @@ CONBENCH_LIST = """
   },
   {
     "command": "external --iterations=2"
+  },
+  {
+    "command": "external-r --iterations=2"
   },
   {
     "command": "matrix --all=true --iterations=2"
