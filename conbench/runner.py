@@ -336,4 +336,4 @@ class Conbench(Connection):
         error = result.stderr.decode("utf-8").strip()
         if result.returncode != 0:
             raise Exception(error)
-        return output
+        return output, error
