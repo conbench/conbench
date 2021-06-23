@@ -661,7 +661,16 @@ Benchmark result:
 
 ### Example R benchmarks
 
-A few examples ilustrating how to integrate R benchmarks with Conbench.
+A few examples illustrating how to integrate R benchmarks with Conbench.
+
+The first one just times `1 + 1` in R, and the second one executes an R
+benchmark from a library of R benchmarks (in this case
+[arrowbench](https://github.com/ursacomputing/arrowbench)).
+
+If you find yourself wrapping a lot of R benchmarks in Python to integrate them
+with Conbench (to get uniform JSON benchmark results which you can persist and
+publish on a Conbench serve), you'll probably want to extract much of the
+boilerplate out into a base class.
 
 
 ```python
@@ -703,7 +712,7 @@ class ExternalBenchmarkR(conbench.runner.Benchmark):
 
 
 ```
-cd ~/workspace/conbench/conbench/tests/benchmark/
+$ cd ~/workspace/conbench/conbench/tests/benchmark/
 $ conbench external-r --help
 
 Usage: conbench external-r [OPTIONS]
@@ -769,14 +778,16 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
 ```
 
 ```
-cd ~/workspace/conbench/conbench/tests/benchmark/
+$ cd ~/workspace/conbench/conbench/tests/benchmark/
 $ conbench external-r --help
 
-Usage: conbench external-r [OPTIONS]
+Usage: conbench external-r-options [OPTIONS]
 
-  Run external-r benchmark.
+  Run external-r-options benchmark.
 
 Options:
+  --iterations INTEGER   [default: 1]
+  --drop-caches BOOLEAN  [default: False]
   --show-result BOOLEAN  [default: True]
   --show-output BOOLEAN  [default: False]
   --run-id TEXT          Group executions together with a run id.
