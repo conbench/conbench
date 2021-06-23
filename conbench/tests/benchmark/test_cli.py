@@ -119,6 +119,22 @@ Options:
 """
 
 
+CONBENCH_EXTERNAL_R_HELP = """
+Usage: conbench external-r [OPTIONS]
+
+  Run external-r benchmark.
+
+Options:
+  --iterations INTEGER   [default: 1]
+  --drop-caches BOOLEAN  [default: False]
+  --show-result BOOLEAN  [default: True]
+  --show-output BOOLEAN  [default: False]
+  --run-id TEXT          Group executions together with a run id.
+  --run-name TEXT        Name of run (commit, pull request, etc).
+  --help                 Show this message and exit.
+"""
+
+
 this_dir = os.path.dirname(os.path.abspath(__file__))
 register_benchmarks(this_dir)
 
@@ -127,6 +143,12 @@ def assert_command_output(result, expected):
     assert result.exit_code == 0
     output = result.output.strip().replace("\x08", "")
     assert output == expected.strip()
+
+
+def assert_command_contains(result, contains):
+    assert result.exit_code == 0
+    output = result.output.strip()
+    assert contains in output
 
 
 def test_conbench(runner):
@@ -146,6 +168,13 @@ def test_conbench_command_show_result(runner):
     assert "stats" in result.output
     assert "context" in result.output
     assert "machine_info" in result.output
+
+
+def test_conbench_list(runner):
+    from conbench.cli import conbench
+
+    result = runner.invoke(conbench, "list")
+    assert_command_output(result, CONBENCH_LIST)
 
 
 def test_conbench_command_without_cases(runner):
@@ -197,8 +226,17 @@ def test_conbench_command_external_help(runner):
     assert_command_output(result, CONBENCH_EXTERNAL_HELP)
 
 
-def test_conbench_list(runner):
+def test_conbench_command_external_r(runner):
     from conbench.cli import conbench
 
-    result = runner.invoke(conbench, "list")
-    assert_command_output(result, CONBENCH_LIST)
+    command = "external-r --show-result=false --show-output=true"
+    with unittest.mock.patch("conbench.util.Connection.publish"):
+        result = runner.invoke(conbench, command)
+    assert_command_contains(result, "[1] 2")  # 1 + 1 = 2
+
+
+def test_conbench_command_external_r_help(runner):
+    from conbench.cli import conbench
+
+    result = runner.invoke(conbench, "external-r --help")
+    assert_command_output(result, CONBENCH_EXTERNAL_R_HELP)
