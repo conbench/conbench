@@ -311,7 +311,7 @@ class ExternalBenchmark(conbench.runner.Benchmark):
 
     def run(self, **kwargs):
         # external results from an API call, command line execution, etc
-        data = {
+        result = {
             "data": [100, 200, 300],
             "unit": "i/s",
             "times": [0.100, 0.200, 0.300],
@@ -320,7 +320,7 @@ class ExternalBenchmark(conbench.runner.Benchmark):
 
         context = {"benchmark_language": "C++"}
         return self.conbench.external(
-            data, self.name, context=context, options=kwargs, output=data
+            result, self.name, context=context, options=kwargs, output=result
         )
 ```
 

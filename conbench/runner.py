@@ -9,7 +9,7 @@ import uuid
 
 import numpy as np
 
-from .machine_info import language, machine_info
+from .machine_info import github_info, machine_info, python_info, r_info
 from .util import Connection
 
 
@@ -115,11 +115,37 @@ class BenchmarkList(abc.ABC):
 class Conbench(Connection):
     def __init__(self):
         super().__init__()
-        self.machine_info = machine_info(self.config.host_name)
-        self.language = language()
         self.batch_id = uuid.uuid4().hex
+        self._machine_info = None
+        self._python_info = None
+        self._r_info = None
+        self._github_info = None
         self._drop_caches_failed = False
         self._purge_failed = False
+
+    @property
+    def python_info(self):
+        if not self._python_info:
+            self._python_info = python_info()
+        return self._python_info
+
+    @property
+    def r_info(self):
+        if not self._r_info:
+            self._r_info = r_info()
+        return self._r_info
+
+    @property
+    def github_info(self):
+        if not self._github_info:
+            self._github_info = github_info()
+        return self._github_info
+
+    @property
+    def machine_info(self):
+        if not self._machine_info:
+            self._machine_info = machine_info(self.config.host_name)
+        return self._machine_info
 
     def run(self, f, name, **kwargs):
         """Benchmark a function and publish the result."""
@@ -160,7 +186,7 @@ class Conbench(Connection):
             raise ValueError(f"Invalid iterations: {iterations}")
 
         data, output = self._get_timing(f, iterations, timing_options)
-        context.update(self.language)
+        context.update(self.python_info)
         benchmark, _ = self.record(
             {"data": data, "unit": "s"},
             name,
@@ -198,15 +224,6 @@ class Conbench(Connection):
         }
         return benchmark, output
 
-    def get_github_info(self):
-        command = ["git", "rev-parse", "HEAD"]
-        result = subprocess.run(command, capture_output=True, check=True)
-        commit = result.stdout.decode("utf-8").strip()
-        command = ["git", "remote", "get-url", "origin"]
-        result = subprocess.run(command, capture_output=True, check=True)
-        repository = result.stdout.decode("utf-8").strip().rsplit(".git")[0]
-        return {"repository": repository, "commit": commit}
-
     def mark_new_batch(self):
         self.batch_id = uuid.uuid4().hex
 
@@ -234,7 +251,7 @@ class Conbench(Connection):
         context = kwargs.get("context", {})
         github = kwargs.get("github", {})
         options = kwargs.get("options", {})
-        github = github if github else self.get_github_info()
+        github = github if github else self.github_info
         return tags, context, github, options, kwargs.get("output")
 
     def _get_timing(self, f, iterations, options):
@@ -308,3 +325,12 @@ class Conbench(Connection):
             result["run_name"] = run_name
 
         return result
+
+    def execute_r_command(self, r_command):
+        command = ["R", "-s", "-q", "-e", r_command]
+        result = subprocess.run(command, capture_output=True)
+        output = result.stdout.decode("utf-8").strip()
+        error = result.stderr.decode("utf-8").strip()
+        if result.returncode != 0:
+            raise Exception(error)
+        return output
