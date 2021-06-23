@@ -695,7 +695,7 @@ class ExternalBenchmarkR(conbench.runner.Benchmark):
         )
 
     def _run_r_command(self):
-        output = self.conbench.execute_r_command(self._get_r_command())
+        output, _ = self.conbench.execute_r_command(self._get_r_command())
         result = float(output.split("\n")[-1].split("[1] ")[1])
         return result, output
 
