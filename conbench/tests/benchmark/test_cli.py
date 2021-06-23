@@ -147,7 +147,6 @@ Usage: conbench external-r-options [OPTIONS]
 Options:
   --iterations INTEGER   [default: 1]
   --drop-caches BOOLEAN  [default: False]
-  --cpu-count INTEGER
   --show-result BOOLEAN  [default: True]
   --show-output BOOLEAN  [default: False]
   --run-id TEXT          Group executions together with a run id.
@@ -281,7 +280,7 @@ def test_conbench_command_external_options_r(runner):
     command = "external-r-options --show-result=false --show-output=true"
     with unittest.mock.patch("conbench.util.Connection.publish"):
         result = runner.invoke(conbench, command)
-    assert_command_contains(result, "[1] 2")  # 1 + 1 = 2
+    assert_command_contains(result, '"result": [')
 
 
 def test_conbench_command_external_options_r_help(runner):

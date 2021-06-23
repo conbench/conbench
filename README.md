@@ -52,6 +52,10 @@ repository, and the results are hosted on the
 
 * [Contributing](https://github.com/ursacomputing/connbench#contributing)
 * [Authoring benchmarks](https://github.com/ursacomputing/conbench#authoring-benchmarks)
+  * [Simple benchmarks](https://github.com/ursacomputing/conbench#example-simple-benchmarks)
+  * [External benchmarks](https://github.com/ursacomputing/conbench#example-external-benchmarks)
+  * [Case benchmarks](https://github.com/ursacomputing/conbench#example-case-benchmarks)
+  * [R benchmarks](https://github.com/ursacomputing/conbench#example-r-benchmarks)
 
 
 ## Contributing
@@ -342,7 +346,7 @@ Options:
 ```
 
 
-Note that the use of `--iterations=3` results in 3 runs of the benchmark with
+Note that the use of `--iterations=3` results in 3 runs of the benchmark, and
 the `mean`, `stdev`, etc calculated.
 
 
@@ -455,6 +459,7 @@ class CasesBenchmark(conbench.runner.Benchmark):
 ```
 $ cd ~/workspace/conbench/conbench/tests/benchmark/
 $ conbench matrix --help
+
 Usage: conbench matrix [OPTIONS]
 
   Run matrix benchmark(s).
@@ -652,4 +657,129 @@ Benchmark result:
         "rows": "10"
     }
 }
+```
+
+### Example R benchmarks
+
+A few examples ilustrating how to integrate R benchmarks with Conbench.
+
+
+```python
+import conbench.runner
+
+
+@conbench.runner.register_benchmark
+class ExternalBenchmarkR(conbench.runner.Benchmark):
+    """Example benchmark that records an R benchmark result."""
+
+    external = True
+    name = "external-r"
+
+    def run(self, **kwargs):
+        result, output = self._run_r_command()
+        return self.conbench.external(
+            {"data": [result], "unit": "s"},
+            self.name,
+            context=self.conbench.r_info,
+            options=kwargs,
+            output=output,
+        )
+
+    def _run_r_command(self):
+        output = self.conbench.execute_r_command(self._get_r_command())
+        result = float(output.split("\n")[-1].split("[1] ")[1])
+        return result, output
+
+    def _get_r_command(self):
+        return (
+            f"addition <- function() { 1 + 1 }; "
+            f"start_time <- Sys.time();"
+            f"addition(); "
+            f"end_time <- Sys.time(); "
+            f"result <- end_time - start_time; "
+            f"as.numeric(result); "
+        )
+```
+
+
+```
+cd ~/workspace/conbench/conbench/tests/benchmark/
+$ conbench external-r --help
+
+Usage: conbench external-r [OPTIONS]
+
+  Run external-r benchmark.
+
+Options:
+  --show-result BOOLEAN  [default: True]
+  --show-output BOOLEAN  [default: False]
+  --run-id TEXT          Group executions together with a run id.
+  --run-name TEXT        Name of run (commit, pull request, etc).
+  --help                 Show this message and exit.
+```
+
+
+```python
+import json
+
+import conbench.runner
+
+
+@conbench.runner.register_benchmark
+class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
+    """Example benchmark that records an R benchmark result (with options)."""
+
+    external = True
+    name = "external-r-options"
+    options = {
+        "iterations": {"default": 1, "type": int},
+        "drop_caches": {"type": bool, "default": "false"},
+    }
+
+    def run(self, **kwargs):
+        data, iterations = [], kwargs.get("iterations", 1)
+
+        for _ in range(iterations):
+            if kwargs.get("drop_caches", False):
+                self.conbench.sync_and_drop_caches()
+            result, output = self._run_r_command()
+            data.append(result["result"][0]["real"])
+
+        return self.conbench.external(
+            {"data": data, "unit": "s"},
+            self.name,
+            context=self.conbench.r_info,
+            options=kwargs,
+            output=output,
+        )
+
+    def _run_r_command(self):
+        r_command = self._get_r_command()
+        self.conbench.execute_r_command(r_command)
+        with open('placebo.json') as json_file:
+            data = json.load(json_file)
+        return data, json.dumps(data, indent=2)
+
+    def _get_r_command(self):
+        return (
+            f"library(arrowbench); "
+            f"out <- run_one(arrowbench:::placebo); "
+            f"cat(jsonlite::toJSON(out), file='placebo.json'); "
+        )
+```
+
+```
+cd ~/workspace/conbench/conbench/tests/benchmark/
+$ conbench external-r --help
+
+Usage: conbench external-r [OPTIONS]
+
+  Run external-r benchmark.
+
+Options:
+  --show-result BOOLEAN  [default: True]
+  --show-output BOOLEAN  [default: False]
+  --run-id TEXT          Group executions together with a run id.
+  --run-name TEXT        Name of run (commit, pull request, etc).
+  --help                 Show this message and exit.
 ```

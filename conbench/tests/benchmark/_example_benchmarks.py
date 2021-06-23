@@ -1,3 +1,5 @@
+import json
+
 import conbench.runner
 
 
@@ -116,14 +118,13 @@ class ExternalBenchmarkR(conbench.runner.Benchmark):
 
 @conbench.runner.register_benchmark
 class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
-    """Example benchmark with options that records an R benchmark result."""
+    """Example benchmark that records an R benchmark result (with options)."""
 
     external = True
     name = "external-r-options"
     options = {
         "iterations": {"default": 1, "type": int},
         "drop_caches": {"type": bool, "default": "false"},
-        "cpu_count": {"type": int},
     }
 
     def run(self, **kwargs):
@@ -133,7 +134,7 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
             if kwargs.get("drop_caches", False):
                 self.conbench.sync_and_drop_caches()
             result, output = self._run_r_command()
-            data.append(result)
+            data.append(result["result"][0]["real"])
 
         return self.conbench.external(
             {"data": data, "unit": "s"},
@@ -144,16 +145,15 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
         )
 
     def _run_r_command(self):
-        output = self.conbench.execute_r_command(self._get_r_command())
-        result = float(output.split("\n")[-1].split("[1] ")[1])
-        return result, output
+        r_command = self._get_r_command()
+        self.conbench.execute_r_command(r_command)
+        with open("placebo.json") as json_file:
+            data = json.load(json_file)
+        return data, json.dumps(data, indent=2)
 
     def _get_r_command(self):
         return (
-            f"addition <- function() { 1 + 1 }; "
-            f"start_time <- Sys.time();"
-            f"addition(); "
-            f"end_time <- Sys.time(); "
-            f"result <- end_time - start_time; "
-            f"as.numeric(result); "
+            f"library(arrowbench); "
+            f"out <- run_one(arrowbench:::placebo); "
+            f"cat(jsonlite::toJSON(out), file='placebo.json'); "
         )
