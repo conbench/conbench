@@ -342,9 +342,13 @@ Options:
 ```
 
 
+Note that the use of `--iterations=3` results in 3 runs of the benchmark with
+the `mean`, `stdev`, etc calculated.
+
+
 ```
 $ cd ~/workspace/conbench/conbench/tests/benchmark/
-$ conbench external
+$ conbench external --iterations=3
 
 Benchmark result:
 {
@@ -480,6 +484,10 @@ Options:
   --help                 Show this message and exit.
     """
 ```
+
+
+Note that the use of `--all=true` results in 3 benchmark results, one for each
+case (`10 x 10`, `2, x 10`, and `10, x 2`).
 
 
 ```

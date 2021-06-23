@@ -87,9 +87,43 @@ class ExternalBenchmarkR(conbench.runner.Benchmark):
 
     external = True
     name = "external-r"
+
+    def run(self, **kwargs):
+        result, output = self._run_r_command()
+        return self.conbench.external(
+            {"data": [result], "unit": "s"},
+            self.name,
+            context=self.conbench.r_info,
+            options=kwargs,
+            output=output,
+        )
+
+    def _run_r_command(self):
+        output = self.conbench.execute_r_command(self._get_r_command())
+        result = float(output.split("\n")[-1].split("[1] ")[1])
+        return result, output
+
+    def _get_r_command(self):
+        return (
+            f"addition <- function() { 1 + 1 }; "
+            f"start_time <- Sys.time();"
+            f"addition(); "
+            f"end_time <- Sys.time(); "
+            f"result <- end_time - start_time; "
+            f"as.numeric(result); "
+        )
+
+
+@conbench.runner.register_benchmark
+class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
+    """Example benchmark with options that records an R benchmark result."""
+
+    external = True
+    name = "external-r-options"
     options = {
         "iterations": {"default": 1, "type": int},
         "drop_caches": {"type": bool, "default": "false"},
+        "cpu_count": {"type": int},
     }
 
     def run(self, **kwargs):

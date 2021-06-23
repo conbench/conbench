@@ -1,5 +1,7 @@
-import unittest.mock
 import os
+import unittest.mock
+
+import pytest
 
 from ...util import register_benchmarks
 
@@ -13,11 +15,12 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  addition    Run addition benchmark.
-  external    Run external benchmark.
-  external-r  Run external-r benchmark.
-  list        List of benchmarks (for orchestration).
-  matrix      Run matrix benchmark(s).
+  addition            Run addition benchmark.
+  external            Run external benchmark.
+  external-r          Run external-r benchmark.
+  external-r-options  Run external-r-options benchmark.
+  list                List of benchmarks (for orchestration).
+  matrix              Run matrix benchmark(s).
 """
 
 CONBENCH_LIST = """
@@ -30,6 +33,9 @@ CONBENCH_LIST = """
   },
   {
     "command": "external-r --iterations=2"
+  },
+  {
+    "command": "external-r-options --iterations=2"
   },
   {
     "command": "matrix --all=true --iterations=2"
@@ -125,8 +131,23 @@ Usage: conbench external-r [OPTIONS]
   Run external-r benchmark.
 
 Options:
+  --show-result BOOLEAN  [default: True]
+  --show-output BOOLEAN  [default: False]
+  --run-id TEXT          Group executions together with a run id.
+  --run-name TEXT        Name of run (commit, pull request, etc).
+  --help                 Show this message and exit.
+"""
+
+
+CONBENCH_EXTERNAL_R_OPTIONS_HELP = """
+Usage: conbench external-r-options [OPTIONS]
+
+  Run external-r-options benchmark.
+
+Options:
   --iterations INTEGER   [default: 1]
   --drop-caches BOOLEAN  [default: False]
+  --cpu-count INTEGER
   --show-result BOOLEAN  [default: True]
   --show-output BOOLEAN  [default: False]
   --run-id TEXT          Group executions together with a run id.
@@ -228,6 +249,12 @@ def test_conbench_command_external_help(runner):
 
 def test_conbench_command_external_r(runner):
     from conbench.cli import conbench
+    from conbench.machine_info import r_info
+
+    try:
+        r_info()
+    except:
+        pytest.skip("No R")
 
     command = "external-r --show-result=false --show-output=true"
     with unittest.mock.patch("conbench.util.Connection.publish"):
@@ -240,3 +267,25 @@ def test_conbench_command_external_r_help(runner):
 
     result = runner.invoke(conbench, "external-r --help")
     assert_command_output(result, CONBENCH_EXTERNAL_R_HELP)
+
+
+def test_conbench_command_external_options_r(runner):
+    from conbench.cli import conbench
+    from conbench.machine_info import r_info
+
+    try:
+        r_info()
+    except:
+        pytest.skip("No R")
+
+    command = "external-r-options --show-result=false --show-output=true"
+    with unittest.mock.patch("conbench.util.Connection.publish"):
+        result = runner.invoke(conbench, command)
+    assert_command_contains(result, "[1] 2")  # 1 + 1 = 2
+
+
+def test_conbench_command_external_options_r_help(runner):
+    from conbench.cli import conbench
+
+    result = runner.invoke(conbench, "external-r-options --help")
+    assert_command_output(result, CONBENCH_EXTERNAL_R_OPTIONS_HELP)
