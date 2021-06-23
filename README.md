@@ -669,7 +669,7 @@ benchmark from a library of R benchmarks (in this case
 
 If you find yourself wrapping a lot of R benchmarks in Python to integrate them
 with Conbench (to get uniform JSON benchmark results which you can persist and
-publish on a Conbench serve), you'll probably want to extract much of the
+publish on a Conbench server), you'll probably want to extract much of the
 boilerplate out into a base class.
 
 
