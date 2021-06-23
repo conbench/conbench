@@ -326,8 +326,11 @@ class Conbench(Connection):
 
         return result
 
-    def execute_r_command(self, r_command):
-        command = ["R", "-s", "-q", "-e", r_command]
+    def execute_r_command(self, r_command, quiet=True):
+        if quiet:
+            command = ["R", "-s", "-q", "-e", r_command]
+        else:
+            command = ["R", "-e", r_command]
         result = subprocess.run(command, capture_output=True)
         output = result.stdout.decode("utf-8").strip()
         error = result.stderr.decode("utf-8").strip()
