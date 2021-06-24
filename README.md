@@ -661,7 +661,8 @@ Benchmark result:
 
 ### Example R benchmarks
 
-A few examples illustrating how to integrate R benchmarks with Conbench.
+Here are a few examples illustrating how to integrate R benchmarks with
+Conbench.
 
 The first one just times `1 + 1` in R, and the second one executes an R
 benchmark from a library of R benchmarks (in this case
