@@ -147,37 +147,8 @@ class Conbench(Connection):
             self._machine_info = machine_info(self.config.host_name)
         return self._machine_info
 
-    def run(self, f, name, **kwargs):
-        """Benchmark a function and publish the result."""
-        tags, context, github, options, _ = self._init(kwargs)
-        benchmark, output = self.benchmark(
-            f,
-            name,
-            tags=tags,
-            context=context,
-            github=github,
-            options=options,
-        )
-        self.publish(benchmark)
-        return [(benchmark, output)]
-
-    def external(self, result, name, **kwargs):
-        """Record and publish an external benchmark result."""
-        tags, context, github, options, output = self._init(kwargs)
-        benchmark, output = self.record(
-            result,
-            name,
-            tags=tags,
-            context=context,
-            github=github,
-            options=options,
-            output=output,
-        )
-        self.publish(benchmark)
-        return [(benchmark, output)]
-
     def benchmark(self, f, name, **kwargs):
-        """Benchmark a function."""
+        """Benchmark a function and publish the result."""
         tags, context, github, options, _ = self._init(kwargs)
 
         timing_options = self._get_timing_options(options)
@@ -195,10 +166,11 @@ class Conbench(Connection):
             github=github,
             options=options,
         )
+        self.publish(benchmark)
         return benchmark, output
 
     def record(self, result, name, **kwargs):
-        """Create a record for an external benchmark result."""
+        """Record and publish an external benchmark result."""
         tags, context, github, options, output = self._init(kwargs)
 
         tags["name"] = name
@@ -222,6 +194,7 @@ class Conbench(Connection):
             "tags": tags,
             "github": github,
         }
+        self.publish(benchmark)
         return benchmark, output
 
     def mark_new_batch(self):

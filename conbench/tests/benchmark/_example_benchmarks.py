@@ -23,7 +23,7 @@ class SimpleBenchmark(conbench.runner.Benchmark):
     name = "addition"
 
     def run(self, **kwargs):
-        return self.conbench.run(
+        yield self.conbench.benchmark(
             self._get_benchmark_function(), self.name, options=kwargs
         )
 
@@ -78,7 +78,7 @@ class ExternalBenchmark(conbench.runner.Benchmark):
         }
 
         context = {"benchmark_language": "C++"}
-        return self.conbench.external(
+        yield self.conbench.record(
             result, self.name, context=context, options=kwargs, output=result
         )
 
@@ -92,7 +92,7 @@ class ExternalBenchmarkR(conbench.runner.Benchmark):
 
     def run(self, **kwargs):
         result, output = self._run_r_command()
-        return self.conbench.external(
+        yield self.conbench.record(
             {"data": [result], "unit": "s"},
             self.name,
             context=self.conbench.r_info,
@@ -136,7 +136,7 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
             result, output = self._run_r_command()
             data.append(result["result"][0]["real"])
 
-        return self.conbench.external(
+        yield self.conbench.record(
             {"data": data, "unit": "s"},
             self.name,
             context=self.conbench.r_info,

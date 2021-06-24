@@ -205,7 +205,7 @@ class SimpleBenchmark(conbench.runner.Benchmark):
     name = "addition"
 
     def run(self, **kwargs):
-        return self.conbench.run(
+        yield self.conbench.benchmark(
             self._get_benchmark_function(), self.name, options=kwargs
         )
 
@@ -299,8 +299,8 @@ benchmarking tool (like executing an R benchmark from command line, parsing
 the resulting JSON, and recording those results).
 
 Implementation details: Note that the following benchmark sets
-`external = True`, and calls `self.conbench.external()` rather than
-`self.conbench.run()` as the example above does.
+`external = True`, and calls `self.conbench.record()` rather than
+`self.conbench.benchmark()` as the example above does.
 
 ```python
 import conbench.runner
@@ -323,7 +323,7 @@ class ExternalBenchmark(conbench.runner.Benchmark):
         }
 
         context = {"benchmark_language": "C++"}
-        return self.conbench.external(
+        yield self.conbench.record(
             result, self.name, context=context, options=kwargs, output=result
         )
 ```
@@ -661,7 +661,8 @@ Benchmark result:
 
 ### Example R benchmarks
 
-A few examples illustrating how to integrate R benchmarks with Conbench.
+Here are a few examples illustrating how to integrate R benchmarks with
+Conbench.
 
 The first one just times `1 + 1` in R, and the second one executes an R
 benchmark from a library of R benchmarks (in this case
@@ -686,7 +687,7 @@ class ExternalBenchmarkR(conbench.runner.Benchmark):
 
     def run(self, **kwargs):
         result, output = self._run_r_command()
-        return self.conbench.external(
+        yield self.conbench.record(
             {"data": [result], "unit": "s"},
             self.name,
             context=self.conbench.r_info,
@@ -754,7 +755,7 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
             result, output = self._run_r_command()
             data.append(result["result"][0]["real"])
 
-        return self.conbench.external(
+        yield self.conbench.record(
             {"data": data, "unit": "s"},
             self.name,
             context=self.conbench.r_info,
