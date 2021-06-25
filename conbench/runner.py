@@ -1,6 +1,7 @@
 import abc
 import collections
 import datetime
+import functools
 import gc
 import statistics
 import subprocess
@@ -116,36 +117,24 @@ class Conbench(Connection):
     def __init__(self):
         super().__init__()
         self.batch_id = uuid.uuid4().hex
-        self._machine_info = None
-        self._python_info = None
-        self._r_info = None
-        self._github_info = None
         self._drop_caches_failed = False
         self._purge_failed = False
 
-    @property
+    @functools.cached_property
     def python_info(self):
-        if not self._python_info:
-            self._python_info = python_info()
-        return self._python_info
+        return python_info()
 
-    @property
+    @functools.cached_property
     def r_info(self):
-        if not self._r_info:
-            self._r_info = r_info()
-        return self._r_info
+        return r_info()
 
-    @property
+    @functools.cached_property
     def github_info(self):
-        if not self._github_info:
-            self._github_info = github_info()
-        return self._github_info
+        return github_info()
 
-    @property
+    @functools.cached_property
     def machine_info(self):
-        if not self._machine_info:
-            self._machine_info = machine_info(self.config.host_name)
-        return self._machine_info
+        return machine_info(self.config.host_name)
 
     def benchmark(self, f, name, **kwargs):
         """Benchmark a function and publish the result."""
