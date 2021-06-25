@@ -42,7 +42,7 @@ jobs:
           flake8
       - name: Run tests
         run: |
-          coverage run --source conbench -m pytest -v conbench/tests/
+          coverage run --source conbench -m pytest -v --durations=20 conbench/tests/
         env:
           DB_USERNAME: postgres
       - name: Publish coverage
