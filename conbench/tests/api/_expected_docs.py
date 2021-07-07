@@ -331,6 +331,7 @@
                             "contender_z_regression": False,
                             "contender_z_score": "0.000",
                             "improvement": False,
+                            "language": "Python",
                             "less_is_better": True,
                             "regression": False,
                             "tags": {
@@ -372,6 +373,7 @@
                                 "contender_z_regression": False,
                                 "contender_z_score": "0.000",
                                 "improvement": False,
+                                "language": "Python",
                                 "less_is_better": True,
                                 "regression": False,
                                 "tags": {
@@ -405,6 +407,7 @@
                                 "contender_z_regression": False,
                                 "contender_z_score": "0.000",
                                 "improvement": False,
+                                "language": "Python",
                                 "less_is_better": True,
                                 "regression": False,
                                 "tags": {
