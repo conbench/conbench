@@ -7,7 +7,7 @@ from ..entities._comparator import BenchmarkComparator, BenchmarkListComparator
 from ..entities._entity import NotFound
 from ..entities.distribution import set_z_scores
 from ..entities.summary import Summary
-from ..hacks import set_display_batch, set_display_language, set_display_name
+from ..hacks import set_display_batch, set_display_name
 
 
 def _compare_entity(summary):
@@ -19,7 +19,7 @@ def _compare_entity(summary):
         "unit": summary.unit,
         "benchmark": summary.display_name,
         "batch": summary.display_batch,
-        "language": summary.display_language,
+        "language": summary.context.tags.get("benchmark_language", "unknown"),
         "tags": summary.case.tags,
         "z_score": summary.z_score,
     }
@@ -78,15 +78,12 @@ class CompareBenchmarksAPI(ApiEndpoint):
         except ValueError:
             self.abort_404_not_found()
 
-        contexts = {}  # TODO
         baseline_summary = self._get(baseline_id)
         contender_summary = self._get(contender_id)
         set_display_name(baseline_summary)
         set_display_name(contender_summary)
         set_display_batch(baseline_summary)
         set_display_batch(contender_summary)
-        set_display_language(baseline_summary, contexts)
-        set_display_language(contender_summary, contexts)
 
         baseline = _compare_entity(baseline_summary)
         contender = _compare_entity(contender_summary)
@@ -163,16 +160,13 @@ class CompareBatchesAPI(ApiEndpoint):
         contenders = self._get(contender_id)
 
         pairs = {}
-        contexts = {}  # TODO
         for summary in baselines:
             set_display_name(summary)
             set_display_batch(summary)
-            set_display_language(summary, contexts)
             self._add_pair(pairs, summary, "baseline")
         for summary in contenders:
             set_display_name(summary)
             set_display_batch(summary)
-            set_display_language(summary, contexts)
             self._add_pair(pairs, summary, "contender")
 
         if raw:
