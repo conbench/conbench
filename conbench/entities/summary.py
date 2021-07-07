@@ -34,7 +34,7 @@ class Summary(Base, EntityMixin):
     context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
     run_id = NotNull(s.Text, s.ForeignKey("run.id"))
     case = relationship("Case", lazy="joined")
-    context = relationship("Context", lazy="select")
+    context = relationship("Context", lazy="joined")
     run = relationship("Run", lazy="select")
     data = relationship(
         "Data",
