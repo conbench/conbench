@@ -10,6 +10,7 @@
                 <thead>
                     <tr>
                         <th scope="col">Date</th>
+                        <th scope="col">Language</th>
                         <th scope="col">Batch</th>
                         <th scope="col">Benchmark</th>
                         <th scope="col">Mean</th>
@@ -22,6 +23,7 @@
                     {% for benchmark in benchmarks %}
                     <tr>
                          <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
+                         <td style="white-space: nowrap;">{{ benchmark.display_language }}</td>
                          <td style="white-space: nowrap;">
                            <a href="{{ url_for('app.batch', batch_id=benchmark.stats.batch_id) }}">
                              <div>{{ benchmark.display_batch }}</div>

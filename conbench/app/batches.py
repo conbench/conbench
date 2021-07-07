@@ -7,10 +7,11 @@ from ..app import rule
 from ..app._endpoint import AppEndpoint
 from ..app._plots import simple_bar_plot
 from ..app._util import augment
+from ..app.benchmarks import ContextMixin
 from ..config import Config
 
 
-class BatchPlot(AppEndpoint):
+class BatchPlot(AppEndpoint, ContextMixin):
     def page(self, by_group):
         plots, raw, i = [], [], 1
         for benchmarks in by_group.values():
@@ -38,8 +39,9 @@ class BatchPlot(AppEndpoint):
 
         group_by_key = "dataset"  # TODO: move to GRAPHS
         by_group = collections.defaultdict(list)
+        contexts = self.get_contexts(benchmarks)
         for benchmark in benchmarks:
-            augment(benchmark)
+            augment(benchmark, contexts)
             tags = benchmark["tags"]
             key = f'{tags["name"]}-{tags.get(group_by_key, "")}'
             by_group[key].append(benchmark)

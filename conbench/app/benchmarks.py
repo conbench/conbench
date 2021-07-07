@@ -12,6 +12,20 @@ class DeleteForm(flask_wtf.FlaskForm):
     delete = w.SubmitField("Delete")
 
 
+class ContextMixin:
+    def get_contexts(self, benchmarks):
+        context_urls, contexts = set(), {}
+        for benchmark in benchmarks:
+            context_urls.add(benchmark["links"]["context"])
+
+        for context_url in context_urls:
+            response = self.api_get_url(context_url)
+            if response.status_code == 200:
+                contexts[context_url] = response.json
+
+        return contexts
+
+
 class BenchmarkMixin:
     def get_display_benchmark(self, benchmark_id):
         benchmark, response = self._get_benchmark(benchmark_id)
@@ -150,10 +164,11 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin):
         return benchmark, run
 
 
-class BenchmarkList(AppEndpoint):
+class BenchmarkList(AppEndpoint, ContextMixin):
     def page(self, benchmarks):
+        contexts = self.get_contexts(benchmarks)
         for benchmark in benchmarks:
-            augment(benchmark)
+            augment(benchmark, contexts)
 
         return self.render_template(
             "benchmark-list.html",
