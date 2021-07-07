@@ -19,6 +19,7 @@ def _compare_entity(summary):
         "unit": summary.unit,
         "benchmark": summary.display_name,
         "batch": summary.display_batch,
+        "language": summary.context.tags.get("benchmark_language", "unknown"),
         "tags": summary.case.tags,
         "z_score": summary.z_score,
     }

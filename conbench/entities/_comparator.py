@@ -41,6 +41,7 @@ class BenchmarkResult:
         value,
         batch,
         benchmark,
+        language,
         tags,
         z_score,
     ):
@@ -52,6 +53,7 @@ class BenchmarkResult:
         self.benchmark = benchmark
         self.value = decimal.Decimal(value)
         self.tags = tags
+        self.language = language
         self.z_score = decimal.Decimal(z_score)
 
 
@@ -76,6 +78,14 @@ class BenchmarkComparator:
             return self.baseline.benchmark
         if self.contender is not None:
             return self.contender.benchmark
+        return "unknown"
+
+    @property
+    def language(self):
+        if self.baseline is not None:
+            return self.baseline.language
+        if self.contender is not None:
+            return self.contender.language
         return "unknown"
 
     @property
@@ -160,6 +170,7 @@ class BenchmarkComparator:
         return {
             "batch": self.batch,
             "benchmark": self.benchmark,
+            "language": self.language,
             "change": change_fmt(self.change),
             "threshold": fmt(self.threshold) + "%",
             "regression": self.regression,
@@ -190,6 +201,7 @@ class BenchmarkComparator:
         return {
             "batch": self.batch,
             "benchmark": self.benchmark,
+            "language": self.language,
             "change": fmt(self.change * 100),
             "threshold": fmt(self.threshold),
             "regression": self.regression,

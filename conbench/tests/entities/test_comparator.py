@@ -5,6 +5,7 @@ def test_compare_no_change():
     baseline = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1000",
         "unit": "i/s",
         "id": "some-benchmark-id-1",
@@ -16,6 +17,7 @@ def test_compare_no_change():
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1000",
         "unit": "i/s",
         "id": "some-benchmark-id-2",
@@ -31,6 +33,7 @@ def test_compare_no_change():
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "0.000",
         "threshold": "5.000",
         "regression": False,
@@ -57,6 +60,7 @@ def test_compare_no_change():
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "0.000%",
         "threshold": "5.000%",
         "regression": False,
@@ -86,6 +90,7 @@ def test_compare_regression():
     baseline = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1000",
         "unit": "i/s",
         "id": "some-benchmark-id-1",
@@ -96,6 +101,7 @@ def test_compare_regression():
     }
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
+        "language": "Python",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
         "value": "940",
         "unit": "i/s",
@@ -112,6 +118,7 @@ def test_compare_regression():
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "-6.000",
         "threshold": "5.000",
         "regression": True,
@@ -138,6 +145,7 @@ def test_compare_regression():
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "-6.000%",
         "threshold": "5.000%",
         "regression": True,
@@ -167,6 +175,7 @@ def test_compare_regression_less_is_better():
     baseline = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1000",
         "unit": "s",
         "id": "some-benchmark-id-1",
@@ -178,6 +187,7 @@ def test_compare_regression_less_is_better():
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1060",
         "unit": "s",
         "id": "some-benchmark-id-2",
@@ -193,6 +203,7 @@ def test_compare_regression_less_is_better():
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "-6.000",
         "threshold": "5.000",
         "regression": True,
@@ -219,6 +230,7 @@ def test_compare_regression_less_is_better():
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "-6.000%",
         "threshold": "5.000%",
         "regression": True,
@@ -248,6 +260,7 @@ def test_compare_regression_but_under_threshold():
     baseline = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1000",
         "unit": "i/s",
         "id": "some-benchmark-id-1",
@@ -259,6 +272,7 @@ def test_compare_regression_but_under_threshold():
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "950",
         "unit": "i/s",
         "id": "some-benchmark-id-2",
@@ -274,6 +288,7 @@ def test_compare_regression_but_under_threshold():
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "-5.000",
         "threshold": "5.000",
         "regression": False,
@@ -300,6 +315,7 @@ def test_compare_regression_but_under_threshold():
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "-5.000%",
         "threshold": "5.000%",
         "regression": False,
@@ -329,6 +345,7 @@ def test_compare_regression_custom_threshold_and_threshold_z():
     baseline = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1000",
         "unit": "i/s",
         "id": "some-benchmark-id-1",
@@ -340,6 +357,7 @@ def test_compare_regression_custom_threshold_and_threshold_z():
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "950",
         "unit": "i/s",
         "id": "some-benchmark-id-2",
@@ -358,6 +376,7 @@ def test_compare_regression_custom_threshold_and_threshold_z():
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "-5.000",
         "threshold": "4.000",
         "regression": True,
@@ -384,6 +403,7 @@ def test_compare_regression_custom_threshold_and_threshold_z():
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "-5.000%",
         "threshold": "4.000%",
         "regression": True,
@@ -413,6 +433,7 @@ def test_compare_improvement():
     baseline = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1000",
         "unit": "i/s",
         "id": "some-benchmark-id-1",
@@ -424,6 +445,7 @@ def test_compare_improvement():
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1060",
         "unit": "i/s",
         "id": "some-benchmark-id-2",
@@ -439,6 +461,7 @@ def test_compare_improvement():
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "6.000",
         "threshold": "5.000",
         "regression": False,
@@ -465,6 +488,7 @@ def test_compare_improvement():
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "6.000%",
         "threshold": "5.000%",
         "regression": False,
@@ -494,6 +518,7 @@ def test_compare_improvement_less_is_better():
     baseline = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1000",
         "unit": "s",
         "id": "some-benchmark-id-1",
@@ -505,6 +530,7 @@ def test_compare_improvement_less_is_better():
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "940",
         "unit": "s",
         "id": "some-benchmark-id-2",
@@ -520,6 +546,7 @@ def test_compare_improvement_less_is_better():
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "6.000",
         "threshold": "5.000",
         "regression": False,
@@ -546,6 +573,7 @@ def test_compare_improvement_less_is_better():
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "6.000%",
         "threshold": "5.000%",
         "regression": False,
@@ -575,6 +603,7 @@ def test_compare_improvement_but_under_threshold():
     baseline = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1000",
         "unit": "i/s",
         "id": "some-benchmark-id-1",
@@ -586,6 +615,7 @@ def test_compare_improvement_but_under_threshold():
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1050",
         "unit": "i/s",
         "id": "some-benchmark-id-2",
@@ -604,6 +634,7 @@ def test_compare_improvement_but_under_threshold():
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "5.000",
         "threshold": "4.000",
         "regression": False,
@@ -630,6 +661,7 @@ def test_compare_improvement_but_under_threshold():
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "5.000%",
         "threshold": "4.000%",
         "regression": False,
@@ -659,6 +691,7 @@ def test_compare_improvement_custom_threshold_and_threshold_z():
     baseline = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1000",
         "unit": "i/s",
         "id": "some-benchmark-id-1",
@@ -670,6 +703,7 @@ def test_compare_improvement_custom_threshold_and_threshold_z():
     contender = {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "value": "1050",
         "unit": "i/s",
         "id": "some-benchmark-id-2",
@@ -685,6 +719,7 @@ def test_compare_improvement_custom_threshold_and_threshold_z():
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "5.000",
         "threshold": "5.000",
         "regression": False,
@@ -711,6 +746,7 @@ def test_compare_improvement_custom_threshold_and_threshold_z():
     assert formatted == {
         "batch": "arrow-compute-scalar-cast-benchmark",
         "benchmark": "CastUInt32ToInt32Safe/262144/1000",
+        "language": "Python",
         "change": "5.000%",
         "threshold": "5.000%",
         "regression": False,
@@ -742,6 +778,7 @@ def test_compare_list():
             "baseline": {
                 "batch": "math",
                 "benchmark": "addition",
+                "language": "Python",
                 "unit": "s",
                 "value": "0.036369",
                 "id": "some-benchmark-id-1",
@@ -753,6 +790,7 @@ def test_compare_list():
             "contender": {
                 "batch": "math",
                 "benchmark": "addition",
+                "language": "Python",
                 "unit": "s",
                 "value": "0.036369",
                 "id": "some-benchmark-id-2",
@@ -766,6 +804,7 @@ def test_compare_list():
             "baseline": {
                 "batch": "math",
                 "benchmark": "subtraction",
+                "language": "Python",
                 "unit": "s",
                 "value": "1.036369",
                 "id": "some-benchmark-id-3",
@@ -777,6 +816,7 @@ def test_compare_list():
             "contender": {
                 "batch": "math",
                 "benchmark": "subtraction",
+                "language": "Python",
                 "unit": "s",
                 "value": "0.036369",
                 "id": "some-benchmark-id-4",
@@ -795,6 +835,7 @@ def test_compare_list():
         {
             "batch": "math",
             "benchmark": "addition",
+            "language": "Python",
             "change": "0.000",
             "threshold": "5.000",
             "regression": False,
@@ -821,6 +862,7 @@ def test_compare_list():
         {
             "batch": "math",
             "benchmark": "subtraction",
+            "language": "Python",
             "change": "96.491",
             "threshold": "5.000",
             "regression": False,
@@ -849,6 +891,7 @@ def test_compare_list():
         {
             "batch": "math",
             "benchmark": "addition",
+            "language": "Python",
             "change": "0.000%",
             "threshold": "5.000%",
             "regression": False,
@@ -875,6 +918,7 @@ def test_compare_list():
         {
             "batch": "math",
             "benchmark": "subtraction",
+            "language": "Python",
             "change": "96.491%",
             "threshold": "5.000%",
             "regression": False,
@@ -907,6 +951,7 @@ def test_compare_list_missing_contender():
             "baseline": {
                 "batch": "math",
                 "benchmark": "addition",
+                "language": "Python",
                 "unit": "s",
                 "value": "0.036369",
                 "id": "some-benchmark-id-1",
@@ -920,6 +965,7 @@ def test_compare_list_missing_contender():
             "baseline": {
                 "batch": "math",
                 "benchmark": "subtraction",
+                "language": "Python",
                 "unit": "s",
                 "value": "1.036369",
                 "id": "some-benchmark-id-3",
@@ -931,6 +977,7 @@ def test_compare_list_missing_contender():
             "contender": {
                 "batch": "math",
                 "benchmark": "subtraction",
+                "language": "Python",
                 "unit": "s",
                 "value": "0.036369",
                 "id": "some-benchmark-id-4",
@@ -949,6 +996,7 @@ def test_compare_list_missing_contender():
         {
             "batch": "math",
             "benchmark": "addition",
+            "language": "Python",
             "change": "0.000",
             "threshold": "5.000",
             "regression": False,
@@ -975,6 +1023,7 @@ def test_compare_list_missing_contender():
         {
             "batch": "math",
             "benchmark": "subtraction",
+            "language": "Python",
             "change": "96.491",
             "threshold": "5.000",
             "regression": False,
@@ -1003,6 +1052,7 @@ def test_compare_list_missing_contender():
         {
             "batch": "math",
             "benchmark": "addition",
+            "language": "Python",
             "change": "0.000%",
             "threshold": "5.000%",
             "regression": False,
@@ -1029,6 +1079,7 @@ def test_compare_list_missing_contender():
         {
             "batch": "math",
             "benchmark": "subtraction",
+            "language": "Python",
             "change": "96.491%",
             "threshold": "5.000%",
             "regression": False,
@@ -1061,6 +1112,7 @@ def test_compare_list_empty_contender():
             "baseline": {
                 "batch": "math",
                 "benchmark": "addition",
+                "language": "Python",
                 "unit": "s",
                 "value": "0.036369",
                 "id": "some-benchmark-id-1",
@@ -1075,6 +1127,7 @@ def test_compare_list_empty_contender():
             "baseline": {
                 "batch": "math",
                 "benchmark": "subtraction",
+                "language": "Python",
                 "unit": "s",
                 "value": "1.036369",
                 "id": "some-benchmark-id-3",
@@ -1086,6 +1139,7 @@ def test_compare_list_empty_contender():
             "contender": {
                 "batch": "math",
                 "benchmark": "subtraction",
+                "language": "Python",
                 "unit": "s",
                 "value": "0.036369",
                 "id": "some-benchmark-id-4",
@@ -1104,6 +1158,7 @@ def test_compare_list_empty_contender():
         {
             "batch": "math",
             "benchmark": "addition",
+            "language": "Python",
             "change": "0.000",
             "threshold": "5.000",
             "regression": False,
@@ -1130,6 +1185,7 @@ def test_compare_list_empty_contender():
         {
             "batch": "math",
             "benchmark": "subtraction",
+            "language": "Python",
             "change": "96.491",
             "threshold": "5.000",
             "regression": False,
@@ -1158,6 +1214,7 @@ def test_compare_list_empty_contender():
         {
             "batch": "math",
             "benchmark": "addition",
+            "language": "Python",
             "change": "0.000%",
             "threshold": "5.000%",
             "regression": False,
@@ -1184,6 +1241,7 @@ def test_compare_list_empty_contender():
         {
             "batch": "math",
             "benchmark": "subtraction",
+            "language": "Python",
             "change": "96.491%",
             "threshold": "5.000%",
             "regression": False,
@@ -1216,6 +1274,7 @@ def test_compare_list_missing_baseline():
             "contender": {
                 "batch": "math",
                 "benchmark": "addition",
+                "language": "Python",
                 "unit": "s",
                 "value": "0.036369",
                 "id": "some-benchmark-id-2",
@@ -1229,6 +1288,7 @@ def test_compare_list_missing_baseline():
             "baseline": {
                 "batch": "math",
                 "benchmark": "subtraction",
+                "language": "Python",
                 "unit": "s",
                 "value": "1.036369",
                 "id": "some-benchmark-id-3",
@@ -1240,6 +1300,7 @@ def test_compare_list_missing_baseline():
             "contender": {
                 "batch": "math",
                 "benchmark": "subtraction",
+                "language": "Python",
                 "unit": "s",
                 "value": "0.036369",
                 "id": "some-benchmark-id-4",
@@ -1258,6 +1319,7 @@ def test_compare_list_missing_baseline():
         {
             "batch": "math",
             "benchmark": "addition",
+            "language": "Python",
             "change": "0.000",
             "threshold": "5.000",
             "regression": False,
@@ -1284,6 +1346,7 @@ def test_compare_list_missing_baseline():
         {
             "batch": "math",
             "benchmark": "subtraction",
+            "language": "Python",
             "change": "96.491",
             "threshold": "5.000",
             "regression": False,
@@ -1312,6 +1375,7 @@ def test_compare_list_missing_baseline():
         {
             "batch": "math",
             "benchmark": "addition",
+            "language": "Python",
             "change": "0.000%",
             "threshold": "5.000%",
             "regression": False,
@@ -1338,6 +1402,7 @@ def test_compare_list_missing_baseline():
         {
             "batch": "math",
             "benchmark": "subtraction",
+            "language": "Python",
             "change": "96.491%",
             "threshold": "5.000%",
             "regression": False,
@@ -1371,6 +1436,7 @@ def test_compare_list_empty_baseline():
             "contender": {
                 "batch": "math",
                 "benchmark": "addition",
+                "language": "Python",
                 "unit": "s",
                 "value": "0.036369",
                 "id": "some-benchmark-id-2",
@@ -1384,6 +1450,7 @@ def test_compare_list_empty_baseline():
             "baseline": {
                 "batch": "math",
                 "benchmark": "subtraction",
+                "language": "Python",
                 "unit": "s",
                 "value": "1.036369",
                 "id": "some-benchmark-id-3",
@@ -1395,6 +1462,7 @@ def test_compare_list_empty_baseline():
             "contender": {
                 "batch": "math",
                 "benchmark": "subtraction",
+                "language": "Python",
                 "unit": "s",
                 "value": "0.036369",
                 "id": "some-benchmark-id-4",
@@ -1413,6 +1481,7 @@ def test_compare_list_empty_baseline():
         {
             "batch": "math",
             "benchmark": "addition",
+            "language": "Python",
             "change": "0.000",
             "threshold": "5.000",
             "regression": False,
@@ -1439,6 +1508,7 @@ def test_compare_list_empty_baseline():
         {
             "batch": "math",
             "benchmark": "subtraction",
+            "language": "Python",
             "change": "96.491",
             "threshold": "5.000",
             "regression": False,
@@ -1467,6 +1537,7 @@ def test_compare_list_empty_baseline():
         {
             "batch": "math",
             "benchmark": "addition",
+            "language": "Python",
             "change": "0.000%",
             "threshold": "5.000%",
             "regression": False,
@@ -1493,6 +1564,7 @@ def test_compare_list_empty_baseline():
         {
             "batch": "math",
             "benchmark": "subtraction",
+            "language": "Python",
             "change": "96.491%",
             "threshold": "5.000%",
             "regression": False,
@@ -1538,6 +1610,7 @@ def test_compare_list_empty_pair():
         {
             "batch": "unknown",
             "benchmark": "unknown",
+            "language": "unknown",
             "change": "0.000",
             "threshold": "5.000",
             "regression": False,
@@ -1564,6 +1637,7 @@ def test_compare_list_empty_pair():
         {
             "batch": "unknown",
             "benchmark": "unknown",
+            "language": "unknown",
             "change": "0.000",
             "threshold": "5.000",
             "regression": False,
@@ -1592,6 +1666,7 @@ def test_compare_list_empty_pair():
         {
             "batch": "unknown",
             "benchmark": "unknown",
+            "language": "unknown",
             "change": "0.000%",
             "threshold": "5.000%",
             "regression": False,
@@ -1618,6 +1693,7 @@ def test_compare_list_empty_pair():
         {
             "batch": "unknown",
             "benchmark": "unknown",
+            "language": "unknown",
             "change": "0.000%",
             "threshold": "5.000%",
             "regression": False,

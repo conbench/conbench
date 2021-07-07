@@ -65,6 +65,7 @@
                     <tr>
                         <th scope="col" nowrap>Z-Score</th>
                         <th scope="col">Change</th>
+                        <th scope="col">Language</th>
                         <th scope="col">Batch</th>
                         <th scope="col">Benchmark</th>
                         <th scope="col">Baseline</th>
@@ -85,6 +86,8 @@
                          {% else %}
                            <td>---</td>
                          {% endif %}
+
+                         <td>{{ c.language }}</td>
 
                          <td>
                            {% if type == "batch" %}
