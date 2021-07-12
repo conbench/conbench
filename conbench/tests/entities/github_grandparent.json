@@ -1,0 +1,98 @@
+{
+  "sha": "6d703c4c7b15be630af48d5e9ef61628751674b2",
+  "node_id": "MDY6Q29tbWl0NTE5MDUzNTM6NmQ3MDNjNGM3YjE1YmU2MzBhZjQ4ZDVlOWVmNjE2Mjg3NTE2NzRiMg==",
+  "commit": {
+    "author": {
+      "name": "Antoine Pitrou",
+      "email": "antoine@python.org",
+      "date": "2021-02-24T21:48:05Z"
+    },
+    "committer": {
+      "name": "Sutou Kouhei",
+      "email": "kou@clear-code.com",
+      "date": "2021-02-24T21:48:05Z"
+    },
+    "message": "ARROW-11768: [CI][C++] Make s390x job required\n\nWe can consider big-endian support in the C++ implementation stable (except for Parquet where it isn't supported).\n\nCloses #9563 from pitrou/ARROW-11768-s390x-required\n\nAuthored-by: Antoine Pitrou <antoine@python.org>\nSigned-off-by: Sutou Kouhei <kou@clear-code.com>",
+    "tree": {
+      "sha": "b00707b3192dad877bdf2d8b3e00517ac7a0119b",
+      "url": "https://api.github.com/repos/apache/arrow/git/trees/b00707b3192dad877bdf2d8b3e00517ac7a0119b"
+    },
+    "url": "https://api.github.com/repos/apache/arrow/git/commits/6d703c4c7b15be630af48d5e9ef61628751674b2",
+    "comment_count": 0,
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null
+    }
+  },
+  "url": "https://api.github.com/repos/apache/arrow/commits/6d703c4c7b15be630af48d5e9ef61628751674b2",
+  "html_url": "https://github.com/apache/arrow/commit/6d703c4c7b15be630af48d5e9ef61628751674b2",
+  "comments_url": "https://api.github.com/repos/apache/arrow/commits/6d703c4c7b15be630af48d5e9ef61628751674b2/comments",
+  "author": {
+    "login": "pitrou",
+    "id": 1721820,
+    "node_id": "MDQ6VXNlcjE3MjE4MjA=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/1721820?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/pitrou",
+    "html_url": "https://github.com/pitrou",
+    "followers_url": "https://api.github.com/users/pitrou/followers",
+    "following_url": "https://api.github.com/users/pitrou/following{/other_user}",
+    "gists_url": "https://api.github.com/users/pitrou/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/pitrou/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/pitrou/subscriptions",
+    "organizations_url": "https://api.github.com/users/pitrou/orgs",
+    "repos_url": "https://api.github.com/users/pitrou/repos",
+    "events_url": "https://api.github.com/users/pitrou/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/pitrou/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "committer": {
+    "login": "kou",
+    "id": 27350,
+    "node_id": "MDQ6VXNlcjI3MzUw",
+    "avatar_url": "https://avatars.githubusercontent.com/u/27350?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/kou",
+    "html_url": "https://github.com/kou",
+    "followers_url": "https://api.github.com/users/kou/followers",
+    "following_url": "https://api.github.com/users/kou/following{/other_user}",
+    "gists_url": "https://api.github.com/users/kou/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/kou/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/kou/subscriptions",
+    "organizations_url": "https://api.github.com/users/kou/orgs",
+    "repos_url": "https://api.github.com/users/kou/repos",
+    "events_url": "https://api.github.com/users/kou/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/kou/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "parents": [
+    {
+      "sha": "81e9417eb68171e03a304097ae86e1fd83307130",
+      "url": "https://api.github.com/repos/apache/arrow/commits/81e9417eb68171e03a304097ae86e1fd83307130",
+      "html_url": "https://github.com/apache/arrow/commit/81e9417eb68171e03a304097ae86e1fd83307130"
+    }
+  ],
+  "stats": {
+    "total": 3,
+    "additions": 2,
+    "deletions": 1
+  },
+  "files": [
+    {
+      "sha": "2cf70cca982ff416652afd780337679bae18c012",
+      "filename": ".travis.yml",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 1,
+      "changes": 3,
+      "blob_url": "https://github.com/apache/arrow/blob/6d703c4c7b15be630af48d5e9ef61628751674b2/.travis.yml",
+      "raw_url": "https://github.com/apache/arrow/raw/6d703c4c7b15be630af48d5e9ef61628751674b2/.travis.yml",
+      "contents_url": "https://api.github.com/repos/apache/arrow/contents/.travis.yml?ref=6d703c4c7b15be630af48d5e9ef61628751674b2",
+      "patch": "@@ -125,7 +125,8 @@ jobs:\n         JDK: 11\n \n   allow_failures:\n-    - arch: s390x\n+    - name: \"Go on s390x\"\n+    - name: \"Java on s390x\"\n \n before_install:\n   - eval \"$(python ci/detect-changes.py)\""
+    }
+  ]
+}

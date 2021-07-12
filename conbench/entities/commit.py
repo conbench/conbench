@@ -1,4 +1,5 @@
 import functools
+import json
 import os
 
 import dateutil.parser
@@ -58,13 +59,14 @@ class CommitSerializer:
 
 
 GITHUB = "https://api.github.com"
+this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
 def get_github_commit(repository, sha):
     github = GitHub()
     name = repository.split("github.com/")[1]
     commit = github.get_commit(name, sha)
-    commits = github.get_commits(name)
+    commits = github.get_commits(name, sha)
     if commit["parent"] in commits:
         return commit
     else:
@@ -81,15 +83,23 @@ def get_github_commit(repository, sha):
 
 
 class GitHub:
-    @functools.cached_property
-    def session(self):
-        token, session = os.getenv("GITHUB_API_TOKEN"), None
-        if token:
-            session = requests.Session()
-            session.headers = {"Authorization": f"Bearer {token}"}
-        return session
+    def __init__(self):
+        self.test_shas = {
+            "02addad336ba19a654f9c857ede546331be7b631": "github_child.json",
+            "4beb514d071c9beec69b8917b5265e77ade22fb3": "github_parent.json",
+            "6d703c4c7b15be630af48d5e9ef61628751674b2": "github_grandparent.json",
+        }
+        self.test_commits = [
+            "02addad336ba19a654f9c857ede546331be7b631",
+            "4beb514d071c9beec69b8917b5265e77ade22fb3",
+            "6d703c4c7b15be630af48d5e9ef61628751674b2",
+            "81e9417eb68171e03a304097ae86e1fd83307130",
+        ]
 
-    def get_commits(self, name):
+    def get_commits(self, name, sha):
+        if sha in self.test_commits:
+            return self.test_commits
+
         commits = []
         for branch in ["master", "main"]:
             url = f"{GITHUB}/repos/{name}/commits?sha={branch}&per_page=100"
@@ -103,12 +113,30 @@ class GitHub:
                         commits.extend(self._parse_commits(response))
             if commits:
                 break
+
         return commits
 
     def get_commit(self, name, sha):
-        url = f"{GITHUB}/repos/{name}/commits/{sha}"
-        response = self._get_response(url)
+        if sha in self.test_commits:
+            response = self.test_commit(sha)
+        else:
+            url = f"{GITHUB}/repos/{name}/commits/{sha}"
+            response = self._get_response(url)
         return self._parse_commit(response) if response else None
+
+    @functools.cached_property
+    def session(self):
+        token, session = os.getenv("GITHUB_API_TOKEN"), None
+        if token:
+            session = requests.Session()
+            session.headers = {"Authorization": f"Bearer {token}"}
+        return session
+
+    def test_commit(self, sha):
+        fixture = f"../tests/entities/{self.test_shas[sha]}"
+        path = os.path.join(this_dir, fixture)
+        with open(path) as fixture:
+            return json.load(fixture)
 
     @staticmethod
     def _parse_commits(commits):

@@ -11,13 +11,14 @@ this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
 def test_get_github_commit():
+    # NOTE: This test intentionally hits GitHub
     repo = "https://github.com/apache/arrow"
-    sha = "02addad336ba19a654f9c857ede546331be7b631"
+    sha = "3decc46119d583df56c7c66c77cf2803441c4458"
     tz = dateutil.tz.tzutc()
     expected = {
-        "parent": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-        "date": datetime.datetime(2021, 2, 25, 1, 2, 51, tzinfo=tz),
-        "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+        "parent": "fcaa422c84796bcf7dbe328ee3612f434cd4d356",
+        "date": datetime.datetime(2021, 3, 17, 16, 27, 37, tzinfo=tz),
+        "message": "ARROW-11997: [Python] concat_tables crashes python interpreter",
         "author_name": "Diana Clarke",
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
@@ -26,6 +27,7 @@ def test_get_github_commit():
 
 
 def test_get_github_commit_pull_request():
+    # NOTE: This test intentionally hits GitHub
     repo = "https://github.com/apache/arrow"
     sha = "982023150ccbb06a6f581f6797c017492485b58c"
     tz = dateutil.tz.tzutc()
@@ -80,7 +82,7 @@ def test_parse_commits():
 
 
 def test_parse_commit():
-    path = os.path.join(this_dir, "github_commit.json")
+    path = os.path.join(this_dir, "github_child.json")
     with open(path) as f:
         commit = json.load(f)
     tz = dateutil.tz.tzutc()
