@@ -66,8 +66,9 @@ def get_github_commit(repository, sha):
     github = GitHub()
     name = repository.split("github.com/")[1]
     commit = github.get_commit(name, sha)
-    commits = github.get_commits(name, sha)
-    if commit["parent"] in commits:
+    parent = commit["parent"]
+    commits = github.get_commits(name, parent)
+    if parent in commits:
         return commit
     else:
         # this is a pull request, find the parent of the first commit
@@ -106,11 +107,15 @@ class GitHub:
             response = self._get_response(url)
             if response:
                 commits = self._parse_commits(response)
+                if sha in commits:
+                    return commits
                 for page in range(2, 11):
                     url = f"{GITHUB}/repos/{name}/commits?sha={branch}&per_page=100&page={page}"
                     response = self._get_response(url)
                     if response:
                         commits.extend(self._parse_commits(response))
+                        if sha in commits:
+                            return commits
             if commits:
                 break
 
