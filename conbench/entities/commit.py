@@ -71,9 +71,12 @@ def get_github_commit(repository, sha):
     if parent in commits:
         return commit
     else:
-        # this is a pull request, find the parent of the first commit
+        # This is a pull request, find the parent of the first commit.
+        # TODO: This will fail if the pull request has more than 50 commits.
+        # It will also give up if it can't find the parent aftter 50 tries
+        # (which could happen for a really old pull request).
         parent = commit["parent"]
-        while True:
+        for _ in range(50):
             other = github.get_commit(name, parent)
             if other["parent"] in commits:
                 commit["parent"] = other["parent"]
@@ -102,6 +105,9 @@ class GitHub:
             return self.test_commits
 
         commits = []
+
+        # Grabs the last 1000 commits to the main branch. TODO: If the pull
+        # request is old, the parent may not be in the last 1000 commits.
         for branch in ["master", "main"]:
             url = f"{GITHUB}/repos/{name}/commits?sha={branch}&per_page=100"
             response = self._get_response(url)
