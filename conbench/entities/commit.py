@@ -73,7 +73,7 @@ def get_github_commit(repository, sha):
     else:
         # This is a pull request, find the parent of the first commit.
         # TODO: This will fail if the pull request has more than 50 commits.
-        # It will also give up if it can't find the parent aftter 50 tries
+        # It will also give up if it can't find the parent after 50 tries
         # (which could happen for a really old pull request).
         parent = commit["parent"]
         for _ in range(50):
