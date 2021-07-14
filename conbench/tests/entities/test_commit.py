@@ -11,7 +11,9 @@ this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
 def test_get_github_commit():
-    # NOTE: This test intentionally hits GitHub
+    # NOTE: This integration test intentionally hits GitHub.
+    # TODO: This test will fail once it's no longer one of the most recent 1000
+    # commits to the apache/arrow repository.
     repo = "https://github.com/apache/arrow"
     sha = "3decc46119d583df56c7c66c77cf2803441c4458"
     tz = dateutil.tz.tzutc()
@@ -27,7 +29,9 @@ def test_get_github_commit():
 
 
 def test_get_github_commit_pull_request():
-    # NOTE: This test intentionally hits GitHub
+    # NOTE: This integration test intentionally hits GitHub.
+    # TODO: This test will fail once it's no longer one of the most recent 1000
+    # commits to the apache/arrow repository.
     repo = "https://github.com/apache/arrow"
     sha = "982023150ccbb06a6f581f6797c017492485b58c"
     tz = dateutil.tz.tzutc()
