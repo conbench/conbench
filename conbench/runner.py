@@ -169,8 +169,13 @@ class Conbench(Connection):
             result.get("times", []),
             result.get("time_unit", "s"),
         )
+
+        run_id = options.get("run_id")
+        if run_id is None:
+            run_id = self.batch_id
+
         benchmark = {
-            "run_id": options.get("run_id", self.batch_id),
+            "run_id": run_id,
             "batch_id": self.batch_id,
             "timestamp": _now_formatted(),
             "stats": stats,
