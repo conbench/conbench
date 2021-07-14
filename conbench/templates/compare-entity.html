@@ -80,13 +80,13 @@
             <li class="list-group-item" style="overflow-y: auto;">
               <b>run</b>
               <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.run', run_id=baseline.stats.run_id) }}">{{ baseline.stats.run_id }}</a>
+                <a href="{{ url_for('app.run', run_id=baseline.run_id) }}">{{ baseline.run_id }}</a>
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
               <b>batch</b>
               <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.batch', batch_id=baseline.stats.batch_id ) }}">{{ baseline.display_batch }}</a>
+                <a href="{{ url_for('app.batch', batch_id=baseline.batch_id ) }}">{{ baseline.display_batch }}</a>
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
@@ -131,15 +131,19 @@
             </li>
             {% endif %}
           <li class="list-group-item active">Result</li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>timestamp</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ baseline.display_timestamp }}
+              </div>
+            </li>
           {% for k,v in baseline.stats.items() %}
-            {% if k != "run_id" and k != "batch_id" %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
               <div align="right" style="display:inline-block; float: right;">
               {{ v }}
               </div>
             </li>
-            {% endif %}
           {% endfor %}
           <li class="list-group-item active">Tags</li>
           {% for k,v in baseline.tags.items() %}
@@ -173,13 +177,13 @@
             <li class="list-group-item" style="overflow-y: auto;">
               <b>run</b>
               <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.run', run_id=contender.stats.run_id) }}">{{ contender.stats.run_id }}</a>
+                <a href="{{ url_for('app.run', run_id=contender.run_id) }}">{{ contender.run_id }}</a>
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
               <b>batch</b>
               <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.batch', batch_id=contender.stats.batch_id ) }}">{{ contender.display_batch }}</a>
+                <a href="{{ url_for('app.batch', batch_id=contender.batch_id ) }}">{{ contender.display_batch }}</a>
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
@@ -224,15 +228,19 @@
             </li>
             {% endif %}
           <li class="list-group-item active">Result</li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>timestamp</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ contender.display_timestamp }}
+              </div>
+            </li>
           {% for k,v in contender.stats.items() %}
-            {% if k != "run_id" and k != "batch_id" %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
               <div align="right" style="display:inline-block; float: right;">
               {{ v }}
               </div>
             </li>
-            {% endif %}
           {% endfor %}
           <li class="list-group-item active">Tags</li>
           {% for k,v in contender.tags.items() %}

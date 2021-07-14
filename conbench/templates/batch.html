@@ -5,12 +5,12 @@
       <ol class="breadcrumb">
         {% if benchmarks %}
         <li class="breadcrumb-item active">
-          <a href="{{ url_for('app.run', run_id=benchmarks[0].stats.run_id) }}">Run</a>
+          <a href="{{ url_for('app.run', run_id=benchmarks[0].run_id) }}">Run</a>
         </li>
         {% endif %}
         <li class="breadcrumb-item active">Batch</li>
         {% if benchmarks %}
-        <li class="breadcrumb-item active" aria-current="page">{{ benchmarks[0].stats.batch_id }}</li>
+        <li class="breadcrumb-item active" aria-current="page">{{ benchmarks[0].batch_id }}</li>
         {% endif %}
       </ol>
     </nav>

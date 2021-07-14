@@ -241,6 +241,9 @@ $ conbench addition
 
 Benchmark result:
 {
+    "run_id": "c7e5280e65d24ec19d64a7636cef1bd4",
+    "batch_id": "c7e5280e65d24ec19d64a7636cef1bd4",
+    "timestamp": "2021-06-21T22:18:16.752993+00:00",
     "context": {
         "benchmark_language": "Python",
         "benchmark_language_version": "Python 3.9.2"
@@ -266,7 +269,6 @@ Benchmark result:
         "os_version": "10.16"
     },
     "stats": {
-        "batch_id": "c7e5280e65d24ec19d64a7636cef1bd4",
         "data": [
             "0.000003"
         ],
@@ -278,11 +280,9 @@ Benchmark result:
         "min": "0.000003",
         "q1": "0.000003",
         "q3": "0.000003",
-        "run_id": "c7e5280e65d24ec19d64a7636cef1bd4",
         "stdev": 0,
         "time_unit": "s",
         "times": [],
-        "timestamp": "2021-06-21T22:18:16.752993+00:00",
         "unit": "s"
     },
     "tags": {
@@ -356,6 +356,9 @@ $ conbench external --iterations=3
 
 Benchmark result:
 {
+    "run_id": "8058dde1491b49e5bd514646797c2a20",
+    "batch_id": "8058dde1491b49e5bd514646797c2a20",
+    "timestamp": "2021-06-21T22:16:54.786499+00:00",
     "context": {
         "benchmark_language": "C++"
     },
@@ -380,7 +383,6 @@ Benchmark result:
         "os_version": "10.16"
     },
     "stats": {
-        "batch_id": "8058dde1491b49e5bd514646797c2a20",
         "data": [
             "100.000000",
             "200.000000",
@@ -394,7 +396,6 @@ Benchmark result:
         "min": "100.000000",
         "q1": "150.000000",
         "q3": "250.000000",
-        "run_id": "8058dde1491b49e5bd514646797c2a20",
         "stdev": "100.000000",
         "time_unit": "s",
         "times": [
@@ -402,7 +403,6 @@ Benchmark result:
             "0.200000",
             "0.300000"
         ],
-        "timestamp": "2021-06-21T22:16:54.786499+00:00",
         "unit": "i/s"
     },
     "tags": {
@@ -501,6 +501,9 @@ $ conbench matrix --all=true
 
 Benchmark result:
 {
+    "run_id": "d509f6e80ed440a09af60fe1847dc033",
+    "batch_id": "d509f6e80ed440a09af60fe1847dc033",
+    "timestamp": "2021-06-22T18:39:53.805714+00:00",
     "context": {
         "benchmark_language": "Python",
         "benchmark_language_version": "Python 3.9.2"
@@ -526,7 +529,6 @@ Benchmark result:
         "os_version": "10.16"
     },
     "stats": {
-        "batch_id": "d509f6e80ed440a09af60fe1847dc033",
         "data": [
             "0.000010"
         ],
@@ -538,11 +540,9 @@ Benchmark result:
         "min": "0.000010",
         "q1": "0.000010",
         "q3": "0.000010",
-        "run_id": "d509f6e80ed440a09af60fe1847dc033",
         "stdev": 0,
         "time_unit": "s",
         "times": [],
-        "timestamp": "2021-06-22T18:39:53.805714+00:00",
         "unit": "s"
     },
     "tags": {
@@ -554,6 +554,9 @@ Benchmark result:
 
 Benchmark result:
 {
+    "run_id": "d509f6e80ed440a09af60fe1847dc033",
+    "batch_id": "d509f6e80ed440a09af60fe1847dc033",
+    "timestamp": "2021-06-22T18:39:53.830928+00:00",
     "context": {
         "benchmark_language": "Python",
         "benchmark_language_version": "Python 3.9.2"
@@ -579,7 +582,6 @@ Benchmark result:
         "os_version": "10.16"
     },
     "stats": {
-        "batch_id": "d509f6e80ed440a09af60fe1847dc033",
         "data": [
             "0.000006"
         ],
@@ -591,11 +593,9 @@ Benchmark result:
         "min": "0.000006",
         "q1": "0.000006",
         "q3": "0.000006",
-        "run_id": "d509f6e80ed440a09af60fe1847dc033",
         "stdev": 0,
         "time_unit": "s",
         "times": [],
-        "timestamp": "2021-06-22T18:39:53.830928+00:00",
         "unit": "s"
     },
     "tags": {
@@ -607,6 +607,9 @@ Benchmark result:
 
 Benchmark result:
 {
+    "run_id": "d509f6e80ed440a09af60fe1847dc033",
+    "batch_id": "d509f6e80ed440a09af60fe1847dc033",
+    "timestamp": "2021-06-22T18:39:53.843815+00:00",
     "context": {
         "benchmark_language": "Python",
         "benchmark_language_version": "Python 3.9.2"
@@ -632,7 +635,6 @@ Benchmark result:
         "os_version": "10.16"
     },
     "stats": {
-        "batch_id": "d509f6e80ed440a09af60fe1847dc033",
         "data": [
             "0.000007"
         ],
@@ -644,11 +646,9 @@ Benchmark result:
         "min": "0.000007",
         "q1": "0.000007",
         "q3": "0.000007",
-        "run_id": "d509f6e80ed440a09af60fe1847dc033",
         "stdev": 0,
         "time_unit": "s",
         "times": [],
-        "timestamp": "2021-06-22T18:39:53.843815+00:00",
         "unit": "s"
     },
     "tags": {

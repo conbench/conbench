@@ -30,8 +30,7 @@ def set_display_language(benchmark, contexts):
 
 
 def set_display_time(benchmark):
-    t = benchmark["stats"]["timestamp"]
-    benchmark["display_timestamp"] = display_time(t)
+    benchmark["display_timestamp"] = display_time(benchmark["timestamp"])
 
 
 def set_display_mean(benchmark):

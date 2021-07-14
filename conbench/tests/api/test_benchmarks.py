@@ -31,21 +31,15 @@ def create_benchmark_summary(
     if name:
         data["tags"]["name"] = name
     if batch_id:
-        data["stats"]["batch_id"] = batch_id
+        data["batch_id"] = batch_id
     if run_id:
-        data["stats"]["run_id"] = run_id
+        data["run_id"] = run_id
     if sha:
         data["github"]["commit"] = sha
 
     if results is not None:
         unit = unit if unit else "s"
-        run_id = data["stats"]["run_id"]
-        run_name = data["stats"]["run_name"]
-        batch_id = data["stats"]["batch_id"]
-        timestamp = data["stats"]["timestamp"]
-        data["stats"] = Conbench._stats(
-            results, unit, [], "s", timestamp, run_id, batch_id, run_name
-        )
+        data["stats"] = Conbench._stats(results, unit, [], "s")
 
     summary = Summary.create(data)
     return summary
@@ -321,8 +315,17 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
 class TestBenchmarkPost(_asserts.PostEnforcer):
     url = "/api/benchmarks/"
-    required_fields = ["machine_info", "stats", "tags", "context", "github"]
     valid_payload = _fixtures.VALID_PAYLOAD
+    required_fields = [
+        "run_id",
+        "batch_id",
+        "timestamp",
+        "machine_info",
+        "stats",
+        "tags",
+        "context",
+        "github",
+    ]
 
     def test_create_benchmark(self, client):
         self.authenticate(client)
@@ -337,7 +340,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         response = client.post("/api/benchmarks/", json=self.valid_payload)
         summary_1 = Summary.one(id=response.json["id"])
         data = copy.deepcopy(self.valid_payload)
-        data["stats"]["run_id"] = data["stats"]["run_id"] + "_X"
+        data["run_id"] = data["run_id"] + "_X"
         response = client.post("/api/benchmarks/", json=data)
         summary_2 = Summary.one(id=response.json["id"])
         assert summary_1.id != summary_2.id
@@ -352,7 +355,6 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         data = copy.deepcopy(self.valid_payload)
         del data["stats"]["iterations"]
         del data["machine_info"]["os_name"]
-        data["stats"]["timestamp"] = None
         data["machine_info"]["os_version"] = None
         data["stats"]["extra"] = "field"
         data["machine_info"]["extra"] = "field"
@@ -366,7 +368,6 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             "stats": {
                 "extra": ["Unknown field."],
                 "iterations": ["Missing data for required field."],
-                "timestamp": ["Field may not be null."],
             },
         }
         self.assert_400_bad_request(response, message)

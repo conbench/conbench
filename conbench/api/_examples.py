@@ -25,9 +25,10 @@ def _api_user_entity(user):
 def _api_benchmark_entity(summary_id, context_id, case_id, batch_id, run_id, name):
     return {
         "id": summary_id,
+        "run_id": run_id,
+        "batch_id": batch_id,
+        "timestamp": "2020-11-25T21:02:42.706806",
         "stats": {
-            "batch_id": batch_id,
-            "run_id": run_id,
             "data": [
                 "0.099094",
                 "0.037129",
@@ -63,7 +64,6 @@ def _api_benchmark_entity(summary_id, context_id, case_id, batch_id, run_id, nam
             "q1": "0.006500",
             "q3": "0.036942",
             "stdev": "0.049194",
-            "timestamp": "2020-11-25T21:02:42.706806",
             "z_score": "0.000000",
             "z_regression": False,
             "z_improvement": False,

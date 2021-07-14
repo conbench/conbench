@@ -163,26 +163,32 @@ class Conbench(Connection):
         tags, context, github, options, output = self._init(kwargs)
 
         tags["name"] = name
-        timestamp = _now_formatted()
-        run_id = options.get("run_id")
-        run_name = options.get("run_name")
         stats = self._stats(
             result["data"],
             result["unit"],
             result.get("times", []),
             result.get("time_unit", "s"),
-            timestamp,
-            run_id,
-            self.batch_id,
-            run_name,
         )
+
+        run_id = options.get("run_id")
+        if run_id is None:
+            run_id = self.batch_id
+
         benchmark = {
+            "run_id": run_id,
+            "batch_id": self.batch_id,
+            "timestamp": _now_formatted(),
             "stats": stats,
             "machine_info": self.machine_info,
             "context": context,
             "tags": tags,
             "github": github,
         }
+
+        run_name = options.get("run_name")
+        if run_name is not None:
+            benchmark["run_name"] = run_name
+
         self.publish(benchmark)
         return benchmark, output
 
@@ -250,7 +256,7 @@ class Conbench(Connection):
         }
 
     @staticmethod
-    def _stats(data, unit, times, time_unit, timestamp, run_id, batch_id, run_name):
+    def _stats(data, unit, times, time_unit):
         fmt = "{:.6f}"
 
         def _format(f, data, min_length=0):
@@ -261,18 +267,12 @@ class Conbench(Connection):
 
         q1, q3 = np.percentile(data, [25, 75])
 
-        if not run_id:
-            run_id = batch_id
-
         result = {
             "data": [fmt.format(x) for x in data],
             "times": [fmt.format(x) for x in times],
             "unit": unit,
             "time_unit": time_unit,
             "iterations": len(data),
-            "timestamp": timestamp,
-            "batch_id": batch_id,
-            "run_id": run_id,
             "mean": _format(statistics.mean, data),
             "median": _format(statistics.median, data),
             "min": _format(min, data),
@@ -282,9 +282,6 @@ class Conbench(Connection):
             "q3": fmt.format(q3),
             "iqr": fmt.format(q3 - q1),
         }
-
-        if run_name is not None:
-            result["run_name"] = run_name
 
         return result
 
