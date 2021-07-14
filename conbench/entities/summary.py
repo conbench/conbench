@@ -103,8 +103,8 @@ class Summary(Base, EntityMixin):
             )
 
         # create if not exists
-        run_id = data["stats"]["run_id"]
-        run_name = stats.pop("run_name", None)
+        run_id = data["run_id"]
+        run_name = data.pop("run_name", None)
         run = Run.first(id=run_id)
         if not run:
             run = Run.create(
@@ -116,6 +116,9 @@ class Summary(Base, EntityMixin):
                 }
             )
 
+        stats["run_id"] = data["run_id"]
+        stats["batch_id"] = data["batch_id"]
+        stats["timestamp"] = data["timestamp"]
         stats["case_id"] = case.id
         stats["context_id"] = context.id
         summary = Summary(**stats)
@@ -148,10 +151,6 @@ class SummaryCreate(marshmallow.Schema):
     times = marshmallow.fields.List(marshmallow.fields.Decimal, required=True)
     unit = marshmallow.fields.String(required=True)
     time_unit = marshmallow.fields.String(required=True)
-    batch_id = marshmallow.fields.String(required=True)
-    run_id = marshmallow.fields.String(required=True)
-    run_name = marshmallow.fields.String(required=False)
-    timestamp = marshmallow.fields.DateTime(required=True)
     iterations = marshmallow.fields.Integer(required=True)
     min = marshmallow.fields.Decimal(required=False)
     max = marshmallow.fields.Decimal(required=False)
@@ -180,14 +179,15 @@ class _Serializer(EntitySerializer):
         tags.update(case.tags)
         return {
             "id": summary.id,
+            "run_id": summary.run_id,
+            "batch_id": summary.batch_id,
+            "timestamp": summary.timestamp.isoformat(),
             "tags": tags,
             "stats": {
                 "data": [self.decimal_fmt.format(x) for x in data],
                 "times": [self.decimal_fmt.format(x) for x in times],
                 "unit": summary.unit,
                 "time_unit": summary.time_unit,
-                "batch_id": summary.batch_id,
-                "run_id": summary.run_id,
                 "iterations": summary.iterations,
                 "min": self.decimal_fmt.format(summary.min),
                 "max": self.decimal_fmt.format(summary.max),
@@ -197,7 +197,6 @@ class _Serializer(EntitySerializer):
                 "q1": self.decimal_fmt.format(summary.q1),
                 "q3": self.decimal_fmt.format(summary.q3),
                 "iqr": self.decimal_fmt.format(summary.iqr),
-                "timestamp": summary.timestamp.isoformat(),
                 "z_score": self.decimal_fmt.format(summary.z_score),
                 "z_regression": z_regression(summary.z_score),
                 "z_improvement": z_improvement(summary.z_score),
@@ -221,6 +220,10 @@ class SummarySerializer:
 
 
 class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
+    run_id = marshmallow.fields.String(required=True)
+    run_name = marshmallow.fields.String(required=False)
+    batch_id = marshmallow.fields.String(required=True)
+    timestamp = marshmallow.fields.DateTime(required=True)
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=True)
     stats = marshmallow.fields.Nested(SummarySchema().create, required=True)
     tags = marshmallow.fields.Dict(required=True)

@@ -4,6 +4,9 @@ from ...entities.summary import BenchmarkFacadeSchema
 
 REPO = "https://github.com/ursacomputing/conbench"
 example = {
+    "run_id": "b00966bd99a94c34abc7a042b7a0a5b4",
+    "batch_id": "307182bb124544c794a2e38b5e7fd24a",
+    "timestamp": "2020-12-16T03:40:29.819878+00:00",
     "context": {
         "benchmark_language": "Python",
         "benchmark_language_version": "Python 3.8.5",
@@ -29,8 +32,6 @@ example = {
         "os_version": "10.15.7",
     },
     "stats": {
-        "batch_id": "307182bb124544c794a2e38b5e7fd24a",
-        "run_id": "b00966bd99a94c34abc7a042b7a0a5b4",
         "data": [
             "0.000002",
             "0.000001",
@@ -66,7 +67,6 @@ example = {
         "q1": "0.000000",
         "q3": "0.000001",
         "stdev": "0.000001",
-        "timestamp": "2020-12-16T03:40:29.819878+00:00",
     },
     "tags": {
         "name": "addition",

@@ -159,7 +159,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin):
         benchmark = self.get_display_benchmark(benchmark_id)
         run = None
         if benchmark is not None:
-            run_id = benchmark["stats"]["run_id"]
+            run_id = benchmark["run_id"]
             run = self.get_display_run(run_id)
         return benchmark, run
 

@@ -11,6 +11,10 @@ Z_SCORE_DOWN = -13.435028842544401
 
 
 VALID_PAYLOAD = {
+    "run_id": "2a5709d179f349cba69ed242be3e6321",
+    "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+    "batch_id": "7b2fdd9f929d47b9960152090d47f8e6",
+    "timestamp": "2020-11-25T21:02:42.706806+00:00",
     "context": {
         "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
         "arrow_compiler_id": "AppleClang",
@@ -40,9 +44,6 @@ VALID_PAYLOAD = {
         "os_version": "10.15.7",
     },
     "stats": {
-        "batch_id": "7b2fdd9f929d47b9960152090d47f8e6",
-        "run_id": "2a5709d179f349cba69ed242be3e6321",
-        "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
         "data": [
             "0.099094",
             "0.037129",
@@ -78,7 +79,6 @@ VALID_PAYLOAD = {
         "q1": "0.006500",
         "q3": "0.036942",
         "stdev": "0.049194",
-        "timestamp": "2020-11-25T21:02:42.706806+00:00",
     },
     "tags": {
         "compression": "snappy",

@@ -56,13 +56,13 @@ class TestCompareBatches(_asserts.AppEndpointTest):
         assert f"{batch_id}".encode() in response.data
 
     def test_compare_authenticated(self, client):
-        batch_id = _fixtures.VALID_PAYLOAD["stats"]["batch_id"]
+        batch_id = _fixtures.VALID_PAYLOAD["batch_id"]
         self._create(client)
         self.authenticate(client)
         self._assert_view(client, batch_id)
 
     def test_compare_unauthenticated(self, client):
-        batch_id = _fixtures.VALID_PAYLOAD["stats"]["batch_id"]
+        batch_id = _fixtures.VALID_PAYLOAD["batch_id"]
         self._create(client)
         self.logout(client)
         self._assert_view(client, batch_id)
@@ -93,13 +93,13 @@ class TestCompareRuns(_asserts.AppEndpointTest):
         assert f"{run_id}".encode() in response.data
 
     def test_compare_authenticated(self, client):
-        run_id = _fixtures.VALID_PAYLOAD["stats"]["run_id"]
+        run_id = _fixtures.VALID_PAYLOAD["run_id"]
         self._create(client)
         self.authenticate(client)
         self._assert_view(client, run_id)
 
     def test_compare_unauthenticated(self, client):
-        run_id = _fixtures.VALID_PAYLOAD["stats"]["run_id"]
+        run_id = _fixtures.VALID_PAYLOAD["run_id"]
         self._create(client)
         self.logout(client)
         self._assert_view(client, run_id)

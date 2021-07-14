@@ -46,6 +46,7 @@
                 "content": {
                     "application/json": {
                         "example": {
+                            "batch_id": "some-batch-uuid-1",
                             "id": "some-benchmark-uuid-1",
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
@@ -53,8 +54,8 @@
                                 "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
+                            "run_id": "some-run-uuid-1",
                             "stats": {
-                                "batch_id": "some-batch-uuid-1",
                                 "data": [
                                     "0.099094",
                                     "0.037129",
@@ -75,7 +76,6 @@
                                 "min": "0.004733",
                                 "q1": "0.006500",
                                 "q3": "0.036942",
-                                "run_id": "some-run-uuid-1",
                                 "stdev": "0.049194",
                                 "time_unit": "s",
                                 "times": [
@@ -90,7 +90,6 @@
                                     "0.007978",
                                     "0.004733",
                                 ],
-                                "timestamp": "2020-11-25T21:02:42.706806",
                                 "unit": "s",
                                 "z_improvement": False,
                                 "z_regression": False,
@@ -105,6 +104,7 @@
                                 "input_type": "arrow",
                                 "name": "file-write",
                             },
+                            "timestamp": "2020-11-25T21:02:42.706806",
                         }
                     }
                 },
@@ -114,6 +114,7 @@
                 "content": {
                     "application/json": {
                         "example": {
+                            "batch_id": "some-batch-uuid-1",
                             "id": "some-benchmark-uuid-1",
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
@@ -121,8 +122,8 @@
                                 "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
+                            "run_id": "some-run-uuid-1",
                             "stats": {
-                                "batch_id": "some-batch-uuid-1",
                                 "data": [
                                     "0.099094",
                                     "0.037129",
@@ -143,7 +144,6 @@
                                 "min": "0.004733",
                                 "q1": "0.006500",
                                 "q3": "0.036942",
-                                "run_id": "some-run-uuid-1",
                                 "stdev": "0.049194",
                                 "time_unit": "s",
                                 "times": [
@@ -158,7 +158,6 @@
                                     "0.007978",
                                     "0.004733",
                                 ],
-                                "timestamp": "2020-11-25T21:02:42.706806",
                                 "unit": "s",
                                 "z_improvement": False,
                                 "z_regression": False,
@@ -173,6 +172,7 @@
                                 "input_type": "arrow",
                                 "name": "file-write",
                             },
+                            "timestamp": "2020-11-25T21:02:42.706806",
                         }
                     }
                 },
@@ -183,6 +183,7 @@
                     "application/json": {
                         "example": [
                             {
+                                "batch_id": "some-batch-uuid-1",
                                 "id": "some-benchmark-uuid-1",
                                 "links": {
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
@@ -190,8 +191,8 @@
                                     "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                                 },
+                                "run_id": "some-run-uuid-1",
                                 "stats": {
-                                    "batch_id": "some-batch-uuid-1",
                                     "data": [
                                         "0.099094",
                                         "0.037129",
@@ -212,7 +213,6 @@
                                     "min": "0.004733",
                                     "q1": "0.006500",
                                     "q3": "0.036942",
-                                    "run_id": "some-run-uuid-1",
                                     "stdev": "0.049194",
                                     "time_unit": "s",
                                     "times": [
@@ -227,7 +227,6 @@
                                         "0.007978",
                                         "0.004733",
                                     ],
-                                    "timestamp": "2020-11-25T21:02:42.706806",
                                     "unit": "s",
                                     "z_improvement": False,
                                     "z_regression": False,
@@ -242,8 +241,10 @@
                                     "input_type": "arrow",
                                     "name": "file-write",
                                 },
+                                "timestamp": "2020-11-25T21:02:42.706806",
                             },
                             {
+                                "batch_id": "some-batch-uuid-1",
                                 "id": "some-benchmark-uuid-2",
                                 "links": {
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
@@ -251,8 +252,8 @@
                                     "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-2/",
                                 },
+                                "run_id": "some-run-uuid-1",
                                 "stats": {
-                                    "batch_id": "some-batch-uuid-1",
                                     "data": [
                                         "0.099094",
                                         "0.037129",
@@ -273,7 +274,6 @@
                                     "min": "0.004733",
                                     "q1": "0.006500",
                                     "q3": "0.036942",
-                                    "run_id": "some-run-uuid-1",
                                     "stdev": "0.049194",
                                     "time_unit": "s",
                                     "times": [
@@ -288,7 +288,6 @@
                                         "0.007978",
                                         "0.004733",
                                     ],
-                                    "timestamp": "2020-11-25T21:02:42.706806",
                                     "unit": "s",
                                     "z_improvement": False,
                                     "z_regression": False,
@@ -303,6 +302,7 @@
                                     "input_type": "arrow",
                                     "name": "file-write",
                                 },
+                                "timestamp": "2020-11-25T21:02:42.706806",
                             },
                         ]
                     }
@@ -698,13 +698,26 @@
         "schemas": {
             "BenchmarkCreate": {
                 "properties": {
+                    "batch_id": {"type": "string"},
                     "context": {"type": "object"},
                     "github": {"type": "object"},
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
+                    "run_id": {"type": "string"},
+                    "run_name": {"type": "string"},
                     "stats": {"$ref": "#/components/schemas/SummaryCreate"},
                     "tags": {"type": "object"},
+                    "timestamp": {"format": "date-time", "type": "string"},
                 },
-                "required": ["context", "github", "machine_info", "stats", "tags"],
+                "required": [
+                    "batch_id",
+                    "context",
+                    "github",
+                    "machine_info",
+                    "run_id",
+                    "stats",
+                    "tags",
+                    "timestamp",
+                ],
                 "type": "object",
             },
             "Error": {
@@ -809,7 +822,6 @@
             },
             "SummaryCreate": {
                 "properties": {
-                    "batch_id": {"type": "string"},
                     "data": {"items": {"type": "number"}, "type": "array"},
                     "iqr": {"type": "number"},
                     "iterations": {"type": "integer"},
@@ -819,24 +831,12 @@
                     "min": {"type": "number"},
                     "q1": {"type": "number"},
                     "q3": {"type": "number"},
-                    "run_id": {"type": "string"},
-                    "run_name": {"type": "string"},
                     "stdev": {"type": "number"},
                     "time_unit": {"type": "string"},
                     "times": {"items": {"type": "number"}, "type": "array"},
-                    "timestamp": {"format": "date-time", "type": "string"},
                     "unit": {"type": "string"},
                 },
-                "required": [
-                    "batch_id",
-                    "data",
-                    "iterations",
-                    "run_id",
-                    "time_unit",
-                    "times",
-                    "timestamp",
-                    "unit",
-                ],
+                "required": ["data", "iterations", "time_unit", "times", "unit"],
                 "type": "object",
             },
             "UserCreate": {

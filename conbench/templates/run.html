@@ -5,7 +5,7 @@
       <ol class="breadcrumb">
         <li class="breadcrumb-item active">Run</li>
         {% if benchmarks %}
-        <li class="breadcrumb-item active" aria-current="page">{{ benchmarks[0].stats.run_id }}</li>
+        <li class="breadcrumb-item active" aria-current="page">{{ benchmarks[0].run_id }}</li>
         {% endif %}
         {% if compare_runs_url %}
         <span align="right" style="display:inline-block; float: right;">
@@ -34,7 +34,7 @@
                      <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
                      <td style="white-space: nowrap;">{{ benchmark.display_language }}</td>
                      <td style="white-space: nowrap;">
-                       <a href="{{ url_for('app.batch', batch_id=benchmark.stats.batch_id) }}">
+                       <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">
                          <div>{{ benchmark.display_batch }}</div>
                        </a>
                      </td>

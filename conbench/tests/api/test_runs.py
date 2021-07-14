@@ -22,11 +22,11 @@ def create_benchmark_summary(sha=None, language=None, run_id=None):
     data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     if sha:
         data["github"]["commit"] = sha
-        data["stats"]["run_id"] = _uuid()
+        data["run_id"] = _uuid()
     if language:
         data["context"]["benchmark_language"] = language
     if run_id:
-        data["stats"]["run_id"] = run_id
+        data["run_id"] = run_id
     summary = Summary.create(data)
     return summary
 

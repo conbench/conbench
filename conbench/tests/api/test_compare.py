@@ -1,5 +1,4 @@
 import copy
-import datetime
 
 from ...api._examples import _api_compare_entity, _api_compare_list
 from ...entities.summary import Summary
@@ -21,19 +20,13 @@ def create_benchmark_summary(name, batch_id=None, run_id=None, results=None, sha
     data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     data["tags"]["name"] = name
     if batch_id:
-        data["stats"]["batch_id"] = batch_id
+        data["batch_id"] = batch_id
     if run_id:
-        data["stats"]["run_id"] = run_id
+        data["run_id"] = run_id
     if sha:
         data["github"]["commit"] = sha
     if results is not None:
-        run_id = data["stats"]["run_id"]
-        run_name = data["stats"]["run_name"]
-        batch_id = data["stats"]["batch_id"]
-        now = datetime.datetime.now(datetime.timezone.utc)
-        data["stats"] = Conbench._stats(
-            results, "s", [], "s", now.isoformat(), run_id, batch_id, run_name
-        )
+        data["stats"] = Conbench._stats(results, "s", [], "s")
     summary = Summary.create(data)
     return summary
 

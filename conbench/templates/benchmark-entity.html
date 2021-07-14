@@ -5,10 +5,10 @@
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item active">
-          <a href="{{ url_for('app.run', run_id=benchmark.stats.run_id) }}">Run</a>
+          <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">Run</a>
         </li>
         <li class="breadcrumb-item active">
-          <a href="{{ url_for('app.batch', batch_id=benchmark.stats.batch_id) }}">Batch</a>
+          <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">Batch</a>
         </li>
         <li class="breadcrumb-item active">Benchmark</li>
         <li class="breadcrumb-item active" aria-current="page">{{ benchmark.id }}</li>
@@ -28,13 +28,13 @@
             <li class="list-group-item" style="overflow-y: auto;">
               <b>batch</b>
               <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.batch', batch_id=benchmark.stats.batch_id ) }}">{{ benchmark.display_batch }}</a>
+                <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id ) }}">{{ benchmark.display_batch }}</a>
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
               <b>run</b>
               <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.run', run_id=benchmark.stats.run_id) }}">{{ benchmark.stats.run_id }}</a>
+                <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">{{ benchmark.run_id }}</a>
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
@@ -45,12 +45,10 @@
             </li>
             <li class="list-group-item active">Result</li>
           {% for k,v in benchmark.stats.items() %}
-            {% if k != "run_id" and k != "batch_id" %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
               <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
             </li>
-            {% endif %}
           {% endfor %}
             <li class="list-group-item active">Tags</li>
           {% for k,v in benchmark.tags.items() %}

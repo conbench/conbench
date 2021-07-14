@@ -25,7 +25,7 @@
                          <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
                          <td style="white-space: nowrap;">{{ benchmark.display_language }}</td>
                          <td style="white-space: nowrap;">
-                           <a href="{{ url_for('app.batch', batch_id=benchmark.stats.batch_id) }}">
+                           <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">
                              <div>{{ benchmark.display_batch }}</div>
                            </a>
                          </td>

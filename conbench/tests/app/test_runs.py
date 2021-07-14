@@ -7,16 +7,16 @@ from ...tests.app import _asserts
 def create_benchmark(client):
     # also create a benchmark with a different name & run_id
     other = copy.deepcopy(_fixtures.VALID_PAYLOAD)
-    other["stats"]["run_id"] = other["stats"]["run_id"] + "-other"
+    other["run_id"] = other["run_id"] + "-other"
     other["tags"]["name"] = other["tags"]["name"] + "-other"
-    other["stats"]["timestamp"] = "2019-11-25T21:02:42.706806+00:00"
+    other["timestamp"] = "2019-11-25T21:02:42.706806+00:00"
     client.post("/api/benchmarks/", json=other)
 
     # create a benchmark
     data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     response = client.post("/api/benchmarks/", json=data)
     new_id = response.json["id"]
-    run_id = response.json["stats"]["run_id"]
+    run_id = response.json["run_id"]
     return new_id, run_id
 
 

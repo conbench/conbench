@@ -115,16 +115,12 @@ def test_z_score_calculations():
 
 def create_benchmark_summary(results, commit, name=None):
     data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
-    now = datetime.datetime.now(datetime.timezone.utc)
-    run_id, run_name = _uuid(), "commit: some commit"
+    data["run_id"], data["run_name"] = _uuid(), "commit: some commit"
     data["github"]["commit"] = commit.sha
     data["github"]["repository"] = commit.repository
     if name:
         data["tags"]["name"] = name
-    batch_id = data["stats"]["batch_id"]
-    data["stats"] = Conbench._stats(
-        results, "s", [], "s", now.isoformat(), run_id, batch_id, run_name
-    )
+    data["stats"] = Conbench._stats(results, "s", [], "s")
     summary = Summary.create(data)
     return summary
 
