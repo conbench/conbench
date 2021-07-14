@@ -3,6 +3,8 @@ import dateutil
 import json
 import os
 
+import pytest
+
 from ...entities.commit import GitHub, get_github_commit
 from ...tests.api import _fixtures
 
@@ -10,6 +12,7 @@ from ...tests.api import _fixtures
 this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
+@pytest.mark.slow
 def test_get_github_commit():
     # NOTE: This integration test intentionally hits GitHub.
     # TODO: This test will fail once it's no longer one of the most recent 1000
@@ -28,6 +31,7 @@ def test_get_github_commit():
     assert get_github_commit(repo, sha) == expected
 
 
+@pytest.mark.slow
 def test_get_github_commit_pull_request():
     # NOTE: This integration test intentionally hits GitHub.
     # TODO: This test will fail once it's no longer one of the most recent 1000
