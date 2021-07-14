@@ -1,9 +1,7 @@
 import decimal
-import os
 
 import flask as f
 import marshmallow
-import requests
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy.orm import relationship
@@ -19,7 +17,7 @@ from ..entities._entity import (
 from ..entities._comparator import z_improvement, z_regression
 from ..entities.case import Case
 from ..entities.context import Context
-from ..entities.commit import Commit, parse_commit
+from ..entities.commit import Commit, get_github_commit
 from ..entities.data import Data
 from ..entities.distribution import update_distribution
 from ..entities.machine import Machine, MachineSchema
@@ -90,19 +88,7 @@ class Summary(Base, EntityMixin):
         sha, repository = data["github"]["commit"], data["github"]["repository"]
         commit = Commit.first(sha=sha)
         if not commit:
-            name = repository.split("github.com/")[1]
-            url = f"https://api.github.com/repos/{name}/commits/{sha}"
-
-            token, session = os.getenv("GITHUB_API_TOKEN"), None
-            if token:
-                session = requests.Session()
-                session.headers = {"Authorization": f"Bearer {token}"}
-
-            response = session.get(url) if session else requests.get(url)
-            if response.status_code != 200:
-                print(response.json())
-
-            github = parse_commit(response.json())
+            github = get_github_commit(repository, sha)
             commit = Commit.create(
                 {
                     "sha": sha,
