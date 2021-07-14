@@ -44,6 +44,12 @@
               </div>
             </li>
             <li class="list-group-item active">Result</li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>timestamp</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ benchmark.display_timestamp }}
+              </div>
+            </li>
           {% for k,v in benchmark.stats.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
