@@ -354,12 +354,18 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
         del data["stats"]["iterations"]
+        del data["github"]["commit"]
         del data["machine_info"]["os_name"]
         data["machine_info"]["os_version"] = None
         data["stats"]["extra"] = "field"
+        data["github"]["extra"] = "field"
         data["machine_info"]["extra"] = "field"
         response = client.post("/api/benchmarks/", json=data)
         message = {
+            "github": {
+                "extra": ["Unknown field."],
+                "commit": ["Missing data for required field."],
+            },
             "machine_info": {
                 "extra": ["Unknown field."],
                 "os_name": ["Missing data for required field."],

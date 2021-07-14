@@ -219,6 +219,11 @@ class SummarySerializer:
     many = _Serializer(many=True)
 
 
+class GitHubCreate(marshmallow.Schema):
+    commit = marshmallow.fields.String(required=True)
+    repository = marshmallow.fields.String(required=True)
+
+
 class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     run_id = marshmallow.fields.String(required=True)
     run_name = marshmallow.fields.String(required=False)
@@ -228,7 +233,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     stats = marshmallow.fields.Nested(SummarySchema().create, required=True)
     tags = marshmallow.fields.Dict(required=True)
     context = marshmallow.fields.Dict(required=True)
-    github = marshmallow.fields.Dict(required=True)
+    github = marshmallow.fields.Nested(GitHubCreate(), required=True)
 
 
 class BenchmarkFacadeSchema:

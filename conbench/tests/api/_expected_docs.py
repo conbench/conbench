@@ -700,7 +700,7 @@
                 "properties": {
                     "batch_id": {"type": "string"},
                     "context": {"type": "object"},
-                    "github": {"type": "object"},
+                    "github": {"$ref": "#/components/schemas/GitHubCreate"},
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
                     "run_id": {"type": "string"},
                     "run_name": {"type": "string"},
@@ -753,6 +753,14 @@
                         "type": "array",
                     },
                 },
+                "type": "object",
+            },
+            "GitHubCreate": {
+                "properties": {
+                    "commit": {"type": "string"},
+                    "repository": {"type": "string"},
+                },
+                "required": ["commit", "repository"],
                 "type": "object",
             },
             "Login": {
