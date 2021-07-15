@@ -78,13 +78,13 @@
                          {% if c.contender is not none and c.baseline is not none %}
                            <td>{{ c.contender_z_score }}</td>
                          {% else %}
-                           <td>---</td>
+                           <td></td>
                          {% endif %}
 
                          {% if c.contender is not none and c.baseline is not none %}
                            <td>{{ c.change }}</td>
                          {% else %}
-                           <td>---</td>
+                           <td></td>
                          {% endif %}
 
                          <td>{{ c.language }}</td>
@@ -114,13 +114,13 @@
                          </td>
 
                          {% if c.baseline is none %}
-                           <td>---</td>
+                           <td></td>
                          {% else %}
                            <td>{{ c.baseline }}</td>
                          {% endif %}
 
                          {% if c.contender is none %}
-                           <td>---</td>
+                           <td></td>
                          {% else %}
                            <td>{{ c.contender }}</td>
                          {% endif %}
