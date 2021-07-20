@@ -217,6 +217,36 @@ def _api_context_entity(context_id, links=True):
     return result
 
 
+def _api_distribution_entity(
+    distribution_id,
+    sha,
+    case_id,
+    context_id,
+    machine_hash,
+    observations,
+    links=True,
+):
+    result = {
+        "id": distribution_id,
+        "sha": sha,
+        "case_id": case_id,
+        "context_id": context_id,
+        "machine_hash": machine_hash,
+        "unit": "s",
+        "mean_mean": "0.036369",
+        "first_timestamp": "2021-02-25T01:02:51",
+        "last_timestamp": "2021-02-25T01:02:51",
+        "observations": observations,
+        "repository": "https://github.com/apache/arrow",
+        "links": {
+            "self": "http://localhost/api/distributions/%s/" % distribution_id,
+        },
+    }
+    if not links:
+        result.pop("links", None)
+    return result
+
+
 def _api_machine_entity(machine_id, links=True):
     result = {
         "id": machine_id,
@@ -331,6 +361,32 @@ COMPARE_LIST = _api_compare_list(
     ],
 )
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
+DISTRIBUTION_ENTITY = _api_distribution_entity(
+    "some-distribution-uuid-1",
+    "some-sha-1",
+    "some-case-uuid-1",
+    "some-context-uuid-1",
+    "some-machine-hash-1",
+    33,
+)
+DISTRIBUTION_LIST = [
+    _api_distribution_entity(
+        "some-distribution-uuid-1",
+        "some-sha-1",
+        "some-case-uuid-1",
+        "some-context-uuid-1",
+        "some-machine-hash-1",
+        33,
+    ),
+    _api_distribution_entity(
+        "some-distribution-uuid-2",
+        "some-sha-2",
+        "some-case-uuid-2",
+        "some-context-uuid-2",
+        "some-machine-hash-2",
+        33,
+    ),
+]
 MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1")
 RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",

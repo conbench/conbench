@@ -1,3 +1,4 @@
+import flask as f
 import sqlalchemy as s
 from sqlalchemy import func
 from sqlalchemy import CheckConstraint as check
@@ -7,6 +8,7 @@ from ..db import Session
 from ..entities._entity import (
     Base,
     EntityMixin,
+    EntitySerializer,
     generate_uuid,
     NotNull,
     Nullable,
@@ -53,6 +55,36 @@ s.Index("distribution_repository_index", Distribution.repository)
 s.Index("distribution_case_id_index", Distribution.case_id)
 s.Index("distribution_context_id_index", Distribution.context_id)
 s.Index("distribution_machine_hash_index", Distribution.machine_hash)
+
+
+class _Serializer(EntitySerializer):
+    decimal_fmt = "{:.6f}"
+
+    def _dump(self, distribution):
+        result = {
+            "id": distribution.id,
+            "sha": distribution.sha,
+            "repository": distribution.repository,
+            "case_id": distribution.case_id,
+            "context_id": distribution.context_id,
+            "machine_hash": distribution.machine_hash,
+            "unit": distribution.unit,
+            "mean_mean": self.decimal_fmt.format(distribution.mean_mean),
+            "first_timestamp": distribution.first_timestamp.isoformat(),
+            "last_timestamp": distribution.last_timestamp.isoformat(),
+            "observations": distribution.observations,
+            "links": {
+                "self": f.url_for(
+                    "api.distribution", distribution_id=distribution.id, _external=True
+                ),
+            },
+        }
+        return result
+
+
+class DistributionSerializer:
+    one = _Serializer()
+    many = _Serializer(many=True)
 
 
 def get_commit_index(repository):
