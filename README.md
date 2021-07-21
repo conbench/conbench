@@ -35,7 +35,7 @@ Benchmarking (CB) orchestration alongside your development pipeline.
 The [Apache Arrow](https://arrow.apache.org/) project is using Conbench
 for Continuous Benchmarking. They have both native Python Conbench
 benchmarks, and Conbench benchmarks written in Python that know how to
-execute their external C++ and R benchmarks and record those results
+execute their external C++/R/Java/Javascript benchmarks and record those results
 too. Those benchmarks can be found in the
 [ursacomputing/benchmarks](https://github.com/ursacomputing/benchmarks)
 repository, and the results are hosted on the
