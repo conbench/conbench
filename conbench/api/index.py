@@ -21,9 +21,13 @@ class IndexSerializer:
         return {
             "links": {
                 "benchmarks": f.url_for("api.benchmarks", _external=True),
+                "commits": f.url_for("api.commits", _external=True),
+                "contexts": f.url_for("api.contexts", _external=True),
+                "distributions": f.url_for("api.distributions", _external=True),
                 "docs": f.url_for("api.docs", _external=True),
                 "login": f.url_for("api.login", _external=True),
                 "logout": f.url_for("api.logout", _external=True),
+                "machines": f.url_for("api.machines", _external=True),
                 "ping": f.url_for("api.ping", _external=True),
                 "register": f.url_for("api.register", _external=True),
                 "runs": f.url_for("api.runs", _external=True),
