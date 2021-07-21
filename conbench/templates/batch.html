@@ -83,7 +83,9 @@
 
 {% block scripts %}
 {{super()}}
+
 {{ resources | safe }}
+
 <script type="text/javascript">
 $(document).ready(function() {
     {% for plot in plots %}
