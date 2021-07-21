@@ -50,7 +50,7 @@ repository, and the results are hosted on the
 
 ## Index
 
-* [Contributing](https://github.com/ursacomputing/connbench#contributing)
+* [Contributing](https://github.com/ursacomputing/conbench#contributing)
 * [Authoring benchmarks](https://github.com/ursacomputing/conbench#authoring-benchmarks)
   * [Simple benchmarks](https://github.com/ursacomputing/conbench#example-simple-benchmarks)
   * [External benchmarks](https://github.com/ursacomputing/conbench#example-external-benchmarks)
