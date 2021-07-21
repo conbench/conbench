@@ -1,8 +1,6 @@
-import copy
 import urllib
 
 from ...api._examples import _api_run_entity
-from ...entities.summary import Summary
 from ...tests.api import _asserts
 from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
@@ -18,19 +16,6 @@ def _expected_entity(run, baseline_id=None):
     )
 
 
-def create_benchmark_summary(sha=None, language=None, run_id=None):
-    data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
-    if sha:
-        data["github"]["commit"] = sha
-        data["run_id"] = _uuid()
-    if language:
-        data["context"]["benchmark_language"] = language
-    if run_id:
-        data["run_id"] = run_id
-    summary = Summary.create(data)
-    return summary
-
-
 class TestRunGet(_asserts.GetEnforcer):
     url = "/api/runs/{}/"
     public = True
@@ -39,19 +24,19 @@ class TestRunGet(_asserts.GetEnforcer):
         if baseline:
             # change anything about the context so we get only one baseline
             language = _uuid()
-            contender = create_benchmark_summary(
+            contender = _fixtures.create_benchmark_summary(
                 sha=_fixtures.CHILD,
                 language=language,
                 run_id=_uuid(),
             )
-            baseline = create_benchmark_summary(
+            baseline = _fixtures.create_benchmark_summary(
                 sha=_fixtures.PARENT,
                 language=language,
                 run_id=_uuid(),
             )
             return contender.run, baseline.run
         else:
-            contender = create_benchmark_summary()
+            contender = _fixtures.create_benchmark_summary()
         return contender.run
 
     def test_get_run(self, client):
@@ -66,7 +51,7 @@ class TestRunList(_asserts.ListEnforcer):
     public = True
 
     def _create(self):
-        summary = create_benchmark_summary()
+        summary = _fixtures.create_benchmark_summary()
         return summary.run
 
     def test_run_list(self, client):
