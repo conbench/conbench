@@ -96,6 +96,7 @@ class _Serializer(EntitySerializer):
             "cpu_frequency_max_hz": machine.cpu_frequency_max_hz,
             "memory_bytes": machine.memory_bytes,
             "links": {
+                "list": f.url_for("api.machines", _external=True),
                 "self": f.url_for("api.machine", machine_id=machine.id, _external=True),
             },
         }

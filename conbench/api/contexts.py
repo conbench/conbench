@@ -4,6 +4,23 @@ from ..entities._entity import NotFound
 from ..entities.context import Context, ContextSerializer
 
 
+class ContextListAPI(ApiEndpoint):
+    serializer = ContextSerializer()
+
+    def get(self):
+        """
+        ---
+        description: Get a list of contexts.
+        responses:
+            "200": "ContextList"
+            "401": "401"
+        tags:
+          - Contexts
+        """
+        contexts = Context.all(order_by=Context.id.asc(), limit=500)
+        return self.serializer.many.dump(contexts)
+
+
 class ContextEntityAPI(ApiEndpoint):
     serializer = ContextSerializer()
 
@@ -35,9 +52,15 @@ class ContextEntityAPI(ApiEndpoint):
 
 
 context_entity_view = ContextEntityAPI.as_view("context")
+context_list_view = ContextListAPI.as_view("contexts")
 
 rule(
     "/contexts/<context_id>/",
     view_func=context_entity_view,
+    methods=["GET"],
+)
+rule(
+    "/contexts/",
+    view_func=context_list_view,
     methods=["GET"],
 )

@@ -25,6 +25,7 @@ class _Serializer(EntitySerializer):
         result = {
             "id": context.id,
             "links": {
+                "list": f.url_for("api.contexts", _external=True),
                 "self": f.url_for("api.context", context_id=context.id, _external=True),
             },
         }

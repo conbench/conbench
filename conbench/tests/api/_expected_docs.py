@@ -428,9 +428,32 @@
                             "benchmark_language_version": "Python 3.8.5",
                             "id": "some-context-uuid-1",
                             "links": {
-                                "self": "http://localhost/api/contexts/some-context-uuid-1/"
+                                "list": "http://localhost/api/contexts/",
+                                "self": "http://localhost/api/contexts/some-context-uuid-1/",
                             },
                         }
+                    }
+                },
+                "description": "OK",
+            },
+            "ContextList": {
+                "content": {
+                    "application/json": {
+                        "example": [
+                            {
+                                "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
+                                "arrow_compiler_id": "AppleClang",
+                                "arrow_compiler_version": "11.0.0.11000033",
+                                "arrow_version": "2.0.0",
+                                "benchmark_language": "Python",
+                                "benchmark_language_version": "Python 3.8.5",
+                                "id": "some-context-uuid-1",
+                                "links": {
+                                    "list": "http://localhost/api/contexts/",
+                                    "self": "http://localhost/api/contexts/some-context-uuid-1/",
+                                },
+                            }
+                        ]
                     }
                 },
                 "description": "OK",
@@ -520,13 +543,44 @@
                             "id": "some-machine-uuid-1",
                             "kernel_name": "19.6.0",
                             "links": {
-                                "self": "http://localhost/api/machines/some-machine-uuid-1/"
+                                "list": "http://localhost/api/machines/",
+                                "self": "http://localhost/api/machines/some-machine-uuid-1/",
                             },
                             "memory_bytes": 17179869184,
                             "name": "diana",
                             "os_name": "macOS",
                             "os_version": "10.15.7",
                         }
+                    }
+                },
+                "description": "OK",
+            },
+            "MachineList": {
+                "content": {
+                    "application/json": {
+                        "example": [
+                            {
+                                "architecture_name": "x86_64",
+                                "cpu_core_count": 2,
+                                "cpu_frequency_max_hz": 3500000000,
+                                "cpu_l1d_cache_bytes": 32768,
+                                "cpu_l1i_cache_bytes": 32768,
+                                "cpu_l2_cache_bytes": 262144,
+                                "cpu_l3_cache_bytes": 4194304,
+                                "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                "cpu_thread_count": 4,
+                                "id": "some-machine-uuid-1",
+                                "kernel_name": "19.6.0",
+                                "links": {
+                                    "list": "http://localhost/api/machines/",
+                                    "self": "http://localhost/api/machines/some-machine-uuid-1/",
+                                },
+                                "memory_bytes": 17179869184,
+                                "name": "diana",
+                                "os_name": "macOS",
+                                "os_version": "10.15.7",
+                            }
+                        ]
                     }
                 },
                 "description": "OK",
@@ -1002,7 +1056,7 @@
                     "401": {"$ref": "#/components/responses/401"},
                     "404": {"$ref": "#/components/responses/404"},
                 },
-                "tags": ["Compare"],
+                "tags": ["Comparisons"],
             }
         },
         "/api/compare/benchmarks/{compare_ids}/": {
@@ -1029,7 +1083,7 @@
                     "401": {"$ref": "#/components/responses/401"},
                     "404": {"$ref": "#/components/responses/404"},
                 },
-                "tags": ["Compare"],
+                "tags": ["Comparisons"],
             }
         },
         "/api/compare/runs/{compare_ids}/": {
@@ -1056,7 +1110,17 @@
                     "401": {"$ref": "#/components/responses/401"},
                     "404": {"$ref": "#/components/responses/404"},
                 },
-                "tags": ["Compare"],
+                "tags": ["Comparisons"],
+            }
+        },
+        "/api/contexts/": {
+            "get": {
+                "description": "Get a list of contexts.",
+                "responses": {
+                    "200": {"$ref": "#/components/responses/ContextList"},
+                    "401": {"$ref": "#/components/responses/401"},
+                },
+                "tags": ["Contexts"],
             }
         },
         "/api/contexts/{context_id}/": {
@@ -1130,6 +1194,16 @@
                 "description": "Logout.",
                 "responses": {"204": {"$ref": "#/components/responses/204"}},
                 "tags": ["Authentication"],
+            }
+        },
+        "/api/machines/": {
+            "get": {
+                "description": "Get a list of machines.",
+                "responses": {
+                    "200": {"$ref": "#/components/responses/MachineList"},
+                    "401": {"$ref": "#/components/responses/401"},
+                },
+                "tags": ["Machines"],
             }
         },
         "/api/machines/{machine_id}/": {
@@ -1297,8 +1371,8 @@
         {"description": "List of endpoints", "name": "Index"},
         {"description": "Manage users", "name": "Users"},
         {"description": "Record benchmarks", "name": "Benchmarks"},
-        {"description": "Benchmarked Commits", "name": "Commits"},
-        {"description": "Compare benchmarks", "name": "Compare"},
+        {"description": "Benchmarked commits", "name": "Commits"},
+        {"description": "Benchmark comparisons", "name": "Comparisons"},
         {"description": "Benchmark contexts", "name": "Contexts"},
         {"description": "Benchmark distributions", "name": "Distributions"},
         {"description": "Benchmark machines", "name": "Machines"},

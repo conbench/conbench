@@ -216,6 +216,7 @@ def _api_context_entity(context_id, links=True):
         "benchmark_language_version": "Python 3.8.5",
         "benchmark_language": "Python",
         "links": {
+            "list": "http://localhost/api/contexts/",
             "self": "http://localhost/api/contexts/%s/" % context_id,
         },
     }
@@ -273,6 +274,7 @@ def _api_machine_entity(machine_id, links=True):
         "os_name": "macOS",
         "os_version": "10.15.7",
         "links": {
+            "list": "http://localhost/api/machines/",
             "self": "http://localhost/api/machines/%s/" % machine_id,
         },
     }
