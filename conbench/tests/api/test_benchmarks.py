@@ -7,7 +7,6 @@ from ...api._examples import _api_benchmark_entity
 from ...entities._entity import NotFound
 from ...entities.distribution import Distribution
 from ...entities.summary import Summary
-from ...runner import Conbench
 from ...tests.api import _asserts
 from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
@@ -24,33 +23,12 @@ def _expected_entity(summary):
     )
 
 
-def create_benchmark_summary(
-    name=None, batch_id=None, run_id=None, results=None, unit=None, sha=None
-):
-    data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
-    if name:
-        data["tags"]["name"] = name
-    if batch_id:
-        data["batch_id"] = batch_id
-    if run_id:
-        data["run_id"] = run_id
-    if sha:
-        data["github"]["commit"] = sha
-
-    if results is not None:
-        unit = unit if unit else "s"
-        data["stats"] = Conbench._stats(results, unit, [], "s")
-
-    summary = Summary.create(data)
-    return summary
-
-
 class TestBenchmarkGet(_asserts.GetEnforcer):
     url = "/api/benchmarks/{}/"
     public = True
 
     def _create(self, name=None, run_id=None, results=None, unit=None, sha=None):
-        return create_benchmark_summary(
+        return _fixtures.create_benchmark_summary(
             name=name, run_id=run_id, results=results, unit=unit, sha=sha
         )
 
@@ -264,7 +242,7 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
 
     def test_delete_benchmark(self, client):
         self.authenticate(client)
-        summary = create_benchmark_summary()
+        summary = _fixtures.create_benchmark_summary()
 
         # can get before delete
         Summary.one(id=summary.id)
@@ -284,31 +262,31 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
     def test_benchmark_list(self, client):
         self.authenticate(client)
-        summary = create_benchmark_summary()
+        summary = _fixtures.create_benchmark_summary()
         response = client.get("/api/benchmarks/")
         self.assert_200_ok(response, contains=_expected_entity(summary))
 
     def test_benchmark_list_filter_by_name(self, client):
         self.authenticate(client)
-        create_benchmark_summary(name="aaa")
-        summary = create_benchmark_summary(name="bbb")
-        create_benchmark_summary(name="ccc")
+        _fixtures.create_benchmark_summary(name="aaa")
+        summary = _fixtures.create_benchmark_summary(name="bbb")
+        _fixtures.create_benchmark_summary(name="ccc")
         response = client.get("/api/benchmarks/?name=bbb")
         self.assert_200_ok(response, [_expected_entity(summary)])
 
     def test_benchmark_list_filter_by_batch_id(self, client):
         self.authenticate(client)
-        create_benchmark_summary(batch_id="10")
-        summary = create_benchmark_summary(batch_id="20")
-        create_benchmark_summary(batch_id="30")
+        _fixtures.create_benchmark_summary(batch_id="10")
+        summary = _fixtures.create_benchmark_summary(batch_id="20")
+        _fixtures.create_benchmark_summary(batch_id="30")
         response = client.get("/api/benchmarks/?batch_id=20")
         self.assert_200_ok(response, [_expected_entity(summary)])
 
     def test_benchmark_list_filter_by_run_id(self, client):
         self.authenticate(client)
-        create_benchmark_summary(run_id="100")
-        summary = create_benchmark_summary(run_id="200")
-        create_benchmark_summary(run_id="300")
+        _fixtures.create_benchmark_summary(run_id="100")
+        summary = _fixtures.create_benchmark_summary(run_id="200")
+        _fixtures.create_benchmark_summary(run_id="300")
         response = client.get("/api/benchmarks/?run_id=200")
         self.assert_200_ok(response, [_expected_entity(summary)])
 

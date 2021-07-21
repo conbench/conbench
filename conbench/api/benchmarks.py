@@ -120,7 +120,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         else:
             summaries = Summary.all(order_by=Summary.timestamp.desc(), limit=500)
             # TODO: cannot currently compute z_score on an arbitrary
-            # list of summaries - assumes same machine/sha/repository.s
+            # list of summaries - assumes same machine/sha/repository.
             for summary in summaries:
                 summary.z_score = 0
         return self.serializer.many.dump(summaries)

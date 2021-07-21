@@ -1,8 +1,4 @@
-import copy
-
 from ...api._examples import _api_compare_entity, _api_compare_list
-from ...entities.summary import Summary
-from ...runner import Conbench
 from ...tests.api import _asserts
 from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
@@ -16,21 +12,6 @@ class FakeEntity:
         self.id = _id
 
 
-def create_benchmark_summary(name, batch_id=None, run_id=None, results=None, sha=None):
-    data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
-    data["tags"]["name"] = name
-    if batch_id:
-        data["batch_id"] = batch_id
-    if run_id:
-        data["run_id"] = run_id
-    if sha:
-        data["github"]["commit"] = sha
-    if results is not None:
-        data["stats"] = Conbench._stats(results, "s", [], "s")
-    summary = Summary.create(data)
-    return summary
-
-
 class TestCompareBenchmarksGet(_asserts.GetEnforcer):
     url = "/api/compare/benchmarks/{}/"
     public = True
@@ -39,20 +20,20 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         # create a distribution history & a regression
         name = name if name is not None else _uuid()
         run_0, run_1, run_2 = _uuid(), _uuid(), _uuid()
-        create_benchmark_summary(
-            name,
+        _fixtures.create_benchmark_summary(
+            name=name,
             results=_fixtures.RESULTS_UP[0],
             run_id=run_0,
             sha=_fixtures.GRANDPARENT,
         )
-        summary_1 = create_benchmark_summary(
-            name,
+        summary_1 = _fixtures.create_benchmark_summary(
+            name=name,
             results=_fixtures.RESULTS_UP[1],
             run_id=run_1,
             sha=_fixtures.PARENT,
         )
-        summary_2 = create_benchmark_summary(
-            name,
+        summary_2 = _fixtures.create_benchmark_summary(
+            name=name,
             results=_fixtures.RESULTS_UP[2],
             run_id=run_2,
         )
@@ -115,13 +96,13 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
 
     def _create(self, with_ids=False, run_id=None, batch_id=None):
         batch_id = batch_id if batch_id is not None else _uuid()
-        summary1 = create_benchmark_summary(
-            "read",
+        summary1 = _fixtures.create_benchmark_summary(
+            name="read",
             run_id=run_id,
             batch_id=batch_id,
         )
-        summary2 = create_benchmark_summary(
-            "write",
+        summary2 = _fixtures.create_benchmark_summary(
+            name="write",
             run_id=run_id,
             batch_id=batch_id,
         )
@@ -186,13 +167,13 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
 
     def _create(self, with_ids=False, run_id=None, batch_id=None):
         run_id = run_id if run_id is not None else _uuid()
-        summary1 = create_benchmark_summary(
-            "read",
+        summary1 = _fixtures.create_benchmark_summary(
+            name="read",
             run_id=run_id,
             batch_id=batch_id,
         )
-        summary2 = create_benchmark_summary(
-            "write",
+        summary2 = _fixtures.create_benchmark_summary(
+            name="write",
             run_id=run_id,
             batch_id=batch_id,
         )

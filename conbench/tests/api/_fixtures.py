@@ -1,3 +1,9 @@
+import copy
+
+from ...entities.summary import Summary
+from ...runner import Conbench
+
+
 CHILD = "02addad336ba19a654f9c857ede546331be7b631"
 PARENT = "4beb514d071c9beec69b8917b5265e77ade22fb3"
 GRANDPARENT = "6d703c4c7b15be630af48d5e9ef61628751674b2"
@@ -89,3 +95,32 @@ VALID_PAYLOAD = {
         "name": "file-write",
     },
 }
+
+
+def create_benchmark_summary(
+    name=None,
+    batch_id=None,
+    run_id=None,
+    results=None,
+    unit=None,
+    sha=None,
+    language=None,
+):
+    data = copy.deepcopy(VALID_PAYLOAD)
+
+    if name:
+        data["tags"]["name"] = name
+    if batch_id:
+        data["batch_id"] = batch_id
+    if run_id:
+        data["run_id"] = run_id
+    if sha:
+        data["github"]["commit"] = sha
+    if language:
+        data["context"]["benchmark_language"] = language
+
+    if results is not None:
+        unit = unit if unit else "s"
+        data["stats"] = Conbench._stats(results, unit, [], "s")
+
+    return Summary.create(data)
