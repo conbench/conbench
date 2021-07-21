@@ -512,9 +512,13 @@
                         "example": {
                             "links": {
                                 "benchmarks": "http://localhost/api/benchmarks/",
+                                "commits": "http://localhost/api/commits/",
+                                "contexts": "http://localhost/api/contexts/",
+                                "distributions": "http://localhost/api/distributions/",
                                 "docs": "http://localhost/api/docs.json",
                                 "login": "http://localhost/api/login/",
                                 "logout": "http://localhost/api/logout/",
+                                "machines": "http://localhost/api/machines/",
                                 "ping": "http://localhost/api/ping/",
                                 "register": "http://localhost/api/register/",
                                 "runs": "http://localhost/api/runs/",
