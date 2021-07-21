@@ -97,7 +97,6 @@ def _api_commit_entity(commit_id, links=True):
         "sha": "02addad336ba19a654f9c857ede546331be7b631",
         "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
         "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-        "parent_url": "https://github.com/apache/arrow/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
         "timestamp": "2021-02-25T01:02:51",
         "links": {
             "list": "http://localhost/api/commits/",
