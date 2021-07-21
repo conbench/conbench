@@ -255,6 +255,24 @@ def _api_distribution_entity(
     return result
 
 
+def _api_history_entity(benchmark_id, case_id, context_id):
+    return [
+        {
+            "benchmark_id": benchmark_id,
+            "case_id": case_id,
+            "context_id": context_id,
+            "machine_hash": "diana-2-4-17179869184",
+            "mean": "0.036369",
+            "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+            "repository": "https://github.com/apache/arrow",
+            "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+            "sha": "02addad336ba19a654f9c857ede546331be7b631",
+            "timestamp": "2021-02-25T01:02:51",
+            "unit": "s",
+        },
+    ]
+
+
 def _api_machine_entity(machine_id, links=True):
     result = {
         "id": machine_id,
@@ -361,6 +379,11 @@ DISTRIBUTION_ENTITY = _api_distribution_entity(
     "some-context-uuid-1",
     "some-machine-hash-1",
     33,
+)
+HISTORY_ENTITY = _api_history_entity(
+    "some-benchmark-uuid-1",
+    "some-case-uuid-1",
+    "some-context-uuid-1",
 )
 MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1")
 RUN_ENTITY = _api_run_entity(

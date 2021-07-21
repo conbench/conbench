@@ -12,6 +12,7 @@ from .commits import *  # noqa
 from .compare import *  # noqa
 from .contexts import *  # noqa
 from .distributions import *  # noqa
+from .history import *  # noqa
 from .index import *  # noqa
 from .machines import *  # noqa
 from .runs import *  # noqa
