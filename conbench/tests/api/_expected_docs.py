@@ -242,68 +242,57 @@
                                     "name": "file-write",
                                 },
                                 "timestamp": "2020-11-25T21:02:42.706806",
+                            }
+                        ]
+                    }
+                },
+                "description": "OK",
+            },
+            "CommitEntity": {
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                            "author_login": "dianaclarke",
+                            "author_name": "Diana Clarke",
+                            "id": "some-commit-uuid-1",
+                            "links": {
+                                "list": "http://localhost/api/commits/",
+                                "self": "http://localhost/api/commits/some-commit-uuid-1/",
                             },
+                            "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                            "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                            "parent_url": "https://github.com/apache/arrow/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
+                            "repository": "https://github.com/apache/arrow",
+                            "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                            "timestamp": "2021-02-25T01:02:51",
+                            "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+                        }
+                    }
+                },
+                "description": "OK",
+            },
+            "CommitList": {
+                "content": {
+                    "application/json": {
+                        "example": [
                             {
-                                "batch_id": "some-batch-uuid-1",
-                                "id": "some-benchmark-uuid-2",
+                                "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                "author_login": "dianaclarke",
+                                "author_name": "Diana Clarke",
+                                "id": "some-commit-uuid-1",
                                 "links": {
-                                    "context": "http://localhost/api/contexts/some-context-uuid-1/",
-                                    "list": "http://localhost/api/benchmarks/",
-                                    "run": "http://localhost/api/runs/some-run-uuid-1/",
-                                    "self": "http://localhost/api/benchmarks/some-benchmark-uuid-2/",
+                                    "list": "http://localhost/api/commits/",
+                                    "self": "http://localhost/api/commits/some-commit-uuid-1/",
                                 },
-                                "run_id": "some-run-uuid-1",
-                                "stats": {
-                                    "data": [
-                                        "0.099094",
-                                        "0.037129",
-                                        "0.036381",
-                                        "0.148896",
-                                        "0.008104",
-                                        "0.005496",
-                                        "0.009871",
-                                        "0.006008",
-                                        "0.007978",
-                                        "0.004733",
-                                    ],
-                                    "iqr": "0.030442",
-                                    "iterations": 10,
-                                    "max": "0.148896",
-                                    "mean": "0.036369",
-                                    "median": "0.008988",
-                                    "min": "0.004733",
-                                    "q1": "0.006500",
-                                    "q3": "0.036942",
-                                    "stdev": "0.049194",
-                                    "time_unit": "s",
-                                    "times": [
-                                        "0.099094",
-                                        "0.037129",
-                                        "0.036381",
-                                        "0.148896",
-                                        "0.008104",
-                                        "0.005496",
-                                        "0.009871",
-                                        "0.006008",
-                                        "0.007978",
-                                        "0.004733",
-                                    ],
-                                    "unit": "s",
-                                    "z_improvement": False,
-                                    "z_regression": False,
-                                    "z_score": "0.000000",
-                                },
-                                "tags": {
-                                    "compression": "snappy",
-                                    "cpu_count": 2,
-                                    "dataset": "nyctaxi_sample",
-                                    "file_type": "parquet",
-                                    "id": "some-case-uuid-1",
-                                    "input_type": "arrow",
-                                    "name": "file-write",
-                                },
-                                "timestamp": "2020-11-25T21:02:42.706806",
-                            },
+                                "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                "parent_url": "https://github.com/apache/arrow/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                "repository": "https://github.com/apache/arrow",
+                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                "timestamp": "2021-02-25T01:02:51",
+                                "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+                            }
                         ]
                     }
                 },
@@ -456,7 +445,8 @@
                             "id": "some-distribution-uuid-1",
                             "last_timestamp": "2021-02-25T01:02:51",
                             "links": {
-                                "self": "http://localhost/api/distributions/some-distribution-uuid-1/"
+                                "list": "http://localhost/api/distributions/",
+                                "self": "http://localhost/api/distributions/some-distribution-uuid-1/",
                             },
                             "machine_hash": "some-machine-hash-1",
                             "mean_mean": "0.036369",
@@ -480,7 +470,8 @@
                                 "id": "some-distribution-uuid-1",
                                 "last_timestamp": "2021-02-25T01:02:51",
                                 "links": {
-                                    "self": "http://localhost/api/distributions/some-distribution-uuid-1/"
+                                    "list": "http://localhost/api/distributions/",
+                                    "self": "http://localhost/api/distributions/some-distribution-uuid-1/",
                                 },
                                 "machine_hash": "some-machine-hash-1",
                                 "mean_mean": "0.036369",
@@ -488,23 +479,7 @@
                                 "repository": "https://github.com/apache/arrow",
                                 "sha": "some-sha-1",
                                 "unit": "s",
-                            },
-                            {
-                                "case_id": "some-case-uuid-2",
-                                "context_id": "some-context-uuid-2",
-                                "first_timestamp": "2021-02-25T01:02:51",
-                                "id": "some-distribution-uuid-2",
-                                "last_timestamp": "2021-02-25T01:02:51",
-                                "links": {
-                                    "self": "http://localhost/api/distributions/some-distribution-uuid-2/"
-                                },
-                                "machine_hash": "some-machine-hash-2",
-                                "mean_mean": "0.036369",
-                                "observations": 33,
-                                "repository": "https://github.com/apache/arrow",
-                                "sha": "some-sha-2",
-                                "unit": "s",
-                            },
+                            }
                         ]
                     }
                 },
@@ -588,6 +563,7 @@
                             "id": "some-run-uuid-1",
                             "links": {
                                 "baseline": "http://localhost/api/runs/some-run-uuid-0/",
+                                "list": "http://localhost/api/runs/",
                                 "self": "http://localhost/api/runs/some-run-uuid-1/",
                             },
                             "machine": {
@@ -634,7 +610,8 @@
                                 },
                                 "id": "some-run-uuid-1",
                                 "links": {
-                                    "self": "http://localhost/api/runs/some-run-uuid-1/"
+                                    "list": "http://localhost/api/runs/",
+                                    "self": "http://localhost/api/runs/some-run-uuid-1/",
                                 },
                                 "machine": {
                                     "architecture_name": "x86_64",
@@ -655,45 +632,7 @@
                                 },
                                 "name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
                                 "timestamp": "2021-02-04T17:22:05.225583",
-                            },
-                            {
-                                "commit": {
-                                    "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
-                                    "author_login": "dianaclarke",
-                                    "author_name": "Diana Clarke",
-                                    "id": "some-commit-uuid-1",
-                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
-                                    "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                    "parent_url": "https://github.com/apache/arrow/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                    "repository": "https://github.com/apache/arrow",
-                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                    "timestamp": "2021-02-25T01:02:51",
-                                    "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
-                                },
-                                "id": "some-run-uuid-2",
-                                "links": {
-                                    "self": "http://localhost/api/runs/some-run-uuid-2/"
-                                },
-                                "machine": {
-                                    "architecture_name": "x86_64",
-                                    "cpu_core_count": 2,
-                                    "cpu_frequency_max_hz": 3500000000,
-                                    "cpu_l1d_cache_bytes": 32768,
-                                    "cpu_l1i_cache_bytes": 32768,
-                                    "cpu_l2_cache_bytes": 262144,
-                                    "cpu_l3_cache_bytes": 4194304,
-                                    "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
-                                    "cpu_thread_count": 4,
-                                    "id": "some-machine-uuid-1",
-                                    "kernel_name": "19.6.0",
-                                    "memory_bytes": 17179869184,
-                                    "name": "diana",
-                                    "os_name": "macOS",
-                                    "os_version": "10.15.7",
-                                },
-                                "name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
-                                "timestamp": "2021-03-04T17:18:05.715583",
-                            },
+                            }
                         ]
                     }
                 },
@@ -1009,6 +948,35 @@
                 },
                 "tags": ["Benchmarks"],
             },
+        },
+        "/api/commits/": {
+            "get": {
+                "description": "Get a list of commits.",
+                "responses": {
+                    "200": {"$ref": "#/components/responses/CommitList"},
+                    "401": {"$ref": "#/components/responses/401"},
+                },
+                "tags": ["Commits"],
+            }
+        },
+        "/api/commits/{commit_id}/": {
+            "get": {
+                "description": "Get a commit.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "commit_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/CommitEntity"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Commits"],
+            }
         },
         "/api/compare/batches/{compare_ids}/": {
             "get": {
@@ -1329,6 +1297,7 @@
         {"description": "List of endpoints", "name": "Index"},
         {"description": "Manage users", "name": "Users"},
         {"description": "Record benchmarks", "name": "Benchmarks"},
+        {"description": "Benchmarked Commits", "name": "Commits"},
         {"description": "Compare benchmarks", "name": "Compare"},
         {"description": "Benchmark contexts", "name": "Contexts"},
         {"description": "Benchmark distributions", "name": "Distributions"},

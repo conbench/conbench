@@ -74,6 +74,7 @@ class _Serializer(EntitySerializer):
             "last_timestamp": distribution.last_timestamp.isoformat(),
             "observations": distribution.observations,
             "links": {
+                "list": f.url_for("api.distributions", _external=True),
                 "self": f.url_for(
                     "api.distribution", distribution_id=distribution.id, _external=True
                 ),

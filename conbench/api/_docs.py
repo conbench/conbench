@@ -62,12 +62,14 @@ spec.components.response("404", _error("Not Found", ex.API_404, "Error"))
 spec.components.response("Ping", _200_ok(ex.API_PING, "Ping"))
 spec.components.response("Index", _200_ok(ex.API_INDEX))
 spec.components.response("BenchmarkEntity", _200_ok(ex.BENCHMARK_ENTITY))
-spec.components.response("BenchmarkList", _200_ok(ex.BENCHMARK_LIST))
+spec.components.response("BenchmarkList", _200_ok([ex.BENCHMARK_ENTITY]))
 spec.components.response("BenchmarkCreated", _201_created(ex.BENCHMARK_ENTITY))
+spec.components.response("CommitEntity", _200_ok(ex.COMMIT_ENTITY))
+spec.components.response("CommitList", _200_ok([ex.COMMIT_ENTITY]))
 spec.components.response("CompareEntity", _200_ok(ex.COMPARE_ENTITY))
 spec.components.response("CompareList", _200_ok(ex.COMPARE_LIST))
 spec.components.response("DistributionEntity", _200_ok(ex.DISTRIBUTION_ENTITY))
-spec.components.response("DistributionList", _200_ok(ex.DISTRIBUTION_LIST))
+spec.components.response("DistributionList", _200_ok([ex.DISTRIBUTION_ENTITY]))
 spec.components.response("ContextEntity", _200_ok(ex.CONTEXT_ENTITY))
 spec.components.response("MachineEntity", _200_ok(ex.MACHINE_ENTITY))
 spec.components.response("RunEntity", _200_ok(ex.RUN_ENTITY))
@@ -82,6 +84,7 @@ tags = [
     {"name": "Index", "description": "List of endpoints"},
     {"name": "Users", "description": "Manage users"},
     {"name": "Benchmarks", "description": "Record benchmarks"},
+    {"name": "Commits", "description": "Benchmarked Commits"},
     {"name": "Compare", "description": "Compare benchmarks"},
     {"name": "Contexts", "description": "Benchmark contexts"},
     {"name": "Distributions", "description": "Benchmark distributions"},
