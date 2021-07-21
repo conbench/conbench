@@ -1,9 +1,11 @@
+import bokeh
 import flask_login
 import flask_wtf
 import wtforms as w
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint
+from ..app._plots import TimeSeriesPlotMixin
 from ..app._util import augment, display_time
 from ..config import Config
 
@@ -107,7 +109,7 @@ class RunMixin:
         return response.json, response
 
 
-class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin):
+class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, benchmark, run, form):
         if not flask_login.current_user.is_authenticated:
             delattr(form, "delete")
@@ -122,6 +124,8 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin):
             benchmark=benchmark,
             run=run,
             form=form,
+            resources=bokeh.resources.CDN.render(),
+            plot_history=self._get_history_plot(benchmark),
         )
 
     def get(self, benchmark_id):

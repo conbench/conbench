@@ -6,18 +6,18 @@ import bokeh
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint
-from ..app._plots import simple_bar_plot
+from ..app._plots import simple_bar_plot, TimeSeriesPlotMixin
 from ..app.benchmarks import BenchmarkMixin, RunMixin
 from ..config import Config
 
 
-class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
+class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, comparisons, regressions, improvements, baseline_id, contender_id):
 
         unknown = "unknown...unknown"
         compare_runs_url = f.url_for("app.compare-runs", compare_ids=unknown)
         compare_batches_url = f.url_for("app.compare-batches", compare_ids=unknown)
-        baseline, contender, plot = None, None, None
+        baseline, contender, plot, plot_history = None, None, None, None
         baseline_run, contender_run = None, None
 
         if comparisons and self.type == "batch":
@@ -31,6 +31,7 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
             baseline = self.get_display_benchmark(baseline_id)
             contender = self.get_display_benchmark(contender_id)
             plot = self._get_plot(baseline, contender)
+            plot_history = self._get_history_plot(contender)
             baseline_run_id = baseline["run_id"]
             contender_run_id = baseline["run_id"]
             compare = f"{baseline_run_id}...{contender_run_id}"
@@ -48,6 +49,7 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin):
             title=self.title,
             type=self.type,
             plot=plot,
+            plot_history=plot_history,
             resources=bokeh.resources.CDN.render(),
             comparisons=comparisons,
             regressions=regressions,
