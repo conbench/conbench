@@ -71,7 +71,9 @@ spec.components.response("CompareList", _200_ok(ex.COMPARE_LIST))
 spec.components.response("DistributionEntity", _200_ok(ex.DISTRIBUTION_ENTITY))
 spec.components.response("DistributionList", _200_ok([ex.DISTRIBUTION_ENTITY]))
 spec.components.response("ContextEntity", _200_ok(ex.CONTEXT_ENTITY))
+spec.components.response("ContextList", _200_ok([ex.CONTEXT_ENTITY]))
 spec.components.response("MachineEntity", _200_ok(ex.MACHINE_ENTITY))
+spec.components.response("MachineList", _200_ok([ex.MACHINE_ENTITY]))
 spec.components.response("RunEntity", _200_ok(ex.RUN_ENTITY))
 spec.components.response("RunList", _200_ok(ex.RUN_LIST))
 spec.components.response("UserEntity", _200_ok(ex.USER_ENTITY))
@@ -84,8 +86,8 @@ tags = [
     {"name": "Index", "description": "List of endpoints"},
     {"name": "Users", "description": "Manage users"},
     {"name": "Benchmarks", "description": "Record benchmarks"},
-    {"name": "Commits", "description": "Benchmarked Commits"},
-    {"name": "Compare", "description": "Compare benchmarks"},
+    {"name": "Commits", "description": "Benchmarked commits"},
+    {"name": "Comparisons", "description": "Benchmark comparisons"},
     {"name": "Contexts", "description": "Benchmark contexts"},
     {"name": "Distributions", "description": "Benchmark distributions"},
     {"name": "Machines", "description": "Benchmark machines"},

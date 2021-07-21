@@ -61,7 +61,7 @@ class CompareBenchmarksAPI(ApiEndpoint):
             schema:
               type: integer
         tags:
-          - Compare
+          - Comparisons
         """
         raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
 
@@ -139,7 +139,7 @@ class CompareBatchesAPI(ApiEndpoint):
             schema:
               type: integer
         tags:
-          - Compare
+          - Comparisons
         """
         raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
 

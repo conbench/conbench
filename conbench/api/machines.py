@@ -4,6 +4,23 @@ from ..entities._entity import NotFound
 from ..entities.machine import Machine, MachineSerializer
 
 
+class MachineListAPI(ApiEndpoint):
+    serializer = MachineSerializer()
+
+    def get(self):
+        """
+        ---
+        description: Get a list of machines.
+        responses:
+            "200": "MachineList"
+            "401": "401"
+        tags:
+          - Machines
+        """
+        machines = Machine.all(order_by=Machine.name.asc(), limit=500)
+        return self.serializer.many.dump(machines)
+
+
 class MachineEntityAPI(ApiEndpoint):
     serializer = MachineSerializer()
 
@@ -35,9 +52,16 @@ class MachineEntityAPI(ApiEndpoint):
 
 
 machine_entity_view = MachineEntityAPI.as_view("machine")
+machine_list_view = MachineListAPI.as_view("machines")
+
 
 rule(
     "/machines/<machine_id>/",
     view_func=machine_entity_view,
+    methods=["GET"],
+)
+rule(
+    "/machines/",
+    view_func=machine_list_view,
     methods=["GET"],
 )
