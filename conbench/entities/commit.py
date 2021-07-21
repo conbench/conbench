@@ -44,7 +44,6 @@ class _Serializer(EntitySerializer):
             "sha": commit.sha,
             "url": f"{commit.repository}/commit/{commit.sha}",
             "parent_sha": commit.parent,
-            "parent_url": f"{commit.repository}/commit/{commit.parent}",
             "repository": commit.repository,
             "message": commit.message,
             "author_name": commit.author_name,
