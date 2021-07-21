@@ -29,7 +29,11 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
 
     def _create(self, name=None, run_id=None, results=None, unit=None, sha=None):
         return _fixtures.create_benchmark_summary(
-            name=name, run_id=run_id, results=results, unit=unit, sha=sha
+            name=name,
+            run_id=run_id,
+            results=results,
+            unit=unit,
+            sha=sha,
         )
 
     def test_get_benchmark(self, client):

@@ -66,6 +66,8 @@ spec.components.response("BenchmarkList", _200_ok(ex.BENCHMARK_LIST))
 spec.components.response("BenchmarkCreated", _201_created(ex.BENCHMARK_ENTITY))
 spec.components.response("CompareEntity", _200_ok(ex.COMPARE_ENTITY))
 spec.components.response("CompareList", _200_ok(ex.COMPARE_LIST))
+spec.components.response("DistributionEntity", _200_ok(ex.DISTRIBUTION_ENTITY))
+spec.components.response("DistributionList", _200_ok(ex.DISTRIBUTION_LIST))
 spec.components.response("ContextEntity", _200_ok(ex.CONTEXT_ENTITY))
 spec.components.response("MachineEntity", _200_ok(ex.MACHINE_ENTITY))
 spec.components.response("RunEntity", _200_ok(ex.RUN_ENTITY))
@@ -82,6 +84,7 @@ tags = [
     {"name": "Benchmarks", "description": "Record benchmarks"},
     {"name": "Compare", "description": "Compare benchmarks"},
     {"name": "Contexts", "description": "Benchmark contexts"},
+    {"name": "Distributions", "description": "Benchmark distributions"},
     {"name": "Machines", "description": "Benchmark machines"},
     {"name": "Runs", "description": "Benchmark runs"},
     {"name": "Ping", "description": "Monitor status"},

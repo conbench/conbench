@@ -446,6 +446,70 @@
                 },
                 "description": "OK",
             },
+            "DistributionEntity": {
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "case_id": "some-case-uuid-1",
+                            "context_id": "some-context-uuid-1",
+                            "first_timestamp": "2021-02-25T01:02:51",
+                            "id": "some-distribution-uuid-1",
+                            "last_timestamp": "2021-02-25T01:02:51",
+                            "links": {
+                                "self": "http://localhost/api/distributions/some-distribution-uuid-1/"
+                            },
+                            "machine_hash": "some-machine-hash-1",
+                            "mean_mean": "0.036369",
+                            "observations": 33,
+                            "repository": "https://github.com/apache/arrow",
+                            "sha": "some-sha-1",
+                            "unit": "s",
+                        }
+                    }
+                },
+                "description": "OK",
+            },
+            "DistributionList": {
+                "content": {
+                    "application/json": {
+                        "example": [
+                            {
+                                "case_id": "some-case-uuid-1",
+                                "context_id": "some-context-uuid-1",
+                                "first_timestamp": "2021-02-25T01:02:51",
+                                "id": "some-distribution-uuid-1",
+                                "last_timestamp": "2021-02-25T01:02:51",
+                                "links": {
+                                    "self": "http://localhost/api/distributions/some-distribution-uuid-1/"
+                                },
+                                "machine_hash": "some-machine-hash-1",
+                                "mean_mean": "0.036369",
+                                "observations": 33,
+                                "repository": "https://github.com/apache/arrow",
+                                "sha": "some-sha-1",
+                                "unit": "s",
+                            },
+                            {
+                                "case_id": "some-case-uuid-2",
+                                "context_id": "some-context-uuid-2",
+                                "first_timestamp": "2021-02-25T01:02:51",
+                                "id": "some-distribution-uuid-2",
+                                "last_timestamp": "2021-02-25T01:02:51",
+                                "links": {
+                                    "self": "http://localhost/api/distributions/some-distribution-uuid-2/"
+                                },
+                                "machine_hash": "some-machine-hash-2",
+                                "mean_mean": "0.036369",
+                                "observations": 33,
+                                "repository": "https://github.com/apache/arrow",
+                                "sha": "some-sha-2",
+                                "unit": "s",
+                            },
+                        ]
+                    }
+                },
+                "description": "OK",
+            },
             "Index": {
                 "content": {
                     "application/json": {
@@ -1046,6 +1110,35 @@
                 "tags": ["Contexts"],
             }
         },
+        "/api/distributions/": {
+            "get": {
+                "description": "Get a list of distributions.",
+                "responses": {
+                    "200": {"$ref": "#/components/responses/DistributionList"},
+                    "401": {"$ref": "#/components/responses/401"},
+                },
+                "tags": ["Distributions"],
+            }
+        },
+        "/api/distributions/{distribution_id}/": {
+            "get": {
+                "description": "Get a distribution.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "distribution_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/DistributionEntity"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Distributions"],
+            }
+        },
         "/api/docs.json": {},
         "/api/login/": {
             "post": {
@@ -1238,6 +1331,7 @@
         {"description": "Record benchmarks", "name": "Benchmarks"},
         {"description": "Compare benchmarks", "name": "Compare"},
         {"description": "Benchmark contexts", "name": "Contexts"},
+        {"description": "Benchmark distributions", "name": "Distributions"},
         {"description": "Benchmark machines", "name": "Machines"},
         {"description": "Benchmark runs", "name": "Runs"},
         {"description": "Monitor status", "name": "Ping"},
