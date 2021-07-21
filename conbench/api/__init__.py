@@ -8,6 +8,7 @@ rule = api.add_url_rule
 from ._errors import *  # noqa
 from .auth import *  # noqa
 from .benchmarks import *  # noqa
+from .commits import *  # noqa
 from .compare import *  # noqa
 from .contexts import *  # noqa
 from .distributions import *  # noqa

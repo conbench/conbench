@@ -17,7 +17,9 @@ class DistributionListAPI(ApiEndpoint):
         tags:
           - Distributions
         """
-        distributions = Distribution.all(limit=500)
+        distributions = Distribution.all(
+            order_by=Distribution.last_timestamp.desc(), limit=500
+        )
         return self.serializer.many.dump(distributions)
 
 

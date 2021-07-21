@@ -86,8 +86,8 @@ def _api_benchmark_entity(summary_id, context_id, case_id, batch_id, run_id, nam
     }
 
 
-def _api_commit_entity(commit_id):
-    return {
+def _api_commit_entity(commit_id, links=True):
+    result = {
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
         "author_login": "dianaclarke",
         "author_name": "Diana Clarke",
@@ -99,7 +99,14 @@ def _api_commit_entity(commit_id):
         "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
         "parent_url": "https://github.com/apache/arrow/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
         "timestamp": "2021-02-25T01:02:51",
+        "links": {
+            "list": "http://localhost/api/commits/",
+            "self": "http://localhost/api/commits/%s/" % commit_id,
+        },
     }
+    if not links:
+        result.pop("links", None)
+    return result
 
 
 def _api_compare_entity(benchmark_ids, batch_ids, run_ids, batch, benchmark, tags):
@@ -239,6 +246,7 @@ def _api_distribution_entity(
         "observations": observations,
         "repository": "https://github.com/apache/arrow",
         "links": {
+            "list": "http://localhost/api/distributions/",
             "self": "http://localhost/api/distributions/%s/" % distribution_id,
         },
     }
@@ -278,9 +286,10 @@ def _api_run_entity(run_id, commit_id, machine_id, now, baseline_id):
         "id": run_id,
         "name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
         "timestamp": now,
-        "commit": _api_commit_entity(commit_id),
+        "commit": _api_commit_entity(commit_id, links=False),
         "machine": _api_machine_entity(machine_id, links=False),
         "links": {
+            "list": "http://localhost/api/runs/",
             "self": "http://localhost/api/runs/%s/" % run_id,
         },
     }
@@ -298,24 +307,7 @@ BENCHMARK_ENTITY = _api_benchmark_entity(
     "some-run-uuid-1",
     "file-write",
 )
-BENCHMARK_LIST = [
-    _api_benchmark_entity(
-        "some-benchmark-uuid-1",
-        "some-context-uuid-1",
-        "some-case-uuid-1",
-        "some-batch-uuid-1",
-        "some-run-uuid-1",
-        "file-write",
-    ),
-    _api_benchmark_entity(
-        "some-benchmark-uuid-2",
-        "some-context-uuid-1",
-        "some-case-uuid-1",
-        "some-batch-uuid-1",
-        "some-run-uuid-1",
-        "file-write",
-    ),
-]
+COMMIT_ENTITY = _api_commit_entity("some-commit-uuid-1")
 COMPARE_ENTITY = _api_compare_entity(
     ["some-benchmark-uuid-1", "some-benchmark-uuid-2"],
     ["some-batch-uuid-1", "some-batch-uuid-2"],
@@ -369,24 +361,6 @@ DISTRIBUTION_ENTITY = _api_distribution_entity(
     "some-machine-hash-1",
     33,
 )
-DISTRIBUTION_LIST = [
-    _api_distribution_entity(
-        "some-distribution-uuid-1",
-        "some-sha-1",
-        "some-case-uuid-1",
-        "some-context-uuid-1",
-        "some-machine-hash-1",
-        33,
-    ),
-    _api_distribution_entity(
-        "some-distribution-uuid-2",
-        "some-sha-2",
-        "some-case-uuid-2",
-        "some-context-uuid-2",
-        "some-machine-hash-2",
-        33,
-    ),
-]
 MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1")
 RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",
@@ -401,13 +375,6 @@ RUN_LIST = [
         "some-commit-uuid-1",
         "some-machine-uuid-1",
         "2021-02-04T17:22:05.225583",
-        None,
-    ),
-    _api_run_entity(
-        "some-run-uuid-2",
-        "some-commit-uuid-1",
-        "some-machine-uuid-1",
-        "2021-03-04T17:18:05.715583",
         None,
     ),
 ]

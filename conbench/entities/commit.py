@@ -3,6 +3,7 @@ import json
 import os
 
 import dateutil.parser
+import flask as f
 import requests
 import sqlalchemy as s
 
@@ -50,6 +51,10 @@ class _Serializer(EntitySerializer):
             "author_login": commit.author_login,
             "author_avatar": commit.author_avatar,
             "timestamp": commit.timestamp.isoformat(),
+            "links": {
+                "list": f.url_for("api.commits", _external=True),
+                "self": f.url_for("api.commit", commit_id=commit.id, _external=True),
+            },
         }
 
 
