@@ -506,6 +506,30 @@
                 },
                 "description": "OK",
             },
+            "HistoryList": {
+                "content": {
+                    "application/json": {
+                        "example": [
+                            [
+                                {
+                                    "benchmark_id": "some-benchmark-uuid-1",
+                                    "case_id": "some-case-uuid-1",
+                                    "context_id": "some-context-uuid-1",
+                                    "machine_hash": "diana-2-4-17179869184",
+                                    "mean": "0.036369",
+                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                    "repository": "https://github.com/apache/arrow",
+                                    "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                    "timestamp": "2021-02-25T01:02:51",
+                                    "unit": "s",
+                                }
+                            ]
+                        ]
+                    }
+                },
+                "description": "OK",
+            },
             "Index": {
                 "content": {
                     "application/json": {
@@ -1172,6 +1196,25 @@
             }
         },
         "/api/docs.json": {},
+        "/api/history/{benchmark_id}/": {
+            "get": {
+                "description": "Get benchmark history.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "benchmark_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/HistoryList"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["History"],
+            }
+        },
         "/api/login/": {
             "post": {
                 "description": "Login with email and password.",
@@ -1375,6 +1418,7 @@
         {"description": "Benchmark comparisons", "name": "Comparisons"},
         {"description": "Benchmark contexts", "name": "Contexts"},
         {"description": "Benchmark distributions", "name": "Distributions"},
+        {"description": "Benchmark history", "name": "History"},
         {"description": "Benchmark machines", "name": "Machines"},
         {"description": "Benchmark runs", "name": "Runs"},
         {"description": "Monitor status", "name": "Ping"},
