@@ -94,12 +94,11 @@ def simple_bar_plot(benchmarks, height=400, width=400):
 
 def time_series_plot(history, benchmark_id, height=250, width=1000):
     unit = get_display_unit(history[0]["unit"])
-    others = [h for h in history if h["benchmark_id"] != benchmark_id]
     current = [h for h in history if h["benchmark_id"] == benchmark_id]
 
-    times = [o["mean"] for o in others]
-    commits = [o["message"] for o in others]
-    dates = [dateutil.parser.isoparse(o["timestamp"]) for o in others]
+    times = [h["mean"] for h in history]
+    commits = [h["message"] for h in history]
+    dates = [dateutil.parser.isoparse(h["timestamp"]) for h in history]
 
     times_x = [c["mean"] for c in current]
     commits_x = [c["message"] for c in current]
