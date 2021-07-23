@@ -133,7 +133,6 @@ def time_series_plot(history, benchmark_id, height=250, width=1000):
     p.xaxis.major_label_orientation = 1
     p.yaxis.axis_label = unit
 
-    p.circle(source=source)
     p.line(source=source)
     p.circle(source=source_x, size=8, color="Orange")
 
