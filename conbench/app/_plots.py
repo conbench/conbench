@@ -10,7 +10,8 @@ class TimeSeriesPlotMixin:
     def _get_history_plot(self, benchmark):
         return json.dumps(
             bokeh.embed.json_item(
-                time_series_plot(self._get_history(benchmark)), "plot-history"
+                time_series_plot(self._get_history(benchmark), benchmark["id"]),
+                "plot-history",
             )
         )
 
@@ -91,13 +92,24 @@ def simple_bar_plot(benchmarks, height=400, width=400):
     return p
 
 
-def time_series_plot(history, height=250, width=1000):
+def time_series_plot(history, benchmark_id, height=250, width=1000):
     unit = get_display_unit(history[0]["unit"])
-    times = [h["mean"] for h in history]
-    dates = [dateutil.parser.isoparse(h["timestamp"]) for h in history]
-    commits = [h["message"] for h in history]
+    others = [h for h in history if h["benchmark_id"] != benchmark_id]
+    current = [h for h in history if h["benchmark_id"] == benchmark_id]
+
+    times = [o["mean"] for o in others]
+    commits = [o["message"] for o in others]
+    dates = [dateutil.parser.isoparse(o["timestamp"]) for o in others]
+
+    times_x = [c["mean"] for c in current]
+    commits_x = [c["message"] for c in current]
+    dates_x = [dateutil.parser.isoparse(c["timestamp"]) for c in current]
+
     source_data = dict(x=dates, y=times, commit=commits)
     source = bokeh.models.ColumnDataSource(data=source_data)
+
+    source_data_x = dict(x=dates_x, y=times_x, commit=commits_x)
+    source_x = bokeh.models.ColumnDataSource(data=source_data_x)
 
     tooltips = [
         ("date", "$x{%F}"),
@@ -120,7 +132,9 @@ def time_series_plot(history, height=250, width=1000):
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
     p.yaxis.axis_label = unit
+
     p.circle(source=source)
     p.line(source=source)
+    p.circle(source=source_x, size=8, color="Orange")
 
     return p
