@@ -138,6 +138,6 @@ def time_series_plot(history, benchmark_id, height=250, width=1000):
     p.line(x=dates, y=mean, color="#ffa600", legend_label="Mean")
     p.circle(source=source_x, size=8, color="#ff6361", legend_label="Benchmark")
 
-    p.legend.location = "top_left"
+    p.legend.location = "bottom_left"
 
     return p
