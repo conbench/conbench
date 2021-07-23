@@ -54,7 +54,6 @@ class CasesBenchmark(conbench.runner.Benchmark):
                 tags=tags,
                 options=kwargs,
             )
-            self.conbench.publish(benchmark)
             yield benchmark, output
 
     def _get_benchmark_function(self, rows, columns):
