@@ -136,7 +136,7 @@ class Conbench(Connection):
     def machine_info(self):
         return machine_info(self.config.host_name)
 
-    def benchmark(self, f, name, **kwargs):
+    def benchmark(self, f, name, publish=True, **kwargs):
         """Benchmark a function and publish the result."""
         tags, context, github, options, _ = self._init(kwargs)
 
@@ -154,11 +154,13 @@ class Conbench(Connection):
             context=context,
             github=github,
             options=options,
+            publish=False,
         )
-        self.publish(benchmark)
+        if publish:
+            self.publish(benchmark)
         return benchmark, output
 
-    def record(self, result, name, **kwargs):
+    def record(self, result, name, publish=True, **kwargs):
         """Record and publish an external benchmark result."""
         tags, context, github, options, output = self._init(kwargs)
 
@@ -189,7 +191,8 @@ class Conbench(Connection):
         if run_name is not None:
             benchmark["run_name"] = run_name
 
-        self.publish(benchmark)
+        if publish:
+            self.publish(benchmark)
         return benchmark, output
 
     def mark_new_batch(self):
