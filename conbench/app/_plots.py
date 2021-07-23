@@ -1,5 +1,6 @@
 import dateutil
 import json
+import statistics
 
 import bokeh.plotting
 
@@ -96,11 +97,12 @@ def time_series_plot(history, benchmark_id, height=250, width=1000):
     unit = get_display_unit(history[0]["unit"])
     current = [h for h in history if h["benchmark_id"] == benchmark_id]
 
-    times = [h["mean"] for h in history]
+    times = [float(h["mean"]) for h in history]
     commits = [h["message"] for h in history]
     dates = [dateutil.parser.isoparse(h["timestamp"]) for h in history]
+    mean = statistics.mean(times)
 
-    times_x = [c["mean"] for c in current]
+    times_x = [float(c["mean"]) for c in current]
     commits_x = [c["message"] for c in current]
     dates_x = [dateutil.parser.isoparse(c["timestamp"]) for c in current]
 
@@ -132,7 +134,8 @@ def time_series_plot(history, benchmark_id, height=250, width=1000):
     p.xaxis.major_label_orientation = 1
     p.yaxis.axis_label = unit
 
-    p.line(source=source)
-    p.circle(source=source_x, size=8, color="Orange")
+    p.line(source=source, legend_label="History")
+    p.line(x=dates, y=mean, color="#ffa600", legend_label="Mean")
+    p.circle(source=source_x, size=8, color="#ff6361", legend_label="Benchmark")
 
     return p
