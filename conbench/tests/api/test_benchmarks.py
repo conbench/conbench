@@ -374,7 +374,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         case_id = summary_1.case_id
 
         # after one result
-        distributions = Distribution.search(filters=[Distribution.case_id == case_id])
+        distributions = Distribution.all(case_id=case_id)
         assert len(distributions) == 1
         assert distributions[0].unit == "s"
         assert distributions[0].observations == 1
@@ -399,7 +399,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         assert summary_1.run.commit_id == summary_2.run.commit_id
 
         # after two results
-        distributions = Distribution.search(filters=[Distribution.case_id == case_id])
+        distributions = Distribution.all(case_id=case_id)
         assert len(distributions) == 1
         assert distributions[0].unit == "s"
         assert distributions[0].observations == 2
