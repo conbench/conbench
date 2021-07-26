@@ -14,8 +14,6 @@ class DistributionEntityAPI(ApiEndpoint):
         except NotFound:
             self.abort_404_not_found()
         return get_distribution_history(
-            summary.run.commit.repository,
-            summary.run.commit.sha,
             summary.case_id,
             summary.context_id,
             summary.run.machine.hash,
