@@ -104,19 +104,20 @@ def simple_bar_plot(benchmarks, height=400, width=400):
 def time_series_plot(history, distribution, benchmark_id, height=250, width=1000):
     dist_by_sha = {d["sha"]: d for d in distribution}
     for h in history:
-        dist = dist_by_sha[h["sha"]]
-        h["mean_mean"] = dist["mean_mean"]
-        h["mean_sd"] = dist["mean_sd"]
+        dist = dist_by_sha.get(h["sha"])
+        if dist:
+            h["mean_mean"] = dist["mean_mean"]
+            h["mean_sd"] = dist["mean_sd"]
 
     unit = get_display_unit(history[0]["unit"])
     current = [h for h in history if h["benchmark_id"] == benchmark_id]
 
-    times = [float(h["mean"]) for h in history]
+    times = [h["mean"] for h in history]
     commits = [h["message"] for h in history]
     dates = [dateutil.parser.isoparse(h["timestamp"]) for h in history]
-    means = [float(h["mean_mean"]) for h in history]
+    means = [h.get("mean_mean") for h in history]
 
-    times_x = [float(c["mean"]) for c in current]
+    times_x = [c["mean"] for c in current]
     commits_x = [c["message"] for c in current]
     dates_x = [dateutil.parser.isoparse(c["timestamp"]) for c in current]
 
