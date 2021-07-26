@@ -108,14 +108,10 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             for summary in summaries:
                 summary.z_score = 0
         elif batch_id:
-            summaries = Summary.search(
-                filters=[Summary.batch_id == batch_id],
-            )
+            summaries = Summary.all(batch_id=batch_id)
             set_z_scores(summaries)
         elif run_id:
-            summaries = Summary.search(
-                filters=[Summary.run_id == run_id],
-            )
+            summaries = Summary.all(run_id=run_id)
             set_z_scores(summaries)
         else:
             summaries = Summary.all(order_by=Summary.timestamp.desc(), limit=500)
