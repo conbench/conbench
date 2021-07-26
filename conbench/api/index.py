@@ -23,7 +23,6 @@ class IndexSerializer:
                 "benchmarks": f.url_for("api.benchmarks", _external=True),
                 "commits": f.url_for("api.commits", _external=True),
                 "contexts": f.url_for("api.contexts", _external=True),
-                "distributions": f.url_for("api.distributions", _external=True),
                 "docs": f.url_for("api.docs", _external=True),
                 "login": f.url_for("api.login", _external=True),
                 "logout": f.url_for("api.logout", _external=True),

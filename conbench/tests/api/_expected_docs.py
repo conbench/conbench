@@ -456,30 +456,6 @@
                 },
                 "description": "OK",
             },
-            "DistributionEntity": {
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "case_id": "some-case-uuid-1",
-                            "context_id": "some-context-uuid-1",
-                            "first_timestamp": "2021-02-25T01:02:51",
-                            "id": "some-distribution-uuid-1",
-                            "last_timestamp": "2021-02-25T01:02:51",
-                            "links": {
-                                "list": "http://localhost/api/distributions/",
-                                "self": "http://localhost/api/distributions/some-distribution-uuid-1/",
-                            },
-                            "machine_hash": "some-machine-hash-1",
-                            "mean_mean": "0.036369",
-                            "observations": 33,
-                            "repository": "https://github.com/apache/arrow",
-                            "sha": "some-sha-1",
-                            "unit": "s",
-                        }
-                    }
-                },
-                "description": "OK",
-            },
             "DistributionList": {
                 "content": {
                     "application/json": {
@@ -490,15 +466,11 @@
                                 "first_timestamp": "2021-02-25T01:02:51",
                                 "id": "some-distribution-uuid-1",
                                 "last_timestamp": "2021-02-25T01:02:51",
-                                "links": {
-                                    "list": "http://localhost/api/distributions/",
-                                    "self": "http://localhost/api/distributions/some-distribution-uuid-1/",
-                                },
-                                "machine_hash": "some-machine-hash-1",
+                                "machine_hash": "diana-2-4-17179869184",
                                 "mean_mean": "0.036369",
-                                "observations": 33,
+                                "mean_sd": "0.000000",
                                 "repository": "https://github.com/apache/arrow",
-                                "sha": "some-sha-1",
+                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
                                 "unit": "s",
                             }
                         ]
@@ -510,21 +482,19 @@
                 "content": {
                     "application/json": {
                         "example": [
-                            [
-                                {
-                                    "benchmark_id": "some-benchmark-uuid-1",
-                                    "case_id": "some-case-uuid-1",
-                                    "context_id": "some-context-uuid-1",
-                                    "machine_hash": "diana-2-4-17179869184",
-                                    "mean": "0.036369",
-                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
-                                    "repository": "https://github.com/apache/arrow",
-                                    "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
-                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                    "timestamp": "2021-02-25T01:02:51",
-                                    "unit": "s",
-                                }
-                            ]
+                            {
+                                "benchmark_id": "some-benchmark-uuid-1",
+                                "case_id": "some-case-uuid-1",
+                                "context_id": "some-context-uuid-1",
+                                "machine_hash": "diana-2-4-17179869184",
+                                "mean": "0.036369",
+                                "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                "repository": "https://github.com/apache/arrow",
+                                "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                "timestamp": "2021-02-25T01:02:51",
+                                "unit": "s",
+                            }
                         ]
                     }
                 },
@@ -538,7 +508,6 @@
                                 "benchmarks": "http://localhost/api/benchmarks/",
                                 "commits": "http://localhost/api/commits/",
                                 "contexts": "http://localhost/api/contexts/",
-                                "distributions": "http://localhost/api/distributions/",
                                 "docs": "http://localhost/api/docs.json",
                                 "login": "http://localhost/api/login/",
                                 "logout": "http://localhost/api/logout/",
@@ -1166,33 +1135,23 @@
                 "tags": ["Contexts"],
             }
         },
-        "/api/distributions/": {
+        "/api/distribution/{benchmark_id}/": {
             "get": {
-                "description": "Get a list of distributions.",
-                "responses": {
-                    "200": {"$ref": "#/components/responses/DistributionList"},
-                    "401": {"$ref": "#/components/responses/401"},
-                },
-                "tags": ["Distributions"],
-            }
-        },
-        "/api/distributions/{distribution_id}/": {
-            "get": {
-                "description": "Get a distribution.",
+                "description": "Get benchmark distribution history.",
                 "parameters": [
                     {
                         "in": "path",
-                        "name": "distribution_id",
+                        "name": "benchmark_id",
                         "required": True,
                         "schema": {"type": "string"},
                     }
                 ],
                 "responses": {
-                    "200": {"$ref": "#/components/responses/DistributionEntity"},
+                    "200": {"$ref": "#/components/responses/DistributionList"},
                     "401": {"$ref": "#/components/responses/401"},
                     "404": {"$ref": "#/components/responses/404"},
                 },
-                "tags": ["Distributions"],
+                "tags": ["Distribution"],
             }
         },
         "/api/docs.json": {},
@@ -1417,7 +1376,7 @@
         {"description": "Benchmarked commits", "name": "Commits"},
         {"description": "Benchmark comparisons", "name": "Comparisons"},
         {"description": "Benchmark contexts", "name": "Contexts"},
-        {"description": "Benchmark distributions", "name": "Distributions"},
+        {"description": "Benchmark distribution", "name": "Distribution"},
         {"description": "Benchmark history", "name": "History"},
         {"description": "Benchmark machines", "name": "Machines"},
         {"description": "Benchmark runs", "name": "Runs"},

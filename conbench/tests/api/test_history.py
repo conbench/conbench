@@ -8,7 +8,7 @@ def _expected_entity(summary):
         summary.id,
         summary.case_id,
         summary.context_id,
-    )[0]
+    )
 
 
 class TestHistoryGet(_asserts.GetEnforcer):
