@@ -111,21 +111,28 @@ def time_series_plot(history, distribution, benchmark_id, height=250, width=1000
 
     unit = get_display_unit(history[0]["unit"])
     current = [h for h in history if h["benchmark_id"] == benchmark_id]
+    with_dist = [h for h in history if h.get("mean_mean")]
 
     times = [h["mean"] for h in history]
     commits = [h["message"] for h in history]
     dates = [dateutil.parser.isoparse(h["timestamp"]) for h in history]
-    means = [h.get("mean_mean") for h in history]
 
     times_x = [c["mean"] for c in current]
     commits_x = [c["message"] for c in current]
     dates_x = [dateutil.parser.isoparse(c["timestamp"]) for c in current]
+
+    times_mean = [w["mean_mean"] for w in with_dist]
+    commits_mean = [w["message"] for w in with_dist]
+    dates_mean = [dateutil.parser.isoparse(w["timestamp"]) for w in with_dist]
 
     source_data = dict(x=dates, y=times, commit=commits)
     source = bokeh.models.ColumnDataSource(data=source_data)
 
     source_data_x = dict(x=dates_x, y=times_x, commit=commits_x)
     source_x = bokeh.models.ColumnDataSource(data=source_data_x)
+
+    source_data_mean = dict(x=dates_mean, y=times_mean, commit=commits_mean)
+    source_mean = bokeh.models.ColumnDataSource(data=source_data_mean)
 
     tooltips = [
         ("date", "$x{%F}"),
@@ -150,7 +157,7 @@ def time_series_plot(history, distribution, benchmark_id, height=250, width=1000
     p.yaxis.axis_label = unit
 
     p.line(source=source, legend_label="History")
-    p.line(x=dates, y=means, color="#ffa600", legend_label="Mean")
+    p.line(source=source_mean, color="#ffa600", legend_label="Mean")
     p.circle(source=source_x, size=8, color="#ff6361", legend_label="Benchmark")
 
     p.legend.location = "bottom_left"
