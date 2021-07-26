@@ -82,7 +82,7 @@ class DistributionSerializer:
     many = _Serializer(many=True)
 
 
-def get_distribution_history(repository, sha, case_id, context_id, machine_hash):
+def get_distribution_history(case_id, context_id, machine_hash):
     return (
         Session.query(
             Distribution.id,
@@ -98,8 +98,6 @@ def get_distribution_history(repository, sha, case_id, context_id, machine_hash)
             Distribution.last_timestamp,
         )
         .filter(
-            Distribution.repository == repository,
-            Distribution.sha == sha,
             Distribution.case_id == case_id,
             Distribution.context_id == context_id,
             Distribution.machine_hash == machine_hash,
