@@ -125,13 +125,11 @@ def time_series_plot(history, distribution, benchmark_id, height=250, width=1000
     commits_mean = [w["message"] for w in with_dist]
     dates_mean = [dateutil.parser.isoparse(w["timestamp"]) for w in with_dist]
 
-    alert_min, alert_max, commits_alert, dates_alert = [], [], [], []
+    alert_min, alert_max = [], []
     for w in with_dist:
         alert = 5 * float(w["mean_sd"])
         alert_min.append(float(w["mean_mean"]) - alert)
         alert_max.append(float(w["mean_mean"]) + alert)
-        commits_alert.append(w["message"])
-        dates_alert.append(dateutil.parser.isoparse(w["timestamp"]))
 
     source_data = dict(x=dates, y=times, commit=commits)
     source = bokeh.models.ColumnDataSource(data=source_data)
@@ -142,10 +140,10 @@ def time_series_plot(history, distribution, benchmark_id, height=250, width=1000
     source_data_mean = dict(x=dates_mean, y=times_mean, commit=commits_mean)
     source_mean = bokeh.models.ColumnDataSource(data=source_data_mean)
 
-    source_data_alert_min = dict(x=dates_alert, y=alert_min, commit=commits_alert)
+    source_data_alert_min = dict(x=dates_mean, y=alert_min, commit=commits_mean)
     source_alert_min = bokeh.models.ColumnDataSource(data=source_data_alert_min)
 
-    source_data_alert_max = dict(x=dates_alert, y=alert_max, commit=commits_alert)
+    source_data_alert_max = dict(x=dates_mean, y=alert_max, commit=commits_mean)
     source_alert_max = bokeh.models.ColumnDataSource(data=source_data_alert_max)
 
     tooltips = [
