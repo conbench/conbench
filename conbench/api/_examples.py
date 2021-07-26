@@ -226,51 +226,39 @@ def _api_context_entity(context_id, links=True):
 
 def _api_distribution_entity(
     distribution_id,
-    sha,
     case_id,
     context_id,
-    machine_hash,
-    observations,
-    links=True,
 ):
     result = {
         "id": distribution_id,
-        "sha": sha,
         "case_id": case_id,
         "context_id": context_id,
-        "machine_hash": machine_hash,
+        "machine_hash": "diana-2-4-17179869184",
         "unit": "s",
         "mean_mean": "0.036369",
+        "mean_sd": "0.000000",
+        "repository": "https://github.com/apache/arrow",
+        "sha": "02addad336ba19a654f9c857ede546331be7b631",
         "first_timestamp": "2021-02-25T01:02:51",
         "last_timestamp": "2021-02-25T01:02:51",
-        "observations": observations,
-        "repository": "https://github.com/apache/arrow",
-        "links": {
-            "list": "http://localhost/api/distributions/",
-            "self": "http://localhost/api/distributions/%s/" % distribution_id,
-        },
     }
-    if not links:
-        result.pop("links", None)
     return result
 
 
 def _api_history_entity(benchmark_id, case_id, context_id):
-    return [
-        {
-            "benchmark_id": benchmark_id,
-            "case_id": case_id,
-            "context_id": context_id,
-            "machine_hash": "diana-2-4-17179869184",
-            "mean": "0.036369",
-            "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
-            "repository": "https://github.com/apache/arrow",
-            "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
-            "sha": "02addad336ba19a654f9c857ede546331be7b631",
-            "timestamp": "2021-02-25T01:02:51",
-            "unit": "s",
-        },
-    ]
+    return {
+        "benchmark_id": benchmark_id,
+        "case_id": case_id,
+        "context_id": context_id,
+        "machine_hash": "diana-2-4-17179869184",
+        "unit": "s",
+        "mean": "0.036369",
+        "repository": "https://github.com/apache/arrow",
+        "sha": "02addad336ba19a654f9c857ede546331be7b631",
+        "timestamp": "2021-02-25T01:02:51",
+        "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+        "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+    }
 
 
 def _api_machine_entity(machine_id, links=True):
@@ -374,11 +362,8 @@ COMPARE_LIST = _api_compare_list(
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
 DISTRIBUTION_ENTITY = _api_distribution_entity(
     "some-distribution-uuid-1",
-    "some-sha-1",
     "some-case-uuid-1",
     "some-context-uuid-1",
-    "some-machine-hash-1",
-    33,
 )
 HISTORY_ENTITY = _api_history_entity(
     "some-benchmark-uuid-1",
@@ -432,7 +417,6 @@ API_INDEX = {
         "benchmarks": "http://localhost/api/benchmarks/",
         "commits": "http://localhost/api/commits/",
         "contexts": "http://localhost/api/contexts/",
-        "distributions": "http://localhost/api/distributions/",
         "docs": "http://localhost/api/docs.json",
         "login": "http://localhost/api/login/",
         "logout": "http://localhost/api/logout/",

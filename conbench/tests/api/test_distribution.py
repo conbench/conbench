@@ -7,16 +7,12 @@ from ...tests.api import _fixtures
 def _expected_entity(distribution):
     return _api_distribution_entity(
         distribution.id,
-        distribution.sha,
         distribution.case_id,
         distribution.context_id,
-        distribution.machine_hash,
-        distribution.observations,
     )
 
 
-def create_distribution():
-    summary = _fixtures.create_benchmark_summary()
+def get_distribution(summary):
     return Distribution.one(
         sha=summary.run.commit.sha,
         case_id=summary.case_id,
@@ -26,28 +22,15 @@ def create_distribution():
 
 
 class TestDistributionGet(_asserts.GetEnforcer):
-    url = "/api/distributions/{}/"
+    url = "/api/distribution/{}/"
     public = True
 
     def _create(self):
-        return create_distribution()
+        return _fixtures.create_benchmark_summary()
 
     def test_get_distribution(self, client):
         self.authenticate(client)
-        distribution = self._create()
-        response = client.get(f"/api/distributions/{distribution.id}/")
-        self.assert_200_ok(response, _expected_entity(distribution))
-
-
-class TestDistributionList(_asserts.ListEnforcer):
-    url = "/api/distributions/"
-    public = True
-
-    def _create(self):
-        return create_distribution()
-
-    def test_distribution_list(self, client):
-        self.authenticate(client)
-        distribution = self._create()
-        response = client.get("/api/distributions/")
+        summary = self._create()
+        distribution = get_distribution(summary)
+        response = client.get(f"/api/distribution/{summary.id}/")
         self.assert_200_ok(response, contains=_expected_entity(distribution))
