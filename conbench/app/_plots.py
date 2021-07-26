@@ -1,6 +1,5 @@
 import dateutil
 import json
-import statistics
 
 import bokeh.plotting
 
@@ -9,9 +8,11 @@ from ..hacks import sorted_data
 
 class TimeSeriesPlotMixin:
     def _get_history_plot(self, benchmark):
+        history = self._get_history(benchmark)
+        distribution = self._get_distribution(benchmark)
         return json.dumps(
             bokeh.embed.json_item(
-                time_series_plot(self._get_history(benchmark), benchmark["id"]),
+                time_series_plot(history, distribution, benchmark["id"]),
                 "plot-history",
             )
         )
@@ -20,6 +21,13 @@ class TimeSeriesPlotMixin:
         response = self.api_get("api.history", benchmark_id=benchmark["id"])
         if response.status_code != 200:
             self.flash("Error getting history.")
+            return []
+        return response.json
+
+    def _get_distribution(self, benchmark):
+        response = self.api_get("api.distribution", benchmark_id=benchmark["id"])
+        if response.status_code != 200:
+            self.flash("Error getting distribution.")
             return []
         return response.json
 
@@ -93,16 +101,23 @@ def simple_bar_plot(benchmarks, height=400, width=400):
     return p
 
 
-def time_series_plot(history, benchmark_id, height=250, width=1000):
+def time_series_plot(history, distribution, benchmark_id, height=250, width=1000):
+    dist_by_sha = {d["sha"]: d for d in distribution}
+    for h in history:
+        dist = dist_by_sha.get(h["sha"])
+        if dist:
+            h["mean_mean"] = dist["mean_mean"]
+            h["mean_sd"] = dist["mean_sd"]
+
     unit = get_display_unit(history[0]["unit"])
     current = [h for h in history if h["benchmark_id"] == benchmark_id]
 
-    times = [float(h["mean"]) for h in history]
+    times = [h["mean"] for h in history]
     commits = [h["message"] for h in history]
     dates = [dateutil.parser.isoparse(h["timestamp"]) for h in history]
-    mean = statistics.mean(times)
+    means = [h.get("mean_mean") for h in history]
 
-    times_x = [float(c["mean"]) for c in current]
+    times_x = [c["mean"] for c in current]
     commits_x = [c["message"] for c in current]
     dates_x = [dateutil.parser.isoparse(c["timestamp"]) for c in current]
 
@@ -135,7 +150,7 @@ def time_series_plot(history, benchmark_id, height=250, width=1000):
     p.yaxis.axis_label = unit
 
     p.line(source=source, legend_label="History")
-    p.line(x=dates, y=mean, color="#ffa600", legend_label="Mean")
+    p.line(x=dates, y=means, color="#ffa600", legend_label="Mean")
     p.circle(source=source_x, size=8, color="#ff6361", legend_label="Benchmark")
 
     p.legend.location = "bottom_left"
