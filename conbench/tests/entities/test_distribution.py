@@ -125,7 +125,7 @@ def create_benchmark_summary(results, commit, name=None):
     return summary
 
 
-def test_distibution_queries():
+def test_distribution_queries():
     query = str(get_commit_index(REPO).statement.compile())
     assert query == COMMIT_INDEX
     query = str(get_sha_row_number(REPO, "SHA").statement.compile())
@@ -136,7 +136,7 @@ def test_distibution_queries():
     assert query == DISTRIBUTION
 
 
-def test_distibution():
+def test_distribution():
     commit_1 = Commit.create(
         {
             "sha": "11111",
@@ -452,7 +452,7 @@ def test_distibution():
     assert summary_x.z_score == 0
 
 
-def test_distibution_multiple_runs_same_commit():
+def test_distribution_multiple_runs_same_commit():
     commit_1 = Commit.create(
         {
             "sha": "xxxxx",
