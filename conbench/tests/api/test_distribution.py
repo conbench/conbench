@@ -9,6 +9,7 @@ def _expected_entity(distribution):
         distribution.id,
         distribution.case_id,
         distribution.context_id,
+        distribution.commit_id,
     )
 
 

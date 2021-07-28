@@ -228,11 +228,13 @@ def _api_distribution_entity(
     distribution_id,
     case_id,
     context_id,
+    commit_id,
 ):
     result = {
         "id": distribution_id,
         "case_id": case_id,
         "context_id": context_id,
+        "commit_id": commit_id,
         "machine_hash": "diana-2-4-17179869184",
         "unit": "s",
         "mean_mean": "0.036369",
@@ -364,6 +366,7 @@ DISTRIBUTION_ENTITY = _api_distribution_entity(
     "some-distribution-uuid-1",
     "some-case-uuid-1",
     "some-context-uuid-1",
+    "some-commit-uuid-1",
 )
 HISTORY_ENTITY = _api_history_entity(
     "some-benchmark-uuid-1",

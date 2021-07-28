@@ -462,6 +462,7 @@
                         "example": [
                             {
                                 "case_id": "some-case-uuid-1",
+                                "commit_id": "some-commit-uuid-1",
                                 "context_id": "some-context-uuid-1",
                                 "first_timestamp": "2021-02-25T01:02:51",
                                 "id": "some-distribution-uuid-1",
