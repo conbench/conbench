@@ -25,6 +25,7 @@ class Distribution(Base, EntityMixin):
     repository = NotNull(s.String(100))
     case_id = NotNull(s.String(50), s.ForeignKey("case.id", ondelete="CASCADE"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id", ondelete="CASCADE"))
+    commit_id = Nullable(s.String(50), s.ForeignKey("commit.id", ondelete="CASCADE"))
     machine_hash = NotNull(s.String(250))
     unit = NotNull(s.Text)
     mean_mean = Nullable(s.Numeric, check("mean_mean>=0"))
@@ -53,6 +54,7 @@ s.Index("distribution_sha_index", Distribution.sha)
 s.Index("distribution_repository_index", Distribution.repository)
 s.Index("distribution_case_id_index", Distribution.case_id)
 s.Index("distribution_context_id_index", Distribution.context_id)
+s.Index("distribution_commit_id_index", Distribution.commit_id)
 s.Index("distribution_machine_hash_index", Distribution.machine_hash)
 
 
@@ -67,6 +69,7 @@ class _Serializer(EntitySerializer):
             "repository": distribution.repository,
             "case_id": distribution.case_id,
             "context_id": distribution.context_id,
+            "commit_id": distribution.commit_id,
             "machine_hash": distribution.machine_hash,
             "unit": distribution.unit,
             "mean_mean": self.decimal_fmt.format(distribution.mean_mean),
@@ -90,6 +93,7 @@ def get_distribution_history(case_id, context_id, machine_hash):
             Distribution.sha,
             Distribution.case_id,
             Distribution.context_id,
+            Distribution.commit_id,
             Distribution.machine_hash,
             Distribution.unit,
             Distribution.mean_mean,
@@ -127,7 +131,9 @@ def get_commits_up(repository, sha, limit):
     return Session.query(index).filter(index.c.row_number >= n).limit(limit)
 
 
-def get_distribution(repository, sha, case_id, context_id, machine_hash, limit):
+def get_distribution(
+    repository, sha, case_id, context_id, commit_id, machine_hash, limit
+):
     from ..entities.summary import Summary
 
     commits_up = get_commits_up(repository, sha, limit).subquery().alias("commits_up")
@@ -135,8 +141,9 @@ def get_distribution(repository, sha, case_id, context_id, machine_hash, limit):
         Session.query(
             func.text(repository).label("repository"),
             func.text(sha).label("sha"),
-            Summary.case_id,
-            Summary.context_id,
+            func.text(case_id).label("case_id"),
+            func.text(context_id).label("context_id"),
+            func.text(commit_id).label("commit_id"),
             Machine.hash,
             func.max(Summary.unit).label("unit"),
             func.avg(Summary.mean).label("mean_mean"),
@@ -179,6 +186,7 @@ def update_distribution(repository, sha, summary, limit):
         sha,
         summary.case_id,
         summary.context_id,
+        summary.run.commit_id,
         summary.run.machine.hash,
         limit,
     ).first()
