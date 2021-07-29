@@ -61,6 +61,7 @@ def get_history(case_id, context_id, machine_hash):
             Machine.hash == machine_hash,
             Distribution.case_id == case_id,
             Distribution.context_id == context_id,
+            Distribution.machine_hash == machine_hash,
         )
         .order_by(Commit.timestamp.asc())
         .all()
