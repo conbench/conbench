@@ -7,7 +7,6 @@ from ..db import Session
 from ..entities._entity import (
     Base,
     EntityMixin,
-    EntitySerializer,
     generate_uuid,
     NotNull,
     Nullable,
@@ -52,55 +51,6 @@ s.Index("distribution_case_id_index", Distribution.case_id)
 s.Index("distribution_context_id_index", Distribution.context_id)
 s.Index("distribution_commit_id_index", Distribution.commit_id)
 s.Index("distribution_machine_hash_index", Distribution.machine_hash)
-
-
-class _Serializer(EntitySerializer):
-    decimal_fmt = "{:.6f}"
-
-    def _dump(self, distribution):
-        standard_deviation = distribution.mean_sd if distribution.mean_sd else 0
-        result = {
-            "id": distribution.id,
-            "case_id": distribution.case_id,
-            "context_id": distribution.context_id,
-            "commit_id": distribution.commit_id,
-            "machine_hash": distribution.machine_hash,
-            "unit": distribution.unit,
-            "mean_mean": self.decimal_fmt.format(distribution.mean_mean),
-            "mean_sd": self.decimal_fmt.format(standard_deviation),
-            "first_timestamp": distribution.first_timestamp.isoformat(),
-            "last_timestamp": distribution.last_timestamp.isoformat(),
-        }
-        return result
-
-
-class DistributionSerializer:
-    one = _Serializer()
-    many = _Serializer(many=True)
-
-
-def get_distribution_history(case_id, context_id, machine_hash):
-    return (
-        Session.query(
-            Distribution.id,
-            Distribution.case_id,
-            Distribution.context_id,
-            Distribution.commit_id,
-            Distribution.machine_hash,
-            Distribution.unit,
-            Distribution.mean_mean,
-            Distribution.mean_sd,
-            Distribution.first_timestamp,
-            Distribution.last_timestamp,
-        )
-        .filter(
-            Distribution.case_id == case_id,
-            Distribution.context_id == context_id,
-            Distribution.machine_hash == machine_hash,
-        )
-        .order_by(Distribution.first_timestamp.asc())
-        .all()
-    )
 
 
 def get_commit_index(repository):

@@ -1,5 +1,6 @@
 import copy
 import datetime
+import decimal
 
 from ...entities.commit import Commit
 from ...entities.history import get_history
@@ -122,6 +123,8 @@ def test_history():
             REPO,
             "message 11111",
             datetime.datetime(2021, 11, 1),
+            decimal.Decimal("2.0300000000000000"),
+            None,
             "commit: some commit",
         ),
         (
@@ -135,6 +138,8 @@ def test_history():
             REPO,
             "message 22222",
             datetime.datetime(2021, 11, 2),
+            decimal.Decimal("2.0300000000000000"),
+            decimal.Decimal("0"),
             "commit: some commit",
         ),
         (
@@ -148,6 +153,8 @@ def test_history():
             REPO,
             "message 33333",
             datetime.datetime(2021, 11, 3),
+            decimal.Decimal("1.6966666666666667"),
+            decimal.Decimal("0.57735026918962576451"),
             "commit: some commit",
         ),
         (
@@ -161,6 +168,8 @@ def test_history():
             REPO,
             "message 44444",
             datetime.datetime(2021, 11, 4),
+            decimal.Decimal("1.8440000000000000"),
+            decimal.Decimal("0.82035358230460601799"),
             "commit: some commit",
         ),
         (
@@ -174,7 +183,11 @@ def test_history():
             REPO,
             "message 44444",
             datetime.datetime(2021, 11, 4),
+            decimal.Decimal("1.8440000000000000"),
+            decimal.Decimal("0.82035358230460601799"),
             "commit: some commit",
         ),
     ]
-    assert set(get_history(case_id, context_id, machine_hash)) == set(expected)
+    actual = get_history(case_id, context_id, machine_hash)
+    assert len(actual) == len(expected)
+    assert set(actual) == set(expected)
