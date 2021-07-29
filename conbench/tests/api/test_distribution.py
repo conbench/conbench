@@ -15,9 +15,9 @@ def _expected_entity(distribution):
 
 def get_distribution(summary):
     return Distribution.one(
-        sha=summary.run.commit.sha,
         case_id=summary.case_id,
         context_id=summary.context_id,
+        commit_id=summary.run.commit.id,
         machine_hash=summary.run.machine.hash,
     )
 

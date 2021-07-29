@@ -239,8 +239,6 @@ def _api_distribution_entity(
         "unit": "s",
         "mean_mean": "0.036369",
         "mean_sd": "0.000000",
-        "repository": "https://github.com/apache/arrow",
-        "sha": "02addad336ba19a654f9c857ede546331be7b631",
         "first_timestamp": "2021-02-25T01:02:51",
         "last_timestamp": "2021-02-25T01:02:51",
     }

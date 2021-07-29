@@ -21,11 +21,9 @@ from ..entities.run import Run
 class Distribution(Base, EntityMixin):
     __tablename__ = "distribution"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
-    sha = NotNull(s.String(50))
-    repository = NotNull(s.String(100))
     case_id = NotNull(s.String(50), s.ForeignKey("case.id", ondelete="CASCADE"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id", ondelete="CASCADE"))
-    commit_id = Nullable(s.String(50), s.ForeignKey("commit.id", ondelete="CASCADE"))
+    commit_id = NotNull(s.String(50), s.ForeignKey("commit.id", ondelete="CASCADE"))
     machine_hash = NotNull(s.String(250))
     unit = NotNull(s.Text)
     mean_mean = Nullable(s.Numeric, check("mean_mean>=0"))
@@ -44,14 +42,12 @@ class Distribution(Base, EntityMixin):
 
 s.Index(
     "distribution_index",
-    Distribution.sha,
     Distribution.case_id,
     Distribution.context_id,
+    Distribution.commit_id,
     Distribution.machine_hash,
     unique=True,
 )
-s.Index("distribution_sha_index", Distribution.sha)
-s.Index("distribution_repository_index", Distribution.repository)
 s.Index("distribution_case_id_index", Distribution.case_id)
 s.Index("distribution_context_id_index", Distribution.context_id)
 s.Index("distribution_commit_id_index", Distribution.commit_id)
@@ -65,8 +61,6 @@ class _Serializer(EntitySerializer):
         standard_deviation = distribution.mean_sd if distribution.mean_sd else 0
         result = {
             "id": distribution.id,
-            "sha": distribution.sha,
-            "repository": distribution.repository,
             "case_id": distribution.case_id,
             "context_id": distribution.context_id,
             "commit_id": distribution.commit_id,
@@ -89,8 +83,6 @@ def get_distribution_history(case_id, context_id, machine_hash):
     return (
         Session.query(
             Distribution.id,
-            Distribution.repository,
-            Distribution.sha,
             Distribution.case_id,
             Distribution.context_id,
             Distribution.commit_id,
@@ -131,19 +123,24 @@ def get_commits_up(repository, sha, limit):
     return Session.query(index).filter(index.c.row_number >= n).limit(limit)
 
 
-def get_distribution(
-    repository, sha, case_id, context_id, commit_id, machine_hash, limit
-):
+def get_distribution(summary, limit):
     from ..entities.summary import Summary
 
-    commits_up = get_commits_up(repository, sha, limit).subquery().alias("commits_up")
+    commits_up = (
+        get_commits_up(
+            summary.run.commit.repository,
+            summary.run.commit.sha,
+            limit,
+        )
+        .subquery()
+        .alias("commits_up")
+    )
+
     return (
         Session.query(
-            func.text(repository).label("repository"),
-            func.text(sha).label("sha"),
-            func.text(case_id).label("case_id"),
-            func.text(context_id).label("context_id"),
-            func.text(commit_id).label("commit_id"),
+            func.text(summary.case_id).label("case_id"),
+            func.text(summary.context_id).label("context_id"),
+            func.text(summary.run.commit_id).label("commit_id"),
             Machine.hash,
             func.max(Summary.unit).label("unit"),
             func.avg(Summary.mean).label("mean_mean"),
@@ -171,25 +168,17 @@ def get_distribution(
         .join(commits_up, commits_up.c.id == Run.commit_id)
         .filter(
             Run.name.like("commit: %"),
-            Summary.case_id == case_id,
-            Summary.context_id == context_id,
-            Machine.hash == machine_hash,
+            Summary.case_id == summary.case_id,
+            Summary.context_id == summary.context_id,
+            Machine.hash == summary.run.machine.hash,
         )
     )
 
 
-def update_distribution(repository, sha, summary, limit):
+def update_distribution(summary, limit):
     from ..db import engine
 
-    distribution = get_distribution(
-        repository,
-        sha,
-        summary.case_id,
-        summary.context_id,
-        summary.run.commit_id,
-        summary.run.machine.hash,
-        limit,
-    ).first()
+    distribution = get_distribution(summary, limit).first()
 
     if not distribution:
         return
@@ -204,7 +193,7 @@ def update_distribution(repository, sha, summary, limit):
             insert(Distribution.__table__)
             .values(values)
             .on_conflict_do_update(
-                index_elements=["sha", "case_id", "context_id", "machine_hash"],
+                index_elements=["case_id", "context_id", "commit_id", "machine_hash"],
                 set_=values,
             )
         )
@@ -215,15 +204,21 @@ def set_z_scores(summaries):
     if not summaries:
         return
 
+    for summary in summaries:
+        summary.z_score = 0
+
     first = summaries[0]
-    repository = first.run.commit.repository
-    sha = first.run.commit.parent
-    machine_hash = first.run.machine.hash
+    parent_commit = Commit.first(
+        sha=first.run.commit.parent,
+        repository=first.run.commit.repository,
+    )
+
+    if not parent_commit:
+        return
 
     where = [
-        Distribution.repository == repository,
-        Distribution.sha == sha,
-        Distribution.machine_hash == machine_hash,
+        Distribution.commit_id == parent_commit.id,
+        Distribution.machine_hash == first.run.machine.hash,
     ]
     if len(summaries) == 1:
         where.extend(
@@ -239,6 +234,7 @@ def set_z_scores(summaries):
         Distribution.mean_mean,
         Distribution.mean_sd,
     ]
+
     distributions = Session.query(*cols).filter(*where).all()
     lookup = {f"{d.case_id}-{d.context_id}": d for d in distributions}
 

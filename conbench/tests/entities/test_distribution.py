@@ -57,7 +57,7 @@ DISTRIBUTION = """WITH ordered_commits AS
 (SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
 FROM commit 
 WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
- SELECT text(:text_1) AS repository, text(:text_2) AS sha, text(:text_3) AS case_id, text(:text_4) AS context_id, text(:text_5) AS commit_id, concat(machine.name, :concat_1, machine.cpu_core_count, :concat_2, machine.cpu_thread_count, :concat_3, machine.memory_bytes) AS hash, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
+ SELECT text(:text_1) AS case_id, text(:text_2) AS context_id, text(:text_3) AS commit_id, concat(machine.name, :concat_1, machine.cpu_core_count, :concat_2, machine.cpu_thread_count, :concat_3, machine.memory_bytes) AS hash, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
 FROM summary JOIN run ON run.id = summary.run_id JOIN machine ON machine.id = run.machine_id JOIN (SELECT commit_index.id AS id, commit_index.sha AS sha, commit_index.timestamp AS timestamp, commit_index.row_number AS row_number 
 FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
@@ -132,9 +132,21 @@ def test_distribution_queries():
     assert query == ROW_NUMBER
     query = str(get_commits_up(REPO, "SHA", 3).statement.compile())
     assert query == COMMITS_UP
-    query = str(
-        get_distribution(REPO, "SHA", "ID", "ID", "ID", "ID", 3).statement.compile()
+
+    commit = Commit.create(
+        {
+            "sha": "some commit",
+            "repository": "some repo",
+            "parent": "some parent",
+            "timestamp": datetime.datetime(2021, 11, 1),
+            "message": "message 11111",
+            "author_name": "author_name",
+            "author_login": "author_login",
+            "author_avatar": "author_avatar",
+        }
     )
+    summary = create_benchmark_summary([1, 2, 3], commit, name=_uuid())
+    query = str(get_distribution(summary, 3).statement.compile())
     assert query == DISTRIBUTION
 
 
@@ -244,10 +256,6 @@ def test_distribution():
     assert summary_1.run.machine_id == summary_4.run.machine_id
     assert summary_1.run.machine_id == summary_5.run.machine_id
 
-    case_id = summary_1.case_id
-    context_id = summary_1.context_id
-    machine_hash = summary_1.run.machine.hash
-
     assert Distribution.count() >= 7
 
     # ----- get_commit_index
@@ -303,12 +311,8 @@ def test_distribution():
 
     # ----- get_distribution
 
-    assert get_distribution(
-        REPO, "55555", case_id, context_id, commit_5.id, machine_hash, 10
-    ).all() == [
+    assert get_distribution(summary_5, 10).all() == [
         (
-            REPO,
-            "55555",
             summary_5.case_id,
             summary_5.context_id,
             commit_5.id,
@@ -327,12 +331,8 @@ def test_distribution():
             5,
         )
     ]
-    assert get_distribution(
-        REPO, "44444", case_id, context_id, commit_4.id, machine_hash, 10
-    ).all() == [
+    assert get_distribution(summary_4, 10).all() == [
         (
-            REPO,
-            "44444",
             summary_4.case_id,
             summary_4.context_id,
             commit_4.id,
@@ -351,12 +351,8 @@ def test_distribution():
             4,
         )
     ]
-    assert get_distribution(
-        REPO, "33333", case_id, context_id, commit_3.id, machine_hash, 10
-    ).all() == [
+    assert get_distribution(summary_3, 10).all() == [
         (
-            REPO,
-            "33333",
             summary_3.case_id,
             summary_3.context_id,
             commit_3.id,
@@ -375,12 +371,8 @@ def test_distribution():
             3,
         )
     ]
-    assert get_distribution(
-        REPO, "22222", case_id, context_id, commit_2.id, machine_hash, 10
-    ).all() == [
+    assert get_distribution(summary_2, 10).all() == [
         (
-            REPO,
-            "22222",
             summary_2.case_id,
             summary_2.context_id,
             commit_2.id,
@@ -399,12 +391,8 @@ def test_distribution():
             2,
         )
     ]
-    assert get_distribution(
-        REPO, "11111", case_id, context_id, commit_1.id, machine_hash, 10
-    ).all() == [
+    assert get_distribution(summary_1, 10).all() == [
         (
-            REPO,
-            "11111",
             summary_1.case_id,
             summary_1.context_id,
             commit_1.id,
@@ -500,14 +488,9 @@ def test_distribution_multiple_runs_same_commit():
 
     case_id = summary_1.case_id
     context_id = summary_1.context_id
-    machine_hash = summary_1.run.machine.hash
 
-    assert get_distribution(
-        REPO, "xxxxx", case_id, context_id, commit_1.id, machine_hash, 10
-    ).all() == [
+    assert get_distribution(summary_1, 10).all() == [
         (
-            REPO,
-            "xxxxx",
             case_id,
             context_id,
             commit_1.id,
@@ -527,12 +510,8 @@ def test_distribution_multiple_runs_same_commit():
         )
     ]
 
-    assert get_distribution(
-        REPO, "yyyyy", case_id, context_id, commit_2.id, machine_hash, 10
-    ).all() == [
+    assert get_distribution(summary_2, 10).all() == [
         (
-            REPO,
-            "yyyyy",
             case_id,
             context_id,
             commit_2.id,

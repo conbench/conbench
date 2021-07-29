@@ -470,8 +470,6 @@
                                 "machine_hash": "diana-2-4-17179869184",
                                 "mean_mean": "0.036369",
                                 "mean_sd": "0.000000",
-                                "repository": "https://github.com/apache/arrow",
-                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
                                 "unit": "s",
                             }
                         ]
