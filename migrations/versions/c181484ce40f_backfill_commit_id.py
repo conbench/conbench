@@ -7,6 +7,7 @@ Create Date: 2021-07-29 08:13:59.714930
 """
 from alembic import op
 from sqlalchemy import MetaData
+from sqlalchemy import distinct, select
 
 
 # revision identifiers, used by Alembic.
@@ -25,27 +26,26 @@ def upgrade():
     distribution_table = meta.tables["distribution"]
 
     commits = connection.execute(commit_table.select())
-    distributions = connection.execute(distribution_table.select())
+    shas = connection.execute(select(distinct(distribution_table.c.sha)))
     commits_by_sha = {c["sha"]: c for c in commits}
 
-    i = 1
+    i, count = 1, shas.rowcount
 
-    for distribution in distributions:
-        if distribution.commit_id:
-            continue
+    for row in shas:
+        sha = row.sha
 
-        commit = commits_by_sha.get(distribution["sha"])
+        commit = commits_by_sha.get(sha)
         if not commit:
-            print(f"Could not find commit for distribution {distribution.id}")
+            print(f"Could not find commit sha {sha}")
             continue
 
         connection.execute(
             distribution_table.update()
-            .where(distribution_table.c.id == distribution.id)
+            .where(distribution_table.c.sha == sha)
             .values(commit_id=commit.id)
         )
 
-        print(f"Updated distribution {1}")
+        print(f"Updated sha {i} of {count}")
         i += 1
 
     print("Done with migration")
