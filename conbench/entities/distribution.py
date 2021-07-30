@@ -47,10 +47,6 @@ s.Index(
     Distribution.machine_hash,
     unique=True,
 )
-s.Index("distribution_case_id_index", Distribution.case_id)
-s.Index("distribution_context_id_index", Distribution.context_id)
-s.Index("distribution_commit_id_index", Distribution.commit_id)
-s.Index("distribution_machine_hash_index", Distribution.machine_hash)
 
 
 def get_commit_index(repository):
