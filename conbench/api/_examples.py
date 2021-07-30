@@ -224,29 +224,6 @@ def _api_context_entity(context_id, links=True):
     return result
 
 
-def _api_distribution_entity(
-    distribution_id,
-    case_id,
-    context_id,
-    commit_id,
-):
-    result = {
-        "id": distribution_id,
-        "case_id": case_id,
-        "context_id": context_id,
-        "commit_id": commit_id,
-        "machine_hash": "diana-2-4-17179869184",
-        "unit": "s",
-        "mean_mean": "0.036369",
-        "mean_sd": "0.000000",
-        "repository": "https://github.com/apache/arrow",
-        "sha": "02addad336ba19a654f9c857ede546331be7b631",
-        "first_timestamp": "2021-02-25T01:02:51",
-        "last_timestamp": "2021-02-25T01:02:51",
-    }
-    return result
-
-
 def _api_history_entity(benchmark_id, case_id, context_id):
     return {
         "benchmark_id": benchmark_id,
@@ -255,6 +232,8 @@ def _api_history_entity(benchmark_id, case_id, context_id):
         "machine_hash": "diana-2-4-17179869184",
         "unit": "s",
         "mean": "0.036369",
+        "distribution_mean": "0.036369",
+        "distribution_stdev": "0.000000",
         "repository": "https://github.com/apache/arrow",
         "sha": "02addad336ba19a654f9c857ede546331be7b631",
         "timestamp": "2021-02-25T01:02:51",
@@ -362,12 +341,6 @@ COMPARE_LIST = _api_compare_list(
     ],
 )
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
-DISTRIBUTION_ENTITY = _api_distribution_entity(
-    "some-distribution-uuid-1",
-    "some-case-uuid-1",
-    "some-context-uuid-1",
-    "some-commit-uuid-1",
-)
 HISTORY_ENTITY = _api_history_entity(
     "some-benchmark-uuid-1",
     "some-case-uuid-1",

@@ -9,10 +9,9 @@ from ..hacks import sorted_data
 class TimeSeriesPlotMixin:
     def _get_history_plot(self, benchmark):
         history = self._get_history(benchmark)
-        distribution = self._get_distribution(benchmark)
         return json.dumps(
             bokeh.embed.json_item(
-                time_series_plot(history, distribution, benchmark["id"]),
+                time_series_plot(history, benchmark["id"]),
                 "plot-history",
             )
         )
@@ -21,13 +20,6 @@ class TimeSeriesPlotMixin:
         response = self.api_get("api.history", benchmark_id=benchmark["id"])
         if response.status_code != 200:
             self.flash("Error getting history.")
-            return []
-        return response.json
-
-    def _get_distribution(self, benchmark):
-        response = self.api_get("api.distribution", benchmark_id=benchmark["id"])
-        if response.status_code != 200:
-            self.flash("Error getting distribution.")
             return []
         return response.json
 
@@ -101,17 +93,10 @@ def simple_bar_plot(benchmarks, height=400, width=400):
     return p
 
 
-def time_series_plot(history, distribution, benchmark_id, height=250, width=1000):
-    dist_by_sha = {d["sha"]: d for d in distribution}
-    for h in history:
-        dist = dist_by_sha.get(h["sha"])
-        if dist:
-            h["mean_mean"] = dist["mean_mean"]
-            h["mean_sd"] = dist["mean_sd"]
-
+def time_series_plot(history, benchmark_id, height=250, width=1000):
     unit = get_display_unit(history[0]["unit"])
     current = [h for h in history if h["benchmark_id"] == benchmark_id]
-    with_dist = [h for h in history if h.get("mean_mean")]
+    with_dist = [h for h in history if h["distribution_mean"]]
 
     times = [h["mean"] for h in history]
     commits = [h["message"] for h in history]
@@ -121,15 +106,15 @@ def time_series_plot(history, distribution, benchmark_id, height=250, width=1000
     commits_x = [c["message"] for c in current]
     dates_x = [dateutil.parser.isoparse(c["timestamp"]) for c in current]
 
-    times_mean = [w["mean_mean"] for w in with_dist]
+    times_mean = [w["distribution_mean"] for w in with_dist]
     commits_mean = [w["message"] for w in with_dist]
     dates_mean = [dateutil.parser.isoparse(w["timestamp"]) for w in with_dist]
 
     alert_min, alert_max = [], []
     for w in with_dist:
-        alert = 5 * float(w["mean_sd"])
-        alert_min.append(float(w["mean_mean"]) - alert)
-        alert_max.append(float(w["mean_mean"]) + alert)
+        alert = 5 * float(w["distribution_stdev"])
+        alert_min.append(float(w["distribution_mean"]) - alert)
+        alert_max.append(float(w["distribution_mean"]) + alert)
 
     source_data = dict(x=dates, y=times, commit=commits)
     source = bokeh.models.ColumnDataSource(data=source_data)

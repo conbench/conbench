@@ -456,29 +456,6 @@
                 },
                 "description": "OK",
             },
-            "DistributionList": {
-                "content": {
-                    "application/json": {
-                        "example": [
-                            {
-                                "case_id": "some-case-uuid-1",
-                                "commit_id": "some-commit-uuid-1",
-                                "context_id": "some-context-uuid-1",
-                                "first_timestamp": "2021-02-25T01:02:51",
-                                "id": "some-distribution-uuid-1",
-                                "last_timestamp": "2021-02-25T01:02:51",
-                                "machine_hash": "diana-2-4-17179869184",
-                                "mean_mean": "0.036369",
-                                "mean_sd": "0.000000",
-                                "repository": "https://github.com/apache/arrow",
-                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                "unit": "s",
-                            }
-                        ]
-                    }
-                },
-                "description": "OK",
-            },
             "HistoryList": {
                 "content": {
                     "application/json": {
@@ -487,6 +464,8 @@
                                 "benchmark_id": "some-benchmark-uuid-1",
                                 "case_id": "some-case-uuid-1",
                                 "context_id": "some-context-uuid-1",
+                                "distribution_mean": "0.036369",
+                                "distribution_stdev": "0.000000",
                                 "machine_hash": "diana-2-4-17179869184",
                                 "mean": "0.036369",
                                 "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
@@ -1136,25 +1115,6 @@
                 "tags": ["Contexts"],
             }
         },
-        "/api/distribution/{benchmark_id}/": {
-            "get": {
-                "description": "Get benchmark distribution history.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "benchmark_id",
-                        "required": True,
-                        "schema": {"type": "string"},
-                    }
-                ],
-                "responses": {
-                    "200": {"$ref": "#/components/responses/DistributionList"},
-                    "401": {"$ref": "#/components/responses/401"},
-                    "404": {"$ref": "#/components/responses/404"},
-                },
-                "tags": ["Distribution"],
-            }
-        },
         "/api/docs.json": {},
         "/api/history/{benchmark_id}/": {
             "get": {
@@ -1377,7 +1337,6 @@
         {"description": "Benchmarked commits", "name": "Commits"},
         {"description": "Benchmark comparisons", "name": "Comparisons"},
         {"description": "Benchmark contexts", "name": "Contexts"},
-        {"description": "Benchmark distribution", "name": "Distribution"},
         {"description": "Benchmark history", "name": "History"},
         {"description": "Benchmark machines", "name": "Machines"},
         {"description": "Benchmark runs", "name": "Runs"},

@@ -1,5 +1,6 @@
 import copy
 import datetime
+import decimal
 
 from ...entities.commit import Commit
 from ...entities.history import get_history
@@ -13,13 +14,17 @@ REPO = "arrow"
 MACHINE = "diana-2-4-17179869184"
 
 
-def create_benchmark_summary(results, commit, name=None):
+def create_benchmark_summary(results, commit, name, language=None, machine=None):
     data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     data["run_id"], data["run_name"] = _uuid(), "commit: some commit"
     data["github"]["commit"] = commit.sha
     data["github"]["repository"] = commit.repository
     if name:
         data["tags"]["name"] = name
+    if language:
+        data["context"]["benchmark_language"] = language
+    if machine:
+        data["machine_info"]["name"] = machine
     data["stats"] = Conbench._stats(results, "s", [], "s")
     summary = Summary.create(data)
     return summary
@@ -77,22 +82,28 @@ def test_history():
 
     name = _uuid()
     data = [2.1, 2.0, 1.99]  # first commit
-    summary_1 = create_benchmark_summary(data, commit_1, name=name)
+    summary_1 = create_benchmark_summary(data, commit_1, name)
 
     data = [1.99, 2.0, 2.1]  # stayed the same
-    summary_2 = create_benchmark_summary(data, commit_2, name=name)
+    summary_2 = create_benchmark_summary(data, commit_2, name)
 
     data = [1.1, 1.0, 0.99]  # got better
-    summary_3 = create_benchmark_summary(data, commit_3, name=name)
+    summary_3 = create_benchmark_summary(data, commit_3, name)
 
     data = [1.2, 1.1, 1.0]  # stayed about the same
-    summary_4 = create_benchmark_summary(data, commit_4, name=name)
+    summary_4 = create_benchmark_summary(data, commit_4, name)
 
     data = [3.1, 3.0, 2.99]  # measure commit 4 twice
-    summary_5 = create_benchmark_summary(data, commit_4, name=name)
+    summary_5 = create_benchmark_summary(data, commit_4, name)
 
-    data, case = [5.1, 5.2, 5.3], "different-case"  # n/a different case
-    create_benchmark_summary(data, commit_1, name=case)
+    data, case = [5.1, 5.2, 5.3], "different-case"
+    create_benchmark_summary(data, commit_1, case)
+
+    data, language = [6.1, 6.2, 6.3], "different-context"
+    create_benchmark_summary(data, commit_1, name, language=language)
+
+    data, machine = [7.1, 7.2, 7.3], "different-machine"
+    create_benchmark_summary(data, commit_1, name, machine=machine)
 
     assert summary_1.case_id == summary_2.case_id
     assert summary_1.case_id == summary_3.case_id
@@ -122,6 +133,8 @@ def test_history():
             REPO,
             "message 11111",
             datetime.datetime(2021, 11, 1),
+            decimal.Decimal("2.0300000000000000"),
+            None,
             "commit: some commit",
         ),
         (
@@ -135,6 +148,8 @@ def test_history():
             REPO,
             "message 22222",
             datetime.datetime(2021, 11, 2),
+            decimal.Decimal("2.0300000000000000"),
+            decimal.Decimal("0"),
             "commit: some commit",
         ),
         (
@@ -148,6 +163,8 @@ def test_history():
             REPO,
             "message 33333",
             datetime.datetime(2021, 11, 3),
+            decimal.Decimal("1.6966666666666667"),
+            decimal.Decimal("0.57735026918962576451"),
             "commit: some commit",
         ),
         (
@@ -161,6 +178,8 @@ def test_history():
             REPO,
             "message 44444",
             datetime.datetime(2021, 11, 4),
+            decimal.Decimal("1.8440000000000000"),
+            decimal.Decimal("0.82035358230460601799"),
             "commit: some commit",
         ),
         (
@@ -174,7 +193,11 @@ def test_history():
             REPO,
             "message 44444",
             datetime.datetime(2021, 11, 4),
+            decimal.Decimal("1.8440000000000000"),
+            decimal.Decimal("0.82035358230460601799"),
             "commit: some commit",
         ),
     ]
-    assert set(get_history(case_id, context_id, machine_hash)) == set(expected)
+    actual = get_history(case_id, context_id, machine_hash)
+    assert len(actual) == len(expected)
+    assert set(actual) == set(expected)
