@@ -1,3 +1,4 @@
+import datetime
 import decimal
 
 import flask as f
@@ -89,18 +90,31 @@ class Summary(Base, EntityMixin):
         commit = Commit.first(sha=sha)
         if not commit:
             github = get_github_commit(repository, sha)
-            commit = Commit.create(
-                {
-                    "sha": sha,
-                    "repository": repository,
-                    "parent": github["parent"],
-                    "timestamp": github["date"],
-                    "message": github["message"],
-                    "author_name": github["author_name"],
-                    "author_login": github["author_login"],
-                    "author_avatar": github["author_avatar"],
-                }
-            )
+            if github:
+                commit = Commit.create(
+                    {
+                        "sha": sha,
+                        "repository": repository,
+                        "parent": github["parent"],
+                        "timestamp": github["date"],
+                        "message": github["message"],
+                        "author_name": github["author_name"],
+                        "author_login": github["author_login"],
+                        "author_avatar": github["author_avatar"],
+                    }
+                )
+            else:
+                now = datetime.datetime.now(datetime.timezone.utc)
+                commit = Commit.create(
+                    {
+                        "sha": sha,
+                        "repository": repository,
+                        "parent": "unknown",
+                        "timestamp": now,
+                        "message": "unknown",
+                        "author_name": "unknown",
+                    }
+                )
 
         # create if not exists
         run_id = data["run_id"]

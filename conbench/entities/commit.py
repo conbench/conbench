@@ -70,6 +70,9 @@ def get_github_commit(repository, sha):
     github = GitHub()
     name = repository.split("github.com/")[1]
     commit = github.get_commit(name, sha)
+    if commit is None:
+        return {}
+
     parent = commit["parent"]
     commits = github.get_commits(name, parent)
     if parent in commits:
@@ -87,6 +90,7 @@ def get_github_commit(repository, sha):
                 return commit
             else:
                 parent = other["parent"]
+
     return {}
 
 
