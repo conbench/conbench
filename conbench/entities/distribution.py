@@ -48,6 +48,12 @@ s.Index(
     unique=True,
 )
 
+s.Index(
+    "distribution_commit_machine_index",
+    Distribution.commit_id,
+    Distribution.machine_hash,
+)
+
 
 def get_commit_index(repository):
     ordered = (
