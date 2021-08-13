@@ -1,4 +1,3 @@
-import datetime
 import decimal
 
 import flask as f
@@ -85,36 +84,20 @@ class Summary(Base, EntityMixin):
         if not context:
             context = Context.create({"tags": data["context"]})
 
+        sha, repository = None, None
+        if "github" in data:
+            sha, repository = data["github"]["commit"], data["github"]["repository"]
+
         # create if not exists
-        sha, repository = data["github"]["commit"], data["github"]["repository"]
         commit = Commit.first(sha=sha)
         if not commit:
             github = get_github_commit(repository, sha)
             if github:
-                commit = Commit.create(
-                    {
-                        "sha": sha,
-                        "repository": repository,
-                        "parent": github["parent"],
-                        "timestamp": github["date"],
-                        "message": github["message"],
-                        "author_name": github["author_name"],
-                        "author_login": github["author_login"],
-                        "author_avatar": github["author_avatar"],
-                    }
-                )
+                commit = Commit.create_github_context(sha, repository, github)
+            elif sha and repository:
+                commit = Commit.create_unknown_context(sha, repository)
             else:
-                now = datetime.datetime.now(datetime.timezone.utc)
-                commit = Commit.create(
-                    {
-                        "sha": sha,
-                        "repository": repository,
-                        "parent": "unknown",
-                        "timestamp": now,
-                        "message": "unknown",
-                        "author_name": "unknown",
-                    }
-                )
+                commit = Commit.create_no_context()
 
         # create if not exists
         run_id = data["run_id"]
@@ -247,7 +230,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     stats = marshmallow.fields.Nested(SummarySchema().create, required=True)
     tags = marshmallow.fields.Dict(required=True)
     context = marshmallow.fields.Dict(required=True)
-    github = marshmallow.fields.Nested(GitHubCreate(), required=True)
+    github = marshmallow.fields.Nested(GitHubCreate(), required=False)
 
 
 class BenchmarkFacadeSchema:

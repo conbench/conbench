@@ -90,7 +90,9 @@ class RunMixin:
         self._display_time(run, "timestamp")
         self._display_time(run["commit"], "timestamp")
         repository = run["commit"]["repository"]
-        repository_name = repository.split("github.com/")[1]
+        repository_name = repository
+        if "github.com/" in repository:
+            repository_name = repository.split("github.com/")[1]
         run["commit"]["display_repository"] = repository_name
 
     def _display_time(self, obj, field):

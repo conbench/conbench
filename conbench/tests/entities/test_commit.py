@@ -12,6 +12,16 @@ from ...tests.api import _fixtures
 this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
+def test_get_github_commit_none():
+    repo = "https://github.com/apache/arrow"
+    sha = "3decc46119d583df56c7c66c77cf2803441c4458"
+
+    assert get_github_commit(None, None) == {}
+    assert get_github_commit("", "") == {}
+    assert get_github_commit(repo, None) == {}
+    assert get_github_commit(None, sha) == {}
+
+
 @pytest.mark.slow
 def test_get_github_commit():
     # NOTE: This integration test intentionally hits GitHub.
