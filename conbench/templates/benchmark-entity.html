@@ -149,9 +149,11 @@ $(document).ready(function($) {
     $("#benchmark-form").find("#delete").attr("data-message", "<ul><li>Delete benchmark: <strong>{{ benchmark.id }}</strong></li></ul>");
 });
 
+{% if plot_history %}
 $(document).ready(function() {
     Bokeh.embed.embed_item({{ plot_history | safe }});
 });
+{% endif %}
 
 </script>
 {% endblock %}
