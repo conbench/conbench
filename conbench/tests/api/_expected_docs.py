@@ -741,7 +741,6 @@
                 "required": [
                     "batch_id",
                     "context",
-                    "github",
                     "machine_info",
                     "run_id",
                     "stats",

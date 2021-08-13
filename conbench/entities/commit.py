@@ -1,3 +1,4 @@
+import datetime
 import functools
 import json
 import os
@@ -28,6 +29,52 @@ class Commit(Base, EntityMixin):
     author_login = Nullable(s.String(50))
     author_avatar = Nullable(s.String(100))
     timestamp = NotNull(s.DateTime(timezone=False))
+
+    @staticmethod
+    def create_no_context():
+        commit = Commit.first(sha="none")
+        if not commit:
+            now = datetime.datetime.now(datetime.timezone.utc)
+            commit = Commit.create(
+                {
+                    "sha": "none",
+                    "repository": "none",
+                    "parent": "",
+                    "timestamp": now,
+                    "message": "none",
+                    "author_name": "none",
+                }
+            )
+        return commit
+
+    @staticmethod
+    def create_unknown_context(sha, repository):
+        now = datetime.datetime.now(datetime.timezone.utc)
+        return Commit.create(
+            {
+                "sha": sha,
+                "repository": repository,
+                "parent": "unknown",
+                "timestamp": now,
+                "message": "unknown",
+                "author_name": "unknown",
+            }
+        )
+
+    @staticmethod
+    def create_github_context(sha, repository, github):
+        return Commit.create(
+            {
+                "sha": sha,
+                "repository": repository,
+                "parent": github["parent"],
+                "timestamp": github["date"],
+                "message": github["message"],
+                "author_name": github["author_name"],
+                "author_login": github["author_login"],
+                "author_avatar": github["author_avatar"],
+            }
+        )
 
 
 s.Index(
@@ -67,6 +114,9 @@ this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
 def get_github_commit(repository, sha):
+    if not repository or not sha:
+        return {}
+
     github = GitHub()
     name = repository.split("github.com/")[1]
     commit = github.get_commit(name, sha)

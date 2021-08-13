@@ -306,7 +306,6 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         "stats",
         "tags",
         "context",
-        "github",
     ]
 
     def test_create_benchmark(self, client):
@@ -359,6 +358,81 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             },
         }
         self.assert_400_bad_request(response, message)
+
+    def test_create_no_commit_context(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["run_id"] = _uuid()
+        del data["github"]
+
+        # create benchmark without commit context
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        assert summary.run.commit.sha == "none"
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
+
+        # create another benchmark without commit context
+        # (test duplicate key duplicate key -- commit_index)
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        assert summary.run.commit.sha == "none"
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
+
+    def test_create_empty_commit_context(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["run_id"] = _uuid()
+        data["github"]["commit"] = ""
+        data["github"]["repository"] = ""
+
+        # create benchmark without commit context
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        assert summary.run.commit.sha == "none"
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
+
+        # create another benchmark without commit context
+        # (test duplicate key duplicate key -- commit_index)
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        assert summary.run.commit.sha == "none"
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
+
+    def test_create_unknown_commit_context(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["run_id"] = _uuid()
+        data["github"]["commit"] = "unknown commit"
+        data["github"]["repository"] = "github.com/apache/arrow"
+
+        # create benchmark with unknown commit context
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        assert summary.run.commit.sha == "unknown commit"
+        assert summary.run.commit.repository == "github.com/apache/arrow"
+        assert summary.run.commit.parent == "unknown"
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
+
+        # create another benchmark with unknown commit context
+        # (test duplicate key duplicate key -- commit_index)
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        assert summary.run.commit.sha == "unknown commit"
+        assert summary.run.commit.repository == "github.com/apache/arrow"
+        assert summary.run.commit.parent == "unknown"
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
 
     def test_create_benchmark_distribution(self, client):
         self.authenticate(client)
