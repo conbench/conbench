@@ -283,9 +283,11 @@ $(document).ready(function() {
     Bokeh.embed.embed_item({{ plot | safe }});
 });
 
+{% if plot_history %}
 $(document).ready(function() {
     Bokeh.embed.embed_item({{ plot_history | safe }});
 });
+{% endif %}
 
 $(document).ready(function() {
     $('#unit-tooltip').tooltip()

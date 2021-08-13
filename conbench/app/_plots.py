@@ -7,14 +7,16 @@ from ..hacks import sorted_data
 
 
 class TimeSeriesPlotMixin:
-    def _get_history_plot(self, benchmark):
+    def get_history_plot(self, benchmark):
         history = self._get_history(benchmark)
-        return json.dumps(
-            bokeh.embed.json_item(
-                time_series_plot(history, benchmark["id"]),
-                "plot-history",
+        if history:
+            return json.dumps(
+                bokeh.embed.json_item(
+                    time_series_plot(history, benchmark["id"]),
+                    "plot-history",
+                )
             )
-        )
+        return None
 
     def _get_history(self, benchmark):
         response = self.api_get("api.history", benchmark_id=benchmark["id"])
