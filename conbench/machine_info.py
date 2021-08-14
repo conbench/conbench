@@ -18,13 +18,6 @@ MUST_BE_INTS = [
     "memory_bytes",
 ]
 
-BYTES = [
-    "memory_bytes",
-    "cpu_l1d_cache_bytes",
-    "cpu_l1i_cache_bytes",
-    "cpu_l2_cache_bytes",
-    "cpu_l3_cache_bytes",
-]
 
 COMMANDS = {
     "kernel_name": ["uname", "-r"],
@@ -38,6 +31,7 @@ COMMANDS = {
     "cpu_l3_cache_bytes": _sysctl("hw.l3cachesize"),
     "memory_bytes": _sysctl("hw.memsize"),
 }
+
 
 LSCPU_MAPPING = {
     "cpu_frequency_max_hz": "CPU max MHz",
@@ -121,8 +115,7 @@ def machine_info(host_name):
         except ValueError:
             info[key] = 0
 
-    for key in BYTES:
-        info[key] = _round_memory(int(info[key]))
+    info["memory_bytes"] = _round_memory(int(info["memory_bytes"]))
 
     for key in info:
         info[key] = str(info[key])
