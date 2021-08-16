@@ -77,8 +77,13 @@ class Enforcer(ApiEndpointTest):
 
 
 class ListEnforcer(Enforcer):
-    def test_unauthenticated(self, client):
+    def test_unauthenticated(self, client, monkeypatch):
         if getattr(self, "public", False):
+            monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "off")
+            response = client.get(self.url)
+            self.assert_401_unauthorized(response)
+
+            monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "on")
             response = client.get(self.url)
             self.assert_200_ok(response)
         else:
@@ -87,12 +92,17 @@ class ListEnforcer(Enforcer):
 
 
 class GetEnforcer(Enforcer):
-    def test_unauthenticated(self, client):
+    def test_unauthenticated(self, client, monkeypatch):
         if getattr(self, "public", False):
             entity = self._create()
-            response = client.get(self.url.format(entity.id))
-            # TODO: compare _expected_entity too
-            # self.assert_200_ok(response, _expected_entity(entity))
+            entity_url = self.url.format(entity.id)
+
+            monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "off")
+            response = client.get(entity_url)
+            self.assert_401_unauthorized(response)
+
+            monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "on")
+            response = client.get(entity_url)
             self.assert_200_ok(response)
         else:
             response = client.get(self.url.format("id"))
