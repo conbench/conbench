@@ -1,5 +1,24 @@
+import functools
+import os
+
 import flask as f
+import flask_login
 import flask.views
+
+
+def as_bool(x):
+    return x.lower() in ["yes", "y", "1", "on", "true"]
+
+
+def maybe_login_required(func):
+    @functools.wraps(func)
+    def maybe(*args, **kwargs):
+        public = as_bool(os.getenv("BENCHMARKS_DATA_PUBLIC", "yes"))
+        if not public:
+            return flask_login.login_required(func)(*args, **kwargs)
+        return func(*args, **kwargs)
+
+    return maybe
 
 
 class ApiEndpoint(flask.views.MethodView):

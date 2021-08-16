@@ -2,7 +2,7 @@ import flask as f
 
 
 from ..api import rule
-from ..api._endpoint import ApiEndpoint
+from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._comparator import BenchmarkComparator, BenchmarkListComparator
 from ..entities._entity import NotFound
 from ..entities.distribution import set_z_scores
@@ -34,6 +34,7 @@ class CompareBenchmarksAPI(ApiEndpoint):
         set_z_scores([summary])
         return summary
 
+    @maybe_login_required
     def get(self, compare_ids):
         """
         ---
@@ -112,6 +113,7 @@ class CompareBatchesAPI(ApiEndpoint):
         set_z_scores(summaries)
         return summaries
 
+    @maybe_login_required
     def get(self, compare_ids):
         """
         ---

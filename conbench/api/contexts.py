@@ -1,5 +1,5 @@
 from ..api import rule
-from ..api._endpoint import ApiEndpoint
+from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.context import Context, ContextSerializer
 
@@ -7,6 +7,7 @@ from ..entities.context import Context, ContextSerializer
 class ContextListAPI(ApiEndpoint):
     serializer = ContextSerializer()
 
+    @maybe_login_required
     def get(self):
         """
         ---
@@ -31,6 +32,7 @@ class ContextEntityAPI(ApiEndpoint):
             self.abort_404_not_found()
         return context
 
+    @maybe_login_required
     def get(self, context_id):
         """
         ---

@@ -1,5 +1,5 @@
 from ..api import rule
-from ..api._endpoint import ApiEndpoint
+from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.machine import Machine, MachineSerializer
 
@@ -7,6 +7,7 @@ from ..entities.machine import Machine, MachineSerializer
 class MachineListAPI(ApiEndpoint):
     serializer = MachineSerializer()
 
+    @maybe_login_required
     def get(self):
         """
         ---
@@ -31,6 +32,7 @@ class MachineEntityAPI(ApiEndpoint):
             self.abort_404_not_found()
         return machine
 
+    @maybe_login_required
     def get(self, machine_id):
         """
         ---

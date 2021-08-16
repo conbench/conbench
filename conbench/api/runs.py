@@ -1,5 +1,5 @@
 from ..api import rule
-from ..api._endpoint import ApiEndpoint
+from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.run import Run, RunSerializer
 
@@ -14,6 +14,7 @@ class RunEntityAPI(ApiEndpoint):
             self.abort_404_not_found()
         return run
 
+    @maybe_login_required
     def get(self, run_id):
         """
         ---
@@ -37,6 +38,7 @@ class RunEntityAPI(ApiEndpoint):
 class RunListAPI(ApiEndpoint):
     serializer = RunSerializer()
 
+    @maybe_login_required
     def get(self):
         """
         ---

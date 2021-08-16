@@ -6,3 +6,4 @@ FLASK_APP=conbench
 FLASK_ENV=development
 REGISTRATION_KEY=code
 SECRET_KEY="Person, woman, man, camera, TV"
+BENCHMARKS_DATA_PUBLIC=true
