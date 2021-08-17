@@ -1,5 +1,5 @@
 from ..api import rule
-from ..api._endpoint import ApiEndpoint
+from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.history import get_history, HistorySerializer
 from ..entities.summary import Summary
@@ -19,6 +19,7 @@ class HistoryEntityAPI(ApiEndpoint):
             summary.run.machine.hash,
         )
 
+    @maybe_login_required
     def get(self, benchmark_id):
         """
         ---

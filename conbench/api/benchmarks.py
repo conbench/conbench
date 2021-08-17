@@ -4,7 +4,7 @@ import flask_login
 
 from ..api import rule
 from ..api._docs import spec
-from ..api._endpoint import ApiEndpoint
+from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.case import Case
 from ..entities.distribution import set_z_scores
@@ -26,6 +26,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
             self.abort_404_not_found()
         return summary
 
+    @maybe_login_required
     def get(self, benchmark_id):
         """
         ---
@@ -72,6 +73,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
     serializer = SummarySerializer()
     schema = BenchmarkFacadeSchema()
 
+    @maybe_login_required
     def get(self):
         """
         ---

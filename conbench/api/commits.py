@@ -1,5 +1,5 @@
 from ..api import rule
-from ..api._endpoint import ApiEndpoint
+from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.commit import Commit, CommitSerializer
 
@@ -7,6 +7,7 @@ from ..entities.commit import Commit, CommitSerializer
 class CommitListAPI(ApiEndpoint):
     serializer = CommitSerializer()
 
+    @maybe_login_required
     def get(self):
         """
         ---
@@ -31,6 +32,7 @@ class CommitEntityAPI(ApiEndpoint):
             self.abort_404_not_found()
         return commit
 
+    @maybe_login_required
     def get(self, commit_id):
         """
         ---
