@@ -5,6 +5,7 @@
             "201": {"description": "Created"},
             "202": {"description": "No Content (accepted)"},
             "204": {"description": "No Content (success)"},
+            "302": {"description": "Found"},
             "400": {
                 "content": {
                     "application/json": {
@@ -1115,6 +1116,23 @@
             }
         },
         "/api/docs.json": {},
+        "/api/google/": {
+            "get": {
+                "description": "Google SSO.",
+                "responses": {"302": {"$ref": "#/components/responses/302"}},
+                "tags": ["Authentication"],
+            }
+        },
+        "/api/google/callback": {
+            "get": {
+                "description": "Google SSO callback.",
+                "responses": {
+                    "204": {"$ref": "#/components/responses/204"},
+                    "400": {"$ref": "#/components/responses/400"},
+                },
+                "tags": ["Authentication"],
+            }
+        },
         "/api/history/{benchmark_id}/": {
             "get": {
                 "description": "Get benchmark history.",
