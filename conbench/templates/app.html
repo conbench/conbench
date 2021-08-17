@@ -38,6 +38,8 @@
                             <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
+                            <li><a href="#">{{ current_user.name }}</a></li>
+                            <li role="separator" class="divider"></li>
                             <li><a href="{{ url_for('app.users') }}""><span class="glyphicon glyphicon-user submenu"></span> &nbsp; Users</a></li>
                             <li role="separator" class="divider"></li>
                             <li><a href="/api/docs"><span class="glyphicon glyphicon-book submenu"></span> &nbsp; API Docs</a></li>

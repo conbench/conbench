@@ -1,7 +1,11 @@
+import uuid
+
+import flask as f
 import flask_login
 import marshmallow
 
 
+from ..api import _google
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint
@@ -56,10 +60,59 @@ class LogoutAPI(ApiEndpoint):
         tags:
           - Authentication
         """
+
         flask_login.logout_user()
         return self.response_204_no_content()
 
 
+class GoogleAPI(ApiEndpoint):
+    def get(self):
+        """
+        ---
+        description: Google SSO.
+        responses:
+            "302": "302"
+        tags:
+          - Authentication
+        """
+
+        return f.redirect(_google.auth_google_user())
+
+
+class CallbackAPI(ApiEndpoint):
+    def get(self):
+        """
+        ---
+        description: Google SSO callback.
+        responses:
+            "302": "302"
+            "400": "400"
+        tags:
+          - Authentication
+        """
+
+        try:
+            google_user = _google.get_google_user()
+            email = google_user["email"]
+            given = google_user["given_name"]
+            family = google_user["family_name"]
+            user = User.first(email=email)
+            if user is None:
+                data = {
+                    "email": email,
+                    "name": f"{given} {family}",
+                    "password": uuid.uuid4().hex,
+                }
+                user = User.create(data)
+            flask_login.login_user(user)
+            return self.redirect("app.index")
+        except:
+            self.abort_400_bad_request("Google SSO failed.")
+
+
 rule("/login/", view_func=LoginAPI.as_view("login"), methods=["POST"])
 rule("/logout/", view_func=LogoutAPI.as_view("logout"), methods=["GET"])
+rule("/google/", view_func=GoogleAPI.as_view("google"), methods=["GET"])
+rule("/google/callback", view_func=CallbackAPI.as_view("callback"), methods=["GET"])
+
 spec.components.schema("Login", schema=LoginSchema)
