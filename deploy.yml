@@ -9,6 +9,7 @@ data:
   DB_HOST: "{{DB_HOST}}"
   DB_PORT: "{{DB_PORT}}"
   FLASK_APP: "{{FLASK_APP}}"
+  BENCHMARKS_DATA_PUBLIC: "{{BENCHMARKS_DATA_PUBLIC}}"
 ---
 apiVersion: apps/v1
 kind: Deployment
