@@ -1,3 +1,5 @@
+import os
+
 import flask_login
 import flask_wtf
 import wtforms as w
@@ -26,11 +28,13 @@ class Login(AppEndpoint):
     form = LoginForm
 
     def page(self, form):
+        sso = os.environ.get("GOOGLE_CLIENT_ID", None) is not None
         return self.render_template(
             "login.html",
             application=Config.APPLICATION_NAME,
             title="Sign In",
             form=form,
+            sso=sso,
         )
 
     def data(self, form):
