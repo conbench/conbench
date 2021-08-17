@@ -48,6 +48,9 @@ class ApiEndpoint(flask.views.MethodView):
 
         return data
 
+    def redirect(self, endpoint, **kwargs):
+        return f.redirect(f.url_for(endpoint, **kwargs))
+
     def abort_400_bad_request(self, message):
         if not isinstance(message, dict):
             message = {"_errors": [message]}

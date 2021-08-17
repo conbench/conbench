@@ -85,7 +85,7 @@ class CallbackAPI(ApiEndpoint):
         ---
         description: Google SSO callback.
         responses:
-            "204": "204"
+            "302": "302"
             "400": "400"
         tags:
           - Authentication
@@ -105,7 +105,7 @@ class CallbackAPI(ApiEndpoint):
                 }
                 user = User.create(data)
             flask_login.login_user(user)
-            return self.response_204_no_content()
+            return self.redirect("app.index")
         except:
             self.abort_400_bad_request("Google SSO failed.")
 

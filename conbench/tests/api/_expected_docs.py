@@ -1127,7 +1127,7 @@
             "get": {
                 "description": "Google SSO callback.",
                 "responses": {
-                    "204": {"$ref": "#/components/responses/204"},
+                    "302": {"$ref": "#/components/responses/302"},
                     "400": {"$ref": "#/components/responses/400"},
                 },
                 "tags": ["Authentication"],
