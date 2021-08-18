@@ -93,21 +93,22 @@ class CallbackAPI(ApiEndpoint):
 
         try:
             google_user = _google.get_google_user()
-            email = google_user["email"]
-            given = google_user["given_name"]
-            family = google_user["family_name"]
-            user = User.first(email=email)
-            if user is None:
-                data = {
-                    "email": email,
-                    "name": f"{given} {family}",
-                    "password": uuid.uuid4().hex,
-                }
-                user = User.create(data)
-            flask_login.login_user(user)
-            return self.redirect("app.index")
-        except:
-            self.abort_400_bad_request("Google SSO failed.")
+        except Exception as e:
+            self.abort_400_bad_request(f"Google SSO failed {e}.")
+
+        email = google_user["email"]
+        given = google_user["given_name"]
+        family = google_user["family_name"]
+        user = User.first(email=email)
+        if user is None:
+            data = {
+                "email": email,
+                "name": f"{given} {family}",
+                "password": uuid.uuid4().hex,
+            }
+            user = User.create(data)
+        flask_login.login_user(user)
+        return self.redirect("app.index")
 
 
 rule("/login/", view_func=LoginAPI.as_view("login"), methods=["POST"])

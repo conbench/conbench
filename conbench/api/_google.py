@@ -8,6 +8,8 @@ def get_google_config():
     client_id = os.environ.get("GOOGLE_CLIENT_ID", None)
     client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", None)
     discovery_url = "https://accounts.google.com/.well-known/openid-configuration"
+    if client_id and not client_id.endswith(".apps.googleusercontent.com"):
+        client_id += ".apps.googleusercontent.com"
     return discovery_url, client_id, client_secret
 
 
@@ -37,8 +39,8 @@ def get_google_user():
 
     token_url, headers, body = client.prepare_token_request(
         google["token_endpoint"],
-        authorization_response=f.request.url,
-        redirect_url=f.request.base_url,
+        authorization_response=f.request.url.replace("http://", "https://"),
+        redirect_url=f.request.base_url.replace("http://", "https://"),
         code=f.request.args.get("code"),
     )
     token_response = requests.post(
