@@ -8,8 +8,6 @@ def get_google_config():
     client_id = os.environ.get("GOOGLE_CLIENT_ID", None)
     client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", None)
     discovery_url = "https://accounts.google.com/.well-known/openid-configuration"
-    if client_id and not client_id.endswith(".apps.googleusercontent.com"):
-        client_id += ".apps.googleusercontent.com"
     return discovery_url, client_id, client_secret
 
 
@@ -19,7 +17,6 @@ def get_google_client():
     discovery_url, client_id, _ = get_google_config()
     google = requests.get(discovery_url).json()
     client = WebApplicationClient(client_id)
-
     return client, google
 
 
