@@ -23,9 +23,10 @@ def get_google_client():
 
 def auth_google_user():
     client, google = get_google_client()
+    redirect_uri = f.url_for("api.callback", _external=True, _scheme="https")
     return client.prepare_request_uri(
         google["authorization_endpoint"],
-        redirect_uri=f.url_for("api.callback", _external=True),
+        redirect_uri=redirect_uri,
         scope=["openid", "email", "profile"],
     )
 
