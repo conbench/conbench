@@ -18,7 +18,7 @@ from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
 
 
-REPO = "arrow"
+REPO = "https://github.com/org/something"
 MACHINE = "diana-2-4-17179869184"
 
 COMMIT_INDEX = """WITH ordered_commits AS 
