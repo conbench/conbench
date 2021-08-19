@@ -30,30 +30,46 @@
             <thead>
                 <tr>
                     <th scope="col">Run</th>
+                    {% if has_authors %}
                     <th scope="col">Author</th>
+                    {% endif %}
                     <th scope="col">Repository</th>
                     <th scope="col">Commit</th>
                     <th scope="col">Machine</th>
+                    {% if has_reasons %}
                     <th scope="col">Reason</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for run in runs %}
                 <tr>
                      <td style="white-space: nowrap;"><a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.display_timestamp }}</a></td>
+
+                     {% if has_authors %}
                      <td style="white-space: nowrap;">
                        {% if run.commit.author_avatar %}
                          <image src="{{ run.commit.author_avatar }}" height="30" style="border-radius: 50%;">&nbsp;
                        {% endif %}
                        {{ run.commit.author_name }}
                      </td>
+                     {% endif %}
+
                      <td style="white-space: nowrap;"><a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a></td>
-                     <td><a href="{{ run.commit.url }}">{{ run.commit.message }}</a></td>
-                     <td><div class="ellipsis-175">{{ run.machine.name }}</div></td>
-                     {% if run.name %}
-                       <td><div class="ellipsis-175">{{ run.name.split(":", 1)[0] }}</div></td>
+
+                     {% if run.commit.message %}
+                       <td><a href="{{ run.commit.url }}">{{ run.commit.message }}</a></td>
                      {% else %}
-                       <td></td>
+                       <td><a href="{{ run.commit.url }}">{{ run.commit.sha }}</a></td>
+                     {% endif %}
+
+                     <td><div class="ellipsis-175">{{ run.machine.name }}</div></td>
+                     {% if has_reasons %}
+                       {% if run.name %}
+                         <td><div class="ellipsis-175">{{ run.name.split(":", 1)[0] }}</div></td>
+                       {% else %}
+                         <td></td>
+                       {% endif %}
                      {% endif %}
                 </tr>
                 {% endfor %}
