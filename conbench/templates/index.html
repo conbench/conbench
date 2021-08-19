@@ -64,9 +64,10 @@
                      {% endif %}
 
                      <td><div class="ellipsis-175">{{ run.machine.name }}</div></td>
+
                      {% if has_reasons %}
-                       {% if run.name %}
-                         <td><div class="ellipsis-175">{{ run.name.split(":", 1)[0] }}</div></td>
+                       {% if run.display_name %}
+                         <td><div class="ellipsis-175">{{ run.display_name }}</div></td>
                        {% else %}
                          <td></td>
                        {% endif %}

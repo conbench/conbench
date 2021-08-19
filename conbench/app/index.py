@@ -6,7 +6,7 @@ from ..config import Config
 
 class Index(AppEndpoint, RunMixin):
     def page(self, runs):
-        reasons = {r["name"].split(":", 1)[0] for r in runs if r["name"]}
+        reasons = {r["display_name"] for r in runs if r["display_name"]}
         authors = {
             r["commit"]["author_name"] for r in runs if r["commit"]["author_name"]
         }

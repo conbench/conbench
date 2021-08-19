@@ -93,6 +93,9 @@ class RunMixin:
         repository_name = repository
         if "github.com/" in repository:
             repository_name = repository.split("github.com/")[1]
+        run["display_name"] = ""
+        if run["name"]:
+            run["display_name"] = run["name"].split(":", 1)[0]
         run["commit"]["display_repository"] = repository_name
 
     def _display_time(self, obj, field):
