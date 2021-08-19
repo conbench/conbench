@@ -113,12 +113,28 @@ GITHUB = "https://api.github.com"
 this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
+def repository_to_name(repository):
+    if not repository:
+        return ""
+    name = repository
+    if "github.com/" in repository:
+        name = repository.split("github.com/")[1]
+    elif "git@github.com:" in repository:
+        name = repository.split("git@github.com:")[1]
+    return name
+
+
+def repository_to_url(repository):
+    name = repository_to_name(repository)
+    return f"https://github.com/{name}"
+
+
 def get_github_commit(repository, sha):
     if not repository or not sha:
         return {}
 
     github = GitHub()
-    name = repository.split("github.com/")[1]
+    name = repository_to_name(repository)
     commit = github.get_commit(name, sha)
     if commit is None:
         return {}
