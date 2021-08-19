@@ -1,4 +1,3 @@
-import datetime
 import functools
 import json
 import os
@@ -22,42 +21,40 @@ class Commit(Base, EntityMixin):
     __tablename__ = "commit"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     sha = NotNull(s.String(50))
-    parent = NotNull(s.String(50))
+    parent = Nullable(s.String(50))
     repository = NotNull(s.String(100))
     message = NotNull(s.String(250))
     author_name = NotNull(s.String(100))
     author_login = Nullable(s.String(50))
     author_avatar = Nullable(s.String(100))
-    timestamp = NotNull(s.DateTime(timezone=False))
+    timestamp = Nullable(s.DateTime(timezone=False))
 
     @staticmethod
     def create_no_context():
-        commit = Commit.first(sha="none")
+        commit = Commit.first(sha="", repository="")
         if not commit:
-            now = datetime.datetime.now(datetime.timezone.utc)
             commit = Commit.create(
                 {
-                    "sha": "none",
-                    "repository": "none",
-                    "parent": "",
-                    "timestamp": now,
-                    "message": "none",
-                    "author_name": "none",
+                    "sha": "",
+                    "repository": "",
+                    "parent": None,
+                    "timestamp": None,
+                    "message": "",
+                    "author_name": "",
                 }
             )
         return commit
 
     @staticmethod
     def create_unknown_context(sha, repository):
-        now = datetime.datetime.now(datetime.timezone.utc)
         return Commit.create(
             {
                 "sha": sha,
                 "repository": repository,
-                "parent": "unknown",
-                "timestamp": now,
-                "message": "unknown",
-                "author_name": "unknown",
+                "parent": None,
+                "timestamp": None,
+                "message": "",
+                "author_name": "",
             }
         )
 
@@ -87,17 +84,21 @@ s.Index(
 
 class _Serializer(EntitySerializer):
     def _dump(self, commit):
+        url = None
+        if commit.repository and commit.sha:
+            url = f"{commit.repository}/commit/{commit.sha}"
+        timestamp = commit.timestamp.isoformat() if commit.timestamp else None
         return {
             "id": commit.id,
             "sha": commit.sha,
-            "url": f"{commit.repository}/commit/{commit.sha}",
+            "url": url,
             "parent_sha": commit.parent,
             "repository": commit.repository,
             "message": commit.message,
             "author_name": commit.author_name,
             "author_login": commit.author_login,
             "author_avatar": commit.author_avatar,
-            "timestamp": commit.timestamp.isoformat(),
+            "timestamp": timestamp,
             "links": {
                 "list": f.url_for("api.commits", _external=True),
                 "self": f.url_for("api.commit", commit_id=commit.id, _external=True),
