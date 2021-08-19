@@ -87,6 +87,10 @@ class Summary(Base, EntityMixin):
         sha, repository = None, None
         if "github" in data:
             sha, repository = data["github"]["commit"], data["github"]["repository"]
+            if "github.com/" in repository:
+                repository = repository.split("github.com/")[1]
+            elif "git@github.com:" in repository:
+                repository = repository.split("git@github.com:")[1]
 
         # create if not exists
         commit = Commit.first(sha=sha)

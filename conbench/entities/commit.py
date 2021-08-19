@@ -118,13 +118,12 @@ def get_github_commit(repository, sha):
         return {}
 
     github = GitHub()
-    name = repository.split("github.com/")[1]
-    commit = github.get_commit(name, sha)
+    commit = github.get_commit(repository, sha)
     if commit is None:
         return {}
 
     parent = commit["parent"]
-    commits = github.get_commits(name, parent)
+    commits = github.get_commits(repository, parent)
     if parent in commits:
         return commit
     else:
@@ -134,7 +133,7 @@ def get_github_commit(repository, sha):
         # (which could happen for a really old pull request).
         parent = commit["parent"]
         for _ in range(50):
-            other = github.get_commit(name, parent)
+            other = github.get_commit(repository, parent)
             if other["parent"] in commits:
                 commit["parent"] = other["parent"]
                 return commit
