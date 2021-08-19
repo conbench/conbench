@@ -5,11 +5,36 @@ import os
 
 import pytest
 
-from ...entities.commit import GitHub, get_github_commit
+from ...entities.commit import (
+    GitHub,
+    get_github_commit,
+    repository_to_name,
+    repository_to_url,
+)
 from ...tests.api import _fixtures
 
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
+
+
+def test_repository_to_name():
+    expected = "apache/arrow"
+    assert repository_to_name(None) == ""
+    assert repository_to_name("") == ""
+    assert repository_to_name("blah blah") == "blah blah"
+    assert repository_to_name("apache/arrow") == expected
+    assert repository_to_name("https://github.com/apache/arrow") == expected
+    assert repository_to_name("git@github.com:apache/arrow") == expected
+
+
+def test_repository_to_url():
+    expected = "https://github.com/apache/arrow"
+    assert repository_to_url(None) == "https://github.com/"
+    assert repository_to_url("") == "https://github.com/"
+    assert repository_to_url("blah blah") == "https://github.com/blah blah"
+    assert repository_to_url("apache/arrow") == expected
+    assert repository_to_url("https://github.com/apache/arrow") == expected
+    assert repository_to_url("git@github.com:apache/arrow") == expected
 
 
 def test_get_github_commit_none():

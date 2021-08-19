@@ -359,21 +359,13 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         }
         self.assert_400_bad_request(response, message)
 
-    def test_create_different_git_repo_format(self, client):
-        self.authenticate(client)
-        data = copy.deepcopy(self.valid_payload)
-        data["run_id"] = _uuid()
-        data["github"]["commit"] = "testing repository with git@g"
-        data["github"]["repository"] = "git@github.com:apache/arrow"
-
-        response = client.post("/api/benchmarks/", json=data)
+    def _assert_none_commit(self, response):
         new_id = response.json["id"]
         summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == "testing repository with git@g"
-        assert summary.run.commit.repository == "apache/arrow"
-        assert summary.run.commit.parent == "unknown"
-        location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        assert summary.run.commit.sha == "none"
+        assert summary.run.commit.repository == "none"
+        assert summary.run.commit.parent == ""
+        return summary, new_id
 
     def test_create_no_commit_context(self, client):
         self.authenticate(client)
@@ -383,22 +375,14 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
         # create benchmark without commit context
         response = client.post("/api/benchmarks/", json=data)
-        new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == "none"
-        assert summary.run.commit.repository == "none"
-        assert summary.run.commit.parent == ""
+        summary, new_id = self._assert_none_commit(response)
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
 
         # create another benchmark without commit context
         # (test duplicate key duplicate key -- commit_index)
         response = client.post("/api/benchmarks/", json=data)
-        new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == "none"
-        assert summary.run.commit.repository == "none"
-        assert summary.run.commit.parent == ""
+        summary, new_id = self._assert_none_commit(response)
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
 
@@ -411,22 +395,14 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
         # create benchmark without commit context
         response = client.post("/api/benchmarks/", json=data)
-        new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == "none"
-        assert summary.run.commit.repository == "none"
-        assert summary.run.commit.parent == ""
+        summary, new_id = self._assert_none_commit(response)
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
 
         # create another benchmark without commit context
         # (test duplicate key duplicate key -- commit_index)
         response = client.post("/api/benchmarks/", json=data)
-        new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == "none"
-        assert summary.run.commit.repository == "none"
-        assert summary.run.commit.parent == ""
+        summary, new_id = self._assert_none_commit(response)
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
 
@@ -435,14 +411,14 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         data = copy.deepcopy(self.valid_payload)
         data["run_id"] = _uuid()
         data["github"]["commit"] = "unknown commit"
-        data["github"]["repository"] = "github.com/apache/arrow"
+        data["github"]["repository"] = "https://github.com/apache/arrow"
 
         # create benchmark with unknown commit context
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == "unknown commit"
-        assert summary.run.commit.repository == "apache/arrow"
+        assert summary.run.commit.repository == "https://github.com/apache/arrow"
         assert summary.run.commit.parent == "unknown"
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
@@ -453,7 +429,39 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         new_id = response.json["id"]
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == "unknown commit"
-        assert summary.run.commit.repository == "apache/arrow"
+        assert summary.run.commit.repository == "https://github.com/apache/arrow"
+        assert summary.run.commit.parent == "unknown"
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
+
+    def test_create_different_git_repo_format(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["run_id"] = _uuid()
+        data["github"]["commit"] = "testing repository with git@g"
+        data["github"]["repository"] = "git@github.com:apache/arrow"
+
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        assert summary.run.commit.sha == "testing repository with git@g"
+        assert summary.run.commit.repository == "https://github.com/apache/arrow"
+        assert summary.run.commit.parent == "unknown"
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
+
+    def test_create_repo_not_full_url(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["run_id"] = _uuid()
+        data["github"]["commit"] = "testing repository with just org/repo"
+        data["github"]["repository"] = "apache/arrow"
+
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        assert summary.run.commit.sha == "testing repository with just org/repo"
+        assert summary.run.commit.repository == "https://github.com/apache/arrow"
         assert summary.run.commit.parent == "unknown"
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)

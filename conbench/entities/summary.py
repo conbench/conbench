@@ -17,7 +17,7 @@ from ..entities._entity import (
 from ..entities._comparator import z_improvement, z_regression
 from ..entities.case import Case
 from ..entities.context import Context
-from ..entities.commit import Commit, get_github_commit
+from ..entities.commit import Commit, get_github_commit, repository_to_url
 from ..entities.data import Data
 from ..entities.distribution import update_distribution
 from ..entities.machine import Machine, MachineSchema
@@ -86,11 +86,8 @@ class Summary(Base, EntityMixin):
 
         sha, repository = None, None
         if "github" in data:
-            sha, repository = data["github"]["commit"], data["github"]["repository"]
-            if "github.com/" in repository:
-                repository = repository.split("github.com/")[1]
-            elif "git@github.com:" in repository:
-                repository = repository.split("git@github.com:")[1]
+            sha = data["github"]["commit"]
+            repository = repository_to_url(data["github"]["repository"])
 
         # create if not exists
         commit = Commit.first(sha=sha)
