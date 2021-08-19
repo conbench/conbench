@@ -172,9 +172,12 @@ def _lscpu(info):
     if not missing:
         return
 
-    command = ["lscpu", "--bytes"]
-    result = subprocess.run(command, capture_output=True)
-    if result.returncode != 0:
+    try:
+        command = ["lscpu", "--bytes"]
+        result = subprocess.run(command, capture_output=True)
+        if result.returncode != 0:
+            return
+    except:
         return
 
     parts = result.stdout.decode("utf-8").strip().split("\n")
@@ -186,9 +189,12 @@ def _meminfo(info):
     if not missing:
         return
 
-    command = ["cat", "/proc/meminfo"]
-    result = subprocess.run(command, capture_output=True)
-    if result.returncode != 0:
+    try:
+        command = ["cat", "/proc/meminfo"]
+        result = subprocess.run(command, capture_output=True)
+        if result.returncode != 0:
+            return
+    except:
         return
 
     parts = result.stdout.decode("utf-8").strip().split("\n")
