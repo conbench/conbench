@@ -59,6 +59,7 @@ def get_commit_index(repository):
     ordered = (
         Session.query(Commit.id, Commit.sha, Commit.timestamp)
         .filter(Commit.repository == repository)
+        .filter(Commit.timestamp.isnot(None))
         .order_by(Commit.timestamp.desc())
     ).cte("ordered_commits")
     return Session.query(ordered, func.row_number().over().label("row_number"))
