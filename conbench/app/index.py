@@ -7,6 +7,7 @@ from ..config import Config
 class Index(AppEndpoint, RunMixin):
     def page(self, runs):
         reasons = {r["display_name"] for r in runs if r["display_name"]}
+        commits = {r["commit"]["url"] for r in runs if r["commit"]["url"]}
         authors = {
             r["commit"]["author_name"] for r in runs if r["commit"]["author_name"]
         }
@@ -17,6 +18,7 @@ class Index(AppEndpoint, RunMixin):
             runs=runs,
             has_reasons=len(reasons) > 0,
             has_authors=len(authors) > 0,
+            has_commits=len(commits) > 0,
         )
 
     def get(self):
