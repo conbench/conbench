@@ -366,9 +366,9 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
     def _assert_none_commit(self, response):
         new_id = response.json["id"]
         summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == "none"
-        assert summary.run.commit.repository == "none"
-        assert summary.run.commit.parent == ""
+        assert summary.run.commit.sha == ""
+        assert summary.run.commit.repository == ""
+        assert summary.run.commit.parent is None
         return summary, new_id
 
     def test_create_no_commit_context(self, client):
@@ -423,7 +423,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == "unknown commit"
         assert summary.run.commit.repository == ARROW_REPO
-        assert summary.run.commit.parent == "unknown"
+        assert summary.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
 
@@ -434,7 +434,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == "unknown commit"
         assert summary.run.commit.repository == ARROW_REPO
-        assert summary.run.commit.parent == "unknown"
+        assert summary.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
 
@@ -450,7 +450,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == "testing repository with git@g"
         assert summary.run.commit.repository == ARROW_REPO
-        assert summary.run.commit.parent == "unknown"
+        assert summary.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
 
@@ -466,7 +466,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == "testing repository with just org/repo"
         assert summary.run.commit.repository == ARROW_REPO
-        assert summary.run.commit.parent == "unknown"
+        assert summary.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
 
@@ -482,7 +482,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == ""
         assert summary.run.commit.repository == ARROW_REPO
-        assert summary.run.commit.parent == "unknown"
+        assert summary.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
 
@@ -496,7 +496,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == ""
         assert summary.run.commit.repository == CONBENCH_REPO
-        assert summary.run.commit.parent == "unknown"
+        assert summary.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
 
@@ -512,7 +512,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == "something something"
         assert summary.run.commit.repository == ""
-        assert summary.run.commit.parent == "unknown"
+        assert summary.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
 

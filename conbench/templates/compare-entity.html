@@ -98,18 +98,27 @@
               </div>
             </li>
             {% if baseline_run %}
+            {% if baseline_run.commit.url %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>commit</b>
               <div class="ellipsis-500" align="right" style="display:inline-block; float: right;">
-                <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.message }}</a>
+                {% if baseline_run.commit.message %}
+                  <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.message }}</a>
+                {% else %}
+                  <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.url }}</a>
+                {% endif %}
               </div>
             </li>
+            {% endif %}
+            {% if baseline_run.commit.display_timestamp %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>date</b>
               <div align="right" style="display:inline-block; float: right;">
                 {{ baseline_run.commit.display_timestamp }}
               </div>
             </li>
+            {% endif %}
+            {% if baseline_run.commit.author_name %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>author</b>
               <div align="right" style="display:inline-block; float: right;">
@@ -119,12 +128,15 @@
                 {% endif %}
               </div>
             </li>
+            {% endif %}
+            {% if baseline_run.commit.display_repository %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>repository</b>
               <div align="right" style="display:inline-block; float: right;">
                 <a href="{{ baseline_run.commit.repository }}">{{ baseline_run.commit.display_repository }}</a>
               </div>
             </li>
+            {% endif %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>machine</b>
               <div align="right" style="display:inline-block; float: right;">
@@ -195,18 +207,27 @@
               </div>
             </li>
             {% if contender_run %}
+            {% if contender_run.commit.url %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>commit</b>
               <div class="ellipsis-500" align="right" style="display:inline-block; float: right;">
-                <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.message }}</a>
+                {% if contender_run.commit.message %}
+                  <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.message }}</a>
+                {% else %}
+                  <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.url }}</a>
+                {% endif %}
               </div>
             </li>
+            {% endif %}
+            {% if contender_run.commit.display_timestamp %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>date</b>
               <div align="right" style="display:inline-block; float: right;">
                 {{ contender_run.commit.display_timestamp }}
               </div>
             </li>
+            {% endif %}
+            {% if contender_run.commit.author_name %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>author</b>
               <div align="right" style="display:inline-block; float: right;">
@@ -216,12 +237,15 @@
                 {% endif %}
               </div>
             </li>
+            {% endif %}
+            {% if contender_run.commit.display_repository %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>repository</b>
               <div align="right" style="display:inline-block; float: right;">
                 <a href="{{ contender_run.commit.repository }}">{{ contender_run.commit.display_repository }}</a>
               </div>
             </li>
+            {% endif %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>machine</b>
               <div align="right" style="display:inline-block; float: right;">

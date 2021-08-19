@@ -18,7 +18,7 @@ def dataset_name(name):
 
 
 def display_time(t):
-    return t.split(".")[0].replace("T", "  ").rsplit(":", 1)[0]
+    return t.split(".")[0].replace("T", "  ").rsplit(":", 1)[0] if t else ""
 
 
 def set_display_language(benchmark, contexts):
