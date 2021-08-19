@@ -90,12 +90,12 @@ class Summary(Base, EntityMixin):
             repository = repository_to_url(data["github"]["repository"])
 
         # create if not exists
-        commit = Commit.first(sha=sha)
+        commit = Commit.first(sha=sha, repository=repository)
         if not commit:
             github = get_github_commit(repository, sha)
             if github:
                 commit = Commit.create_github_context(sha, repository, github)
-            elif sha and repository:
+            elif sha or repository:
                 commit = Commit.create_unknown_context(sha, repository)
             else:
                 commit = Commit.create_no_context()

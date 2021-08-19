@@ -12,6 +12,10 @@ from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
 
 
+ARROW_REPO = "https://github.com/apache/arrow"
+CONBENCH_REPO = "https://github.com/ursacomputing/conbench"
+
+
 def _expected_entity(summary):
     return _api_benchmark_entity(
         summary.id,
@@ -411,14 +415,14 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         data = copy.deepcopy(self.valid_payload)
         data["run_id"] = _uuid()
         data["github"]["commit"] = "unknown commit"
-        data["github"]["repository"] = "https://github.com/apache/arrow"
+        data["github"]["repository"] = ARROW_REPO
 
         # create benchmark with unknown commit context
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == "unknown commit"
-        assert summary.run.commit.repository == "https://github.com/apache/arrow"
+        assert summary.run.commit.repository == ARROW_REPO
         assert summary.run.commit.parent == "unknown"
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
@@ -429,7 +433,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         new_id = response.json["id"]
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == "unknown commit"
-        assert summary.run.commit.repository == "https://github.com/apache/arrow"
+        assert summary.run.commit.repository == ARROW_REPO
         assert summary.run.commit.parent == "unknown"
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
@@ -445,7 +449,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         new_id = response.json["id"]
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == "testing repository with git@g"
-        assert summary.run.commit.repository == "https://github.com/apache/arrow"
+        assert summary.run.commit.repository == ARROW_REPO
         assert summary.run.commit.parent == "unknown"
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)
@@ -461,7 +465,53 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         new_id = response.json["id"]
         summary = Summary.one(id=new_id)
         assert summary.run.commit.sha == "testing repository with just org/repo"
-        assert summary.run.commit.repository == "https://github.com/apache/arrow"
+        assert summary.run.commit.repository == ARROW_REPO
+        assert summary.run.commit.parent == "unknown"
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
+
+    def test_create_allow_just_repository(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["run_id"] = _uuid()
+        data["github"]["commit"] = ""
+        data["github"]["repository"] = ARROW_REPO
+
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        assert summary.run.commit.sha == ""
+        assert summary.run.commit.repository == ARROW_REPO
+        assert summary.run.commit.parent == "unknown"
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
+
+        # And again with a different repository with an empty sha
+        data["run_id"] = _uuid()
+        data["github"]["commit"] = ""
+        data["github"]["repository"] = CONBENCH_REPO
+
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        assert summary.run.commit.sha == ""
+        assert summary.run.commit.repository == CONBENCH_REPO
+        assert summary.run.commit.parent == "unknown"
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
+
+    def test_create_allow_just_sha(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["run_id"] = _uuid()
+        data["github"]["commit"] = "something something"
+        data["github"]["repository"] = ""
+
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        assert summary.run.commit.sha == "something something"
+        assert summary.run.commit.repository == ""
         assert summary.run.commit.parent == "unknown"
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(summary), location)

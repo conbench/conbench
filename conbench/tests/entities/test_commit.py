@@ -29,8 +29,8 @@ def test_repository_to_name():
 
 def test_repository_to_url():
     expected = "https://github.com/apache/arrow"
-    assert repository_to_url(None) == "https://github.com/"
-    assert repository_to_url("") == "https://github.com/"
+    assert repository_to_url(None) == ""
+    assert repository_to_url("") == ""
     assert repository_to_url("blah blah") == "https://github.com/blah blah"
     assert repository_to_url("apache/arrow") == expected
     assert repository_to_url("https://github.com/apache/arrow") == expected
