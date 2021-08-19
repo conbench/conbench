@@ -24,7 +24,7 @@ MACHINE = "diana-2-4-17179869184"
 COMMIT_INDEX = """WITH ordered_commits AS 
 (SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
 FROM commit 
-WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
+WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL ORDER BY commit.timestamp DESC)
  SELECT ordered_commits.id, ordered_commits.sha, ordered_commits.timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits"""  # noqa
 
