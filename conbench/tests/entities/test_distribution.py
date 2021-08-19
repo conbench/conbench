@@ -32,7 +32,7 @@ FROM ordered_commits"""  # noqa
 ROW_NUMBER = """WITH ordered_commits AS 
 (SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
 FROM commit 
-WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
+WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL ORDER BY commit.timestamp DESC)
  SELECT commit_index.row_number 
 FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
@@ -42,7 +42,7 @@ WHERE commit_index.sha = :sha_1"""  # noqa
 COMMITS_UP = """WITH ordered_commits AS 
 (SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
 FROM commit 
-WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
+WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL ORDER BY commit.timestamp DESC)
  SELECT commit_index.id, commit_index.sha, commit_index.timestamp, commit_index.row_number 
 FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
 FROM ordered_commits) AS commit_index 
@@ -56,7 +56,7 @@ WHERE commit_index.sha = :sha_1)
 DISTRIBUTION = """WITH ordered_commits AS 
 (SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
 FROM commit 
-WHERE commit.repository = :repository_1 ORDER BY commit.timestamp DESC)
+WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL ORDER BY commit.timestamp DESC)
  SELECT text(:text_1) AS case_id, text(:text_2) AS context_id, text(:text_3) AS commit_id, concat(machine.name, :concat_1, machine.cpu_core_count, :concat_2, machine.cpu_thread_count, :concat_3, machine.memory_bytes) AS hash, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
 FROM summary JOIN run ON run.id = summary.run_id JOIN machine ON machine.id = run.machine_id JOIN (SELECT commit_index.id AS id, commit_index.sha AS sha, commit_index.timestamp AS timestamp, commit_index.row_number AS row_number 
 FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
