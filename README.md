@@ -276,8 +276,8 @@ Benchmark result:
         "benchmark_language_version": "Python 3.9.2"
     },
     "github": {
-        "commit": "02addad336ba19a654f9c857ede546331be7b631",
-        "repository": "https://github.com/apache/arrow"
+        "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
+        "repository": "https://github.com/ursacomputing/conbench"
     },
     "machine_info": {
         "architecture_name": "x86_64",
@@ -383,8 +383,8 @@ Example Python execution:
     "name": "addition"
   },
   "github": {
-    "commit": "",
-    "repository": ""
+    "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
+    "repository": "https://github.com/ursacomputing/conbench"
   }
 }
 ```
@@ -501,8 +501,8 @@ Benchmark result:
         "benchmark_language": "C++"
     },
     "github": {
-        "commit": "02addad336ba19a654f9c857ede546331be7b631",
-        "repository": "https://github.com/apache/arrow"
+        "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
+        "repository": "https://github.com/ursacomputing/conbench"
     },
     "machine_info": {
         "architecture_name": "x86_64",
@@ -646,8 +646,8 @@ Benchmark result:
         "benchmark_language_version": "Python 3.9.2"
     },
     "github": {
-        "commit": "02addad336ba19a654f9c857ede546331be7b631",
-        "repository": "https://github.com/apache/arrow"
+        "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
+        "repository": "https://github.com/ursacomputing/conbench"
     },
     "machine_info": {
         "architecture_name": "x86_64",
@@ -699,8 +699,8 @@ Benchmark result:
         "benchmark_language_version": "Python 3.9.2"
     },
     "github": {
-        "commit": "02addad336ba19a654f9c857ede546331be7b631",
-        "repository": "https://github.com/apache/arrow"
+        "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
+        "repository": "https://github.com/ursacomputing/conbench"
     },
     "machine_info": {
         "architecture_name": "x86_64",
@@ -752,8 +752,8 @@ Benchmark result:
         "benchmark_language_version": "Python 3.9.2"
     },
     "github": {
-        "commit": "02addad336ba19a654f9c857ede546331be7b631",
-        "repository": "https://github.com/apache/arrow"
+        "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
+        "repository": "https://github.com/ursacomputing/conbench"
     },
     "machine_info": {
         "architecture_name": "x86_64",
