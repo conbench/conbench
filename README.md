@@ -16,8 +16,8 @@ iterating on performance improvements or to guard against regressions.
 
 Conbench includes a runner which can be used as a stand-alone library
 for traditional benchmark authoring. The runner will time a unit of
-work, collect machine information that may be relevant for hardware
-specific optimizations, and return JSON formatted results.
+work (or measure throughput), collect machine information that may be relevant
+for hardware specific optimizations, and return JSON formatted results.
 
 You can optionally host a Conbench server (API & dashboard) to share
 benchmark results more widely, explore the changes over time, and
@@ -213,10 +213,35 @@ class SimpleBenchmark(conbench.runner.Benchmark):
         return lambda: 1 + 1
 ```
 
+Successfully registered benchmarks appear in the `conbench --help` list.
 
 ```
-$ cd ~/workspace/conbench/conbench/tests/benchmark/
-$ conbench addition --help
+(conbench) $ cd ~/workspace/conbench/conbench/tests/benchmark/
+(conbench) $ conbench --help
+Usage: conbench [OPTIONS] COMMAND [ARGS]...
+
+  Conbench: Language-independent Continuous Benchmarking (CB) Framework
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  addition            Run addition benchmark.
+  external            Run external benchmark.
+  external-r          Run external-r benchmark.
+  external-r-options  Run external-r-options benchmark.
+  list                List of benchmarks (for orchestration).
+  matrix              Run matrix benchmark(s).
+```
+
+Benchmarks can be run from command line within the directory where the
+benchmarks are defined. Benchmark classes can also be imported and executed via
+the `run` method which accepts the same arguments that appear in the command
+line help.
+
+```
+(conbench) $ cd ~/workspace/conbench/conbench/tests/benchmark/
+(conbench) $ conbench addition --help
 
 Usage: conbench addition [OPTIONS]
 
@@ -234,10 +259,11 @@ Options:
   --help                 Show this message and exit.
 ```
 
+Example command line execution:
 
 ```
-$ cd ~/workspace/conbench/conbench/tests/benchmark/
-$ conbench addition
+(conbench) $ cd ~/workspace/conbench/conbench/tests/benchmark/
+(conbench) $ conbench addition
 
 Benchmark result:
 {
@@ -291,6 +317,117 @@ Benchmark result:
 }
 ```
 
+Example Python execution:
+
+```
+(conbench) $ python
+>>> import json
+>>> from conbench.tests.benchmark import _example_benchmarks
+>>> benchmark = _example_benchmarks.SimpleBenchmark()
+>>> [(result, output)] = benchmark.run(iterations=10)
+>>> output
+2
+>>> print(json.dumps(result, indent=2))
+{
+  "run_id": "9dc1beadf4bb46e0ac86cd0bb6fe201f",
+  "batch_id": "9dc1beadf4bb46e0ac86cd0bb6fe201f",
+  "timestamp": "2021-08-20T16:05:57.299148+00:00",
+  "stats": {
+    "data": [
+      "0.000004",
+      "0.000000",
+      "0.000001",
+      "0.000000",
+      "0.000000",
+      "0.000001",
+      "0.000000",
+      "0.000001",
+      "0.000000",
+      "0.000000"
+    ],
+    "times": [],
+    "unit": "s",
+    "time_unit": "s",
+    "iterations": 10,
+    "mean": "0.000001",
+    "median": "0.000000",
+    "min": "0.000000",
+    "max": "0.000004",
+    "stdev": "0.000001",
+    "q1": "0.000000",
+    "q3": "0.000001",
+    "iqr": "0.000001"
+  },
+  "machine_info": {
+    "name": "machine-xyz",
+    "os_name": "macOS",
+    "os_version": "10.16",
+    "architecture_name": "x86_64",
+    "kernel_name": "20.5.0",
+    "memory_bytes": "17179869184",
+    "cpu_model_name": "Apple M1",
+    "cpu_core_count": "8",
+    "cpu_thread_count": "8",
+    "cpu_l1d_cache_bytes": "65536",
+    "cpu_l1i_cache_bytes": "131072",
+    "cpu_l2_cache_bytes": "4194304",
+    "cpu_l3_cache_bytes": "0",
+    "cpu_frequency_max_hz": "2400000000"
+  },
+  "context": {
+    "benchmark_language": "Python",
+    "benchmark_language_version": "Python 3.9.6"
+  },
+  "tags": {
+    "name": "addition"
+  },
+  "github": {
+    "commit": "",
+    "repository": ""
+  }
+}
+```
+
+By default, Conbench will try to publish your results to a Conbench server. If
+you don't have one running or are missing a `.conbench` credentials file, you'll
+see error messages like the following when you execute benchmarks.
+
+```
+POST http://localhost:5000/api/login/ failed
+{
+  "code": 400,
+  "description": {
+    "_errors": [
+      "Invalid email or password."
+    ]
+  },
+  "name": "Bad Request"
+}
+
+POST http://localhost:5000/api/benchmarks/ failed
+{
+  "code": 401,
+  "name": "Unauthorized"
+}
+```
+
+To publish your results to a Conbench server, place a `.conbench` file in the
+same directory as your benchmarks. The `cat` command below shows the contents
+of an example `.conbench` config file.
+
+```
+(conbench) $ cd ~/workspace/conbench/conbench/tests/benchmark/
+(conbench) $ cat .conbench
+url: http://localhost:5000
+email: you@example.com
+password: conbench
+```
+
+If you don't yet have a Conbench server user account, you'll need to create one
+to publish results (registration key defaults to `conbench`).
+
+- http://localhost:5000/register/
+
 
 ### Example external benchmarks
 
@@ -330,8 +467,8 @@ class ExternalBenchmark(conbench.runner.Benchmark):
 
 
 ```
-$ cd ~/workspace/conbench/conbench/tests/benchmark/
-$ conbench external --help
+(conbench) $ cd ~/workspace/conbench/conbench/tests/benchmark/
+(conbench) $ conbench external --help
 
 Usage: conbench external [OPTIONS]
 
@@ -351,8 +488,8 @@ the `mean`, `stdev`, etc calculated.
 
 
 ```
-$ cd ~/workspace/conbench/conbench/tests/benchmark/
-$ conbench external --iterations=3
+(conbench) $ cd ~/workspace/conbench/conbench/tests/benchmark/
+(conbench) $ conbench external --iterations=3
 
 Benchmark result:
 {
@@ -456,8 +593,8 @@ class CasesBenchmark(conbench.runner.Benchmark):
 
 
 ```
-$ cd ~/workspace/conbench/conbench/tests/benchmark/
-$ conbench matrix --help
+(conbench) $ cd ~/workspace/conbench/conbench/tests/benchmark/
+(conbench) $ conbench matrix --help
 
 Usage: conbench matrix [OPTIONS]
 
@@ -495,8 +632,8 @@ case (`10 x 10`, `2, x 10`, and `10, x 2`).
 
 
 ```
-$ cd ~/workspace/conbench/conbench/tests/benchmark/
-$ conbench matrix --all=true
+(conbench) $ cd ~/workspace/conbench/conbench/tests/benchmark/
+(conbench) $ conbench matrix --all=true
 
 Benchmark result:
 {
@@ -712,8 +849,8 @@ class ExternalBenchmarkR(conbench.runner.Benchmark):
 
 
 ```
-$ cd ~/workspace/conbench/conbench/tests/benchmark/
-$ conbench external-r --help
+(conbench) $ cd ~/workspace/conbench/conbench/tests/benchmark/
+(conbench) $ conbench external-r --help
 
 Usage: conbench external-r [OPTIONS]
 
@@ -778,8 +915,8 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
 ```
 
 ```
-$ cd ~/workspace/conbench/conbench/tests/benchmark/
-$ conbench external-r --help
+(conbench) $ cd ~/workspace/conbench/conbench/tests/benchmark/
+(conbench) $ conbench external-r --help
 
 Usage: conbench external-r-options [OPTIONS]
 

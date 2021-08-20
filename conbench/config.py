@@ -12,7 +12,7 @@ class Config:
     DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
     DB_PORT = os.environ.get("DB_PORT", "5432")
     DB_USERNAME = os.environ.get("DB_USERNAME", getpass.getuser())
-    REGISTRATION_KEY = os.environ.get("REGISTRATION_KEY", "Benchmarking2021")
+    REGISTRATION_KEY = os.environ.get("REGISTRATION_KEY", "conbench")
     SECRET_KEY = os.environ.get("SECRET_KEY", "Person, woman, man, camera, TV")
     SQLALCHEMY_DATABASE_URI = (
         f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
