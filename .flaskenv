@@ -4,6 +4,6 @@ DB_PASSWORD=postgres
 DB_PORT=5432
 FLASK_APP=conbench
 FLASK_ENV=development
-REGISTRATION_KEY=code
+REGISTRATION_KEY=conbench
 SECRET_KEY="Person, woman, man, camera, TV"
 BENCHMARKS_DATA_PUBLIC=true
