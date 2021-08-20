@@ -4,9 +4,7 @@ import flask as f
 import flask_login
 import marshmallow
 
-
-from ..api import _google
-from ..api import rule
+from ..api import _google, rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint
 from ..api.users import User

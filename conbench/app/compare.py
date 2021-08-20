@@ -1,12 +1,12 @@
 import copy
-import flask as f
 import json
 
 import bokeh
+import flask as f
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint
-from ..app._plots import simple_bar_plot, TimeSeriesPlotMixin
+from ..app._plots import TimeSeriesPlotMixin, simple_bar_plot
 from ..app.benchmarks import BenchmarkMixin, RunMixin
 from ..config import Config
 

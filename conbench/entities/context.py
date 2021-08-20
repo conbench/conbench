@@ -6,8 +6,8 @@ from ..entities._entity import (
     Base,
     EntityMixin,
     EntitySerializer,
-    generate_uuid,
     NotNull,
+    generate_uuid,
 )
 
 

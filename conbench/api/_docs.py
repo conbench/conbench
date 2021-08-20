@@ -5,7 +5,6 @@ import apispec_webframeworks.flask
 from ..api import _examples as ex
 from ..config import Config
 
-
 spec = apispec.APISpec(
     title=Config.APPLICATION_NAME,
     version="1.0.0",

@@ -1,7 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session
-from sqlalchemy.orm import sessionmaker
-
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 engine = None
 session_maker = sessionmaker(future=True)

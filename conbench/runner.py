@@ -13,7 +13,6 @@ import numpy as np
 from .machine_info import github_info, machine_info, python_info, r_info
 from .util import Connection
 
-
 REGISTRY = []
 LIST = []
 

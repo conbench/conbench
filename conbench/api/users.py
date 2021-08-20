@@ -1,7 +1,6 @@
 import flask_login
 import marshmallow
 
-
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint

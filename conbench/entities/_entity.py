@@ -8,7 +8,6 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from ..db import Session
 
-
 Base = declarative_base()
 NotNull = functools.partial(Column, nullable=False)
 Nullable = functools.partial(Column, nullable=True)

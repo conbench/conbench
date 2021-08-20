@@ -1,17 +1,11 @@
 import sqlalchemy as s
-from sqlalchemy import func
 from sqlalchemy import CheckConstraint as check
+from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import insert
 
 from ..db import Session
-from ..entities._entity import (
-    Base,
-    EntityMixin,
-    generate_uuid,
-    NotNull,
-    Nullable,
-)
 from ..entities._comparator import _less_is_better
+from ..entities._entity import Base, EntityMixin, NotNull, Nullable, generate_uuid
 from ..entities.commit import Commit
 from ..entities.machine import Machine
 from ..entities.run import Run

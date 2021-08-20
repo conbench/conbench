@@ -5,7 +5,6 @@ from ...machine_info import (
     _round_memory,
 )
 
-
 L1D_CACHE = 524288
 L1I_CACHE = 524288
 L2_CACHE = 16777216

@@ -129,6 +129,13 @@ repository, and the results are hosted on the
     (conbench) $ git add foo.py
 
 
+### Sort imports (before committing)
+    (conbench) $ cd ~/workspace/conbench/
+    (conbench) $ isort .
+        Fixing foo.py
+    (conbench) $ git add foo.py
+
+
 ### Lint code (before committing)
     (qa) $ cd ~/workspace/conbench/
     (qa) $ flake8

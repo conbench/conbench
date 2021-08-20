@@ -11,9 +11,9 @@ from ..entities._entity import (
     Base,
     EntityMixin,
     EntitySerializer,
-    generate_uuid,
     NotNull,
     Nullable,
+    generate_uuid,
 )
 
 

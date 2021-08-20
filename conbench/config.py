@@ -1,6 +1,5 @@
-import os
 import getpass
-
+import os
 
 APPLICATION_NAME = "Conbench"
 

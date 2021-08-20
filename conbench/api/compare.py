@@ -1,6 +1,5 @@
 import flask as f
 
-
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._comparator import BenchmarkComparator, BenchmarkListComparator

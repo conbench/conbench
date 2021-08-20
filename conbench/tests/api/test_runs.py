@@ -1,8 +1,7 @@
 import urllib
 
 from ...api._examples import _api_run_entity
-from ...tests.api import _asserts
-from ...tests.api import _fixtures
+from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
 

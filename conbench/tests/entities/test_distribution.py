@@ -17,7 +17,6 @@ from ...runner import Conbench
 from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
 
-
 REPO = "https://github.com/org/something"
 MACHINE = "diana-2-4-17179869184"
 

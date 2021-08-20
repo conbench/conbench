@@ -1,4 +1,4 @@
-from ...units import bytes_per_seconds_fmt, items_per_seconds_fmt, formatter_for_unit
+from ...units import bytes_per_seconds_fmt, formatter_for_unit, items_per_seconds_fmt
 
 
 def test_items_per_seconds_fmt():

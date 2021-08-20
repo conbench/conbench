@@ -1,8 +1,8 @@
 import datetime
-import dateutil
 import json
 import os
 
+import dateutil
 import pytest
 
 from ...entities.commit import (
@@ -12,7 +12,6 @@ from ...entities.commit import (
     repository_to_url,
 )
 from ...tests.api import _fixtures
-
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 

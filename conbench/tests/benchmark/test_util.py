@@ -2,7 +2,6 @@ import tempfile
 
 from conbench.util import Config, Connection, get_config
 
-
 CONFIG = b"""
 url: https://conbench.io
 email: cole@example.com

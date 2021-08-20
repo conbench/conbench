@@ -1,7 +1,7 @@
 import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
 
-from ..entities._entity import Base, EntityMixin, generate_uuid, NotNull
+from ..entities._entity import Base, EntityMixin, NotNull, generate_uuid
 
 
 class Case(Base, EntityMixin):

@@ -1,8 +1,6 @@
 from ...api._examples import _api_compare_entity, _api_compare_list
-from ...tests.api import _asserts
-from ...tests.api import _fixtures
+from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
-
 
 CASE = "snappy, cpu_count=2, parquet, arrow, nyctaxi_sample"
 
