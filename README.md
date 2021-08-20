@@ -173,7 +173,7 @@ repository, and the results are hosted on the
 There are three main types of benchmarks: "simple benchmarks" that time the
 execution of a unit of work, "external benchmarks" that just record benchmark
 results that were obtained from some other benchmarking tool, and "case
-benchmarks" which benchmark a unit of work under different scenarios.
+benchmarks" which benchmark a unit of work under different scenarios (cases).
 
 Included in this repository are contrived, minimal examples of these different
 kinds of benchmarks to be used as templates for benchmark authoring. These
@@ -235,9 +235,10 @@ Commands:
 ```
 
 Benchmarks can be run from command line within the directory where the
-benchmarks are defined. Benchmark classes can also be imported and executed via
-the `run` method which accepts the same arguments that appear in the command
-line help.
+benchmarks are defined.
+
+Benchmark classes can also be imported and executed via the `run` method which
+accepts the same arguments that appear in the command line help.
 
 ```
 (conbench) $ cd ~/workspace/conbench/conbench/tests/benchmark/
