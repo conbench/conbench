@@ -1,6 +1,5 @@
 from ...api._examples import _api_machine_entity
-from ...tests.api import _asserts
-from ...tests.api import _fixtures
+from ...tests.api import _asserts, _fixtures
 
 
 def _expected_entity(machine):

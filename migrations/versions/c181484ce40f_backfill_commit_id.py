@@ -6,9 +6,7 @@ Create Date: 2021-07-29 08:13:59.714930
 
 """
 from alembic import op
-from sqlalchemy import MetaData
-from sqlalchemy import distinct, select
-
+from sqlalchemy import MetaData, distinct, select
 
 # revision identifiers, used by Alembic.
 revision = "c181484ce40f"

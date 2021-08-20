@@ -7,10 +7,8 @@ from ...api._examples import _api_benchmark_entity
 from ...entities._entity import NotFound
 from ...entities.distribution import Distribution
 from ...entities.summary import Summary
-from ...tests.api import _asserts
-from ...tests.api import _fixtures
+from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
-
 
 ARROW_REPO = "https://github.com/apache/arrow"
 CONBENCH_REPO = "https://github.com/ursacomputing/conbench"

@@ -6,18 +6,18 @@ import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy.orm import relationship
 
+from ..entities._comparator import z_improvement, z_regression
 from ..entities._entity import (
     Base,
     EntityMixin,
     EntitySerializer,
-    generate_uuid,
     NotNull,
     Nullable,
+    generate_uuid,
 )
-from ..entities._comparator import z_improvement, z_regression
 from ..entities.case import Case
-from ..entities.context import Context
 from ..entities.commit import Commit, get_github_commit, repository_to_url
+from ..entities.context import Context
 from ..entities.data import Data
 from ..entities.distribution import update_distribution
 from ..entities.machine import Machine, MachineSchema

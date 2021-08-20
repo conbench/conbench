@@ -1,6 +1,5 @@
-from ._example_benchmarks import CasesBenchmark, ExternalBenchmark, SimpleBenchmark
 from ...entities.summary import BenchmarkFacadeSchema
-
+from ._example_benchmarks import CasesBenchmark, ExternalBenchmark, SimpleBenchmark
 
 REPO = "https://github.com/ursacomputing/conbench"
 example = {

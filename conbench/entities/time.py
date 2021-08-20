@@ -1,7 +1,7 @@
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 
-from ..entities._entity import Base, EntityMixin, generate_uuid, NotNull
+from ..entities._entity import Base, EntityMixin, NotNull, generate_uuid
 
 
 class Time(Base, EntityMixin):

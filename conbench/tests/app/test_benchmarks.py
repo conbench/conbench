@@ -1,5 +1,5 @@
-from ...tests.app import _asserts
 from ...tests.api import _fixtures
+from ...tests.app import _asserts
 
 
 def create_benchmark(client):

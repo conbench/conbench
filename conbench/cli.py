@@ -2,9 +2,8 @@ import json
 
 import click
 
-from .runner import REGISTRY, LIST
+from .runner import LIST, REGISTRY
 from .util import register_benchmarks
-
 
 register_benchmarks()
 BENCHMARKS = {}

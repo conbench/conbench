@@ -2,8 +2,8 @@ import functools
 import os
 
 import flask as f
-import flask_login
 import flask.views
+import flask_login
 
 
 def as_bool(x):

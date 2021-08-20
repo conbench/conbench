@@ -5,7 +5,6 @@ import pytest
 
 from ...util import register_benchmarks
 
-
 CONBENCH = """
 Usage: conbench [OPTIONS] COMMAND [ARGS]...
 

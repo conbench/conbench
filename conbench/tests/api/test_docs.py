@@ -6,7 +6,6 @@ from openapi_spec_validator import validate_spec
 
 from ...tests.api import _asserts
 
-
 this_dir = os.path.abspath(os.path.dirname(__file__))
 
 

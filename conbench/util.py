@@ -4,14 +4,12 @@ import os
 import sys
 import time
 import urllib.parse
-import yaml
 
 import click
 import requests
-
+import yaml
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-
 
 retry_strategy = Retry(
     total=5,

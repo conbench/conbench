@@ -2,7 +2,6 @@ import decimal
 
 from ..units import formatter_for_unit
 
-
 CHANGE = 5.0  # percent changed threshold
 Z_SCORE = 5.0  # z-score threshold
 

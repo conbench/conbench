@@ -1,7 +1,7 @@
-import dateutil
 import json
 
 import bokeh.plotting
+import dateutil
 
 from ..hacks import sorted_data
 

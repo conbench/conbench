@@ -1,7 +1,6 @@
 import flask as f
 import flask_login
 
-
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required

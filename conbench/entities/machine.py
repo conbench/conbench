@@ -1,16 +1,16 @@
 import flask as f
 import marshmallow
 import sqlalchemy as s
-from sqlalchemy import func
 from sqlalchemy import CheckConstraint as check
+from sqlalchemy import func
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from ..entities._entity import (
     Base,
     EntityMixin,
     EntitySerializer,
-    generate_uuid,
     NotNull,
+    generate_uuid,
 )
 
 
