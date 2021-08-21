@@ -21,8 +21,10 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         baseline_run, contender_run = None, None
 
         if comparisons and self.type == "batch":
-            baseline_run_id = comparisons[0]["baseline_run_id"]
-            contender_run_id = comparisons[0]["contender_run_id"]
+            ids = {c["baseline_run_id"] for c in comparisons if c["baseline_run_id"]}
+            baseline_run_id = ids.pop() if ids else None
+            ids = {c["contender_run_id"] for c in comparisons if c["contender_run_id"]}
+            contender_run_id = ids.pop() if ids else None
             compare = f"{baseline_run_id}...{contender_run_id}"
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
         elif comparisons and self.type == "run":
