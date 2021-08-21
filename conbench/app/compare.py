@@ -33,10 +33,10 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
             plot = self._get_plot(baseline, contender)
             plot_history = self.get_history_plot(contender)
             baseline_run_id = baseline["run_id"]
-            contender_run_id = baseline["run_id"]
+            contender_run_id = contender["run_id"]
             compare = f"{baseline_run_id}...{contender_run_id}"
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
-            compare = f'{baseline["batch_id"]}...{baseline["batch_id"]}'
+            compare = f'{baseline["batch_id"]}...{contender["batch_id"]}'
             compare_batches_url = f.url_for("app.compare-batches", compare_ids=compare)
 
         if comparisons:
