@@ -21,11 +21,15 @@ def _less_is_better(unit):
 
 
 def z_regression(z_score, threshold_z=None):
+    if z_score is None:
+        return False
     threshold_z = threshold_z if threshold_z else Z_SCORE
     return -z_score > threshold_z
 
 
 def z_improvement(z_score, threshold_z=None):
+    if z_score is None:
+        return False
     threshold_z = threshold_z if threshold_z else Z_SCORE
     return z_score > threshold_z
 
@@ -53,7 +57,7 @@ class BenchmarkResult:
         self.value = decimal.Decimal(value)
         self.tags = tags
         self.language = language
-        self.z_score = decimal.Decimal(z_score)
+        self.z_score = decimal.Decimal(z_score) if z_score is not None else None
 
 
 class BenchmarkComparator:
@@ -129,13 +133,13 @@ class BenchmarkComparator:
     @property
     def baseline_z_score(self):
         if self.baseline is None:
-            return 0.0
+            return None
         return self.baseline.z_score
 
     @property
     def contender_z_score(self):
         if self.contender is None:
-            return 0.0
+            return None
         return self.contender.z_score
 
     @property

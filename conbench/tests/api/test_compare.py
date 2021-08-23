@@ -75,7 +75,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "contender": "20.000 s",
                 "change": "-566.667%",
                 "regression": True,
-                "baseline_z_score": "0.000",
+                "baseline_z_score": None,
                 "contender_z_score": "-{:.3f}".format(_fixtures.Z_SCORE_UP),
                 "contender_z_regression": True,
             }

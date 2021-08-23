@@ -172,6 +172,7 @@ class _Serializer(EntitySerializer):
         data = [result for _, result in by_iteration_data]
         by_iteration_times = sorted([(x.iteration, x.result) for x in summary.times])
         times = [result for _, result in by_iteration_times]
+        z_score = self.decimal_fmt.format(summary.z_score) if summary.z_score else None
         case = summary.case
         tags = {"id": case.id, "name": case.name}
         tags.update(case.tags)
@@ -195,7 +196,7 @@ class _Serializer(EntitySerializer):
                 "q1": self.decimal_fmt.format(summary.q1),
                 "q3": self.decimal_fmt.format(summary.q3),
                 "iqr": self.decimal_fmt.format(summary.iqr),
-                "z_score": self.decimal_fmt.format(summary.z_score),
+                "z_score": z_score,
                 "z_regression": z_regression(summary.z_score),
                 "z_improvement": z_improvement(summary.z_score),
             },
