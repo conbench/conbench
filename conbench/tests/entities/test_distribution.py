@@ -5,7 +5,6 @@ import statistics
 
 from ...entities.commit import Commit
 from ...entities.distribution import (
-    Distribution,
     get_commit_index,
     get_commits_up,
     get_distribution,
