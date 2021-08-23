@@ -21,7 +21,8 @@ jobs:
       - name: Lint (black)
         uses: psf/black@stable
         with:
-          args: ". --check"
+          options: --check --diff
+          src: .
       - name: Install dependencies
         run: |
           pip install -r requirements-test.txt
@@ -40,6 +41,9 @@ jobs:
       - name: Lint (flake8)
         run: |
           flake8
+      - name: Lint (isort)
+        run: |
+          isort --check .
       - name: Run tests
         run: |
           coverage run --source conbench -m pytest -v --durations=20 conbench/tests/
