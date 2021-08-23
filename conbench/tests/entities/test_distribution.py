@@ -255,8 +255,6 @@ def test_distribution():
     assert summary_1.run.machine_id == summary_4.run.machine_id
     assert summary_1.run.machine_id == summary_5.run.machine_id
 
-    assert Distribution.count() >= 7
-
     # ----- get_commit_index
 
     expected = [
@@ -415,15 +413,15 @@ def test_distribution():
 
     # first commit, no distribution history
     set_z_scores([summary_1])
-    assert summary_1.z_score == 0
+    assert summary_1.z_score is None
 
     # second commit, no change
     set_z_scores([summary_2])
-    assert summary_2.z_score == 0
+    assert summary_2.z_score is None
 
     # third commit, got better, but distribution stdev was 0
     set_z_scores([summary_3])
-    assert summary_3.z_score == 0
+    assert summary_3.z_score is None
 
     # forth commit, stayed about the same (but still better)
     set_z_scores([summary_4])
@@ -435,11 +433,11 @@ def test_distribution():
 
     # n/a different repo, no distribution history
     set_z_scores([summary_b])
-    assert summary_b.z_score == 0
+    assert summary_b.z_score is None
 
     # n/a different case, no distribution history
     set_z_scores([summary_x])
-    assert summary_x.z_score == 0
+    assert summary_x.z_score is None
 
 
 def test_distribution_multiple_runs_same_commit():
@@ -532,9 +530,9 @@ def test_distribution_multiple_runs_same_commit():
 
     # before
     set_z_scores([summary_1])
-    assert summary_1.z_score == 0
+    assert summary_1.z_score is None
     set_z_scores([summary_2])
-    assert summary_2.z_score == 0
+    assert summary_2.z_score is None
     set_z_scores([summary_3])
     Z_SCORE_UP_DECIMAL = decimal.Decimal(_fixtures.Z_SCORE_UP)
     assert round(summary_3.z_score, 10) == -1 * round(Z_SCORE_UP_DECIMAL, 10)
@@ -542,13 +540,13 @@ def test_distribution_multiple_runs_same_commit():
     # re-run commit 2
     summary_4 = create_benchmark_summary([0, 1, 2], commit_2, name=name)
     set_z_scores([summary_4])
-    assert summary_4.z_score == 0
+    assert summary_4.z_score is None
 
     # after, summary_3 z-score changes with more info
     set_z_scores([summary_1])
-    assert summary_1.z_score == 0
+    assert summary_1.z_score is None
     set_z_scores([summary_2])
-    assert summary_2.z_score == 0
+    assert summary_2.z_score is None
     set_z_scores([summary_3])
     Z_SCORE_UP_DECIMAL = decimal.Decimal("18.0000000000")
     assert round(summary_3.z_score, 10) == -1 * round(Z_SCORE_UP_DECIMAL, 10)
