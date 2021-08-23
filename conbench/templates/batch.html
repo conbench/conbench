@@ -72,7 +72,11 @@
                          <div>{{ benchmark.display_name }}</div>
                      </a></td>
                      <td>{{ benchmark.display_mean }}</td>
-                     <td>{{ benchmark.stats.z_score }}</td>
+                     {% if benchmark.stats.z_score is not none %}
+                       <td>{{ benchmark.stats.z_score }}</td>
+                     {% else %}
+                       <td></td>
+                     {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>

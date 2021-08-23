@@ -43,7 +43,9 @@
                     {% for c in comparisons %}
                     <tr>
                          <td>
-                           {{ c.contender_z_score }} z
+                           {% if c.contender_z_score %}
+                             {{ c.contender_z_score }} z
+                           {% endif %}
                            {% if c.contender_z_regression %}
                            <span class="glyphicon glyphicon-arrow-down"></span></b>
                            {% endif %}
@@ -154,16 +156,18 @@
           {% for k,v in baseline.stats.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">
-              {{ v }}
-              </div>
+              {% if v is not none %}
+                <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+              {% endif %}
             </li>
           {% endfor %}
           <li class="list-group-item active">Tags</li>
           {% for k,v in baseline.tags.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+              {% if v is not none %}
+                <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+              {% endif %}
             </li>
           {% endfor %}
           <li class="list-group-item active">Machine</li>
@@ -263,16 +267,18 @@
           {% for k,v in contender.stats.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">
-              {{ v }}
-              </div>
+              {% if v is not none %}
+                <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+              {% endif %}
             </li>
           {% endfor %}
           <li class="list-group-item active">Tags</li>
           {% for k,v in contender.tags.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+              {% if v is not none %}
+                <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+              {% endif %}
             </li>
           {% endfor %}
           <li class="list-group-item active">Machine</li>
