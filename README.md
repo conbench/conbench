@@ -122,9 +122,7 @@ repository, and the results are hosted on the
 
 ### Format code (before committing)
     (conbench) $ cd ~/workspace/conbench/
-    (conbench) $ git status
-        modified: foo.py
-    (conbench) $ black foo.py
+    (conbench) $ black .
         reformatted foo.py
     (conbench) $ git add foo.py
 

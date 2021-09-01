@@ -23,6 +23,9 @@ class RunPlot(AppEndpoint, ContextMixin, RunMixin):
         )
 
     def get(self, run_id):
+        if self.public_data_off():
+            return self.redirect("app.login")
+
         contender_run, baseline_run = self.get_display_run(run_id), None
         if contender_run:
             baseline_url = contender_run["links"].get("baseline")
@@ -30,11 +33,11 @@ class RunPlot(AppEndpoint, ContextMixin, RunMixin):
                 baseline_run = self.get_display_baseline_run(baseline_url)
 
         benchmarks, response = self._get_benchmarks(run_id)
-        contexts = self.get_contexts(benchmarks)
         if response.status_code != 200:
             self.flash("Error getting benchmarks.")
             return self.redirect("app.index")
 
+        contexts = self.get_contexts(benchmarks)
         for benchmark in benchmarks:
             augment(benchmark, contexts)
 

@@ -1,5 +1,6 @@
 import re
 
+from ...tests.api import _fixtures
 from ...tests.helpers import _create_fixture_user, create_random_user
 
 
@@ -67,3 +68,117 @@ class AppEndpointTest:
         self.assert_200_ok(r)
         title = "{} - ".format(title).encode()
         assert title in r.data, r.data
+
+    def create_benchmark(self, client):
+        self.authenticate(client)
+        response = client.post("/api/benchmarks/", json=_fixtures.VALID_PAYLOAD)
+        benchmark_id = response.json["id"]
+        self.logout(client)
+        return benchmark_id
+
+
+class Enforcer(AppEndpointTest):
+    def test_authenticated(self, client):
+        raise NotImplementedError()
+
+    def test_unauthenticated(self, client):
+        raise NotImplementedError()
+
+    def test_public_data_off(self, client, monkeypatch):
+        raise NotImplementedError()
+
+
+class ListEnforcer(Enforcer):
+    def _assert_view(self, client, new_id):
+        response = client.get(self.url)
+        self.assert_page(response, self.title)
+        assert f"{new_id}".encode() in response.data
+
+    def test_authenticated(self, client, monkeypatch):
+        new_id = self._create(client)
+
+        monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "on")
+        self.authenticate(client)
+        self._assert_view(client, new_id)
+
+    def test_unauthenticated(self, client, monkeypatch):
+        new_id = self._create(client)
+
+        monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "on")
+        self.logout(client)
+        self._assert_view(client, new_id)
+
+    def test_public_data_off(self, client, monkeypatch):
+        new_id = self._create(client)
+
+        monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "off")
+        self.logout(client)
+        response = client.get(self.url, follow_redirects=True)
+        assert new_id.encode() not in response.data
+        assert b"Sign In - Conbench" in response.data, response.data
+
+
+class GetEnforcer(Enforcer):
+    def _assert_view(self, client, new_id):
+        response = client.get(self.url.format(new_id))
+        self.assert_page(response, self.title)
+        assert f'{new_id.split("...")[0]}'.encode() in response.data
+
+    def test_authenticated(self, client, monkeypatch):
+        new_id = self._create(client)
+
+        monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "on")
+        self.authenticate(client)
+        self._assert_view(client, new_id)
+
+    def test_unauthenticated(self, client, monkeypatch):
+        new_id = self._create(client)
+
+        monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "on")
+        self.logout(client)
+        self._assert_view(client, new_id)
+
+    def test_public_data_off(self, client, monkeypatch):
+        new_id = self._create(client)
+        entity_url = self.url.format(new_id)
+
+        monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "off")
+        self.logout(client)
+        response = client.get(entity_url, follow_redirects=True)
+        assert new_id.encode() not in response.data
+        assert b"Sign In - Conbench" in response.data, response.data
+
+    def test_unknown(self, client):
+        self.authenticate(client)
+        unknown_url = self.url.format("unknown")
+        response = client.get(unknown_url, follow_redirects=True)
+        if getattr(self, "redirect_on_unknown", True):
+            assert b"Home - Conbench" in response.data, response.data
+        else:
+            title = "{} - Conbench".format(self.title).encode()
+            assert title in response.data, response.data
+
+
+class CreateEnforcer(Enforcer):
+    def test_authenticated(self, client):
+        raise NotImplementedError()
+
+    def test_unauthenticated(self, client):
+        raise NotImplementedError()
+
+    def test_no_csrf_token(self, client):
+        raise NotImplementedError()
+
+
+class DeleteEnforcer(Enforcer):
+    def test_authenticated(self, client):
+        raise NotImplementedError()
+
+    def test_unauthenticated(self, client):
+        raise NotImplementedError()
+
+    def test_no_csrf_token(self, client):
+        raise NotImplementedError()
+
+    def test_public_data_off(self, client, monkeypatch):
+        pass

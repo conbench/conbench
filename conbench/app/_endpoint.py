@@ -1,9 +1,19 @@
+import os
+
 import flask as f
 import flask.views
 import flask_login
 
 
+def as_bool(x):
+    return x.lower() in ["yes", "y", "1", "on", "true"]
+
+
 class AppEndpoint(flask.views.MethodView):
+    def public_data_off(self):
+        public = as_bool(os.getenv("BENCHMARKS_DATA_PUBLIC", "yes"))
+        return not flask_login.current_user.is_authenticated and not public
+
     def redirect(self, endpoint, **kwargs):
         return f.redirect(f.url_for(endpoint, **kwargs))
 
