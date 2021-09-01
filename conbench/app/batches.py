@@ -32,6 +32,9 @@ class BatchPlot(AppEndpoint, ContextMixin):
         )
 
     def get(self, batch_id):
+        if self.public_data_off():
+            return self.redirect("app.login")
+
         benchmarks, response = self._get_benchmarks(batch_id)
         if response.status_code != 200:
             self.flash("Error getting benchmarks.")

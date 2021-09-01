@@ -134,6 +134,9 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         )
 
     def get(self, benchmark_id):
+        if self.public_data_off():
+            return self.redirect("app.login")
+
         benchmark, run = self._get_benchmark_and_run(benchmark_id)
         return self.page(benchmark, run, DeleteForm())
 
@@ -187,6 +190,9 @@ class BenchmarkList(AppEndpoint, ContextMixin):
         )
 
     def get(self):
+        if self.public_data_off():
+            return self.redirect("app.login")
+
         benchmarks, response = self._get_benchmarks()
         if response.status_code != 200:
             self.flash("Error getting benchmarks.")

@@ -86,6 +86,9 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         return plot
 
     def get(self, compare_ids):
+        if self.public_data_off():
+            return self.redirect("app.login")
+
         threshold = f.request.args.get("threshold")
         params = {"compare_ids": compare_ids}
         if threshold is not None:

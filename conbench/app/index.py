@@ -22,6 +22,9 @@ class Index(AppEndpoint, RunMixin):
         )
 
     def get(self):
+        if self.public_data_off():
+            return self.redirect("app.login")
+
         runs = self.get_display_runs()
         return self.page(runs)
 
