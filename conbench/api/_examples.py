@@ -259,6 +259,8 @@ def _api_machine_entity(machine_id, links=True):
         "name": "diana",
         "os_name": "macOS",
         "os_version": "10.15.7",
+        "gpu_count": 2,
+        "gpu_product_names": ["Tesla T4", "GeForce GTX 1060 3GB"],
         "links": {
             "list": "http://localhost/api/machines/",
             "self": "http://localhost/api/machines/%s/" % machine_id,

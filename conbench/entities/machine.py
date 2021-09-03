@@ -3,6 +3,7 @@ import marshmallow
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy import func
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from ..entities._entity import (
@@ -31,6 +32,10 @@ class Machine(Base, EntityMixin):
     cpu_thread_count = NotNull(s.Integer, check("cpu_thread_count>=0"))
     cpu_frequency_max_hz = NotNull(s.BigInteger, check("cpu_frequency_max_hz>=0"))
     memory_bytes = NotNull(s.BigInteger, check("memory_bytes>=0"))
+    gpu_count = NotNull(s.Integer, check("gpu_count>=0"), default=0)
+    gpu_product_names = NotNull(postgresql.ARRAY(s.Text), default=[])
+
+    # TODO: Does GPU count belong in the hash?
 
     @hybrid_property
     def hash(self):
@@ -73,6 +78,8 @@ s.Index(
     Machine.cpu_thread_count,
     Machine.cpu_frequency_max_hz,
     Machine.memory_bytes,
+    Machine.gpu_count,
+    Machine.gpu_product_names,
     unique=True,
 )
 
@@ -95,6 +102,8 @@ class _Serializer(EntitySerializer):
             "cpu_thread_count": machine.cpu_thread_count,
             "cpu_frequency_max_hz": machine.cpu_frequency_max_hz,
             "memory_bytes": machine.memory_bytes,
+            "gpu_count": machine.gpu_count,
+            "gpu_product_names": machine.gpu_product_names,
             "links": {
                 "list": f.url_for("api.machines", _external=True),
                 "self": f.url_for("api.machine", machine_id=machine.id, _external=True),
@@ -122,6 +131,10 @@ class MachineCreate(marshmallow.Schema):
     cpu_thread_count = marshmallow.fields.Integer(required=True)
     cpu_frequency_max_hz = marshmallow.fields.Integer(required=True)
     memory_bytes = marshmallow.fields.Integer(required=True)
+    gpu_count = marshmallow.fields.Integer(required=True)
+    gpu_product_names = marshmallow.fields.List(
+        marshmallow.fields.String, required=True
+    )
 
 
 class MachineSchema:
