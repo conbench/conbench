@@ -46,6 +46,11 @@ MEMINFO_MAPPING = {
     "memory_bytes": "MemTotal",
 }
 
+NVIDIA_SMI_MAPPING = {
+    "gpu_count": None,
+    "gpu_product_names": None,
+}
+
 CPUINFO_MAPPING = {
     "cpu_model_name": "brand_raw",
     "cpu_l1d_cache_bytes": "l1_data_cache_size",
@@ -111,6 +116,7 @@ def machine_info(host_name):
     _lscpu(info)
     _cpuinfo(info)
     _psutil(info)
+    _nvidia_smi(info)
 
     for key in MUST_BE_INTS:
         try:
@@ -203,6 +209,25 @@ def _meminfo(info):
 
     parts = result.stdout.decode("utf-8").strip().split("\n")
     _fill_from_meminfo(info, parts)
+
+
+def _nvidia_smi(info):
+    missing = _has_missing(info, MEMINFO_MAPPING)
+    if not missing:
+        return
+
+    try:
+        command = ["nvidia-smi", "--query-gpu=gpu_name", "--format=csv,noheader"]
+        result = subprocess.run(command, capture_output=True)
+        if result.returncode != 0:
+            return
+    except:
+        return
+
+    parts = result.stdout.decode("utf-8").strip().split("\n")
+    if parts:
+        info["gpu_count"] = len(parts)
+        info["gpu_product_names"] = parts
 
 
 def _fill_from_cpuinfo(info, cpu_info):
