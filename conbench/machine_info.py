@@ -16,6 +16,7 @@ MUST_BE_INTS = [
     "cpu_l2_cache_bytes",
     "cpu_l3_cache_bytes",
     "memory_bytes",
+    "gpu_count",
 ]
 
 
@@ -101,6 +102,8 @@ def machine_info(host_name):
         "cpu_l2_cache_bytes": None,
         "cpu_l3_cache_bytes": None,
         "cpu_frequency_max_hz": None,
+        "gpu_count": None,
+        "gpu_product_names": [],
     }
 
     _commands(info)
@@ -112,13 +115,14 @@ def machine_info(host_name):
     for key in MUST_BE_INTS:
         try:
             int(info[key])
-        except ValueError:
+        except (ValueError, TypeError):
             info[key] = 0
 
     info["memory_bytes"] = _round_memory(int(info["memory_bytes"]))
 
     for key in info:
-        info[key] = str(info[key])
+        if not isinstance(info[key], list):
+            info[key] = str(info[key])
 
     return info
 

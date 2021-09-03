@@ -47,6 +47,8 @@ VALID_PAYLOAD = {
         "name": "diana",
         "os_name": "macOS",
         "os_version": "10.15.7",
+        "gpu_count": "2",
+        "gpu_product_names": ["Tesla T4", "GeForce GTX 1060 3GB"],
     },
     "stats": {
         "data": [
