@@ -11,7 +11,6 @@ from ..entities._entity import (
     EntityMixin,
     EntitySerializer,
     NotNull,
-    Nullable,
     generate_uuid,
 )
 
@@ -33,8 +32,8 @@ class Machine(Base, EntityMixin):
     cpu_thread_count = NotNull(s.Integer, check("cpu_thread_count>=0"))
     cpu_frequency_max_hz = NotNull(s.BigInteger, check("cpu_frequency_max_hz>=0"))
     memory_bytes = NotNull(s.BigInteger, check("memory_bytes>=0"))
-    gpu_count = Nullable(s.Integer, check("gpu_count>=0"), default=0)
-    gpu_product_names = Nullable(postgresql.ARRAY(s.Text), default=[])
+    gpu_count = NotNull(s.Integer, check("gpu_count>=0"), default=0)
+    gpu_product_names = NotNull(postgresql.ARRAY(s.Text), default=[])
 
     # TODO: Does GPU count belong in the hash?
 
