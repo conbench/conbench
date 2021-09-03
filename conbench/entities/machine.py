@@ -36,6 +36,8 @@ class Machine(Base, EntityMixin):
     gpu_count = Nullable(s.Integer, check("gpu_count>=0"), default=0)
     gpu_product_names = Nullable(postgresql.ARRAY(s.Text), default=[])
 
+    # TODO: Does GPU count belong in the hash?
+
     @hybrid_property
     def hash(self):
         return (
