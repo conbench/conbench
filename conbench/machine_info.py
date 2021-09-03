@@ -212,7 +212,7 @@ def _meminfo(info):
 
 
 def _nvidia_smi(info):
-    missing = _has_missing(info, MEMINFO_MAPPING)
+    missing = _has_missing(info, NVIDIA_SMI_MAPPING)
     if not missing:
         return
 
