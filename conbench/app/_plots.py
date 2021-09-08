@@ -1,3 +1,4 @@
+import collections
 import json
 
 import bokeh.plotting
@@ -69,7 +70,7 @@ def _simple_source(data, unit):
     points_formated, units_formatted = [], set()
 
     for *values, point in data:
-        cases.append("-".join(values))
+        cases.append(values)
         points.append(point)
         formatted = unit_fmt(float(point), unit)
         means.append(formatted)
@@ -84,6 +85,12 @@ def _simple_source(data, unit):
     axis_unit = unit_formatted if unit_formatted is not None else unit
     if axis_unit == unit:
         axis_unit = get_display_unit(unit)
+
+    # remove redundant tags from labels
+    len_cases = len(cases)
+    counts = collections.Counter([tag for case in cases for tag in case])
+    stripped = [[tag for tag in case if counts[tag] != len_cases] for case in cases]
+    cases = ["-".join(tags) for tags in stripped]
 
     source_data = dict(x=cases, y=points, means=means)
     return bokeh.models.ColumnDataSource(data=source_data), axis_unit
