@@ -70,6 +70,19 @@ class Connection:
 
 def places_to_look():
     current_dir = os.getcwd()
+
+    # Handle projects where the envelope is also the package
+    # (has both a setup.py and an __init__.py).
+    #
+    #   project
+    #   ├── __init__.py
+    #   ├── benchmarks
+    #   │   ├── __init__.py
+    #   │   └── benchmark_project.py
+    #   ├── requirements.txt
+    #   └── setup.py
+    sys.path.append(os.path.join(current_dir, ".."))
+
     benchmarks_dir = os.path.join(current_dir, "benchmarks")
     if os.path.exists(benchmarks_dir):
         return [current_dir, benchmarks_dir]
