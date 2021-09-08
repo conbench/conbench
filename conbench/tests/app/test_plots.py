@@ -381,3 +381,28 @@ def test_simple_source_units_not_uniform_items_per_second():
         "983.070182 i/s",
         "138.696 M i/s",
     ]
+
+
+def test_simple_source_omit_redundant_labels():
+    data = [
+        ["table", "tag=1", "tag 2", "100"],
+        ["download", "tag=2", "tag 2", "200"],
+        ["parquet", "tag=3", "tag 2", "300"],
+    ]
+    source, axis_unit = _simple_source(data, "s")
+    assert axis_unit == "seconds"
+    assert source.data["x"] == [
+        "table-tag=1",
+        "download-tag=2",
+        "parquet-tag=3",
+    ]
+    assert source.data["y"] == [
+        "100.000",
+        "200.000",
+        "300.000",
+    ]
+    assert source.data["means"] == [
+        "100.000 s",
+        "200.000 s",
+        "300.000 s",
+    ]
