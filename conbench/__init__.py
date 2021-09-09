@@ -71,11 +71,8 @@ def _init_api_docs(application):
 
 def _json_http_errors(e):
     import flask as f
-    from werkzeug.wrappers.response import Response as WSGIResponse
 
-    # TODO: revert back to response = e.get_response() once this is fixed
-    # https://github.com/pallets/werkzeug/issues/2115
-    response = WSGIResponse("body omitted", e.code, e.get_headers(None, None))
+    response = e.get_response()
     data = {"code": e.code, "name": e.name}
     if e.code == 400:
         data["description"] = e.description
