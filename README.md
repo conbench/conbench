@@ -73,7 +73,7 @@ repository, and the results are hosted on the
     $ source conbench/bin/activate
 
 
-### Clone repo
+### Clone repository
     (conbench) $ cd ~/workspace/
     (conbench) $ git clone https://github.com/ursacomputing/conbench.git
 
@@ -83,7 +83,7 @@ repository, and the results are hosted on the
     (conbench) $ pip install -r requirements-test.txt
     (conbench) $ pip install -r requirements-build.txt
     (conbench) $ pip install -r requirements-cli.txt
-    (conbench) $ python setup.py develop
+    (conbench) $ pip install -e .
 
 
 ### Start postgres
@@ -120,21 +120,21 @@ repository, and the results are hosted on the
     (conbench) $ pytest -vv conbench/tests/
 
 
-### Format code (before committing)
+### Format code
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ black .
         reformatted foo.py
     (conbench) $ git add foo.py
 
 
-### Sort imports (before committing)
+### Sort imports
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ isort .
         Fixing foo.py
     (conbench) $ git add foo.py
 
 
-### Lint code (before committing)
+### Lint code
     (qa) $ cd ~/workspace/conbench/
     (qa) $ flake8
     ./foo/bar/__init__.py:1:1: F401 'FooBar' imported but unused
