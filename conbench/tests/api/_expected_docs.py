@@ -1261,6 +1261,23 @@
             }
         },
         "/api/runs/{run_id}/": {
+            "delete": {
+                "description": "Delete a run.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "run_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "responses": {
+                    "204": {"$ref": "#/components/responses/204"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Runs"],
+            },
             "get": {
                 "description": "Get a run.",
                 "parameters": [
@@ -1277,7 +1294,7 @@
                     "404": {"$ref": "#/components/responses/404"},
                 },
                 "tags": ["Runs"],
-            }
+            },
         },
         "/api/users/": {
             "get": {

@@ -1,6 +1,7 @@
 import urllib
 
 from ...api._examples import _api_run_entity
+from ...entities.summary import Summary
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
@@ -76,3 +77,14 @@ class TestRunList(_asserts.ListEnforcer):
         args = urllib.parse.urlencode(args)
         response = client.get(f"/api/runs/?{args}")
         self.assert_200_ok(response, [])
+
+
+class TestRunDelete(_asserts.DeleteEnforcer):
+    url = "api/runs/{}/"
+
+    def test_delete_run(self, client):
+        self.authenticate(client)
+        summary = _fixtures.create_benchmark_summary()
+        Summary.one(id=summary.id)
+        response = client.delete(f"/api/runs/{summary.run_id}/")
+        self.assert_204_no_content(response)

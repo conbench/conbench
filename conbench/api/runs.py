@@ -1,7 +1,10 @@
+import flask_login
+
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.run import Run, RunSerializer
+from ..entities.summary import Summary
 
 
 class RunEntityAPI(ApiEndpoint):
@@ -34,6 +37,30 @@ class RunEntityAPI(ApiEndpoint):
         run = self._get(run_id)
         return self.serializer.one.dump(run)
 
+    @flask_login.login_required
+    def delete(self, run_id):
+        """
+        ---
+        description: Delete a run.
+        responses:
+            "204": "204"
+            "401": "401"
+            "404": "404"
+        parameters:
+          - name: run_id
+            in: path
+            schema:
+                type: string
+        tags:
+          - Runs
+        """
+        summaries = Summary.all(run_id=run_id)
+        for summarie in summaries:
+            summarie.delete()
+        run = self._get(run_id)
+        run.delete()
+        return self.response_204_no_content()
+
 
 class RunListAPI(ApiEndpoint):
     serializer = RunSerializer()
@@ -64,5 +91,5 @@ rule(
 rule(
     "/runs/<run_id>/",
     view_func=run_entity_view,
-    methods=["GET"],
+    methods=["GET", "DELETE"],
 )
