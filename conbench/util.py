@@ -1,13 +1,12 @@
-import importlib.util
 import json
 import os
-import sys
 import time
 import urllib.parse
 
 import click
 import requests
 import yaml
+from _pytest.pathlib import import_path
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
@@ -70,19 +69,6 @@ class Connection:
 
 def places_to_look():
     current_dir = os.getcwd()
-
-    # Handle projects where the envelope is also the package
-    # (has both a setup.py and an __init__.py).
-    #
-    #   project
-    #   ├── __init__.py
-    #   ├── benchmarks
-    #   │   ├── __init__.py
-    #   │   └── benchmark_project.py
-    #   ├── requirements.txt
-    #   └── setup.py
-    sys.path.append(os.path.join(current_dir, ".."))
-
     benchmarks_dir = os.path.join(current_dir, "benchmarks")
     if os.path.exists(benchmarks_dir):
         return [current_dir, benchmarks_dir]
@@ -156,13 +142,4 @@ def register_benchmarks(directory=None):
                     or filename.endswith("benchmark.py")
                     or filename.endswith("benchmarks.py")
                 ):
-                    import_module(directory, filename)
-
-
-def import_module(directory, filename):
-    module_name = filename.split(".")[0]
-    file_path = os.path.join(directory, filename)
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
+                    import_path(f"{directory}/{filename}")

@@ -1,5 +1,6 @@
 click
 psutil
 py-cpuinfo
+pytest
 PyYAML
 requests
