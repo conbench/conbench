@@ -6,7 +6,7 @@ with open("README.md", "r") as readme:
 
 setuptools.setup(
     name="conbench",
-    version="1.20.0",
+    version="1.21.0",
     description="Continuous Benchmarking (CB) Framework",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -29,6 +29,7 @@ setuptools.setup(
         "numpy",
         "psutil",
         "py-cpuinfo",
+        "pytest",
         "PyYAML",
         "requests",
     ],
