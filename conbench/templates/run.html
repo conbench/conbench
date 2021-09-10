@@ -1,4 +1,5 @@
 {% extends "app.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
     <nav aria-label="breadcrumb">
@@ -51,6 +52,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        {{ wtf.quick_form(form, id="run-form", button_map={'delete': 'primary'}) }}
     </div>
 
 {% endblock %}
@@ -66,6 +68,12 @@ var table = $('#benchmarks').dataTable( {
 
 $(document).ready(function() {
     $('#unit-tooltip').tooltip()
+    $("#run-form").find("#delete").attr("type", "button");
+    $("#run-form").find("#delete").attr("data-toggle", "modal");
+    $("#run-form").find("#delete").attr("data-target", "#confirm-delete");
+    $("#run-form").find("#delete").attr("data-form-id", "#run-form");
+    $("#run-form").find("#delete").attr("data-href", "{{ url_for('app.run', run_id=benchmarks[0].run_id) }}");
+    $("#run-form").find("#delete").attr("data-message", "<ul><li>Delete run: <strong>{{ benchmarks[0].run_id }}</strong></li></ul>");
    });
 </script>
 {% endblock %}
