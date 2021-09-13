@@ -1,6 +1,10 @@
 import urllib
 
+import pytest
+
 from ...api._examples import _api_run_entity
+from ...entities._entity import NotFound
+from ...entities.run import Run
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
@@ -76,3 +80,23 @@ class TestRunList(_asserts.ListEnforcer):
         args = urllib.parse.urlencode(args)
         response = client.get(f"/api/runs/?{args}")
         self.assert_200_ok(response, [])
+
+
+class TestRunDelete(_asserts.DeleteEnforcer):
+    url = "api/runs/{}/"
+
+    def test_delete_run(self, client):
+        self.authenticate(client)
+        summary = _fixtures.create_benchmark_summary()
+        run_id = summary.run_id
+
+        # can get before delete
+        Run.one(id=run_id)
+
+        # delete
+        response = client.delete(f"/api/runs/{run_id}/")
+        self.assert_204_no_content(response)
+
+        # cannot get after delete
+        with pytest.raises(NotFound):
+            Run.one(id=run_id)
