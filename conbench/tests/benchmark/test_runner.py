@@ -4,7 +4,7 @@ from ...entities.summary import BenchmarkFacadeSchema
 from ...tests.api import _fixtures
 from ._example_benchmarks import CasesBenchmark, ExternalBenchmark, SimpleBenchmark
 
-REPO = "https://github.com/ursacomputing/conbench"
+REPO = "https://github.com/conbench/conbench"
 EXAMPLE = copy.deepcopy(_fixtures.VALID_PAYLOAD)
 EXAMPLE.pop("run_name")
 EXAMPLE["context"] = {

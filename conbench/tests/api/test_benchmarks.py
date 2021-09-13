@@ -11,7 +11,7 @@ from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
 ARROW_REPO = "https://github.com/apache/arrow"
-CONBENCH_REPO = "https://github.com/ursacomputing/conbench"
+CONBENCH_REPO = "https://github.com/conbench/conbench"
 
 
 def _expected_entity(summary):

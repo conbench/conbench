@@ -1,13 +1,13 @@
 <p align="right">
-<a href="https://github.com/ursacomputing/conbench/blob/main/.github/workflows/actions.yml"><img alt="Build Status" src="https://github.com/ursacomputing/conbench/actions/workflows/actions.yml/badge.svg?branch=main"></a>
-<a href="https://coveralls.io/github/ursacomputing/conbench?branch=main"><img src="https://coveralls.io/repos/github/ursacomputing/conbench/badge.svg?branch=main&kill_cache=06b9891a46827df564072ae831b13897599f7f3d" alt="Coverage Status" /></a>
+<a href="https://github.com/conbench/conbench/blob/main/.github/workflows/actions.yml"><img alt="Build Status" src="https://github.com/conbench/conbench/actions/workflows/actions.yml/badge.svg?branch=main"></a>
+<a href="https://coveralls.io/github/conbench/conbench?branch=main"><img src="https://coveralls.io/repos/github/conbench/conbench/badge.svg?branch=main&kill_cache=06b9891a46827df564072ae831b13897599f7f3d" alt="Coverage Status" /></a>
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 
 # Conbench
 
 
-<img src="https://github.com/ursacomputing/conbench/blob/main/conbench.png" alt="Language-independent Continuous Benchmarking (CB) Framework">
+<img src="https://github.com/conbench/conbench/blob/main/conbench.png" alt="Language-independent Continuous Benchmarking (CB) Framework">
 
 
 Conbench allows you to write benchmarks in any language, publish the
@@ -50,12 +50,12 @@ repository, and the results are hosted on the
 
 ## Index
 
-* [Contributing](https://github.com/ursacomputing/conbench#contributing)
-* [Authoring benchmarks](https://github.com/ursacomputing/conbench#authoring-benchmarks)
-  * [Simple benchmarks](https://github.com/ursacomputing/conbench#example-simple-benchmarks)
-  * [External benchmarks](https://github.com/ursacomputing/conbench#example-external-benchmarks)
-  * [Case benchmarks](https://github.com/ursacomputing/conbench#example-case-benchmarks)
-  * [R benchmarks](https://github.com/ursacomputing/conbench#example-r-benchmarks)
+* [Contributing](https://github.com/conbench/conbench#contributing)
+* [Authoring benchmarks](https://github.com/conbench/conbench#authoring-benchmarks)
+  * [Simple benchmarks](https://github.com/conbench/conbench#example-simple-benchmarks)
+  * [External benchmarks](https://github.com/conbench/conbench#example-external-benchmarks)
+  * [Case benchmarks](https://github.com/conbench/conbench#example-case-benchmarks)
+  * [R benchmarks](https://github.com/conbench/conbench#example-r-benchmarks)
 
 
 ## Contributing
@@ -75,7 +75,7 @@ repository, and the results are hosted on the
 
 ### Clone repository
     (conbench) $ cd ~/workspace/
-    (conbench) $ git clone https://github.com/ursacomputing/conbench.git
+    (conbench) $ git clone https://github.com/conbench/conbench.git
 
 
 ### Install dependencies
@@ -185,9 +185,9 @@ kinds of benchmarks to be used as templates for benchmark authoring. These
 example benchmarks and their tests can be found here:
 
 
-* [_example_benchmarks.py](https://github.com/ursacomputing/conbench/blob/main/conbench/tests/benchmark/_example_benchmarks.py)
-* [test_cli.py](https://github.com/ursacomputing/conbench/blob/main/conbench/tests/benchmark/test_runner.py)
-* [test_runner.py](https://github.com/ursacomputing/conbench/blob/main/conbench/tests/benchmark/test_cli.py)
+* [_example_benchmarks.py](https://github.com/conbench/conbench/blob/main/conbench/tests/benchmark/_example_benchmarks.py)
+* [test_cli.py](https://github.com/conbench/conbench/blob/main/conbench/tests/benchmark/test_runner.py)
+* [test_runner.py](https://github.com/conbench/conbench/blob/main/conbench/tests/benchmark/test_cli.py)
 
 
 ### Example simple benchmarks
@@ -282,7 +282,7 @@ Benchmark result:
     },
     "github": {
         "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
-        "repository": "https://github.com/ursacomputing/conbench"
+        "repository": "https://github.com/conbench/conbench"
     },
     "machine_info": {
         "architecture_name": "x86_64",
@@ -389,7 +389,7 @@ Example Python execution:
   },
   "github": {
     "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
-    "repository": "https://github.com/ursacomputing/conbench"
+    "repository": "https://github.com/conbench/conbench"
   }
 }
 ```
@@ -507,7 +507,7 @@ Benchmark result:
     },
     "github": {
         "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
-        "repository": "https://github.com/ursacomputing/conbench"
+        "repository": "https://github.com/conbench/conbench"
     },
     "machine_info": {
         "architecture_name": "x86_64",
@@ -652,7 +652,7 @@ Benchmark result:
     },
     "github": {
         "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
-        "repository": "https://github.com/ursacomputing/conbench"
+        "repository": "https://github.com/conbench/conbench"
     },
     "machine_info": {
         "architecture_name": "x86_64",
@@ -705,7 +705,7 @@ Benchmark result:
     },
     "github": {
         "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
-        "repository": "https://github.com/ursacomputing/conbench"
+        "repository": "https://github.com/conbench/conbench"
     },
     "machine_info": {
         "architecture_name": "x86_64",
@@ -758,7 +758,7 @@ Benchmark result:
     },
     "github": {
         "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
-        "repository": "https://github.com/ursacomputing/conbench"
+        "repository": "https://github.com/conbench/conbench"
     },
     "machine_info": {
         "architecture_name": "x86_64",
