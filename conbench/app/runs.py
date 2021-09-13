@@ -13,6 +13,8 @@ from ..config import Config
 class RunPlot(AppEndpoint, ContextMixin, RunMixin):
     def page(self, benchmarks, baseline_run, contender_run, form):
         compare_runs_url = None
+        if not flask_login.current_user.is_authenticated:
+            delattr(form, "delete")
         if baseline_run and contender_run:
             compare = f'{baseline_run["id"]}...{contender_run["id"]}'
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)

@@ -26,7 +26,6 @@ class TestRunDelete(_asserts.DeleteEnforcer):
         assert b"Run deleted." in response.data
 
         response = client.get(f"/runs/{run_id}/", follow_redirects=True)
-        print(response.data)
         self.assert_index_page(response)
         assert b"Error getting run." in response.data
 
