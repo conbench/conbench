@@ -1,7 +1,6 @@
 steps:
   - label: "Build & Push"
     key: "build-and-push"
-    if: build.branch == 'main'
     concurrency: 1
     concurrency_group: "conbench-deploy"
     command:
