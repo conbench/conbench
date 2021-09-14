@@ -11,7 +11,7 @@ from ..config import Config
 
 
 class RunPlot(AppEndpoint, ContextMixin, RunMixin):
-    def page(self, benchmarks, baseline_run, contender_run, form):
+    def page(self, benchmarks, baseline_run, contender_run, form, run_id):
         compare_runs_url = None
         if not flask_login.current_user.is_authenticated:
             delattr(form, "delete")
@@ -25,6 +25,7 @@ class RunPlot(AppEndpoint, ContextMixin, RunMixin):
             title="Run",
             benchmarks=benchmarks,
             compare_runs_url=compare_runs_url,
+            run_id=run_id,
             form=form,
         )
 
@@ -33,9 +34,6 @@ class RunPlot(AppEndpoint, ContextMixin, RunMixin):
             return self.redirect("app.login")
 
         contender_run, baseline_run = self.get_display_run(run_id), None
-        if contender_run is None:
-            self.flash("Error getting run.")
-            return self.redirect("app.index")
         if contender_run:
             baseline_url = contender_run["links"].get("baseline")
             if baseline_url:
@@ -50,7 +48,7 @@ class RunPlot(AppEndpoint, ContextMixin, RunMixin):
         for benchmark in benchmarks:
             augment(benchmark, contexts)
 
-        return self.page(benchmarks, baseline_run, contender_run, DeleteForm())
+        return self.page(benchmarks, baseline_run, contender_run, DeleteForm(), run_id)
 
     def _get_benchmarks(self, run_id):
         response = self.api_get("api.benchmarks", run_id=run_id)
@@ -69,7 +67,7 @@ class RunPlot(AppEndpoint, ContextMixin, RunMixin):
                 if response.status_code == 204:
                     self.flash("Run deleted.")
                 else:
-                    self.flash("Error deleting runs.")
+                    self.flash("Error deleting run.")
         csrf = {"csrf_token": ["The CSRF token is missing."]}
         if form.errors == csrf:
             self.flash("The CSRF token is missing.")

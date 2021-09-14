@@ -5,8 +5,8 @@
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item active">Run</li>
-        {% if benchmarks %}
-        <li class="breadcrumb-item active" aria-current="page">{{ benchmarks[0].run_id }}</li>
+        {% if run_id %}
+        <li class="breadcrumb-item active" aria-current="page">{{ run_id }}</li>
         {% endif %}
         {% if compare_runs_url %}
         <span align="right" style="display:inline-block; float: right;">
@@ -52,7 +52,9 @@
                 {% endfor %}
             </tbody>
         </table>
-        {{ wtf.quick_form(form, id="run-form", button_map={'delete': 'primary'}) }}
+        {% if run_id %}
+            {{ wtf.quick_form(form, id="run-form", button_map={'delete': 'primary'}) }}
+        {%  endif %}
     </div>
 
 {% endblock %}
@@ -68,12 +70,14 @@ var table = $('#benchmarks').dataTable( {
 
 $(document).ready(function() {
     $('#unit-tooltip').tooltip()
-    $("#run-form").find("#delete").attr("type", "button");
-    $("#run-form").find("#delete").attr("data-toggle", "modal");
-    $("#run-form").find("#delete").attr("data-target", "#confirm-delete");
-    $("#run-form").find("#delete").attr("data-form-id", "#run-form");
-    $("#run-form").find("#delete").attr("data-href", "{{ url_for('app.run', run_id=benchmarks[0].run_id) }}");
-    $("#run-form").find("#delete").attr("data-message", "<ul><li>Delete run: <strong>{{ benchmarks[0].run_id }}</strong></li></ul>");
+    {% if run_id %}
+        $("#run-form").find("#delete").attr("type", "button");
+        $("#run-form").find("#delete").attr("data-toggle", "modal");
+        $("#run-form").find("#delete").attr("data-target", "#confirm-delete");
+        $("#run-form").find("#delete").attr("data-form-id", "#run-form");
+        $("#run-form").find("#delete").attr("data-href", "{{ url_for('app.run', run_id=run_id) }}");
+        $("#run-form").find("#delete").attr("data-message", "<ul><li>Delete run: <strong>{{ run_id }}</strong></li></ul>");
+    {% endif %}
    });
 </script>
 {% endblock %}

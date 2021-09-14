@@ -5,6 +5,7 @@ from ...tests.app import _asserts
 class TestRunGet(_asserts.GetEnforcer):
     url = "/runs/{}/"
     title = "Run"
+    redirect_on_unknown = False
 
     def _create(self, client):
         self.create_benchmark(client)
@@ -26,7 +27,7 @@ class TestRunDelete(_asserts.DeleteEnforcer):
         assert b"Run deleted." in response.data
 
         response = client.get(f"/runs/{run_id}/", follow_redirects=True)
-        self.assert_index_page(response)
+        self.assert_page(response, "Run")
         assert b"Error getting run." in response.data
 
     def test_unauthenticated(self, client):
