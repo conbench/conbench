@@ -31,7 +31,7 @@ steps:
     concurrency_group: "conbench-staging-deploy"
     command:
       - set -x
-      - kubectl config set-context --current --namespace=staging
       - aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
+      - kubectl config set-context --current --namespace=staging
       - cat deploy.yml | sed "s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g; s/{{DB_NAME}}/${DB_NAME}/g; s/{{APPLICATION_NAME}}/${APPLICATION_NAME}/g; s/{{DB_HOST}}/${DB_HOST}/g; s/{{DB_PORT}}/${DB_PORT}/g; s/{{FLASK_APP}}/${FLASK_APP}/g; s/{{DOCKER_REGISTRY}}/${DOCKER_REGISTRY}/g; s/{{CERTIFICATE_ARN}}/${CERTIFICATE_ARN}/g; s/{{EKS_CLUSTER}}/${EKS_CLUSTER}/g; s/{{BENCHMARKS_DATA_PUBLIC}}/${BENCHMARKS_DATA_PUBLIC}/g" | kubectl apply -f -
       - kubectl rollout status deployment/conbench-deployment
