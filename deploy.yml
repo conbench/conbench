@@ -6,6 +6,7 @@ metadata:
     app: conbench
 data:
   APPLICATION_NAME: "{{APPLICATION_NAME}}"
+  DB_NAME: "{{DB_NAME}}"
   DB_HOST: "{{DB_HOST}}"
   DB_PORT: "{{DB_PORT}}"
   FLASK_APP: "{{FLASK_APP}}"
@@ -64,7 +65,6 @@ metadata:
   annotations:
     alb.ingress.kubernetes.io/target-type: ip
   name: "conbench-service"
-  namespace: "default"
 spec:
   ports:
   - port: 80
@@ -78,7 +78,6 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: "conbench-ingress"
-  namespace: "default"
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
