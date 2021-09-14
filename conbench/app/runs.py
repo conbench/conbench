@@ -1,4 +1,7 @@
 import flask as f
+import flask_login
+import flask_wtf
+import wtforms as w
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint
@@ -8,8 +11,10 @@ from ..config import Config
 
 
 class RunPlot(AppEndpoint, ContextMixin, RunMixin):
-    def page(self, benchmarks, baseline_run, contender_run):
+    def page(self, benchmarks, baseline_run, contender_run, form, run_id):
         compare_runs_url = None
+        if not flask_login.current_user.is_authenticated:
+            delattr(form, "delete")
         if baseline_run and contender_run:
             compare = f'{baseline_run["id"]}...{contender_run["id"]}'
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
@@ -20,6 +25,8 @@ class RunPlot(AppEndpoint, ContextMixin, RunMixin):
             title="Run",
             benchmarks=benchmarks,
             compare_runs_url=compare_runs_url,
+            run_id=run_id,
+            form=form,
         )
 
     def get(self, run_id):
@@ -41,15 +48,38 @@ class RunPlot(AppEndpoint, ContextMixin, RunMixin):
         for benchmark in benchmarks:
             augment(benchmark, contexts)
 
-        return self.page(benchmarks, baseline_run, contender_run)
+        return self.page(benchmarks, baseline_run, contender_run, DeleteForm(), run_id)
 
     def _get_benchmarks(self, run_id):
         response = self.api_get("api.benchmarks", run_id=run_id)
         return response.json, response
 
+    def post(self, run_id):
+        if not flask_login.current_user.is_authenticated:
+            return self.redirect("app.login")
+        form, response = DeleteForm(), None
+        if form.delete.data:
+            if form.validate_on_submit():
+                response = self.api_delete(
+                    "api.run",
+                    run_id=run_id,
+                )
+                if response.status_code == 204:
+                    self.flash("Run deleted.")
+                else:
+                    self.flash("Error deleting run.")
+        csrf = {"csrf_token": ["The CSRF token is missing."]}
+        if form.errors == csrf:
+            self.flash("The CSRF token is missing.")
+        return self.redirect("app.index")
+
+
+class DeleteForm(flask_wtf.FlaskForm):
+    delete = w.SubmitField("Delete")
+
 
 rule(
     "/runs/<run_id>/",
     view_func=RunPlot.as_view("run"),
-    methods=["GET"],
+    methods=["GET", "POST"],
 )
