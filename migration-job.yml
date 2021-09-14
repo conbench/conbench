@@ -6,6 +6,7 @@ metadata:
     app: conbench-migration
 data:
   CREATE_ALL_TABLES: "false"
+  DB_NAME: "{{DB_NAME}}"
 ---
 apiVersion: batch/v1
 kind: Job
