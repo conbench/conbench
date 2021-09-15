@@ -1,8 +1,18 @@
+import pathlib
+
 import setuptools
 
 with open("README.md", "r") as readme:
     long_description = readme.read()
 
+
+install_requires = [
+    line.strip()
+    for line in pathlib.Path(__file__)
+    .parent.joinpath("requirements-cli.txt")
+    .read_text()
+    .splitlines()
+]
 
 setuptools.setup(
     name="conbench",
@@ -24,13 +34,5 @@ setuptools.setup(
     maintainer="Apache Arrow Developers",
     maintainer_email="dev@arrow.apache.org",
     url="https://github.com/conbench/conbench",
-    install_requires=[
-        "click",
-        "numpy",
-        "psutil",
-        "py-cpuinfo",
-        "pytest",
-        "PyYAML",
-        "requests",
-    ],
+    install_requires=install_requires,
 )
