@@ -7,7 +7,7 @@ def _expected_entity(context):
 
 
 def create_context():
-    summary = _fixtures.create_benchmark_summary()
+    summary = _fixtures.summary()
     return summary.context
 
 

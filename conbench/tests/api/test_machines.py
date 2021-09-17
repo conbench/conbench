@@ -7,7 +7,7 @@ def _expected_entity(machine):
 
 
 def create_machine():
-    summary = _fixtures.create_benchmark_summary()
+    summary = _fixtures.summary()
     return summary.run.machine
 
 

@@ -28,19 +28,19 @@ class TestRunGet(_asserts.GetEnforcer):
         if baseline:
             # change anything about the context so we get only one baseline
             language = _uuid()
-            contender = _fixtures.create_benchmark_summary(
+            contender = _fixtures.summary(
                 sha=_fixtures.CHILD,
                 language=language,
                 run_id=_uuid(),
             )
-            baseline = _fixtures.create_benchmark_summary(
+            baseline = _fixtures.summary(
                 sha=_fixtures.PARENT,
                 language=language,
                 run_id=_uuid(),
             )
             return contender.run, baseline.run
         else:
-            contender = _fixtures.create_benchmark_summary()
+            contender = _fixtures.summary()
         return contender.run
 
     def test_get_run(self, client):
@@ -55,7 +55,7 @@ class TestRunList(_asserts.ListEnforcer):
     public = True
 
     def _create(self):
-        summary = _fixtures.create_benchmark_summary()
+        summary = _fixtures.summary()
         return summary.run
 
     def test_run_list(self, client):
@@ -88,7 +88,7 @@ class TestRunDelete(_asserts.DeleteEnforcer):
 
     def test_delete_run(self, client):
         self.authenticate(client)
-        summary = _fixtures.create_benchmark_summary()
+        summary = _fixtures.summary()
         run_id = summary.run_id
 
         # can get before delete

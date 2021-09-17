@@ -99,7 +99,7 @@ VALID_PAYLOAD = {
 }
 
 
-def create_benchmark_summary(
+def summary(
     name=None,
     batch_id=None,
     run_id=None,

@@ -18,19 +18,19 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         # create a distribution history & a regression
         name = name if name is not None else _uuid()
         run_0, run_1, run_2 = _uuid(), _uuid(), _uuid()
-        _fixtures.create_benchmark_summary(
+        _fixtures.summary(
             name=name,
             results=_fixtures.RESULTS_UP[0],
             run_id=run_0,
             sha=_fixtures.GRANDPARENT,
         )
-        summary_1 = _fixtures.create_benchmark_summary(
+        summary_1 = _fixtures.summary(
             name=name,
             results=_fixtures.RESULTS_UP[1],
             run_id=run_1,
             sha=_fixtures.PARENT,
         )
-        summary_2 = _fixtures.create_benchmark_summary(
+        summary_2 = _fixtures.summary(
             name=name,
             results=_fixtures.RESULTS_UP[2],
             run_id=run_2,
@@ -94,12 +94,12 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
 
     def _create(self, with_ids=False, run_id=None, batch_id=None):
         batch_id = batch_id if batch_id is not None else _uuid()
-        summary1 = _fixtures.create_benchmark_summary(
+        summary1 = _fixtures.summary(
             name="read",
             run_id=run_id,
             batch_id=batch_id,
         )
-        summary2 = _fixtures.create_benchmark_summary(
+        summary2 = _fixtures.summary(
             name="write",
             run_id=run_id,
             batch_id=batch_id,
@@ -165,12 +165,12 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
 
     def _create(self, with_ids=False, run_id=None, batch_id=None):
         run_id = run_id if run_id is not None else _uuid()
-        summary1 = _fixtures.create_benchmark_summary(
+        summary1 = _fixtures.summary(
             name="read",
             run_id=run_id,
             batch_id=batch_id,
         )
-        summary2 = _fixtures.create_benchmark_summary(
+        summary2 = _fixtures.summary(
             name="write",
             run_id=run_id,
             batch_id=batch_id,

@@ -62,47 +62,31 @@ def test_history():
 
     name = _uuid()
     data = [2.1, 2.0, 1.99]  # first commit
-    summary_1 = _fixtures.create_benchmark_summary(
-        results=data, commit=commit_1, name=name
-    )
+    summary_1 = _fixtures.summary(results=data, commit=commit_1, name=name)
 
     data = [1.99, 2.0, 2.1]  # stayed the same
-    summary_2 = _fixtures.create_benchmark_summary(
-        results=data, commit=commit_2, name=name
-    )
+    summary_2 = _fixtures.summary(results=data, commit=commit_2, name=name)
 
     data = [1.1, 1.0, 0.99]  # got better
-    summary_3 = _fixtures.create_benchmark_summary(
-        results=data, commit=commit_3, name=name
-    )
+    summary_3 = _fixtures.summary(results=data, commit=commit_3, name=name)
 
     data = [1.2, 1.1, 1.0]  # stayed about the same
-    summary_4 = _fixtures.create_benchmark_summary(
-        results=data, commit=commit_4, name=name
-    )
+    summary_4 = _fixtures.summary(results=data, commit=commit_4, name=name)
 
     data = [3.1, 3.0, 2.99]  # measure commit 4 twice
-    summary_5 = _fixtures.create_benchmark_summary(
-        results=data, commit=commit_4, name=name
-    )
+    summary_5 = _fixtures.summary(results=data, commit=commit_4, name=name)
 
     data, name = [5.1, 5.2, 5.3], "different-case"
-    _fixtures.create_benchmark_summary(results=data, commit=commit_1, name=name)
+    _fixtures.summary(results=data, commit=commit_1, name=name)
 
     data, language = [6.1, 6.2, 6.3], "different-context"
-    _fixtures.create_benchmark_summary(
-        results=data, commit=commit_1, name=name, language=language
-    )
+    _fixtures.summary(results=data, commit=commit_1, name=name, language=language)
 
     data, machine = [7.1, 7.2, 7.3], "different-machine"
-    _fixtures.create_benchmark_summary(
-        results=data, commit=commit_1, name=name, machine=machine
-    )
+    _fixtures.summary(results=data, commit=commit_1, name=name, machine=machine)
 
     data = [8.1, 8.2, 8.3]  # pull request, exclude from history
-    _fixtures.create_benchmark_summary(
-        results=data, commit=commit_1, name=name, pull_request=True
-    )
+    _fixtures.summary(results=data, commit=commit_1, name=name, pull_request=True)
 
     assert summary_1.case_id == summary_2.case_id
     assert summary_1.case_id == summary_3.case_id
