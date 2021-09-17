@@ -128,7 +128,7 @@ def test_distribution_queries():
             "author_avatar": "author_avatar",
         }
     )
-    summary = _fixtures.summary(results=[1, 2, 3], commit=commit, name=_uuid())
+    summary = _fixtures.summary(results=[1, 2, 3], commit=commit)
     query = str(get_distribution(summary, 3).statement.compile())
     assert query == DISTRIBUTION
 

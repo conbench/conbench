@@ -16,7 +16,6 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
 
     def _create(self, name=None, verbose=False):
         # create a distribution history & a regression
-        name = name if name is not None else _uuid()
         _fixtures.summary(
             name=name,
             results=_fixtures.RESULTS_UP[0],
