@@ -9,12 +9,12 @@ from ..units import formatter_for_unit
 
 
 class TimeSeriesPlotMixin:
-    def get_history_plot(self, benchmark):
+    def get_history_plot(self, benchmark, run):
         history = self._get_history(benchmark)
         if history:
             return json.dumps(
                 bokeh.embed.json_item(
-                    time_series_plot(history, benchmark["id"]),
+                    time_series_plot(history, benchmark, run),
                     "plot-history",
                 )
             )
@@ -188,9 +188,15 @@ def _source(
     return bokeh.models.ColumnDataSource(data=source_data)
 
 
-def time_series_plot(history, benchmark_id, height=250, width=1000):
+def time_series_plot(history, benchmark, run, height=250, width=1000):
     unit = history[0]["unit"]
-    current = [h for h in history if h["benchmark_id"] == benchmark_id]
+    current = [
+        {
+            "mean": benchmark["stats"]["mean"],
+            "message": run["commit"]["message"],
+            "timestamp": run["commit"]["timestamp"],
+        }
+    ]
     with_dist = [h for h in history if h["distribution_mean"]]
     formatted, axis_unit = _should_format(history, unit)
 

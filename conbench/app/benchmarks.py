@@ -130,7 +130,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
             run=run,
             form=form,
             resources=bokeh.resources.CDN.render(),
-            plot_history=self.get_history_plot(benchmark),
+            plot_history=self.get_history_plot(benchmark, run),
         )
 
     def get(self, benchmark_id):
