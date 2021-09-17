@@ -14,46 +14,38 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
     url = "/api/compare/benchmarks/{}/"
     public = True
 
-    def _create(self, name=None, with_ids=False):
+    def _create(self, name=None, verbose=False):
         # create a distribution history & a regression
-        name = name if name is not None else _uuid()
-        run_0, run_1, run_2 = _uuid(), _uuid(), _uuid()
-        _fixtures.create_benchmark_summary(
+        _fixtures.summary(
             name=name,
             results=_fixtures.RESULTS_UP[0],
-            run_id=run_0,
             sha=_fixtures.GRANDPARENT,
         )
-        summary_1 = _fixtures.create_benchmark_summary(
+        summary_1 = _fixtures.summary(
             name=name,
             results=_fixtures.RESULTS_UP[1],
-            run_id=run_1,
             sha=_fixtures.PARENT,
         )
-        summary_2 = _fixtures.create_benchmark_summary(
+        summary_2 = _fixtures.summary(
             name=name,
             results=_fixtures.RESULTS_UP[2],
-            run_id=run_2,
         )
 
         entity = FakeEntity(f"{summary_1.id}...{summary_2.id}")
-        if with_ids:
-            return summary_1.id, summary_2.id, run_1, run_2, entity
+        if verbose:
+            return [summary_1, summary_2], entity
         else:
             return entity
 
     def test_compare(self, client):
         self.authenticate(client)
         name = _uuid()
-        id_1, id_2, run_1, run_2, compare = self._create(name, with_ids=True)
+        new_entities, compare = self._create(name, verbose=True)
         response = client.get(f"/api/compare/benchmarks/{compare.id}/")
 
-        benchmark_ids = [id_1, id_2]
-        run_ids = [run_1, run_2]
-        batch_ids = [
-            "7b2fdd9f929d47b9960152090d47f8e6",
-            "7b2fdd9f929d47b9960152090d47f8e6",
-        ]
+        benchmark_ids = [e.id for e in new_entities]
+        batch_ids = [e.batch_id for e in new_entities]
+        run_ids = [e.run_id for e in new_entities]
         expected = _api_compare_entity(
             benchmark_ids,
             batch_ids,
@@ -92,32 +84,33 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
     url = "/api/compare/batches/{}/"
     public = True
 
-    def _create(self, with_ids=False, run_id=None, batch_id=None):
+    def _create(self, verbose=False, run_id=None, batch_id=None):
         batch_id = batch_id if batch_id is not None else _uuid()
-        summary1 = _fixtures.create_benchmark_summary(
+        summary_1 = _fixtures.summary(
             name="read",
             run_id=run_id,
             batch_id=batch_id,
         )
-        summary2 = _fixtures.create_benchmark_summary(
+        summary_2 = _fixtures.summary(
             name="write",
             run_id=run_id,
             batch_id=batch_id,
         )
         entity = FakeEntity(f"{batch_id}...{batch_id}")
-        if with_ids:
-            return [summary1.id, summary2.id], entity
+        if verbose:
+            return [summary_1, summary_2], entity
         else:
             return entity
 
     def test_compare(self, client):
         self.authenticate(client)
         run_id, batch_id = _uuid(), _uuid()
-        new_ids, compare = self._create(
-            with_ids=True,
+        new_entities, compare = self._create(
+            verbose=True,
             run_id=run_id,
             batch_id=batch_id,
         )
+        new_ids = [e.id for e in new_entities]
         response = client.get(f"/api/compare/batches/{compare.id}/")
 
         # cheating by comparing batch to same batch
@@ -163,32 +156,33 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
     url = "/api/compare/runs/{}/"
     public = True
 
-    def _create(self, with_ids=False, run_id=None, batch_id=None):
+    def _create(self, verbose=False, run_id=None, batch_id=None):
         run_id = run_id if run_id is not None else _uuid()
-        summary1 = _fixtures.create_benchmark_summary(
+        summary_1 = _fixtures.summary(
             name="read",
             run_id=run_id,
             batch_id=batch_id,
         )
-        summary2 = _fixtures.create_benchmark_summary(
+        summary_2 = _fixtures.summary(
             name="write",
             run_id=run_id,
             batch_id=batch_id,
         )
         entity = FakeEntity(f"{run_id}...{run_id}")
-        if with_ids:
-            return [summary1.id, summary2.id], entity
+        if verbose:
+            return [summary_1, summary_2], entity
         else:
             return entity
 
     def test_compare(self, client):
         self.authenticate(client)
         run_id, batch_id = _uuid(), _uuid()
-        new_ids, compare = self._create(
-            with_ids=True,
+        new_entities, compare = self._create(
+            verbose=True,
             run_id=run_id,
             batch_id=batch_id,
         )
+        new_ids = [e.id for e in new_entities]
         response = client.get(f"/api/compare/runs/{compare.id}/")
 
         # cheating by comparing run to same run

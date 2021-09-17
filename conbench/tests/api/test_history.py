@@ -7,6 +7,7 @@ def _expected_entity(summary):
         summary.id,
         summary.case_id,
         summary.context_id,
+        summary.run.name,
     )
 
 
@@ -15,7 +16,7 @@ class TestHistoryGet(_asserts.GetEnforcer):
     public = True
 
     def _create(self):
-        return _fixtures.create_benchmark_summary()
+        return _fixtures.summary()
 
     def test_get_history(self, client):
         self.authenticate(client)

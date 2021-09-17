@@ -2,6 +2,7 @@ import copy
 
 from ...entities.summary import Summary
 from ...runner import Conbench
+from ...tests.helpers import _uuid
 
 CHILD = "02addad336ba19a654f9c857ede546331be7b631"
 PARENT = "4beb514d071c9beec69b8917b5265e77ade22fb3"
@@ -98,27 +99,35 @@ VALID_PAYLOAD = {
 }
 
 
-def create_benchmark_summary(
+def summary(
     name=None,
     batch_id=None,
     run_id=None,
     results=None,
     unit=None,
-    sha=None,
     language=None,
+    machine=None,
+    sha=None,
+    commit=None,
+    pull_request=False,
 ):
     data = copy.deepcopy(VALID_PAYLOAD)
+    data["run_name"] = f"commit: {_uuid()}"
+    data["run_id"] = run_id if run_id else _uuid()
+    data["batch_id"] = batch_id if batch_id else _uuid()
+    data["tags"]["name"] = name if name else _uuid()
 
-    if name:
-        data["tags"]["name"] = name
-    if batch_id:
-        data["batch_id"] = batch_id
-    if run_id:
-        data["run_id"] = run_id
-    if sha:
-        data["github"]["commit"] = sha
     if language:
         data["context"]["benchmark_language"] = language
+    if machine:
+        data["machine_info"]["name"] = machine
+    if pull_request:
+        data["run_name"] = "pull request: some commit"
+    if sha:
+        data["github"]["commit"] = sha
+    if commit:
+        data["github"]["commit"] = commit.sha
+        data["github"]["repository"] = commit.repository
 
     if results is not None:
         unit = unit if unit else "s"

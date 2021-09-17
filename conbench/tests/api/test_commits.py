@@ -7,7 +7,7 @@ def _expected_entity(commit):
 
 
 def create_commit():
-    summary = _fixtures.create_benchmark_summary()
+    summary = _fixtures.summary()
     return summary.run.commit
 
 

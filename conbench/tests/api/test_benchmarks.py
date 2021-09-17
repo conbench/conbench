@@ -29,10 +29,9 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     url = "/api/benchmarks/{}/"
     public = True
 
-    def _create(self, name=None, run_id=None, results=None, unit=None, sha=None):
-        return _fixtures.create_benchmark_summary(
+    def _create(self, name=None, results=None, unit=None, sha=None):
+        return _fixtures.summary(
             name=name,
-            run_id=run_id,
             results=results,
             unit=unit,
             sha=sha,
@@ -47,28 +46,25 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_regression(self, client):
         self.authenticate(client)
 
-        name, run_0, run_1, run_2 = _uuid(), _uuid(), _uuid(), _uuid()
+        name = _uuid()
 
         # create a distribution history & a regression
         self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[0],
             unit="i/s",
-            run_id=run_0,
             sha=_fixtures.GRANDPARENT,
         )
         self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[1],
             unit="i/s",
-            run_id=run_1,
             sha=_fixtures.PARENT,
         )
         summary = self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[2],
             unit="i/s",
-            run_id=run_2,
         )
 
         expected = _expected_entity(summary)
@@ -97,28 +93,25 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_regression_less_is_better(self, client):
         self.authenticate(client)
 
-        name, run_0, run_1, run_2 = _uuid(), _uuid(), _uuid(), _uuid()
+        name = _uuid()
 
         # create a distribution history & a regression
         self._create(
             name=name,
             results=_fixtures.RESULTS_UP[0],
             unit="s",
-            run_id=run_0,
             sha=_fixtures.GRANDPARENT,
         )
         self._create(
             name=name,
             results=_fixtures.RESULTS_UP[1],
             unit="s",
-            run_id=run_1,
             sha=_fixtures.PARENT,
         )
         summary = self._create(
             name=name,
             results=_fixtures.RESULTS_UP[2],
             unit="s",
-            run_id=run_2,
         )
 
         expected = _expected_entity(summary)
@@ -146,28 +139,25 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_improvement(self, client):
         self.authenticate(client)
 
-        name, run_0, run_1, run_2 = _uuid(), _uuid(), _uuid(), _uuid()
+        name = _uuid()
 
         # create a distribution history & a improvement
         self._create(
             name=name,
             results=_fixtures.RESULTS_UP[0],
             unit="i/s",
-            run_id=run_0,
             sha=_fixtures.GRANDPARENT,
         )
         self._create(
             name=name,
             results=_fixtures.RESULTS_UP[1],
             unit="i/s",
-            run_id=run_1,
             sha=_fixtures.PARENT,
         )
         summary = self._create(
             name=name,
             results=_fixtures.RESULTS_UP[2],
             unit="i/s",
-            run_id=run_2,
         )
 
         expected = _expected_entity(summary)
@@ -196,28 +186,25 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_improvement_less_is_better(self, client):
         self.authenticate(client)
 
-        name, run_0, run_1, run_2 = _uuid(), _uuid(), _uuid(), _uuid()
+        name = _uuid()
 
         # create a distribution history & a improvement
         self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[0],
             unit="s",
-            run_id=run_0,
             sha=_fixtures.GRANDPARENT,
         )
         self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[1],
             unit="s",
-            run_id=run_1,
             sha=_fixtures.PARENT,
         )
         summary = self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[2],
             unit="s",
-            run_id=run_2,
         )
 
         expected = _expected_entity(summary)
@@ -248,7 +235,7 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
 
     def test_delete_benchmark(self, client):
         self.authenticate(client)
-        summary = _fixtures.create_benchmark_summary()
+        summary = _fixtures.summary()
 
         # can get before delete
         Summary.one(id=summary.id)
@@ -268,31 +255,31 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
     def test_benchmark_list(self, client):
         self.authenticate(client)
-        summary = _fixtures.create_benchmark_summary()
+        summary = _fixtures.summary()
         response = client.get("/api/benchmarks/")
         self.assert_200_ok(response, contains=_expected_entity(summary))
 
     def test_benchmark_list_filter_by_name(self, client):
         self.authenticate(client)
-        _fixtures.create_benchmark_summary(name="aaa")
-        summary = _fixtures.create_benchmark_summary(name="bbb")
-        _fixtures.create_benchmark_summary(name="ccc")
+        _fixtures.summary(name="aaa")
+        summary = _fixtures.summary(name="bbb")
+        _fixtures.summary(name="ccc")
         response = client.get("/api/benchmarks/?name=bbb")
         self.assert_200_ok(response, [_expected_entity(summary)])
 
     def test_benchmark_list_filter_by_batch_id(self, client):
         self.authenticate(client)
-        _fixtures.create_benchmark_summary(batch_id="10")
-        summary = _fixtures.create_benchmark_summary(batch_id="20")
-        _fixtures.create_benchmark_summary(batch_id="30")
+        _fixtures.summary(batch_id="10")
+        summary = _fixtures.summary(batch_id="20")
+        _fixtures.summary(batch_id="30")
         response = client.get("/api/benchmarks/?batch_id=20")
         self.assert_200_ok(response, [_expected_entity(summary)])
 
     def test_benchmark_list_filter_by_run_id(self, client):
         self.authenticate(client)
-        _fixtures.create_benchmark_summary(run_id="100")
-        summary = _fixtures.create_benchmark_summary(run_id="200")
-        _fixtures.create_benchmark_summary(run_id="300")
+        _fixtures.summary(run_id="100")
+        summary = _fixtures.summary(run_id="200")
+        _fixtures.summary(run_id="300")
         response = client.get("/api/benchmarks/?run_id=200")
         self.assert_200_ok(response, [_expected_entity(summary)])
 
