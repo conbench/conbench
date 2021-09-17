@@ -58,6 +58,7 @@ def get_history(case_id, context_id, machine_hash):
         .filter(
             Summary.case_id == case_id,
             Summary.context_id == context_id,
+            Run.name.like("commit: %"),
             Machine.hash == machine_hash,
             Distribution.case_id == case_id,
             Distribution.context_id == context_id,

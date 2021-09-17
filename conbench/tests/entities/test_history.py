@@ -13,9 +13,13 @@ REPO = "https://github.com/org/something"
 MACHINE = "diana-2-4-17179869184"
 
 
-def create_benchmark_summary(results, commit, name, language=None, machine=None):
+def create_benchmark_summary(
+    results, commit, name, language=None, machine=None, pull_request=False
+):
     data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     data["run_id"], data["run_name"] = _uuid(), "commit: some commit"
+    if pull_request:
+        data["run_name"] = "pull request: some commit"
     data["github"]["commit"] = commit.sha
     data["github"]["repository"] = commit.repository
     if name:
@@ -103,6 +107,9 @@ def test_history():
 
     data, machine = [7.1, 7.2, 7.3], "different-machine"
     create_benchmark_summary(data, commit_1, name, machine=machine)
+
+    data = [8.1, 8.2, 8.3]  # pull request, exclude from history
+    create_benchmark_summary(data, commit_1, name, pull_request=True)
 
     assert summary_1.case_id == summary_2.case_id
     assert summary_1.case_id == summary_3.case_id
