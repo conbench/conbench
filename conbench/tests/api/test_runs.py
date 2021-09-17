@@ -31,12 +31,10 @@ class TestRunGet(_asserts.GetEnforcer):
             contender = _fixtures.summary(
                 sha=_fixtures.CHILD,
                 language=language,
-                run_id=_uuid(),
             )
             baseline = _fixtures.summary(
                 sha=_fixtures.PARENT,
                 language=language,
-                run_id=_uuid(),
             )
             return contender.run, baseline.run
         else:
