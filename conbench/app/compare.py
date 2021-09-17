@@ -33,7 +33,6 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
             baseline = self.get_display_benchmark(baseline_id)
             contender = self.get_display_benchmark(contender_id)
             plot = self._get_plot(baseline, contender)
-            plot_history = self.get_history_plot(contender)
             baseline_run_id = baseline["run_id"]
             contender_run_id = contender["run_id"]
             compare = f"{baseline_run_id}...{contender_run_id}"
@@ -44,6 +43,9 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         if comparisons:
             baseline_run = self.get_display_run(baseline_run_id)
             contender_run = self.get_display_run(contender_run_id)
+
+        if comparisons and self.type == "benchmark":
+            plot_history = self.get_history_plot(contender, contender_run)
 
         return self.render_template(
             self.html,
