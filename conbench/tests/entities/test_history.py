@@ -118,7 +118,7 @@ def test_history():
             datetime.datetime(2021, 11, 1),
             decimal.Decimal("2.0300000000000000"),
             None,
-            "commit: some commit",
+            summary_1.run.name,
         ),
         (
             summary_2.id,
@@ -133,7 +133,7 @@ def test_history():
             datetime.datetime(2021, 11, 2),
             decimal.Decimal("2.0300000000000000"),
             decimal.Decimal("0"),
-            "commit: some commit",
+            summary_2.run.name,
         ),
         (
             summary_3.id,
@@ -148,7 +148,7 @@ def test_history():
             datetime.datetime(2021, 11, 3),
             decimal.Decimal("1.6966666666666667"),
             decimal.Decimal("0.57735026918962576451"),
-            "commit: some commit",
+            summary_3.run.name,
         ),
         (
             summary_4.id,
@@ -163,7 +163,7 @@ def test_history():
             datetime.datetime(2021, 11, 4),
             decimal.Decimal("1.8440000000000000"),
             decimal.Decimal("0.82035358230460601799"),
-            "commit: some commit",
+            summary_4.run.name,
         ),
         (
             summary_5.id,
@@ -178,7 +178,7 @@ def test_history():
             datetime.datetime(2021, 11, 4),
             decimal.Decimal("1.8440000000000000"),
             decimal.Decimal("0.82035358230460601799"),
-            "commit: some commit",
+            summary_5.run.name,
         ),
     ]
     actual = get_history(case_id, context_id, machine_hash)
