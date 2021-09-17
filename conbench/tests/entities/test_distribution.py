@@ -111,9 +111,11 @@ def test_z_score_calculations():
     assert z_score == _fixtures.Z_SCORE_DOWN
 
 
-def create_benchmark_summary(results, commit, name=None):
+def create_benchmark_summary(results, commit, name=None, pull_request=False):
     data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
     data["run_id"], data["run_name"] = _uuid(), "commit: some commit"
+    if pull_request:
+        data["run_name"] = "pull request: some commit"
     data["github"]["commit"] = commit.sha
     data["github"]["repository"] = commit.repository
     if name:
@@ -243,6 +245,9 @@ def test_distribution():
 
     data, case = [5.1, 5.2, 5.3], "different-case"  # n/a different case
     summary_x = create_benchmark_summary(data, commit_1, name=case)
+
+    data = [8.1, 8.2, 8.3]  # pull request, exclude from distribution
+    create_benchmark_summary(data, commit_1, pull_request=True)
 
     assert summary_1.case_id == summary_2.case_id
     assert summary_1.case_id == summary_3.case_id
