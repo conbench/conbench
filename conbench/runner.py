@@ -171,6 +171,10 @@ class Conbench(Connection):
             result.get("time_unit", "s"),
         )
 
+        batch_id = options.get("batch_id")
+        if batch_id:
+            self.batch_id = batch_id
+
         run_id = options.get("run_id")
         if run_id is None:
             run_id = self.batch_id
