@@ -29,10 +29,9 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     url = "/api/benchmarks/{}/"
     public = True
 
-    def _create(self, name=None, run_id=None, results=None, unit=None, sha=None):
+    def _create(self, name=None, results=None, unit=None, sha=None):
         return _fixtures.summary(
             name=name,
-            run_id=run_id,
             results=results,
             unit=unit,
             sha=sha,
@@ -47,28 +46,25 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_regression(self, client):
         self.authenticate(client)
 
-        name, run_0, run_1, run_2 = _uuid(), _uuid(), _uuid(), _uuid()
+        name = _uuid()
 
         # create a distribution history & a regression
         self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[0],
             unit="i/s",
-            run_id=run_0,
             sha=_fixtures.GRANDPARENT,
         )
         self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[1],
             unit="i/s",
-            run_id=run_1,
             sha=_fixtures.PARENT,
         )
         summary = self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[2],
             unit="i/s",
-            run_id=run_2,
         )
 
         expected = _expected_entity(summary)
@@ -97,28 +93,25 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_regression_less_is_better(self, client):
         self.authenticate(client)
 
-        name, run_0, run_1, run_2 = _uuid(), _uuid(), _uuid(), _uuid()
+        name = _uuid()
 
         # create a distribution history & a regression
         self._create(
             name=name,
             results=_fixtures.RESULTS_UP[0],
             unit="s",
-            run_id=run_0,
             sha=_fixtures.GRANDPARENT,
         )
         self._create(
             name=name,
             results=_fixtures.RESULTS_UP[1],
             unit="s",
-            run_id=run_1,
             sha=_fixtures.PARENT,
         )
         summary = self._create(
             name=name,
             results=_fixtures.RESULTS_UP[2],
             unit="s",
-            run_id=run_2,
         )
 
         expected = _expected_entity(summary)
@@ -146,28 +139,25 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_improvement(self, client):
         self.authenticate(client)
 
-        name, run_0, run_1, run_2 = _uuid(), _uuid(), _uuid(), _uuid()
+        name = _uuid()
 
         # create a distribution history & a improvement
         self._create(
             name=name,
             results=_fixtures.RESULTS_UP[0],
             unit="i/s",
-            run_id=run_0,
             sha=_fixtures.GRANDPARENT,
         )
         self._create(
             name=name,
             results=_fixtures.RESULTS_UP[1],
             unit="i/s",
-            run_id=run_1,
             sha=_fixtures.PARENT,
         )
         summary = self._create(
             name=name,
             results=_fixtures.RESULTS_UP[2],
             unit="i/s",
-            run_id=run_2,
         )
 
         expected = _expected_entity(summary)
@@ -196,28 +186,25 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     def test_get_benchmark_improvement_less_is_better(self, client):
         self.authenticate(client)
 
-        name, run_0, run_1, run_2 = _uuid(), _uuid(), _uuid(), _uuid()
+        name = _uuid()
 
         # create a distribution history & a improvement
         self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[0],
             unit="s",
-            run_id=run_0,
             sha=_fixtures.GRANDPARENT,
         )
         self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[1],
             unit="s",
-            run_id=run_1,
             sha=_fixtures.PARENT,
         )
         summary = self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[2],
             unit="s",
-            run_id=run_2,
         )
 
         expected = _expected_entity(summary)
