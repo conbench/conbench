@@ -17,23 +17,19 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
     def _create(self, name=None, verbose=False):
         # create a distribution history & a regression
         name = name if name is not None else _uuid()
-        run_0, run_1, run_2 = _uuid(), _uuid(), _uuid()
         _fixtures.summary(
             name=name,
             results=_fixtures.RESULTS_UP[0],
-            run_id=run_0,
             sha=_fixtures.GRANDPARENT,
         )
         summary_1 = _fixtures.summary(
             name=name,
             results=_fixtures.RESULTS_UP[1],
-            run_id=run_1,
             sha=_fixtures.PARENT,
         )
         summary_2 = _fixtures.summary(
             name=name,
             results=_fixtures.RESULTS_UP[2],
-            run_id=run_2,
         )
 
         entity = FakeEntity(f"{summary_1.id}...{summary_2.id}")
