@@ -115,9 +115,8 @@ def summary(
     data["run_name"] = f"commit: {_uuid()}"
     data["run_id"] = run_id if run_id else _uuid()
     data["batch_id"] = batch_id if batch_id else _uuid()
+    data["tags"]["name"] = name if name else _uuid()
 
-    if name:
-        data["tags"]["name"] = name
     if language:
         data["context"]["benchmark_language"] = language
     if machine:
