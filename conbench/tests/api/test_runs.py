@@ -12,6 +12,7 @@ from ...tests.helpers import _uuid
 def _expected_entity(run, baseline_id=None):
     return _api_run_entity(
         run.id,
+        run.name,
         run.commit_id,
         run.machine_id,
         run.timestamp.isoformat(),

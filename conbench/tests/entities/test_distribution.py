@@ -1,4 +1,3 @@
-import copy
 import datetime
 import decimal
 import statistics
@@ -11,8 +10,6 @@ from ...entities.distribution import (
     get_sha_row_number,
     set_z_scores,
 )
-from ...entities.summary import Summary
-from ...runner import Conbench
 from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
 
@@ -111,20 +108,6 @@ def test_z_score_calculations():
     assert z_score == _fixtures.Z_SCORE_DOWN
 
 
-def create_benchmark_summary(results, commit, name=None, pull_request=False):
-    data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
-    data["run_id"], data["run_name"] = _uuid(), "commit: some commit"
-    if pull_request:
-        data["run_name"] = "pull request: some commit"
-    data["github"]["commit"] = commit.sha
-    data["github"]["repository"] = commit.repository
-    if name:
-        data["tags"]["name"] = name
-    data["stats"] = Conbench._stats(results, "s", [], "s")
-    summary = Summary.create(data)
-    return summary
-
-
 def test_distribution_queries():
     query = str(get_commit_index(REPO).statement.compile())
     assert query == COMMIT_INDEX
@@ -145,7 +128,9 @@ def test_distribution_queries():
             "author_avatar": "author_avatar",
         }
     )
-    summary = create_benchmark_summary([1, 2, 3], commit, name=_uuid())
+    summary = _fixtures.create_benchmark_summary(
+        results=[1, 2, 3], commit=commit, name=_uuid()
+    )
     query = str(get_distribution(summary, 3).statement.compile())
     assert query == DISTRIBUTION
 
@@ -226,28 +211,42 @@ def test_distribution():
 
     name = _uuid()
     data = [2.1, 2.0, 1.99]  # first commit
-    summary_1 = create_benchmark_summary(data, commit_1, name=name)
+    summary_1 = _fixtures.create_benchmark_summary(
+        results=data, commit=commit_1, name=name
+    )
 
     data = [1.99, 2.0, 2.1]  # stayed the same
-    summary_2 = create_benchmark_summary(data, commit_2, name=name)
+    summary_2 = _fixtures.create_benchmark_summary(
+        results=data, commit=commit_2, name=name
+    )
 
     data = [1.1, 1.0, 0.99]  # got better
-    summary_3 = create_benchmark_summary(data, commit_3, name=name)
+    summary_3 = _fixtures.create_benchmark_summary(
+        results=data, commit=commit_3, name=name
+    )
 
     data = [1.2, 1.1, 1.0]  # stayed about the same
-    summary_4 = create_benchmark_summary(data, commit_4, name=name)
+    summary_4 = _fixtures.create_benchmark_summary(
+        results=data, commit=commit_4, name=name
+    )
 
     data = [3.1, 3.0, 2.99]  # got worse
-    summary_5 = create_benchmark_summary(data, commit_5, name=name)
+    summary_5 = _fixtures.create_benchmark_summary(
+        results=data, commit=commit_5, name=name
+    )
 
     data = [5.1, 5.2, 5.3]  # n/a different repo
-    summary_b = create_benchmark_summary(data, commit_b, name=name)
+    summary_b = _fixtures.create_benchmark_summary(
+        results=data, commit=commit_b, name=name
+    )
 
     data, case = [5.1, 5.2, 5.3], "different-case"  # n/a different case
-    summary_x = create_benchmark_summary(data, commit_1, name=case)
+    summary_x = _fixtures.create_benchmark_summary(
+        results=data, commit=commit_1, name=case
+    )
 
     data = [8.1, 8.2, 8.3]  # pull request, exclude from distribution
-    create_benchmark_summary(data, commit_1, pull_request=True)
+    _fixtures.create_benchmark_summary(results=data, commit=commit_1, pull_request=True)
 
     assert summary_1.case_id == summary_2.case_id
     assert summary_1.case_id == summary_3.case_id
@@ -483,9 +482,15 @@ def test_distribution_multiple_runs_same_commit():
     )
 
     name = _uuid()
-    summary_1 = create_benchmark_summary(_fixtures.RESULTS_UP[0], commit_1, name=name)
-    summary_2 = create_benchmark_summary(_fixtures.RESULTS_UP[1], commit_2, name=name)
-    summary_3 = create_benchmark_summary(_fixtures.RESULTS_UP[2], commit_3, name=name)
+    summary_1 = _fixtures.create_benchmark_summary(
+        results=_fixtures.RESULTS_UP[0], commit=commit_1, name=name
+    )
+    summary_2 = _fixtures.create_benchmark_summary(
+        results=_fixtures.RESULTS_UP[1], commit=commit_2, name=name
+    )
+    summary_3 = _fixtures.create_benchmark_summary(
+        results=_fixtures.RESULTS_UP[2], commit=commit_3, name=name
+    )
 
     case_id = summary_1.case_id
     context_id = summary_1.context_id
@@ -542,7 +547,9 @@ def test_distribution_multiple_runs_same_commit():
     assert round(summary_3.z_score, 10) == -1 * round(Z_SCORE_UP_DECIMAL, 10)
 
     # re-run commit 2
-    summary_4 = create_benchmark_summary([0, 1, 2], commit_2, name=name)
+    summary_4 = _fixtures.create_benchmark_summary(
+        results=[0, 1, 2], commit=commit_2, name=name
+    )
     set_z_scores([summary_4])
     assert summary_4.z_score is None
 

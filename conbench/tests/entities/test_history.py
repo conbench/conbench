@@ -1,36 +1,13 @@
-import copy
 import datetime
 import decimal
 
 from ...entities.commit import Commit
 from ...entities.history import get_history
-from ...entities.summary import Summary
-from ...runner import Conbench
 from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
 
 REPO = "https://github.com/org/something"
 MACHINE = "diana-2-4-17179869184"
-
-
-def create_benchmark_summary(
-    results, commit, name, language=None, machine=None, pull_request=False
-):
-    data = copy.deepcopy(_fixtures.VALID_PAYLOAD)
-    data["run_id"], data["run_name"] = _uuid(), "commit: some commit"
-    if pull_request:
-        data["run_name"] = "pull request: some commit"
-    data["github"]["commit"] = commit.sha
-    data["github"]["repository"] = commit.repository
-    if name:
-        data["tags"]["name"] = name
-    if language:
-        data["context"]["benchmark_language"] = language
-    if machine:
-        data["machine_info"]["name"] = machine
-    data["stats"] = Conbench._stats(results, "s", [], "s")
-    summary = Summary.create(data)
-    return summary
 
 
 def test_history():
@@ -85,31 +62,47 @@ def test_history():
 
     name = _uuid()
     data = [2.1, 2.0, 1.99]  # first commit
-    summary_1 = create_benchmark_summary(data, commit_1, name)
+    summary_1 = _fixtures.create_benchmark_summary(
+        results=data, commit=commit_1, name=name
+    )
 
     data = [1.99, 2.0, 2.1]  # stayed the same
-    summary_2 = create_benchmark_summary(data, commit_2, name)
+    summary_2 = _fixtures.create_benchmark_summary(
+        results=data, commit=commit_2, name=name
+    )
 
     data = [1.1, 1.0, 0.99]  # got better
-    summary_3 = create_benchmark_summary(data, commit_3, name)
+    summary_3 = _fixtures.create_benchmark_summary(
+        results=data, commit=commit_3, name=name
+    )
 
     data = [1.2, 1.1, 1.0]  # stayed about the same
-    summary_4 = create_benchmark_summary(data, commit_4, name)
+    summary_4 = _fixtures.create_benchmark_summary(
+        results=data, commit=commit_4, name=name
+    )
 
     data = [3.1, 3.0, 2.99]  # measure commit 4 twice
-    summary_5 = create_benchmark_summary(data, commit_4, name)
+    summary_5 = _fixtures.create_benchmark_summary(
+        results=data, commit=commit_4, name=name
+    )
 
-    data, case = [5.1, 5.2, 5.3], "different-case"
-    create_benchmark_summary(data, commit_1, case)
+    data, name = [5.1, 5.2, 5.3], "different-case"
+    _fixtures.create_benchmark_summary(results=data, commit=commit_1, name=name)
 
     data, language = [6.1, 6.2, 6.3], "different-context"
-    create_benchmark_summary(data, commit_1, name, language=language)
+    _fixtures.create_benchmark_summary(
+        results=data, commit=commit_1, name=name, language=language
+    )
 
     data, machine = [7.1, 7.2, 7.3], "different-machine"
-    create_benchmark_summary(data, commit_1, name, machine=machine)
+    _fixtures.create_benchmark_summary(
+        results=data, commit=commit_1, name=name, machine=machine
+    )
 
     data = [8.1, 8.2, 8.3]  # pull request, exclude from history
-    create_benchmark_summary(data, commit_1, name, pull_request=True)
+    _fixtures.create_benchmark_summary(
+        results=data, commit=commit_1, name=name, pull_request=True
+    )
 
     assert summary_1.case_id == summary_2.case_id
     assert summary_1.case_id == summary_3.case_id

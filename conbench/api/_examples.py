@@ -224,7 +224,7 @@ def _api_context_entity(context_id, links=True):
     return result
 
 
-def _api_history_entity(benchmark_id, case_id, context_id):
+def _api_history_entity(benchmark_id, case_id, context_id, run_name):
     return {
         "benchmark_id": benchmark_id,
         "case_id": case_id,
@@ -238,7 +238,7 @@ def _api_history_entity(benchmark_id, case_id, context_id):
         "sha": "02addad336ba19a654f9c857ede546331be7b631",
         "timestamp": "2021-02-25T01:02:51",
         "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
-        "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+        "run_name": run_name,
     }
 
 
@@ -271,10 +271,10 @@ def _api_machine_entity(machine_id, links=True):
     return result
 
 
-def _api_run_entity(run_id, commit_id, machine_id, now, baseline_id):
+def _api_run_entity(run_id, run_name, commit_id, machine_id, now, baseline_id):
     result = {
         "id": run_id,
-        "name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+        "name": run_name,
         "timestamp": now,
         "commit": _api_commit_entity(commit_id, links=False),
         "machine": _api_machine_entity(machine_id, links=False),
@@ -347,10 +347,12 @@ HISTORY_ENTITY = _api_history_entity(
     "some-benchmark-uuid-1",
     "some-case-uuid-1",
     "some-context-uuid-1",
+    "some run name",
 )
 MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1")
 RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",
+    "some run name",
     "some-commit-uuid-1",
     "some-machine-uuid-1",
     "2021-02-04T17:22:05.225583",
@@ -359,6 +361,7 @@ RUN_ENTITY = _api_run_entity(
 RUN_LIST = [
     _api_run_entity(
         "some-run-uuid-1",
+        "some run name",
         "some-commit-uuid-1",
         "some-machine-uuid-1",
         "2021-02-04T17:22:05.225583",

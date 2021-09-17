@@ -471,7 +471,7 @@
                                 "mean": "0.036369",
                                 "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
                                 "repository": "https://github.com/apache/arrow",
-                                "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+                                "run_name": "some run name",
                                 "sha": "02addad336ba19a654f9c857ede546331be7b631",
                                 "timestamp": "2021-02-25T01:02:51",
                                 "unit": "s",
@@ -624,7 +624,7 @@
                                 "os_name": "macOS",
                                 "os_version": "10.15.7",
                             },
-                            "name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+                            "name": "some run name",
                             "timestamp": "2021-02-04T17:22:05.225583",
                         }
                     }
@@ -675,7 +675,7 @@
                                     "os_name": "macOS",
                                     "os_version": "10.15.7",
                                 },
-                                "name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+                                "name": "some run name",
                                 "timestamp": "2021-02-04T17:22:05.225583",
                             }
                         ]

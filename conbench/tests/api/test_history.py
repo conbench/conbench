@@ -7,6 +7,7 @@ def _expected_entity(summary):
         summary.id,
         summary.case_id,
         summary.context_id,
+        summary.run.name,
     )
 
 
