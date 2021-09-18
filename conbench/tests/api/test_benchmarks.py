@@ -320,6 +320,57 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         assert summary_1.run_id != summary_2.run_id
         assert summary_1.run.commit_id == summary_2.run.commit_id
 
+    def test_create_benchmark_can_specify_run_and_batch_id(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        run_id, batch_id = _uuid(), _uuid()
+        data["run_id"] = run_id
+        data["batch_id"] = batch_id
+        response = client.post("/api/benchmarks/", json=data)
+        summary = Summary.one(id=response.json["id"])
+        assert summary.run_id == run_id
+        assert summary.batch_id == batch_id
+
+    def test_create_benchmark_cannot_omit_batch_id(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+
+        # omit
+        del data["batch_id"]
+        response = client.post("/api/benchmarks/", json=data)
+        message = {
+            "batch_id": ["Missing data for required field."],
+        }
+        self.assert_400_bad_request(response, message)
+
+        # null
+        data["batch_id"] = None
+        response = client.post("/api/benchmarks/", json=data)
+        message = {
+            "batch_id": ["Field may not be null."],
+        }
+        self.assert_400_bad_request(response, message)
+
+    def test_create_benchmark_cannot_omit_run_id(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+
+        # omit
+        del data["run_id"]
+        response = client.post("/api/benchmarks/", json=data)
+        message = {
+            "run_id": ["Missing data for required field."],
+        }
+        self.assert_400_bad_request(response, message)
+
+        # null
+        data["run_id"] = None
+        response = client.post("/api/benchmarks/", json=data)
+        message = {
+            "run_id": ["Field may not be null."],
+        }
+        self.assert_400_bad_request(response, message)
+
     def test_nested_schema_validation(self, client):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
