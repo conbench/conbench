@@ -48,9 +48,9 @@ def _choice(params, name, choices):
     params.append(
         click.Option(
             (name,),
-            default=choices[0],
+            default=str(choices[0]),
             show_default=False,
-            type=click.Choice(choices, case_sensitive=False),
+            type=click.Choice([str(c) for c in choices], case_sensitive=False),
         )
     )
 
