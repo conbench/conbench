@@ -90,7 +90,7 @@ class Benchmark(abc.ABC):
 
     @property
     def case_ids(self):
-        return [", ".join(case) for case in self.cases]
+        return [", ".join([str(c) for c in case]) for case in self.cases]
 
     def get_cases(self, case, options):
         run_all = options.get("all", False)
