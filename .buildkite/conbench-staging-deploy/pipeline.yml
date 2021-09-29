@@ -12,7 +12,7 @@ steps:
 
   - label: "Deploy secrets and config"
     key: "deploy-secrets-and-config"
-    depends_on "build-and-push"
+    depends_on: "build-and-push"
     concurrency: 1
     concurrency_group: "conbench-staging-deploy"
     command:
