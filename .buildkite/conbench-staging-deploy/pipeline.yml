@@ -4,11 +4,11 @@ steps:
       - cat conbench-secret.yml | sed "s/{{GITHUB_API_TOKEN}}/$(echo -n $GITHUB_API_TOKEN | base64)/g;
         s/{{DB_PASSWORD}}/$(echo -n $DB_PASSWORD | base64)/g;
         s/{{DB_USERNAME}}/$(echo -n $DB_USERNAME | base64)/g;
-#        s/{{GOOGLE_CLIENT_ID}}/$(echo -n $GOOGLE_CLIENT_ID | base64)/g;
         s/{{GOOGLE_CLIENT_SECRET}}/$(echo -n $GOOGLE_CLIENT_SECRET | base64)/g;
         s/{{REGISTRATION_KEY}}/$(echo -n $REGISTRATION_KEY | base64)/g;
         s/{{SECRET_KEY}}/$(echo -n $SECRET_KEY | base64)/g"
 
+#        s/{{GOOGLE_CLIENT_ID}}/$(echo -n $GOOGLE_CLIENT_ID | base64)/g;
 #  - label: "Build & Push"
 #    key: "build-and-push"
 #    concurrency: 1
