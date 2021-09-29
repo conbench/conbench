@@ -16,6 +16,8 @@ steps:
     concurrency: 1
     concurrency_group: "conbench-staging-deploy"
     command:
+      - aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
+      - kubectl config set-context --current --namespace=staging
       - cat conbench-secret.yml | sed "s/{{GITHUB_API_TOKEN}}/$(echo -n $GITHUB_API_TOKEN | base64)/g;
         s/{{DB_PASSWORD}}/$(echo -n $DB_PASSWORD | base64)/g;
         s/{{DB_USERNAME}}/$(echo -n $DB_USERNAME | base64)/g;

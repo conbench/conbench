@@ -26,10 +26,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8024417f-2734-4139-a630-0ff6b9f38760" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/conbench-config.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.buildkite/conbench-staging-deploy/pipeline.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.buildkite/conbench-staging-deploy/pipeline.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/deploy.yml" beforeDir="false" afterPath="$PROJECT_DIR$/deploy.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/migration-job.yml" beforeDir="false" afterPath="$PROJECT_DIR$/migration-job.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +111,7 @@
       <workItem from="1631323677692" duration="4119000" />
       <workItem from="1631649250404" duration="6950000" />
       <workItem from="1632767123489" duration="1068000" />
-      <workItem from="1632946806722" duration="6824000" />
+      <workItem from="1632946806722" duration="7178000" />
     </task>
     <servers />
   </component>
