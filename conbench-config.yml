@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conbench-config
+  labels:
+    app: conbench
+data:
+  APPLICATION_NAME: "{{APPLICATION_NAME}}"
+  BENCHMARKS_DATA_PUBLIC: "{{BENCHMARKS_DATA_PUBLIC}}"
+  DB_NAME: "{{DB_NAME}}"
+  DB_HOST: "{{DB_HOST}}"
+  DB_PORT: "{{DB_PORT}}"
+  FLASK_APP: "{{FLASK_APP}}"

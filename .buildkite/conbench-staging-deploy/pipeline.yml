@@ -4,25 +4,24 @@ steps:
     concurrency: 1
     concurrency_group: "conbench-staging-deploy"
     command:
-      - set -x
-      - docker build -t ${FLASK_APP} .
-      - docker tag ${FLASK_APP}:latest ${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}
-      - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin ${DOCKER_REGISTRY}
-      - docker push ${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}
+      - source .buildkite/utils.sh build_and_push
 
-  - label: "Run Migrations"
-    key: "run-migrations"
+  - label: "Deploy secrets and config"
+    key: "deploy-secrets-and-config"
     depends_on: "build-and-push"
     concurrency: 1
     concurrency_group: "conbench-staging-deploy"
     command:
-      - set -x
-      - aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
-      - kubectl config set-context --current --namespace=staging
-      - cat migration-job.yml | sed "s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g; s/{{DB_NAME}}/${DB_NAME}/g; s/{{APPLICATION_NAME}}/${APPLICATION_NAME}/g; s/{{DB_HOST}}/${DB_HOST}/g; s/{{DB_PORT}}/${DB_PORT}/g; s/{{FLASK_APP}}/${FLASK_APP}/g; s/{{DOCKER_REGISTRY}}/${DOCKER_REGISTRY}/g; s/{{CERTIFICATE_ARN}}/${CERTIFICATE_ARN}/g; s/{{EKS_CLUSTER}}/${EKS_CLUSTER}/g; s/{{BENCHMARKS_DATA_PUBLIC}}/${BENCHMARKS_DATA_PUBLIC}/g" | kubectl delete --ignore-not-found=true -f -
-      - cat migration-job.yml | sed "s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g; s/{{DB_NAME}}/${DB_NAME}/g; s/{{APPLICATION_NAME}}/${APPLICATION_NAME}/g; s/{{DB_HOST}}/${DB_HOST}/g; s/{{DB_PORT}}/${DB_PORT}/g; s/{{FLASK_APP}}/${FLASK_APP}/g; s/{{DOCKER_REGISTRY}}/${DOCKER_REGISTRY}/g; s/{{CERTIFICATE_ARN}}/${CERTIFICATE_ARN}/g; s/{{EKS_CLUSTER}}/${EKS_CLUSTER}/g; s/{{BENCHMARKS_DATA_PUBLIC}}/${BENCHMARKS_DATA_PUBLIC}/g" | kubectl apply -f -
-      - kubectl wait --for=condition=complete --timeout=86400s job/conbench-migration
-      - (($(kubectl get job conbench-migration -o jsonpath={.status.succeeded}) == "1")) && exit 0 || exit 1
+      - source .buildkite/utils.sh deploy_secrets_and_config
+
+
+  - label: "Run Migrations"
+    key: "run-migrations"
+    depends_on: "deploy-secrets-and-config"
+    concurrency: 1
+    concurrency_group: "conbench-staging-deploy"
+    command:
+      - source .buildkite/utils.sh run_migrations
 
   - label: "Deploy"
     key: "deploy"
@@ -30,8 +29,4 @@ steps:
     concurrency: 1
     concurrency_group: "conbench-staging-deploy"
     command:
-      - set -x
-      - aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
-      - kubectl config set-context --current --namespace=staging
-      - cat deploy.yml | sed "s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g; s/{{DB_NAME}}/${DB_NAME}/g; s/{{APPLICATION_NAME}}/${APPLICATION_NAME}/g; s/{{DB_HOST}}/${DB_HOST}/g; s/{{DB_PORT}}/${DB_PORT}/g; s/{{FLASK_APP}}/${FLASK_APP}/g; s/{{DOCKER_REGISTRY}}/${DOCKER_REGISTRY}/g; s/{{CERTIFICATE_ARN}}/${CERTIFICATE_ARN}/g; s/{{EKS_CLUSTER}}/${EKS_CLUSTER}/g; s/{{BENCHMARKS_DATA_PUBLIC}}/${BENCHMARKS_DATA_PUBLIC}/g" | kubectl apply -f -
-      - kubectl rollout status deployment/conbench-deployment
+      - source .buildkite/utils.sh deploy
