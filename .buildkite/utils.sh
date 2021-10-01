@@ -9,7 +9,6 @@ build_and_push() {
 }
 
 deploy_secrets_and_config() {
-  set -x
   aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
   kubectl config set-context --current --namespace=${NAMESPACE}
   cat conbench-secret.yml | sed "\
