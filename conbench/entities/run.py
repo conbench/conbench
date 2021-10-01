@@ -18,25 +18,30 @@ class Run(Base, EntityMixin):
     machine = relationship("Machine", lazy="joined")
 
     def get_baseline_id(self):
+        from ..entities.distribution import get_closest_parent
         from ..entities.summary import Summary
+
+        parent = get_closest_parent(self.commit)
+        if not parent:
+            return None
 
         run_contexts = Summary.distinct(
             Summary.context_id, filters=[Summary.run_id == self.id]
         )
 
         # TODO: Should be using machine hash?
-        parent = self.commit.parent
         parent_runs = Run.search(
-            filters=[Run.machine_id == self.machine_id, Commit.sha == parent],
+            filters=[Run.machine_id == self.machine_id, Commit.sha == parent.sha],
             joins=[Commit],
         )
 
         # TODO: What if there are multiple matches? Pick by date?
+        # TODO: What is all the contexts just aren't yet in? Or some failed?
         for run in parent_runs:
-            baseline_contexts = Summary.distinct(
+            parent_contexts = Summary.distinct(
                 Summary.context_id, filters=[Summary.run_id == run.id]
             )
-            if set(run_contexts) == set(baseline_contexts):
+            if set(run_contexts) == set(parent_contexts):
                 return run.id
 
         return None
