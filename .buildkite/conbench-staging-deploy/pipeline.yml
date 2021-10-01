@@ -16,25 +16,7 @@ steps:
     concurrency: 1
     concurrency_group: "conbench-staging-deploy"
     command:
-      - aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
-      - kubectl config set-context --current --namespace=staging
-      - cat conbench-secret.yml | sed "
-        s/{{DB_PASSWORD}}/$(echo -n $DB_PASSWORD | base64)/g;
-        s/{{DB_USERNAME}}/$(echo -n $DB_USERNAME | base64)/g;
-        s/{{GITHUB_API_TOKEN}}/$(echo -n $GITHUB_API_TOKEN | base64)/g;
-        s/{{GOOGLE_CLIENT_ID}}/$(echo -n $GOOGLE_CLIENT_ID | base64 -w 0)/g;
-        s/{{GOOGLE_CLIENT_SECRET}}/$(echo -n $GOOGLE_CLIENT_SECRET | base64)/g;
-        s/{{REGISTRATION_KEY}}/$(echo -n $REGISTRATION_KEY | base64)/g;
-        s/{{SECRET_KEY}}/$(echo -n $SECRET_KEY | base64)/g"
-        | kubectl apply -f -
-      - cat conbench-config.yml | sed "
-        s/{{APPLICATION_NAME}}/${APPLICATION_NAME}/g;
-        s/{{BENCHMARKS_DATA_PUBLIC}}/${BENCHMARKS_DATA_PUBLIC}/g;
-        s/{{DB_NAME}}/${DB_NAME}/g;
-        s/{{DB_HOST}}/${DB_HOST}/g;
-        s/{{DB_PORT}}/${DB_PORT}/g;
-        s/{{FLASK_APP}}/${FLASK_APP}/g"
-        | kubectl apply -f -
+
 
   - label: "Run Migrations"
     key: "run-migrations"
