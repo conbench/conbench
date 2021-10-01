@@ -9,6 +9,7 @@ build_and_push() {
 }
 
 deploy_secrets_and_config() {
+  set -x
   aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
   kubectl config set-context --current --namespace=${NAMESPACE}
   cat conbench-secret.yml | sed "\
@@ -58,6 +59,13 @@ s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g;\
         s/{{DOCKER_REGISTRY}}/${DOCKER_REGISTRY}/g;\
         s/{{FLASK_APP}}/${FLASK_APP}/g" |
     kubectl apply -f -
+  kubectl rollout status deployment/conbench-deployment
+}
+
+rollback() {
+  set -x
+  aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
+  kubectl rollout undo deployment.v1.apps/conbench-deployment
   kubectl rollout status deployment/conbench-deployment
 }
 
