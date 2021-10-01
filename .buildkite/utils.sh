@@ -11,7 +11,18 @@ build_and_push() {
 deploy_secrets_and_config() {
   aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
   kubectl config set-context --current --namespace=${NAMESPACE}
-  cat conbench-secret.yml | sed "\
+  if [ -z "$GOOGLE_CLIENT_ID" ]; then
+      cat conbench-secret.yml | sed "\
+        s/{{DB_PASSWORD}}/$(echo -n $DB_PASSWORD | base64)/g;\
+        s/{{DB_USERNAME}}/$(echo -n $DB_USERNAME | base64)/g;\
+        s/{{GITHUB_API_TOKEN}}/$(echo -n $GITHUB_API_TOKEN | base64)/g;\
+        s/GOOGLE_CLIENT_ID: {{GOOGLE_CLIENT_ID}}//g;\
+        s/GOOGLE_CLIENT_SECRET: {{GOOGLE_CLIENT_SECRET}}//g;\
+        s/{{REGISTRATION_KEY}}/$(echo -n $REGISTRATION_KEY | base64)/g;\
+        s/{{SECRET_KEY}}/$(echo -n $SECRET_KEY | base64)/g" |
+    kubectl apply -f -
+  else
+    cat conbench-secret.yml | sed "\
         s/{{DB_PASSWORD}}/$(echo -n $DB_PASSWORD | base64)/g;\
         s/{{DB_USERNAME}}/$(echo -n $DB_USERNAME | base64)/g;\
         s/{{GITHUB_API_TOKEN}}/$(echo -n $GITHUB_API_TOKEN | base64)/g;\
@@ -20,6 +31,10 @@ deploy_secrets_and_config() {
         s/{{REGISTRATION_KEY}}/$(echo -n $REGISTRATION_KEY | base64)/g;\
         s/{{SECRET_KEY}}/$(echo -n $SECRET_KEY | base64)/g" |
     kubectl apply -f -
+
+  fi
+
+
   cat conbench-config.yml | sed "\
         s/{{APPLICATION_NAME}}/${APPLICATION_NAME}/g;\
         s/{{BENCHMARKS_DATA_PUBLIC}}/${BENCHMARKS_DATA_PUBLIC}/g;\
