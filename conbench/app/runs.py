@@ -10,7 +10,7 @@ from ..app.benchmarks import ContextMixin, RunMixin
 from ..config import Config
 
 
-class RunPlot(AppEndpoint, ContextMixin, RunMixin):
+class Run(AppEndpoint, ContextMixin, RunMixin):
     def page(self, benchmarks, baseline_run, contender_run, form, run_id):
         compare_runs_url = None
         if not flask_login.current_user.is_authenticated:
@@ -80,6 +80,6 @@ class DeleteForm(flask_wtf.FlaskForm):
 
 rule(
     "/runs/<run_id>/",
-    view_func=RunPlot.as_view("run"),
+    view_func=Run.as_view("run"),
     methods=["GET", "POST"],
 )

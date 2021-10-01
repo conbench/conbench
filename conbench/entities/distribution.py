@@ -147,6 +147,18 @@ def update_distribution(summary, limit):
         conn.commit()
 
 
+def get_closest_parent(commit):
+    parent = Commit.first(sha=commit.parent, repository=commit.repository)
+
+    if not parent:
+        commits_up = get_commits_up(commit.repository, commit.sha, 2).all()
+        if len(commits_up) > 1:
+            closest_sha = commits_up[1][1]
+            parent = Commit.first(sha=closest_sha, repository=commit.repository)
+
+    return parent
+
+
 def set_z_scores(summaries):
     if not summaries:
         return
@@ -155,11 +167,7 @@ def set_z_scores(summaries):
         summary.z_score = None
 
     first = summaries[0]
-    parent_commit = Commit.first(
-        sha=first.run.commit.parent,
-        repository=first.run.commit.repository,
-    )
-
+    parent_commit = get_closest_parent(first.run.commit)
     if not parent_commit:
         return
 

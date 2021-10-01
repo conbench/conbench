@@ -4,6 +4,7 @@ import statistics
 
 from ...entities.commit import Commit
 from ...entities.distribution import (
+    get_closest_parent,
     get_commit_index,
     get_commits_up,
     get_distribution,
@@ -65,7 +66,7 @@ WHERE run.name LIKE :name_1 AND summary.case_id = :case_id_1 AND summary.context
 
 
 def test_z_score_calculations():
-    """Manually santity check the calculations used in the z-score tests."""
+    """Manually sanity check the calculations used in the z-score tests."""
 
     # ----- RESULTS_UP
 
@@ -207,6 +208,21 @@ def test_distribution():
         }
     )
 
+    # note that commit_6 & commit_7 are intentionally missing
+
+    commit_8 = Commit.create(
+        {
+            "sha": "88888",
+            "repository": REPO,
+            "parent": "77777",
+            "timestamp": datetime.datetime(2021, 11, 7),
+            "message": "message 88888",
+            "author_name": "author_name",
+            "author_login": "author_login",
+            "author_avatar": "author_avatar",
+        }
+    )
+
     name = _uuid()
     data = [2.1, 2.0, 1.99]  # first commit
     summary_1 = _fixtures.summary(results=data, commit=commit_1, name=name)
@@ -223,6 +239,11 @@ def test_distribution():
     data = [3.1, 3.0, 2.99]  # got worse
     summary_5 = _fixtures.summary(results=data, commit=commit_5, name=name)
 
+    # note that summary_6 & summary_7 are intentionally missing
+
+    data = [4.1, 4.0, 4.99]  # got even worse
+    summary_8 = _fixtures.summary(results=data, commit=commit_8, name=name)
+
     data = [5.1, 5.2, 5.3]  # n/a different repo
     summary_b = _fixtures.summary(results=data, commit=commit_b, name=name)
 
@@ -236,65 +257,108 @@ def test_distribution():
     assert summary_1.case_id == summary_3.case_id
     assert summary_1.case_id == summary_4.case_id
     assert summary_1.case_id == summary_5.case_id
+    assert summary_1.case_id == summary_8.case_id
 
     assert summary_1.run.machine_id == summary_2.run.machine_id
     assert summary_1.run.machine_id == summary_3.run.machine_id
     assert summary_1.run.machine_id == summary_4.run.machine_id
     assert summary_1.run.machine_id == summary_5.run.machine_id
+    assert summary_1.run.machine_id == summary_8.run.machine_id
 
     # ----- get_commit_index
 
     expected = [
-        (commit_5.id, commit_5.sha, commit_5.timestamp, 1),
-        (commit_4.id, commit_4.sha, commit_4.timestamp, 2),
-        (commit_3.id, commit_3.sha, commit_3.timestamp, 3),
-        (commit_2.id, commit_2.sha, commit_2.timestamp, 4),
-        (commit_1.id, commit_1.sha, commit_1.timestamp, 5),
+        (commit_8.id, commit_8.sha, commit_8.timestamp, 1),
+        (commit_5.id, commit_5.sha, commit_5.timestamp, 2),
+        (commit_4.id, commit_4.sha, commit_4.timestamp, 3),
+        (commit_3.id, commit_3.sha, commit_3.timestamp, 4),
+        (commit_2.id, commit_2.sha, commit_2.timestamp, 5),
+        (commit_1.id, commit_1.sha, commit_1.timestamp, 6),
     ]
     assert get_commit_index(REPO).all() == expected
 
     # ----- get_sha_row_number
 
-    assert get_sha_row_number(REPO, "55555").all() == [(1,)]
-    assert get_sha_row_number(REPO, "44444").all() == [(2,)]
-    assert get_sha_row_number(REPO, "33333").all() == [(3,)]
-    assert get_sha_row_number(REPO, "22222").all() == [(4,)]
-    assert get_sha_row_number(REPO, "11111").all() == [(5,)]
+    assert get_sha_row_number(REPO, "88888").all() == [(1,)]
+    assert get_sha_row_number(REPO, "77777").all() == []
+    assert get_sha_row_number(REPO, "66666").all() == []
+    assert get_sha_row_number(REPO, "55555").all() == [(2,)]
+    assert get_sha_row_number(REPO, "44444").all() == [(3,)]
+    assert get_sha_row_number(REPO, "33333").all() == [(4,)]
+    assert get_sha_row_number(REPO, "22222").all() == [(5,)]
+    assert get_sha_row_number(REPO, "11111").all() == [(6,)]
     assert get_sha_row_number(REPO, "00000").all() == []
 
     # ----- get_commits_up
 
     expected = [
-        (commit_5.id, commit_5.sha, commit_5.timestamp, 1),
-        (commit_4.id, commit_4.sha, commit_4.timestamp, 2),
-        (commit_3.id, commit_3.sha, commit_3.timestamp, 3),
+        (commit_8.id, commit_8.sha, commit_8.timestamp, 1),
+        (commit_5.id, commit_5.sha, commit_5.timestamp, 2),
+        (commit_4.id, commit_4.sha, commit_4.timestamp, 3),
+    ]
+    assert get_commits_up(REPO, "88888", 3).all() == expected
+    assert get_commits_up(REPO, "77777", 3).all() == []
+    assert get_commits_up(REPO, "66666", 3).all() == []
+    expected = [
+        (commit_5.id, commit_5.sha, commit_5.timestamp, 2),
+        (commit_4.id, commit_4.sha, commit_4.timestamp, 3),
+        (commit_3.id, commit_3.sha, commit_3.timestamp, 4),
     ]
     assert get_commits_up(REPO, "55555", 3).all() == expected
     expected = [
-        (commit_4.id, commit_4.sha, commit_4.timestamp, 2),
-        (commit_3.id, commit_3.sha, commit_3.timestamp, 3),
-        (commit_2.id, commit_2.sha, commit_2.timestamp, 4),
+        (commit_4.id, commit_4.sha, commit_4.timestamp, 3),
+        (commit_3.id, commit_3.sha, commit_3.timestamp, 4),
+        (commit_2.id, commit_2.sha, commit_2.timestamp, 5),
     ]
     assert get_commits_up(REPO, "44444", 3).all() == expected
     expected = [
-        (commit_3.id, commit_3.sha, commit_3.timestamp, 3),
-        (commit_2.id, commit_2.sha, commit_2.timestamp, 4),
-        (commit_1.id, commit_1.sha, commit_1.timestamp, 5),
+        (commit_3.id, commit_3.sha, commit_3.timestamp, 4),
+        (commit_2.id, commit_2.sha, commit_2.timestamp, 5),
+        (commit_1.id, commit_1.sha, commit_1.timestamp, 6),
     ]
     assert get_commits_up(REPO, "33333", 3).all() == expected
     expected = [
-        (commit_2.id, commit_2.sha, commit_2.timestamp, 4),
-        (commit_1.id, commit_1.sha, commit_1.timestamp, 5),
+        (commit_2.id, commit_2.sha, commit_2.timestamp, 5),
+        (commit_1.id, commit_1.sha, commit_1.timestamp, 6),
     ]
     assert get_commits_up(REPO, "22222", 3).all() == expected
     expected = [
-        (commit_1.id, commit_1.sha, commit_1.timestamp, 5),
+        (commit_1.id, commit_1.sha, commit_1.timestamp, 6),
     ]
     assert get_commits_up(REPO, "11111", 3).all() == expected
     assert get_commits_up(REPO, "00000", 3).all() == []
 
+    # ----- get_closest_parent
+
+    assert get_closest_parent(commit_8).id == commit_5.id
+    assert get_closest_parent(commit_5).id == commit_4.id
+    assert get_closest_parent(commit_4).id == commit_3.id
+    assert get_closest_parent(commit_3).id == commit_2.id
+    assert get_closest_parent(commit_2).id == commit_1.id
+    assert get_closest_parent(commit_1) is None
+
     # ----- get_distribution
 
+    assert get_distribution(summary_8, 10).all() == [
+        (
+            summary_8.case_id,
+            summary_8.context_id,
+            commit_8.id,
+            MACHINE,
+            "s",
+            decimal.Decimal("2.2638888333333333"),
+            decimal.Decimal("1.2634175058737182"),
+            decimal.Decimal("2.1600000000000000"),
+            decimal.Decimal("1.1701965646847541"),
+            decimal.Decimal("2.4316666666666667"),
+            decimal.Decimal("1.4492814311467137"),
+            decimal.Decimal("2.2000000000000000"),
+            decimal.Decimal("1.1815244390193544"),
+            datetime.datetime(2021, 11, 1, 0, 0),
+            datetime.datetime(2021, 11, 7, 0, 0),
+            6,
+        )
+    ]
     assert get_distribution(summary_5, 10).all() == [
         (
             summary_5.case_id,
@@ -418,6 +482,12 @@ def test_distribution():
     set_z_scores([summary_5])
     assert summary_5.z_score == decimal.Decimal("-2.657403264808751253340839750")
 
+    # note that summary_6 & summary_7 are intentionally missing
+
+    # eighth commit, got even worse
+    set_z_scores([summary_8])
+    assert summary_8.z_score == decimal.Decimal("-3.071033093952584018991452191")
+
     # n/a different repo, no distribution history
     set_z_scores([summary_b])
     assert summary_b.z_score is None
@@ -446,7 +516,7 @@ def test_distribution_multiple_runs_same_commit():
             "repository": REPO,
             "parent": "xxxxx",
             "timestamp": datetime.datetime(2021, 11, 2),
-            "message": "message 22222",
+            "message": "message yyyyy",
             "author_name": "author_name",
             "author_login": "author_login",
             "author_avatar": "author_avatar",
@@ -458,7 +528,7 @@ def test_distribution_multiple_runs_same_commit():
             "repository": REPO,
             "parent": "yyyyy",
             "timestamp": datetime.datetime(2021, 11, 3),
-            "message": "message 33333",
+            "message": "message zzzzz",
             "author_name": "author_name",
             "author_login": "author_login",
             "author_avatar": "author_avatar",
