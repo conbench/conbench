@@ -151,7 +151,7 @@ def get_closest_parent(commit):
     parent = Commit.first(sha=commit.parent, repository=commit.repository)
 
     if not parent:
-        commits_up = get_commits_up(commit.repository, commit.sha, 100).all()
+        commits_up = get_commits_up(commit.repository, commit.sha, 2).all()
         if len(commits_up) > 1:
             closest_sha = commits_up[1][1]
             parent = Commit.first(sha=closest_sha, repository=commit.repository)
