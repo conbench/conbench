@@ -326,12 +326,12 @@ def test_distribution():
 
     # ----- get_closest_parent
 
-    assert get_closest_parent(summary_7).id == commit_5.id
-    assert get_closest_parent(summary_5).id == commit_4.id
-    assert get_closest_parent(summary_4).id == commit_3.id
-    assert get_closest_parent(summary_3).id == commit_2.id
-    assert get_closest_parent(summary_2).id == commit_1.id
-    assert get_closest_parent(summary_1) is None
+    assert get_closest_parent(commit_7).id == commit_5.id
+    assert get_closest_parent(commit_5).id == commit_4.id
+    assert get_closest_parent(commit_4).id == commit_3.id
+    assert get_closest_parent(commit_3).id == commit_2.id
+    assert get_closest_parent(commit_2).id == commit_1.id
+    assert get_closest_parent(commit_1) is None
 
     # ----- get_distribution
 
