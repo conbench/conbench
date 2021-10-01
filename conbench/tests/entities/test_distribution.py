@@ -208,15 +208,15 @@ def test_distribution():
         }
     )
 
-    # note that commit_6 is intentionally missing
+    # note that commit_6 & commit_7 are intentionally missing
 
-    commit_7 = Commit.create(
+    commit_8 = Commit.create(
         {
-            "sha": "77777",
+            "sha": "88888",
             "repository": REPO,
-            "parent": "66666",
+            "parent": "77777",
             "timestamp": datetime.datetime(2021, 11, 7),
-            "message": "message 77777",
+            "message": "message 88888",
             "author_name": "author_name",
             "author_login": "author_login",
             "author_avatar": "author_avatar",
@@ -239,10 +239,10 @@ def test_distribution():
     data = [3.1, 3.0, 2.99]  # got worse
     summary_5 = _fixtures.summary(results=data, commit=commit_5, name=name)
 
-    # note that summary_6 is intentionally missing
+    # note that summary_6 & summary_7 are intentionally missing
 
     data = [4.1, 4.0, 4.99]  # got even worse
-    summary_7 = _fixtures.summary(results=data, commit=commit_7, name=name)
+    summary_8 = _fixtures.summary(results=data, commit=commit_8, name=name)
 
     data = [5.1, 5.2, 5.3]  # n/a different repo
     summary_b = _fixtures.summary(results=data, commit=commit_b, name=name)
@@ -257,16 +257,18 @@ def test_distribution():
     assert summary_1.case_id == summary_3.case_id
     assert summary_1.case_id == summary_4.case_id
     assert summary_1.case_id == summary_5.case_id
+    assert summary_1.case_id == summary_8.case_id
 
     assert summary_1.run.machine_id == summary_2.run.machine_id
     assert summary_1.run.machine_id == summary_3.run.machine_id
     assert summary_1.run.machine_id == summary_4.run.machine_id
     assert summary_1.run.machine_id == summary_5.run.machine_id
+    assert summary_1.run.machine_id == summary_8.run.machine_id
 
     # ----- get_commit_index
 
     expected = [
-        (commit_7.id, commit_7.sha, commit_7.timestamp, 1),
+        (commit_8.id, commit_8.sha, commit_8.timestamp, 1),
         (commit_5.id, commit_5.sha, commit_5.timestamp, 2),
         (commit_4.id, commit_4.sha, commit_4.timestamp, 3),
         (commit_3.id, commit_3.sha, commit_3.timestamp, 4),
@@ -277,7 +279,8 @@ def test_distribution():
 
     # ----- get_sha_row_number
 
-    assert get_sha_row_number(REPO, "77777").all() == [(1,)]
+    assert get_sha_row_number(REPO, "88888").all() == [(1,)]
+    assert get_sha_row_number(REPO, "77777").all() == []
     assert get_sha_row_number(REPO, "66666").all() == []
     assert get_sha_row_number(REPO, "55555").all() == [(2,)]
     assert get_sha_row_number(REPO, "44444").all() == [(3,)]
@@ -289,11 +292,12 @@ def test_distribution():
     # ----- get_commits_up
 
     expected = [
-        (commit_7.id, commit_7.sha, commit_7.timestamp, 1),
+        (commit_8.id, commit_8.sha, commit_8.timestamp, 1),
         (commit_5.id, commit_5.sha, commit_5.timestamp, 2),
         (commit_4.id, commit_4.sha, commit_4.timestamp, 3),
     ]
-    assert get_commits_up(REPO, "77777", 3).all() == expected
+    assert get_commits_up(REPO, "88888", 3).all() == expected
+    assert get_commits_up(REPO, "77777", 3).all() == []
     assert get_commits_up(REPO, "66666", 3).all() == []
     expected = [
         (commit_5.id, commit_5.sha, commit_5.timestamp, 2),
@@ -326,7 +330,7 @@ def test_distribution():
 
     # ----- get_closest_parent
 
-    assert get_closest_parent(commit_7).id == commit_5.id
+    assert get_closest_parent(commit_8).id == commit_5.id
     assert get_closest_parent(commit_5).id == commit_4.id
     assert get_closest_parent(commit_4).id == commit_3.id
     assert get_closest_parent(commit_3).id == commit_2.id
@@ -335,11 +339,11 @@ def test_distribution():
 
     # ----- get_distribution
 
-    assert get_distribution(summary_7, 10).all() == [
+    assert get_distribution(summary_8, 10).all() == [
         (
-            summary_7.case_id,
-            summary_7.context_id,
-            commit_7.id,
+            summary_8.case_id,
+            summary_8.context_id,
+            commit_8.id,
             MACHINE,
             "s",
             decimal.Decimal("2.2638888333333333"),
@@ -478,11 +482,11 @@ def test_distribution():
     set_z_scores([summary_5])
     assert summary_5.z_score == decimal.Decimal("-2.657403264808751253340839750")
 
-    # # note that summary_6 is intentionally missing
+    # note that summary_6 & summary_7 are intentionally missing
 
-    # seventh commit, got even worse
-    set_z_scores([summary_7])
-    assert summary_7.z_score == decimal.Decimal("-3.071033093952584018991452191")
+    # eighth commit, got even worse
+    set_z_scores([summary_8])
+    assert summary_8.z_score == decimal.Decimal("-3.071033093952584018991452191")
 
     # n/a different repo, no distribution history
     set_z_scores([summary_b])
