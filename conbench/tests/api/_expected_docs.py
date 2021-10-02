@@ -259,6 +259,7 @@
                             "id": "some-commit-uuid-1",
                             "links": {
                                 "list": "http://localhost/api/commits/",
+                                "parent": "http://localhost/api/commits/some-commit-parent-uuid-1/",
                                 "self": "http://localhost/api/commits/some-commit-uuid-1/",
                             },
                             "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
@@ -283,6 +284,7 @@
                                 "id": "some-commit-uuid-1",
                                 "links": {
                                     "list": "http://localhost/api/commits/",
+                                    "parent": "http://localhost/api/commits/some-commit-parent-uuid-1/",
                                     "self": "http://localhost/api/commits/some-commit-uuid-1/",
                                 },
                                 "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",

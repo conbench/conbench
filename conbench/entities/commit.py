@@ -88,7 +88,7 @@ class _Serializer(EntitySerializer):
         if commit.repository and commit.sha:
             url = f"{commit.repository}/commit/{commit.sha}"
         timestamp = commit.timestamp.isoformat() if commit.timestamp else None
-        return {
+        result = {
             "id": commit.id,
             "sha": commit.sha,
             "url": url,
@@ -104,6 +104,13 @@ class _Serializer(EntitySerializer):
                 "self": f.url_for("api.commit", commit_id=commit.id, _external=True),
             },
         }
+        if not self.many:
+            parent = Commit.first(sha=commit.parent, repository=commit.repository)
+            if parent:
+                result["links"]["parent"] = f.url_for(
+                    "api.commit", commit_id=parent.id, _external=True
+                )
+        return result
 
 
 class CommitSerializer:

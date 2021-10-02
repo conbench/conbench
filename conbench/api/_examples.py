@@ -86,7 +86,7 @@ def _api_benchmark_entity(summary_id, context_id, case_id, batch_id, run_id, nam
     }
 
 
-def _api_commit_entity(commit_id, links=True):
+def _api_commit_entity(commit_id, parent_id, links=True):
     result = {
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
         "author_login": "dianaclarke",
@@ -103,6 +103,8 @@ def _api_commit_entity(commit_id, links=True):
             "self": "http://localhost/api/commits/%s/" % commit_id,
         },
     }
+    if parent_id:
+        result["links"]["parent"] = "http://localhost/api/commits/%s/" % parent_id
     if not links:
         result.pop("links", None)
     return result
@@ -271,12 +273,14 @@ def _api_machine_entity(machine_id, links=True):
     return result
 
 
-def _api_run_entity(run_id, run_name, commit_id, machine_id, now, baseline_id):
+def _api_run_entity(
+    run_id, run_name, commit_id, parent_id, machine_id, now, baseline_id
+):
     result = {
         "id": run_id,
         "name": run_name,
         "timestamp": now,
-        "commit": _api_commit_entity(commit_id, links=False),
+        "commit": _api_commit_entity(commit_id, parent_id, links=False),
         "machine": _api_machine_entity(machine_id, links=False),
         "links": {
             "list": "http://localhost/api/runs/",
@@ -297,7 +301,10 @@ BENCHMARK_ENTITY = _api_benchmark_entity(
     "some-run-uuid-1",
     "file-write",
 )
-COMMIT_ENTITY = _api_commit_entity("some-commit-uuid-1")
+COMMIT_ENTITY = _api_commit_entity(
+    "some-commit-uuid-1",
+    "some-commit-parent-uuid-1",
+)
 COMPARE_ENTITY = _api_compare_entity(
     ["some-benchmark-uuid-1", "some-benchmark-uuid-2"],
     ["some-batch-uuid-1", "some-batch-uuid-2"],
@@ -354,6 +361,7 @@ RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",
     "some run name",
     "some-commit-uuid-1",
+    "some-parent-commit-uuid-1",
     "some-machine-uuid-1",
     "2021-02-04T17:22:05.225583",
     "some-run-uuid-0",
@@ -363,6 +371,7 @@ RUN_LIST = [
         "some-run-uuid-1",
         "some run name",
         "some-commit-uuid-1",
+        "some-parent-commit-uuid-1",
         "some-machine-uuid-1",
         "2021-02-04T17:22:05.225583",
         None,
