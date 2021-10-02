@@ -4,13 +4,13 @@ import pytest
 
 from ...api._examples import _api_run_entity
 from ...entities._entity import NotFound
-from ...entities.run import Commit, Run
+from ...entities.run import Run
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
 
 def _expected_entity(run, baseline_id=None):
-    parent = Commit.first(sha=run.commit.parent, repository=run.commit.repository)
+    parent = run.commit.get_parent_commit()
     return _api_run_entity(
         run.id,
         run.name,

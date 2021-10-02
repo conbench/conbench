@@ -29,6 +29,9 @@ class Commit(Base, EntityMixin):
     author_avatar = Nullable(s.String(100))
     timestamp = Nullable(s.DateTime(timezone=False))
 
+    def get_parent_commit(self):
+        return Commit.first(sha=self.parent, repository=self.repository)
+
     @staticmethod
     def create_no_context():
         commit = Commit.first(sha="", repository="")
@@ -105,7 +108,7 @@ class _Serializer(EntitySerializer):
             },
         }
         if not self.many:
-            parent = Commit.first(sha=commit.parent, repository=commit.repository)
+            parent = commit.get_parent_commit()
             if parent:
                 result["links"]["parent"] = f.url_for(
                     "api.commit", commit_id=parent.id, _external=True
