@@ -285,6 +285,8 @@ def _api_run_entity(
         "links": {
             "list": "http://localhost/api/runs/",
             "self": "http://localhost/api/runs/%s/" % run_id,
+            "commit": "http://localhost/api/commits/%s/" % commit_id,
+            "machine": "http://localhost/api/machines/%s/" % machine_id,
         },
     }
     if baseline_id:
