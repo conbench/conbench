@@ -108,11 +108,12 @@ class _Serializer(EntitySerializer):
             },
         }
         if not self.many:
-            parent = commit.get_parent_commit()
+            parent, parent_url = commit.get_parent_commit(), None
             if parent:
-                result["links"]["parent"] = f.url_for(
+                parent_url = f.url_for(
                     "api.commit", commit_id=parent.id, _external=True
                 )
+            result["links"]["parent"] = parent_url
         return result
 
 
