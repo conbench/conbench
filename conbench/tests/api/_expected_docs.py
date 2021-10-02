@@ -259,6 +259,7 @@
                             "id": "some-commit-uuid-1",
                             "links": {
                                 "list": "http://localhost/api/commits/",
+                                "parent": "http://localhost/api/commits/some-commit-parent-uuid-1/",
                                 "self": "http://localhost/api/commits/some-commit-uuid-1/",
                             },
                             "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
@@ -283,6 +284,7 @@
                                 "id": "some-commit-uuid-1",
                                 "links": {
                                     "list": "http://localhost/api/commits/",
+                                    "parent": "http://localhost/api/commits/some-commit-parent-uuid-1/",
                                     "self": "http://localhost/api/commits/some-commit-uuid-1/",
                                 },
                                 "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
@@ -599,7 +601,9 @@
                             "id": "some-run-uuid-1",
                             "links": {
                                 "baseline": "http://localhost/api/runs/some-run-uuid-0/",
+                                "commit": "http://localhost/api/commits/some-commit-uuid-1/",
                                 "list": "http://localhost/api/runs/",
+                                "machine": "http://localhost/api/machines/some-machine-uuid-1/",
                                 "self": "http://localhost/api/runs/some-run-uuid-1/",
                             },
                             "machine": {
@@ -650,7 +654,9 @@
                                 },
                                 "id": "some-run-uuid-1",
                                 "links": {
+                                    "commit": "http://localhost/api/commits/some-commit-uuid-1/",
                                     "list": "http://localhost/api/runs/",
+                                    "machine": "http://localhost/api/machines/some-machine-uuid-1/",
                                     "self": "http://localhost/api/runs/some-run-uuid-1/",
                                 },
                                 "machine": {

@@ -62,6 +62,12 @@ class _Serializer(EntitySerializer):
             "links": {
                 "list": f.url_for("api.runs", _external=True),
                 "self": f.url_for("api.run", run_id=run.id, _external=True),
+                "commit": f.url_for(
+                    "api.commit", commit_id=commit["id"], _external=True
+                ),
+                "machine": f.url_for(
+                    "api.machine", machine_id=machine["id"], _external=True
+                ),
             },
         }
         if not self.many:

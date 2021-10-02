@@ -2,8 +2,9 @@ from ...api._examples import _api_commit_entity
 from ...tests.api import _asserts, _fixtures
 
 
-def _expected_entity(commit):
-    return _api_commit_entity(commit.id)
+def _expected_entity(commit, parent=None):
+    parent_commit_id = parent.id if parent else None
+    return _api_commit_entity(commit.id, parent_commit_id)
 
 
 def create_commit():
@@ -22,7 +23,8 @@ class TestCommitGet(_asserts.GetEnforcer):
         self.authenticate(client)
         commit = self._create()
         response = client.get(f"/api/commits/{commit.id}/")
-        self.assert_200_ok(response, _expected_entity(commit))
+        parent = commit.get_parent_commit()
+        self.assert_200_ok(response, _expected_entity(commit, parent))
 
 
 class TestCommitList(_asserts.ListEnforcer):

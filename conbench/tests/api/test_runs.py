@@ -10,10 +10,12 @@ from ...tests.helpers import _uuid
 
 
 def _expected_entity(run, baseline_id=None):
+    parent = run.commit.get_parent_commit()
     return _api_run_entity(
         run.id,
         run.name,
         run.commit_id,
+        parent.id,
         run.machine_id,
         run.timestamp.isoformat(),
         baseline_id,
