@@ -20,6 +20,7 @@ Commands:
   external-r-options  Run external-r-options benchmark.
   list                List of benchmarks (for orchestration).
   matrix              Run matrix benchmark(s).
+  matrix-types        Run matrix-types benchmark(s).
 """
 
 CONBENCH_LIST = """
@@ -38,6 +39,9 @@ CONBENCH_LIST = """
   },
   {
     "command": "matrix --all=true --iterations=2"
+  },
+  {
+    "command": "matrix-types --all=true --iterations=2"
   }
 ]
 """
@@ -72,6 +76,10 @@ Benchmark output:
 [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 """
 
+CONBENCH_MATRIX_TYPES = """
+Benchmark output:
+[[False, False], [False, False]]
+"""
 
 CONBENCH_MATRIX_HELP = """
 Usage: conbench matrix [OPTIONS]
@@ -91,6 +99,39 @@ Usage: conbench matrix [OPTIONS]
 Options:
   --rows [10|2]
   --columns [10|2]
+  --all BOOLEAN          [default: False]
+  --iterations INTEGER   [default: 1]
+  --drop-caches BOOLEAN  [default: False]
+  --gc-collect BOOLEAN   [default: True]
+  --gc-disable BOOLEAN   [default: True]
+  --show-result BOOLEAN  [default: True]
+  --show-output BOOLEAN  [default: False]
+  --run-id TEXT          Group executions together with a run id.
+  --run-name TEXT        Name of run (commit, pull request, etc).
+  --help                 Show this message and exit.
+"""
+
+
+CONBENCH_MATRIX_HELP_TYPES = """
+Usage: conbench matrix-types [OPTIONS]
+
+  Run matrix-types benchmark(s).
+
+  For each benchmark option, the first option value is the default.
+
+  Valid benchmark combinations:
+  --rows=10 --columns=10.0 --flag=False
+  --rows=2 --columns=2.0 --flag=False
+  --rows=10 --columns=10.0 --flag=True
+  --rows=2 --columns=2.0 --flag=True
+
+  To run all combinations:
+  $ conbench matrix-types --all=true
+
+Options:
+  --rows [2|10]
+  --columns [2.0|10.0]
+  --flag [False|True]
   --all BOOLEAN          [default: False]
   --iterations INTEGER   [default: 1]
   --drop-caches BOOLEAN  [default: False]
@@ -227,6 +268,23 @@ def test_conbench_command_with_cases_help(runner):
 
     result = runner.invoke(conbench, "matrix --help")
     assert_command_output(result, CONBENCH_MATRIX_HELP)
+
+
+def test_conbench_command_with_cases_type_casting(runner):
+    from conbench.cli import conbench
+
+    case = "--rows=2 --columns=2.0 --flag=false"
+    command = f"matrix-types {case} --show-result=false --show-output=true"
+    with unittest.mock.patch("conbench.util.Connection.publish"):
+        result = runner.invoke(conbench, command)
+    assert_command_output(result, CONBENCH_MATRIX_TYPES)
+
+
+def test_conbench_command_with_cases_type_casting_help(runner):
+    from conbench.cli import conbench
+
+    result = runner.invoke(conbench, "matrix-types --help")
+    assert_command_output(result, CONBENCH_MATRIX_HELP_TYPES)
 
 
 def test_conbench_command_external(runner):

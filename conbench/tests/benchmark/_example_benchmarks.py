@@ -61,6 +61,36 @@ class CasesBenchmark(conbench.runner.Benchmark):
 
 
 @conbench.runner.register_benchmark
+class CasesBenchmarkTypeCasting(conbench.runner.Benchmark):
+    """Example benchmark with cases."""
+
+    name = "matrix-types"
+    valid_cases = (
+        ("rows", "columns", "flag"),
+        (10, 10.0, False),
+        (2, 2.0, False),
+        (10, 10.0, True),
+        (2, 2.0, True),
+    )
+
+    def run(self, case=None, **kwargs):
+        for case in self.get_cases(case, kwargs):
+            rows, columns, flag = case
+            tags = {"rows": rows, "columns": columns, "flag": flag}
+            func = self._get_benchmark_function(rows, columns, flag)
+            benchmark, output = self.conbench.benchmark(
+                func,
+                self.name,
+                tags=tags,
+                options=kwargs,
+            )
+            yield benchmark, output
+
+    def _get_benchmark_function(self, rows, columns, flag):
+        return lambda: rows * [int(columns) * [flag]]
+
+
+@conbench.runner.register_benchmark
 class ExternalBenchmark(conbench.runner.Benchmark):
     """Example benchmark that just records external results."""
 

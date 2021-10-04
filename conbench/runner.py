@@ -98,7 +98,14 @@ class Benchmark(abc.ABC):
 
     def _get_case(self, case, options):
         if case is None:
-            case = [options.get(c) for c in self.fields]
+            case = []
+            for i, c in enumerate(self.fields):
+                pick = self.cases[0][i]
+                if isinstance(pick, bool):
+                    case.append(options.get(c).lower() in ["True", "true"])
+                else:
+                    t = type(self.cases[0][i])
+                    case.append(t(options.get(c)))
         case_tuples = [tuple(c) for c in self.cases]
         if tuple(case) not in case_tuples:
             invalid_case = dict(zip(self.fields, case))
