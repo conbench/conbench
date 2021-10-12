@@ -255,11 +255,11 @@ Usage: conbench addition [OPTIONS]
 
 Options:
   --iterations INTEGER   [default: 1]
-  --drop-caches BOOLEAN  [default: False]
-  --gc-collect BOOLEAN   [default: True]
-  --gc-disable BOOLEAN   [default: True]
-  --show-result BOOLEAN  [default: True]
-  --show-output BOOLEAN  [default: False]
+  --drop-caches BOOLEAN  [default: false]
+  --gc-collect BOOLEAN   [default: true]
+  --gc-disable BOOLEAN   [default: true]
+  --show-result BOOLEAN  [default: true]
+  --show-output BOOLEAN  [default: false]
   --run-id TEXT          Group executions together with a run id.
   --run-name TEXT        Name of run (commit, pull request, etc).
   --help                 Show this message and exit.
@@ -481,8 +481,8 @@ Usage: conbench external [OPTIONS]
   Run external benchmark.
 
 Options:
-  --show-result BOOLEAN  [default: True]
-  --show-output BOOLEAN  [default: False]
+  --show-result BOOLEAN  [default: true]
+  --show-output BOOLEAN  [default: false]
   --run-id TEXT          Group executions together with a run id.
   --run-name TEXT        Name of run (commit, pull request, etc).
   --help                 Show this message and exit.
@@ -619,13 +619,13 @@ Usage: conbench matrix [OPTIONS]
 Options:
   --rows [10|2]
   --columns [10|2]
-  --all BOOLEAN          [default: False]
+  --all BOOLEAN          [default: false]
   --iterations INTEGER   [default: 1]
-  --drop-caches BOOLEAN  [default: False]
-  --gc-collect BOOLEAN   [default: True]
-  --gc-disable BOOLEAN   [default: True]
-  --show-result BOOLEAN  [default: True]
-  --show-output BOOLEAN  [default: False]
+  --drop-caches BOOLEAN  [default: false]
+  --gc-collect BOOLEAN   [default: true]
+  --gc-disable BOOLEAN   [default: true]
+  --show-result BOOLEAN  [default: true]
+  --show-output BOOLEAN  [default: false]
   --run-id TEXT          Group executions together with a run id.
   --run-name TEXT        Name of run (commit, pull request, etc).
   --help                 Show this message and exit.
@@ -863,8 +863,8 @@ Usage: conbench external-r [OPTIONS]
   Run external-r benchmark.
 
 Options:
-  --show-result BOOLEAN  [default: True]
-  --show-output BOOLEAN  [default: False]
+  --show-result BOOLEAN  [default: true]
+  --show-output BOOLEAN  [default: false]
   --run-id TEXT          Group executions together with a run id.
   --run-name TEXT        Name of run (commit, pull request, etc).
   --help                 Show this message and exit.
@@ -930,9 +930,9 @@ Usage: conbench external-r-options [OPTIONS]
 
 Options:
   --iterations INTEGER   [default: 1]
-  --drop-caches BOOLEAN  [default: False]
-  --show-result BOOLEAN  [default: True]
-  --show-output BOOLEAN  [default: False]
+  --drop-caches BOOLEAN  [default: false]
+  --show-result BOOLEAN  [default: true]
+  --show-output BOOLEAN  [default: false]
   --run-id TEXT          Group executions together with a run id.
   --run-name TEXT        Name of run (commit, pull request, etc).
   --help                 Show this message and exit.
