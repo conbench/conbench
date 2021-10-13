@@ -152,16 +152,19 @@ def get_github_commit(repository, sha):
     if commit is None:
         return {}
 
-    parent = commit["parent"]
+    parent, original_parent = commit["parent"], commit["parent"]
     commits = github.get_commits(name, parent)
     if parent in commits:
         return commit
     else:
-        # This is a pull request, find the parent of the first commit.
+        # TODO: Need a better heuristic for determining if this is a pull
+        # request. It might just be a commit to a branch that isn't the default
+        # branch.
+
+        # Assuming this is a pull request, find the parent of the first commit.
         # TODO: This will fail if the pull request has more than 50 commits.
         # It will also give up if it can't find the parent after 50 tries
         # (which could happen for a really old pull request).
-        parent = commit["parent"]
         for _ in range(50):
             other = github.get_commit(name, parent)
             if other["parent"] in commits:
@@ -170,7 +173,10 @@ def get_github_commit(repository, sha):
             else:
                 parent = other["parent"]
 
-    return {}
+    # TODO: Couldn't find pull request parent or commit was not to the
+    # default branch.
+    commit["parent"] = original_parent
+    return commit
 
 
 class GitHub:
@@ -187,30 +193,35 @@ class GitHub:
             "81e9417eb68171e03a304097ae86e1fd83307130",
         ]
 
+    def get_default_branch(self, name):
+        url = f"{GITHUB}/repos/{name}"
+        response = self._get_response(url)
+        if response:
+            return response["default_branch"]
+        return "main"
+
     def get_commits(self, name, sha):
         if sha in self.test_commits:
             return self.test_commits
 
         commits = []
 
-        # Grabs the last 1000 commits to the main branch. TODO: If the pull
+        # Grabs the last 1000 commits to the default branch. TODO: If the pull
         # request is old, the parent may not be in the last 1000 commits.
-        for branch in ["master", "main"]:
-            url = f"{GITHUB}/repos/{name}/commits?sha={branch}&per_page=100"
-            response = self._get_response(url)
-            if response:
-                commits = self._parse_commits(response)
-                if sha in commits:
-                    return commits
-                for page in range(2, 11):
-                    url = f"{GITHUB}/repos/{name}/commits?sha={branch}&per_page=100&page={page}"
-                    response = self._get_response(url)
-                    if response:
-                        commits.extend(self._parse_commits(response))
-                        if sha in commits:
-                            return commits
-            if commits:
-                break
+        branch = self.get_default_branch(name)
+        url = f"{GITHUB}/repos/{name}/commits?sha={branch}&per_page=100"
+        response = self._get_response(url)
+        if response:
+            commits = self._parse_commits(response)
+            if sha in commits:
+                return commits
+            for page in range(2, 11):
+                url = f"{GITHUB}/repos/{name}/commits?sha={branch}&per_page=100&page={page}"
+                response = self._get_response(url)
+                if response:
+                    commits.extend(self._parse_commits(response))
+                    if sha in commits:
+                        return commits
 
         return commits
 
