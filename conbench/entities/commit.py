@@ -152,7 +152,7 @@ def get_github_commit(repository, sha):
     if commit is None:
         return {}
 
-    parent, original_parent = commit["parent"], commit["parent"]
+    parent = commit["parent"]
     commits = github.get_commits(name, parent)
     if parent in commits:
         return commit
@@ -175,7 +175,6 @@ def get_github_commit(repository, sha):
 
     # TODO: Couldn't find pull request parent or commit was not to the
     # default branch.
-    commit["parent"] = original_parent
     return commit
 
 
