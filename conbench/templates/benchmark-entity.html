@@ -83,8 +83,8 @@
             <li class="list-group-item" style="overflow-y: auto;">
               <b>commit</b>
               <div class="ellipsis-500" align="right" style="display:inline-block; float: right;">
-                {% if run.commit.message %}
-                <a href="{{ run.commit.url }}">{{ run.commit.message }}</a>
+                {% if run.commit.display_message %}
+                <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
                 {% else %}
                 <a href="{{ run.commit.url }}">{{ run.commit.sha }}</a>
                 {% endif %}
@@ -98,7 +98,7 @@
               </div>
             </li>
             {% endif %}
-            {% if run.commit.message %}
+            {% if run.commit.display_message %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>author</b>
               <div align="right" style="display:inline-block; float: right;">

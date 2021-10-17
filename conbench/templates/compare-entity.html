@@ -104,8 +104,8 @@
             <li class="list-group-item" style="overflow-y: auto;">
               <b>commit</b>
               <div class="ellipsis-500" align="right" style="display:inline-block; float: right;">
-                {% if baseline_run.commit.message %}
-                  <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.message }}</a>
+                {% if baseline_run.commit.display_message %}
+                  <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.display_message }}</a>
                 {% else %}
                   <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.sha }}</a>
                 {% endif %}
@@ -215,8 +215,8 @@
             <li class="list-group-item" style="overflow-y: auto;">
               <b>commit</b>
               <div class="ellipsis-500" align="right" style="display:inline-block; float: right;">
-                {% if contender_run.commit.message %}
-                  <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.message }}</a>
+                {% if contender_run.commit.display_message %}
+                  <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.display_message }}</a>
                 {% else %}
                   <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.sha }}</a>
                 {% endif %}
