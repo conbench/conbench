@@ -46,10 +46,10 @@
             <tbody>
                 {% for run in runs %}
                 <tr>
-                     <td style="white-space: nowrap;"><a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.display_timestamp }}</a></td>
+                     <td><a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.display_timestamp }}</a></td>
 
                      {% if has_authors %}
-                     <td style="white-space: nowrap;">
+                     <td>
                        {% if run.commit.author_avatar %}
                          <image src="{{ run.commit.author_avatar }}" height="30" style="border-radius: 50%;">&nbsp;
                        {% endif %}
@@ -57,7 +57,7 @@
                      </td>
                      {% endif %}
 
-                     <td style="white-space: nowrap;"><a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a></td>
+                     <td><a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a></td>
 
                      {% if has_commits %}
                        {% if run.commit.message %}
@@ -92,6 +92,15 @@
   var table = $('#runs').dataTable( {
       "responsive": true,
       "order": [[0, 'desc']],
+      "autoWidth": false,
+      "columns": [
+         { "width": "15%" },
+         { "width": "20%" },
+         { "width": "10%" },
+         { "width": "35%" },
+         { "width": "10%" },
+         { "width": "10%" },
+      ],
   } );
 </script>
 {% endblock %}
