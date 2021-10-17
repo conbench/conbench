@@ -51,8 +51,8 @@
 
                      <td><a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a></td>
 
-                       {% if run.commit.message %}
-                         <td><a href="{{ run.commit.url }}">{{ run.commit.message }}</a></td>
+                       {% if run.commit.display_message %}
+                         <td><a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a></td>
                        {% else %}
                          <td><a href="{{ run.commit.url }}">{{ run.commit.sha }}</a></td>
                        {% endif %}

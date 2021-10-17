@@ -1,3 +1,5 @@
+import re
+
 from ..hacks import set_display_batch, set_display_name
 from ..units import formatter_for_unit
 
@@ -38,3 +40,10 @@ def set_display_mean(benchmark):
     mean = float(benchmark["stats"]["mean"])
     fmt = formatter_for_unit(unit)
     benchmark["display_mean"] = fmt(mean, unit)
+
+
+def display_message(message):
+    # truncate git shas in commit message
+    for m in re.findall(r"\b[0-9a-f]{40}\b", message):
+        message = message.replace(m, m[:7])
+    return message

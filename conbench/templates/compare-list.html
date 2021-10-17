@@ -26,16 +26,16 @@
     </nav>
 
     {% if baseline_run and contender_run %}
-      {% if baseline_run.commit.message and contender_run.commit.message %}
+      {% if baseline_run.commit.display_message and contender_run.commit.display_message %}
     <div class="row">
       <div class="col-md-12">
         <ul class="list-group">
           <li class="list-group-item" align="right" style="border-style:none">
           Baseline:
-          <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.message }}</a>
+          <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.display_message }}</a>
           <br/>
           Contender:
-          <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.message }}</a>
+          <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.display_message }}</a>
           </li>
          </ul>
       </div>

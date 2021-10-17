@@ -6,7 +6,7 @@ import wtforms as w
 from ..app import rule
 from ..app._endpoint import AppEndpoint
 from ..app._plots import TimeSeriesPlotMixin
-from ..app._util import augment, display_time
+from ..app._util import augment, display_message, display_time
 from ..config import Config
 
 
@@ -97,6 +97,8 @@ class RunMixin:
         if run["name"]:
             run["display_name"] = run["name"].split(":", 1)[0]
         run["commit"]["display_repository"] = repository_name
+        commit_message = display_message(run["commit"]["message"])
+        run["commit"]["display_message"] = commit_message
 
     def _display_time(self, obj, field):
         obj[f"display_{field}"] = display_time(obj[field])
