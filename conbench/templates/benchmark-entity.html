@@ -41,22 +41,14 @@
                 <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">{{ benchmark.run_id }}</a>
               </div>
             </li>
-            {% if run and not run.commit.url and run.commit.display_repository %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>repository</b>
-              <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a>
-              </div>
-            </li>
-            {% endif %}
-            {% if run.name %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>reason</b>
               <div align="right" style="display:inline-block; float: right;">
-                {{ run.name }}
+	            {% if run.name %}
+                  {{ run.name }}
+                {% endif %}
               </div>
             </li>
-            {% endif %}
             <li class="list-group-item active">Result</li>
             <li class="list-group-item" style="overflow-y: auto;">
               <b>timestamp</b>
