@@ -25,25 +25,23 @@ class Run(Base, EntityMixin):
         if not parent:
             return None
 
-        run_contexts = Summary.distinct(
-            Summary.context_id, filters=[Summary.run_id == self.id]
-        )
+        run_summaries = Summary.all(run_id=self.id)
+        run_items = [(s.context_id, s.case_id) for s in run_summaries]
 
         parent_runs = Run.search(
             filters=[Commit.sha == parent.sha],
             joins=[Commit],
         )
 
-        # TODO: What if there are multiple matches? Pick by date?
-        # TODO: What is all the contexts just aren't yet in? Or some failed?
+        # TODO: What if all the contexts/cases just aren't yet in?
         machine_hash = self.machine.hash
         for run in parent_runs:
             if run.machine.hash != machine_hash:
                 continue
-            parent_contexts = Summary.distinct(
-                Summary.context_id, filters=[Summary.run_id == run.id]
-            )
-            if set(run_contexts) == set(parent_contexts):
+
+            parent_summaries = Summary.all(run_id=run.id)
+            parent_items = [(s.context_id, s.case_id) for s in parent_summaries]
+            if set(run_items) == set(parent_items):
                 return run.id
 
         return None
