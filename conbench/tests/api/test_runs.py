@@ -1,5 +1,3 @@
-import urllib
-
 import pytest
 
 from ...api._examples import _api_run_entity
@@ -79,22 +77,18 @@ class TestRunList(_asserts.ListEnforcer):
         response = client.get("/api/runs/")
         self.assert_200_ok(response, contains=_expected_entity(run))
 
-    def test_run_list_filter_by_sha_and_machine(self, client):
+    def test_run_list_filter_by_sha(self, client):
         sha = _fixtures.CHILD
         self.authenticate(client)
         run = self._create()
-        args = {"sha": sha, "machine_id": run.machine_id}
-        args = urllib.parse.urlencode(args)
-        response = client.get(f"/api/runs/?{args}")
+        response = client.get(f"/api/runs/?sha={sha}")
         self.assert_200_ok(response, contains=_expected_entity(run))
 
-    def test_run_list_filter_by_sha_and_machine_no_match(self, client):
-        sha = _fixtures.CHILD
+    def test_run_list_filter_by_sha_no_match(self, client):
+        sha = "some unknown sha"
         self.authenticate(client)
         self._create()
-        args = {"sha": sha, "machine_id": "some other machine id"}
-        args = urllib.parse.urlencode(args)
-        response = client.get(f"/api/runs/?{args}")
+        response = client.get(f"/api/runs/?sha={sha}")
         self.assert_200_ok(response, [])
 
 

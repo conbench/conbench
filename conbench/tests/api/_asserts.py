@@ -24,9 +24,9 @@ class ApiEndpointTest:
     def assert_200_ok(self, r, expected=None, contains=None):
         assert r.status_code == 200, r.status_code
         assert r.content_type == "application/json", r.content_type
-        if expected:
+        if expected is not None:
             assert r.json == expected, r.json
-        if contains:
+        if contains is not None:
             assert contains in r.json
 
     def assert_201_created(self, r, expected, location):
