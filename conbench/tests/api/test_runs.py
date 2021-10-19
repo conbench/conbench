@@ -26,15 +26,15 @@ class TestRunGet(_asserts.GetEnforcer):
     url = "/api/runs/{}/"
     public = True
 
-    def _create(self, baseline=False):
+    def _create(self, baseline=False, name=None, language=None):
         if baseline:
-            # change anything about the context so we get only one baseline
-            language = _uuid()
             contender = _fixtures.summary(
+                name=name,
                 sha=_fixtures.CHILD,
                 language=language,
             )
             baseline = _fixtures.summary(
+                name=name,
                 sha=_fixtures.PARENT,
                 language=language,
             )
@@ -44,10 +44,25 @@ class TestRunGet(_asserts.GetEnforcer):
         return contender.run
 
     def test_get_run(self, client):
+        # change anything about the context so we get only one baseline
+        language, name = _uuid(), _uuid()
+
         self.authenticate(client)
-        run, baseline = self._create(baseline=True)
+        run, baseline = self._create(baseline=True, name=name, language=language)
         response = client.get(f"/api/runs/{run.id}/")
         self.assert_200_ok(response, _expected_entity(run, baseline.id))
+
+    def test_get_run_find_correct_baseline_many_matching_contexts(self, client):
+        # same context for different benchmark runs, but different benchmarks
+        language, name_1, name_2 = _uuid(), _uuid(), _uuid()
+
+        self.authenticate(client)
+        run_1, baseline_1 = self._create(baseline=True, name=name_1, language=language)
+        run_2, baseline_2 = self._create(baseline=True, name=name_2, language=language)
+        response = client.get(f"/api/runs/{run_1.id}/")
+        self.assert_200_ok(response, _expected_entity(run_1, baseline_1.id))
+        response = client.get(f"/api/runs/{run_2.id}/")
+        self.assert_200_ok(response, _expected_entity(run_2, baseline_2.id))
 
 
 class TestRunList(_asserts.ListEnforcer):
