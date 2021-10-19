@@ -29,15 +29,17 @@ class Run(Base, EntityMixin):
             Summary.context_id, filters=[Summary.run_id == self.id]
         )
 
-        # TODO: Should be using machine hash?
         parent_runs = Run.search(
-            filters=[Run.machine_id == self.machine_id, Commit.sha == parent.sha],
+            filters=[Commit.sha == parent.sha],
             joins=[Commit],
         )
 
         # TODO: What if there are multiple matches? Pick by date?
         # TODO: What is all the contexts just aren't yet in? Or some failed?
+        machine_hash = self.machine.hash
         for run in parent_runs:
+            if run.machine.hash != machine_hash:
+                continue
             parent_contexts = Summary.distinct(
                 Summary.context_id, filters=[Summary.run_id == run.id]
             )
