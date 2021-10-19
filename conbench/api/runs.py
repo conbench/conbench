@@ -1,8 +1,10 @@
+import flask as f
 import flask_login
 
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
+from ..entities.commit import Commit
 from ..entities.run import Run, RunSerializer
 from ..entities.summary import Summary
 
@@ -73,10 +75,19 @@ class RunListAPI(ApiEndpoint):
         responses:
             "200": "RunList"
             "401": "401"
+        parameters:
+          - in: query
+            name: sha
+            schema:
+              type: string
         tags:
           - Runs
         """
-        runs = Run.all(order_by=Run.timestamp.desc(), limit=500)
+        sha = f.request.args.get("sha")
+        if sha:
+            runs = Run.search(filters=[Commit.sha == sha], joins=[Commit])
+        else:
+            runs = Run.all(order_by=Run.timestamp.desc(), limit=500)
         return self.serializer.many.dump(runs)
 
 
