@@ -222,3 +222,78 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         self.authenticate(client)
         response = client.get("/api/compare/runs/foo...bar/")
         self.assert_404_not_found(response)
+
+
+class TestCompareCommitsGet(_asserts.GetEnforcer):
+    url = "/api/compare/commits/{}/"
+    public = True
+
+    def _create(self, verbose=False, run_id=None, batch_id=None):
+        run_id = run_id if run_id is not None else _uuid()
+        sha = _uuid()
+        summary_1 = _fixtures.summary(
+            name="read",
+            run_id=run_id,
+            batch_id=batch_id,
+            sha=sha,
+        )
+        summary_2 = _fixtures.summary(
+            name="write",
+            run_id=run_id,
+            batch_id=batch_id,
+            sha=sha,
+        )
+        entity = FakeEntity(f"{sha}...{sha}")
+        if verbose:
+            return [summary_1, summary_2], entity
+        else:
+            return entity
+
+    def test_compare(self, client):
+        self.authenticate(client)
+        run_id, batch_id = _uuid(), _uuid()
+        new_entities, compare = self._create(
+            verbose=True,
+            run_id=run_id,
+            batch_id=batch_id,
+        )
+        new_ids = [e.id for e in new_entities]
+        response = client.get(f"/api/compare/commits/{compare.id}/")
+
+        # cheating by comparing run to same run
+        run_ids = [run_id, run_id]
+        batch_ids = [batch_id, batch_id]
+        batches = ["read", "write"]
+        benchmarks = [CASE, CASE]
+        expected = _api_compare_list(
+            new_ids,
+            new_ids,
+            batch_ids,
+            run_ids,
+            batches,
+            benchmarks,
+            tags=[
+                {
+                    "dataset": "nyctaxi_sample",
+                    "cpu_count": 2,
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "compression": "snappy",
+                    "name": "read",
+                },
+                {
+                    "dataset": "nyctaxi_sample",
+                    "cpu_count": 2,
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "compression": "snappy",
+                    "name": "write",
+                },
+            ],
+        )
+        self.assert_200_ok(response, expected)
+
+    def test_compare_unknown_compare_ids(self, client):
+        self.authenticate(client)
+        response = client.get("/api/compare/commits/foo...bar/")
+        self.assert_404_not_found(response)

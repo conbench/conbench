@@ -1091,7 +1091,7 @@
                 "description": "Compare benchmark results.",
                 "parameters": [
                     {
-                        "example": "<baseline_sha>...<contender_sha>",
+                        "example": "<baseline_id>...<contender_id>",
                         "in": "path",
                         "name": "compare_ids",
                         "required": True,

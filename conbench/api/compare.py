@@ -4,7 +4,9 @@ from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._comparator import BenchmarkComparator, BenchmarkListComparator
 from ..entities._entity import NotFound
+from ..entities.commit import Commit
 from ..entities.distribution import set_z_scores
+from ..entities.run import Run
 from ..entities.summary import Summary
 from ..hacks import set_display_batch, set_display_name
 
@@ -24,7 +26,7 @@ def _compare_entity(summary):
     }
 
 
-class CompareMixin(ApiEndpoint):
+class CompareMixin:
     def get_args(self, compare_ids):
         raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
 
@@ -44,15 +46,7 @@ class CompareMixin(ApiEndpoint):
         return raw, threshold, threshold_z, baseline_id, contender_id
 
 
-class CompareBenchmarksAPI(CompareMixin):
-    def _get(self, benchmark_id):
-        try:
-            summary = Summary.one(id=benchmark_id)
-        except NotFound:
-            self.abort_404_not_found()
-        set_z_scores([summary])
-        return summary
-
+class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
     @maybe_login_required
     def get(self, compare_ids):
         """
@@ -112,14 +106,7 @@ class CompareBenchmarksAPI(CompareMixin):
             ).formatted()
 
 
-class CompareBatchesAPI(CompareMixin):
-    def _get(self, batch_id):
-        summaries = Summary.all(batch_id=batch_id)
-        if not summaries:
-            self.abort_404_not_found()
-        set_z_scores(summaries)
-        return summaries
-
+class CompareListEndpoint(ApiEndpoint, CompareMixin):
     @maybe_login_required
     def get(self, compare_ids):
         """
@@ -181,27 +168,33 @@ class CompareBatchesAPI(CompareMixin):
 
         return f.jsonify(list(result))
 
-    def _has_unique_names(self, baselines, contenders):
-        baseline_names = set([x.case.name for x in baselines])
-        if len(baseline_names) != len(baselines):
-            return False
-
-        contender_names = set([x.case.name for x in contenders])
-        if len(contender_names) != len(contenders):
-            return False
-
-        return True
-
     def _add_pair(self, pairs, summary, kind):
         case = summary.case
-
         if case.id not in pairs:
             pairs[case.id] = {"baseline": None, "contender": None}
-
         pairs[case.id][kind] = _compare_entity(summary)
 
 
-class CompareRunsAPI(CompareBatchesAPI):
+class CompareBenchmarksAPI(CompareEntityEndpoint):
+    def _get(self, benchmark_id):
+        try:
+            summary = Summary.one(id=benchmark_id)
+        except NotFound:
+            self.abort_404_not_found()
+        set_z_scores([summary])
+        return summary
+
+
+class CompareBatchesAPI(CompareListEndpoint):
+    def _get(self, batch_id):
+        summaries = Summary.all(batch_id=batch_id)
+        if not summaries:
+            self.abort_404_not_found()
+        set_z_scores(summaries)
+        return summaries
+
+
+class CompareRunsAPI(CompareListEndpoint):
     def _get(self, run_id):
         summaries = Summary.all(run_id=run_id)
         if not summaries:
@@ -210,40 +203,18 @@ class CompareRunsAPI(CompareBatchesAPI):
         return summaries
 
 
-class CompareCommitsAPI(CompareMixin):
-    @maybe_login_required
-    def get(self, compare_ids):
-        """
-        ---
-        description: Compare benchmark results.
-        responses:
-            "200": "CompareList"
-            "401": "401"
-            "404": "404"
-        parameters:
-          - name: compare_ids
-            in: path
-            schema:
-                type: string
-            example: <baseline_sha>...<contender_sha>
-          - in: query
-            name: raw
-            schema:
-              type: boolean
-          - in: query
-            name: threshold
-            schema:
-              type: integer
-          - in: query
-            name: threshold_z
-            schema:
-              type: integer
-        tags:
-          - Comparisons
-        """
-        args = self.get_args(compare_ids)
-        raw, threshold, threshold_z, baseline_id, contender_id = args
-        return f.jsonify(list([]))
+class CompareCommitsAPI(CompareListEndpoint):
+    def _get(self, sha):
+        try:
+            commit = Commit.one(sha=sha)
+        except NotFound:
+            self.abort_404_not_found()
+        summaries = []
+        runs = Run.all(commit_id=commit.id)
+        for run in runs:
+            summaries.extend(Summary.all(run_id=run.id))
+        set_z_scores(summaries)
+        return summaries
 
 
 compare_benchmarks_view = CompareBenchmarksAPI.as_view("compare-benchmarks")

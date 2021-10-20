@@ -25,7 +25,7 @@ class ApiEndpointTest:
         assert r.status_code == 200, r.status_code
         assert r.content_type == "application/json", r.content_type
         if expected is not None:
-            assert r.json == expected, r.json
+            assert r.json == expected
         if contains is not None:
             assert contains in r.json
 
