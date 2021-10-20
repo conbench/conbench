@@ -24,7 +24,27 @@ def _compare_entity(summary):
     }
 
 
-class CompareBenchmarksAPI(ApiEndpoint):
+class CompareMixin(ApiEndpoint):
+    def get_args(self, compare_ids):
+        raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
+
+        threshold = f.request.args.get("threshold")
+        if threshold is not None:
+            threshold = int(threshold)
+
+        threshold_z = f.request.args.get("threshold_z")
+        if threshold_z is not None:
+            threshold_z = int(threshold_z)
+
+        try:
+            baseline_id, contender_id = compare_ids.split("...", 1)
+        except ValueError:
+            self.abort_404_not_found()
+
+        return raw, threshold, threshold_z, baseline_id, contender_id
+
+
+class CompareBenchmarksAPI(CompareMixin):
     def _get(self, benchmark_id):
         try:
             summary = Summary.one(id=benchmark_id)
@@ -63,20 +83,8 @@ class CompareBenchmarksAPI(ApiEndpoint):
         tags:
           - Comparisons
         """
-        raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
-
-        threshold = f.request.args.get("threshold")
-        if threshold is not None:
-            threshold = int(threshold)
-
-        threshold_z = f.request.args.get("threshold_z")
-        if threshold_z is not None:
-            threshold_z = int(threshold_z)
-
-        try:
-            baseline_id, contender_id = compare_ids.split("...", 1)
-        except ValueError:
-            self.abort_404_not_found()
+        args = self.get_args(compare_ids)
+        raw, threshold, threshold_z, baseline_id, contender_id = args
 
         baseline_summary = self._get(baseline_id)
         contender_summary = self._get(contender_id)
@@ -104,7 +112,7 @@ class CompareBenchmarksAPI(ApiEndpoint):
             ).formatted()
 
 
-class CompareBatchesAPI(ApiEndpoint):
+class CompareBatchesAPI(CompareMixin):
     def _get(self, batch_id):
         summaries = Summary.all(batch_id=batch_id)
         if not summaries:
@@ -142,20 +150,8 @@ class CompareBatchesAPI(ApiEndpoint):
         tags:
           - Comparisons
         """
-        raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
-
-        threshold = f.request.args.get("threshold")
-        if threshold is not None:
-            threshold = int(threshold)
-
-        threshold_z = f.request.args.get("threshold_z")
-        if threshold_z is not None:
-            threshold_z = int(threshold_z)
-
-        try:
-            baseline_id, contender_id = compare_ids.split("...", 1)
-        except ValueError:
-            self.abort_404_not_found()
+        args = self.get_args(compare_ids)
+        raw, threshold, threshold_z, baseline_id, contender_id = args
 
         baselines = self._get(baseline_id)
         contenders = self._get(contender_id)
@@ -214,9 +210,46 @@ class CompareRunsAPI(CompareBatchesAPI):
         return summaries
 
 
+class CompareCommitsAPI(CompareMixin):
+    @maybe_login_required
+    def get(self, compare_ids):
+        """
+        ---
+        description: Compare benchmark results.
+        responses:
+            "200": "CompareList"
+            "401": "401"
+            "404": "404"
+        parameters:
+          - name: compare_ids
+            in: path
+            schema:
+                type: string
+            example: <baseline_sha>...<contender_sha>
+          - in: query
+            name: raw
+            schema:
+              type: boolean
+          - in: query
+            name: threshold
+            schema:
+              type: integer
+          - in: query
+            name: threshold_z
+            schema:
+              type: integer
+        tags:
+          - Comparisons
+        """
+        args = self.get_args(compare_ids)
+        raw, threshold, threshold_z, baseline_id, contender_id = args
+        return f.jsonify(list([]))
+
+
 compare_benchmarks_view = CompareBenchmarksAPI.as_view("compare-benchmarks")
 compare_batches_view = CompareBatchesAPI.as_view("compare-batches")
 compare_runs_view = CompareRunsAPI.as_view("compare-runs")
+compare_commits_view = CompareCommitsAPI.as_view("compare-commits")
 
 rule(
     "/compare/benchmarks/<compare_ids>/",
@@ -231,5 +264,10 @@ rule(
 rule(
     "/compare/runs/<compare_ids>/",
     view_func=compare_runs_view,
+    methods=["GET"],
+)
+rule(
+    "/compare/commits/<compare_ids>/",
+    view_func=compare_commits_view,
     methods=["GET"],
 )

@@ -1086,6 +1086,33 @@
                 "tags": ["Comparisons"],
             }
         },
+        "/api/compare/commits/{compare_ids}/": {
+            "get": {
+                "description": "Compare benchmark results.",
+                "parameters": [
+                    {
+                        "example": "<baseline_sha>...<contender_sha>",
+                        "in": "path",
+                        "name": "compare_ids",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    },
+                    {"in": "query", "name": "raw", "schema": {"type": "boolean"}},
+                    {"in": "query", "name": "threshold", "schema": {"type": "integer"}},
+                    {
+                        "in": "query",
+                        "name": "threshold_z",
+                        "schema": {"type": "integer"},
+                    },
+                ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/CompareList"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Comparisons"],
+            }
+        },
         "/api/compare/runs/{compare_ids}/": {
             "get": {
                 "description": "Compare benchmark results.",
