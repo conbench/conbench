@@ -38,16 +38,22 @@ def _get_pairs(baseline_items, contender_items):
     contender_counter = collections.Counter([i["case_id"] for i in contender_items])
     for item in baseline_items:
         case_id = item["case_id"]
-        simple = baseline_counter[case_id] == 1
+        simple = _simple_key(baseline_counter, contender_counter, case_id)
         _add_pair(pairs, item, "baseline", simple)
     for item in contender_items:
         case_id = item["case_id"]
-        simple = contender_counter[case_id] == 1
+        simple = _simple_key(baseline_counter, contender_counter, case_id)
         _add_pair(pairs, item, "contender", simple)
     return pairs
 
 
+def _simple_key(baseline_counter, contender_counter, case_id):
+    return baseline_counter[case_id] == 1 and contender_counter[case_id] == 1
+
+
 def _dedup_items(items):
+    # TODO: what about the same benchmark run on different machines?
+    # TODO: include machine hash in the key?
     filtered = {}
     for item in items:
         filtered[f'{item["case_id"]}-{item["context_id"]}'] = item
