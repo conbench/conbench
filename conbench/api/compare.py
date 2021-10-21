@@ -89,21 +89,14 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
 
         baseline = _compare_entity(baseline_summary)
         contender = _compare_entity(contender_summary)
+        comparator = BenchmarkComparator(
+            baseline,
+            contender,
+            threshold,
+            threshold_z,
+        )
 
-        if raw:
-            return BenchmarkComparator(
-                baseline,
-                contender,
-                threshold,
-                threshold_z,
-            ).compare()
-        else:
-            return BenchmarkComparator(
-                baseline,
-                contender,
-                threshold,
-                threshold_z,
-            ).formatted()
+        return comparator.compare() if raw else comparator.formatted()
 
 
 class CompareListEndpoint(ApiEndpoint, CompareMixin):
@@ -153,19 +146,13 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
             set_display_batch(summary)
             self._add_pair(pairs, summary, "contender")
 
-        if raw:
-            result = BenchmarkListComparator(
-                pairs,
-                threshold,
-                threshold_z,
-            ).compare()
-        else:
-            result = BenchmarkListComparator(
-                pairs,
-                threshold,
-                threshold_z,
-            ).formatted()
+        comparator = BenchmarkListComparator(
+            pairs,
+            threshold,
+            threshold_z,
+        )
 
+        result = comparator.compare() if raw else comparator.formatted()
         return f.jsonify(list(result))
 
     def _add_pair(self, pairs, summary, kind):
