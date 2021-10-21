@@ -1,4 +1,5 @@
 from ...api._examples import _api_compare_entity, _api_compare_list
+from ...api.compare import _get_pairs
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
@@ -8,6 +9,64 @@ CASE = "snappy, cpu_count=2, parquet, arrow, nyctaxi_sample"
 class FakeEntity:
     def __init__(self, _id):
         self.id = _id
+
+
+def _fake_compare_entity(summary_id, case_id, context_id):
+    return {
+        "id": summary_id,
+        "batch_id": "some_batch_id",
+        "run_id": "some_run_id",
+        "case_id": case_id,
+        "context_id": context_id,
+        "value": "some_value",
+        "unit": "some_unit",
+        "benchmark": "some_benchmark",
+        "batch": "some_batch",
+        "language": "some_language",
+        "tags": "some_tags",
+        "z_score": "some_zscore",
+    }
+
+
+class TestGetPairs:
+    def test_empty(self):
+        assert _get_pairs([], []) == {}
+
+    def test_unique_cases_and_contexts(self):
+        baselines = [
+            _fake_compare_entity("id1", "case 1", "context 1"),
+            _fake_compare_entity("id2", "case 2", "context 2"),
+        ]
+        contenders = [
+            _fake_compare_entity("id3", "case 1", "context 1"),
+            _fake_compare_entity("id4", "case 2", "context 2"),
+        ]
+        pairs = _get_pairs(baselines, contenders)
+        assert len(pairs) == 2
+        assert list(pairs.keys()) == ["case 1", "case 2"]
+        assert pairs["case 1"]["baseline"]["id"] == "id1"
+        assert pairs["case 1"]["contender"]["id"] == "id3"
+        assert pairs["case 2"]["baseline"]["id"] == "id2"
+        assert pairs["case 2"]["contender"]["id"] == "id4"
+
+    def test_duplicates_get_skipped(self):
+        baselines = [
+            _fake_compare_entity("id1", "case 1", "context 1"),
+            _fake_compare_entity("id2", "case 2", "context 2"),  # duplicate
+            _fake_compare_entity("id3", "case 2", "context 2"),
+        ]
+        contenders = [
+            _fake_compare_entity("id4", "case 1", "context 1"),  # duplicate
+            _fake_compare_entity("id5", "case 1", "context 1"),
+            _fake_compare_entity("id6", "case 2", "context 2"),
+        ]
+        pairs = _get_pairs(baselines, contenders)
+        assert len(pairs) == 2
+        assert list(pairs.keys()) == ["case 1", "case 2"]
+        assert pairs["case 1"]["baseline"]["id"] == "id1"
+        assert pairs["case 1"]["contender"]["id"] == "id5"
+        assert pairs["case 2"]["baseline"]["id"] == "id3"
+        assert pairs["case 2"]["contender"]["id"] == "id6"
 
 
 class TestCompareBenchmarksGet(_asserts.GetEnforcer):

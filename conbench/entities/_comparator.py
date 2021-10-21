@@ -47,6 +47,7 @@ class BenchmarkResult:
         language,
         tags,
         z_score,
+        **kwargs,
     ):
         self.id = id
         self.batch_id = batch_id

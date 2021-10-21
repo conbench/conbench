@@ -16,6 +16,8 @@ def _compare_entity(summary):
         "id": summary.id,
         "batch_id": summary.batch_id,
         "run_id": summary.run_id,
+        "case_id": summary.case_id,
+        "context_id": summary.context_id,
         "value": summary.mean,
         "unit": summary.unit,
         "benchmark": summary.display_name,
@@ -24,6 +26,22 @@ def _compare_entity(summary):
         "tags": summary.case.tags,
         "z_score": summary.z_score,
     }
+
+
+def _get_pairs(baseline_items, contender_items):
+    pairs = {}
+    for item in baseline_items:
+        _add_pair(pairs, item, "baseline")
+    for item in contender_items:
+        _add_pair(pairs, item, "contender")
+    return pairs
+
+
+def _add_pair(pairs, item, kind):
+    case_id = item["case_id"]
+    if case_id not in pairs:
+        pairs[case_id] = {"baseline": None, "contender": None}
+    pairs[case_id][kind] = item
 
 
 class CompareMixin:
@@ -136,16 +154,17 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
         baselines = self._get(baseline_id)
         contenders = self._get(contender_id)
 
-        pairs = {}
+        baseline_items, contender_items = [], []
         for summary in baselines:
             set_display_name(summary)
             set_display_batch(summary)
-            self._add_pair(pairs, summary, "baseline")
+            baseline_items.append(_compare_entity(summary))
         for summary in contenders:
             set_display_name(summary)
             set_display_batch(summary)
-            self._add_pair(pairs, summary, "contender")
+            contender_items.append(_compare_entity(summary))
 
+        pairs = _get_pairs(baseline_items, contender_items)
         comparator = BenchmarkListComparator(
             pairs,
             threshold,
@@ -154,12 +173,6 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
 
         result = comparator.compare() if raw else comparator.formatted()
         return f.jsonify(list(result))
-
-    def _add_pair(self, pairs, summary, kind):
-        case = summary.case
-        if case.id not in pairs:
-            pairs[case.id] = {"baseline": None, "contender": None}
-        pairs[case.id][kind] = _compare_entity(summary)
 
 
 class CompareBenchmarksAPI(CompareEntityEndpoint):
