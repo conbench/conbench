@@ -31,6 +31,25 @@ def _compare_entity(summary):
 
 
 def _get_pairs(baseline_items, contender_items):
+    """
+    You should be able to compare any run with any other run, so we can't
+    just key by case_id/context_id/machine_hash, or you couldn't compare runs
+    done on different machine, nor could you compare runs done in different
+    contexts.
+
+    Other cases to consider:
+        - Comparing a run with other run where the machine, case, and contexts
+        are all the same.
+
+        - Comparing a git sha with another git sha, where there are N runs for
+        each sha. Those runs might have N contexts and N machines for a given
+        case.
+
+    Assumptions:
+        - A run contains exactly one machine.
+        - A run contains N contexts.
+        - A run may contain N contexts for a given benchmark case.
+    """
     pairs = {}
     baseline_items = _dedup_items(baseline_items)
     contender_items = _dedup_items(contender_items)
@@ -54,6 +73,7 @@ def _simple_key(baseline_counter, contender_counter, case_id):
 def _dedup_items(items):
     # TODO: what about the same benchmark run on different machines?
     # TODO: include machine hash in the key?
+    # TODO: dedup order by date?
     filtered = {}
     for item in items:
         filtered[f'{item["case_id"]}-{item["context_id"]}'] = item
