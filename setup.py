@@ -22,15 +22,14 @@ install_requires = [
 # In the event of not running from a git clone (e.g. from a git archive
 # or a Python sdist), see if we can set the version number ourselves
 default_version = '1.33.0-SNAPSHOT'
-if (not os.path.exists('../.git') and
+if (not os.path.exists(os.path.join(setup_dir, '.git')) and
         not os.environ.get('SETUPTOOLS_SCM_PRETEND_VERSION')):
     os.environ['SETUPTOOLS_SCM_PRETEND_VERSION'] = \
-        default_version.replace('-SNAPSHOT', 'a0')
+        default_version.replace('-SNAPSHOT', '')
 
 # See https://github.com/pypa/setuptools_scm#configuration-parameters
 scm_version_write_to_prefix = os.environ.get(
     'SETUPTOOLS_SCM_VERSION_WRITE_TO_PREFIX', setup_dir)
-
 
 def parse_git(root, **kwargs):
     """
@@ -40,28 +39,36 @@ def parse_git(root, **kwargs):
     from setuptools_scm.git import parse
     kwargs['describe_command'] =\
         'git describe --dirty --tags --long --match "conbench-[0-9].*"'
+
     return parse(root, **kwargs)
 
 
 def guess_next_dev_version(version):
-    if version.exact:
+    print(version.format_with('{tag}'))
+    print(version.exact)
+    print(default_version)
+    print(version)
+    print(type(version))
+    if version.exact or not version.dirty:
         return version.format_with('{tag}')
+    # elif not version.dirty:
+
     else:
         def guess_next_version(tag_version):
             return default_version.replace('-SNAPSHOT', '')
+        print(version.format_next_version(guess_next_version))
         return version.format_next_version(guess_next_version)
 
 setuptools.setup(
     name="conbench",
-    # version="1.33.0",
     use_scm_version={
-        'root': os.path.dirname(setup_dir),
+        'root': setup_dir,
         'parse': parse_git,
         'write_to': os.path.join(scm_version_write_to_prefix,
                                  'conbench/_generated_version.py'),
-        'version_scheme': guess_next_dev_version
+        'version_scheme': guess_next_dev_version,
+        # 'local_scheme': guess_next_dev_version
     },
-    # use_scm_version=True,
     description="Continuous Benchmarking (CB) Framework",
     long_description=long_description,
     long_description_content_type="text/markdown",
