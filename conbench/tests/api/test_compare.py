@@ -32,6 +32,21 @@ class TestGetPairs:
     def test_empty(self):
         assert _get_pairs([], []) == {}
 
+    def test_mismatch(self):
+        baselines = [
+            _fake_compare_entity("id1", "case 1", "context 1"),
+        ]
+        contenders = [
+            _fake_compare_entity("id2", "case 2", "context 2"),
+        ]
+        pairs = _get_pairs(baselines, contenders)
+        assert len(pairs) == 2
+        assert list(pairs.keys()) == ["case 1", "case 2"]
+        assert pairs["case 1"]["baseline"]["id"] == "id1"
+        assert pairs["case 1"]["contender"] is None
+        assert pairs["case 2"]["baseline"] is None
+        assert pairs["case 2"]["contender"]["id"] == "id2"
+
     def test_unique_cases_and_contexts(self):
         baselines = [
             _fake_compare_entity("id1", "case 1", "context 1"),
@@ -67,6 +82,49 @@ class TestGetPairs:
         assert pairs["case 1"]["contender"]["id"] == "id5"
         assert pairs["case 2"]["baseline"]["id"] == "id3"
         assert pairs["case 2"]["contender"]["id"] == "id6"
+
+    def test_contexts_dont_match_but_pair_them_anyway(self):
+        baselines = [
+            _fake_compare_entity("id1", "case 1", "context 1"),
+            _fake_compare_entity("id2", "case 2", "context 2"),
+        ]
+        contenders = [
+            _fake_compare_entity("id3", "case 1", "context 3"),
+            _fake_compare_entity("id4", "case 2", "context 4"),
+        ]
+        pairs = _get_pairs(baselines, contenders)
+        assert len(pairs) == 2
+        assert list(pairs.keys()) == ["case 1", "case 2"]
+        assert pairs["case 1"]["baseline"]["id"] == "id1"
+        assert pairs["case 1"]["contender"]["id"] == "id3"
+        assert pairs["case 2"]["baseline"]["id"] == "id2"
+        assert pairs["case 2"]["contender"]["id"] == "id4"
+
+    def test_multiple_contexts_for_same_cases(self):
+        baselines = [
+            _fake_compare_entity("id1", "case 1", "context 1"),
+            _fake_compare_entity("id2", "case 1", "context 2"),
+        ]
+        contenders = [
+            _fake_compare_entity("id3", "case 1", "context 3"),
+            _fake_compare_entity("id4", "case 1", "context 4"),
+        ]
+        pairs = _get_pairs(baselines, contenders)
+        assert len(pairs) == 4
+        assert list(pairs.keys()) == [
+            "case 1-context 1",
+            "case 1-context 2",
+            "case 1-context 3",
+            "case 1-context 4",
+        ]
+        assert pairs["case 1-context 1"]["baseline"]["id"] == "id1"
+        assert pairs["case 1-context 1"]["contender"] is None
+        assert pairs["case 1-context 2"]["baseline"]["id"] == "id2"
+        assert pairs["case 1-context 2"]["contender"] is None
+        assert pairs["case 1-context 3"]["baseline"] is None
+        assert pairs["case 1-context 3"]["contender"]["id"] == "id3"
+        assert pairs["case 1-context 4"]["baseline"] is None
+        assert pairs["case 1-context 4"]["contender"]["id"] == "id4"
 
 
 class TestCompareBenchmarksGet(_asserts.GetEnforcer):

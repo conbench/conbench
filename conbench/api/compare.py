@@ -1,3 +1,5 @@
+import collections
+
 import flask as f
 
 from ..api import rule
@@ -30,18 +32,34 @@ def _compare_entity(summary):
 
 def _get_pairs(baseline_items, contender_items):
     pairs = {}
+    baseline_items = _dedup_items(baseline_items)
+    contender_items = _dedup_items(contender_items)
+    baseline_counter = collections.Counter([i["case_id"] for i in baseline_items])
+    contender_counter = collections.Counter([i["case_id"] for i in contender_items])
     for item in baseline_items:
-        _add_pair(pairs, item, "baseline")
+        case_id = item["case_id"]
+        simple = baseline_counter[case_id] == 1
+        _add_pair(pairs, item, "baseline", simple)
     for item in contender_items:
-        _add_pair(pairs, item, "contender")
+        case_id = item["case_id"]
+        simple = contender_counter[case_id] == 1
+        _add_pair(pairs, item, "contender", simple)
     return pairs
 
 
-def _add_pair(pairs, item, kind):
-    case_id = item["case_id"]
-    if case_id not in pairs:
-        pairs[case_id] = {"baseline": None, "contender": None}
-    pairs[case_id][kind] = item
+def _dedup_items(items):
+    filtered = {}
+    for item in items:
+        filtered[f'{item["case_id"]}-{item["context_id"]}'] = item
+    return filtered.values()
+
+
+def _add_pair(pairs, item, kind, simple):
+    case_id, context_id = item["case_id"], item["context_id"]
+    key = case_id if simple else f"{case_id}-{context_id}"
+    if key not in pairs:
+        pairs[key] = {"baseline": None, "contender": None}
+    pairs[key][kind] = item
 
 
 class CompareMixin:
