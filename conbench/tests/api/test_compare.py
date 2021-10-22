@@ -47,7 +47,7 @@ class TestGetPairs:
         assert pairs["case 2-context 2"]["baseline"] is None
         assert pairs["case 2-context 2"]["contender"]["id"] == "id2"
 
-    def test_unique_cases_and_contexts(self):
+    def test_simple_match(self):
         baselines = [
             _fake_compare_entity("id1", "case 1", "context 1"),
             _fake_compare_entity("id2", "case 2", "context 2"),
