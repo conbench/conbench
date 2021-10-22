@@ -1,7 +1,10 @@
 import datetime
+import importlib.metadata as importlib_metadata
 
 from ...api._examples import API_INDEX
 from ...tests.api import _asserts
+
+__version__ = importlib_metadata.version("conbench")
 
 
 class TestIndexList(_asserts.ListEnforcer):
@@ -23,5 +26,6 @@ class TestAPI(_asserts.ApiEndpointTest):
         data = response.json
         assert response.status_code == 200
         assert response.content_type == "application/json"
-        assert set(data) == {"date", "alembic_version"}
+        assert set(data) == {"date", "conbench_version", "alembic_version"}
         assert str(datetime.datetime.today().year) in data["date"]
+        assert data["conbench_version"] == __version__
