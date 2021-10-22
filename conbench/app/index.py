@@ -1,10 +1,9 @@
+# set the version
+from .. import __version__
 from ..app import rule
 from ..app._endpoint import AppEndpoint
 from ..app.benchmarks import RunMixin
 from ..config import Config
-
-# set the version
-from .. import __version__
 
 
 class Index(AppEndpoint, RunMixin):

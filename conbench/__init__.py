@@ -1,7 +1,6 @@
-import os
-
 # set the version
 import importlib.metadata as importlib_metadata
+import os
 
 try:
     __version__ = importlib_metadata.version(__name__)
