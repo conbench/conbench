@@ -3,6 +3,20 @@ from ..app._endpoint import AppEndpoint
 from ..app.benchmarks import RunMixin
 from ..config import Config
 
+# set the version
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    # TODO: remove this when Python 3.7 support is dropped
+    import importlib_metadata
+
+try:
+    __version__ = importlib_metadata.version(__name__)
+except Exception:
+    __version__ = importlib_metadata.version("conbench")
+
+del importlib_metadata
+
 
 class Index(AppEndpoint, RunMixin):
     def page(self, runs):
@@ -13,7 +27,7 @@ class Index(AppEndpoint, RunMixin):
         }
         return self.render_template(
             "index.html",
-            application=Config.APPLICATION_NAME,
+            application=f"{Config.APPLICATION_NAME}, ver. {__version__}",
             title="Home",
             runs=runs,
             has_reasons=len(reasons) > 0,
