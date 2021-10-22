@@ -1,4 +1,12 @@
+import importlib.metadata as importlib_metadata
 import os
+
+try:
+    __version__ = importlib_metadata.version(__name__)
+except Exception:
+    __version__ = importlib_metadata.version("conbench")
+
+del importlib_metadata
 
 
 def create_application(config):

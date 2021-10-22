@@ -2,6 +2,7 @@ import json
 
 import click
 
+from . import __version__
 from .runner import LIST, REGISTRY
 from .util import register_benchmarks
 
@@ -30,6 +31,11 @@ def list_benchmarks():
     if LIST:
         benchmarks = LIST[0]().list(BENCHMARKS)
     print(json.dumps(benchmarks, indent=2))
+
+
+@conbench.command(name="version")
+def version():
+    print(f"conbench version: {__version__}")
 
 
 def _option(params, name, default, _type, help_msg=None):

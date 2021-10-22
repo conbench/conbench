@@ -1,3 +1,4 @@
+from .. import __version__
 from ..app import rule
 from ..app._endpoint import AppEndpoint
 from ..app.benchmarks import RunMixin
@@ -15,6 +16,7 @@ class Index(AppEndpoint, RunMixin):
             "index.html",
             application=Config.APPLICATION_NAME,
             title="Home",
+            version=__version__,
             runs=runs,
             has_reasons=len(reasons) > 0,
             has_authors=len(authors) > 0,

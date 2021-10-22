@@ -1,9 +1,13 @@
+import importlib.metadata as importlib_metadata
 import os
 import unittest.mock
 
 import pytest
 
 from ...util import register_benchmarks
+
+__version__ = importlib_metadata.version("conbench")
+
 
 CONBENCH = """
 Usage: conbench [OPTIONS] COMMAND [ARGS]...
@@ -21,6 +25,7 @@ Commands:
   list                List of benchmarks (for orchestration).
   matrix              Run matrix benchmark(s).
   matrix-types        Run matrix-types benchmark(s).
+  version
 """
 
 CONBENCH_LIST = """
@@ -349,3 +354,10 @@ def test_conbench_command_external_options_r_help(runner):
 
     result = runner.invoke(conbench, "external-r-options --help")
     assert_command_output(result, CONBENCH_EXTERNAL_R_OPTIONS_HELP)
+
+
+def test_conbench_command_version(runner):
+    from conbench.cli import conbench
+
+    result = runner.invoke(conbench, "version")
+    assert_command_output(result, f"conbench version: {__version__}")
