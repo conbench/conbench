@@ -90,6 +90,7 @@ repository, and the results are hosted on the
     $ brew services start postgres
 
 On Linux this would be
+
     $ sudo service postgresql start 
 
 
