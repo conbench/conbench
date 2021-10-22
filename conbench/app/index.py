@@ -27,10 +27,11 @@ class Index(AppEndpoint, RunMixin):
         }
         return self.render_template(
             "index.html",
-            application=f"{Config.APPLICATION_NAME}, ver. {__version__}",
+            application=Config.APPLICATION_NAME,
             title="Home",
+            version=__version__,
             runs=runs,
-            has_reasons=len(reasons) > 0,
+            has_reasons=len(reasons) > 0, 
             has_authors=len(authors) > 0,
             has_commits=len(commits) > 0,
         )
