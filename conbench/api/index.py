@@ -10,6 +10,20 @@ from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint
 from ..db import Session
 
+# get the version
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    # TODO: remove this when Python 3.7 support is dropped
+    import importlib_metadata
+
+try:
+    __version__ = importlib_metadata.version(__name__)
+except Exception:
+    __version__ = importlib_metadata.version("conbench")
+
+del importlib_metadata
+
 
 @api.route("/docs.json")
 def docs():
@@ -74,6 +88,7 @@ class PingAPI(ApiEndpoint):
             version = "unknown"
         return {
             "date": now.strftime("%a, %d %b %Y %H:%M:%S %Z"),
+            "conbench_version": __version__,
             "alembic_version": version,
         }
 
