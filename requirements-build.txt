@@ -24,3 +24,4 @@ python-dotenv
 PyYAML
 requests
 SQLAlchemy
+setuptools_scm
