@@ -2,6 +2,7 @@ import pathlib
 import os
 
 import setuptools
+from setuptools_scm.version import simplified_semver_version
 
 setup_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -44,19 +45,13 @@ def parse_git(root, **kwargs):
 
 
 def guess_next_dev_version(version):
-    print(version.format_with('{tag}'))
-    print(version.exact)
-    print(default_version)
-    print(version)
-    print(type(version))
     if version.exact or not version.dirty:
         return version.format_with('{tag}')
-    # elif not version.dirty:
 
     else:
+        print(version)
         def guess_next_version(tag_version):
-            return default_version.replace('-SNAPSHOT', '')
-        print(version.format_next_version(guess_next_version))
+            return(str(tag_version) + f'+g{version.node}')
         return version.format_next_version(guess_next_version)
 
 setuptools.setup(
@@ -67,7 +62,7 @@ setuptools.setup(
         'write_to': os.path.join(scm_version_write_to_prefix,
                                  'conbench/_generated_version.py'),
         'version_scheme': guess_next_dev_version,
-        # 'local_scheme': guess_next_dev_version
+        'local_scheme': 'no-local-version'
     },
     description="Continuous Benchmarking (CB) Framework",
     long_description=long_description,
