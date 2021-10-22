@@ -1,4 +1,3 @@
-# set the version
 from .. import __version__
 from ..app import rule
 from ..app._endpoint import AppEndpoint

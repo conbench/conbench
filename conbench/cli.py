@@ -5,6 +5,8 @@ import click
 from .runner import LIST, REGISTRY
 from .util import register_benchmarks
 
+from . import __version__
+
 register_benchmarks()
 BENCHMARKS = {}
 for benchmark in REGISTRY:
@@ -34,14 +36,6 @@ def list_benchmarks():
 
 @conbench.command(name="version")
 def version():
-    import importlib.metadata as importlib_metadata
-
-    try:
-        __version__ = importlib_metadata.version(__name__)
-    except Exception:
-        __version__ = importlib_metadata.version("conbench")
-    del importlib_metadata
-
     print(f"conbench version: {__version__}")
 
 

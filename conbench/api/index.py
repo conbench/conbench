@@ -5,7 +5,6 @@ import flask_login
 import marshmallow
 from sqlalchemy.sql import text
 
-# get the version
 from .. import __version__
 from ..api import api, rule
 from ..api._docs import spec
