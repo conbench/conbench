@@ -11,15 +11,7 @@ from ..api._endpoint import ApiEndpoint
 from ..db import Session
 
 # get the version
-
-import importlib.metadata as importlib_metadata
-
-try:
-    __version__ = importlib_metadata.version(__name__)
-except Exception:
-    __version__ = importlib_metadata.version("conbench")
-
-del importlib_metadata
+from .. import __version__
 
 
 @api.route("/docs.json")

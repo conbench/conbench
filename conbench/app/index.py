@@ -4,14 +4,7 @@ from ..app.benchmarks import RunMixin
 from ..config import Config
 
 # set the version
-import importlib.metadata as importlib_metadata
-
-try:
-    __version__ = importlib_metadata.version(__name__)
-except Exception:
-    __version__ = importlib_metadata.version("conbench")
-
-del importlib_metadata
+from .. import __version__
 
 
 class Index(AppEndpoint, RunMixin):
