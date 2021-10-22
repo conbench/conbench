@@ -1,8 +1,7 @@
-import pathlib
 import os
+import pathlib
 
 import setuptools
-
 
 setup_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -67,9 +66,6 @@ setuptools.setup(
     use_scm_version={
         "root": setup_dir,
         "parse": parse_git,
-        "write_to": os.path.join(
-            scm_version_write_to_prefix, "conbench/_generated_version.py"
-        ),
         "version_scheme": guess_next_dev_version,
         "local_scheme": "no-local-version",
     },

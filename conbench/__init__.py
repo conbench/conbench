@@ -1,5 +1,19 @@
 import os
 
+# set the version
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    # TODO: remove this when Python 3.7 support is dropped
+    import importlib_metadata
+
+try:
+    __version__ = importlib_metadata.version(__name__)
+except Exception:
+    __version__ = importlib_metadata.version("conbench")
+
+del importlib_metadata
+
 
 def create_application(config):
     import flask as f
