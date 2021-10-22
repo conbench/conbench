@@ -1,4 +1,3 @@
-# set the version
 import importlib.metadata as importlib_metadata
 import os
 
