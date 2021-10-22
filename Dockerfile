@@ -7,3 +7,4 @@ RUN pip install -r /tmp/requirements-test.txt
 
 WORKDIR /app
 ADD . /app
+RUN pip install .
