@@ -49,7 +49,6 @@ def guess_next_dev_version(version):
         return version.format_with('{tag}')
 
     else:
-        print(version)
         def guess_next_version(tag_version):
             return(str(tag_version) + f'+g{version.node}')
         return version.format_next_version(guess_next_version)
