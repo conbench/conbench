@@ -91,7 +91,7 @@ repository, and the results are hosted on the
 
 On Linux this would be
 
-    $ sudo service postgresql start 
+    $ sudo service postgresql start
 
 
 ### Create databases
