@@ -68,6 +68,7 @@ class TestRunList(_asserts.ListEnforcer):
     public = True
 
     def _create(self):
+        _fixtures.summary(sha=_fixtures.PARENT)
         summary = _fixtures.summary()
         return summary.run
 

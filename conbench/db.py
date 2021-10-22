@@ -29,4 +29,5 @@ def create_all():
 def drop_all():
     from .entities._entity import Base
 
+    Session.close()
     Base.metadata.drop_all(engine)
