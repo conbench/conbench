@@ -239,7 +239,7 @@ class CompareCommitsAPI(CompareListEndpoint):
     serializer = CompareSummarySerializer()
 
     @maybe_login_required
-    def get(self, compare_ids):
+    def get(self, compare_shas):
         """
         ---
         description: Compare benchmark results.
@@ -248,7 +248,7 @@ class CompareCommitsAPI(CompareListEndpoint):
             "401": "401"
             "404": "404"
         parameters:
-          - name: compare_ids
+          - name: compare_shas
             in: path
             schema:
                 type: string
@@ -257,11 +257,11 @@ class CompareCommitsAPI(CompareListEndpoint):
           - Comparisons
         """
         try:
-            baseline_id, contender_id = compare_ids.split("...", 1)
+            baseline_sha, contender_sha = compare_shas.split("...", 1)
         except ValueError:
             self.abort_404_not_found()
-        baseline_commit = self._get(baseline_id)
-        contender_commit = self._get(contender_id)
+        baseline_commit = self._get(baseline_sha)
+        contender_commit = self._get(contender_sha)
         return self.serializer.one.dump([baseline_commit, contender_commit])
 
     def _get(self, sha):
@@ -293,7 +293,7 @@ rule(
     methods=["GET"],
 )
 rule(
-    "/compare/commits/<compare_ids>/",
+    "/compare/commits/<compare_shas>/",
     view_func=compare_commits_view,
     methods=["GET"],
 )

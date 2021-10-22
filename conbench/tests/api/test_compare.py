@@ -386,17 +386,14 @@ class TestCompareCommitsGet(_asserts.GetEnforcer):
     public = True
 
     def _create(self, verbose=False):
-        # change anything about the context so we get only one baseline
-        language, name = _uuid(), _uuid()
+        name = _uuid()
         contender = _fixtures.summary(
             name=name,
             sha=_fixtures.CHILD,
-            language=language,
         )
         baseline = _fixtures.summary(
             name=name,
             sha=_fixtures.PARENT,
-            language=language,
         )
         baseline_sha = baseline.run.commit.sha
         contender_sha = contender.run.commit.sha

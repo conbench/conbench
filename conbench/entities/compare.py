@@ -30,7 +30,7 @@ class _Serializer(EntitySerializer):
 
         baseline_commit, contender_commit = commits
         contender_runs = Run.all(commit_id=contender_commit.id)
-        compare_ids = f"{baseline_commit.sha}...{contender_commit.sha}"
+        compare_shas = f"{baseline_commit.sha}...{contender_commit.sha}"
         result = {
             "commits": {
                 "baseline": CommitSerializer().one.dump(baseline_commit),
@@ -39,7 +39,7 @@ class _Serializer(EntitySerializer):
             "runs": [_run(r) for r in contender_runs],
             "links": {
                 "self": f.url_for(
-                    "api.compare-commits", compare_ids=compare_ids, _external=True
+                    "api.compare-commits", compare_shas=compare_shas, _external=True
                 ),
             },
         }
