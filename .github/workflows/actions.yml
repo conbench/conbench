@@ -28,6 +28,7 @@ jobs:
           pip install -r requirements-test.txt
           pip install -r requirements-cli.txt
           pip install -r requirements-build.txt
+          pip install .
           pip install coveralls
       - name: Migrations
         run: |
