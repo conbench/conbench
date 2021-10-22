@@ -34,11 +34,7 @@ def list_benchmarks():
 
 @conbench.command(name="version")
 def version():
-    try:
-        import importlib.metadata as importlib_metadata
-    except ImportError:
-        # TODO: remove this when Python 3.7 support is dropped
-        import importlib_metadata
+    import importlib.metadata as importlib_metadata
 
     try:
         __version__ = importlib_metadata.version(__name__)
