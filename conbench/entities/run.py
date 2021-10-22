@@ -17,7 +17,7 @@ class Run(Base, EntityMixin):
     machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
     machine = relationship("Machine", lazy="joined")
 
-    def get_baseline_id(self):
+    def get_baseline_run(self):
         from ..entities.distribution import get_closest_parent
         from ..entities.summary import Summary
 
@@ -42,9 +42,13 @@ class Run(Base, EntityMixin):
             parent_summaries = Summary.all(run_id=run.id)
             parent_items = [(s.context_id, s.case_id) for s in parent_summaries]
             if set(run_items) == set(parent_items):
-                return run.id
+                return run
 
         return None
+
+    def get_baseline_id(self):
+        run = self.get_baseline_run()
+        return run.id if run else None
 
 
 class _Serializer(EntitySerializer):

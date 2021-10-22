@@ -7,8 +7,8 @@ from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._comparator import BenchmarkComparator, BenchmarkListComparator
 from ..entities._entity import NotFound
 from ..entities.commit import Commit
+from ..entities.compare import CompareSummarySerializer
 from ..entities.distribution import set_z_scores
-from ..entities.run import Run
 from ..entities.summary import Summary
 from ..hacks import set_display_batch, set_display_name
 
@@ -236,17 +236,40 @@ class CompareRunsAPI(CompareListEndpoint):
 
 
 class CompareCommitsAPI(CompareListEndpoint):
+    serializer = CompareSummarySerializer()
+
+    @maybe_login_required
+    def get(self, compare_ids):
+        """
+        ---
+        description: Compare benchmark results.
+        responses:
+            "200": "CompareSummary"
+            "401": "401"
+            "404": "404"
+        parameters:
+          - name: compare_ids
+            in: path
+            schema:
+                type: string
+            example: <baseline_sha>...<contender_sha>
+        tags:
+          - Comparisons
+        """
+        try:
+            baseline_id, contender_id = compare_ids.split("...", 1)
+        except ValueError:
+            self.abort_404_not_found()
+        baseline_commit = self._get(baseline_id)
+        contender_commit = self._get(contender_id)
+        return self.serializer.one.dump([baseline_commit, contender_commit])
+
     def _get(self, sha):
         try:
             commit = Commit.one(sha=sha)
         except NotFound:
             self.abort_404_not_found()
-        summaries = []
-        runs = Run.all(commit_id=commit.id)
-        for run in runs:
-            summaries.extend(Summary.all(run_id=run.id))
-        set_z_scores(summaries)
-        return summaries
+        return commit
 
 
 compare_benchmarks_view = CompareBenchmarksAPI.as_view("compare-benchmarks")

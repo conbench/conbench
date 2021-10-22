@@ -1,4 +1,8 @@
-from ...api._examples import _api_compare_entity, _api_compare_list
+from ...api._examples import (
+    _api_compare_entity,
+    _api_compare_list,
+    _api_compare_summary,
+)
 from ...api.compare import _get_pairs
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
@@ -190,8 +194,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         entity = FakeEntity(f"{summary_1.id}...{summary_2.id}")
         if verbose:
             return [summary_1, summary_2], entity
-        else:
-            return entity
+        return entity
 
     def test_compare(self, client):
         self.authenticate(client)
@@ -255,8 +258,7 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
         entity = FakeEntity(f"{batch_id}...{batch_id}")
         if verbose:
             return [summary_1, summary_2], entity
-        else:
-            return entity
+        return entity
 
     def test_compare(self, client):
         self.authenticate(client)
@@ -327,8 +329,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         entity = FakeEntity(f"{run_id}...{run_id}")
         if verbose:
             return [summary_1, summary_2], entity
-        else:
-            return entity
+        return entity
 
     def test_compare(self, client):
         self.authenticate(client)
@@ -384,68 +385,36 @@ class TestCompareCommitsGet(_asserts.GetEnforcer):
     url = "/api/compare/commits/{}/"
     public = True
 
-    def _create(self, verbose=False, run_id=None, batch_id=None):
-        run_id = run_id if run_id is not None else _uuid()
-        sha = _uuid()
-        summary_1 = _fixtures.summary(
-            name="read",
-            run_id=run_id,
-            batch_id=batch_id,
-            sha=sha,
+    def _create(self, verbose=False):
+        # change anything about the context so we get only one baseline
+        language, name = _uuid(), _uuid()
+        contender = _fixtures.summary(
+            name=name,
+            sha=_fixtures.CHILD,
+            language=language,
         )
-        summary_2 = _fixtures.summary(
-            name="write",
-            run_id=run_id,
-            batch_id=batch_id,
-            sha=sha,
+        baseline = _fixtures.summary(
+            name=name,
+            sha=_fixtures.PARENT,
+            language=language,
         )
-        entity = FakeEntity(f"{sha}...{sha}")
+        baseline_sha = baseline.run.commit.sha
+        contender_sha = contender.run.commit.sha
+        entity = FakeEntity(f"{baseline_sha}...{contender_sha}")
+
         if verbose:
-            return [summary_1, summary_2], entity
-        else:
-            return entity
+            return [baseline.run, contender.run], entity
+        return entity
 
     def test_compare(self, client):
         self.authenticate(client)
-        run_id, batch_id = _uuid(), _uuid()
-        new_entities, compare = self._create(
-            verbose=True,
-            run_id=run_id,
-            batch_id=batch_id,
-        )
-        new_ids = [e.id for e in new_entities]
+        [baseline, contender], compare = self._create(verbose=True)
         response = client.get(f"/api/compare/commits/{compare.id}/")
-
-        # cheating by comparing run to same run
-        run_ids = [run_id, run_id]
-        batch_ids = [batch_id, batch_id]
-        batches = ["read", "write"]
-        benchmarks = [CASE, CASE]
-        expected = _api_compare_list(
-            new_ids,
-            new_ids,
-            batch_ids,
-            run_ids,
-            batches,
-            benchmarks,
-            tags=[
-                {
-                    "dataset": "nyctaxi_sample",
-                    "cpu_count": 2,
-                    "file_type": "parquet",
-                    "input_type": "arrow",
-                    "compression": "snappy",
-                    "name": "read",
-                },
-                {
-                    "dataset": "nyctaxi_sample",
-                    "cpu_count": 2,
-                    "file_type": "parquet",
-                    "input_type": "arrow",
-                    "compression": "snappy",
-                    "name": "write",
-                },
-            ],
+        expected = _api_compare_summary(
+            baseline.commit.id,
+            contender.commit.id,
+            baseline.id,
+            contender.id,
         )
         self.assert_200_ok(response, expected)
 
