@@ -87,9 +87,12 @@ repository, and the results are hosted on the
 
 
 ### Start postgres
+
+Mac
+
     $ brew services start postgres
 
-On Linux this would be
+Linux
 
     $ sudo service postgresql start
 
@@ -107,7 +110,7 @@ On Linux this would be
      * Debug mode: on
      * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
 
-If this renders an authentication error, set the password for your user.
+If you get an authentication error, set the password for your user.
 
     $ psql
     # ALTER USER <username> PASSWORD '<password>';
@@ -116,7 +119,8 @@ Then, set an environmental variable `DB_PASSWORD` to reflect the chosen password
 
     $ export DB_PASSWORD=<password>
 
-Alternatively, if you don't want to set the `DB_PASSWORD` you can change the password in postgres to `postgres`.
+Alternatively, if you don't want to set the `DB_PASSWORD` you can change the
+password in postgres to `postgres`.
 
     $ psql
     # ALTER USER <username> PASSWORD 'postgres';
@@ -255,6 +259,7 @@ Commands:
   external-r-options  Run external-r-options benchmark.
   list                List of benchmarks (for orchestration).
   matrix              Run matrix benchmark(s).
+  version             Display Conbench version.
 ```
 
 Benchmarks can be run from command line within the directory where the
