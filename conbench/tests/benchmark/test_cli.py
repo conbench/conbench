@@ -25,7 +25,7 @@ Commands:
   list                List of benchmarks (for orchestration).
   matrix              Run matrix benchmark(s).
   matrix-types        Run matrix-types benchmark(s).
-  version
+  version             Display Conbench version.
 """
 
 CONBENCH_LIST = """

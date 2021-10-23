@@ -14,7 +14,6 @@ install_requires = [
     .splitlines()
 ]
 
-
 setuptools.setup(
     name="conbench",
     version="1.33.0",

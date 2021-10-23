@@ -35,6 +35,7 @@ def list_benchmarks():
 
 @conbench.command(name="version")
 def version():
+    """Display Conbench version."""
     print(f"conbench version: {__version__}")
 
 
