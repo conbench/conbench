@@ -73,7 +73,13 @@
                      </a></td>
                      <td>{{ benchmark.display_mean }}</td>
                      {% if benchmark.stats.z_score is not none %}
-                       <td>{{ benchmark.stats.z_score }}</td>
+                       {% if benchmark.stats.z_regression %}
+                         <td style="color: #ff7c43;">{{ benchmark.stats.z_score }}</td>
+                       {% elif benchmark.stats.z_improvement %}
+                         <td style="color: #61B329;">{{ benchmark.stats.z_score }}</td>
+                       {% else %}
+                         <td>{{ benchmark.stats.z_score }}</td>
+                       {% endif %}
                      {% else %}
                        <td></td>
                      {% endif %}
@@ -100,7 +106,7 @@ $(document).ready(function() {
 
 var table = $('#benchmarks').dataTable( {
     "responsive": true,
-    "order": [[0, 'desc']],
+    "order": [[5, 'asc']],
     "columnDefs": [{ "orderable": false, "targets": [4] }]
 } );
 

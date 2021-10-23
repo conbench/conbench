@@ -78,7 +78,13 @@
                     {% for c in comparisons %}
                     <tr>
                          {% if c.contender_z_score is not none %}
-                           <td>{{ c.contender_z_score }}</td>
+	                       {% if c.contender_z_regression %}
+	                         <td style="color: #ff7c43;">{{ c.contender_z_score }}</td>
+	                       {% elif c.contender_z_improvement %}
+	                         <td style="color: #61B329;">{{ c.contender_z_score }}</td>
+	                       {% else %}
+	                         <td>{{ c.contender_z_score }}</td>
+	                       {% endif %}
                          {% else %}
                            <td></td>
                          {% endif %}
