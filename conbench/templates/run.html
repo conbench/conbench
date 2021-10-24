@@ -16,6 +16,22 @@
       </ol>
     </nav>
 
+    {% if run %}
+      {% if run.commit.display_message %}
+    <div class="row">
+      <div class="col-md-12">
+        <ul class="list-group">
+          <li class="list-group-item" align="right" style="border-style:none">
+          Commit:
+          <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
+          </li>
+         </ul>
+      </div>
+    </div>
+      {% endif %}
+    {% endif %}
+
+
 {% if plot_history %}
 <div class="col-md-12" >
 <h6>Outliers: {{ plot_history|length }}</h6>
