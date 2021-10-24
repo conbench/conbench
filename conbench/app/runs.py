@@ -1,3 +1,4 @@
+import bokeh
 import flask as f
 import flask_login
 import flask_wtf
@@ -5,12 +6,13 @@ import wtforms as w
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint
+from ..app._plots import TimeSeriesPlotMixin
 from ..app._util import augment
 from ..app.benchmarks import ContextMixin, RunMixin
 from ..config import Config
 
 
-class Run(AppEndpoint, ContextMixin, RunMixin):
+class Run(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, benchmarks, baseline_run, contender_run, form, run_id):
         compare_runs_url = None
         if not flask_login.current_user.is_authenticated:
@@ -19,6 +21,16 @@ class Run(AppEndpoint, ContextMixin, RunMixin):
             compare = f'{baseline_run["id"]}...{contender_run["id"]}'
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
 
+        outliers = [
+            b
+            for b in benchmarks
+            if b["stats"]["z_regression"] or b["stats"]["z_improvement"]
+        ]
+        outlier_ids = [b["id"] for b in outliers]
+        outlier_names = [f'{b["display_batch"]}, {b["display_name"]}' for b in outliers]
+        plot_history = [
+            self.get_history_plot(b, contender_run, i) for i, b in enumerate(outliers)
+        ]
         return self.render_template(
             "run.html",
             application=Config.APPLICATION_NAME,
@@ -27,6 +39,10 @@ class Run(AppEndpoint, ContextMixin, RunMixin):
             compare_runs_url=compare_runs_url,
             run_id=run_id,
             form=form,
+            resources=bokeh.resources.CDN.render(),
+            plot_history=plot_history,
+            outlier_names=outlier_names,
+            outlier_ids=outlier_ids,
         )
 
     def get(self, run_id):

@@ -9,13 +9,13 @@ from ..units import formatter_for_unit
 
 
 class TimeSeriesPlotMixin:
-    def get_history_plot(self, benchmark, run):
+    def get_history_plot(self, benchmark, run, i=0):
         history = self._get_history(benchmark)
         if history:
             return json.dumps(
                 bokeh.embed.json_item(
                     time_series_plot(history, benchmark, run),
-                    "plot-history",
+                    f"plot-history-{i}",
                 )
             )
         return None
