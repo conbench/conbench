@@ -38,6 +38,7 @@ class Run(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             benchmarks=benchmarks,
             compare_runs_url=compare_runs_url,
             run_id=run_id,
+            run=contender_run,
             form=form,
             resources=bokeh.resources.CDN.render(),
             plot_history=plot_history,
