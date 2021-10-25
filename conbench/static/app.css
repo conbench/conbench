@@ -67,10 +67,12 @@ table.dataTable thead .sorting_desc {
   background:none;
   width:30px;
 }
+
 .carousel-control.left {
   left:-30px;
   color: #999999;
 }
+
 .carousel-control.right {
   right:-30px;
   color: #999999;
