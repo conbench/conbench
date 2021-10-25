@@ -203,6 +203,7 @@ def time_series_plot(history, benchmark, run, height=250, width=1000):
     hover = bokeh.models.HoverTool(
         tooltips=tooltips,
         formatters={"$x": "datetime"},
+        names=["history", "benchmark"],
     )
     p = bokeh.plotting.figure(
         x_axis_type="datetime",
@@ -216,11 +217,17 @@ def time_series_plot(history, benchmark, run, height=250, width=1000):
     p.xaxis.major_label_orientation = 1
     p.yaxis.axis_label = axis_unit
 
-    p.line(source=source, legend_label="History")
+    p.line(source=source, legend_label="History", name="history")
     p.line(source=source_mean, color="#ffa600", legend_label="Mean")
     p.line(source=source_alert_min, color="Silver", legend_label="+/- 5 σ")
     p.line(source=source_alert_max, color="Silver")
-    p.circle(source=source_x, size=8, color="#ff6361", legend_label="Benchmark")
+    p.circle(
+        source=source_x,
+        size=8,
+        color="#ff6361",
+        legend_label="Benchmark",
+        name="benchmark",
+    )
 
     p.legend.location = "bottom_left"
 
