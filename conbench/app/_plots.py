@@ -87,7 +87,7 @@ def _simple_source(data, unit):
     return bokeh.models.ColumnDataSource(data=source_data), axis_unit
 
 
-def simple_bar_plot(benchmarks, height=400, width=400):
+def simple_bar_plot(benchmarks, height=400, width=400, vbar_width=0.7):
     if len(benchmarks) > 30:
         return None
     if len(benchmarks) == 1:
@@ -111,7 +111,7 @@ def simple_bar_plot(benchmarks, height=400, width=400):
         x="x",
         top="y",
         source=source,
-        width=0.3,
+        width=vbar_width,
         line_color="white",
         color="silver",
     )
