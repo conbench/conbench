@@ -37,6 +37,17 @@
 <h6>Outliers: {{ plot_history|length }}</h6>
   <div id="bokeh-carousel" style="visibility: hidden;" class="carousel slide" data-ride="carousel">
     <div class="carousel-inner" role="listbox">
+	  <ol class="carousel-indicators">
+	  {% if plot_history|length > 1 %}
+        {% for plot in plot_history %}
+          {% if loop.index == 1 %}
+          <li data-target="#bokeh-carousel" data-slide-to="0" class="active"></li>
+          {% else %}
+	      <li data-target="#bokeh-carousel" data-slide-to="{{ loop.index - 1}}"></li>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+	  </ol>
       {% for plot in plot_history %}
         {% if loop.index == 1 %}
         <div class="item active">
@@ -51,6 +62,11 @@
         <div id="plot-history-{{ loop.index - 1}}" align="center"></div>
         </div>
       {% endfor %}
+	  {% if plot_history|length > 1 %}
+        <br>
+        <br>
+        <br>
+      {% endif %}
     </div>
   </div>
   <br>

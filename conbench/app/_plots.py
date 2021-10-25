@@ -39,15 +39,6 @@ def get_display_unit(unit):
         return unit
 
 
-def get_title(benchmarks, name):
-    title = f"{name}"
-    tags = benchmarks[0]["tags"]
-    if "dataset" in tags:
-        dataset = tags["dataset"]
-        title = f"{name} ({dataset})"
-    return title
-
-
 def get_date_format():
     date_format = "%Y-%m-%d"
     return bokeh.models.DatetimeTickFormatter(
@@ -96,13 +87,12 @@ def _simple_source(data, unit):
     return bokeh.models.ColumnDataSource(data=source_data), axis_unit
 
 
-def simple_bar_plot(benchmarks, height=400, width=400):
+def simple_bar_plot(benchmarks, height=400, width=400, vbar_width=0.7):
     if len(benchmarks) > 30:
         return None
     if len(benchmarks) == 1:
         return None
 
-    name = benchmarks[0]["tags"]["name"]
     unit = benchmarks[0]["stats"]["unit"]
     data = sorted_data(benchmarks)
     source, axis_unit = _simple_source(data, unit)
@@ -112,7 +102,6 @@ def simple_bar_plot(benchmarks, height=400, width=400):
 
     p = bokeh.plotting.figure(
         x_range=source.data["x"],
-        title=get_title(benchmarks, name),
         toolbar_location=None,
         plot_height=height,
         plot_width=width,
@@ -122,7 +111,7 @@ def simple_bar_plot(benchmarks, height=400, width=400):
         x="x",
         top="y",
         source=source,
-        width=0.9,
+        width=vbar_width,
         line_color="white",
         color="silver",
     )

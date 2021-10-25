@@ -81,7 +81,9 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         }
         plot = json.dumps(
             bokeh.embed.json_item(
-                simple_bar_plot([baseline_copy, contender_copy], height=200),
+                simple_bar_plot(
+                    [baseline_copy, contender_copy], height=200, vbar_width=0.3
+                ),
                 "plot",
             ),
         )
