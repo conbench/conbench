@@ -76,6 +76,7 @@
                 </thead>
                 <tbody>
                     {% for c in comparisons %}
+                    {% if c.contender is not none and c.baseline is not none %}
                     <tr>
                          {% if c.contender_z_score is not none %}
 	                       {% if c.contender_z_regression %}
@@ -133,6 +134,7 @@
                            <td>{{ c.contender }}</td>
                          {% endif %}
                     </tr>
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
