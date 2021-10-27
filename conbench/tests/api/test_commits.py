@@ -8,6 +8,7 @@ def _expected_entity(commit, parent=None):
 
 
 def create_commit():
+    _fixtures.summary(sha=_fixtures.PARENT)
     summary = _fixtures.summary()
     return summary.run.commit
 

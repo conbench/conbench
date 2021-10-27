@@ -207,6 +207,55 @@ def _api_compare_list(
     ]
 
 
+def _api_compare_summary(
+    baseline_commit_id, contender_commit_id, baseline_id, contender_id
+):
+    return {
+        "commits": {
+            "baseline": {
+                "author_avatar": "https://avatars.githubusercontent.com/u/1299904?v=4",
+                "author_login": "bkietz",
+                "author_name": "Benjamin Kietzman",
+                "id": baseline_commit_id,
+                "message": "ARROW-11767: [C++] Scalar::Hash may segfault",
+                "parent_sha": "6d703c4c7b15be630af48d5e9ef61628751674b2",
+                "repository": "https://github.com/apache/arrow",
+                "sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                "timestamp": "2021-02-24T22:12:11",
+                "url": "https://github.com/apache/arrow/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
+            },
+            "contender": {
+                "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                "author_login": "dianaclarke",
+                "author_name": "Diana Clarke",
+                "id": contender_commit_id,
+                "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                "repository": "https://github.com/apache/arrow",
+                "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                "timestamp": "2021-02-25T01:02:51",
+                "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+            },
+        },
+        "links": {
+            "self": "http://localhost/api/compare/commits/4beb514d071c9beec69b8917b5265e77ade22fb3...02addad336ba19a654f9c857ede546331be7b631/"
+        },
+        "runs": [
+            {
+                "baseline": {
+                    "machine_name": "diana",
+                    "run": f"http://localhost/api/runs/{baseline_id}/",
+                },
+                "compare": f"http://localhost/api/compare/runs/{baseline_id}...{contender_id}/",
+                "contender": {
+                    "machine_name": "diana",
+                    "run": f"http://localhost/api/runs/{contender_id}/",
+                },
+            },
+        ],
+    }
+
+
 def _api_context_entity(context_id, links=True):
     result = {
         "id": context_id,
@@ -350,6 +399,12 @@ COMPARE_LIST = _api_compare_list(
             "name": "file-write",
         },
     ],
+)
+COMPARE_SUMMARY = _api_compare_summary(
+    "some-baseline-commit-id",
+    "some-contender-commit-id",
+    "some-baseline-run-id",
+    "some-contender-run-id",
 )
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
 HISTORY_ENTITY = _api_history_entity(

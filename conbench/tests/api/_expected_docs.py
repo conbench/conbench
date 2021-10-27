@@ -417,6 +417,57 @@
                 },
                 "description": "OK",
             },
+            "CompareSummary": {
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "commits": {
+                                "baseline": {
+                                    "author_avatar": "https://avatars.githubusercontent.com/u/1299904?v=4",
+                                    "author_login": "bkietz",
+                                    "author_name": "Benjamin Kietzman",
+                                    "id": "some-baseline-commit-id",
+                                    "message": "ARROW-11767: [C++] Scalar::Hash may segfault",
+                                    "parent_sha": "6d703c4c7b15be630af48d5e9ef61628751674b2",
+                                    "repository": "https://github.com/apache/arrow",
+                                    "sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                    "timestamp": "2021-02-24T22:12:11",
+                                    "url": "https://github.com/apache/arrow/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                },
+                                "contender": {
+                                    "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                    "author_login": "dianaclarke",
+                                    "author_name": "Diana Clarke",
+                                    "id": "some-contender-commit-id",
+                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                    "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                    "repository": "https://github.com/apache/arrow",
+                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                    "timestamp": "2021-02-25T01:02:51",
+                                    "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+                                },
+                            },
+                            "links": {
+                                "self": "http://localhost/api/compare/commits/4beb514d071c9beec69b8917b5265e77ade22fb3...02addad336ba19a654f9c857ede546331be7b631/"
+                            },
+                            "runs": [
+                                {
+                                    "baseline": {
+                                        "machine_name": "diana",
+                                        "run": "http://localhost/api/runs/some-baseline-run-id/",
+                                    },
+                                    "compare": "http://localhost/api/compare/runs/some-baseline-run-id...some-contender-run-id/",
+                                    "contender": {
+                                        "machine_name": "diana",
+                                        "run": "http://localhost/api/runs/some-contender-run-id/",
+                                    },
+                                }
+                            ],
+                        }
+                    }
+                },
+                "description": "OK",
+            },
             "ContextEntity": {
                 "content": {
                     "application/json": {
@@ -1080,6 +1131,26 @@
                 ],
                 "responses": {
                     "200": {"$ref": "#/components/responses/CompareEntity"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Comparisons"],
+            }
+        },
+        "/api/compare/commits/{compare_ids}/": {
+            "get": {
+                "description": "Compare benchmark results.",
+                "parameters": [
+                    {
+                        "example": "<baseline_sha>...<contender_sha>",
+                        "in": "path",
+                        "name": "compare_ids",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/CompareSummary"},
                     "401": {"$ref": "#/components/responses/401"},
                     "404": {"$ref": "#/components/responses/404"},
                 },

@@ -8,7 +8,7 @@ pytest.register_assert_rewrite("conbench.tests.api._asserts")
 pytest.register_assert_rewrite("conbench.tests.app._asserts")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(autouse=True)
 def create_db():
     configure_engine(TestConfig.SQLALCHEMY_DATABASE_URI)
     drop_all()
