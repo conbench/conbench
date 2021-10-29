@@ -122,7 +122,8 @@ class BenchmarkList(abc.ABC):
 class Conbench(Connection):
     def __init__(self):
         super().__init__()
-        self.batch_id = uuid.uuid4().hex
+        self._run_id = uuid.uuid4().hex
+        self._batch_id = uuid.uuid4().hex
         self._drop_caches_failed = False
         self._purge_failed = False
 
@@ -179,16 +180,16 @@ class Conbench(Connection):
         )
 
         batch_id = options.get("batch_id")
-        if batch_id:
-            self.batch_id = batch_id
+        if not batch_id:
+            batch_id = self._batch_id
 
         run_id = options.get("run_id")
-        if run_id is None:
-            run_id = self.batch_id
+        if not run_id:
+            run_id = self._run_id
 
         benchmark = {
             "run_id": run_id,
-            "batch_id": self.batch_id,
+            "batch_id": batch_id,
             "timestamp": _now_formatted(),
             "stats": stats,
             "machine_info": self.machine_info,
@@ -205,8 +206,15 @@ class Conbench(Connection):
             self.publish(benchmark)
         return benchmark, output
 
+    def get_run_id(self, options):
+        run_id = options.get("run_id")
+        return run_id if run_id else self._run_id
+
     def mark_new_batch(self):
-        self.batch_id = uuid.uuid4().hex
+        self._batch_id = uuid.uuid4().hex
+
+    def manually_batch(self, batch_id):
+        self._batch_id = batch_id
 
     def sync_and_drop_caches(self):
         if not self._drop_caches_failed:

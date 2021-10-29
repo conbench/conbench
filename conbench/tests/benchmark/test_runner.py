@@ -100,7 +100,6 @@ def test_runner_can_omit_run_and_batch_id():
     assert output == 2
     assert result["run_id"] is not None
     assert result["batch_id"] is not None
-    assert result["run_id"] == result["batch_id"]
 
 
 def test_runner_null_run_and_batch_id():
@@ -110,7 +109,6 @@ def test_runner_null_run_and_batch_id():
     assert output == 2
     assert result["run_id"] is not None
     assert result["batch_id"] is not None
-    assert result["run_id"] == result["batch_id"]
 
 
 def test_runner_omit_batch_id():
@@ -121,7 +119,6 @@ def test_runner_omit_batch_id():
     assert output == 2
     assert result["run_id"] == run_id
     assert result["batch_id"] is not None
-    assert result["batch_id"] != run_id
 
 
 def test_runner_null_batch_id():
@@ -132,7 +129,6 @@ def test_runner_null_batch_id():
     assert output == 2
     assert result["run_id"] == run_id
     assert result["batch_id"] is not None
-    assert result["batch_id"] != run_id
 
 
 def test_runner_omit_run_id():
@@ -143,7 +139,6 @@ def test_runner_omit_run_id():
     assert output == 2
     assert result["batch_id"] == batch_id
     assert result["run_id"] is not None
-    assert result["run_id"] == batch_id
 
 
 def test_runner_null_run_id():
@@ -154,4 +149,3 @@ def test_runner_null_run_id():
     assert output == 2
     assert result["batch_id"] == batch_id
     assert result["run_id"] is not None
-    assert result["run_id"] == batch_id

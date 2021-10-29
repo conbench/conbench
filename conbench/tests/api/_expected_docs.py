@@ -1137,14 +1137,14 @@
                 "tags": ["Comparisons"],
             }
         },
-        "/api/compare/commits/{compare_ids}/": {
+        "/api/compare/commits/{compare_shas}/": {
             "get": {
                 "description": "Compare benchmark results.",
                 "parameters": [
                     {
                         "example": "<baseline_sha>...<contender_sha>",
                         "in": "path",
-                        "name": "compare_ids",
+                        "name": "compare_shas",
                         "required": True,
                         "schema": {"type": "string"},
                     }
