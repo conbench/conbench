@@ -16,7 +16,7 @@ install_requires = [
 
 setuptools.setup(
     name="conbench",
-    version="1.34.0",
+    version="1.35.0",
     description="Continuous Benchmarking (CB) Framework",
     long_description=long_description,
     long_description_content_type="text/markdown",
