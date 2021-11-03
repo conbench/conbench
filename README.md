@@ -199,7 +199,7 @@ password in postgres to `postgres`.
 1. Update version in [setup.py](setup.py)
 2. Commit your change into `main` branch
 
-New version of conbench package will be uploaded into PyPI by a new build of [.buildkite/conbench-deploy/pipeline.yml](.buildkite/conbench-deploy/pipeline.yml)
+New version of conbench package will be uploaded into PyPI by a new build for [conbench-deploy](.buildkite/conbench-deploy/pipeline.yml) Buildkite pipeline
 
 ## Authoring benchmarks
 
