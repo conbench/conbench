@@ -15,6 +15,7 @@ def _expected_entity(run, baseline_id=None):
         run.commit_id,
         parent.id,
         run.machine_id,
+        run.machine.name,
         run.timestamp.isoformat(),
         baseline_id,
     )
@@ -61,6 +62,52 @@ class TestRunGet(_asserts.GetEnforcer):
         self.assert_200_ok(response, _expected_entity(run_1, baseline_1.id))
         response = client.get(f"/api/runs/{run_2.id}/")
         self.assert_200_ok(response, _expected_entity(run_2, baseline_2.id))
+
+    def test_closest_commit_different_machines(self, client):
+        # same benchmarks, different machines
+        name, machine_1, machine_2 = _uuid(), _uuid(), _uuid()
+
+        self.authenticate(client)
+
+        summary_1 = _fixtures.summary(
+            name=name,
+            sha=_fixtures.CHILD,
+            machine=machine_1,
+        )
+        summary_2 = _fixtures.summary(
+            name=name,
+            sha=_fixtures.PARENT,
+            machine=machine_2,
+        )
+        summary_3 = _fixtures.summary(
+            name=name,
+            sha=_fixtures.GRANDPARENT,
+            machine=machine_1,
+        )
+        summary_4 = _fixtures.summary(
+            name=name,
+            sha=_fixtures.ELDER,
+            machine=machine_1,
+        )
+
+        run_1 = summary_1.run
+        run_1.name = "contender run"
+        run_1.save()
+
+        run_2 = summary_2.run
+        run_2.name = "closest_commit_different_machine"
+        run_2.save()
+
+        run_3 = summary_3.run
+        run_3.name = "older_commit_same_machine"
+        run_3.save()
+
+        run_4 = summary_4.run
+        run_4.name = "even_older_commit_same_machine"
+        run_4.save()
+
+        response = client.get(f"/api/runs/{run_1.id}/")
+        self.assert_200_ok(response, _expected_entity(run_1, run_3.id))
 
 
 class TestRunList(_asserts.ListEnforcer):

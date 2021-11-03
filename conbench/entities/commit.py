@@ -184,12 +184,14 @@ class GitHub:
             "02addad336ba19a654f9c857ede546331be7b631": "github_child.json",
             "4beb514d071c9beec69b8917b5265e77ade22fb3": "github_parent.json",
             "6d703c4c7b15be630af48d5e9ef61628751674b2": "github_grandparent.json",
+            "81e9417eb68171e03a304097ae86e1fd83307130": "github_elder.json",
         }
         self.test_commits = [
             "02addad336ba19a654f9c857ede546331be7b631",
             "4beb514d071c9beec69b8917b5265e77ade22fb3",
             "6d703c4c7b15be630af48d5e9ef61628751674b2",
             "81e9417eb68171e03a304097ae86e1fd83307130",
+            "4de992c60ba433ad9b15ca1c41e6ec40bc542c2a",
         ]
 
     def get_default_branch(self, name):

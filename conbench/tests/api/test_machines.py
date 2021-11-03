@@ -3,7 +3,7 @@ from ...tests.api import _asserts, _fixtures
 
 
 def _expected_entity(machine):
-    return _api_machine_entity(machine.id)
+    return _api_machine_entity(machine.id, machine.name)
 
 
 def create_machine():

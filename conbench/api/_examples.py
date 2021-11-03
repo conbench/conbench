@@ -293,7 +293,7 @@ def _api_history_entity(benchmark_id, case_id, context_id, run_name):
     }
 
 
-def _api_machine_entity(machine_id, links=True):
+def _api_machine_entity(machine_id, machine_name, links=True):
     result = {
         "id": machine_id,
         "architecture_name": "x86_64",
@@ -307,7 +307,7 @@ def _api_machine_entity(machine_id, links=True):
         "cpu_thread_count": 4,
         "kernel_name": "19.6.0",
         "memory_bytes": 17179869184,
-        "name": "diana",
+        "name": machine_name,
         "os_name": "macOS",
         "os_version": "10.15.7",
         "gpu_count": 2,
@@ -323,14 +323,14 @@ def _api_machine_entity(machine_id, links=True):
 
 
 def _api_run_entity(
-    run_id, run_name, commit_id, parent_id, machine_id, now, baseline_id
+    run_id, run_name, commit_id, parent_id, machine_id, machine_name, now, baseline_id
 ):
     result = {
         "id": run_id,
         "name": run_name,
         "timestamp": now,
         "commit": _api_commit_entity(commit_id, parent_id, links=False),
-        "machine": _api_machine_entity(machine_id, links=False),
+        "machine": _api_machine_entity(machine_id, machine_name, links=False),
         "links": {
             "list": "http://localhost/api/runs/",
             "self": "http://localhost/api/runs/%s/" % run_id,
@@ -413,13 +413,14 @@ HISTORY_ENTITY = _api_history_entity(
     "some-context-uuid-1",
     "some run name",
 )
-MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1")
+MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1", "some-machine-name")
 RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",
     "some run name",
     "some-commit-uuid-1",
     "some-parent-commit-uuid-1",
     "some-machine-uuid-1",
+    "some-machine-name",
     "2021-02-04T17:22:05.225583",
     "some-run-uuid-0",
 )
@@ -430,6 +431,7 @@ RUN_LIST = [
         "some-commit-uuid-1",
         "some-parent-commit-uuid-1",
         "some-machine-uuid-1",
+        "some-machine-name",
         "2021-02-04T17:22:05.225583",
         None,
     ),
