@@ -1,10 +1,10 @@
 steps:
   - label: "Upload Conbench to PyPI"
-      key: "build-and-push"
-      concurrency: 1
-      concurrency_group: "conbench-deploy"
-      command:
-        - source .buildkite/utils.sh upload_conbench_to_pypi
+    key: "upload-conbench-to-pypi"
+    concurrency: 1
+    concurrency_group: "conbench-deploy"
+    command:
+      - source .buildkite/utils.sh upload_conbench_to_pypi
 #
 #  - label: "Build & Push"
 #    key: "build-and-push"
