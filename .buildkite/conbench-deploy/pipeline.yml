@@ -37,6 +37,7 @@ steps:
 
   - label: "Upload Conbench to PyPI"
     key: "upload-conbench-to-pypi"
+#    depends_on: "deploy"
 #    if: build.branch == 'main'
 #    concurrency: 1
 #    concurrency_group: "conbench-deploy"
