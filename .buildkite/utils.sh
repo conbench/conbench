@@ -78,7 +78,14 @@ s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g;\
 
 upload_conbench_to_pypi() {
   last_released_version=$(curl https://pypi.org/pypi/conbench/json | jq '.info.version' | tr -d '"')
-  version=$(cat version.py | tr -d '"' | tr -d '__version__ = ')
+
+  eval "$(command '/opt/conda/condabin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+  conda create -y -n conbench --force -c conda-forge python=3.8
+  conda activate conbench
+  pip install -r requirements-test.txt -r requirements-build.txt -r requirements-cli.txt
+  pip install -e .
+
+  version=$(python -c "from conbench import __version__; print(__version__)")
 
   echo Last conbench version released to PyPI: $last_released_version
   echo Current conbench project version: $version
@@ -90,11 +97,6 @@ upload_conbench_to_pypi() {
     return
   fi
 
-  eval "$(command '/opt/conda/condabin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-  conda create -y -n conbench --force -c conda-forge python=3.8
-  conda activate conbench
-  pip install -r requirements-test.txt -r requirements-build.txt -r requirements-cli.txt
-  pip install -e .
   python -m pip install --upgrade build
   python -m pip install --upgrade twine
   rm -rf dist

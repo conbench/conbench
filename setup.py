@@ -2,8 +2,6 @@ import pathlib
 
 import setuptools
 
-from version import __version__
-
 with open("README.md", "r") as readme:
     long_description = readme.read()
 
@@ -18,7 +16,7 @@ install_requires = [
 
 setuptools.setup(
     name="conbench",
-    version=__version__,
+    version="1.38.0",
     description="Continuous Benchmarking (CB) Framework",
     long_description=long_description,
     long_description_content_type="text/markdown",

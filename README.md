@@ -195,6 +195,12 @@ password in postgres to `postgres`.
     (conbench) $ alembic revision --autogenerate -m "new"
 
 
+### To upload new version of conbench package to PyPI
+1. Update version in [setup.py](setup.py)
+2. Commit your change into `main` branch
+
+New version of conbench package will be uploaded into PyPI by a new build of [.buildkite/conbench-deploy/pipeline.yml](.buildkite/conbench-deploy/pipeline.yml)
+
 ## Authoring benchmarks
 
 There are three main types of benchmarks: "simple benchmarks" that time the
