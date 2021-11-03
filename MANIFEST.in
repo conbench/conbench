@@ -1,0 +1,5 @@
+include LICENSE
+include conbench.png
+include requirements-build.txt
+include requirements-cli.txt
+include requirements-test.txt
