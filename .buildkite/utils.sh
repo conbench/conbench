@@ -90,6 +90,7 @@ upload_conbench_to_pypi() {
     return
   fi
 
+  eval "$(command '/opt/conda/condabin/conda' 'shell.bash' 'hook' 2> /dev/null)"
   conda create -y -n conbench --force -c conda-forge python=3.8 \
   -- file requirements-test.txt \
   -- file requirements-build.txt \
