@@ -83,12 +83,12 @@ upload_conbench_to_pypi() {
   echo Last conbench version released to PyPI: $last_released_version
   echo Current conbench project version: $version
 
-#  if [[ $last_released_version < $version ]]; then
-#    echo "Releasing new conbench version"
-#  else
-#    echo "Conbench version " $version " is already released to PyPI"
-#    return
-#  fi
+  if [[ $last_released_version < $version ]]; then
+    echo "Releasing new conbench version"
+  else
+    echo "Conbench version " $version " is already released to PyPI"
+    return
+  fi
 
   eval "$(command '/opt/conda/condabin/conda' 'shell.bash' 'hook' 2> /dev/null)"
   conda create -y -n conbench --force -c conda-forge python=3.8

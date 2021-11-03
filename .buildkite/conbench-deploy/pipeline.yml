@@ -1,51 +1,53 @@
 steps:
+  - label: "Build & Push"
+    key: "build-and-push"
+    if: build.branch == 'main'
+    concurrency: 1
+    concurrency_group: "conbench-deploy"
+    command:
+      - source .buildkite/utils.sh build_and_push
+
+  - label: "Deploy secrets and config"
+    key: "deploy-secrets-and-config"
+    if: build.branch == 'main'
+    depends_on: "build-and-push"
+    concurrency: 1
+    concurrency_group: "conbench-deploy"
+    command:
+      - source .buildkite/utils.sh deploy_secrets_and_config
+
+
+  - label: "Run Migrations"
+    key: "run-migrations"
+    if: build.branch == 'main'
+    depends_on: "deploy-secrets-and-config"
+    concurrency: 1
+    concurrency_group: "conbench-deploy"
+    command:
+      - source .buildkite/utils.sh run_migrations
+
+  - label: "Deploy"
+    key: "deploy"
+    if: build.branch == 'main'
+    depends_on: "run-migrations"
+    concurrency: 1
+    concurrency_group: "conbench-deploy"
+    command:
+      - source .buildkite/utils.sh deploy
+
   - label: "Upload Conbench to PyPI"
     key: "upload-conbench-to-pypi"
+    if: build.branch == 'main'
     concurrency: 1
     concurrency_group: "conbench-deploy"
     command:
       - source .buildkite/utils.sh upload_conbench_to_pypi
-#
-#  - label: "Build & Push"
-#    key: "build-and-push"
-#    if: build.branch == 'main'
-#    concurrency: 1
-#    concurrency_group: "conbench-deploy"
-#    command:
-#      - source .buildkite/utils.sh build_and_push
-#
-#  - label: "Deploy secrets and config"
-#    key: "deploy-secrets-and-config"
-#    if: build.branch == 'main'
-#    depends_on: "build-and-push"
-#    concurrency: 1
-#    concurrency_group: "conbench-deploy"
-#    command:
-#      - source .buildkite/utils.sh deploy_secrets_and_config
-#
-#
-#  - label: "Run Migrations"
-#    key: "run-migrations"
-#    if: build.branch == 'main'
-#    depends_on: "deploy-secrets-and-config"
-#    concurrency: 1
-#    concurrency_group: "conbench-deploy"
-#    command:
-#      - source .buildkite/utils.sh run_migrations
-#
-#  - label: "Deploy"
-#    key: "deploy"
-#    if: build.branch == 'main'
-#    depends_on: "run-migrations"
-#    concurrency: 1
-#    concurrency_group: "conbench-deploy"
-#    command:
-#      - source .buildkite/utils.sh deploy
-#
-#  - block: "Rollback"
-#    if: build.branch == 'main'
-#    prompt: "Do you want to rollback?"
-#
-#  - label: "Rollback"
-#    trigger: "conbench-rollback"
-#    if: build.branch == 'main'
+
+
+  - block: "Rollback"
+    if: build.branch == 'main'
+    prompt: "Do you want to rollback?"
+
+  - label: "Rollback"
+    trigger: "conbench-rollback"
+    if: build.branch == 'main'
