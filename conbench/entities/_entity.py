@@ -35,11 +35,13 @@ class EntityMixin:
         return q.filter(*filters).all()
 
     @classmethod
-    def search(cls, filters, joins=None):
+    def search(cls, filters, joins=None, order_by=None):
         q = Session.query(cls)
         if joins:
             for join in joins:
                 q = q.join(join)
+        if order_by is not None:
+            q = q.order_by(order_by)
         return q.filter(*filters).all()
 
     @classmethod

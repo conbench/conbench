@@ -1,10 +1,12 @@
 import flask as f
 import sqlalchemy as s
+from sqlalchemy import distinct
 from sqlalchemy.orm import relationship
 
+from ..db import Session
 from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
 from ..entities.commit import Commit, CommitSerializer
-from ..entities.machine import MachineSerializer
+from ..entities.machine import Machine, MachineSerializer
 
 
 class Run(Base, EntityMixin):
@@ -17,32 +19,77 @@ class Run(Base, EntityMixin):
     machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
     machine = relationship("Machine", lazy="joined")
 
+    def _items_match(self, items, other):
+        from ..entities.summary import Summary
+
+        # TODO:
+        #   - what if all the contexts/cases just aren't yet in?
+        #   - what if one of N benchmark cases failed?
+        other_summaries = Summary.all(run_id=other.id)
+        other_items = [(s.context_id, s.case_id) for s in other_summaries]
+        return set(items) == set(other_items)
+
     def get_baseline_run(self):
         from ..entities.distribution import get_closest_parent
         from ..entities.summary import Summary
+
+        machines = Machine.all(hash=self.machine.hash)
+        machine_ids = set([m.id for m in machines])
+
+        run_summaries = Summary.all(run_id=self.id)
+        run_contexts = set([s.context_id for s in run_summaries])
+        run_items = [(s.context_id, s.case_id) for s in run_summaries]
 
         parent = get_closest_parent(self.commit)
         if not parent:
             return None
 
-        run_summaries = Summary.all(run_id=self.id)
-        run_items = [(s.context_id, s.case_id) for s in run_summaries]
-
+        # possible parent runs
         parent_runs = Run.search(
-            filters=[Commit.sha == parent.sha],
-            joins=[Commit],
+            joins=[Commit, Machine],
+            filters=[
+                Commit.sha == parent.sha,
+                Machine.id.in_(machine_ids),
+                Run.name.like("commit: %"),
+            ],
+            order_by=Run.timestamp.desc(),
         )
 
-        # TODO: What if all the contexts/cases just aren't yet in?
-        machine_hash = self.machine.hash
-        for run in parent_runs:
-            if run.machine.hash != machine_hash:
-                continue
+        # return run with matching contexts & cases
+        for parent_run in parent_runs:
+            if self._items_match(run_items, parent_run):
+                return parent_run
 
-            parent_summaries = Summary.all(run_id=run.id)
-            parent_items = [(s.context_id, s.case_id) for s in parent_summaries]
-            if set(run_items) == set(parent_items):
-                return run
+        # no matches found, try walking backwards, 10 runs
+        # TODO: there must be a better way
+        rows = (
+            Session.query(distinct(Summary.run_id), Commit.timestamp)
+            .join(Run, Run.id == Summary.run_id)
+            .join(Commit, Commit.id == Run.commit_id)
+            .join(Machine, Machine.id == Run.machine_id)
+            .filter(
+                Run.name.like("commit: %"),
+                Machine.id.in_(machine_ids),
+                Summary.context_id.in_(run_contexts),
+                Commit.timestamp < self.commit.timestamp,
+            )
+            .order_by(Commit.timestamp.desc(), Summary.run_id.desc())
+            .limit(10)
+            .all()
+        )
+        run_ids = set([row[0] for row in rows])
+
+        # possible parent runs
+        parent_runs = Run.search(
+            filters=[Run.id.in_(run_ids)],
+            joins=[Commit],
+            order_by=Commit.timestamp.desc(),
+        )
+
+        # return run with matching contexts & cases
+        for parent_run in parent_runs:
+            if self._items_match(run_items, parent_run):
+                return parent_run
 
         return None
 
