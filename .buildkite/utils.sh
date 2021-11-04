@@ -76,6 +76,32 @@ s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g;\
   kubectl rollout status deployment/conbench-deployment
 }
 
+upload_conbench_to_pypi() {
+  last_released_version=$(curl https://pypi.org/pypi/conbench/json | jq '.info.version' | tr -d '"')
+  version=$(grep version= setup.py | tr -d '"' | tr -d 'version=' | tr -d ',' | tr -d ' ')
+
+  echo Last conbench version released to PyPI: $last_released_version
+  echo Current conbench project version: $version
+
+  if [[ $last_released_version < $version ]]; then
+    echo "Releasing new conbench version"
+  else
+    echo "Conbench version " $version " is already released to PyPI"
+    return
+  fi
+
+  eval "$(command '/opt/conda/condabin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+  conda create -y -n conbench --force -c conda-forge python=3.8
+  conda activate conbench
+  pip install -r requirements-test.txt -r requirements-build.txt -r requirements-cli.txt
+  pip install -e .
+  python -m pip install --upgrade build
+  python -m pip install --upgrade twine
+  rm -rf dist
+  python -m build
+  python -m twine upload dist/*
+}
+
 rollback() {
   set -x
   aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
