@@ -7,7 +7,7 @@ from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
 
-def _expected_entity(run, baseline_id=None):
+def _expected_entity(run, baseline_id=None, include_baseline=True):
     parent = run.commit.get_parent_commit()
     return _api_run_entity(
         run.id,
@@ -18,6 +18,7 @@ def _expected_entity(run, baseline_id=None):
         run.machine.name,
         run.timestamp.isoformat(),
         baseline_id,
+        include_baseline,
     )
 
 
@@ -51,6 +52,17 @@ class TestRunGet(_asserts.GetEnforcer):
         response = client.get(f"/api/runs/{run.id}/")
         self.assert_200_ok(response, _expected_entity(run, baseline.id))
 
+    def test_get_run_should_omit_test_runs(self, client):
+        # change anything about the context so we get only one baseline
+        language, name = _uuid(), _uuid()
+
+        self.authenticate(client)
+        run, baseline = self._create(baseline=True, name=name, language=language)
+        baseline.name = "testing"
+        baseline.save()
+        response = client.get(f"/api/runs/{run.id}/")
+        self.assert_200_ok(response, _expected_entity(run, None))
+
     def test_get_run_find_correct_baseline_many_matching_contexts(self, client):
         # same context for different benchmark runs, but different benchmarks
         language, name_1, name_2 = _uuid(), _uuid(), _uuid()
@@ -68,46 +80,68 @@ class TestRunGet(_asserts.GetEnforcer):
         name, machine_1, machine_2 = _uuid(), _uuid(), _uuid()
 
         self.authenticate(client)
-
-        summary_1 = _fixtures.summary(
+        contender = _fixtures.summary(
             name=name,
             sha=_fixtures.CHILD,
             machine=machine_1,
         )
-        summary_2 = _fixtures.summary(
+        _fixtures.summary(
             name=name,
             sha=_fixtures.PARENT,
             machine=machine_2,
         )
-        summary_3 = _fixtures.summary(
+        baseline = _fixtures.summary(
             name=name,
             sha=_fixtures.GRANDPARENT,
             machine=machine_1,
         )
-        summary_4 = _fixtures.summary(
+        _fixtures.summary(
             name=name,
             sha=_fixtures.ELDER,
             machine=machine_1,
         )
 
-        run_1 = summary_1.run
-        run_1.name = "contender run"
-        run_1.save()
+        contender_run = contender.run
+        baseline_run = baseline.run
 
-        run_2 = summary_2.run
-        run_2.name = "closest_commit_different_machine"
-        run_2.save()
+        response = client.get(f"/api/runs/{contender_run.id}/")
+        self.assert_200_ok(response, _expected_entity(contender_run, baseline_run.id))
 
-        run_3 = summary_3.run
-        run_3.name = "older_commit_same_machine"
-        run_3.save()
+    def test_closest_commit_different_machines_should_omit_test_runs(self, client):
+        # same benchmarks, different machines, skip test run
+        name, machine_1, machine_2 = _uuid(), _uuid(), _uuid()
 
-        run_4 = summary_4.run
-        run_4.name = "even_older_commit_same_machine"
-        run_4.save()
+        self.authenticate(client)
+        contender = _fixtures.summary(
+            name=name,
+            sha=_fixtures.CHILD,
+            machine=machine_1,
+        )
+        _fixtures.summary(
+            name=name,
+            sha=_fixtures.PARENT,
+            machine=machine_2,
+        )
+        testing = _fixtures.summary(
+            name=name,
+            sha=_fixtures.GRANDPARENT,
+            machine=machine_1,
+        )
+        baseline = _fixtures.summary(
+            name=name,
+            sha=_fixtures.ELDER,
+            machine=machine_1,
+        )
 
-        response = client.get(f"/api/runs/{run_1.id}/")
-        self.assert_200_ok(response, _expected_entity(run_1, run_3.id))
+        testing_run = testing.run
+        testing_run.name = "testing"
+        testing_run.save()
+
+        contender_run = contender.run
+        baseline_run = baseline.run
+
+        response = client.get(f"/api/runs/{contender_run.id}/")
+        self.assert_200_ok(response, _expected_entity(contender_run, baseline_run.id))
 
 
 class TestRunList(_asserts.ListEnforcer):
@@ -123,14 +157,18 @@ class TestRunList(_asserts.ListEnforcer):
         self.authenticate(client)
         run = self._create()
         response = client.get("/api/runs/")
-        self.assert_200_ok(response, contains=_expected_entity(run))
+        self.assert_200_ok(
+            response, contains=_expected_entity(run, include_baseline=False)
+        )
 
     def test_run_list_filter_by_sha(self, client):
         sha = _fixtures.CHILD
         self.authenticate(client)
         run = self._create()
         response = client.get(f"/api/runs/?sha={sha}")
-        self.assert_200_ok(response, contains=_expected_entity(run))
+        self.assert_200_ok(
+            response, contains=_expected_entity(run, include_baseline=False)
+        )
 
     def test_run_list_filter_by_sha_no_match(self, client):
         sha = "some unknown sha"

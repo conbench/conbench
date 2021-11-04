@@ -323,7 +323,15 @@ def _api_machine_entity(machine_id, machine_name, links=True):
 
 
 def _api_run_entity(
-    run_id, run_name, commit_id, parent_id, machine_id, machine_name, now, baseline_id
+    run_id,
+    run_name,
+    commit_id,
+    parent_id,
+    machine_id,
+    machine_name,
+    now,
+    baseline_id,
+    include_baseline=True,
 ):
     result = {
         "id": run_id,
@@ -338,8 +346,10 @@ def _api_run_entity(
             "machine": "http://localhost/api/machines/%s/" % machine_id,
         },
     }
+    baseline_url = None
     if baseline_id:
         baseline_url = "http://localhost/api/runs/%s/" % baseline_id
+    if include_baseline:
         result["links"]["baseline"] = baseline_url
     return result
 
@@ -434,6 +444,7 @@ RUN_LIST = [
         "some-machine-name",
         "2021-02-04T17:22:05.225583",
         None,
+        include_baseline=False,
     ),
 ]
 USER_ENTITY = _api_user_entity(FakeUser1())

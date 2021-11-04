@@ -46,6 +46,7 @@ class Run(Base, EntityMixin):
             filters=[
                 Commit.sha == parent.sha,
                 Machine.id.in_(machine_ids),
+                Run.name.like("commit: %"),
             ],
             joins=[Commit, Machine],
         )
@@ -61,6 +62,7 @@ class Run(Base, EntityMixin):
             filters=[
                 Machine.id.in_(machine_ids),
                 Commit.timestamp < self.commit.timestamp,
+                Run.name.like("commit: %"),
             ],
             joins=[Commit, Machine],
             order_by=Commit.timestamp.desc(),
