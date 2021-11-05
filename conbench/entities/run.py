@@ -1,9 +1,7 @@
 import flask as f
 import sqlalchemy as s
-from sqlalchemy import distinct
 from sqlalchemy.orm import relationship
 
-from ..db import Session
 from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
 from ..entities.commit import Commit, CommitSerializer
 from ..entities.machine import Machine, MachineSerializer
@@ -37,10 +35,9 @@ class Run(Base, EntityMixin):
         machine_ids = set([m.id for m in machines])
 
         run_summaries = Summary.all(run_id=self.id)
-        run_contexts = set([s.context_id for s in run_summaries])
         run_items = [(s.context_id, s.case_id) for s in run_summaries]
 
-        parent = get_closest_parent(self.commit)
+        parent = get_closest_parent(self)
         if not parent:
             return None
 
@@ -53,37 +50,6 @@ class Run(Base, EntityMixin):
                 Run.name.like("commit: %"),
             ],
             order_by=Run.timestamp.desc(),
-        )
-
-        # return run with matching contexts & cases
-        for parent_run in parent_runs:
-            if self._items_match(run_items, parent_run):
-                return parent_run
-
-        # no matches found, try walking backwards, 10 runs
-        # TODO: there must be a better way
-        rows = (
-            Session.query(distinct(Summary.run_id), Commit.timestamp)
-            .join(Run, Run.id == Summary.run_id)
-            .join(Commit, Commit.id == Run.commit_id)
-            .join(Machine, Machine.id == Run.machine_id)
-            .filter(
-                Run.name.like("commit: %"),
-                Machine.id.in_(machine_ids),
-                Summary.context_id.in_(run_contexts),
-                Commit.timestamp < self.commit.timestamp,
-            )
-            .order_by(Commit.timestamp.desc(), Summary.run_id.desc())
-            .limit(10)
-            .all()
-        )
-        run_ids = set([row[0] for row in rows])
-
-        # possible parent runs
-        parent_runs = Run.search(
-            filters=[Run.id.in_(run_ids)],
-            joins=[Commit],
-            order_by=Commit.timestamp.desc(),
         )
 
         # return run with matching contexts & cases
