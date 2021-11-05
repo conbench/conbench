@@ -22,10 +22,17 @@ class Run(Base, EntityMixin):
         from ..entities.distribution import get_closest_parent
         from ..entities.summary import Summary
 
+        result = (
+            Session.query(
+                Summary.case_id,
+                Summary.context_id,
+            )
+            .filter(Summary.run_id == self.id)
+            .all()
+        )
+        run_items = [(row[0], row[1]) for row in result]
         machines = Machine.all(hash=self.machine.hash)
         machine_ids = set([m.id for m in machines])
-        run_summaries = Summary.all(run_id=self.id)
-        run_items = [(s.case_id, s.context_id) for s in run_summaries]
 
         parent = get_closest_parent(self)
         if not parent:
