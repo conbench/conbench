@@ -149,35 +149,12 @@ def update_distribution(summary, limit):
 
 def get_closest_parent(run):
     commit = run.commit
-    if commit.timestamp is None:
-        return None
-
-    machines = Machine.all(hash=run.machine.hash)
-    machine_ids = set([m.id for m in machines])
-
-    # TODO: what about matching contexts
-    result = (
-        Session.query(
-            Run.id,
-            Commit.id,
-        )
-        .join(Commit, Commit.id == Run.commit_id)
-        .join(Machine, Machine.id == Run.machine_id)
-        .filter(
-            Run.name.like("commit: %"),
-            Machine.id.in_(machine_ids),
-            Commit.timestamp < commit.timestamp,
-            Commit.repository == commit.repository,
-        )
-        .order_by(Commit.timestamp.desc())
-        .first()
-    )
-
-    parent = None
-    if result:
-        commit_id = result[1]
-        parent = Commit.get(commit_id)
-
+    parent = commit.get_parent_commit()
+    if not parent:
+        commits_up = get_commits_up(commit.repository, commit.sha, 2).all()
+        if len(commits_up) > 1:
+            closest_sha = commits_up[1][1]
+            parent = Commit.first(sha=closest_sha, repository=commit.repository)
     return parent
 
 
