@@ -2,6 +2,7 @@ import flask as f
 import sqlalchemy as s
 from sqlalchemy.orm import relationship
 
+from ..db import Session
 from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
 from ..entities.commit import Commit, CommitSerializer
 from ..entities.machine import Machine, MachineSerializer
@@ -17,16 +18,6 @@ class Run(Base, EntityMixin):
     machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
     machine = relationship("Machine", lazy="joined")
 
-    def _items_match(self, items, other):
-        from ..entities.summary import Summary
-
-        # TODO:
-        #   - what if all the contexts/cases just aren't yet in?
-        #   - what if one of N benchmark cases failed?
-        other_summaries = Summary.all(run_id=other.id)
-        other_items = [(s.context_id, s.case_id) for s in other_summaries]
-        return set(items) == set(other_items)
-
     def get_baseline_run(self):
         from ..entities.distribution import get_closest_parent
         from ..entities.summary import Summary
@@ -34,7 +25,7 @@ class Run(Base, EntityMixin):
         machines = Machine.all(hash=self.machine.hash)
         machine_ids = set([m.id for m in machines])
         run_summaries = Summary.all(run_id=self.id)
-        run_items = [(s.context_id, s.case_id) for s in run_summaries]
+        run_items = [(s.case_id, s.context_id) for s in run_summaries]
 
         parent = get_closest_parent(self)
         if not parent:
@@ -51,9 +42,26 @@ class Run(Base, EntityMixin):
             order_by=Run.timestamp.desc(),
         )
 
+        # get run items for all possible parent runs
+        parent_run_items = {run.id: [] for run in parent_runs}
+        result = (
+            Session.query(
+                Summary.run_id,
+                Summary.case_id,
+                Summary.context_id,
+            )
+            .filter(Summary.run_id.in_(parent_run_items.keys()))
+            .all()
+        )
+        for row in result:
+            parent_run_items[row[0]].append((row[1], row[2]))
+
         # return run with matching contexts & cases
+        # TODO:
+        #   - what if all the contexts/cases just aren't yet in?
+        #   - what if one of N benchmark cases failed?
         for parent_run in parent_runs:
-            if self._items_match(run_items, parent_run):
+            if set(run_items) == set(parent_run_items[parent_run.id]):
                 return parent_run
 
         return None
