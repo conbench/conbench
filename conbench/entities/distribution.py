@@ -1,6 +1,6 @@
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
-from sqlalchemy import func
+from sqlalchemy import distinct, func
 from sqlalchemy.dialects.postgresql import insert
 
 from ..db import Session
@@ -148,12 +148,41 @@ def update_distribution(summary, limit):
 
 
 def get_closest_parent(run):
+    from ..entities.summary import Summary
+
     commit = run.commit
+    machines = Machine.all(hash=run.machine.hash)
+    machine_ids = set([m.id for m in machines])
+
+    # TODO: what about matching contexts
+
+    result = (
+        Session.query(
+            distinct(Summary.run_id),
+            Commit.id,
+            Commit.timestamp,
+        )
+        .join(Run, Run.id == Summary.run_id)
+        .join(Commit, Commit.id == Run.commit_id)
+        .join(Machine, Machine.id == Run.machine_id)
+        .filter(
+            Run.name.like("commit: %"),
+            Machine.id.in_(machine_ids),
+            Commit.timestamp < commit.timestamp,
+        )
+        .order_by(
+            Commit.timestamp.desc(),
+            Commit.id.desc(),
+            Summary.run_id.desc(),
+        )
+        .first()
+    )
+
     parent = None
-    commits_up = get_commits_up(commit.repository, commit.sha, 2).all()
-    if len(commits_up) > 1:
-        closest_sha = commits_up[1][1]
-        parent = Commit.first(sha=closest_sha, repository=commit.repository)
+    if result:
+        commit_id = result[1]
+        parent = Commit.get(commit_id)
+
     return parent
 
 
