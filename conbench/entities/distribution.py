@@ -149,12 +149,11 @@ def update_distribution(summary, limit):
 
 def get_closest_parent(run):
     commit = run.commit
-    parent = commit.get_parent_commit()
-    if not parent:
-        commits_up = get_commits_up(commit.repository, commit.sha, 2).all()
-        if len(commits_up) > 1:
-            closest_sha = commits_up[1][1]
-            parent = Commit.first(sha=closest_sha, repository=commit.repository)
+    parent = None
+    commits_up = get_commits_up(commit.repository, commit.sha, 2).all()
+    if len(commits_up) > 1:
+        closest_sha = commits_up[1][1]
+        parent = Commit.first(sha=closest_sha, repository=commit.repository)
     return parent
 
 
