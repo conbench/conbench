@@ -37,7 +37,7 @@ class Run(Base, EntityMixin):
         run_summaries = Summary.all(run_id=self.id)
         run_items = [(s.context_id, s.case_id) for s in run_summaries]
 
-        parent = get_closest_parent(self.commit)
+        parent = get_closest_parent(self)
         if not parent:
             return None
 
