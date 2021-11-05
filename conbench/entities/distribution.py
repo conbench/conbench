@@ -151,11 +151,13 @@ def get_closest_parent(run):
     from ..entities.summary import Summary
 
     commit = run.commit
+    if commit.timestamp is None:
+        return None
+
     machines = Machine.all(hash=run.machine.hash)
     machine_ids = set([m.id for m in machines])
 
     # TODO: what about matching contexts
-
     result = (
         Session.query(
             distinct(Summary.run_id),
