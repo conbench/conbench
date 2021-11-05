@@ -33,7 +33,6 @@ class Run(Base, EntityMixin):
 
         machines = Machine.all(hash=self.machine.hash)
         machine_ids = set([m.id for m in machines])
-
         run_summaries = Summary.all(run_id=self.id)
         run_items = [(s.context_id, s.case_id) for s in run_summaries]
 
@@ -43,12 +42,12 @@ class Run(Base, EntityMixin):
 
         # possible parent runs
         parent_runs = Run.search(
-            joins=[Commit, Machine],
             filters=[
                 Commit.sha == parent.sha,
                 Machine.id.in_(machine_ids),
                 Run.name.like("commit: %"),
             ],
+            joins=[Commit, Machine],
             order_by=Run.timestamp.desc(),
         )
 

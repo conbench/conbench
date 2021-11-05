@@ -75,6 +75,7 @@ class TestRunGet(_asserts.GetEnforcer):
         response = client.get(f"/api/runs/{run_2.id}/")
         self.assert_200_ok(response, _expected_entity(run_2, baseline_2.id))
 
+    @pytest.mark.skip(reason="Machine filter not implemented yet")
     def test_closest_commit_different_machines(self, client):
         # same benchmarks, different machines
         name, machine_1, machine_2 = _uuid(), _uuid(), _uuid()
@@ -107,6 +108,7 @@ class TestRunGet(_asserts.GetEnforcer):
         response = client.get(f"/api/runs/{contender_run.id}/")
         self.assert_200_ok(response, _expected_entity(contender_run, baseline_run.id))
 
+    @pytest.mark.skip(reason="Machine filter not implemented yet")
     def test_closest_commit_different_machines_should_omit_test_runs(self, client):
         # same benchmarks, different machines, skip test run
         name, machine_1, machine_2 = _uuid(), _uuid(), _uuid()
