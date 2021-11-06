@@ -80,19 +80,19 @@
             <thead>
                 <tr>
                     <th scope="col">Date</th>
-                    <th scope="col">Language</th>
+                    <th scope="col">Lang</th>
                     <th scope="col">Batch</th>
                     <th scope="col">Benchmark</th>
                     <th scope="col">Mean</th>
-                    <th scope="col" nowrap>Z-Score</th>
+                    <th scope="col" style="white-space: nowrap;">Z-Score</th>
                 </tr>
             </thead>
             <tbody>
                 {% for benchmark in benchmarks %}
                 <tr>
                      <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
-                     <td style="white-space: nowrap;">{{ benchmark.display_language }}</td>
-                     <td style="white-space: nowrap;">
+                     <td>{{ benchmark.display_language }}</td>
+                     <td>
                        <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">
                          {{ benchmark.display_batch }}
                        </a>
@@ -100,7 +100,7 @@
                      <td><a href="{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}">
                          {{ benchmark.display_name }}
                      </a></td>
-                     <td>{{ benchmark.display_mean }}</td>
+                     <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
                      {% if benchmark.stats.z_score is not none %}
                        {% if benchmark.stats.z_regression %}
                          <td style="color: #ff7c43;">{{ benchmark.stats.z_score }}</td>

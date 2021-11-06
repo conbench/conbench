@@ -65,9 +65,9 @@
               </caption>
                 <thead>
                     <tr>
-                        <th scope="col" nowrap>Z-Score</th>
+                        <th scope="col" style="white-space: nowrap;">Z-Score</th>
                         <th scope="col">Change</th>
-                        <th scope="col">Language</th>
+                        <th scope="col">Lang</th>
                         <th scope="col">Batch</th>
                         <th scope="col">Benchmark</th>
                         <th scope="col">Baseline</th>
@@ -125,13 +125,13 @@
                          {% if c.baseline is none %}
                            <td></td>
                          {% else %}
-                           <td>{{ c.baseline }}</td>
+                           <td style="white-space: nowrap;">{{ c.baseline }}</td>
                          {% endif %}
 
                          {% if c.contender is none %}
                            <td></td>
                          {% else %}
-                           <td>{{ c.contender }}</td>
+                           <td style="white-space: nowrap;">{{ c.contender }}</td>
                          {% endif %}
                     </tr>
                     {% endif %}

@@ -4,6 +4,13 @@ html {
   overflow-x: hidden;
   padding-bottom: 15px;
   color: #777777;
+  font-size: 14px;
+}
+
+/* fix blue border on button click */
+.btn:focus,.btn:active {
+  outline: none !important;
+  box-shadow: none;
 }
 
 /* fix datatable sorting icons */
@@ -13,10 +20,9 @@ table.dataTable thead .sorting_desc {
   background : none;
 }
 
-/* fix blue border on button click */
-.btn:focus,.btn:active {
-  outline: none !important;
-  box-shadow: none;
+table.dataTable td {
+  padding: 6px !important;
+  font-size: 13.4px;
 }
 
 .breadcrumb a {
