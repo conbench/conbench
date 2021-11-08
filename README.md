@@ -7,7 +7,7 @@
 # Conbench
 
 
-<img src="https://github.com/conbench/conbench/blob/main/conbench.png" alt="Language-independent Continuous Benchmarking (CB) Framework">
+<img src="https://raw.githubusercontent.com/conbench/conbench/main/conbench.png" alt="Language-independent Continuous Benchmarking (CB) Framework">
 
 
 Conbench allows you to write benchmarks in any language, publish the
