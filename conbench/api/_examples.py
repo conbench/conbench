@@ -208,7 +208,14 @@ def _api_compare_list(
 
 
 def _api_compare_summary(
-    baseline_commit_id, contender_commit_id, baseline_id, contender_id
+    baseline_commit_id,
+    contender_commit_id,
+    baseline_id,
+    baseline_name,
+    baseline_timestamp,
+    contender_id,
+    contender_name,
+    contender_timestamp,
 ):
     return {
         "commits": {
@@ -245,11 +252,17 @@ def _api_compare_summary(
                 "baseline": {
                     "machine_name": "diana",
                     "run": f"http://localhost/api/runs/{baseline_id}/",
+                    "run_id": baseline_id,
+                    "run_name": baseline_name,
+                    "run_timestamp": baseline_timestamp,
                 },
                 "compare": f"http://localhost/api/compare/runs/{baseline_id}...{contender_id}/",
                 "contender": {
                     "machine_name": "diana",
                     "run": f"http://localhost/api/runs/{contender_id}/",
+                    "run_id": contender_id,
+                    "run_name": contender_name,
+                    "run_timestamp": contender_timestamp,
                 },
             },
         ],
@@ -414,7 +427,11 @@ COMPARE_SUMMARY = _api_compare_summary(
     "some-baseline-commit-id",
     "some-contender-commit-id",
     "some-baseline-run-id",
+    "commit: 4beb514d071c9beec69b8917b5265e77ade22fb3",
+    "2021-02-24T23:12:11",
     "some-contender-run-id",
+    "commit: 02addad336ba19a654f9c857ede546331be7b631",
+    "2021-02-25T06:02:51",
 )
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
 HISTORY_ENTITY = _api_history_entity(
