@@ -87,7 +87,7 @@ class RunListAPI(ApiEndpoint):
         if sha:
             runs = Run.search(filters=[Commit.sha == sha], joins=[Commit])
         else:
-            runs = Run.all(order_by=Run.timestamp.desc(), limit=500)
+            runs = Run.all(order_by=Run.timestamp.desc(), limit=1000)
         return self.serializer.many.dump(runs)
 
 
