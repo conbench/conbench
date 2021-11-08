@@ -411,7 +411,11 @@ class TestCompareCommitsGet(_asserts.GetEnforcer):
             baseline.commit.id,
             contender.commit.id,
             baseline.id,
+            baseline.name,
+            baseline.timestamp.isoformat(),
             contender.id,
+            contender.name,
+            contender.timestamp.isoformat(),
         )
         self.assert_200_ok(response, expected)
 

@@ -455,11 +455,17 @@
                                     "baseline": {
                                         "machine_name": "diana",
                                         "run": "http://localhost/api/runs/some-baseline-run-id/",
+                                        "run_id": "some-baseline-run-id",
+                                        "run_name": "commit: 4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                        "run_timestamp": "2021-02-24T23:12:11",
                                     },
                                     "compare": "http://localhost/api/compare/runs/some-baseline-run-id...some-contender-run-id/",
                                     "contender": {
                                         "machine_name": "diana",
                                         "run": "http://localhost/api/runs/some-contender-run-id/",
+                                        "run_id": "some-contender-run-id",
+                                        "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+                                        "run_timestamp": "2021-02-25T06:02:51",
                                     },
                                 }
                             ],
