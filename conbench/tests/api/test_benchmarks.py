@@ -17,8 +17,9 @@ CONBENCH_REPO = "https://github.com/conbench/conbench"
 def _expected_entity(summary):
     return _api_benchmark_entity(
         summary.id,
+        summary.case_id,
+        summary.info_id,
         summary.context_id,
-        summary.case.id,
         summary.batch_id,
         summary.run_id,
         summary.case.name,
@@ -288,13 +289,13 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
     url = "/api/benchmarks/"
     valid_payload = _fixtures.VALID_PAYLOAD
     required_fields = [
-        "run_id",
         "batch_id",
-        "timestamp",
+        "context",
         "machine_info",
+        "run_id",
         "stats",
         "tags",
-        "context",
+        "timestamp",
     ]
 
     def test_create_benchmark(self, client):
@@ -315,6 +316,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         summary_2 = Summary.one(id=response.json["id"])
         assert summary_1.id != summary_2.id
         assert summary_1.case_id == summary_2.case_id
+        assert summary_1.info_id == summary_2.info_id
         assert summary_1.context_id == summary_2.context_id
         assert summary_1.run.machine_id == summary_2.run.machine_id
         assert summary_1.run_id != summary_2.run_id
@@ -398,6 +400,42 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             },
         }
         self.assert_400_bad_request(response, message)
+
+    def test_create_no_additional_info(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["run_id"] = _uuid()
+        del data["info"]
+
+        # assert benchmark created
+        response = client.post("/api/benchmarks/", json=data)
+        summary = Summary.one(id=response.json["id"])
+        new_id = response.json["id"]
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
+
+        # assert empty info response
+        info_response = client.get(f"/api/info/{summary.info_id}/")
+        empty_info = {
+            "id": summary.info_id,
+            "links": {
+                "list": "http://localhost/api/info/",
+                "self": f"http://localhost/api/info/{summary.info_id}/",
+            },
+        }
+        assert info_response.json == empty_info
+
+        # can get benchmark with empty info
+        response = client.get(f"/api/benchmarks/{summary.id}/")
+        self.assert_200_ok(response, _expected_entity(summary))
+
+        # can get benchmark with null info
+        summary.info_id = None
+        summary.save()
+        response = client.get(f"/api/benchmarks/{summary.id}/")
+        expected = _expected_entity(summary)
+        expected["links"]["info"] = None
+        self.assert_200_ok(response, expected)
 
     def _assert_none_commit(self, response):
         new_id = response.json["id"]

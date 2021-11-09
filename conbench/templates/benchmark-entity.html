@@ -17,7 +17,9 @@
 
 
 	<br>
+	{% if plot_history %}
 	<div align="center">{{ benchmark.display_batch }}, {{ benchmark.display_name }}</div>
+	{% endif %}
     <div id="plot-history-0" align="center"></div>
     <br/>
 
@@ -129,6 +131,15 @@
                 <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
               </li>
             {% endfor %}
+            {% if benchmark.info and benchmark.info|length > 1 %}
+            <li class="list-group-item active" >Additional Information</li>
+            {% for k,v in benchmark.info.items() %}
+              <li class="list-group-item" style="overflow-y: auto;">
+                <b>{{ k }}</b>
+                <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+              </li>
+            {% endfor %}
+            {% endif %}
         </ul>
       </div>
     </div>

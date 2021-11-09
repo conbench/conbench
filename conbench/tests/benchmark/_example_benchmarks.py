@@ -121,10 +121,13 @@ class ExternalBenchmarkR(conbench.runner.Benchmark):
 
     def run(self, **kwargs):
         result, output = self._run_r_command()
+        info, context = self.conbench.get_r_info_and_context()
+
         yield self.conbench.record(
             {"data": [result], "unit": "s"},
             self.name,
-            context=self.conbench.r_info,
+            info=info,
+            context=context,
             options=kwargs,
             output=output,
         )
@@ -158,6 +161,7 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
 
     def run(self, **kwargs):
         data, iterations = [], kwargs.get("iterations", 1)
+        info, context = self.conbench.get_r_info_and_context()
 
         for _ in range(iterations):
             if kwargs.get("drop_caches", False):
@@ -168,7 +172,8 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
         yield self.conbench.record(
             {"data": data, "unit": "s"},
             self.name,
-            context=self.conbench.r_info,
+            info=info,
+            context=context,
             options=kwargs,
             output=output,
         )

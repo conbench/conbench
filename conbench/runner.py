@@ -17,6 +17,10 @@ REGISTRY = []
 LIST = []
 
 
+LANG = "benchmark_language"
+LANG_VERSION = "benchmark_language_version"
+
+
 def register_benchmark(cls):
     REGISTRY.append(cls)
     return cls
@@ -119,33 +123,20 @@ class BenchmarkList(abc.ABC):
         pass
 
 
-class Conbench(Connection):
-    def __init__(self):
-        super().__init__()
-        self._run_id = uuid.uuid4().hex
-        self._batch_id = uuid.uuid4().hex
-        self._drop_caches_failed = False
-        self._purge_failed = False
-
+class MixinPython:
     @functools.cached_property
     def python_info(self):
         return python_info()
 
-    @functools.cached_property
-    def r_info(self):
-        return r_info()
-
-    @functools.cached_property
-    def github_info(self):
-        return github_info()
-
-    @functools.cached_property
-    def machine_info(self):
-        return machine_info(self.config.host_name)
+    def set_python_info_and_context(self, info, context):
+        lang = self.python_info
+        info.update({LANG_VERSION: lang[LANG_VERSION]})
+        context.update({LANG: lang[LANG]})
 
     def benchmark(self, f, name, publish=True, **kwargs):
         """Benchmark a function and publish the result."""
-        tags, context, github, options, _ = self._init(kwargs)
+        tags, info, context, github, options, _ = self._init(kwargs)
+        self.set_python_info_and_context(info, context)
 
         timing_options = self._get_timing_options(options)
         iterations = timing_options.pop("iterations")
@@ -153,11 +144,11 @@ class Conbench(Connection):
             raise ValueError(f"Invalid iterations: {iterations}")
 
         data, output = self._get_timing(f, iterations, timing_options)
-        context.update(self.python_info)
         benchmark, _ = self.record(
             {"data": data, "unit": "s"},
             name,
             tags=tags,
+            info=info,
             context=context,
             github=github,
             options=options,
@@ -167,9 +158,50 @@ class Conbench(Connection):
             self.publish(benchmark)
         return benchmark, output
 
+
+class MixinR:
+    @functools.cached_property
+    def r_info(self):
+        return r_info()
+
+    def get_r_info_and_context(self):
+        lang = self.r_info
+        info = {LANG_VERSION: lang[LANG_VERSION]}
+        context = {LANG: lang[LANG]}
+        return info, context
+
+    def execute_r_command(self, r_command, quiet=True):
+        if quiet:
+            command = ["R", "-s", "-q", "-e", r_command]
+        else:
+            command = ["R", "-e", r_command]
+        result = subprocess.run(command, capture_output=True)
+        output = result.stdout.decode("utf-8").strip()
+        error = result.stderr.decode("utf-8").strip()
+        if result.returncode != 0:
+            raise Exception(error)
+        return output, error
+
+
+class Conbench(Connection, MixinPython, MixinR):
+    def __init__(self):
+        super().__init__()
+        self._run_id = uuid.uuid4().hex
+        self._batch_id = uuid.uuid4().hex
+        self._drop_caches_failed = False
+        self._purge_failed = False
+
+    @functools.cached_property
+    def github_info(self):
+        return github_info()
+
+    @functools.cached_property
+    def machine_info(self):
+        return machine_info(self.config.host_name)
+
     def record(self, result, name, publish=True, **kwargs):
         """Record and publish an external benchmark result."""
-        tags, context, github, options, output = self._init(kwargs)
+        tags, info, context, github, options, output = self._init(kwargs)
 
         tags["name"] = name
         stats = self._stats(
@@ -194,6 +226,7 @@ class Conbench(Connection):
             "stats": stats,
             "machine_info": self.machine_info,
             "context": context,
+            "info": info,
             "tags": tags,
             "github": github,
         }
@@ -237,11 +270,12 @@ class Conbench(Connection):
 
     def _init(self, kwargs):
         tags = kwargs.get("tags", {})
+        info = kwargs.get("info", {})
         context = kwargs.get("context", {})
         github = kwargs.get("github", {})
         options = kwargs.get("options", {})
         github = github if github else self.github_info
-        return tags, context, github, options, kwargs.get("output")
+        return tags, info, context, github, options, kwargs.get("output")
 
     def _get_timing(self, f, iterations, options):
         times, output = [], None
@@ -305,15 +339,3 @@ class Conbench(Connection):
         }
 
         return result
-
-    def execute_r_command(self, r_command, quiet=True):
-        if quiet:
-            command = ["R", "-s", "-q", "-e", r_command]
-        else:
-            command = ["R", "-e", r_command]
-        result = subprocess.run(command, capture_output=True)
-        output = result.stdout.decode("utf-8").strip()
-        error = result.stderr.decode("utf-8").strip()
-        if result.returncode != 0:
-            raise Exception(error)
-        return output, error

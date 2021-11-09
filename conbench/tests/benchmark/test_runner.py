@@ -8,8 +8,10 @@ from ._example_benchmarks import CasesBenchmark, ExternalBenchmark, SimpleBenchm
 REPO = "https://github.com/conbench/conbench"
 EXAMPLE = copy.deepcopy(_fixtures.VALID_PAYLOAD)
 EXAMPLE.pop("run_name")
-EXAMPLE["context"] = {
+EXAMPLE["info"] = {
     "benchmark_language_version": "Python 3.8.5",
+}
+EXAMPLE["context"] = {
     "benchmark_language": "Python",
 }
 
@@ -27,6 +29,7 @@ def test_runner_simple_benchmark():
     assert_keys_equal(result, EXAMPLE)
     assert_keys_equal(result["tags"], expected_tags)
     assert_keys_equal(result["stats"], EXAMPLE["stats"])
+    assert_keys_equal(result["info"], EXAMPLE["info"])
     assert_keys_equal(result["context"], EXAMPLE["context"])
     assert_keys_equal(result["github"], EXAMPLE["github"])
     assert_keys_equal(result["machine_info"], EXAMPLE["machine_info"])
@@ -50,6 +53,7 @@ def test_runner_case_benchmark():
     assert_keys_equal(result, EXAMPLE)
     assert_keys_equal(result["tags"], expected_tags)
     assert_keys_equal(result["stats"], EXAMPLE["stats"])
+    assert_keys_equal(result["info"], EXAMPLE["info"])
     assert_keys_equal(result["context"], EXAMPLE["context"])
     assert_keys_equal(result["github"], EXAMPLE["github"])
     assert_keys_equal(result["machine_info"], EXAMPLE["machine_info"])

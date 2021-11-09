@@ -12,6 +12,7 @@ from conbench.entities import (  # noqa  # isort:skip
     commit,
     distribution,
     context as _,
+    info,
     data,
     machine,
     run,

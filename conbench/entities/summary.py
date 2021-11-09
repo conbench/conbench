@@ -20,6 +20,7 @@ from ..entities.commit import Commit, get_github_commit, repository_to_url
 from ..entities.context import Context
 from ..entities.data import Data
 from ..entities.distribution import update_distribution
+from ..entities.info import Info
 from ..entities.machine import Machine, MachineSchema
 from ..entities.run import Run
 from ..entities.time import Time
@@ -29,9 +30,11 @@ class Summary(Base, EntityMixin):
     __tablename__ = "summary"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     case_id = NotNull(s.String(50), s.ForeignKey("case.id"))
+    info_id = Nullable(s.String(50), s.ForeignKey("info.id"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
     run_id = NotNull(s.Text, s.ForeignKey("run.id"))
     case = relationship("Case", lazy="joined")
+    info = relationship("Info", lazy="joined")
     context = relationship("Context", lazy="joined")
     run = relationship("Run", lazy="select")
     data = relationship(
@@ -80,9 +83,18 @@ class Summary(Base, EntityMixin):
             machine = Machine.create(data["machine_info"])
 
         # create if not exists
+        if "context" not in data:
+            data["context"] = {}
         context = Context.first(tags=data["context"])
         if not context:
             context = Context.create({"tags": data["context"]})
+
+        # create if not exists
+        if "info" not in data:
+            data["info"] = {}
+        info = Info.first(tags=data["info"])
+        if not info:
+            info = Info.create({"tags": data["info"]})
 
         sha, repository = None, None
         if "github" in data:
@@ -118,6 +130,7 @@ class Summary(Base, EntityMixin):
         stats["batch_id"] = data["batch_id"]
         stats["timestamp"] = data["timestamp"]
         stats["case_id"] = case.id
+        stats["info_id"] = info.id
         stats["context_id"] = context.id
         summary = Summary(**stats)
         summary.save()
@@ -142,6 +155,8 @@ class Summary(Base, EntityMixin):
 s.Index("summary_run_id_index", Summary.run_id)
 s.Index("summary_case_id_index", Summary.case_id)
 s.Index("summary_batch_id_index", Summary.batch_id)
+s.Index("summary_info_id_index", Summary.info_id)
+s.Index("summary_context_id_index", Summary.context_id)
 
 
 class SummaryCreate(marshmallow.Schema):
@@ -205,6 +220,9 @@ class _Serializer(EntitySerializer):
                 "self": f.url_for(
                     "api.benchmark", benchmark_id=summary.id, _external=True
                 ),
+                "info": f.url_for("api.info", info_id=summary.info_id, _external=True)
+                if summary.info_id
+                else None,
                 "context": f.url_for(
                     "api.context", context_id=summary.context_id, _external=True
                 ),
@@ -231,6 +249,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=True)
     stats = marshmallow.fields.Nested(SummarySchema().create, required=True)
     tags = marshmallow.fields.Dict(required=True)
+    info = marshmallow.fields.Dict(required=False)
     context = marshmallow.fields.Dict(required=True)
     github = marshmallow.fields.Nested(GitHubCreate(), required=False)
 
