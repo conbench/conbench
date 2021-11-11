@@ -5,10 +5,8 @@ import statistics
 from ...entities.commit import Commit
 from ...entities.distribution import (
     get_closest_parent,
-    get_commit_index,
     get_commits_up,
     get_distribution,
-    get_sha_row_number,
     set_z_scores,
 )
 from ...tests.api import _fixtures
@@ -17,50 +15,20 @@ from ...tests.helpers import _uuid
 REPO = "https://github.com/org/something"
 MACHINE = "diana-2-4-17179869184"
 
-COMMIT_INDEX = """WITH ordered_commits AS 
-(SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
+COMMITS_UP = """SELECT commit.id, commit.timestamp 
 FROM commit 
-WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL ORDER BY commit.timestamp DESC)
- SELECT ordered_commits.id, ordered_commits.sha, ordered_commits.timestamp, row_number() OVER () AS row_number 
-FROM ordered_commits"""  # noqa
-
-
-ROW_NUMBER = """WITH ordered_commits AS 
-(SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
+WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL AND commit.timestamp <= (SELECT commit.timestamp 
 FROM commit 
-WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL ORDER BY commit.timestamp DESC)
- SELECT commit_index.row_number 
-FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
-FROM ordered_commits) AS commit_index 
-WHERE commit_index.sha = :sha_1"""  # noqa
-
-
-COMMITS_UP = """WITH ordered_commits AS 
-(SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
-FROM commit 
-WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL ORDER BY commit.timestamp DESC)
- SELECT commit_index.id, commit_index.sha, commit_index.timestamp, commit_index.row_number 
-FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
-FROM ordered_commits) AS commit_index 
-WHERE commit_index.row_number >= (SELECT commit_index.row_number 
-FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
-FROM ordered_commits) AS commit_index 
-WHERE commit_index.sha = :sha_1)
+WHERE commit.repository = :repository_2 AND commit.sha = :sha_1) ORDER BY commit.timestamp DESC
  LIMIT :param_1"""  # noqa
 
 
-DISTRIBUTION = """WITH ordered_commits AS 
-(SELECT commit.id AS id, commit.sha AS sha, commit.timestamp AS timestamp 
+DISTRIBUTION = """SELECT text(:text_1) AS case_id, text(:text_2) AS context_id, text(:text_3) AS commit_id, concat(machine.name, :concat_1, machine.cpu_core_count, :concat_2, machine.cpu_thread_count, :concat_3, machine.memory_bytes) AS hash, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
+FROM summary JOIN run ON run.id = summary.run_id JOIN machine ON machine.id = run.machine_id JOIN (SELECT commit.id AS id, commit.timestamp AS timestamp 
 FROM commit 
-WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL ORDER BY commit.timestamp DESC)
- SELECT text(:text_1) AS case_id, text(:text_2) AS context_id, text(:text_3) AS commit_id, concat(machine.name, :concat_1, machine.cpu_core_count, :concat_2, machine.cpu_thread_count, :concat_3, machine.memory_bytes) AS hash, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
-FROM summary JOIN run ON run.id = summary.run_id JOIN machine ON machine.id = run.machine_id JOIN (SELECT commit_index.id AS id, commit_index.sha AS sha, commit_index.timestamp AS timestamp, commit_index.row_number AS row_number 
-FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
-FROM ordered_commits) AS commit_index 
-WHERE commit_index.row_number >= (SELECT commit_index.row_number 
-FROM (SELECT ordered_commits.id AS id, ordered_commits.sha AS sha, ordered_commits.timestamp AS timestamp, row_number() OVER () AS row_number 
-FROM ordered_commits) AS commit_index 
-WHERE commit_index.sha = :sha_1)
+WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL AND commit.timestamp <= (SELECT commit.timestamp 
+FROM commit 
+WHERE commit.repository = :repository_2 AND commit.sha = :sha_1) ORDER BY commit.timestamp DESC
  LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id 
 WHERE run.name LIKE :name_1 AND summary.case_id = :case_id_1 AND summary.context_id = :context_id_1 AND concat(machine.name, :concat_4, machine.cpu_core_count, :concat_5, machine.cpu_thread_count, :concat_6, machine.memory_bytes) = :param_2 GROUP BY summary.case_id, summary.context_id, machine.name, machine.cpu_core_count, machine.cpu_thread_count, machine.memory_bytes"""  # noqa
 
@@ -110,10 +78,6 @@ def test_z_score_calculations():
 
 
 def test_distribution_queries():
-    query = str(get_commit_index(REPO).statement.compile())
-    assert query == COMMIT_INDEX
-    query = str(get_sha_row_number(REPO, "SHA").statement.compile())
-    assert query == ROW_NUMBER
     query = str(get_commits_up(REPO, "SHA", 3).statement.compile())
     assert query == COMMITS_UP
 
@@ -265,65 +229,41 @@ def test_distribution():
     assert summary_1.run.machine_id == summary_5.run.machine_id
     assert summary_1.run.machine_id == summary_8.run.machine_id
 
-    # ----- get_commit_index
-
-    expected = [
-        (commit_8.id, commit_8.sha, commit_8.timestamp, 1),
-        (commit_5.id, commit_5.sha, commit_5.timestamp, 2),
-        (commit_4.id, commit_4.sha, commit_4.timestamp, 3),
-        (commit_3.id, commit_3.sha, commit_3.timestamp, 4),
-        (commit_2.id, commit_2.sha, commit_2.timestamp, 5),
-        (commit_1.id, commit_1.sha, commit_1.timestamp, 6),
-    ]
-    assert get_commit_index(REPO).all() == expected
-
-    # ----- get_sha_row_number
-
-    assert get_sha_row_number(REPO, "88888").all() == [(1,)]
-    assert get_sha_row_number(REPO, "77777").all() == []
-    assert get_sha_row_number(REPO, "66666").all() == []
-    assert get_sha_row_number(REPO, "55555").all() == [(2,)]
-    assert get_sha_row_number(REPO, "44444").all() == [(3,)]
-    assert get_sha_row_number(REPO, "33333").all() == [(4,)]
-    assert get_sha_row_number(REPO, "22222").all() == [(5,)]
-    assert get_sha_row_number(REPO, "11111").all() == [(6,)]
-    assert get_sha_row_number(REPO, "00000").all() == []
-
     # ----- get_commits_up
 
     expected = [
-        (commit_8.id, commit_8.sha, commit_8.timestamp, 1),
-        (commit_5.id, commit_5.sha, commit_5.timestamp, 2),
-        (commit_4.id, commit_4.sha, commit_4.timestamp, 3),
+        (commit_8.id, commit_8.timestamp),
+        (commit_5.id, commit_5.timestamp),
+        (commit_4.id, commit_4.timestamp),
     ]
     assert get_commits_up(REPO, "88888", 3).all() == expected
     assert get_commits_up(REPO, "77777", 3).all() == []
     assert get_commits_up(REPO, "66666", 3).all() == []
     expected = [
-        (commit_5.id, commit_5.sha, commit_5.timestamp, 2),
-        (commit_4.id, commit_4.sha, commit_4.timestamp, 3),
-        (commit_3.id, commit_3.sha, commit_3.timestamp, 4),
+        (commit_5.id, commit_5.timestamp),
+        (commit_4.id, commit_4.timestamp),
+        (commit_3.id, commit_3.timestamp),
     ]
     assert get_commits_up(REPO, "55555", 3).all() == expected
     expected = [
-        (commit_4.id, commit_4.sha, commit_4.timestamp, 3),
-        (commit_3.id, commit_3.sha, commit_3.timestamp, 4),
-        (commit_2.id, commit_2.sha, commit_2.timestamp, 5),
+        (commit_4.id, commit_4.timestamp),
+        (commit_3.id, commit_3.timestamp),
+        (commit_2.id, commit_2.timestamp),
     ]
     assert get_commits_up(REPO, "44444", 3).all() == expected
     expected = [
-        (commit_3.id, commit_3.sha, commit_3.timestamp, 4),
-        (commit_2.id, commit_2.sha, commit_2.timestamp, 5),
-        (commit_1.id, commit_1.sha, commit_1.timestamp, 6),
+        (commit_3.id, commit_3.timestamp),
+        (commit_2.id, commit_2.timestamp),
+        (commit_1.id, commit_1.timestamp),
     ]
     assert get_commits_up(REPO, "33333", 3).all() == expected
     expected = [
-        (commit_2.id, commit_2.sha, commit_2.timestamp, 5),
-        (commit_1.id, commit_1.sha, commit_1.timestamp, 6),
+        (commit_2.id, commit_2.timestamp),
+        (commit_1.id, commit_1.timestamp),
     ]
     assert get_commits_up(REPO, "22222", 3).all() == expected
     expected = [
-        (commit_1.id, commit_1.sha, commit_1.timestamp, 6),
+        (commit_1.id, commit_1.timestamp),
     ]
     assert get_commits_up(REPO, "11111", 3).all() == expected
     assert get_commits_up(REPO, "00000", 3).all() == []
