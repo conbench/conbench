@@ -49,21 +49,6 @@ s.Index(
 )
 
 
-def get_commit_index(repository):
-    ordered = (
-        Session.query(Commit.id, Commit.sha, Commit.timestamp)
-        .filter(Commit.repository == repository)
-        .filter(Commit.timestamp.isnot(None))
-        .order_by(Commit.timestamp.desc())
-    ).cte("ordered_commits")
-    return Session.query(ordered, func.row_number().over().label("row_number"))
-
-
-def get_sha_row_number(repository, sha):
-    index = get_commit_index(repository).subquery().alias("commit_index")
-    return Session.query(index.c.row_number).filter(index.c.sha == sha)
-
-
 def get_commits_up(repository, sha, limit):
     commit = (
         Session.query(Commit.timestamp)
@@ -74,6 +59,7 @@ def get_commits_up(repository, sha, limit):
     return (
         Session.query(Commit.id, Commit.timestamp)
         .filter(Commit.repository == repository)
+        .filter(Commit.timestamp.isnot(None))
         .filter(Commit.timestamp <= commit)
         .order_by(Commit.timestamp.desc())
         .limit(limit)
