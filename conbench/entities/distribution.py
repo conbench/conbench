@@ -65,9 +65,19 @@ def get_sha_row_number(repository, sha):
 
 
 def get_commits_up(repository, sha, limit):
-    index = get_commit_index(repository).subquery().alias("commit_index")
-    n = Session.query(index.c.row_number).filter(index.c.sha == sha).scalar_subquery()
-    return Session.query(index).filter(index.c.row_number >= n).limit(limit)
+    commit = (
+        Session.query(Commit.timestamp)
+        .filter(Commit.repository == repository)
+        .filter(Commit.sha == sha)
+        .scalar_subquery()
+    )
+    return (
+        Session.query(Commit.id, Commit.timestamp)
+        .filter(Commit.repository == repository)
+        .filter(Commit.timestamp <= commit)
+        .order_by(Commit.timestamp.desc())
+        .limit(limit)
+    )
 
 
 def get_distribution(summary, limit):
