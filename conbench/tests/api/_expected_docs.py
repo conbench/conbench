@@ -521,7 +521,7 @@
                                 "context_id": "some-context-uuid-1",
                                 "distribution_mean": "0.036369",
                                 "distribution_stdev": "0.000000",
-                                "machine_hash": "diana-2-4-17179869184",
+                                "machine_hash": "diana-2-2-4-17179869184",
                                 "mean": "0.036369",
                                 "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
                                 "repository": "https://github.com/apache/arrow",
@@ -857,7 +857,6 @@
                 "required": [
                     "batch_id",
                     "context",
-                    "info",
                     "machine_info",
                     "run_id",
                     "stats",

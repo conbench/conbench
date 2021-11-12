@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from alembic import op
@@ -53,6 +54,8 @@ def get_distribution(
             func.concat(
                 machine_table.c.name,
                 "-",
+                machine_table.c.gpu_count,
+                "-",
                 machine_table.c.cpu_core_count,
                 "-",
                 machine_table.c.cpu_thread_count,
@@ -77,6 +80,7 @@ def get_distribution(
             summary_table.c.context_id,
             run_table.c.commit_id,
             machine_table.c.name,
+            machine_table.c.gpu_count,
             machine_table.c.cpu_core_count,
             machine_table.c.cpu_thread_count,
             machine_table.c.memory_bytes,
@@ -90,6 +94,8 @@ def get_distribution(
             summary_table.c.context_id == context_id,
             func.concat(
                 machine_table.c.name,
+                "-",
+                machine_table.c.gpu_count,
                 "-",
                 machine_table.c.cpu_core_count,
                 "-",
@@ -121,6 +127,7 @@ def upgrade():
     commits_by_id = {c["id"]: c for c in commits}
     machines_by_id = {m["id"]: m for m in machines}
 
+    logging.info("9fed559406c5: Get benchmarks")
     summaries = connection.execute(
         summary_table.select()
         .join(run_table, run_table.c.id == summary_table.c.run_id)
@@ -129,7 +136,7 @@ def upgrade():
 
     i = 1
 
-    # truncate table
+    logging.info("9fed559406c5: Truncate distribution table")
     connection.execute(distribution_table.delete())
     assert list(connection.execute(distribution_table.select())) == []
 
@@ -143,9 +150,7 @@ def upgrade():
             continue
 
         m = machines_by_id[run["machine_id"]]
-        machine_hash = (
-            f"{m.name}-{m.cpu_core_count}-{m.cpu_thread_count}-{m.memory_bytes}"
-        )
+        machine_hash = f"{m.name}-{m.gpu_count}-{m.cpu_core_count}-{m.cpu_thread_count}-{m.memory_bytes}"
 
         distributions = list(
             connection.execute(
@@ -182,10 +187,10 @@ def upgrade():
                 set_=values,
             )
         )
-        print(f"Processed {i} summary")
+        logging.info(f"9fed559406c5: Processed {i} summary")
         i += 1
 
-    print("Done with migration")
+    logging.info("9fed559406c5: Done with migration")
 
 
 def downgrade():
