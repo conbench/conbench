@@ -208,9 +208,6 @@ def test_upgrade():
     assert distributions[0].median_mean == decimal.Decimal("0.00898800000000000000")
     assert distributions[0].median_sd is None
 
-    Distribution.delete_all()
-    assert Distribution.count() == 0
-
     # do migration
     alembic_config = Config(config_path)
     command.stamp(alembic_config, "f542b3646629")

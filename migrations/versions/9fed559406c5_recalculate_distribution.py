@@ -129,6 +129,10 @@ def upgrade():
 
     i = 1
 
+    # truncate table
+    connection.execute(distribution_table.delete())
+    assert list(connection.execute(distribution_table.select())) == []
+
     for summary in summaries:
         run = runs_by_id.get(summary["run_id"])
         if not run:
