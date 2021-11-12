@@ -185,6 +185,15 @@
               <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
             </li>
           {% endfor %}
+          {% if baseline.info and baseline.info|length > 1 %}
+          <li class="list-group-item active" >Additional Information</li>
+          {% for k,v in baseline.info.items() %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>{{ k }}</b>
+              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+            </li>
+          {% endfor %}
+          {% endif %}
         </ul>
       </div>
       {% endif %}
@@ -296,6 +305,15 @@
               <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
             </li>
           {% endfor %}
+          {% if contender.info and contender.info|length > 1 %}
+          <li class="list-group-item active">Additional Information</li>
+          {% for k,v in contender.info.items() %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>{{ k }}</b>
+              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+            </li>
+          {% endfor %}
+          {% endif %}
         </ul>
       </div>
       {% endif %}

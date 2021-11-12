@@ -51,6 +51,7 @@
                             "id": "some-benchmark-uuid-1",
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
+                                "info": "http://localhost/api/info/some-info-uuid-1/",
                                 "list": "http://localhost/api/benchmarks/",
                                 "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
@@ -119,6 +120,7 @@
                             "id": "some-benchmark-uuid-1",
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
+                                "info": "http://localhost/api/info/some-info-uuid-1/",
                                 "list": "http://localhost/api/benchmarks/",
                                 "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
@@ -188,6 +190,7 @@
                                 "id": "some-benchmark-uuid-1",
                                 "links": {
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
+                                    "info": "http://localhost/api/info/some-info-uuid-1/",
                                     "list": "http://localhost/api/benchmarks/",
                                     "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
@@ -479,11 +482,7 @@
                     "application/json": {
                         "example": {
                             "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
-                            "arrow_compiler_id": "AppleClang",
-                            "arrow_compiler_version": "11.0.0.11000033",
-                            "arrow_version": "2.0.0",
                             "benchmark_language": "Python",
-                            "benchmark_language_version": "Python 3.8.5",
                             "id": "some-context-uuid-1",
                             "links": {
                                 "list": "http://localhost/api/contexts/",
@@ -500,11 +499,7 @@
                         "example": [
                             {
                                 "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
-                                "arrow_compiler_id": "AppleClang",
-                                "arrow_compiler_version": "11.0.0.11000033",
-                                "arrow_version": "2.0.0",
                                 "benchmark_language": "Python",
-                                "benchmark_language_version": "Python 3.8.5",
                                 "id": "some-context-uuid-1",
                                 "links": {
                                     "list": "http://localhost/api/contexts/",
@@ -549,6 +544,7 @@
                                 "commits": "http://localhost/api/commits/",
                                 "contexts": "http://localhost/api/contexts/",
                                 "docs": "http://localhost/api/docs.json",
+                                "info": "http://localhost/api/info/",
                                 "login": "http://localhost/api/login/",
                                 "logout": "http://localhost/api/logout/",
                                 "machines": "http://localhost/api/machines/",
@@ -558,6 +554,44 @@
                                 "users": "http://localhost/api/users/",
                             }
                         }
+                    }
+                },
+                "description": "OK",
+            },
+            "InfoEntity": {
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "arrow_compiler_id": "AppleClang",
+                            "arrow_compiler_version": "11.0.0.11000033",
+                            "arrow_version": "2.0.0",
+                            "benchmark_language_version": "Python 3.8.5",
+                            "id": "some-info-uuid-1",
+                            "links": {
+                                "list": "http://localhost/api/info/",
+                                "self": "http://localhost/api/info/some-info-uuid-1/",
+                            },
+                        }
+                    }
+                },
+                "description": "OK",
+            },
+            "InfoList": {
+                "content": {
+                    "application/json": {
+                        "example": [
+                            {
+                                "arrow_compiler_id": "AppleClang",
+                                "arrow_compiler_version": "11.0.0.11000033",
+                                "arrow_version": "2.0.0",
+                                "benchmark_language_version": "Python 3.8.5",
+                                "id": "some-info-uuid-1",
+                                "links": {
+                                    "list": "http://localhost/api/info/",
+                                    "self": "http://localhost/api/info/some-info-uuid-1/",
+                                },
+                            }
+                        ]
                     }
                 },
                 "description": "OK",
@@ -812,6 +846,7 @@
                     "batch_id": {"type": "string"},
                     "context": {"type": "object"},
                     "github": {"$ref": "#/components/schemas/GitHubCreate"},
+                    "info": {"type": "object"},
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
                     "run_id": {"type": "string"},
                     "run_name": {"type": "string"},
@@ -822,6 +857,7 @@
                 "required": [
                     "batch_id",
                     "context",
+                    "info",
                     "machine_info",
                     "run_id",
                     "stats",
@@ -1256,6 +1292,35 @@
                 "tags": ["History"],
             }
         },
+        "/api/info/": {
+            "get": {
+                "description": "Get a list of benchmark info.",
+                "responses": {
+                    "200": {"$ref": "#/components/responses/InfoList"},
+                    "401": {"$ref": "#/components/responses/401"},
+                },
+                "tags": ["Info"],
+            }
+        },
+        "/api/info/{info_id}/": {
+            "get": {
+                "description": "Get benchmark info.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "info_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/InfoEntity"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Info"],
+            }
+        },
         "/api/login/": {
             "post": {
                 "description": "Login with email and password.",
@@ -1477,6 +1542,7 @@
         {"description": "Record benchmarks", "name": "Benchmarks"},
         {"description": "Benchmarked commits", "name": "Commits"},
         {"description": "Benchmark comparisons", "name": "Comparisons"},
+        {"description": "Extra benchmark information", "name": "Info"},
         {"description": "Benchmark contexts", "name": "Contexts"},
         {"description": "Benchmark history", "name": "History"},
         {"description": "Benchmark machines", "name": "Machines"},

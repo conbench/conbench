@@ -71,7 +71,9 @@ spec.components.response("CompareList", _200_ok(ex.COMPARE_LIST))
 spec.components.response("CompareSummary", _200_ok(ex.COMPARE_SUMMARY))
 spec.components.response("ContextEntity", _200_ok(ex.CONTEXT_ENTITY))
 spec.components.response("ContextList", _200_ok([ex.CONTEXT_ENTITY]))
+spec.components.response("InfoList", _200_ok([ex.INFO_ENTITY]))
 spec.components.response("HistoryList", _200_ok([ex.HISTORY_ENTITY]))
+spec.components.response("InfoEntity", _200_ok(ex.INFO_ENTITY))
 spec.components.response("MachineEntity", _200_ok(ex.MACHINE_ENTITY))
 spec.components.response("MachineList", _200_ok([ex.MACHINE_ENTITY]))
 spec.components.response("RunEntity", _200_ok(ex.RUN_ENTITY))
@@ -88,6 +90,7 @@ tags = [
     {"name": "Benchmarks", "description": "Record benchmarks"},
     {"name": "Commits", "description": "Benchmarked commits"},
     {"name": "Comparisons", "description": "Benchmark comparisons"},
+    {"name": "Info", "description": "Extra benchmark information"},
     {"name": "Contexts", "description": "Benchmark contexts"},
     {"name": "History", "description": "Benchmark history"},
     {"name": "Machines", "description": "Benchmark machines"},

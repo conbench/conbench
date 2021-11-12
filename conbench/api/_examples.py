@@ -22,7 +22,15 @@ def _api_user_entity(user):
     }
 
 
-def _api_benchmark_entity(summary_id, context_id, case_id, batch_id, run_id, name):
+def _api_benchmark_entity(
+    summary_id,
+    case_id,
+    info_id,
+    context_id,
+    batch_id,
+    run_id,
+    name,
+):
     return {
         "id": summary_id,
         "run_id": run_id,
@@ -81,6 +89,7 @@ def _api_benchmark_entity(summary_id, context_id, case_id, batch_id, run_id, nam
             "list": "http://localhost/api/benchmarks/",
             "self": "http://localhost/api/benchmarks/%s/" % summary_id,
             "context": "http://localhost/api/contexts/%s/" % context_id,
+            "info": "http://localhost/api/info/%s/" % info_id,
             "run": "http://localhost/api/runs/%s/" % run_id,
         },
     }
@@ -273,10 +282,6 @@ def _api_context_entity(context_id, links=True):
     result = {
         "id": context_id,
         "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
-        "arrow_compiler_id": "AppleClang",
-        "arrow_compiler_version": "11.0.0.11000033",
-        "arrow_version": "2.0.0",
-        "benchmark_language_version": "Python 3.8.5",
         "benchmark_language": "Python",
         "links": {
             "list": "http://localhost/api/contexts/",
@@ -304,6 +309,23 @@ def _api_history_entity(benchmark_id, case_id, context_id, run_name):
         "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
         "run_name": run_name,
     }
+
+
+def _api_info_entity(info_id, links=True):
+    result = {
+        "id": info_id,
+        "arrow_compiler_id": "AppleClang",
+        "arrow_compiler_version": "11.0.0.11000033",
+        "arrow_version": "2.0.0",
+        "benchmark_language_version": "Python 3.8.5",
+        "links": {
+            "list": "http://localhost/api/info/",
+            "self": "http://localhost/api/info/%s/" % info_id,
+        },
+    }
+    if not links:
+        result.pop("links", None)
+    return result
 
 
 def _api_machine_entity(machine_id, machine_name, links=True):
@@ -369,8 +391,9 @@ def _api_run_entity(
 
 BENCHMARK_ENTITY = _api_benchmark_entity(
     "some-benchmark-uuid-1",
-    "some-context-uuid-1",
     "some-case-uuid-1",
+    "some-info-uuid-1",
+    "some-context-uuid-1",
     "some-batch-uuid-1",
     "some-run-uuid-1",
     "file-write",
@@ -440,6 +463,7 @@ HISTORY_ENTITY = _api_history_entity(
     "some-context-uuid-1",
     "some run name",
 )
+INFO_ENTITY = _api_info_entity("some-info-uuid-1")
 MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1", "some-machine-name")
 RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",
@@ -497,6 +521,7 @@ API_INDEX = {
         "docs": "http://localhost/api/docs.json",
         "login": "http://localhost/api/login/",
         "logout": "http://localhost/api/logout/",
+        "info": "http://localhost/api/info/",
         "machines": "http://localhost/api/machines/",
         "register": "http://localhost/api/register/",
         "runs": "http://localhost/api/runs/",

@@ -39,6 +39,9 @@ class BenchmarkMixin:
         context = self._get_context(benchmark)
         context.pop("links", None)
         benchmark["context"] = context
+        info = self._get_info(benchmark)
+        info.pop("links", None)
+        benchmark["info"] = info
 
         return benchmark
 
@@ -53,6 +56,16 @@ class BenchmarkMixin:
         response = self.api_get_url(benchmark["links"]["context"])
         if response.status_code != 200:
             self.flash("Error getting context.")
+            return {}
+        return response.json
+
+    def _get_info(self, benchmark):
+        info_url = benchmark["links"]["info"]
+        if info_url is None:
+            return {}
+        response = self.api_get_url(info_url)
+        if response.status_code != 200:
+            self.flash("Error getting info.")
             return {}
         return response.json
 

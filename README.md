@@ -15,7 +15,7 @@ results as JSON via an API, and persist them for comparison while
 iterating on performance improvements or to guard against regressions.
 
 Conbench includes a runner which can be used as a stand-alone library
-for traditional benchmark authoring. The runner will time a unit of
+for traditional macro benchmark authoring. The runner will time a unit of
 work (or measure throughput), collect machine information that may be relevant
 for hardware specific optimizations, and return JSON formatted results.
 
@@ -233,8 +233,6 @@ import conbench.runner
 
 @conbench.runner.register_benchmark
 class SimpleBenchmark(conbench.runner.Benchmark):
-    """Example simple benchmark."""
-
     name = "addition"
 
     def run(self, **kwargs):
@@ -302,45 +300,49 @@ Example command line execution:
 
 Benchmark result:
 {
-    "run_id": "c7e5280e65d24ec19d64a7636cef1bd4",
-    "batch_id": "c7e5280e65d24ec19d64a7636cef1bd4",
-    "timestamp": "2021-06-21T22:18:16.752993+00:00",
+    "batch_id": "c9db942c27db4359923eb08aa553beb7",
+    "run_id": "f6c7d0b3b3f146f9b1ad297fc6e5776b",
+    "timestamp": "2021-11-09T22:09:17.790397+00:00",
     "context": {
-        "benchmark_language": "Python",
-        "benchmark_language_version": "Python 3.9.2"
+        "benchmark_language": "Python"
     },
     "github": {
-        "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
+        "commit": "61dec915b9dd230ca5029f5e586f8bd95c3e0c05",
         "repository": "https://github.com/conbench/conbench"
     },
+    "info": {
+        "benchmark_language_version": "Python 3.9.7"
+    },
     "machine_info": {
-        "architecture_name": "x86_64",
-        "cpu_core_count": "2",
-        "cpu_frequency_max_hz": "3500000000",
-        "cpu_l1d_cache_bytes": "32768",
-        "cpu_l1i_cache_bytes": "32768",
-        "cpu_l2_cache_bytes": "262144",
-        "cpu_l3_cache_bytes": "4194304",
-        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
-        "cpu_thread_count": "4",
-        "kernel_name": "20.5.0",
+        "architecture_name": "arm64",
+        "cpu_core_count": "8",
+        "cpu_frequency_max_hz": "0",
+        "cpu_l1d_cache_bytes": "65536",
+        "cpu_l1i_cache_bytes": "131072",
+        "cpu_l2_cache_bytes": "4194304",
+        "cpu_l3_cache_bytes": "0",
+        "cpu_model_name": "Apple M1",
+        "cpu_thread_count": "8",
+        "gpu_count": "0",
+        "gpu_product_names": [],
+        "kernel_name": "20.6.0",
         "memory_bytes": "17179869184",
-        "name": "machine-abc",
+        "name": "diana",
         "os_name": "macOS",
-        "os_version": "10.16"
+        "os_version": "11.5.2"
     },
     "stats": {
         "data": [
-            "0.000003"
+            "0.000001"
         ],
         "iqr": "0.000000",
         "iterations": 1,
-        "max": "0.000003",
-        "mean": "0.000003",
-        "median": "0.000003",
-        "min": "0.000003",
-        "q1": "0.000003",
-        "q3": "0.000003",
+        "max": "0.000001",
+        "mean": "0.000001",
+        "median": "0.000001",
+        "min": "0.000001",
+        "q1": "0.000001",
+        "q3": "0.000001",
         "stdev": 0,
         "time_unit": "s",
         "times": [],
@@ -364,41 +366,41 @@ Example Python execution:
 2
 >>> print(json.dumps(result, indent=2))
 {
-  "run_id": "9dc1beadf4bb46e0ac86cd0bb6fe201f",
-  "batch_id": "9dc1beadf4bb46e0ac86cd0bb6fe201f",
-  "timestamp": "2021-08-20T16:05:57.299148+00:00",
+  "run_id": "dfe3a816ca9e451a9da7d940a974cb95",
+  "batch_id": "0e869934b391424a8199c485dfbbc066",
+  "timestamp": "2021-11-09T22:11:25.262330+00:00",
   "stats": {
     "data": [
-      "0.000004",
-      "0.000000",
-      "0.000001",
-      "0.000000",
-      "0.000000",
+      "0.000002",
       "0.000001",
       "0.000000",
       "0.000001",
+      "0.000001",
+      "0.000001",
+      "0.000001",
       "0.000000",
-      "0.000000"
+      "0.000001",
+      "0.000001"
     ],
     "times": [],
     "unit": "s",
     "time_unit": "s",
     "iterations": 10,
     "mean": "0.000001",
-    "median": "0.000000",
+    "median": "0.000001",
     "min": "0.000000",
-    "max": "0.000004",
+    "max": "0.000002",
     "stdev": "0.000001",
-    "q1": "0.000000",
+    "q1": "0.000001",
     "q3": "0.000001",
-    "iqr": "0.000001"
+    "iqr": "0.000000"
   },
   "machine_info": {
-    "name": "machine-xyz",
+    "name": "diana",
     "os_name": "macOS",
-    "os_version": "10.16",
-    "architecture_name": "x86_64",
-    "kernel_name": "20.5.0",
+    "os_version": "11.5.2",
+    "architecture_name": "arm64",
+    "kernel_name": "20.6.0",
     "memory_bytes": "17179869184",
     "cpu_model_name": "Apple M1",
     "cpu_core_count": "8",
@@ -407,17 +409,21 @@ Example Python execution:
     "cpu_l1i_cache_bytes": "131072",
     "cpu_l2_cache_bytes": "4194304",
     "cpu_l3_cache_bytes": "0",
-    "cpu_frequency_max_hz": "2400000000"
+    "cpu_frequency_max_hz": "0",
+    "gpu_count": "0",
+    "gpu_product_names": []
   },
   "context": {
-    "benchmark_language": "Python",
-    "benchmark_language_version": "Python 3.9.6"
+    "benchmark_language": "Python"
+  },
+  "info": {
+    "benchmark_language_version": "Python 3.9.7"
   },
   "tags": {
     "name": "addition"
   },
   "github": {
-    "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
+    "commit": "61dec915b9dd230ca5029f5e586f8bd95c3e0c05",
     "repository": "https://github.com/conbench/conbench"
   }
 }
@@ -538,6 +544,7 @@ Benchmark result:
         "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
         "repository": "https://github.com/conbench/conbench"
     },
+    "info": {},
     "machine_info": {
         "architecture_name": "x86_64",
         "cpu_core_count": "2",
@@ -672,45 +679,50 @@ case (`10 x 10`, `2, x 10`, and `10, x 2`).
 
 Benchmark result:
 {
-    "run_id": "d509f6e80ed440a09af60fe1847dc033",
-    "batch_id": "d509f6e80ed440a09af60fe1847dc033",
-    "timestamp": "2021-06-22T18:39:53.805714+00:00",
+    "batch_id": "13b87cc6d9a84f2188df279d8c513933",
+    "run_id": "48acd853b8294df9a1f5457f192456f3",
+    "timestamp": "2021-11-09T22:15:23.501923+00:00",
     "context": {
-        "benchmark_language": "Python",
-        "benchmark_language_version": "Python 3.9.2"
+        "benchmark_language": "Python"
     },
     "github": {
-        "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
+        "commit": "61dec915b9dd230ca5029f5e586f8bd95c3e0c05",
         "repository": "https://github.com/conbench/conbench"
     },
-    "machine_info": {
-        "architecture_name": "x86_64",
-        "cpu_core_count": "2",
-        "cpu_frequency_max_hz": "3500000000",
-        "cpu_l1d_cache_bytes": "32768",
-        "cpu_l1i_cache_bytes": "32768",
-        "cpu_l2_cache_bytes": "262144",
-        "cpu_l3_cache_bytes": "4194304",
-        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
-        "cpu_thread_count": "4",
-        "kernel_name": "20.5.0",
-        "memory_bytes": "17179869184",
-        "name": "machine-abc",
-        "os_name": "macOS",
-        "os_version": "10.16"
+    "info": {
+        "benchmark_language_version": "Python 3.9.7"
     },
+    "machine_info": {
+        "architecture_name": "arm64",
+        "cpu_core_count": "8",
+        "cpu_frequency_max_hz": "0",
+        "cpu_l1d_cache_bytes": "65536",
+        "cpu_l1i_cache_bytes": "131072",
+        "cpu_l2_cache_bytes": "4194304",
+        "cpu_l3_cache_bytes": "0",
+        "cpu_model_name": "Apple M1",
+        "cpu_thread_count": "8",
+        "gpu_count": "0",
+        "gpu_product_names": [],
+        "kernel_name": "20.6.0",
+        "memory_bytes": "17179869184",
+        "name": "diana",
+        "os_name": "macOS",
+        "os_version": "11.5.2"
+    },
+    "run_id": "48acd853b8294df9a1f5457f192456f3",
     "stats": {
         "data": [
-            "0.000010"
+            "0.000004"
         ],
         "iqr": "0.000000",
         "iterations": 1,
-        "max": "0.000010",
-        "mean": "0.000010",
-        "median": "0.000010",
-        "min": "0.000010",
-        "q1": "0.000010",
-        "q3": "0.000010",
+        "max": "0.000004",
+        "mean": "0.000004",
+        "median": "0.000004",
+        "min": "0.000004",
+        "q1": "0.000004",
+        "q3": "0.000004",
         "stdev": 0,
         "time_unit": "s",
         "times": [],
@@ -720,50 +732,53 @@ Benchmark result:
         "columns": "10",
         "name": "matrix",
         "rows": "10"
-    }
+    },
+    "timestamp": "2021-11-09T22:15:23.397819+00:00"
 }
 
 Benchmark result:
 {
-    "run_id": "d509f6e80ed440a09af60fe1847dc033",
-    "batch_id": "d509f6e80ed440a09af60fe1847dc033",
-    "timestamp": "2021-06-22T18:39:53.830928+00:00",
+    "batch_id": "13b87cc6d9a84f2188df279d8c513933",
     "context": {
-        "benchmark_language": "Python",
-        "benchmark_language_version": "Python 3.9.2"
+        "benchmark_language": "Python"
     },
     "github": {
-        "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
+        "commit": "61dec915b9dd230ca5029f5e586f8bd95c3e0c05",
         "repository": "https://github.com/conbench/conbench"
     },
+    "info": {
+        "benchmark_language_version": "Python 3.9.7"
+    },
     "machine_info": {
-        "architecture_name": "x86_64",
-        "cpu_core_count": "2",
-        "cpu_frequency_max_hz": "3500000000",
-        "cpu_l1d_cache_bytes": "32768",
-        "cpu_l1i_cache_bytes": "32768",
-        "cpu_l2_cache_bytes": "262144",
-        "cpu_l3_cache_bytes": "4194304",
-        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
-        "cpu_thread_count": "4",
-        "kernel_name": "20.5.0",
+        "architecture_name": "arm64",
+        "cpu_core_count": "8",
+        "cpu_frequency_max_hz": "0",
+        "cpu_l1d_cache_bytes": "65536",
+        "cpu_l1i_cache_bytes": "131072",
+        "cpu_l2_cache_bytes": "4194304",
+        "cpu_l3_cache_bytes": "0",
+        "cpu_model_name": "Apple M1",
+        "cpu_thread_count": "8",
+        "gpu_count": "0",
+        "gpu_product_names": [],
+        "kernel_name": "20.6.0",
         "memory_bytes": "17179869184",
-        "name": "machine-abc",
+        "name": "diana",
         "os_name": "macOS",
-        "os_version": "10.16"
+        "os_version": "11.5.2"
     },
     "stats": {
         "data": [
-            "0.000006"
+            "0.000004"
         ],
         "iqr": "0.000000",
         "iterations": 1,
-        "max": "0.000006",
-        "mean": "0.000006",
-        "median": "0.000006",
-        "min": "0.000006",
-        "q1": "0.000006",
-        "q3": "0.000006",
+        "max": "0.000004",
+        "mean": "0.000004",
+        "median": "0.000004",
+        "min": "0.000004",
+        "q1": "0.000004",
+        "q3": "0.000004",
         "stdev": 0,
         "time_unit": "s",
         "times": [],
@@ -778,45 +793,49 @@ Benchmark result:
 
 Benchmark result:
 {
-    "run_id": "d509f6e80ed440a09af60fe1847dc033",
-    "batch_id": "d509f6e80ed440a09af60fe1847dc033",
-    "timestamp": "2021-06-22T18:39:53.843815+00:00",
+    "batch_id": "13b87cc6d9a84f2188df279d8c513933",
+    "run_id": "48acd853b8294df9a1f5457f192456f3",
+    "timestamp": "2021-11-09T22:15:23.509211+00:00",
     "context": {
-        "benchmark_language": "Python",
-        "benchmark_language_version": "Python 3.9.2"
+        "benchmark_language": "Python"
     },
     "github": {
-        "commit": "58fb35dc593dca82c917cf18c1c65c059b9fb12c",
+        "commit": "61dec915b9dd230ca5029f5e586f8bd95c3e0c05",
         "repository": "https://github.com/conbench/conbench"
     },
+    "info": {
+        "benchmark_language_version": "Python 3.9.7"
+    },
     "machine_info": {
-        "architecture_name": "x86_64",
-        "cpu_core_count": "2",
-        "cpu_frequency_max_hz": "3500000000",
-        "cpu_l1d_cache_bytes": "32768",
-        "cpu_l1i_cache_bytes": "32768",
-        "cpu_l2_cache_bytes": "262144",
-        "cpu_l3_cache_bytes": "4194304",
-        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
-        "cpu_thread_count": "4",
-        "kernel_name": "20.5.0",
+        "architecture_name": "arm64",
+        "cpu_core_count": "8",
+        "cpu_frequency_max_hz": "0",
+        "cpu_l1d_cache_bytes": "65536",
+        "cpu_l1i_cache_bytes": "131072",
+        "cpu_l2_cache_bytes": "4194304",
+        "cpu_l3_cache_bytes": "0",
+        "cpu_model_name": "Apple M1",
+        "cpu_thread_count": "8",
+        "gpu_count": "0",
+        "gpu_product_names": [],
+        "kernel_name": "20.6.0",
         "memory_bytes": "17179869184",
-        "name": "machine-abc",
+        "name": "diana",
         "os_name": "macOS",
-        "os_version": "10.16"
+        "os_version": "11.5.2"
     },
     "stats": {
         "data": [
-            "0.000007"
+            "0.000002"
         ],
         "iqr": "0.000000",
         "iterations": 1,
-        "max": "0.000007",
-        "mean": "0.000007",
-        "median": "0.000007",
-        "min": "0.000007",
-        "q1": "0.000007",
-        "q3": "0.000007",
+        "max": "0.000002",
+        "mean": "0.000002",
+        "median": "0.000002",
+        "min": "0.000002",
+        "q1": "0.000002",
+        "q3": "0.000002",
         "stdev": 0,
         "time_unit": "s",
         "times": [],
@@ -858,10 +877,13 @@ class ExternalBenchmarkR(conbench.runner.Benchmark):
 
     def run(self, **kwargs):
         result, output = self._run_r_command()
+        info, context = self.conbench.get_r_info_and_context()
+
         yield self.conbench.record(
             {"data": [result], "unit": "s"},
             self.name,
-            context=self.conbench.r_info,
+            info=info,
+            context=context,
             options=kwargs,
             output=output,
         )
@@ -874,11 +896,11 @@ class ExternalBenchmarkR(conbench.runner.Benchmark):
     def _get_r_command(self):
         return (
             f"addition <- function() { 1 + 1 }; "
-            f"start_time <- Sys.time();"
-            f"addition(); "
-            f"end_time <- Sys.time(); "
-            f"result <- end_time - start_time; "
-            f"as.numeric(result); "
+            "start_time <- Sys.time();"
+            "addition(); "
+            "end_time <- Sys.time(); "
+            "result <- end_time - start_time; "
+            "as.numeric(result); "
         )
 ```
 
@@ -919,6 +941,7 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
 
     def run(self, **kwargs):
         data, iterations = [], kwargs.get("iterations", 1)
+        info, context = self.conbench.get_r_info_and_context()
 
         for _ in range(iterations):
             if kwargs.get("drop_caches", False):
@@ -929,7 +952,8 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
         yield self.conbench.record(
             {"data": data, "unit": "s"},
             self.name,
-            context=self.conbench.r_info,
+            info=info,
+            context=context,
             options=kwargs,
             output=output,
         )
@@ -937,15 +961,15 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
     def _run_r_command(self):
         r_command = self._get_r_command()
         self.conbench.execute_r_command(r_command)
-        with open('placebo.json') as json_file:
+        with open("placebo.json") as json_file:
             data = json.load(json_file)
         return data, json.dumps(data, indent=2)
 
     def _get_r_command(self):
         return (
-            f"library(arrowbench); "
-            f"out <- run_one(arrowbench:::placebo); "
-            f"cat(jsonlite::toJSON(out), file='placebo.json'); "
+            "library(arrowbench); "
+            "out <- run_one(arrowbench:::placebo); "
+            "cat(jsonlite::toJSON(out), file='placebo.json'); "
         )
 ```
 

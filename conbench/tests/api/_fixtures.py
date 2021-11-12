@@ -23,11 +23,13 @@ VALID_PAYLOAD = {
     "timestamp": "2020-11-25T21:02:42.706806+00:00",
     "context": {
         "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
-        "arrow_compiler_id": "AppleClang",
-        "arrow_compiler_version": "11.0.0.11000033",
+        "benchmark_language": "Python",
+    },
+    "info": {
         "arrow_version": "2.0.0",
         "benchmark_language_version": "Python 3.8.5",
-        "benchmark_language": "Python",
+        "arrow_compiler_version": "11.0.0.11000033",
+        "arrow_compiler_id": "AppleClang",
     },
     "github": {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",
