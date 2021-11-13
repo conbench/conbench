@@ -102,6 +102,7 @@ def get_distribution(summary, limit):
             Summary.case_id,
             Summary.context_id,
             Machine.name,
+            Machine.gpu_count,
             Machine.cpu_core_count,
             Machine.cpu_thread_count,
             Machine.memory_bytes,

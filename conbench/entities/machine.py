@@ -35,12 +35,12 @@ class Machine(Base, EntityMixin):
     gpu_count = NotNull(s.Integer, check("gpu_count>=0"), default=0)
     gpu_product_names = NotNull(postgresql.ARRAY(s.Text), default=[])
 
-    # TODO: Does GPU count belong in the hash?
-
     @hybrid_property
     def hash(self):
         return (
             self.name
+            + "-"
+            + str(self.gpu_count)
             + "-"
             + str(self.cpu_core_count)
             + "-"
@@ -53,6 +53,8 @@ class Machine(Base, EntityMixin):
     def hash(cls):
         return func.concat(
             cls.name,
+            "-",
+            cls.gpu_count,
             "-",
             cls.cpu_core_count,
             "-",

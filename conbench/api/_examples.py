@@ -298,7 +298,7 @@ def _api_history_entity(benchmark_id, case_id, context_id, run_name):
         "benchmark_id": benchmark_id,
         "case_id": case_id,
         "context_id": context_id,
-        "machine_hash": "diana-2-4-17179869184",
+        "machine_hash": "diana-2-2-4-17179869184",
         "unit": "s",
         "mean": "0.036369",
         "distribution_mean": "0.036369",
