@@ -12,18 +12,12 @@ branch_labels = None
 depends_on = None
 
 
-def get_commits_up(commit_table, repository, sha, limit):
-    commit = (
-        select(commit_table.c.timestamp)
-        .filter(commit_table.c.repository == repository)
-        .filter(commit_table.c.sha == sha)
-        .scalar_subquery()
-    )
+def get_commits_up(commit_table, commit, limit):
     return (
         select(commit_table.c.id, commit_table.c.timestamp)
-        .filter(commit_table.c.repository == repository)
+        .filter(commit_table.c.repository == commit.repository)
         .filter(commit_table.c.timestamp.isnot(None))
-        .filter(commit_table.c.timestamp <= commit)
+        .filter(commit_table.c.timestamp <= commit.timestamp)
         .order_by(commit_table.c.timestamp.desc())
         .limit(limit)
     )
@@ -34,23 +28,19 @@ def get_distribution(
     run_table,
     machine_table,
     commit_table,
-    repository,
-    sha,
-    case_id,
-    context_id,
+    commit,
+    summary,
     machine_hash,
     limit,
 ):
     commits_up = (
-        get_commits_up(commit_table, repository, sha, limit)
-        .subquery()
-        .alias("commits_up")
+        get_commits_up(commit_table, commit, limit).subquery().alias("commits_up")
     )
     return (
         select(
-            summary_table.c.case_id,
-            summary_table.c.context_id,
-            run_table.c.commit_id,
+            func.text(summary.case_id).label("case_id"),
+            func.text(summary.context_id).label("context_id"),
+            func.text(commit.id).label("commit_id"),
             func.concat(
                 machine_table.c.name,
                 "-",
@@ -78,7 +68,6 @@ def get_distribution(
         .group_by(
             summary_table.c.case_id,
             summary_table.c.context_id,
-            run_table.c.commit_id,
             machine_table.c.name,
             machine_table.c.gpu_count,
             machine_table.c.cpu_core_count,
@@ -90,8 +79,8 @@ def get_distribution(
         .join(commits_up, commits_up.c.id == run_table.c.commit_id)
         .filter(
             run_table.c.name.like("commit: %"),
-            summary_table.c.case_id == case_id,
-            summary_table.c.context_id == context_id,
+            summary_table.c.case_id == summary.case_id,
+            summary_table.c.context_id == summary.context_id,
             func.concat(
                 machine_table.c.name,
                 "-",
@@ -159,10 +148,8 @@ def upgrade():
                     run_table,
                     machine_table,
                     commit_table,
-                    commit["repository"],
-                    commit["sha"],
-                    summary["case_id"],
-                    summary["context_id"],
+                    commit,
+                    summary,
                     machine_hash,
                     100,
                 )
