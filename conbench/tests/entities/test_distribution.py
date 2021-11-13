@@ -15,20 +15,10 @@ from ...tests.helpers import _uuid
 REPO = "https://github.com/org/something"
 MACHINE = "diana-2-2-4-17179869184"
 
-COMMITS_UP = """SELECT commit.id, commit.timestamp 
-FROM commit 
-WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL AND commit.timestamp <= (SELECT commit.timestamp 
-FROM commit 
-WHERE commit.repository = :repository_2 AND commit.sha = :sha_1) ORDER BY commit.timestamp DESC
- LIMIT :param_1"""  # noqa
-
-
 DISTRIBUTION = """SELECT text(:text_1) AS case_id, text(:text_2) AS context_id, text(:text_3) AS commit_id, concat(machine.name, :concat_1, machine.gpu_count, :concat_2, machine.cpu_core_count, :concat_3, machine.cpu_thread_count, :concat_4, machine.memory_bytes) AS hash, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
 FROM summary JOIN run ON run.id = summary.run_id JOIN machine ON machine.id = run.machine_id JOIN (SELECT commit.id AS id, commit.timestamp AS timestamp 
 FROM commit 
-WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL AND commit.timestamp <= (SELECT commit.timestamp 
-FROM commit 
-WHERE commit.repository = :repository_2 AND commit.sha = :sha_1) ORDER BY commit.timestamp DESC
+WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL AND commit.timestamp <= :timestamp_1 ORDER BY commit.timestamp DESC
  LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id 
 WHERE run.name LIKE :name_1 AND summary.case_id = :case_id_1 AND summary.context_id = :context_id_1 AND concat(machine.name, :concat_5, machine.gpu_count, :concat_6, machine.cpu_core_count, :concat_7, machine.cpu_thread_count, :concat_8, machine.memory_bytes) = :param_2 GROUP BY summary.case_id, summary.context_id, machine.name, machine.gpu_count, machine.cpu_core_count, machine.cpu_thread_count, machine.memory_bytes"""  # noqa
 
@@ -77,23 +67,8 @@ def test_z_score_calculations():
     assert z_score == _fixtures.Z_SCORE_DOWN
 
 
-def test_distribution_queries():
-    query = str(get_commits_up(REPO, "SHA", 3).statement.compile())
-    assert query == COMMITS_UP
-
-    commit = Commit.create(
-        {
-            "sha": "some commit",
-            "repository": "some repo",
-            "parent": "some parent",
-            "timestamp": datetime.datetime(2021, 11, 1),
-            "message": "message 11111",
-            "author_name": "author_name",
-            "author_login": "author_login",
-            "author_avatar": "author_avatar",
-        }
-    )
-    summary = _fixtures.summary(results=[1, 2, 3], commit=commit)
+def test_distribution_query():
+    summary = _fixtures.summary()
     query = str(get_distribution(summary, 3).statement.compile())
     assert query == DISTRIBUTION
 
@@ -236,37 +211,34 @@ def test_distribution():
         (commit_5.id, commit_5.timestamp),
         (commit_4.id, commit_4.timestamp),
     ]
-    assert get_commits_up(REPO, "88888", 3).all() == expected
-    assert get_commits_up(REPO, "77777", 3).all() == []
-    assert get_commits_up(REPO, "66666", 3).all() == []
+    assert get_commits_up(commit_8, 3).all() == expected
     expected = [
         (commit_5.id, commit_5.timestamp),
         (commit_4.id, commit_4.timestamp),
         (commit_3.id, commit_3.timestamp),
     ]
-    assert get_commits_up(REPO, "55555", 3).all() == expected
+    assert get_commits_up(commit_5, 3).all() == expected
     expected = [
         (commit_4.id, commit_4.timestamp),
         (commit_3.id, commit_3.timestamp),
         (commit_2.id, commit_2.timestamp),
     ]
-    assert get_commits_up(REPO, "44444", 3).all() == expected
+    assert get_commits_up(commit_4, 3).all() == expected
     expected = [
         (commit_3.id, commit_3.timestamp),
         (commit_2.id, commit_2.timestamp),
         (commit_1.id, commit_1.timestamp),
     ]
-    assert get_commits_up(REPO, "33333", 3).all() == expected
+    assert get_commits_up(commit_3, 3).all() == expected
     expected = [
         (commit_2.id, commit_2.timestamp),
         (commit_1.id, commit_1.timestamp),
     ]
-    assert get_commits_up(REPO, "22222", 3).all() == expected
+    assert get_commits_up(commit_2, 3).all() == expected
     expected = [
         (commit_1.id, commit_1.timestamp),
     ]
-    assert get_commits_up(REPO, "11111", 3).all() == expected
-    assert get_commits_up(REPO, "00000", 3).all() == []
+    assert get_commits_up(commit_1, 3).all() == expected
 
     # ----- get_closest_parent
 
