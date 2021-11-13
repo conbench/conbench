@@ -13,6 +13,7 @@ depends_on = None
 
 
 def get_commits_up(commit_table, commit, limit):
+    # NOTE this query will fail if commit.timestamp is None
     return (
         select(commit_table.c.id, commit_table.c.timestamp)
         .filter(commit_table.c.repository == commit.repository)
@@ -116,7 +117,7 @@ def upgrade():
     commits_by_id = {c["id"]: c for c in commits}
     machines_by_id = {m["id"]: m for m in machines}
 
-    logging.info("9fed559406c5: Get benchmarks")
+    logging.info("0fed559406c5: Get benchmarks")
     summaries = connection.execute(
         summary_table.select()
         .join(run_table, run_table.c.id == summary_table.c.run_id)
@@ -125,7 +126,7 @@ def upgrade():
 
     i = 1
 
-    logging.info("9fed559406c5: Truncate distribution table")
+    logging.info("0fed559406c5: Truncate distribution table")
     connection.execute(distribution_table.delete())
     assert list(connection.execute(distribution_table.select())) == []
 
@@ -136,6 +137,9 @@ def upgrade():
 
         commit = commits_by_id.get(run["commit_id"])
         if not commit:
+            continue
+
+        if commit.timestamp is None:
             continue
 
         m = machines_by_id[run["machine_id"]]
@@ -174,10 +178,10 @@ def upgrade():
                 set_=values,
             )
         )
-        logging.info(f"9fed559406c5: Processed {i} summary")
+        logging.info(f"0fed559406c5: Processed {i} summary")
         i += 1
 
-    logging.info("9fed559406c5: Done with migration")
+    logging.info("0fed559406c5: Done with migration")
 
 
 def downgrade():

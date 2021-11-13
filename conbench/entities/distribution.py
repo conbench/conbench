@@ -49,18 +49,13 @@ s.Index(
 )
 
 
-def get_commits_up(repository, sha, limit):
-    commit = (
-        Session.query(Commit.timestamp)
-        .filter(Commit.repository == repository)
-        .filter(Commit.sha == sha)
-        .scalar_subquery()
-    )
+def get_commits_up(commit, limit):
+    # NOTE this query will fail if commit.timestamp is None
     return (
         Session.query(Commit.id, Commit.timestamp)
-        .filter(Commit.repository == repository)
+        .filter(Commit.repository == commit.repository)
         .filter(Commit.timestamp.isnot(None))
-        .filter(Commit.timestamp <= commit)
+        .filter(Commit.timestamp <= commit.timestamp)
         .order_by(Commit.timestamp.desc())
         .limit(limit)
     )
@@ -70,13 +65,7 @@ def get_distribution(summary, limit):
     from ..entities.summary import Summary
 
     commits_up = (
-        get_commits_up(
-            summary.run.commit.repository,
-            summary.run.commit.sha,
-            limit,
-        )
-        .subquery()
-        .alias("commits_up")
+        get_commits_up(summary.run.commit, limit).subquery().alias("commits_up")
     )
 
     return (
@@ -122,6 +111,9 @@ def get_distribution(summary, limit):
 def update_distribution(summary, limit):
     from ..db import engine
 
+    if summary.run.commit.timestamp is None:
+        return
+
     distribution = get_distribution(summary, limit).first()
 
     if not distribution:
@@ -163,6 +155,7 @@ def get_closest_parent(run):
         .filter(
             Run.name.like("commit: %"),
             Machine.id.in_(machine_ids),
+            Commit.timestamp.isnot(None),
             Commit.timestamp < commit.timestamp,
             Commit.repository == commit.repository,
         )
