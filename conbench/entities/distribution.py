@@ -50,6 +50,7 @@ s.Index(
 
 
 def get_commits_up(commit, limit):
+    # NOTE this query will fail if commit.timestamp is None
     return (
         Session.query(Commit.id, Commit.timestamp)
         .filter(Commit.repository == commit.repository)

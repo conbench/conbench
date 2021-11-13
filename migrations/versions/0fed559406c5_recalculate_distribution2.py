@@ -13,6 +13,7 @@ depends_on = None
 
 
 def get_commits_up(commit_table, commit, limit):
+    # NOTE this query will fail if commit.timestamp is None
     return (
         select(commit_table.c.id, commit_table.c.timestamp)
         .filter(commit_table.c.repository == commit.repository)
