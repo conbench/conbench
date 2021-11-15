@@ -210,8 +210,8 @@ def test_upgrade():
 
     # do migration
     alembic_config = Config(config_path)
-    command.stamp(alembic_config, "9fed559406c5")
-    command.upgrade(alembic_config, "0fed559406c5")
+    command.stamp(alembic_config, "0fed559406c5")
+    command.upgrade(alembic_config, "1fed559406c5")
 
     # assert after migration
     distributions = Distribution.search(
