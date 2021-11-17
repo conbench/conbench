@@ -59,7 +59,7 @@ run_migrations() {
         s/{{DOCKER_REGISTRY}}/${DOCKER_REGISTRY}/g;\
         s/{{FLASK_APP}}/${FLASK_APP}/g" |
     kubectl apply -f -
-  kubectl wait --for=condition=complete --timeout=259200s job/conbench-migration
+  kubectl wait --for=condition=complete --timeout=86400s job/conbench-migration
   (($(kubectl get job conbench-migration -o jsonpath={.status.succeeded}) == "1")) && exit 0 || exit 1
 }
 
