@@ -5,6 +5,7 @@ Revises: 1fed559406c5
 Create Date: 2021-11-17 10:03:27.286293
 
 """
+import logging
 import uuid
 
 import sqlalchemy as sa
@@ -17,6 +18,8 @@ down_revision = "1fed559406c5"
 branch_labels = None
 depends_on = None
 
+logger = logging.getLogger("alembic.runtime.migration")
+
 
 def upgrade():
     connection = op.get_bind()
@@ -25,12 +28,15 @@ def upgrade():
 
     info_table = meta.tables["info"]
     summary_table = meta.tables["summary"]
-    summaries = connection.execute(
-        summary_table.select().filter(summary_table.c.info_id.is_(None))
+    summaries = list(
+        connection.execute(
+            summary_table.select().filter(summary_table.c.info_id.is_(None))
+        )
     )
-    null_info = None
-    for summary in summaries:
-        print("Found NULL", summary.id)
+
+    null_info, num = None, len(summaries)
+    for i, summary in enumerate(summaries):
+        logger.info(f"Found NULL {i + 1} of {num}", summary.id)
 
         if not null_info:
             null_info = connection.execute(
@@ -40,9 +46,9 @@ def upgrade():
             ).fetchone()
 
             if null_info:
-                print("Found NULL info")
+                logger.info("Found NULL info")
             else:
-                print("No NULL info")
+                logger.info("No NULL info")
                 new_info_id = uuid.uuid4().hex
                 connection.execute(
                     info_table.insert().values(
