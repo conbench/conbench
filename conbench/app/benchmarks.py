@@ -60,10 +60,7 @@ class BenchmarkMixin:
         return response.json
 
     def _get_info(self, benchmark):
-        info_url = benchmark["links"]["info"]
-        if info_url is None:
-            return {}
-        response = self.api_get_url(info_url)
+        response = self.api_get_url(benchmark["links"]["info"])
         if response.status_code != 200:
             self.flash("Error getting info.")
             return {}

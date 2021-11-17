@@ -30,7 +30,7 @@ class Summary(Base, EntityMixin):
     __tablename__ = "summary"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     case_id = NotNull(s.String(50), s.ForeignKey("case.id"))
-    info_id = Nullable(s.String(50), s.ForeignKey("info.id"))
+    info_id = NotNull(s.String(50), s.ForeignKey("info.id"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
     run_id = NotNull(s.Text, s.ForeignKey("run.id"))
     case = relationship("Case", lazy="joined")
@@ -220,9 +220,7 @@ class _Serializer(EntitySerializer):
                 "self": f.url_for(
                     "api.benchmark", benchmark_id=summary.id, _external=True
                 ),
-                "info": f.url_for("api.info", info_id=summary.info_id, _external=True)
-                if summary.info_id
-                else None,
+                "info": f.url_for("api.info", info_id=summary.info_id, _external=True),
                 "context": f.url_for(
                     "api.context", context_id=summary.context_id, _external=True
                 ),
@@ -249,7 +247,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=True)
     stats = marshmallow.fields.Nested(SummarySchema().create, required=True)
     tags = marshmallow.fields.Dict(required=True)
-    info = marshmallow.fields.Dict(required=False)
+    info = marshmallow.fields.Dict(required=True)
     context = marshmallow.fields.Dict(required=True)
     github = marshmallow.fields.Nested(GitHubCreate(), required=False)
 
