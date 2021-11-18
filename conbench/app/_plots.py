@@ -209,9 +209,10 @@ def time_series_plot(history, benchmark, run, height=250, width=1000):
         x_axis_type="datetime",
         plot_height=height,
         plot_width=width,
-        toolbar_location=None,
-        tools=[hover],
+        tools=[hover, "pan", "zoom_in", "zoom_out", "reset"],
+        x_range=(source.data["x"][0], source.data["x"][-1]),
     )
+    p.toolbar.logo = None
 
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
@@ -229,6 +230,36 @@ def time_series_plot(history, benchmark, run, height=250, width=1000):
         name="benchmark",
     )
 
+    p.legend.title_text_color = "darkgray"
+    p.legend.title = f"{len(history)} observations"
     p.legend.location = "bottom_left"
 
-    return p
+    range_tool = bokeh.models.RangeTool(x_range=p.x_range)
+    range_tool.overlay.fill_color = "gainsboro"
+    range_tool.overlay.fill_alpha = 0.2
+
+    select = bokeh.plotting.figure(
+        title="drag the middle and edges of the selection box to change the range above",
+        height=80,
+        width=width,
+        y_range=p.y_range,
+        x_axis_type="datetime",
+        y_axis_type=None,
+        tools="",
+        toolbar_location=None,
+    )
+
+    select.line("x", "y", source=source)
+    select.ygrid.grid_line_color = None
+    select.add_tools(range_tool)
+    select.toolbar.active_multi = range_tool
+    select.axis.visible = False
+    select.title.text_font_style = "italic"
+
+    spacer = bokeh.plotting.figure(
+        toolbar_location=None,
+        height=20,
+    )
+    spacer.outline_line_color = None
+
+    return bokeh.layouts.column(p, spacer, select, spacer)
