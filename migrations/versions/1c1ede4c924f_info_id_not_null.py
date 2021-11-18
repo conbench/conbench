@@ -36,7 +36,7 @@ def upgrade():
 
     null_info, num = None, len(summaries)
     for i, summary in enumerate(summaries):
-        logger.info(f"Found NULL {i + 1} of {num}", summary.id)
+        logger.info(f"Found NULL {i + 1} of {num}: {summary.id}")
 
         if not null_info:
             null_info = connection.execute(
