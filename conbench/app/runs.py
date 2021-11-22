@@ -21,21 +21,11 @@ class Run(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             compare = f'{baseline_run["id"]}...{contender_run["id"]}'
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
 
-        # top 3 outliers
-        outliers = sorted(
-            [
-                (abs(float(b["stats"]["z_score"])), b)
-                for b in benchmarks
-                if b["stats"]["z_regression"] or b["stats"]["z_improvement"]
-            ],
-            reverse=True,
-        )[:3]
-        outliers = [o[1] for o in outliers]
-        outlier_ids = [b["id"] for b in outliers]
-        outlier_names = [f'{b["display_batch"]}, {b["display_name"]}' for b in outliers]
+        outliers, outlier_ids, outlier_names = self.get_outliers(benchmarks)
         plot_history = [
             self.get_history_plot(b, contender_run, i) for i, b in enumerate(outliers)
         ]
+
         return self.render_template(
             "run.html",
             application=Config.APPLICATION_NAME,

@@ -9,6 +9,24 @@ from ..units import formatter_for_unit
 
 
 class TimeSeriesPlotMixin:
+    def get_outliers(self, benchmarks):
+        benchmarks_by_id = {b["id"]: b for b in benchmarks}
+
+        # top 3 outliers
+        outliers = sorted(
+            [
+                (abs(float(b["stats"]["z_score"])), b["id"])
+                for b in benchmarks
+                if b["stats"]["z_regression"] or b["stats"]["z_improvement"]
+            ],
+            reverse=True,
+        )[:3]
+
+        outliers = [benchmarks_by_id[o[1]] for o in outliers]
+        outlier_ids = [b["id"] for b in outliers]
+        outlier_names = [f'{b["display_batch"]}, {b["display_name"]}' for b in outliers]
+        return outliers, outlier_ids, outlier_names
+
     def get_history_plot(self, benchmark, run, i=0):
         history = self._get_history(benchmark)
         if history:
