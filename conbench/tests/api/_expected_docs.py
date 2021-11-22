@@ -857,6 +857,7 @@
                 "required": [
                     "batch_id",
                     "context",
+                    "info",
                     "machine_info",
                     "run_id",
                     "stats",

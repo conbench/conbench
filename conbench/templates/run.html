@@ -69,8 +69,6 @@
       {% endif %}
     </div>
   </div>
-  <br>
-  <br>
 </div>
 {% endif %}
 
@@ -145,7 +143,7 @@ $(document).ready(function() {
         $("#run-form").find("#delete").attr("data-href", "{{ url_for('app.run', run_id=run_id) }}");
         $("#run-form").find("#delete").attr("data-message", "<ul><li>Delete run: <strong>{{ run_id }}</strong></li></ul>");
     {% endif %}
-   });
+});
 
 $(document).ready(function() {
     {% for plot in plot_history %}
@@ -153,6 +151,5 @@ $(document).ready(function() {
     {% endfor %}
     document.getElementById("bokeh-carousel").style.visibility = "visible";
 });
-
 </script>
 {% endblock %}
