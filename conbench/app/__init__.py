@@ -9,5 +9,6 @@ from .batches import *  # noqa
 from .benchmarks import *  # noqa
 from .compare import *  # noqa
 from .index import *  # noqa
+from .robots import *  # noqa
 from .runs import *  # noqa
 from .users import *  # noqa
