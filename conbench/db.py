@@ -14,7 +14,7 @@ def configure_engine(url):
         future=True,
         echo=False,
         pool_pre_ping=True,
-        connect_args={"options": "-c timezone=utc statement_timeout=30000"},
+        connect_args={"options": "-c timezone=utc -c statement_timeout=30s"},
     )
     session_maker.configure(bind=engine)
 
