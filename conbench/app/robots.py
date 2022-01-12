@@ -7,7 +7,7 @@ text = """
 "User-Agent: *
 Disallow: /api/history/
 Disallow: /batches/
-Disallow: /benchmark/
+Disallow: /benchmarks/
 Disallow: /compare/
 Disallow: /runs/
 """
