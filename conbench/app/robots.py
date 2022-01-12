@@ -3,11 +3,20 @@ import flask as f
 from ..app import rule
 from ..app._endpoint import AppEndpoint
 
+text = """
+"User-Agent: *
+Disallow: /api/history/
+Disallow: /batches/
+Disallow: /benchmark/
+Disallow: /compare/
+Disallow: /runs/
+"""
+
 
 class Robots(AppEndpoint):
     def get(self):
         response = f.Response(
-            response="User-Agent: *\nDisallow: /compare/\n",
+            response=text,
             status=200,
             mimetype="text/plain",
         )
