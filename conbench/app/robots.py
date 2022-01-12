@@ -2,10 +2,9 @@ import flask as f
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint
-from ..app.benchmarks import RunMixin
 
 
-class Robots(AppEndpoint, RunMixin):
+class Robots(AppEndpoint):
     def get(self):
         response = f.Response(
             response="User-Agent: *\nDisallow: /compare/\n",
