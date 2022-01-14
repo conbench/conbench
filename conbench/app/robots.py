@@ -4,12 +4,8 @@ from ..app import rule
 from ..app._endpoint import AppEndpoint
 
 text = """
-"User-Agent: *
-Disallow: /api/history/
-Disallow: /batches/
-Disallow: /benchmarks/
-Disallow: /compare/
-Disallow: /runs/
+User-Agent: *
+Disallow: /
 """
 
 
