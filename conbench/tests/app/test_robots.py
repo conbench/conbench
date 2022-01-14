@@ -1,10 +1,6 @@
 expected_text = """
-"User-Agent: *
-Disallow: /api/history/
-Disallow: /batches/
-Disallow: /benchmarks/
-Disallow: /compare/
-Disallow: /runs/
+User-Agent: *
+Disallow: /
 """
 
 
