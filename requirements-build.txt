@@ -19,7 +19,7 @@ openapi-spec-validator
 psutil
 psycopg2-binary
 py-cpuinfo
-pytest
+pytest==6.2.5
 python-dotenv
 PyYAML
 requests
