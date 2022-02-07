@@ -3,12 +3,12 @@ def items_per_second_fmt(value, unit):
         return None
     if value < 1000:
         return "{} {}".format(value, unit)
-    if value < 1000 ** 2:
+    if value < 1000**2:
         return "{:.3f} K {}".format(value / 1000, unit)
-    if value < 1000 ** 3:
-        return "{:.3f} M {}".format(value / 1000 ** 2, unit)
+    if value < 1000**3:
+        return "{:.3f} M {}".format(value / 1000**2, unit)
     else:
-        return "{:.3f} G {}".format(value / 1000 ** 3, unit)
+        return "{:.3f} G {}".format(value / 1000**3, unit)
 
 
 def bytes_per_second_fmt(value, unit):
@@ -16,14 +16,14 @@ def bytes_per_second_fmt(value, unit):
         return None
     if value < 1024:
         return "{} {}".format(value, unit)
-    if value < 1024 ** 2:
+    if value < 1024**2:
         return "{:.3f} Ki{}".format(value / 1024, unit)
-    if value < 1024 ** 3:
-        return "{:.3f} Mi{}".format(value / 1024 ** 2, unit)
-    if value < 1024 ** 4:
-        return "{:.3f} Gi{}".format(value / 1024 ** 3, unit)
+    if value < 1024**3:
+        return "{:.3f} Mi{}".format(value / 1024**2, unit)
+    if value < 1024**4:
+        return "{:.3f} Gi{}".format(value / 1024**3, unit)
     else:
-        return "{:.3f} Ti{}".format(value / 1024 ** 4, unit)
+        return "{:.3f} Ti{}".format(value / 1024**4, unit)
 
 
 def fmt_unit(value, unit):
