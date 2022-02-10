@@ -11,29 +11,38 @@ from ..entities._entity import (
     EntityMixin,
     EntitySerializer,
     NotNull,
+    Nullable,
     generate_uuid,
 )
 
 
-class Machine(Base, EntityMixin):
+class Hardware(Base, EntityMixin):
     __tablename__ = "machine"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     name = NotNull(s.Text)
-    architecture_name = NotNull(s.Text)
-    kernel_name = NotNull(s.Text)
-    os_name = NotNull(s.Text)
-    os_version = NotNull(s.Text)
-    cpu_model_name = NotNull(s.Text)
-    cpu_l1d_cache_bytes = NotNull(s.Integer, check("cpu_l1d_cache_bytes>=0"))
-    cpu_l1i_cache_bytes = NotNull(s.Integer, check("cpu_l1i_cache_bytes>=0"))
-    cpu_l2_cache_bytes = NotNull(s.Integer, check("cpu_l2_cache_bytes>=0"))
-    cpu_l3_cache_bytes = NotNull(s.Integer, check("cpu_l3_cache_bytes>=0"))
-    cpu_core_count = NotNull(s.Integer, check("cpu_core_count>=0"))
-    cpu_thread_count = NotNull(s.Integer, check("cpu_thread_count>=0"))
-    cpu_frequency_max_hz = NotNull(s.BigInteger, check("cpu_frequency_max_hz>=0"))
-    memory_bytes = NotNull(s.BigInteger, check("memory_bytes>=0"))
-    gpu_count = NotNull(s.Integer, check("gpu_count>=0"), default=0)
-    gpu_product_names = NotNull(postgresql.ARRAY(s.Text), default=[])
+    type = NotNull(s.String(50))
+
+    __mapper_args__ = {"polymorphic_on": type, "polymorphic_identity": "hardware"}
+
+
+class Machine(Hardware):
+    architecture_name = Nullable(s.Text)
+    kernel_name = Nullable(s.Text)
+    os_name = Nullable(s.Text)
+    os_version = Nullable(s.Text)
+    cpu_model_name = Nullable(s.Text)
+    cpu_l1d_cache_bytes = Nullable(s.Integer, check("cpu_l1d_cache_bytes>=0"))
+    cpu_l1i_cache_bytes = Nullable(s.Integer, check("cpu_l1i_cache_bytes>=0"))
+    cpu_l2_cache_bytes = Nullable(s.Integer, check("cpu_l2_cache_bytes>=0"))
+    cpu_l3_cache_bytes = Nullable(s.Integer, check("cpu_l3_cache_bytes>=0"))
+    cpu_core_count = Nullable(s.Integer, check("cpu_core_count>=0"))
+    cpu_thread_count = Nullable(s.Integer, check("cpu_thread_count>=0"))
+    cpu_frequency_max_hz = Nullable(s.BigInteger, check("cpu_frequency_max_hz>=0"))
+    memory_bytes = Nullable(s.BigInteger, check("memory_bytes>=0"))
+    gpu_count = Nullable(s.Integer, check("gpu_count>=0"), default=0)
+    gpu_product_names = Nullable(postgresql.ARRAY(s.Text), default=[])
+
+    __mapper_args__ = {"polymorphic_identity": "machine"}
 
     @hybrid_property
     def hash(self):
@@ -62,6 +71,13 @@ class Machine(Base, EntityMixin):
             "-",
             cls.memory_bytes,
         ).label("hash")
+
+
+class Cluster(Hardware):
+    info = Nullable(postgresql.JSONB)
+    hash = Nullable(s.String(1000))
+
+    __mapper_args__ = {"polymorphic_identity": "cluster"}
 
 
 s.Index(
