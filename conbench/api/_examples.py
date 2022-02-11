@@ -377,8 +377,9 @@ def _api_run_entity(
     run_name,
     commit_id,
     parent_id,
-    machine_id,
-    machine_name,
+    hardware_id,
+    hardware_name,
+    hardware_type,
     now,
     baseline_id,
     include_baseline=True,
@@ -388,12 +389,14 @@ def _api_run_entity(
         "name": run_name,
         "timestamp": now,
         "commit": _api_commit_entity(commit_id, parent_id, links=False),
-        "hardware": _api_hardware_entity(machine_id, machine_name, links=False),
+        "hardware": _api_hardware_entity(
+            hardware_id, hardware_name, hardware_type, links=False
+        ),
         "links": {
             "list": "http://localhost/api/runs/",
             "self": "http://localhost/api/runs/%s/" % run_id,
             "commit": "http://localhost/api/commits/%s/" % commit_id,
-            "hardware": "http://localhost/api/hardware/%s/" % machine_id,
+            "hardware": "http://localhost/api/hardware/%s/" % hardware_id,
         },
     }
     baseline_url = None
@@ -487,6 +490,7 @@ RUN_ENTITY = _api_run_entity(
     "some-parent-commit-uuid-1",
     "some-machine-uuid-1",
     "some-machine-name",
+    "machine",
     "2021-02-04T17:22:05.225583",
     "some-run-uuid-0",
 )
@@ -498,6 +502,7 @@ RUN_LIST = [
         "some-parent-commit-uuid-1",
         "some-machine-uuid-1",
         "some-machine-name",
+        "machine",
         "2021-02-04T17:22:05.225583",
         None,
         include_baseline=False,

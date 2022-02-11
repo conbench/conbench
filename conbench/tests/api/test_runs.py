@@ -16,6 +16,7 @@ def _expected_entity(run, baseline_id=None, include_baseline=True):
         parent.id,
         run.hardware_id,
         run.hardware.name,
+        run.hardware.type,
         run.timestamp.isoformat(),
         baseline_id,
         include_baseline,
