@@ -78,18 +78,10 @@ class Summary(Base, EntityMixin):
             case = Case.create(c)
 
         # create if not exists
-        if "machine_info" in data:
-            machine = Machine.first(**data["machine_info"])
-            if not machine:
-                machine = Machine.create(data["machine_info"])
-            hardware_id = machine.id
-
-        # create if not exists
-        if "cluster_info" in data:
-            cluster = Cluster.first(**data["cluster_info"])
-            if not cluster:
-                machine = Cluster.create(data["cluster_info"])
-            hardware_id = cluster.id
+        hardware_type = Machine if "machine_info" in data else Cluster
+        hardware = hardware_type.first(**data[f"{hardware_type}_info"])
+        if not hardware:
+            hardware = hardware_type.create(data[f"{hardware_type}_info"])
 
         # create if not exists
         if "context" not in data:
@@ -131,7 +123,7 @@ class Summary(Base, EntityMixin):
                     "id": run_id,
                     "name": run_name,
                     "commit_id": commit.id,
-                    "hardware_id": hardware_id,
+                    "hardware_id": hardware.id,
                 }
             )
 
