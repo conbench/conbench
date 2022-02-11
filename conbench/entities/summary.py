@@ -78,10 +78,14 @@ class Summary(Base, EntityMixin):
             case = Case.create(c)
 
         # create if not exists
-        hardware_type = Machine if "machine_info" in data else Cluster
-        hardware = hardware_type.first(**data[f"{hardware_type.lower()}_info"])
+        hardware_type, field_name = (
+            (Machine, "machine_info")
+            if "machine_info" in data
+            else (Cluster, "cluster_info")
+        )
+        hardware = hardware_type.first(**data[field_name])
         if not hardware:
-            hardware = hardware_type.create(data[f"{hardware_type.lower()}_info"])
+            hardware = hardware_type.create(data[field_name])
 
         # create if not exists
         if "context" not in data:
