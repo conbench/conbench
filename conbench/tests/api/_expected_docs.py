@@ -621,6 +621,7 @@
                             "name": "some-machine-name",
                             "os_name": "macOS",
                             "os_version": "10.15.7",
+                            "type": "machine",
                         }
                     }
                 },
@@ -655,6 +656,7 @@
                                 "name": "some-machine-name",
                                 "os_name": "macOS",
                                 "os_version": "10.15.7",
+                                "type": "machine",
                             }
                         ]
                     }
@@ -710,6 +712,7 @@
                                 "name": "some-machine-name",
                                 "os_name": "macOS",
                                 "os_version": "10.15.7",
+                                "type": "machine",
                             },
                             "id": "some-run-uuid-1",
                             "links": {
@@ -764,6 +767,7 @@
                                     "name": "some-machine-name",
                                     "os_name": "macOS",
                                     "os_version": "10.15.7",
+                                    "type": "machine",
                                 },
                                 "id": "some-run-uuid-1",
                                 "links": {
@@ -844,6 +848,7 @@
             "BenchmarkCreate": {
                 "properties": {
                     "batch_id": {"type": "string"},
+                    "cluster_info": {"$ref": "#/components/schemas/ClusterCreate"},
                     "context": {"type": "object"},
                     "github": {"$ref": "#/components/schemas/GitHubCreate"},
                     "info": {"type": "object"},
@@ -858,12 +863,16 @@
                     "batch_id",
                     "context",
                     "info",
-                    "machine_info",
                     "run_id",
                     "stats",
                     "tags",
                     "timestamp",
                 ],
+                "type": "object",
+            },
+            "ClusterCreate": {
+                "properties": {"info": {"type": "object"}, "name": {"type": "string"}},
+                "required": ["info", "name"],
                 "type": "object",
             },
             "Error": {

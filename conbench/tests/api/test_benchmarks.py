@@ -292,7 +292,6 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         "batch_id",
         "context",
         "info",
-        "machine_info",
         "run_id",
         "stats",
         "tags",
@@ -606,3 +605,23 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         assert distributions[0].max_sd == decimal.Decimal("0")
         assert distributions[0].median_mean == decimal.Decimal("0.00898800000000000000")
         assert distributions[0].median_sd == decimal.Decimal("0")
+
+    def test_one_hardware_field_is_present(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        del data["machine_info"]
+        response = client.post(self.url, json=data)
+        message = {"_schema": ["Either machine_info or cluster_info field is required"]}
+        self.assert_400_bad_request(response, message)
+
+    def test_two_hardware_fields_are_present(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["cluster_info"] = {"name": "cluster", "info": {}}
+        response = client.post(self.url, json=data)
+        message = {
+            "_schema": [
+                "machine_info and cluster_info fields can not be used at the same time"
+            ]
+        }
+        self.assert_400_bad_request(response, message)
