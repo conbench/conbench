@@ -16,7 +16,7 @@ branch_labels = None
 depends_on = None
 
 
-def set_machine_type():
+def set_machine_type_and_hash():
     connection = op.get_bind()
     meta = sa.MetaData()
     meta.reflect(bind=connection)
@@ -85,7 +85,7 @@ def upgrade():
         nullable=True,
     )
 
-    set_machine_type()
+    set_machine_type_and_hash()
 
     op.alter_column(
         "machine", "type", existing_type=sa.VARCHAR(length=50), nullable=False
