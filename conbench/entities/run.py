@@ -96,7 +96,7 @@ class _Serializer(EntitySerializer):
                 "commit": f.url_for(
                     "api.commit", commit_id=commit["id"], _external=True
                 ),
-                "machine": f.url_for(
+                "hardware": f.url_for(
                     "api.hardware", hardware_id=hardware["id"], _external=True
                 ),
             },
