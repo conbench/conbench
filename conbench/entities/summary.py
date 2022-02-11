@@ -20,8 +20,8 @@ from ..entities.commit import Commit, get_github_commit, repository_to_url
 from ..entities.context import Context
 from ..entities.data import Data
 from ..entities.distribution import update_distribution
-from ..entities.info import Info
 from ..entities.hardware import Cluster, Machine, MachineSchema
+from ..entities.info import Info
 from ..entities.run import Run
 from ..entities.time import Time
 
