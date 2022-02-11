@@ -8,7 +8,7 @@ def _expected_entity(machine):
 
 def create_machine():
     summary = _fixtures.summary()
-    return summary.run.machine
+    return summary.run.hardware
 
 
 class TestMachineGet(_asserts.GetEnforcer):

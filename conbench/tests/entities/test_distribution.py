@@ -15,12 +15,12 @@ from ...tests.helpers import _uuid
 REPO = "https://github.com/org/something"
 MACHINE = "diana-2-2-4-17179869184"
 
-DISTRIBUTION = """SELECT text(:text_1) AS case_id, text(:text_2) AS context_id, text(:text_3) AS commit_id, concat(machine.name, :concat_1, machine.gpu_count, :concat_2, machine.cpu_core_count, :concat_3, machine.cpu_thread_count, :concat_4, machine.memory_bytes) AS hash, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
-FROM summary JOIN run ON run.id = summary.run_id JOIN machine ON machine.id = run.machine_id AND machine.type IN (__[POSTCOMPILE_type_1]) JOIN (SELECT commit.id AS id, commit.timestamp AS timestamp 
+DISTRIBUTION = """SELECT text(:text_1) AS case_id, text(:text_2) AS context_id, text(:text_3) AS commit_id, machine.hash AS hash, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
+FROM summary JOIN run ON run.id = summary.run_id JOIN machine ON machine.id = run.machine_id JOIN (SELECT commit.id AS id, commit.timestamp AS timestamp 
 FROM commit 
 WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL AND commit.timestamp <= :timestamp_1 ORDER BY commit.timestamp DESC
  LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id 
-WHERE run.name LIKE :name_1 AND summary.case_id = :case_id_1 AND summary.context_id = :context_id_1 AND concat(machine.name, :concat_5, machine.gpu_count, :concat_6, machine.cpu_core_count, :concat_7, machine.cpu_thread_count, :concat_8, machine.memory_bytes) = :param_2 GROUP BY summary.case_id, summary.context_id, machine.name, machine.gpu_count, machine.cpu_core_count, machine.cpu_thread_count, machine.memory_bytes"""  # noqa
+WHERE run.name LIKE :name_1 AND summary.case_id = :case_id_1 AND summary.context_id = :context_id_1 AND machine.hash = :hash_1 GROUP BY summary.case_id, summary.context_id, machine.hash"""  # noqa
 
 
 def test_z_score_calculations():
@@ -198,11 +198,11 @@ def test_distribution():
     assert summary_1.case_id == summary_5.case_id
     assert summary_1.case_id == summary_8.case_id
 
-    assert summary_1.run.machine_id == summary_2.run.machine_id
-    assert summary_1.run.machine_id == summary_3.run.machine_id
-    assert summary_1.run.machine_id == summary_4.run.machine_id
-    assert summary_1.run.machine_id == summary_5.run.machine_id
-    assert summary_1.run.machine_id == summary_8.run.machine_id
+    assert summary_1.run.hardware_id == summary_2.run.hardware_id
+    assert summary_1.run.hardware_id == summary_3.run.hardware_id
+    assert summary_1.run.hardware_id == summary_4.run.hardware_id
+    assert summary_1.run.hardware_id == summary_5.run.hardware_id
+    assert summary_1.run.hardware_id == summary_8.run.hardware_id
 
     # ----- get_commits_up
 

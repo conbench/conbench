@@ -456,7 +456,7 @@
                             "runs": [
                                 {
                                     "baseline": {
-                                        "machine_name": "diana",
+                                        "hardware_name": "diana",
                                         "run": "http://localhost/api/runs/some-baseline-run-id/",
                                         "run_id": "some-baseline-run-id",
                                         "run_name": "commit: 4beb514d071c9beec69b8917b5265e77ade22fb3",
@@ -464,7 +464,7 @@
                                     },
                                     "compare": "http://localhost/api/compare/runs/some-baseline-run-id...some-contender-run-id/",
                                     "contender": {
-                                        "machine_name": "diana",
+                                        "hardware_name": "diana",
                                         "run": "http://localhost/api/runs/some-contender-run-id/",
                                         "run_id": "some-contender-run-id",
                                         "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
@@ -521,7 +521,7 @@
                                 "context_id": "some-context-uuid-1",
                                 "distribution_mean": "0.036369",
                                 "distribution_stdev": "0.000000",
-                                "machine_hash": "diana-2-2-4-17179869184",
+                                "hardware_hash": "diana-2-2-4-17179869184",
                                 "mean": "0.036369",
                                 "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
                                 "repository": "https://github.com/apache/arrow",
@@ -689,15 +689,7 @@
                                 "timestamp": "2021-02-25T01:02:51",
                                 "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                             },
-                            "id": "some-run-uuid-1",
-                            "links": {
-                                "baseline": "http://localhost/api/runs/some-run-uuid-0/",
-                                "commit": "http://localhost/api/commits/some-commit-uuid-1/",
-                                "list": "http://localhost/api/runs/",
-                                "machine": "http://localhost/api/machines/some-machine-uuid-1/",
-                                "self": "http://localhost/api/runs/some-run-uuid-1/",
-                            },
-                            "machine": {
+                            "hardware": {
                                 "architecture_name": "x86_64",
                                 "cpu_core_count": 2,
                                 "cpu_frequency_max_hz": 3500000000,
@@ -718,6 +710,14 @@
                                 "name": "some-machine-name",
                                 "os_name": "macOS",
                                 "os_version": "10.15.7",
+                            },
+                            "id": "some-run-uuid-1",
+                            "links": {
+                                "baseline": "http://localhost/api/runs/some-run-uuid-0/",
+                                "commit": "http://localhost/api/commits/some-commit-uuid-1/",
+                                "hardware": "http://localhost/api/machines/some-machine-uuid-1/",
+                                "list": "http://localhost/api/runs/",
+                                "self": "http://localhost/api/runs/some-run-uuid-1/",
                             },
                             "name": "some run name",
                             "timestamp": "2021-02-04T17:22:05.225583",
@@ -743,14 +743,7 @@
                                     "timestamp": "2021-02-25T01:02:51",
                                     "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                                 },
-                                "id": "some-run-uuid-1",
-                                "links": {
-                                    "commit": "http://localhost/api/commits/some-commit-uuid-1/",
-                                    "list": "http://localhost/api/runs/",
-                                    "machine": "http://localhost/api/machines/some-machine-uuid-1/",
-                                    "self": "http://localhost/api/runs/some-run-uuid-1/",
-                                },
-                                "machine": {
+                                "hardware": {
                                     "architecture_name": "x86_64",
                                     "cpu_core_count": 2,
                                     "cpu_frequency_max_hz": 3500000000,
@@ -771,6 +764,13 @@
                                     "name": "some-machine-name",
                                     "os_name": "macOS",
                                     "os_version": "10.15.7",
+                                },
+                                "id": "some-run-uuid-1",
+                                "links": {
+                                    "commit": "http://localhost/api/commits/some-commit-uuid-1/",
+                                    "hardware": "http://localhost/api/machines/some-machine-uuid-1/",
+                                    "list": "http://localhost/api/runs/",
+                                    "self": "http://localhost/api/runs/some-run-uuid-1/",
                                 },
                                 "name": "some run name",
                                 "timestamp": "2021-02-04T17:22:05.225583",

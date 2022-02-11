@@ -33,7 +33,7 @@ def _compare_entity(summary):
 def _get_pairs(baseline_items, contender_items):
     """
     You should be able to compare any run with any other run, so we can't
-    just key by case_id/context_id/machine_hash, or you couldn't compare runs
+    just key by case_id/context_id/hardware_hash, or you couldn't compare runs
     done on different machine, nor could you compare runs done in different
     contexts.
 

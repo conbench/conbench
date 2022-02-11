@@ -7,7 +7,7 @@ from ..db import Session
 from ..entities._comparator import _less_is_better
 from ..entities._entity import Base, EntityMixin, NotNull, Nullable, generate_uuid
 from ..entities.commit import Commit
-from ..entities.machine import Machine
+from ..entities.hardware import Hardware
 from ..entities.run import Run
 
 
@@ -17,7 +17,7 @@ class Distribution(Base, EntityMixin):
     case_id = NotNull(s.String(50), s.ForeignKey("case.id", ondelete="CASCADE"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id", ondelete="CASCADE"))
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id", ondelete="CASCADE"))
-    machine_hash = NotNull(s.String(250))
+    hardware_hash = NotNull("machine_hash", s.String(250))
     unit = NotNull(s.Text)
     mean_mean = Nullable(s.Numeric, check("mean_mean>=0"))
     mean_sd = Nullable(s.Numeric, check("mean_sd>=0"))
@@ -38,14 +38,14 @@ s.Index(
     Distribution.case_id,
     Distribution.context_id,
     Distribution.commit_id,
-    Distribution.machine_hash,
+    Distribution.hardware_hash,
     unique=True,
 )
 
 s.Index(
     "distribution_commit_machine_index",
     Distribution.commit_id,
-    Distribution.machine_hash,
+    Distribution.hardware_hash,
 )
 
 
@@ -73,7 +73,7 @@ def get_distribution(summary, limit):
             func.text(summary.case_id).label("case_id"),
             func.text(summary.context_id).label("context_id"),
             func.text(summary.run.commit_id).label("commit_id"),
-            Machine.hash,
+            Hardware.hash.label("hash"),
             func.max(Summary.unit).label("unit"),
             func.avg(Summary.mean).label("mean_mean"),
             func.stddev(Summary.mean).label("mean_sd"),
@@ -90,20 +90,16 @@ def get_distribution(summary, limit):
         .group_by(
             Summary.case_id,
             Summary.context_id,
-            Machine.name,
-            Machine.gpu_count,
-            Machine.cpu_core_count,
-            Machine.cpu_thread_count,
-            Machine.memory_bytes,
+            Hardware.hash,
         )
         .join(Run, Run.id == Summary.run_id)
-        .join(Machine, Machine.id == Run.machine_id)
+        .join(Hardware, Hardware.id == Run.hardware_id)
         .join(commits_up, commits_up.c.id == Run.commit_id)
         .filter(
             Run.name.like("commit: %"),
             Summary.case_id == summary.case_id,
             Summary.context_id == summary.context_id,
-            Machine.hash == summary.run.machine.hash,
+            Hardware.hash == summary.run.hardware.hash,
         )
     )
 
@@ -120,8 +116,8 @@ def update_distribution(summary, limit):
         return
 
     values = dict(distribution)
-    machine_hash = values.pop("hash")
-    values["machine_hash"] = machine_hash
+    hardware_hash = values.pop("hash")
+    values["machine_hash"] = hardware_hash
     values["limit"] = limit
 
     with engine.connect() as conn:
@@ -141,8 +137,8 @@ def get_closest_parent(run):
     if commit.timestamp is None:
         return None
 
-    machines = Machine.all(hash=run.machine.hash)
-    machine_ids = set([m.id for m in machines])
+    hardware_entities = Hardware.all(hash=run.hardware.hash)
+    hardware_ids = set([m.id for m in hardware_entities])
 
     # TODO: what about matching contexts
     result = (
@@ -151,10 +147,10 @@ def get_closest_parent(run):
             Commit.id,
         )
         .join(Commit, Commit.id == Run.commit_id)
-        .join(Machine, Machine.id == Run.machine_id)
+        .join(Hardware, Hardware.id == Run.hardware_id)
         .filter(
             Run.name.like("commit: %"),
-            Machine.id.in_(machine_ids),
+            Hardware.id.in_(hardware_ids),
             Commit.timestamp.isnot(None),
             Commit.timestamp < commit.timestamp,
             Commit.repository == commit.repository,
@@ -185,7 +181,7 @@ def set_z_scores(summaries):
 
     where = [
         Distribution.commit_id == parent_commit.id,
-        Distribution.machine_hash == first.run.machine.hash,
+        Distribution.hardware_hash == first.run.hardware.hash,
     ]
     if len(summaries) == 1:
         where.extend(

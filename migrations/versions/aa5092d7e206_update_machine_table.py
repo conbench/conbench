@@ -21,7 +21,24 @@ def set_machine_type():
     meta = sa.MetaData()
     meta.reflect(bind=connection)
     machine_table = meta.tables["machine"]
-    connection.execute(machine_table.update().values(type="machine"))
+    machines = list(connection.execute(machine_table.select()))
+    for machine in machines:
+        machine_hash = (
+            machine.name
+            + "-"
+            + str(machine.gpu_count)
+            + "-"
+            + str(machine.cpu_core_count)
+            + "-"
+            + str(machine.cpu_thread_count)
+            + "-"
+            + str(machine.memory_bytes)
+        )
+        connection.execute(
+            machine_table.update()
+            .where(machine_table.c.id == machine.id)
+            .values(type="machine", hash=machine_hash)
+        )
 
 
 def upgrade():

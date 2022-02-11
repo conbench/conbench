@@ -1,10 +1,11 @@
+import hashlib
+import json
+
 import flask as f
 import marshmallow
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
-from sqlalchemy import func
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.ext.hybrid import hybrid_property
 
 from ..entities._entity import (
     Base,
@@ -21,8 +22,16 @@ class Hardware(Base, EntityMixin):
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     name = NotNull(s.Text)
     type = NotNull(s.String(50))
+    hash = NotNull(s.String(1000))
 
     __mapper_args__ = {"polymorphic_on": type, "polymorphic_identity": "hardware"}
+
+    @classmethod
+    def create(cls, data):
+        hardware = cls(**data)
+        hardware.hash = hardware.generate_hash()
+        hardware.save()
+        return hardware
 
 
 class Machine(Hardware):
@@ -44,8 +53,7 @@ class Machine(Hardware):
 
     __mapper_args__ = {"polymorphic_identity": "machine"}
 
-    @hybrid_property
-    def hash(self):
+    def generate_hash(self):
         return (
             self.name
             + "-"
@@ -58,26 +66,14 @@ class Machine(Hardware):
             + str(self.memory_bytes)
         )
 
-    @hash.expression
-    def hash(cls):
-        return func.concat(
-            cls.name,
-            "-",
-            cls.gpu_count,
-            "-",
-            cls.cpu_core_count,
-            "-",
-            cls.cpu_thread_count,
-            "-",
-            cls.memory_bytes,
-        ).label("hash")
-
 
 class Cluster(Hardware):
     info = Nullable(postgresql.JSONB)
-    hash = Nullable(s.String(1000))
 
     __mapper_args__ = {"polymorphic_identity": "cluster"}
+
+    def generate_hash(self):
+        return self.name + "-" + hashlib.md5(json.dumps(self.info)).hexdigest()
 
 
 s.Index(

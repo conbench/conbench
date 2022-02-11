@@ -319,7 +319,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         assert summary_1.case_id == summary_2.case_id
         assert summary_1.info_id == summary_2.info_id
         assert summary_1.context_id == summary_2.context_id
-        assert summary_1.run.machine_id == summary_2.run.machine_id
+        assert summary_1.run.hardware_id == summary_2.run.hardware_id
         assert summary_1.run_id != summary_2.run_id
         assert summary_1.run.commit_id == summary_2.run.commit_id
 
@@ -590,7 +590,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         self.assert_201_created(response, _expected_entity(summary_2), location)
         assert summary_1.case_id == summary_2.case_id
         assert summary_1.context_id == summary_2.context_id
-        assert summary_1.run.machine_id == summary_2.run.machine_id
+        assert summary_1.run.hardware_id == summary_2.run.hardware_id
         assert summary_1.run.commit_id == summary_2.run.commit_id
 
         # after two results

@@ -92,14 +92,14 @@ def test_history():
     assert summary_1.case_id == summary_4.case_id
     assert summary_1.case_id == summary_5.case_id
 
-    assert summary_1.run.machine_id == summary_2.run.machine_id
-    assert summary_1.run.machine_id == summary_3.run.machine_id
-    assert summary_1.run.machine_id == summary_4.run.machine_id
-    assert summary_1.run.machine_id == summary_5.run.machine_id
+    assert summary_1.run.hardware_id == summary_2.run.hardware_id
+    assert summary_1.run.hardware_id == summary_3.run.hardware_id
+    assert summary_1.run.hardware_id == summary_4.run.hardware_id
+    assert summary_1.run.hardware_id == summary_5.run.hardware_id
 
     case_id = summary_1.case_id
     context_id = summary_1.context_id
-    machine_hash = summary_1.run.machine.hash
+    hardware_hash = summary_1.run.hardware.hash
 
     # ----- get_commit_index
 
@@ -110,7 +110,7 @@ def test_history():
             context_id,
             summary_1.mean,
             "s",
-            machine_hash,
+            hardware_hash,
             commit_1.sha,
             REPO,
             "message 11111",
@@ -125,7 +125,7 @@ def test_history():
             context_id,
             summary_2.mean,
             "s",
-            machine_hash,
+            hardware_hash,
             commit_2.sha,
             REPO,
             "message 22222",
@@ -140,7 +140,7 @@ def test_history():
             context_id,
             summary_3.mean,
             "s",
-            machine_hash,
+            hardware_hash,
             commit_3.sha,
             REPO,
             "message 33333",
@@ -155,7 +155,7 @@ def test_history():
             context_id,
             summary_4.mean,
             "s",
-            machine_hash,
+            hardware_hash,
             commit_4.sha,
             REPO,
             "message 44444",
@@ -170,7 +170,7 @@ def test_history():
             context_id,
             summary_5.mean,
             "s",
-            machine_hash,
+            hardware_hash,
             commit_4.sha,
             REPO,
             "message 44444",
@@ -180,6 +180,6 @@ def test_history():
             summary_5.run.name,
         ),
     ]
-    actual = get_history(case_id, context_id, machine_hash)
+    actual = get_history(case_id, context_id, hardware_hash)
     assert len(actual) == len(expected)
     assert set(actual) == set(expected)

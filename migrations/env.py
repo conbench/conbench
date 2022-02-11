@@ -14,7 +14,7 @@ from conbench.entities import (  # noqa  # isort:skip
     context as _,
     info,
     data,
-    machine,
+    hardware,
     run,
     summary,
     time,

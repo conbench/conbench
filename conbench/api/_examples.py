@@ -259,7 +259,7 @@ def _api_compare_summary(
         "runs": [
             {
                 "baseline": {
-                    "machine_name": "diana",
+                    "hardware_name": "diana",
                     "run": f"http://localhost/api/runs/{baseline_id}/",
                     "run_id": baseline_id,
                     "run_name": baseline_name,
@@ -267,7 +267,7 @@ def _api_compare_summary(
                 },
                 "compare": f"http://localhost/api/compare/runs/{baseline_id}...{contender_id}/",
                 "contender": {
-                    "machine_name": "diana",
+                    "hardware_name": "diana",
                     "run": f"http://localhost/api/runs/{contender_id}/",
                     "run_id": contender_id,
                     "run_name": contender_name,
@@ -298,7 +298,7 @@ def _api_history_entity(benchmark_id, case_id, context_id, run_name):
         "benchmark_id": benchmark_id,
         "case_id": case_id,
         "context_id": context_id,
-        "machine_hash": "diana-2-2-4-17179869184",
+        "hardware_hash": "diana-2-2-4-17179869184",
         "unit": "s",
         "mean": "0.036369",
         "distribution_mean": "0.036369",
@@ -373,12 +373,12 @@ def _api_run_entity(
         "name": run_name,
         "timestamp": now,
         "commit": _api_commit_entity(commit_id, parent_id, links=False),
-        "machine": _api_machine_entity(machine_id, machine_name, links=False),
+        "hardware": _api_machine_entity(machine_id, machine_name, links=False),
         "links": {
             "list": "http://localhost/api/runs/",
             "self": "http://localhost/api/runs/%s/" % run_id,
             "commit": "http://localhost/api/commits/%s/" % commit_id,
-            "machine": "http://localhost/api/machines/%s/" % machine_id,
+            "hardware": "http://localhost/api/machines/%s/" % machine_id,
         },
     }
     baseline_url = None

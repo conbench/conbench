@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 from ..db import Session
 from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
 from ..entities.commit import Commit, CommitSerializer
-from ..entities.machine import Machine, MachineSerializer
+from ..entities.hardware import Hardware, MachineSerializer
 
 
 class Run(Base, EntityMixin):
@@ -15,8 +15,8 @@ class Run(Base, EntityMixin):
     timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id"))
     commit = relationship("Commit", lazy="joined")
-    machine_id = NotNull(s.String(50), s.ForeignKey("machine.id"))
-    machine = relationship("Machine", lazy="joined")
+    hardware_id = NotNull("machine_id", s.String(50), s.ForeignKey("machine.id"))
+    hardware = relationship("Hardware", lazy="joined")
 
     def get_baseline_run(self):
         from ..entities.distribution import get_closest_parent
@@ -31,8 +31,8 @@ class Run(Base, EntityMixin):
             .all()
         )
         run_items = [(row[0], row[1]) for row in result]
-        machines = Machine.all(hash=self.machine.hash)
-        machine_ids = set([m.id for m in machines])
+        hardware_entities = Hardware.all(hash=self.hardware.hash)
+        hardware_ids = set([m.id for m in hardware_entities])
 
         parent = get_closest_parent(self)
         if not parent:
@@ -42,10 +42,10 @@ class Run(Base, EntityMixin):
         parent_runs = Run.search(
             filters=[
                 Commit.sha == parent.sha,
-                Machine.id.in_(machine_ids),
+                Hardware.id.in_(hardware_ids),
                 Run.name.like("commit: %"),
             ],
-            joins=[Commit, Machine],
+            joins=[Commit, Hardware],
             order_by=Run.timestamp.desc(),
         )
 
@@ -81,23 +81,24 @@ class Run(Base, EntityMixin):
 class _Serializer(EntitySerializer):
     def _dump(self, run):
         commit = CommitSerializer().one.dump(run.commit)
-        machine = MachineSerializer().one.dump(run.machine)
+        hardware = MachineSerializer().one.dump(run.hardware)
         commit.pop("links", None)
-        machine.pop("links", None)
+        hardware.pop("links", None)
         result = {
             "id": run.id,
             "name": run.name,
             "timestamp": run.timestamp.isoformat(),
             "commit": commit,
-            "machine": machine,
+            "hardware": hardware,
             "links": {
                 "list": f.url_for("api.runs", _external=True),
                 "self": f.url_for("api.run", run_id=run.id, _external=True),
                 "commit": f.url_for(
                     "api.commit", commit_id=commit["id"], _external=True
                 ),
-                "machine": f.url_for(
-                    "api.machine", machine_id=machine["id"], _external=True
+                # TODO: Fix this when cluster and hardware endpoints exist
+                "hardware": f.url_for(
+                    "api.machine", machine_id=hardware["id"], _external=True
                 ),
             },
         }

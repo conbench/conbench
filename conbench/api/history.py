@@ -16,7 +16,7 @@ class HistoryEntityAPI(ApiEndpoint):
         return get_history(
             summary.case_id,
             summary.context_id,
-            summary.run.machine.hash,
+            summary.run.hardware.hash,
         )
 
     @maybe_login_required

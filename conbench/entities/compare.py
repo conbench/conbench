@@ -36,14 +36,14 @@ class _Serializer(EntitySerializer):
 
             return {
                 "baseline": {
-                    "machine_name": baseline.machine.name if baseline else None,
+                    "hardware_name": baseline.hardware.name if baseline else None,
                     "run": baseline_url,
                     "run_id": baseline.id if baseline else None,
                     "run_name": baseline.name if baseline else None,
                     "run_timestamp": baseline_timestamp,
                 },
                 "contender": {
-                    "machine_name": contender.machine.name if contender else None,
+                    "hardware_name": contender.hardware.name if contender else None,
                     "run": contender_url,
                     "run_id": contender.id if contender else None,
                     "run_name": contender.name if contender else None,
