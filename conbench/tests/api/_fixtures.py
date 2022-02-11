@@ -108,7 +108,8 @@ def summary(
     results=None,
     unit=None,
     language=None,
-    machine=None,
+    hardware_type="machine",
+    hardware_name=None,
     sha=None,
     commit=None,
     pull_request=False,
@@ -121,8 +122,8 @@ def summary(
 
     if language:
         data["context"]["benchmark_language"] = language
-    if machine:
-        data["machine_info"]["name"] = machine
+    if hardware_name:
+        data[f"{hardware_type}_info"]["name"] = hardware_name
     if pull_request:
         data["run_name"] = "pull request: some commit"
     if sha:

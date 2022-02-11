@@ -13,6 +13,6 @@ from .contexts import *  # noqa
 from .history import *  # noqa
 from .index import *  # noqa
 from .info import *  # noqa
-from .machines import *  # noqa
+from .hardware import *  # noqa
 from .runs import *  # noqa
 from .users import *  # noqa

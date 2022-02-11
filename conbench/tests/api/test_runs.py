@@ -83,22 +83,22 @@ class TestRunGet(_asserts.GetEnforcer):
         contender = _fixtures.summary(
             name=name,
             sha=_fixtures.CHILD,
-            machine=machine_1,
+            hardware_name=machine_1,
         )
         _fixtures.summary(
             name=name,
             sha=_fixtures.PARENT,
-            machine=machine_2,
+            hardware_name=machine_2,
         )
         baseline = _fixtures.summary(
             name=name,
             sha=_fixtures.GRANDPARENT,
-            machine=machine_1,
+            hardware_name=machine_1,
         )
         _fixtures.summary(
             name=name,
             sha=_fixtures.ELDER,
-            machine=machine_1,
+            hardware_name=machine_1,
         )
 
         contender_run = contender.run
@@ -115,22 +115,22 @@ class TestRunGet(_asserts.GetEnforcer):
         contender = _fixtures.summary(
             name=name,
             sha=_fixtures.CHILD,
-            machine=machine_1,
+            hardware_name=machine_1,
         )
         _fixtures.summary(
             name=name,
             sha=_fixtures.PARENT,
-            machine=machine_2,
+            hardware_name=machine_2,
         )
         testing = _fixtures.summary(
             name=name,
             sha=_fixtures.GRANDPARENT,
-            machine=machine_1,
+            hardware_name=machine_1,
         )
         baseline = _fixtures.summary(
             name=name,
             sha=_fixtures.ELDER,
-            machine=machine_1,
+            hardware_name=machine_1,
         )
 
         testing_run = testing.run

@@ -511,6 +511,73 @@
                 },
                 "description": "OK",
             },
+            "HardwareEntity": {
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "architecture_name": "x86_64",
+                            "cpu_core_count": 2,
+                            "cpu_frequency_max_hz": 3500000000,
+                            "cpu_l1d_cache_bytes": 32768,
+                            "cpu_l1i_cache_bytes": 32768,
+                            "cpu_l2_cache_bytes": 262144,
+                            "cpu_l3_cache_bytes": 4194304,
+                            "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                            "cpu_thread_count": 4,
+                            "gpu_count": 2,
+                            "gpu_product_names": ["Tesla T4", "GeForce GTX 1060 3GB"],
+                            "id": "some-machine-uuid-1",
+                            "kernel_name": "19.6.0",
+                            "links": {
+                                "list": "http://localhost/api/hardware/",
+                                "self": "http://localhost/api/hardware/some-machine-uuid-1/",
+                            },
+                            "memory_bytes": 17179869184,
+                            "name": "some-machine-name",
+                            "os_name": "macOS",
+                            "os_version": "10.15.7",
+                            "type": "machine",
+                        }
+                    }
+                },
+                "description": "OK",
+            },
+            "HardwareList": {
+                "content": {
+                    "application/json": {
+                        "example": [
+                            {
+                                "architecture_name": "x86_64",
+                                "cpu_core_count": 2,
+                                "cpu_frequency_max_hz": 3500000000,
+                                "cpu_l1d_cache_bytes": 32768,
+                                "cpu_l1i_cache_bytes": 32768,
+                                "cpu_l2_cache_bytes": 262144,
+                                "cpu_l3_cache_bytes": 4194304,
+                                "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                "cpu_thread_count": 4,
+                                "gpu_count": 2,
+                                "gpu_product_names": [
+                                    "Tesla T4",
+                                    "GeForce GTX 1060 3GB",
+                                ],
+                                "id": "some-machine-uuid-1",
+                                "kernel_name": "19.6.0",
+                                "links": {
+                                    "list": "http://localhost/api/hardware/",
+                                    "self": "http://localhost/api/hardware/some-machine-uuid-1/",
+                                },
+                                "memory_bytes": 17179869184,
+                                "name": "some-machine-name",
+                                "os_name": "macOS",
+                                "os_version": "10.15.7",
+                                "type": "machine",
+                            }
+                        ]
+                    }
+                },
+                "description": "OK",
+            },
             "HistoryList": {
                 "content": {
                     "application/json": {
@@ -547,7 +614,7 @@
                                 "info": "http://localhost/api/info/",
                                 "login": "http://localhost/api/login/",
                                 "logout": "http://localhost/api/logout/",
-                                "machines": "http://localhost/api/machines/",
+                                "hardware": "http://localhost/api/hardware/",
                                 "ping": "http://localhost/api/ping/",
                                 "register": "http://localhost/api/register/",
                                 "runs": "http://localhost/api/runs/",
@@ -590,73 +657,6 @@
                                     "list": "http://localhost/api/info/",
                                     "self": "http://localhost/api/info/some-info-uuid-1/",
                                 },
-                            }
-                        ]
-                    }
-                },
-                "description": "OK",
-            },
-            "MachineEntity": {
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "architecture_name": "x86_64",
-                            "cpu_core_count": 2,
-                            "cpu_frequency_max_hz": 3500000000,
-                            "cpu_l1d_cache_bytes": 32768,
-                            "cpu_l1i_cache_bytes": 32768,
-                            "cpu_l2_cache_bytes": 262144,
-                            "cpu_l3_cache_bytes": 4194304,
-                            "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
-                            "cpu_thread_count": 4,
-                            "gpu_count": 2,
-                            "gpu_product_names": ["Tesla T4", "GeForce GTX 1060 3GB"],
-                            "id": "some-machine-uuid-1",
-                            "kernel_name": "19.6.0",
-                            "links": {
-                                "list": "http://localhost/api/machines/",
-                                "self": "http://localhost/api/machines/some-machine-uuid-1/",
-                            },
-                            "memory_bytes": 17179869184,
-                            "name": "some-machine-name",
-                            "os_name": "macOS",
-                            "os_version": "10.15.7",
-                            "type": "machine",
-                        }
-                    }
-                },
-                "description": "OK",
-            },
-            "MachineList": {
-                "content": {
-                    "application/json": {
-                        "example": [
-                            {
-                                "architecture_name": "x86_64",
-                                "cpu_core_count": 2,
-                                "cpu_frequency_max_hz": 3500000000,
-                                "cpu_l1d_cache_bytes": 32768,
-                                "cpu_l1i_cache_bytes": 32768,
-                                "cpu_l2_cache_bytes": 262144,
-                                "cpu_l3_cache_bytes": 4194304,
-                                "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
-                                "cpu_thread_count": 4,
-                                "gpu_count": 2,
-                                "gpu_product_names": [
-                                    "Tesla T4",
-                                    "GeForce GTX 1060 3GB",
-                                ],
-                                "id": "some-machine-uuid-1",
-                                "kernel_name": "19.6.0",
-                                "links": {
-                                    "list": "http://localhost/api/machines/",
-                                    "self": "http://localhost/api/machines/some-machine-uuid-1/",
-                                },
-                                "memory_bytes": 17179869184,
-                                "name": "some-machine-name",
-                                "os_name": "macOS",
-                                "os_version": "10.15.7",
-                                "type": "machine",
                             }
                         ]
                     }
@@ -718,7 +718,7 @@
                             "links": {
                                 "baseline": "http://localhost/api/runs/some-run-uuid-0/",
                                 "commit": "http://localhost/api/commits/some-commit-uuid-1/",
-                                "hardware": "http://localhost/api/machines/some-machine-uuid-1/",
+                                "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
                                 "list": "http://localhost/api/runs/",
                                 "self": "http://localhost/api/runs/some-run-uuid-1/",
                             },
@@ -772,7 +772,7 @@
                                 "id": "some-run-uuid-1",
                                 "links": {
                                     "commit": "http://localhost/api/commits/some-commit-uuid-1/",
-                                    "hardware": "http://localhost/api/machines/some-machine-uuid-1/",
+                                    "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
                                     "list": "http://localhost/api/runs/",
                                     "self": "http://localhost/api/runs/some-run-uuid-1/",
                                 },
@@ -1282,6 +1282,35 @@
                 "tags": ["Authentication"],
             }
         },
+        "/api/hardware/": {
+            "get": {
+                "description": "Get a list of hardware.",
+                "responses": {
+                    "200": {"$ref": "#/components/responses/HardwareList"},
+                    "401": {"$ref": "#/components/responses/401"},
+                },
+                "tags": ["Hardware"],
+            }
+        },
+        "/api/hardware/{hardware_id}/": {
+            "get": {
+                "description": "Get a hardware.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "hardware_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/HardwareEntity"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Hardware"],
+            }
+        },
         "/api/history/{benchmark_id}/": {
             "get": {
                 "description": "Get benchmark history.",
@@ -1352,35 +1381,6 @@
                 "description": "Logout.",
                 "responses": {"204": {"$ref": "#/components/responses/204"}},
                 "tags": ["Authentication"],
-            }
-        },
-        "/api/machines/": {
-            "get": {
-                "description": "Get a list of machines.",
-                "responses": {
-                    "200": {"$ref": "#/components/responses/MachineList"},
-                    "401": {"$ref": "#/components/responses/401"},
-                },
-                "tags": ["Machines"],
-            }
-        },
-        "/api/machines/{machine_id}/": {
-            "get": {
-                "description": "Get a machine.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "machine_id",
-                        "required": True,
-                        "schema": {"type": "string"},
-                    }
-                ],
-                "responses": {
-                    "200": {"$ref": "#/components/responses/MachineEntity"},
-                    "401": {"$ref": "#/components/responses/401"},
-                    "404": {"$ref": "#/components/responses/404"},
-                },
-                "tags": ["Machines"],
             }
         },
         "/api/ping/": {
@@ -1554,7 +1554,7 @@
         {"description": "Extra benchmark information", "name": "Info"},
         {"description": "Benchmark contexts", "name": "Contexts"},
         {"description": "Benchmark history", "name": "History"},
-        {"description": "Benchmark machines", "name": "Machines"},
+        {"description": "Benchmark hardware", "name": "Hardware"},
         {"description": "Benchmark runs", "name": "Runs"},
         {"description": "Monitor status", "name": "Ping"},
     ],

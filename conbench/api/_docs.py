@@ -74,8 +74,8 @@ spec.components.response("ContextList", _200_ok([ex.CONTEXT_ENTITY]))
 spec.components.response("InfoList", _200_ok([ex.INFO_ENTITY]))
 spec.components.response("HistoryList", _200_ok([ex.HISTORY_ENTITY]))
 spec.components.response("InfoEntity", _200_ok(ex.INFO_ENTITY))
-spec.components.response("MachineEntity", _200_ok(ex.MACHINE_ENTITY))
-spec.components.response("MachineList", _200_ok([ex.MACHINE_ENTITY]))
+spec.components.response("HardwareEntity", _200_ok(ex.MACHINE_ENTITY))
+spec.components.response("HardwareList", _200_ok([ex.MACHINE_ENTITY]))
 spec.components.response("RunEntity", _200_ok(ex.RUN_ENTITY))
 spec.components.response("RunList", _200_ok(ex.RUN_LIST))
 spec.components.response("UserEntity", _200_ok(ex.USER_ENTITY))
@@ -93,7 +93,7 @@ tags = [
     {"name": "Info", "description": "Extra benchmark information"},
     {"name": "Contexts", "description": "Benchmark contexts"},
     {"name": "History", "description": "Benchmark history"},
-    {"name": "Machines", "description": "Benchmark machines"},
+    {"name": "Hardware", "description": "Benchmark hardware"},
     {"name": "Runs", "description": "Benchmark runs"},
     {"name": "Ping", "description": "Monitor status"},
 ]

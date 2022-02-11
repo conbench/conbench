@@ -87,8 +87,8 @@ class Machine(Hardware):
             "gpu_count": self.gpu_count,
             "gpu_product_names": self.gpu_product_names,
             "links": {
-                "list": f.url_for("api.machines", _external=True),
-                "self": f.url_for("api.machine", machine_id=self.id, _external=True),
+                "list": f.url_for("api.hardwares", _external=True),
+                "self": f.url_for("api.hardware", hardware_id=self.id, _external=True),
             },
         }
 

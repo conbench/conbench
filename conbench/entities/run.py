@@ -100,7 +100,7 @@ class _Serializer(EntitySerializer):
         }
         if run.hardware.type == "machine":
             result["links"]["hardware"] = f.url_for(
-                "api.machine", machine_id=hardware["id"], _external=True
+                "api.hardware", hardware_id=hardware["id"], _external=True
             )
         if not self.many:
             baseline_id, baseline_url = run.get_baseline_id(), None

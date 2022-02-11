@@ -82,7 +82,7 @@ def test_history():
     _fixtures.summary(results=data, commit=commit_1, name=name, language=language)
 
     data, machine = [7.1, 7.2, 7.3], "different-machine"
-    _fixtures.summary(results=data, commit=commit_1, name=name, machine=machine)
+    _fixtures.summary(results=data, commit=commit_1, name=name, hardware_name=machine)
 
     data = [8.1, 8.2, 8.3]  # pull request, exclude from history
     _fixtures.summary(results=data, commit=commit_1, name=name, pull_request=True)

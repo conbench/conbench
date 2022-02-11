@@ -328,31 +328,45 @@ def _api_info_entity(info_id, links=True):
     return result
 
 
-def _api_machine_entity(machine_id, machine_name, links=True):
-    result = {
-        "id": machine_id,
-        "type": "machine",
-        "architecture_name": "x86_64",
-        "cpu_l1d_cache_bytes": 32768,
-        "cpu_l1i_cache_bytes": 32768,
-        "cpu_l2_cache_bytes": 262144,
-        "cpu_l3_cache_bytes": 4194304,
-        "cpu_core_count": 2,
-        "cpu_frequency_max_hz": 3500000000,
-        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
-        "cpu_thread_count": 4,
-        "kernel_name": "19.6.0",
-        "memory_bytes": 17179869184,
-        "name": machine_name,
-        "os_name": "macOS",
-        "os_version": "10.15.7",
-        "gpu_count": 2,
-        "gpu_product_names": ["Tesla T4", "GeForce GTX 1060 3GB"],
-        "links": {
-            "list": "http://localhost/api/machines/",
-            "self": "http://localhost/api/machines/%s/" % machine_id,
-        },
-    }
+def _api_hardware_entity(
+    hardware_id, hardware_name, hardware_type="machine", links=True
+):
+    if hardware_type == "machine":
+        result = {
+            "id": hardware_id,
+            "type": "machine",
+            "architecture_name": "x86_64",
+            "cpu_l1d_cache_bytes": 32768,
+            "cpu_l1i_cache_bytes": 32768,
+            "cpu_l2_cache_bytes": 262144,
+            "cpu_l3_cache_bytes": 4194304,
+            "cpu_core_count": 2,
+            "cpu_frequency_max_hz": 3500000000,
+            "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+            "cpu_thread_count": 4,
+            "kernel_name": "19.6.0",
+            "memory_bytes": 17179869184,
+            "name": hardware_name,
+            "os_name": "macOS",
+            "os_version": "10.15.7",
+            "gpu_count": 2,
+            "gpu_product_names": ["Tesla T4", "GeForce GTX 1060 3GB"],
+            "links": {
+                "list": "http://localhost/api/hardware/",
+                "self": "http://localhost/api/hardware/%s/" % hardware_id,
+            },
+        }
+    else:
+        result = {
+            "id": hardware_id,
+            "type": "cluster",
+            "info": {"workers": 2},
+            "name": hardware_name,
+            "links": {
+                "list": "http://localhost/api/hardware/",
+                "self": "http://localhost/api/hardware/%s/" % hardware_id,
+            },
+        }
     if not links:
         result.pop("links", None)
     return result
@@ -374,12 +388,12 @@ def _api_run_entity(
         "name": run_name,
         "timestamp": now,
         "commit": _api_commit_entity(commit_id, parent_id, links=False),
-        "hardware": _api_machine_entity(machine_id, machine_name, links=False),
+        "hardware": _api_hardware_entity(machine_id, machine_name, links=False),
         "links": {
             "list": "http://localhost/api/runs/",
             "self": "http://localhost/api/runs/%s/" % run_id,
             "commit": "http://localhost/api/commits/%s/" % commit_id,
-            "hardware": "http://localhost/api/machines/%s/" % machine_id,
+            "hardware": "http://localhost/api/hardware/%s/" % machine_id,
         },
     }
     baseline_url = None
@@ -465,7 +479,7 @@ HISTORY_ENTITY = _api_history_entity(
     "some run name",
 )
 INFO_ENTITY = _api_info_entity("some-info-uuid-1")
-MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1", "some-machine-name")
+MACHINE_ENTITY = _api_hardware_entity("some-machine-uuid-1", "some-machine-name")
 RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",
     "some run name",
@@ -523,7 +537,7 @@ API_INDEX = {
         "login": "http://localhost/api/login/",
         "logout": "http://localhost/api/logout/",
         "info": "http://localhost/api/info/",
-        "machines": "http://localhost/api/machines/",
+        "hardware": "http://localhost/api/hardware/",
         "register": "http://localhost/api/register/",
         "runs": "http://localhost/api/runs/",
         "ping": "http://localhost/api/ping/",

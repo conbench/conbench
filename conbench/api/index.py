@@ -28,7 +28,7 @@ class IndexSerializer:
                 "login": f.url_for("api.login", _external=True),
                 "logout": f.url_for("api.logout", _external=True),
                 "info": f.url_for("api.infos", _external=True),
-                "machines": f.url_for("api.machines", _external=True),
+                "hardware": f.url_for("api.hardwares", _external=True),
                 "ping": f.url_for("api.ping", _external=True),
                 "register": f.url_for("api.register", _external=True),
                 "runs": f.url_for("api.runs", _external=True),
