@@ -79,9 +79,9 @@ class Summary(Base, EntityMixin):
 
         # create if not exists
         hardware_type = Machine if "machine_info" in data else Cluster
-        hardware = hardware_type.first(**data[f"{hardware_type}_info"])
+        hardware = hardware_type.first(**data[f"{hardware_type.lower()}_info"])
         if not hardware:
-            hardware = hardware_type.create(data[f"{hardware_type}_info"])
+            hardware = hardware_type.create(data[f"{hardware_type.lower()}_info"])
 
         # create if not exists
         if "context" not in data:
