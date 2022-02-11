@@ -482,7 +482,7 @@ HISTORY_ENTITY = _api_history_entity(
     "some run name",
 )
 INFO_ENTITY = _api_info_entity("some-info-uuid-1")
-MACHINE_ENTITY = _api_hardware_entity("some-machine-uuid-1", "some-machine-name")
+HARDWARE_ENTITY = _api_hardware_entity("some-machine-uuid-1", "some-machine-name")
 RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",
     "some run name",
