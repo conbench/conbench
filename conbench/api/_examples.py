@@ -331,6 +331,7 @@ def _api_info_entity(info_id, links=True):
 def _api_machine_entity(machine_id, machine_name, links=True):
     result = {
         "id": machine_id,
+        "type": "machine",
         "architecture_name": "x86_64",
         "cpu_l1d_cache_bytes": 32768,
         "cpu_l1i_cache_bytes": 32768,

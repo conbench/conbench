@@ -20,7 +20,7 @@ from ..entities.commit import Commit, get_github_commit, repository_to_url
 from ..entities.context import Context
 from ..entities.data import Data
 from ..entities.distribution import update_distribution
-from ..entities.hardware import Cluster, ClusterSchema, Machine, MachineSchema
+from ..entities.hardware import Machine, MachineSchema
 from ..entities.info import Info
 from ..entities.run import Run
 from ..entities.time import Time
@@ -78,18 +78,9 @@ class Summary(Base, EntityMixin):
             case = Case.create(c)
 
         # create if not exists
-        if "machine_info" in data:
-            machine = Machine.first(**data["machine_info"])
-            if not machine:
-                machine = Machine.create(data["machine_info"])
-            hardware_id = machine.id
-
-        # create if not exists
-        if "cluster_info" in data:
-            cluster = Cluster.first(**data["cluster_info"])
-            if not cluster:
-                cluster = Cluster.create(data["cluster_info"])
-            hardware_id = cluster.id
+        machine = Machine.first(**data["machine_info"])
+        if not machine:
+            machine = Machine.create(data["machine_info"])
 
         # create if not exists
         if "context" not in data:
@@ -131,7 +122,7 @@ class Summary(Base, EntityMixin):
                     "id": run_id,
                     "name": run_name,
                     "commit_id": commit.id,
-                    "hardware_id": hardware_id,
+                    "hardware_id": machine.id,
                 }
             )
 
@@ -253,8 +244,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     run_name = marshmallow.fields.String(required=False)
     batch_id = marshmallow.fields.String(required=True)
     timestamp = marshmallow.fields.DateTime(required=True)
-    machine_info = marshmallow.fields.Nested(MachineSchema().create)
-    cluster_info = marshmallow.fields.Nested(ClusterSchema().create)
+    machine_info = marshmallow.fields.Nested(MachineSchema().create, required=True)
     stats = marshmallow.fields.Nested(SummarySchema().create, required=True)
     tags = marshmallow.fields.Dict(required=True)
     info = marshmallow.fields.Dict(required=True)
