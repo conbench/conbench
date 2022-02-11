@@ -1,7 +1,7 @@
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
-from ..entities.hardware import HardwareSerializer, Hardware
+from ..entities.hardware import Hardware, HardwareSerializer
 
 
 class HardwareListAPI(ApiEndpoint):
