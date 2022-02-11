@@ -135,7 +135,7 @@ def machine_info(host_name):
 
 def _round_memory(value):
     # B -> GiB -> B
-    gigs = 1024 ** 3
+    gigs = 1024**3
     return int("{:.0f}".format(value / gigs)) * gigs
 
 
@@ -268,7 +268,7 @@ def _fill_from_lscpu(info, parts):
         try:
             if not info[key]:
                 if lookup.endswith("MHz"):
-                    info[key] = int(float(lscpu_dict[lookup]) * 10 ** 6)
+                    info[key] = int(float(lscpu_dict[lookup]) * 10**6)
                 else:
                     info[key] = int(float(lscpu_dict[lookup]))
         except ValueError:
