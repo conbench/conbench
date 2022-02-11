@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 from ..db import Session
 from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
 from ..entities.commit import Commit, CommitSerializer
-from ..entities.hardware import Hardware, MachineSerializer
+from ..entities.hardware import Hardware, HardwareSerializer
 
 
 class Run(Base, EntityMixin):
@@ -81,7 +81,7 @@ class Run(Base, EntityMixin):
 class _Serializer(EntitySerializer):
     def _dump(self, run):
         commit = CommitSerializer().one.dump(run.commit)
-        hardware = MachineSerializer().one.dump(run.hardware)
+        hardware = HardwareSerializer().one.dump(run.hardware)
         commit.pop("links", None)
         hardware.pop("links", None)
         result = {

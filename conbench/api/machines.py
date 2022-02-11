@@ -1,11 +1,11 @@
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
-from ..entities.hardware import Machine, MachineSerializer
+from ..entities.hardware import Machine, HardwareSerializer
 
 
 class MachineListAPI(ApiEndpoint):
-    serializer = MachineSerializer()
+    serializer = HardwareSerializer()
 
     @maybe_login_required
     def get(self):
@@ -23,7 +23,7 @@ class MachineListAPI(ApiEndpoint):
 
 
 class MachineEntityAPI(ApiEndpoint):
-    serializer = MachineSerializer()
+    serializer = HardwareSerializer()
 
     def _get(self, machine_id):
         try:

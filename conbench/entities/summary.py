@@ -20,7 +20,7 @@ from ..entities.commit import Commit, get_github_commit, repository_to_url
 from ..entities.context import Context
 from ..entities.data import Data
 from ..entities.distribution import update_distribution
-from ..entities.hardware import Cluster, Machine, MachineSchema
+from ..entities.hardware import Cluster, ClusterSchema, Machine, MachineSchema
 from ..entities.info import Info
 from ..entities.run import Run
 from ..entities.time import Time
@@ -253,7 +253,8 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     run_name = marshmallow.fields.String(required=False)
     batch_id = marshmallow.fields.String(required=True)
     timestamp = marshmallow.fields.DateTime(required=True)
-    machine_info = marshmallow.fields.Nested(MachineSchema().create, required=True)
+    machine_info = marshmallow.fields.Nested(MachineSchema().create)
+    cluster_info = marshmallow.fields.Nested(ClusterSchema().create)
     stats = marshmallow.fields.Nested(SummarySchema().create, required=True)
     tags = marshmallow.fields.Dict(required=True)
     info = marshmallow.fields.Dict(required=True)

@@ -66,6 +66,32 @@ class Machine(Hardware):
             + str(self.memory_bytes)
         )
 
+    def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "type": self.type,
+            "architecture_name": self.architecture_name,
+            "kernel_name": self.kernel_name,
+            "os_name": self.os_name,
+            "os_version": self.os_version,
+            "cpu_model_name": self.cpu_model_name,
+            "cpu_l1d_cache_bytes": self.cpu_l1d_cache_bytes,
+            "cpu_l1i_cache_bytes": self.cpu_l1i_cache_bytes,
+            "cpu_l2_cache_bytes": self.cpu_l2_cache_bytes,
+            "cpu_l3_cache_bytes": self.cpu_l3_cache_bytes,
+            "cpu_core_count": self.cpu_core_count,
+            "cpu_thread_count": self.cpu_thread_count,
+            "cpu_frequency_max_hz": self.cpu_frequency_max_hz,
+            "memory_bytes": self.memory_bytes,
+            "gpu_count": self.gpu_count,
+            "gpu_product_names": self.gpu_product_names,
+            "links": {
+                "list": f.url_for("api.machines", _external=True),
+                "self": f.url_for("api.machine", machine_id=self.id, _external=True),
+            },
+        }
+
 
 class Cluster(Hardware):
     info = Nullable(postgresql.JSONB)
@@ -73,7 +99,21 @@ class Cluster(Hardware):
     __mapper_args__ = {"polymorphic_identity": "cluster"}
 
     def generate_hash(self):
-        return self.name + "-" + hashlib.md5(json.dumps(self.info)).hexdigest()
+        return (
+            self.name
+            + "-"
+            + hashlib.md5(
+                json.dumps(self.info, sort_keys=True).encode("utf-8")
+            ).hexdigest()
+        )
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "type": self.type,
+            "info": self.info,
+        }
 
 
 s.Index(
@@ -99,33 +139,11 @@ s.Index(
 
 
 class _Serializer(EntitySerializer):
-    def _dump(self, machine):
-        return {
-            "id": machine.id,
-            "name": machine.name,
-            "architecture_name": machine.architecture_name,
-            "kernel_name": machine.kernel_name,
-            "os_name": machine.os_name,
-            "os_version": machine.os_version,
-            "cpu_model_name": machine.cpu_model_name,
-            "cpu_l1d_cache_bytes": machine.cpu_l1d_cache_bytes,
-            "cpu_l1i_cache_bytes": machine.cpu_l1i_cache_bytes,
-            "cpu_l2_cache_bytes": machine.cpu_l2_cache_bytes,
-            "cpu_l3_cache_bytes": machine.cpu_l3_cache_bytes,
-            "cpu_core_count": machine.cpu_core_count,
-            "cpu_thread_count": machine.cpu_thread_count,
-            "cpu_frequency_max_hz": machine.cpu_frequency_max_hz,
-            "memory_bytes": machine.memory_bytes,
-            "gpu_count": machine.gpu_count,
-            "gpu_product_names": machine.gpu_product_names,
-            "links": {
-                "list": f.url_for("api.machines", _external=True),
-                "self": f.url_for("api.machine", machine_id=machine.id, _external=True),
-            },
-        }
+    def _dump(self, hardware):
+        return hardware.serialize()
 
 
-class MachineSerializer:
+class HardwareSerializer:
     one = _Serializer()
     many = _Serializer(many=True)
 
@@ -151,5 +169,14 @@ class MachineCreate(marshmallow.Schema):
     )
 
 
+class ClusterCreate(marshmallow.Schema):
+    name = marshmallow.fields.String(required=True)
+    info = marshmallow.fields.Dict(required=True)
+
+
 class MachineSchema:
     create = MachineCreate()
+
+
+class ClusterSchema:
+    create = ClusterCreate()
