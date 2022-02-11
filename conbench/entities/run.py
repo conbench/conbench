@@ -96,12 +96,11 @@ class _Serializer(EntitySerializer):
                 "commit": f.url_for(
                     "api.commit", commit_id=commit["id"], _external=True
                 ),
+                "machine": f.url_for(
+                    "api.hardware", hardware_id=hardware["id"], _external=True
+                ),
             },
         }
-        if run.hardware.type == "machine":
-            result["links"]["hardware"] = f.url_for(
-                "api.hardware", hardware_id=hardware["id"], _external=True
-            )
         if not self.many:
             baseline_id, baseline_url = run.get_baseline_id(), None
             if baseline_id:
