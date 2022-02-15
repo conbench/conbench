@@ -49,7 +49,9 @@ def upgrade():
     )
     op.add_column(
         "machine",
-        sa.Column("distribution_info", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "distribution_info", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
     )
     op.add_column("machine", sa.Column("hash", sa.String(length=1000), nullable=True))
     op.alter_column(
