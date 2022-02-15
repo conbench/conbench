@@ -50,7 +50,7 @@ def upgrade():
     op.add_column(
         "machine",
         sa.Column(
-            "distribution_info", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+            "optional_info", postgresql.JSONB(astext_type=sa.Text()), nullable=True
         ),
     )
     op.add_column("machine", sa.Column("hash", sa.String(length=1000), nullable=True))
@@ -140,6 +140,6 @@ def downgrade():
         "machine", "architecture_name", existing_type=sa.TEXT(), nullable=False
     )
     op.drop_column("machine", "hash")
-    op.drop_column("machine", "distribution_info")
     op.drop_column("machine", "info")
+    op.drop_column("machine", "optional_info")
     op.drop_column("machine", "type")

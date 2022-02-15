@@ -872,11 +872,11 @@
             },
             "ClusterCreate": {
                 "properties": {
-                    "distribution_info": {"type": "object"},
                     "info": {"type": "object"},
                     "name": {"type": "string"},
+                    "optional_info": {"type": "object"},
                 },
-                "required": ["distribution_info", "info", "name"],
+                "required": ["info", "name", "optional_info"],
                 "type": "object",
             },
             "Error": {

@@ -317,6 +317,27 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
                     summary.run.hardware, attr
                 ) == int(value)
 
+    def test_create_benchmark_for_cluster_with_optional_info_changed(self, client):
+        # Post benchmarks for cluster-1
+        self.authenticate(client)
+        response = client.post("/api/benchmarks/", json=self.valid_payload_for_cluster)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        hardware_id = summary.run.hardware.id
+
+        # Post benchmarks for cluster-1 with different optional_info but the same cluster name and info
+        payload = copy.deepcopy(self.valid_payload_for_cluster)
+        payload["cluster_info"]["optional_info"] = {"field": 1}
+        payload["run_id"] = _uuid()
+        response = client.post("/api/benchmarks/", json=payload)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        assert summary.run.hardware.id == hardware_id
+        assert (
+            summary.run.hardware.optional_info
+            == payload["cluster_info"]["optional_info"]
+        )
+
     def test_create_benchmark_for_cluster_with_info_changed(self, client):
         # Post benchmarks for cluster-1
         self.authenticate(client)
@@ -325,36 +346,15 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         summary = Summary.one(id=new_id)
         hardware_id = summary.run.hardware.id
 
-        # Post benchmarks for cluster-1 with different info but the same cluster name and distribution_info
+        # Post benchmarks for cluster-1 with different info but the same cluster name and optional_info
         payload = copy.deepcopy(self.valid_payload_for_cluster)
         payload["cluster_info"]["info"] = {"field": 1}
         payload["run_id"] = _uuid()
         response = client.post("/api/benchmarks/", json=payload)
         new_id = response.json["id"]
         summary = Summary.one(id=new_id)
-        assert summary.run.hardware.id == hardware_id
-        assert summary.run.hardware.info == payload["cluster_info"]["info"]
-
-    def test_create_benchmark_for_cluster_with_distribution_info_changed(self, client):
-        # Post benchmarks for cluster-1
-        self.authenticate(client)
-        response = client.post("/api/benchmarks/", json=self.valid_payload_for_cluster)
-        new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        hardware_id = summary.run.hardware.id
-
-        # Post benchmarks for cluster-1 with different distribution_info but the same cluster name and info
-        payload = copy.deepcopy(self.valid_payload_for_cluster)
-        payload["cluster_info"]["distribution_info"] = {"field": 1}
-        payload["run_id"] = _uuid()
-        response = client.post("/api/benchmarks/", json=payload)
-        new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
         assert summary.run.hardware.id != hardware_id
-        assert (
-            summary.run.hardware.distribution_info
-            == payload["cluster_info"]["distribution_info"]
-        )
+        assert summary.run.hardware.info == payload["cluster_info"]["info"]
 
     def test_create_benchmark_normalizes_data(self, client):
         self.authenticate(client)
@@ -686,8 +686,8 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         data = copy.deepcopy(self.valid_payload)
         data["cluster_info"] = {
             "name": "cluster",
-            "info": {},
-            "distribution_info": {"field": 1},
+            "info": {"field": 1},
+            "optional_info": {},
         }
         response = client.post(self.url, json=data)
         message = {

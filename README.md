@@ -594,19 +594,21 @@ Benchmark result:
 
 If your benchmark is executed on a machine cluster instead of one machine, you
 can capture cluster info in the following manner.
-Note that a benchmark will have a continuous history on a specific cluster as long as cluster's `name` and `distribution_info` do not change.
+Note that a benchmark will have a continuous history on a specific cluster as long as cluster's `name` and `info` do not change.
 ```python
 import conbench.runner
 
 
 @conbench.runner.register_benchmark
 class SimpleBenchmarkWithClusterInfo(conbench.runner.Benchmark):
-    """Example benchmark without cases."""
-
     name = "product"
 
     def run(self, **kwargs):
-        cluster_info = {"name": "cluster 1", "info": {"workers": 2}, "distribution_info": {"gpu": 1}}
+        cluster_info = {
+            "name": "cluster 1",
+            "info": {"gpu": 1},
+            "optional_info": {"workers": 2},
+        }
         yield self.conbench.benchmark(
             self._get_benchmark_function(),
             self.name,
