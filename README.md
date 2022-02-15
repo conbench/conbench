@@ -595,6 +595,7 @@ Benchmark result:
 If your benchmark is executed on a machine cluster instead of one machine, you
 can capture cluster info in the following manner.
 Note that a benchmark will have a continuous history on a specific cluster as long as cluster's `name` and `info` do not change.
+There is also an `optional_info` field for information that should not impact the cluster's hash (and thus disrupt the distribution history), but should still be recorded. 
 ```python
 import conbench.runner
 
