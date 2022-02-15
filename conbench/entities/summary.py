@@ -20,8 +20,8 @@ from ..entities.commit import Commit, get_github_commit, repository_to_url
 from ..entities.context import Context
 from ..entities.data import Data
 from ..entities.distribution import update_distribution
+from ..entities.hardware import Cluster, ClusterSchema, Machine, MachineSchema
 from ..entities.info import Info
-from ..entities.machine import Machine, MachineSchema
 from ..entities.run import Run
 from ..entities.time import Time
 
@@ -78,9 +78,12 @@ class Summary(Base, EntityMixin):
             case = Case.create(c)
 
         # create if not exists
-        machine = Machine.first(**data["machine_info"])
-        if not machine:
-            machine = Machine.create(data["machine_info"])
+        hardware_type, field_name = (
+            (Machine, "machine_info")
+            if "machine_info" in data
+            else (Cluster, "cluster_info")
+        )
+        hardware = hardware_type.upsert(**data[field_name])
 
         # create if not exists
         if "context" not in data:
@@ -122,7 +125,7 @@ class Summary(Base, EntityMixin):
                     "id": run_id,
                     "name": run_name,
                     "commit_id": commit.id,
-                    "machine_id": machine.id,
+                    "hardware_id": hardware.id,
                 }
             )
 
@@ -244,12 +247,25 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     run_name = marshmallow.fields.String(required=False)
     batch_id = marshmallow.fields.String(required=True)
     timestamp = marshmallow.fields.DateTime(required=True)
-    machine_info = marshmallow.fields.Nested(MachineSchema().create, required=True)
+    machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
+    cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
     stats = marshmallow.fields.Nested(SummarySchema().create, required=True)
     tags = marshmallow.fields.Dict(required=True)
     info = marshmallow.fields.Dict(required=True)
     context = marshmallow.fields.Dict(required=True)
     github = marshmallow.fields.Nested(GitHubCreate(), required=False)
+
+    @marshmallow.validates_schema
+    def validate_hardware_info_fields(self, data, **kwargs):
+        if "machine_info" not in data and "cluster_info" not in data:
+            raise marshmallow.ValidationError(
+                "Either machine_info or cluster_info field is required"
+            )
+
+        if "machine_info" in data and "cluster_info" in data:
+            raise marshmallow.ValidationError(
+                "machine_info and cluster_info fields can not be used at the same time"
+            )
 
 
 class BenchmarkFacadeSchema:

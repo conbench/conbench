@@ -135,7 +135,7 @@ class MixinPython:
 
     def benchmark(self, f, name, publish=True, **kwargs):
         """Benchmark a function and publish the result."""
-        tags, info, context, github, options, _ = self._init(kwargs)
+        tags, info, context, github, options, cluster_info, _ = self._init(kwargs)
         self.set_python_info_and_context(info, context)
 
         timing_options = self._get_timing_options(options)
@@ -152,6 +152,7 @@ class MixinPython:
             context=context,
             github=github,
             options=options,
+            cluster_info=cluster_info,
             publish=False,
         )
         if publish:
@@ -201,7 +202,7 @@ class Conbench(Connection, MixinPython, MixinR):
 
     def record(self, result, name, publish=True, **kwargs):
         """Record and publish an external benchmark result."""
-        tags, info, context, github, options, output = self._init(kwargs)
+        tags, info, context, github, options, cluster_info, output = self._init(kwargs)
 
         tags["name"] = name
         stats = self._stats(
@@ -224,12 +225,16 @@ class Conbench(Connection, MixinPython, MixinR):
             "batch_id": batch_id,
             "timestamp": _now_formatted(),
             "stats": stats,
-            "machine_info": self.machine_info,
             "context": context,
             "info": info,
             "tags": tags,
             "github": github,
         }
+
+        if cluster_info:
+            benchmark["cluster_info"] = cluster_info
+        else:
+            benchmark["machine_info"] = self.machine_info
 
         run_name = options.get("run_name")
         if run_name is not None:
@@ -274,8 +279,9 @@ class Conbench(Connection, MixinPython, MixinR):
         context = kwargs.get("context", {})
         github = kwargs.get("github", {})
         options = kwargs.get("options", {})
+        cluster_info = kwargs.get("cluster_info", {})
         github = github if github else self.github_info
-        return tags, info, context, github, options, kwargs.get("output")
+        return tags, info, context, github, options, cluster_info, kwargs.get("output")
 
     def _get_timing(self, f, iterations, options):
         times, output = [], None

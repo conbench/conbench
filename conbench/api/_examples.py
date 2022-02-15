@@ -259,7 +259,7 @@ def _api_compare_summary(
         "runs": [
             {
                 "baseline": {
-                    "machine_name": "diana",
+                    "hardware_name": "diana",
                     "run": f"http://localhost/api/runs/{baseline_id}/",
                     "run_id": baseline_id,
                     "run_name": baseline_name,
@@ -267,7 +267,7 @@ def _api_compare_summary(
                 },
                 "compare": f"http://localhost/api/compare/runs/{baseline_id}...{contender_id}/",
                 "contender": {
-                    "machine_name": "diana",
+                    "hardware_name": "diana",
                     "run": f"http://localhost/api/runs/{contender_id}/",
                     "run_id": contender_id,
                     "run_name": contender_name,
@@ -298,7 +298,7 @@ def _api_history_entity(benchmark_id, case_id, context_id, run_name):
         "benchmark_id": benchmark_id,
         "case_id": case_id,
         "context_id": context_id,
-        "machine_hash": "diana-2-2-4-17179869184",
+        "hardware_hash": "diana-2-2-4-17179869184",
         "unit": "s",
         "mean": "0.036369",
         "distribution_mean": "0.036369",
@@ -328,30 +328,45 @@ def _api_info_entity(info_id, links=True):
     return result
 
 
-def _api_machine_entity(machine_id, machine_name, links=True):
-    result = {
-        "id": machine_id,
-        "architecture_name": "x86_64",
-        "cpu_l1d_cache_bytes": 32768,
-        "cpu_l1i_cache_bytes": 32768,
-        "cpu_l2_cache_bytes": 262144,
-        "cpu_l3_cache_bytes": 4194304,
-        "cpu_core_count": 2,
-        "cpu_frequency_max_hz": 3500000000,
-        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
-        "cpu_thread_count": 4,
-        "kernel_name": "19.6.0",
-        "memory_bytes": 17179869184,
-        "name": machine_name,
-        "os_name": "macOS",
-        "os_version": "10.15.7",
-        "gpu_count": 2,
-        "gpu_product_names": ["Tesla T4", "GeForce GTX 1060 3GB"],
-        "links": {
-            "list": "http://localhost/api/machines/",
-            "self": "http://localhost/api/machines/%s/" % machine_id,
-        },
-    }
+def _api_hardware_entity(
+    hardware_id, hardware_name, hardware_type="machine", links=True
+):
+    if hardware_type == "machine":
+        result = {
+            "id": hardware_id,
+            "type": "machine",
+            "architecture_name": "x86_64",
+            "cpu_l1d_cache_bytes": 32768,
+            "cpu_l1i_cache_bytes": 32768,
+            "cpu_l2_cache_bytes": 262144,
+            "cpu_l3_cache_bytes": 4194304,
+            "cpu_core_count": 2,
+            "cpu_frequency_max_hz": 3500000000,
+            "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+            "cpu_thread_count": 4,
+            "kernel_name": "19.6.0",
+            "memory_bytes": 17179869184,
+            "name": hardware_name,
+            "os_name": "macOS",
+            "os_version": "10.15.7",
+            "gpu_count": 2,
+            "gpu_product_names": ["Tesla T4", "GeForce GTX 1060 3GB"],
+            "links": {
+                "list": "http://localhost/api/hardware/",
+                "self": "http://localhost/api/hardware/%s/" % hardware_id,
+            },
+        }
+    else:
+        result = {
+            "id": hardware_id,
+            "type": "cluster",
+            "info": {"workers": 2},
+            "name": hardware_name,
+            "links": {
+                "list": "http://localhost/api/hardware/",
+                "self": "http://localhost/api/hardware/%s/" % hardware_id,
+            },
+        }
     if not links:
         result.pop("links", None)
     return result
@@ -362,8 +377,9 @@ def _api_run_entity(
     run_name,
     commit_id,
     parent_id,
-    machine_id,
-    machine_name,
+    hardware_id,
+    hardware_name,
+    hardware_type,
     now,
     baseline_id,
     include_baseline=True,
@@ -373,12 +389,14 @@ def _api_run_entity(
         "name": run_name,
         "timestamp": now,
         "commit": _api_commit_entity(commit_id, parent_id, links=False),
-        "machine": _api_machine_entity(machine_id, machine_name, links=False),
+        "hardware": _api_hardware_entity(
+            hardware_id, hardware_name, hardware_type, links=False
+        ),
         "links": {
             "list": "http://localhost/api/runs/",
             "self": "http://localhost/api/runs/%s/" % run_id,
             "commit": "http://localhost/api/commits/%s/" % commit_id,
-            "machine": "http://localhost/api/machines/%s/" % machine_id,
+            "hardware": "http://localhost/api/hardware/%s/" % hardware_id,
         },
     }
     baseline_url = None
@@ -464,7 +482,7 @@ HISTORY_ENTITY = _api_history_entity(
     "some run name",
 )
 INFO_ENTITY = _api_info_entity("some-info-uuid-1")
-MACHINE_ENTITY = _api_machine_entity("some-machine-uuid-1", "some-machine-name")
+HARDWARE_ENTITY = _api_hardware_entity("some-machine-uuid-1", "some-machine-name")
 RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",
     "some run name",
@@ -472,6 +490,7 @@ RUN_ENTITY = _api_run_entity(
     "some-parent-commit-uuid-1",
     "some-machine-uuid-1",
     "some-machine-name",
+    "machine",
     "2021-02-04T17:22:05.225583",
     "some-run-uuid-0",
 )
@@ -483,6 +502,7 @@ RUN_LIST = [
         "some-parent-commit-uuid-1",
         "some-machine-uuid-1",
         "some-machine-name",
+        "machine",
         "2021-02-04T17:22:05.225583",
         None,
         include_baseline=False,
@@ -522,7 +542,7 @@ API_INDEX = {
         "login": "http://localhost/api/login/",
         "logout": "http://localhost/api/logout/",
         "info": "http://localhost/api/info/",
-        "machines": "http://localhost/api/machines/",
+        "hardware": "http://localhost/api/hardware/",
         "register": "http://localhost/api/register/",
         "runs": "http://localhost/api/runs/",
         "ping": "http://localhost/api/ping/",

@@ -2,7 +2,7 @@ from ..db import Session
 from ..entities._entity import EntitySerializer
 from ..entities.commit import Commit
 from ..entities.distribution import Distribution
-from ..entities.machine import Machine
+from ..entities.hardware import Hardware
 from ..entities.run import Run
 from ..entities.summary import Summary
 
@@ -18,7 +18,7 @@ class _Serializer(EntitySerializer):
             "context_id": history.context_id,
             "mean": self.decimal_fmt.format(history.mean),
             "unit": history.unit,
-            "machine_hash": history.hash,
+            "hardware_hash": history.hash,
             "sha": history.sha,
             "repository": history.repository,
             "message": history.message,
@@ -34,7 +34,7 @@ class HistorySerializer:
     many = _Serializer(many=True)
 
 
-def get_history(case_id, context_id, machine_hash):
+def get_history(case_id, context_id, hardware_hash):
     return (
         Session.query(
             Summary.id,
@@ -42,7 +42,7 @@ def get_history(case_id, context_id, machine_hash):
             Summary.context_id,
             Summary.mean,
             Summary.unit,
-            Machine.hash,
+            Hardware.hash,
             Commit.sha,
             Commit.repository,
             Commit.message,
@@ -52,17 +52,17 @@ def get_history(case_id, context_id, machine_hash):
             Run.name,
         )
         .join(Run, Run.id == Summary.run_id)
-        .join(Machine, Machine.id == Run.machine_id)
+        .join(Hardware, Hardware.id == Run.hardware_id)
         .join(Commit, Commit.id == Run.commit_id)
         .join(Distribution, Distribution.commit_id == Commit.id)
         .filter(
             Summary.case_id == case_id,
             Summary.context_id == context_id,
             Run.name.like("commit: %"),
-            Machine.hash == machine_hash,
+            Hardware.hash == hardware_hash,
             Distribution.case_id == case_id,
             Distribution.context_id == context_id,
-            Distribution.machine_hash == machine_hash,
+            Distribution.hardware_hash == hardware_hash,
         )
         .order_by(Commit.timestamp.asc())
         .all()

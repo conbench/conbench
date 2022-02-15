@@ -34,7 +34,7 @@
                     <th scope="col">Repository</th>
                     <th scope="col">Commit</th>
                     <th scope="col">Hash</th>
-                    <th scope="col">Machine</th>
+                    <th scope="col">Hardware</th>
                     <th scope="col">Reason</th>
                 </tr>
             </thead>
@@ -59,7 +59,7 @@
                      {% endif %}
 
                      <td>{{ run.commit.sha }}</td>
-                     <td><div class="ellipsis-175">{{ run.machine.name }}</div></td>
+                     <td><div class="ellipsis-175">{{ run.hardware.name }}</div></td>
 
                      {% if run.display_name %}
                        <td><div class="ellipsis-175">{{ run.display_name }}</div></td>

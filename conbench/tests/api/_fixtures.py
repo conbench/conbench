@@ -100,6 +100,20 @@ VALID_PAYLOAD = {
     },
 }
 
+VALID_PAYLOAD_FOR_CLUSTER = dict(
+    run_id="3a5709d179f349cba69ed242be3e6323",
+    cluster_info={
+        "name": "cluster-1",
+        "info": {"gpu": 1},
+        "optional_info": {"workers": 1},
+    },
+    **{
+        key: value
+        for key, value in VALID_PAYLOAD.items()
+        if key not in ("machine_info", "run_id")
+    },
+)
+
 
 def summary(
     name=None,
@@ -108,7 +122,8 @@ def summary(
     results=None,
     unit=None,
     language=None,
-    machine=None,
+    hardware_type="machine",
+    hardware_name=None,
     sha=None,
     commit=None,
     pull_request=False,
@@ -121,8 +136,8 @@ def summary(
 
     if language:
         data["context"]["benchmark_language"] = language
-    if machine:
-        data["machine_info"]["name"] = machine
+    if hardware_name:
+        data[f"{hardware_type}_info"]["name"] = hardware_name
     if pull_request:
         data["run_name"] = "pull request: some commit"
     if sha:

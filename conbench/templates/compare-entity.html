@@ -141,9 +141,9 @@
             </li>
             {% endif %}
             <li class="list-group-item" style="overflow-y: auto;">
-              <b>machine</b>
+              <b>hardware</b>
               <div align="right" style="display:inline-block; float: right;">
-                {{ baseline_run.machine.name }}
+                {{ baseline_run.hardware.name }}
               </div>
             </li>
             {% endif %}
@@ -171,8 +171,8 @@
               {% endif %}
             </li>
           {% endfor %}
-          <li class="list-group-item active">Machine</li>
-          {% for k,v in baseline_run.machine.items() %}
+          <li class="list-group-item active">Hardware</li>
+          {% for k,v in baseline_run.hardware.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
               <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
@@ -261,9 +261,9 @@
             </li>
             {% endif %}
             <li class="list-group-item" style="overflow-y: auto;">
-              <b>machine</b>
+              <b>hardware</b>
               <div align="right" style="display:inline-block; float: right;">
-                {{ contender_run.machine.name }}
+                {{ contender_run.hardware.name }}
               </div>
             </li>
             {% endif %}
@@ -291,8 +291,8 @@
               {% endif %}
             </li>
           {% endfor %}
-          <li class="list-group-item active">Machine</li>
-          {% for k,v in contender_run.machine.items() %}
+          <li class="list-group-item active">Hardware</li>
+          {% for k,v in contender_run.hardware.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
               <div align="right" style="display:inline-block; float: right;">{{ v }}</div>

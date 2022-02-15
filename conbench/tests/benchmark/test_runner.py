@@ -3,17 +3,24 @@ import copy
 from ...entities.summary import BenchmarkFacadeSchema
 from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
-from ._example_benchmarks import CasesBenchmark, ExternalBenchmark, SimpleBenchmark
+from ._example_benchmarks import (
+    CasesBenchmark,
+    ExternalBenchmark,
+    SimpleBenchmark,
+    SimpleBenchmarkWithClusterInfo,
+)
 
 REPO = "https://github.com/conbench/conbench"
 EXAMPLE = copy.deepcopy(_fixtures.VALID_PAYLOAD)
-EXAMPLE.pop("run_name")
-EXAMPLE["info"] = {
-    "benchmark_language_version": "Python 3.8.5",
-}
-EXAMPLE["context"] = {
-    "benchmark_language": "Python",
-}
+EXAMPLE_WITH_CLUSTER_INFO = copy.deepcopy(_fixtures.VALID_PAYLOAD_FOR_CLUSTER)
+for example in [EXAMPLE, EXAMPLE_WITH_CLUSTER_INFO]:
+    example.pop("run_name")
+    example["info"] = {
+        "benchmark_language_version": "Python 3.8.5",
+    }
+    example["context"] = {
+        "benchmark_language": "Python",
+    }
 
 
 def assert_keys_equal(a, b):
@@ -21,23 +28,35 @@ def assert_keys_equal(a, b):
 
 
 def test_runner_simple_benchmark():
-    benchmark = SimpleBenchmark()
-    [(result, output)] = benchmark.run(iterations=10)
-    assert not BenchmarkFacadeSchema.create.validate(result)
-    expected_tags = {"name": "addition"}
-    assert output == 2
-    assert_keys_equal(result, EXAMPLE)
-    assert_keys_equal(result["tags"], expected_tags)
-    assert_keys_equal(result["stats"], EXAMPLE["stats"])
-    assert_keys_equal(result["info"], EXAMPLE["info"])
-    assert_keys_equal(result["context"], EXAMPLE["context"])
-    assert_keys_equal(result["github"], EXAMPLE["github"])
-    assert_keys_equal(result["machine_info"], EXAMPLE["machine_info"])
-    assert result["tags"] == expected_tags
-    assert result["stats"]["iterations"] == 10
-    assert len(result["stats"]["data"]) == 10
-    assert result["context"]["benchmark_language"] == "Python"
-    assert result["github"]["repository"] == REPO
+    for benchmark_class, payload_example, hardware_type, tag in [
+        (SimpleBenchmark, EXAMPLE, "machine", "addition"),
+        (
+            SimpleBenchmarkWithClusterInfo,
+            EXAMPLE_WITH_CLUSTER_INFO,
+            "cluster",
+            "product",
+        ),
+    ]:
+        benchmark = benchmark_class()
+        print(benchmark)
+        [(result, output)] = benchmark.run(iterations=10)
+        assert not BenchmarkFacadeSchema.create.validate(result)
+        expected_tags = {"name": tag}
+        assert output == 2
+        assert_keys_equal(result, payload_example)
+        assert_keys_equal(result["tags"], expected_tags)
+        assert_keys_equal(result["stats"], payload_example["stats"])
+        assert_keys_equal(result["info"], payload_example["info"])
+        assert_keys_equal(result["context"], payload_example["context"])
+        assert_keys_equal(result["github"], payload_example["github"])
+        assert_keys_equal(
+            result[f"{hardware_type}_info"], payload_example[f"{hardware_type}_info"]
+        )
+        assert result["tags"] == expected_tags
+        assert result["stats"]["iterations"] == 10
+        assert len(result["stats"]["data"]) == 10
+        assert result["context"]["benchmark_language"] == "Python"
+        assert result["github"]["repository"] == REPO
 
 
 def test_runner_case_benchmark():
