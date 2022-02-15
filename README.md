@@ -590,6 +590,33 @@ Benchmark result:
 }
 ```
 
+### Example simple benchmarks executed on machine cluster instead of one machine
+
+If your benchmark is executed on a machine cluster instead of one machine, you
+can capture cluster info in the following manner.
+```python
+import conbench.runner
+
+
+@conbench.runner.register_benchmark
+class SimpleBenchmarkWithClusterInfo(conbench.runner.Benchmark):
+    """Example benchmark without cases."""
+
+    name = "product"
+
+    def run(self, **kwargs):
+        cluster_info = {"name": "cluster 1", "info": {"workers": 2}}
+        yield self.conbench.benchmark(
+            self._get_benchmark_function(),
+            self.name,
+            cluster_info=cluster_info,
+            options=kwargs,
+        )
+
+    def _get_benchmark_function(self):
+        return lambda: 1 * 2
+```
+
 ### Example case benchmarks
 
 A "case benchmark" is a either a "simple benchmark" or an "external benchmark"
