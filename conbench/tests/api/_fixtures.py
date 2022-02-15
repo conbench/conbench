@@ -100,6 +100,11 @@ VALID_PAYLOAD = {
     },
 }
 
+VALID_PAYLOAD_FOR_CLUSTER = dict(
+    cluster_info={"name": "cluster-1", "info": {"workers": 1}},
+    **{key: value for key, value in VALID_PAYLOAD.items() if key != "machine_info"},
+)
+
 
 def summary(
     name=None,

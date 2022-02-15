@@ -288,6 +288,7 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 class TestBenchmarkPost(_asserts.PostEnforcer):
     url = "/api/benchmarks/"
     valid_payload = _fixtures.VALID_PAYLOAD
+    valid_payload_for_cluster = _fixtures.VALID_PAYLOAD_FOR_CLUSTER
     required_fields = [
         "batch_id",
         "context",
@@ -299,12 +300,20 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
     ]
 
     def test_create_benchmark(self, client):
-        self.authenticate(client)
-        response = client.post("/api/benchmarks/", json=self.valid_payload)
-        new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        for hardware_type, payload in [
+            ("machine", self.valid_payload),
+            ("cluster", self.valid_payload_for_cluster),
+        ]:
+            self.authenticate(client)
+            response = client.post("/api/benchmarks/", json=payload)
+            new_id = response.json["id"]
+            summary = Summary.one(id=new_id)
+            location = "http://localhost/api/benchmarks/%s/" % new_id
+            self.assert_201_created(response, _expected_entity(summary), location)
+
+            assert summary.run.hardware.type == hardware_type
+            for attr, value in payload[f"{hardware_type}_info"].items():
+                assert getattr(summary.run.hardware, attr) == value
 
     def test_create_benchmark_normalizes_data(self, client):
         self.authenticate(client)
