@@ -7,7 +7,6 @@ import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy.dialects import postgresql
 
-from ..db import Session
 from ..entities._entity import (
     Base,
     EntityMixin,
