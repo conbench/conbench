@@ -101,8 +101,13 @@ VALID_PAYLOAD = {
 }
 
 VALID_PAYLOAD_FOR_CLUSTER = dict(
+    run_id="3a5709d179f349cba69ed242be3e6323",
     cluster_info={"name": "cluster-1", "info": {"workers": 1}},
-    **{key: value for key, value in VALID_PAYLOAD.items() if key != "machine_info"},
+    **{
+        key: value
+        for key, value in VALID_PAYLOAD.items()
+        if key not in ("machine_info", "run_id")
+    },
 )
 
 
