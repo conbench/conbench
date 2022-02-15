@@ -17,6 +17,7 @@ class Distribution(Base, EntityMixin):
     case_id = NotNull(s.String(50), s.ForeignKey("case.id", ondelete="CASCADE"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id", ondelete="CASCADE"))
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id", ondelete="CASCADE"))
+    # machine table/columns are only renamed to hardware at code level but not at database level
     hardware_hash = NotNull("machine_hash", s.String(250))
     unit = NotNull(s.Text)
     mean_mean = Nullable(s.Numeric, check("mean_mean>=0"))
@@ -117,6 +118,7 @@ def update_distribution(summary, limit):
 
     values = dict(distribution)
     hardware_hash = values.pop("hash")
+    # machine table/columns are only renamed to hardware at code level but not at database level
     values["machine_hash"] = hardware_hash
     values["limit"] = limit
 
@@ -125,6 +127,7 @@ def update_distribution(summary, limit):
             insert(Distribution.__table__)
             .values(values)
             .on_conflict_do_update(
+                # machine table/columns are only renamed to hardware at code level but not at database level
                 index_elements=["case_id", "context_id", "commit_id", "machine_hash"],
                 set_=values,
             )

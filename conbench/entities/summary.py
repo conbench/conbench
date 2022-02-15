@@ -83,9 +83,7 @@ class Summary(Base, EntityMixin):
             if "machine_info" in data
             else (Cluster, "cluster_info")
         )
-        hardware = hardware_type.first(**data[field_name])
-        if not hardware:
-            hardware = hardware_type.create(data[field_name])
+        hardware = hardware_type.upsert(**data[field_name])
 
         # create if not exists
         if "context" not in data:

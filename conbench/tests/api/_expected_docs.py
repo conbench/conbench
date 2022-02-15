@@ -611,10 +611,10 @@
                                 "commits": "http://localhost/api/commits/",
                                 "contexts": "http://localhost/api/contexts/",
                                 "docs": "http://localhost/api/docs.json",
+                                "hardware": "http://localhost/api/hardware/",
                                 "info": "http://localhost/api/info/",
                                 "login": "http://localhost/api/login/",
                                 "logout": "http://localhost/api/logout/",
-                                "hardware": "http://localhost/api/hardware/",
                                 "ping": "http://localhost/api/ping/",
                                 "register": "http://localhost/api/register/",
                                 "runs": "http://localhost/api/runs/",
@@ -871,8 +871,12 @@
                 "type": "object",
             },
             "ClusterCreate": {
-                "properties": {"info": {"type": "object"}, "name": {"type": "string"}},
-                "required": ["info", "name"],
+                "properties": {
+                    "distribution_info": {"type": "object"},
+                    "info": {"type": "object"},
+                    "name": {"type": "string"},
+                },
+                "required": ["distribution_info", "info", "name"],
                 "type": "object",
             },
             "Error": {

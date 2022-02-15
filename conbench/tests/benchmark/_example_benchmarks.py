@@ -38,7 +38,11 @@ class SimpleBenchmarkWithClusterInfo(conbench.runner.Benchmark):
     name = "product"
 
     def run(self, **kwargs):
-        cluster_info = {"name": "cluster 1", "info": {"workers": 2}}
+        cluster_info = {
+            "name": "cluster 1",
+            "info": {"workers": 2},
+            "distribution_info": {"gpu": 1},
+        }
         yield self.conbench.benchmark(
             self._get_benchmark_function(),
             self.name,

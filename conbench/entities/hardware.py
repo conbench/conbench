@@ -7,6 +7,7 @@ import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy.dialects import postgresql
 
+from ..db import Session
 from ..entities._entity import (
     Base,
     EntityMixin,
@@ -53,6 +54,13 @@ class Machine(Hardware):
 
     __mapper_args__ = {"polymorphic_identity": "machine"}
 
+    @classmethod
+    def upsert(cls, **kwargs):
+        machine = cls.first(**kwargs)
+        if not machine:
+            machine = cls.create(kwargs)
+        return machine
+
     def generate_hash(self):
         return (
             self.name
@@ -95,15 +103,27 @@ class Machine(Hardware):
 
 class Cluster(Hardware):
     info = Nullable(postgresql.JSONB)
+    distribution_info = Nullable(postgresql.JSONB)
 
     __mapper_args__ = {"polymorphic_identity": "cluster"}
+
+    @classmethod
+    def upsert(cls, **kwargs):
+        cluster = cls.first(
+            name=kwargs["name"], distribution_info=kwargs["distribution_info"]
+        )
+        if cluster:
+            cluster.update(dict(info=kwargs["info"]))
+        else:
+            cluster = cls.create(kwargs)
+        return cluster
 
     def generate_hash(self):
         return (
             self.name
             + "-"
             + hashlib.md5(
-                json.dumps(self.info, sort_keys=True).encode("utf-8")
+                json.dumps(self.distribution_info, sort_keys=True).encode("utf-8")
             ).hexdigest()
         )
 
@@ -113,6 +133,7 @@ class Cluster(Hardware):
             "name": self.name,
             "type": self.type,
             "info": self.info,
+            "distribution_info": self.distribution_info,
         }
 
 
@@ -172,6 +193,7 @@ class MachineCreate(marshmallow.Schema):
 class ClusterCreate(marshmallow.Schema):
     name = marshmallow.fields.String(required=True)
     info = marshmallow.fields.Dict(required=True)
+    distribution_info = marshmallow.fields.Dict(required=True)
 
 
 class MachineSchema:
