@@ -32,6 +32,25 @@ class SimpleBenchmark(conbench.runner.Benchmark):
 
 
 @conbench.runner.register_benchmark
+class SimpleBenchmarkWithClusterInfo(conbench.runner.Benchmark):
+    """Example benchmark without cases."""
+
+    name = "product"
+
+    def run(self, **kwargs):
+        cluster_info = {"name": "cluster 1", "info": {"workers": 2}}
+        yield self.conbench.benchmark(
+            self._get_benchmark_function(),
+            self.name,
+            cluster_info=cluster_info,
+            options=kwargs,
+        )
+
+    def _get_benchmark_function(self):
+        return lambda: 1 * 2
+
+
+@conbench.runner.register_benchmark
 class CasesBenchmark(conbench.runner.Benchmark):
     """Example benchmark with cases."""
 

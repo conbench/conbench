@@ -152,6 +152,7 @@ class MixinPython:
             context=context,
             github=github,
             options=options,
+            cluster_info=cluster_info,
             publish=False,
         )
         if publish:

@@ -25,6 +25,7 @@ Commands:
   list                List of benchmarks (for orchestration).
   matrix              Run matrix benchmark(s).
   matrix-types        Run matrix-types benchmark(s).
+  product             Run product benchmark.
   version             Display Conbench version.
 """
 
@@ -47,6 +48,9 @@ CONBENCH_LIST = """
   },
   {
     "command": "matrix-types --all=true --iterations=2"
+  },
+  {
+    "command": "product --iterations=2"
   }
 ]
 """
