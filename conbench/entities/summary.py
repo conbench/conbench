@@ -191,6 +191,10 @@ class SummarySchema:
     create = SummaryCreate()
 
 
+def to_float(value):
+    return float(value) if value else None
+
+
 class _Serializer(EntitySerializer):
     def _dump(self, summary):
         by_iteration_data = sorted([(x.iteration, x.result) for x in summary.data])
@@ -208,19 +212,19 @@ class _Serializer(EntitySerializer):
             "timestamp": summary.timestamp.isoformat(),
             "tags": tags,
             "stats": {
-                "data": [float(x) for x in data],
-                "times": [float(x) for x in times],
+                "data": [to_float(x) for x in data],
+                "times": [to_float(x) for x in times],
                 "unit": summary.unit,
                 "time_unit": summary.time_unit,
                 "iterations": summary.iterations,
-                "min": float(summary.min) if summary.min else None,
-                "max": float(summary.max) if summary.max else None,
-                "mean": float(summary.mean) if summary.mean else None,
-                "median": float(summary.median) if summary.median else None,
-                "stdev": float(summary.stdev) if summary.stdev else None,
-                "q1": float(summary.q1) if summary.q1 else None,
-                "q3": float(summary.q3) if summary.q3 else None,
-                "iqr": float(summary.iqr) if summary.iqr else None,
+                "min": to_float(summary.min),
+                "max": to_float(summary.max),
+                "mean": to_float(summary.mean),
+                "median": to_float(summary.median),
+                "stdev": to_float(summary.stdev),
+                "q1": to_float(summary.q1),
+                "q3": to_float(summary.q3),
+                "iqr": to_float(summary.iqr),
                 "z_score": z_score,
                 "z_regression": z_regression(summary.z_score),
                 "z_improvement": z_improvement(summary.z_score),
