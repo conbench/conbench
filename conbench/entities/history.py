@@ -8,15 +8,13 @@ from ..entities.summary import Summary
 
 
 class _Serializer(EntitySerializer):
-    decimal_fmt = "{:.6f}"
-
     def _dump(self, history):
         standard_deviation = history.mean_sd if history.mean_sd else 0
         return {
             "benchmark_id": history.id,
             "case_id": history.case_id,
             "context_id": history.context_id,
-            "mean": self.decimal_fmt.format(history.mean),
+            "mean": float(history.mean),
             "unit": history.unit,
             "hardware_hash": history.hash,
             "sha": history.sha,
@@ -24,8 +22,8 @@ class _Serializer(EntitySerializer):
             "message": history.message,
             "timestamp": history.timestamp.isoformat(),
             "run_name": history.name,
-            "distribution_mean": self.decimal_fmt.format(history.mean_mean),
-            "distribution_stdev": self.decimal_fmt.format(standard_deviation),
+            "distribution_mean": float(history.mean_mean),
+            "distribution_stdev": float(standard_deviation),
         }
 
 
