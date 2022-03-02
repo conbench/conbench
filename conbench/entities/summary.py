@@ -212,8 +212,8 @@ class _Serializer(EntitySerializer):
             "timestamp": summary.timestamp.isoformat(),
             "tags": tags,
             "stats": {
-                "data": [to_float(x) for x in data],
-                "times": [to_float(x) for x in times],
+                "data": [float(x) for x in data],
+                "times": [float(x) for x in times],
                 "unit": summary.unit,
                 "time_unit": summary.time_unit,
                 "iterations": summary.iterations,
