@@ -13,6 +13,7 @@ from ..entities._entity import (
     EntitySerializer,
     NotNull,
     Nullable,
+    float_fmt,
     generate_uuid,
 )
 from ..entities.case import Case
@@ -183,14 +184,12 @@ class SummarySchema:
 
 
 class _Serializer(EntitySerializer):
-    decimal_fmt = "{:.6f}"
-
     def _dump(self, summary):
         by_iteration_data = sorted([(x.iteration, x.result) for x in summary.data])
         data = [result for _, result in by_iteration_data]
         by_iteration_times = sorted([(x.iteration, x.result) for x in summary.times])
         times = [result for _, result in by_iteration_times]
-        z_score = self.decimal_fmt.format(summary.z_score) if summary.z_score else None
+        z_score = float_fmt(summary.z_score) if summary.z_score else None
         case = summary.case
         tags = {"id": case.id, "name": case.name}
         tags.update(case.tags)
@@ -201,19 +200,19 @@ class _Serializer(EntitySerializer):
             "timestamp": summary.timestamp.isoformat(),
             "tags": tags,
             "stats": {
-                "data": [self.decimal_fmt.format(x) for x in data],
-                "times": [self.decimal_fmt.format(x) for x in times],
+                "data": [float_fmt(x) for x in data],
+                "times": [float_fmt(x) for x in times],
                 "unit": summary.unit,
                 "time_unit": summary.time_unit,
                 "iterations": summary.iterations,
-                "min": self.decimal_fmt.format(summary.min),
-                "max": self.decimal_fmt.format(summary.max),
-                "mean": self.decimal_fmt.format(summary.mean),
-                "median": self.decimal_fmt.format(summary.median),
-                "stdev": self.decimal_fmt.format(summary.stdev),
-                "q1": self.decimal_fmt.format(summary.q1),
-                "q3": self.decimal_fmt.format(summary.q3),
-                "iqr": self.decimal_fmt.format(summary.iqr),
+                "min": float_fmt(summary.min),
+                "max": float_fmt(summary.max),
+                "mean": float_fmt(summary.mean),
+                "median": float_fmt(summary.median),
+                "stdev": float_fmt(summary.stdev),
+                "q1": float_fmt(summary.q1),
+                "q3": float_fmt(summary.q3),
+                "iqr": float_fmt(summary.iqr),
                 "z_score": z_score,
                 "z_regression": z_regression(summary.z_score),
                 "z_improvement": z_improvement(summary.z_score),

@@ -21,6 +21,10 @@ def generate_uuid():
     return uuid.uuid4().hex
 
 
+def float_fmt(value):
+    return float(round(value, 6))
+
+
 class EntityMixin:
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.id}>"
