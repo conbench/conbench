@@ -4,6 +4,7 @@ import flask as f
 import marshmallow
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship
 
 from ..entities._comparator import z_improvement, z_regression
@@ -62,6 +63,7 @@ class Summary(Base, EntityMixin):
     q1 = Nullable(s.Numeric, check("q1>=0"))
     q3 = Nullable(s.Numeric, check("q3>=0"))
     iqr = Nullable(s.Numeric, check("iqr>=0"))
+    error = Nullable(postgresql.JSONB)
 
     @staticmethod
     def create(data):
@@ -247,7 +249,8 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     timestamp = marshmallow.fields.DateTime(required=True)
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
     cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
-    stats = marshmallow.fields.Nested(SummarySchema().create, required=True)
+    stats = marshmallow.fields.Nested(SummarySchema().create, required=False)
+    error = marshmallow.fields.Dict(required=False)
     tags = marshmallow.fields.Dict(required=True)
     info = marshmallow.fields.Dict(required=True)
     context = marshmallow.fields.Dict(required=True)
@@ -263,6 +266,16 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
         if "machine_info" in data and "cluster_info" in data:
             raise marshmallow.ValidationError(
                 "machine_info and cluster_info fields can not be used at the same time"
+            )
+
+    @marshmallow.validates_schema
+    def validate_stats_or_error_field_is_present(self, data, **kwargs):
+        if "stats" not in data and "error" not in data:
+            raise marshmallow.ValidationError("Either stats or error field is required")
+
+        if "stats" in data and "error" in data:
+            raise marshmallow.ValidationError(
+                "stats and error fields can not be used at the same time"
             )
 
 

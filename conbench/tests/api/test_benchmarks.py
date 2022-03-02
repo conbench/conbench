@@ -294,7 +294,6 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         "context",
         "info",
         "run_id",
-        "stats",
         "tags",
         "timestamp",
     ]
@@ -694,5 +693,23 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             "_schema": [
                 "machine_info and cluster_info fields can not be used at the same time"
             ]
+        }
+        self.assert_400_bad_request(response, message)
+
+    def test_neither_stats_nor_error_field_is_present(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        del data["stats"]
+        response = client.post(self.url, json=data)
+        message = {"_schema": ["Either stats or error field is required"]}
+        self.assert_400_bad_request(response, message)
+
+    def test_stats_and_error_fields_are_present(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["error"] = {}
+        response = client.post(self.url, json=data)
+        message = {
+            "_schema": ["stats and error fields can not be used at the same time"]
         }
         self.assert_400_bad_request(response, message)
