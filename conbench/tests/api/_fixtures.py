@@ -12,9 +12,14 @@ ELDER = "81e9417eb68171e03a304097ae86e1fd83307130"
 
 RESULTS_UP = [[1, 2, 3], [2, 3, 4], [10, 20, 30]]
 RESULTS_DOWN = [[10, 11, 12], [11, 12, 13], [1, 2, 3]]
-Z_SCORE_UP = 24.748737
-Z_SCORE_DOWN = -13.435029
-
+Z_SCORE_UP = 24.74873734152916  # Computed using statistics.stdev()
+Z_SCORE_DOWN = -13.435028842544401  # Computed using statistics.stdev()
+Z_SCORE_UP_COMPUTED_VIA_POSTGRES = (
+    Z_SCORE_UP + 0.000000000000004
+)  # Computed using sqlalchemy.func.stddev()
+Z_SCORE_DOWN_COMPUTED_VIA_POSTGRES = (
+    Z_SCORE_DOWN - 0.000000000000002
+)  # Computed using sqlalchemy.func.stddev()
 
 VALID_PAYLOAD = {
     "run_id": "2a5709d179f349cba69ed242be3e6321",

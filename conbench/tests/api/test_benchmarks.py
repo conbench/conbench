@@ -82,7 +82,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": 2.5,
                 "stdev": 1.0,
                 "times": [],
-                "z_score": -abs(_fixtures.Z_SCORE_DOWN),
+                "z_score": -abs(_fixtures.Z_SCORE_DOWN_COMPUTED_VIA_POSTGRES),
                 "z_regression": True,
                 "unit": "i/s",
             }
@@ -129,7 +129,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": 25.0,
                 "stdev": 10.0,
                 "times": [],
-                "z_score": -abs(_fixtures.Z_SCORE_UP),
+                "z_score": -abs(_fixtures.Z_SCORE_UP_COMPUTED_VIA_POSTGRES),
                 "z_regression": True,
             }
         )
@@ -175,7 +175,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": 25.0,
                 "stdev": 10.0,
                 "times": [],
-                "z_score": abs(_fixtures.Z_SCORE_UP),
+                "z_score": abs(_fixtures.Z_SCORE_UP_COMPUTED_VIA_POSTGRES),
                 "z_improvement": True,
                 "unit": "i/s",
             }
@@ -222,7 +222,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": 2.5,
                 "stdev": 1.0,
                 "times": [],
-                "z_score": abs(_fixtures.Z_SCORE_DOWN),
+                "z_score": abs(_fixtures.Z_SCORE_DOWN_COMPUTED_VIA_POSTGRES),
                 "z_improvement": True,
             }
         )

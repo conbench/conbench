@@ -58,7 +58,7 @@ class BenchmarkResult:
         self.value = decimal.Decimal(value)
         self.tags = tags
         self.language = language
-        self.z_score = decimal.Decimal(z_score) if z_score is not None else None
+        self.z_score = float(z_score) if z_score is not None else None
 
 
 class BenchmarkComparator:
