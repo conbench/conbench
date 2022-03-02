@@ -1,5 +1,5 @@
 from ..db import Session
-from ..entities._entity import EntitySerializer, float_fmt
+from ..entities._entity import EntitySerializer
 from ..entities.commit import Commit
 from ..entities.distribution import Distribution
 from ..entities.hardware import Hardware
@@ -14,7 +14,7 @@ class _Serializer(EntitySerializer):
             "benchmark_id": history.id,
             "case_id": history.case_id,
             "context_id": history.context_id,
-            "mean": float_fmt(history.mean),
+            "mean": float(history.mean),
             "unit": history.unit,
             "hardware_hash": history.hash,
             "sha": history.sha,
@@ -22,8 +22,8 @@ class _Serializer(EntitySerializer):
             "message": history.message,
             "timestamp": history.timestamp.isoformat(),
             "run_name": history.name,
-            "distribution_mean": float_fmt(history.mean_mean),
-            "distribution_stdev": float_fmt(standard_deviation),
+            "distribution_mean": float(history.mean_mean),
+            "distribution_stdev": float(standard_deviation),
         }
 
 
