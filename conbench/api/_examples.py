@@ -23,13 +23,7 @@ def _api_user_entity(user):
 
 
 def _api_benchmark_entity(
-    summary_id,
-    case_id,
-    info_id,
-    context_id,
-    batch_id,
-    run_id,
-    name,
+    summary_id, case_id, info_id, context_id, batch_id, run_id, name, error=None
 ):
     return {
         "id": summary_id,
@@ -76,6 +70,7 @@ def _api_benchmark_entity(
             "z_regression": False,
             "z_improvement": False,
         },
+        "error": error,
         "tags": {
             "id": case_id,
             "compression": "snappy",

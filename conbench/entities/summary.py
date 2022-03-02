@@ -50,11 +50,11 @@ class Summary(Base, EntityMixin):
         cascade="all, delete",
         passive_deletes=True,
     )
-    unit = NotNull(s.Text)
-    time_unit = NotNull(s.Text)
-    batch_id = NotNull(s.Text)
+    unit = Nullable(s.Text)
+    time_unit = Nullable(s.Text)
+    batch_id = Nullable(s.Text)
     timestamp = NotNull(s.DateTime(timezone=False))
-    iterations = NotNull(s.Integer, check("iterations>=1"))
+    iterations = Nullable(s.Integer)
     min = Nullable(s.Numeric, check("min>=0"))
     max = Nullable(s.Numeric, check("max>=0"))
     mean = Nullable(s.Numeric, check("mean>=0"))
@@ -68,10 +68,14 @@ class Summary(Base, EntityMixin):
     @staticmethod
     def create(data):
         tags = data["tags"]
-        stats = data["stats"]
+        if "stats" in data:
+            summary_data = data["stats"]
+            values = summary_data.pop("data")
+            times = summary_data.pop("times")
+        else:
+            summary_data = {"error": data["error"]}
+
         name = tags.pop("name")
-        values = stats.pop("data")
-        times = stats.pop("times")
 
         # create if not exists
         c = {"name": name, "tags": tags}
@@ -131,14 +135,17 @@ class Summary(Base, EntityMixin):
                 }
             )
 
-        stats["run_id"] = data["run_id"]
-        stats["batch_id"] = data["batch_id"]
-        stats["timestamp"] = data["timestamp"]
-        stats["case_id"] = case.id
-        stats["info_id"] = info.id
-        stats["context_id"] = context.id
-        summary = Summary(**stats)
+        summary_data["run_id"] = data["run_id"]
+        summary_data["batch_id"] = data["batch_id"]
+        summary_data["timestamp"] = data["timestamp"]
+        summary_data["case_id"] = case.id
+        summary_data["info_id"] = info.id
+        summary_data["context_id"] = context.id
+        summary = Summary(**summary_data)
         summary.save()
+
+        if "error" in data:
+            return summary
 
         values = [decimal.Decimal(x) for x in values]
         bulk = []
@@ -206,18 +213,19 @@ class _Serializer(EntitySerializer):
                 "unit": summary.unit,
                 "time_unit": summary.time_unit,
                 "iterations": summary.iterations,
-                "min": float(summary.min),
-                "max": float(summary.max),
-                "mean": float(summary.mean),
-                "median": float(summary.median),
-                "stdev": float(summary.stdev),
-                "q1": float(summary.q1),
-                "q3": float(summary.q3),
-                "iqr": float(summary.iqr),
+                "min": float(summary.min) if summary.min else None,
+                "max": float(summary.max) if summary.max else None,
+                "mean": float(summary.mean) if summary.mean else None,
+                "median": float(summary.median) if summary.median else None,
+                "stdev": float(summary.stdev) if summary.stdev else None,
+                "q1": float(summary.q1) if summary.q1 else None,
+                "q3": float(summary.q3) if summary.q3 else None,
+                "iqr": float(summary.iqr) if summary.iqr else None,
                 "z_score": z_score,
                 "z_regression": z_regression(summary.z_score),
                 "z_improvement": z_improvement(summary.z_score),
             },
+            "error": summary.error,
             "links": {
                 "list": f.url_for("api.benchmarks", _external=True),
                 "self": f.url_for(
