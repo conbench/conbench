@@ -68,12 +68,14 @@ class Summary(Base, EntityMixin):
     @staticmethod
     def create(data):
         tags = data["tags"]
-        if "stats" in data:
+        has_error = "error" in data
+
+        if has_error:
+            summary_data = {"error": data["error"]}
+        else:
             summary_data = data["stats"]
             values = summary_data.pop("data")
             times = summary_data.pop("times")
-        else:
-            summary_data = {"error": data["error"]}
 
         name = tags.pop("name")
 
@@ -125,13 +127,17 @@ class Summary(Base, EntityMixin):
         run_id = data["run_id"]
         run_name = data.pop("run_name", None)
         run = Run.first(id=run_id)
-        if not run:
+        if run and has_error:
+            run.has_errors = True
+            run.save()
+        else:
             run = Run.create(
                 {
                     "id": run_id,
                     "name": run_name,
                     "commit_id": commit.id,
                     "hardware_id": hardware.id,
+                    "has_errors": has_error,
                 }
             )
 
