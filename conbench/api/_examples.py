@@ -138,6 +138,7 @@ def _api_commit_entity(commit_id, parent_id, links=True):
 def _api_compare_entity(benchmark_ids, batch_ids, run_ids, batch, benchmark, tags):
     return {
         "baseline": "0.036 s",
+        "baseline_error": None,
         "baseline_id": benchmark_ids[0],
         "baseline_batch_id": batch_ids[0],
         "baseline_run_id": run_ids[0],
@@ -156,6 +157,7 @@ def _api_compare_entity(benchmark_ids, batch_ids, run_ids, batch, benchmark, tag
         "contender_z_regression": False,
         "contender_z_improvement": False,
         "contender": "0.036 s",
+        "contender_error": None,
         "contender_id": benchmark_ids[1],
         "contender_batch_id": batch_ids[1],
         "contender_run_id": run_ids[1],
@@ -177,6 +179,7 @@ def _api_compare_list(
     return [
         {
             "baseline": "0.036 s",
+            "baseline_error": None,
             "baseline_id": baseline_ids[0],
             "baseline_batch_id": batch_ids[0],
             "baseline_run_id": run_ids[0],
@@ -195,6 +198,7 @@ def _api_compare_list(
             "contender_z_regression": False,
             "contender_z_improvement": False,
             "contender": "0.036 s",
+            "contender_error": None,
             "contender_id": contender_ids[0],
             "contender_batch_id": batch_ids[1],
             "contender_run_id": run_ids[1],
@@ -204,6 +208,7 @@ def _api_compare_list(
         },
         {
             "baseline": "0.036 s",
+            "baseline_error": None,
             "baseline_id": baseline_ids[1],
             "baseline_batch_id": batch_ids[0],
             "baseline_run_id": run_ids[0],
@@ -222,6 +227,7 @@ def _api_compare_list(
             "contender_z_regression": False,
             "contender_z_improvement": False,
             "contender": "0.036 s",
+            "contender_error": None,
             "contender_id": contender_ids[1],
             "contender_batch_id": batch_ids[1],
             "contender_run_id": run_ids[1],

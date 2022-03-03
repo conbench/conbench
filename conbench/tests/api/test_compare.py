@@ -15,7 +15,7 @@ class FakeEntity:
         self.id = _id
 
 
-def _fake_compare_entity(summary_id, case_id, context_id):
+def _fake_compare_entity(summary_id, case_id, context_id, error=None):
     return {
         "id": summary_id,
         "batch_id": "some_batch_id",
@@ -23,6 +23,7 @@ def _fake_compare_entity(summary_id, case_id, context_id):
         "case_id": case_id,
         "context_id": context_id,
         "value": "some_value",
+        "error": error,
         "unit": "some_unit",
         "benchmark": "some_benchmark",
         "batch": "some_batch",
