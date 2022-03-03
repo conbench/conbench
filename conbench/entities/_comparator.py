@@ -42,6 +42,7 @@ class BenchmarkResult:
         run_id,
         unit,
         value,
+        error,
         batch,
         benchmark,
         language,
@@ -56,6 +57,7 @@ class BenchmarkResult:
         self.batch = batch
         self.benchmark = benchmark
         self.value = decimal.Decimal(value) if value else None
+        self.error = error
         self.tags = tags
         self.language = language
         self.z_score = float(z_score) if z_score is not None else None
@@ -107,6 +109,9 @@ class BenchmarkComparator:
     @property
     def change(self):
         if self.baseline is None or self.contender is None:
+            return 0.0
+
+        if self.baseline.error or self.contender.error:
             return 0.0
 
         new = self.contender.value
@@ -190,6 +195,8 @@ class BenchmarkComparator:
             "contender_z_improvement": self.contender_z_improvement,
             "baseline": fmt_unit(baseline, self.unit),
             "contender": fmt_unit(contender, self.unit),
+            "baseline_error": self.baseline.error if self.baseline else None,
+            "contender_error": self.contender.error if self.contender else None,
             "baseline_id": self.baseline.id if self.baseline else None,
             "contender_id": self.contender.id if self.contender else None,
             "baseline_batch_id": self.baseline.batch_id if self.baseline else None,
@@ -221,6 +228,8 @@ class BenchmarkComparator:
             "contender_z_improvement": self.contender_z_improvement,
             "baseline": fmt(baseline),
             "contender": fmt(contender),
+            "baseline_error": self.baseline.error if self.baseline else None,
+            "contender_error": self.contender.error if self.contender else None,
             "baseline_id": self.baseline.id if self.baseline else None,
             "contender_id": self.contender.id if self.contender else None,
             "baseline_batch_id": self.baseline.batch_id if self.baseline else None,

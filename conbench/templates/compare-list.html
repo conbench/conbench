@@ -117,7 +117,7 @@
                 </thead>
                 <tbody>
                     {% for c in comparisons %}
-                    {% if c.contender is not none and c.baseline is not none %}
+                    {% if(c.contender is not none or c.contender_error) and (c.baseline is not none or c.baseline_error) %}
                     <tr>
                          {% if c.contender_z_score is not none %}
 	                       {% if c.contender_z_regression %}
@@ -163,13 +163,17 @@
                            {% endif %}
                          </td>
 
-                         {% if c.baseline is none %}
+                         {% if c.baseline_error is not none %}
+                           <td>Error: {{ c.baseline_error }}</td>
+                         {% elif c.baseline is none %}
                            <td></td>
                          {% else %}
                            <td style="white-space: nowrap;">{{ c.baseline }}</td>
                          {% endif %}
 
-                         {% if c.contender is none %}
+                         {% if c.contender_error is not none %}
+                           <td>Error: {{ c.contender_error }}</td>
+                         {% elif c.contender is none %}
                            <td></td>
                          {% else %}
                            <td style="white-space: nowrap;">{{ c.contender }}</td>

@@ -14,7 +14,7 @@ from ..config import Config
 
 class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, comparisons, regressions, improvements, baseline_id, contender_id):
-
+        print(comparisons)
         unknown = "unknown...unknown"
         compare_runs_url = f.url_for("app.compare-runs", compare_ids=unknown)
         compare_batches_url = f.url_for("app.compare-batches", compare_ids=unknown)
@@ -135,7 +135,6 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         try:
             baseline_id, contender_id = compare_ids.split("...", 1)
             comparisons, regressions, improvements = self._compare(params)
-            print(comparisons)
             if not comparisons:
                 self.flash("Data is still collecting (or failed).")
         except ValueError:
