@@ -14,6 +14,7 @@ from ..config import Config
 
 class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, comparisons, regressions, improvements, baseline_id, contender_id):
+
         unknown = "unknown...unknown"
         compare_runs_url = f.url_for("app.compare-runs", compare_ids=unknown)
         compare_batches_url = f.url_for("app.compare-batches", compare_ids=unknown)
