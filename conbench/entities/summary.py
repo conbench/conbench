@@ -127,9 +127,10 @@ class Summary(Base, EntityMixin):
         run_id = data["run_id"]
         run_name = data.pop("run_name", None)
         run = Run.first(id=run_id)
-        if run and has_error:
-            run.has_errors = True
-            run.save()
+        if run:
+            if has_error:
+                run.has_errors = True
+                run.save()
         else:
             run = Run.create(
                 {

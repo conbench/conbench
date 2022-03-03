@@ -111,7 +111,16 @@
                      {% else %}
                        <td></td>
                      {% endif %}
-                <td>{{ benchmark.error }}</td>
+                <td>
+                {%  if benchmark.error %}
+                    {% for k,v in benchmark.error.items() %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                          <b>{{ k }}</b>
+                          <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+                        </li>
+                    {% endfor %}
+                {% endif %}
+                </td>
                 </tr>
                 {% endfor %}
             </tbody>

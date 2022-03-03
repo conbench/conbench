@@ -96,9 +96,9 @@ class BenchmarkComparator:
 
     @property
     def unit(self):
-        if self.baseline is not None:
+        if self.baseline is not None and self.baseline.unit:
             return self.baseline.unit
-        if self.contender is not None:
+        if self.contender is not None and self.contender.unit:
             return self.contender.unit
         return "unknown"
 
