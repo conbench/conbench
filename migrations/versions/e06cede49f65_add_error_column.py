@@ -36,7 +36,7 @@ def upgrade():
     op.alter_column("summary", "time_unit", existing_type=sa.TEXT(), nullable=True)
     op.alter_column("summary", "batch_id", existing_type=sa.TEXT(), nullable=True)
     op.alter_column("summary", "iterations", existing_type=sa.INTEGER(), nullable=True)
-    op.add_column("run", sa.Column("has_errors", sa.Boolean()))
+    op.add_column("run", sa.Column("has_errors", sa.Boolean(), server_default="false"))
     set_run_has_errors_values()
     op.alter_column("run", "has_errors", existing_type=sa.Boolean, nullable=False)
 
