@@ -25,12 +25,27 @@ def _api_user_entity(user):
 def _api_benchmark_entity(
     summary_id, case_id, info_id, context_id, batch_id, run_id, name, error=None
 ):
-    return {
-        "id": summary_id,
-        "run_id": run_id,
-        "batch_id": batch_id,
-        "timestamp": "2020-11-25T21:02:42.706806",
-        "stats": {
+    if error:
+        stats = {
+            "data": [],
+            "times": [],
+            "unit": None,
+            "time_unit": None,
+            "iqr": None,
+            "iterations": None,
+            "max": None,
+            "mean": None,
+            "median": None,
+            "min": None,
+            "q1": None,
+            "q3": None,
+            "stdev": None,
+            "z_score": None,
+            "z_regression": False,
+            "z_improvement": False,
+        }
+    else:
+        stats = {
             "data": [
                 0.099094,
                 0.037129,
@@ -69,7 +84,13 @@ def _api_benchmark_entity(
             "z_score": None,
             "z_regression": False,
             "z_improvement": False,
-        },
+        }
+    return {
+        "id": summary_id,
+        "run_id": run_id,
+        "batch_id": batch_id,
+        "timestamp": "2020-11-25T21:02:42.706806",
+        "stats": stats,
         "error": error,
         "tags": {
             "id": case_id,

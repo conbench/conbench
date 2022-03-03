@@ -23,6 +23,7 @@ def _expected_entity(summary):
         summary.batch_id,
         summary.run_id,
         summary.case.name,
+        summary.error,
     )
 
 
@@ -289,6 +290,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
     url = "/api/benchmarks/"
     valid_payload = _fixtures.VALID_PAYLOAD
     valid_payload_for_cluster = _fixtures.VALID_PAYLOAD_FOR_CLUSTER
+    valid_payload_with_error = _fixtures.VALID_PAYLOAD_WITH_ERROR
     required_fields = [
         "batch_id",
         "context",
@@ -315,6 +317,14 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
                 assert getattr(summary.run.hardware, attr) == value or getattr(
                     summary.run.hardware, attr
                 ) == int(value)
+
+    def test_create_benchmark_with_error(self, client):
+        self.authenticate(client)
+        response = client.post("/api/benchmarks/", json=self.valid_payload_with_error)
+        new_id = response.json["id"]
+        summary = Summary.one(id=new_id)
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(summary), location)
 
     def test_create_benchmark_for_cluster_with_optional_info_changed(self, client):
         # Post benchmarks for cluster-1
