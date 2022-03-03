@@ -117,7 +117,7 @@
                 </thead>
                 <tbody>
                     {% for c in comparisons %}
-                    {% if(c.contender is not none or c.contender_error) and (c.baseline is not none or c.baseline_error) %}
+                    {% if (c.contender is not none or c.contender_error) and (c.baseline is not none or c.baseline_error) %}
                     <tr>
                          {% if c.contender_z_score is not none %}
 	                       {% if c.contender_z_regression %}
@@ -154,7 +154,7 @@
                          </td>
 
                          <td>
-                           {% if c.contender is not none and c.baseline is not none %}
+                           {% if (c.contender is not none or c.contender_error) and (c.baseline is not none or c.baseline_error) %}
                              <a href="{{ c.compare_benchmarks_url }}">
                                <div>{{ c.benchmark}}</div>
                              </a>
@@ -164,14 +164,11 @@
                          </td>
 
                          {% if c.baseline_error is not none %}
-                           <td>Failed with this error:
-                           {% for k,v in c.baseline_error.items() %}
-                            <li class="list-group-item" style="overflow-y: auto;">
-                              <b>{{ k }}</b>
-                              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-                            </li>
-                            {% endfor %}
-                            </td>
+                           <td><a href="{{ url_for('app.benchmark', benchmark_id=c.baseline_id) }}">
+                               <i class="glyphicon glyphicon-exclamation-sign text-danger"
+                                  data-toggle="tooltip" data-placement="top" title="Has error">
+                               </i></a>
+                           </td>
                          {% elif c.baseline is none %}
                            <td></td>
                          {% else %}
@@ -179,14 +176,11 @@
                          {% endif %}
 
                          {% if c.contender_error is not none %}
-                           <td>Failed with this error:
-                           {% for k,v in c.contender_error.items() %}
-                            <li class="list-group-item" style="overflow-y: auto;">
-                              <b>{{ k }}</b>
-                              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-                            </li>
-                            {% endfor %}
-                            </td>
+                           <td><a href="{{ url_for('app.benchmark', benchmark_id=c.contender_id) }}">
+                               <i class="glyphicon glyphicon-exclamation-sign text-danger"
+                                  data-toggle="tooltip" data-placement="top" title="Has error">
+                               </i></a>
+                           </td>
                          {% elif c.contender is none %}
                            <td></td>
                          {% else %}

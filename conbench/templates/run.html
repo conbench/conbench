@@ -112,14 +112,7 @@
                        <td></td>
                      {% endif %}
                 <td>
-                {%  if benchmark.error %}
-                    {% for k,v in benchmark.error.items() %}
-                        <li class="list-group-item" style="overflow-y: auto;">
-                          <b>{{ k }}</b>
-                          <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-                        </li>
-                    {% endfor %}
-                {% endif %}
+                    {%  if benchmark.error %}<a href="{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}"><i class="glyphicon glyphicon-exclamation-sign text-danger"></i></a>{% endif %}
                 </td>
                 </tr>
                 {% endfor %}
