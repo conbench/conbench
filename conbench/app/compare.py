@@ -135,6 +135,7 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         try:
             baseline_id, contender_id = compare_ids.split("...", 1)
             comparisons, regressions, improvements = self._compare(params)
+            print(comparisons)
             if not comparisons:
                 self.flash("Data is still collecting (or failed).")
         except ValueError:

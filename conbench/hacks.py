@@ -51,8 +51,9 @@ def sorted_data(benchmarks):
     for benchmark in benchmarks:
         tags = benchmark["tags"]
         case = get_case(tags)
-        case.append(benchmark["stats"]["mean"])
-        data.append(case)
+        if benchmark["stats"]["mean"]:
+            case.append(benchmark["stats"]["mean"])
+            data.append(case)
 
     # Try to sort the cases better
     # unsorted: ['262144/0', '262144/1', '262144/10', '262144/2']

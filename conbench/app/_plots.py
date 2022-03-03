@@ -186,7 +186,7 @@ def _source(
             means.append(unit_fmt(points[-1], unit))
     else:
         points = [x[key] for x in data]
-        means = [unit_fmt(float(x[key]), unit) for x in data]
+        means = [unit_fmt(float(x[key]), unit) for x in data if x[key]]
 
     if formatted:
         points = [x.split(" ")[0] for x in means]

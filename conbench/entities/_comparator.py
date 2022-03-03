@@ -55,7 +55,7 @@ class BenchmarkResult:
         self.unit = unit
         self.batch = batch
         self.benchmark = benchmark
-        self.value = decimal.Decimal(value)
+        self.value = decimal.Decimal(value) if value else None
         self.tags = tags
         self.language = language
         self.z_score = float(z_score) if z_score is not None else None
@@ -115,6 +115,8 @@ class BenchmarkComparator:
         if old == 0 and new == 0:
             return 0.0
         if old == 0:
+            return 0.0
+        if old is None or new is None:
             return 0.0
 
         result = (new - old) / abs(old)

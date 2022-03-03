@@ -10,6 +10,7 @@ def augment(benchmark, contexts=None):
     set_display_batch(benchmark)
     set_display_mean(benchmark)
     set_display_language(benchmark, contexts)
+    set_display_error(benchmark)
     tags = benchmark["tags"]
     if "dataset" in tags:
         tags["dataset"] = dataset_name(tags["dataset"])
@@ -36,10 +37,18 @@ def set_display_time(benchmark):
 
 
 def set_display_mean(benchmark):
+    if not benchmark["stats"]["mean"]:
+        return ""
+
     unit = benchmark["stats"]["unit"]
     mean = float(benchmark["stats"]["mean"])
     fmt = formatter_for_unit(unit)
     benchmark["display_mean"] = fmt(mean, unit)
+
+
+def set_display_error(benchmark):
+    if not benchmark["error"]:
+        benchmark["error"] = ""
 
 
 def display_message(message):

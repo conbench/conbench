@@ -82,7 +82,8 @@
                     <th scope="col">Batch</th>
                     <th scope="col">Benchmark</th>
                     <th scope="col">Mean</th>
-                    <th scope="col" style="white-space: nowrap;">Z-Score</th>
+                    <th scope="col">Z-Score</th>
+                    <th scope="col" style="white-space: nowrap;">Error</th>
                 </tr>
             </thead>
             <tbody>
@@ -110,6 +111,7 @@
                      {% else %}
                        <td></td>
                      {% endif %}
+                <td>{{ benchmark.error }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
