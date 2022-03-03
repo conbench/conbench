@@ -405,6 +405,7 @@ def _api_run_entity(
     now,
     baseline_id,
     include_baseline=True,
+    has_errors=False,
 ):
     result = {
         "id": run_id,
@@ -414,6 +415,7 @@ def _api_run_entity(
         "hardware": _api_hardware_entity(
             hardware_id, hardware_name, hardware_type, links=False
         ),
+        "has_errors": has_errors,
         "links": {
             "list": "http://localhost/api/runs/",
             "self": "http://localhost/api/runs/%s/" % run_id,
