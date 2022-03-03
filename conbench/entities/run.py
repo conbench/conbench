@@ -15,6 +15,7 @@ class Run(Base, EntityMixin):
     timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id"))
     commit = relationship("Commit", lazy="joined")
+    has_errors = NotNull(s.Boolean, default=False)
     hardware_id = NotNull("machine_id", s.String(50), s.ForeignKey("machine.id"))
     hardware = relationship("Hardware", lazy="joined")
 
@@ -90,6 +91,7 @@ class _Serializer(EntitySerializer):
             "timestamp": run.timestamp.isoformat(),
             "commit": commit,
             "hardware": hardware,
+            "has_errors": run.has_errors,
             "links": {
                 "list": f.url_for("api.runs", _external=True),
                 "self": f.url_for("api.run", run_id=run.id, _external=True),
