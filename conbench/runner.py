@@ -5,6 +5,7 @@ import functools
 import gc
 import statistics
 import subprocess
+import traceback
 import time
 import uuid
 
@@ -158,6 +159,7 @@ class MixinPython:
             )
         except Exception as e:
             error = {"exception": str(e)}
+            print(traceback.format_exception)
             benchmark, _ = self.record(
                 None,
                 name,

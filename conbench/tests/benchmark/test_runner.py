@@ -80,6 +80,7 @@ def test_runner_simple_benchmark_that_alway_fails():
     assert result["github"]["repository"] == REPO
     assert "stats" not in result
     assert result["error"] == {"exception": "division by zero"}
+    assert 1 == 0
 
 
 def test_runner_case_benchmark():
