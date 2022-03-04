@@ -205,6 +205,9 @@ def set_z_scores(summaries):
     lookup = {f"{d.case_id}-{d.context_id}": d for d in distributions}
 
     for summary in summaries:
+        if summary.error:
+            continue
+
         d = lookup.get(f"{summary.case_id}-{summary.context_id}")
         if d and d.mean_sd:
             summary.z_score = (summary.mean - d.mean_mean) / d.mean_sd

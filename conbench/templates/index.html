@@ -41,7 +41,17 @@
             <tbody>
                 {% for run in runs %}
                 <tr>
-                     <td style="white-space: nowrap;"><a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.display_timestamp }}</a></td>
+                     <td style="white-space: nowrap;">
+                         {% if run.has_errors %}
+                             <i class="glyphicon glyphicon-exclamation-sign text-danger"
+                                data-toggle="tooltip"
+                                data-placement="top"
+                                title="Some benchmarks have errors"></i>
+                         {% else %}
+                            <i class="glyphicon glyphicon-ok-circle text-success"></i>
+                         {% endif %}
+                         <a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.display_timestamp }}</a>
+                     </td>
 
                      <td>
                        {% if run.commit.author_avatar %}

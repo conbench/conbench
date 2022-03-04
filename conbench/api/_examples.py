@@ -23,20 +23,29 @@ def _api_user_entity(user):
 
 
 def _api_benchmark_entity(
-    summary_id,
-    case_id,
-    info_id,
-    context_id,
-    batch_id,
-    run_id,
-    name,
+    summary_id, case_id, info_id, context_id, batch_id, run_id, name, error=None
 ):
-    return {
-        "id": summary_id,
-        "run_id": run_id,
-        "batch_id": batch_id,
-        "timestamp": "2020-11-25T21:02:42.706806",
-        "stats": {
+    if error:
+        stats = {
+            "data": [],
+            "times": [],
+            "unit": None,
+            "time_unit": None,
+            "iqr": None,
+            "iterations": None,
+            "max": None,
+            "mean": None,
+            "median": None,
+            "min": None,
+            "q1": None,
+            "q3": None,
+            "stdev": None,
+            "z_score": None,
+            "z_regression": False,
+            "z_improvement": False,
+        }
+    else:
+        stats = {
             "data": [
                 0.099094,
                 0.037129,
@@ -75,7 +84,14 @@ def _api_benchmark_entity(
             "z_score": None,
             "z_regression": False,
             "z_improvement": False,
-        },
+        }
+    return {
+        "id": summary_id,
+        "run_id": run_id,
+        "batch_id": batch_id,
+        "timestamp": "2020-11-25T21:02:42.706806",
+        "stats": stats,
+        "error": error,
         "tags": {
             "id": case_id,
             "compression": "snappy",
@@ -122,6 +138,7 @@ def _api_commit_entity(commit_id, parent_id, links=True):
 def _api_compare_entity(benchmark_ids, batch_ids, run_ids, batch, benchmark, tags):
     return {
         "baseline": "0.036 s",
+        "baseline_error": None,
         "baseline_id": benchmark_ids[0],
         "baseline_batch_id": batch_ids[0],
         "baseline_run_id": run_ids[0],
@@ -140,6 +157,7 @@ def _api_compare_entity(benchmark_ids, batch_ids, run_ids, batch, benchmark, tag
         "contender_z_regression": False,
         "contender_z_improvement": False,
         "contender": "0.036 s",
+        "contender_error": None,
         "contender_id": benchmark_ids[1],
         "contender_batch_id": batch_ids[1],
         "contender_run_id": run_ids[1],
@@ -161,6 +179,7 @@ def _api_compare_list(
     return [
         {
             "baseline": "0.036 s",
+            "baseline_error": None,
             "baseline_id": baseline_ids[0],
             "baseline_batch_id": batch_ids[0],
             "baseline_run_id": run_ids[0],
@@ -179,6 +198,7 @@ def _api_compare_list(
             "contender_z_regression": False,
             "contender_z_improvement": False,
             "contender": "0.036 s",
+            "contender_error": None,
             "contender_id": contender_ids[0],
             "contender_batch_id": batch_ids[1],
             "contender_run_id": run_ids[1],
@@ -188,6 +208,7 @@ def _api_compare_list(
         },
         {
             "baseline": "0.036 s",
+            "baseline_error": None,
             "baseline_id": baseline_ids[1],
             "baseline_batch_id": batch_ids[0],
             "baseline_run_id": run_ids[0],
@@ -206,6 +227,7 @@ def _api_compare_list(
             "contender_z_regression": False,
             "contender_z_improvement": False,
             "contender": "0.036 s",
+            "contender_error": None,
             "contender_id": contender_ids[1],
             "contender_batch_id": batch_ids[1],
             "contender_run_id": run_ids[1],
@@ -383,6 +405,7 @@ def _api_run_entity(
     now,
     baseline_id,
     include_baseline=True,
+    has_errors=False,
 ):
     result = {
         "id": run_id,
@@ -392,6 +415,7 @@ def _api_run_entity(
         "hardware": _api_hardware_entity(
             hardware_id, hardware_name, hardware_type, links=False
         ),
+        "has_errors": has_errors,
         "links": {
             "list": "http://localhost/api/runs/",
             "self": "http://localhost/api/runs/%s/" % run_id,

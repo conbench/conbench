@@ -49,6 +49,9 @@ def set_display_batch(benchmark):
 def sorted_data(benchmarks):
     data = []
     for benchmark in benchmarks:
+        if benchmark["error"]:
+            continue
+
         tags = benchmark["tags"]
         case = get_case(tags)
         case.append(benchmark["stats"]["mean"])

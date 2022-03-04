@@ -4,6 +4,7 @@ import flask as f
 import marshmallow
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship
 
 from ..entities._comparator import z_improvement, z_regression
@@ -49,11 +50,11 @@ class Summary(Base, EntityMixin):
         cascade="all, delete",
         passive_deletes=True,
     )
-    unit = NotNull(s.Text)
-    time_unit = NotNull(s.Text)
-    batch_id = NotNull(s.Text)
+    unit = Nullable(s.Text)
+    time_unit = Nullable(s.Text)
+    batch_id = Nullable(s.Text)
     timestamp = NotNull(s.DateTime(timezone=False))
-    iterations = NotNull(s.Integer, check("iterations>=1"))
+    iterations = Nullable(s.Integer)
     min = Nullable(s.Numeric, check("min>=0"))
     max = Nullable(s.Numeric, check("max>=0"))
     mean = Nullable(s.Numeric, check("mean>=0"))
@@ -62,14 +63,21 @@ class Summary(Base, EntityMixin):
     q1 = Nullable(s.Numeric, check("q1>=0"))
     q3 = Nullable(s.Numeric, check("q3>=0"))
     iqr = Nullable(s.Numeric, check("iqr>=0"))
+    error = Nullable(postgresql.JSONB)
 
     @staticmethod
     def create(data):
         tags = data["tags"]
-        stats = data["stats"]
+        has_error = "error" in data
+
+        if has_error:
+            summary_data = {"error": data["error"]}
+        else:
+            summary_data = data["stats"]
+            values = summary_data.pop("data")
+            times = summary_data.pop("times")
+
         name = tags.pop("name")
-        values = stats.pop("data")
-        times = stats.pop("times")
 
         # create if not exists
         c = {"name": name, "tags": tags}
@@ -119,24 +127,32 @@ class Summary(Base, EntityMixin):
         run_id = data["run_id"]
         run_name = data.pop("run_name", None)
         run = Run.first(id=run_id)
-        if not run:
+        if run:
+            if has_error:
+                run.has_errors = True
+                run.save()
+        else:
             run = Run.create(
                 {
                     "id": run_id,
                     "name": run_name,
                     "commit_id": commit.id,
                     "hardware_id": hardware.id,
+                    "has_errors": has_error,
                 }
             )
 
-        stats["run_id"] = data["run_id"]
-        stats["batch_id"] = data["batch_id"]
-        stats["timestamp"] = data["timestamp"]
-        stats["case_id"] = case.id
-        stats["info_id"] = info.id
-        stats["context_id"] = context.id
-        summary = Summary(**stats)
+        summary_data["run_id"] = data["run_id"]
+        summary_data["batch_id"] = data["batch_id"]
+        summary_data["timestamp"] = data["timestamp"]
+        summary_data["case_id"] = case.id
+        summary_data["info_id"] = info.id
+        summary_data["context_id"] = context.id
+        summary = Summary(**summary_data)
         summary.save()
+
+        if "error" in data:
+            return summary
 
         values = [decimal.Decimal(x) for x in values]
         bulk = []
@@ -182,6 +198,10 @@ class SummarySchema:
     create = SummaryCreate()
 
 
+def to_float(value):
+    return float(value) if value else None
+
+
 class _Serializer(EntitySerializer):
     def _dump(self, summary):
         by_iteration_data = sorted([(x.iteration, x.result) for x in summary.data])
@@ -204,18 +224,19 @@ class _Serializer(EntitySerializer):
                 "unit": summary.unit,
                 "time_unit": summary.time_unit,
                 "iterations": summary.iterations,
-                "min": float(summary.min),
-                "max": float(summary.max),
-                "mean": float(summary.mean),
-                "median": float(summary.median),
-                "stdev": float(summary.stdev),
-                "q1": float(summary.q1),
-                "q3": float(summary.q3),
-                "iqr": float(summary.iqr),
+                "min": to_float(summary.min),
+                "max": to_float(summary.max),
+                "mean": to_float(summary.mean),
+                "median": to_float(summary.median),
+                "stdev": to_float(summary.stdev),
+                "q1": to_float(summary.q1),
+                "q3": to_float(summary.q3),
+                "iqr": to_float(summary.iqr),
                 "z_score": z_score,
                 "z_regression": z_regression(summary.z_score),
                 "z_improvement": z_improvement(summary.z_score),
             },
+            "error": summary.error,
             "links": {
                 "list": f.url_for("api.benchmarks", _external=True),
                 "self": f.url_for(
@@ -247,7 +268,8 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     timestamp = marshmallow.fields.DateTime(required=True)
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
     cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
-    stats = marshmallow.fields.Nested(SummarySchema().create, required=True)
+    stats = marshmallow.fields.Nested(SummarySchema().create, required=False)
+    error = marshmallow.fields.Dict(required=False)
     tags = marshmallow.fields.Dict(required=True)
     info = marshmallow.fields.Dict(required=True)
     context = marshmallow.fields.Dict(required=True)
@@ -263,6 +285,16 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
         if "machine_info" in data and "cluster_info" in data:
             raise marshmallow.ValidationError(
                 "machine_info and cluster_info fields can not be used at the same time"
+            )
+
+    @marshmallow.validates_schema
+    def validate_stats_or_error_field_is_present(self, data, **kwargs):
+        if "stats" not in data and "error" not in data:
+            raise marshmallow.ValidationError("Either stats or error field is required")
+
+        if "stats" in data and "error" in data:
+            raise marshmallow.ValidationError(
+                "stats and error fields can not be used at the same time"
             )
 
 

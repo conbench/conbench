@@ -195,6 +195,11 @@ password in postgres to `postgres`.
     (conbench) $ alembic revision --autogenerate -m "new"
 
 
+### To populate local conbench with sample runs and benchmarks
+    (conbench) $ dropdb conbench_prod && createdb conbench_prod && alembic upgrade head && alembic upgrade head && flask run
+    (conbench) $ python -m conbench.tests.populate_local_conbench
+
+
 ### To upload new version of conbench package to PyPI
 1. Update version in [setup.py](setup.py)
 2. Commit your change into `main` branch

@@ -105,6 +105,16 @@ VALID_PAYLOAD = {
     },
 }
 
+VALID_PAYLOAD_WITH_ERROR = dict(
+    run_id="ya5709d179f349cba69ed242be3e6323",
+    error={"stack_trace": "some trace", "command": "ls"},
+    **{
+        key: value
+        for key, value in VALID_PAYLOAD.items()
+        if key not in ("stats", "run_id")
+    },
+)
+
 VALID_PAYLOAD_FOR_CLUSTER = dict(
     run_id="3a5709d179f349cba69ed242be3e6323",
     cluster_info={
@@ -132,6 +142,7 @@ def summary(
     sha=None,
     commit=None,
     pull_request=False,
+    error=None,
 ):
     data = copy.deepcopy(VALID_PAYLOAD)
     data["run_name"] = f"commit: {_uuid()}"
@@ -154,5 +165,8 @@ def summary(
     if results is not None:
         unit = unit if unit else "s"
         data["stats"] = Conbench._stats(results, unit, [], "s")
+
+    if error is not None:
+        data["error"] = error
 
     return Summary.create(data)

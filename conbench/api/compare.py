@@ -21,6 +21,7 @@ def _compare_entity(summary):
         "case_id": summary.case_id,
         "context_id": summary.context_id,
         "value": summary.mean,
+        "error": summary.error,
         "unit": summary.unit,
         "benchmark": summary.display_name,
         "batch": summary.display_batch,

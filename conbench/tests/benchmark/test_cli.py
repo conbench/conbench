@@ -18,21 +18,25 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  addition            Run addition benchmark.
-  external            Run external benchmark.
-  external-r          Run external-r benchmark.
-  external-r-options  Run external-r-options benchmark.
-  list                List of benchmarks (for orchestration).
-  matrix              Run matrix benchmark(s).
-  matrix-types        Run matrix-types benchmark(s).
-  product             Run product benchmark.
-  version             Display Conbench version.
+  addition               Run addition benchmark.
+  division-with-failure  Run division-with-failure benchmark.
+  external               Run external benchmark.
+  external-r             Run external-r benchmark.
+  external-r-options     Run external-r-options benchmark.
+  list                   List of benchmarks (for orchestration).
+  matrix                 Run matrix benchmark(s).
+  matrix-types           Run matrix-types benchmark(s).
+  product                Run product benchmark.
+  version                Display Conbench version.
 """
 
 CONBENCH_LIST = """
 [
   {
     "command": "addition --iterations=2"
+  },
+  {
+    "command": "division-with-failure --iterations=2"
   },
   {
     "command": "external --iterations=2"
