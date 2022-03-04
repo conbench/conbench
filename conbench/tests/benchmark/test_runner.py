@@ -25,15 +25,6 @@ for example in [EXAMPLE, EXAMPLE_WITH_CLUSTER_INFO, EXAMPLE_WITH_ERROR]:
     example["context"] = {
         "benchmark_language": "Python",
     }
-expected_stack_trace = """Traceback (most recent call last):
-  File "/Users/elena/conbench/conbench/runner.py", line 148, in benchmark
-    data, output = self._get_timing(f, iterations, timing_options)
-  File "/Users/elena/conbench/conbench/runner.py", line 325, in _get_timing
-    output = f()
-  File "/Users/elena/conbench/conbench/tests/benchmark/_example_benchmarks.py", line 242, in <lambda>
-    return lambda: 1 / 0
-ZeroDivisionError: division by zero
-"""
 
 
 def assert_keys_equal(a, b):
@@ -88,7 +79,17 @@ def test_runner_simple_benchmark_that_fails():
     assert result["context"]["benchmark_language"] == "Python"
     assert result["github"]["repository"] == REPO
     assert "stats" not in result
-    assert result["error"] == {"stack_trace": expected_stack_trace}
+    assert "stack_trace" in result["error"]
+    for text in [
+        "Traceback (most recent call last):",
+        "data, output = self._get_timing(f, iterations, timing_options)",
+        "in _get_timing",
+        "output = f()",
+        "tests/benchmark/_example_benchmarks.py",
+        "return lambda: 1 / 0",
+        "ZeroDivisionError: division by zero",
+    ]:
+        assert text in result["error"]["stack_trace"]
 
 
 def test_runner_case_benchmark():
