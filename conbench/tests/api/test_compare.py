@@ -393,6 +393,27 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             return [summary_1, summary_2], entity
         return entity
 
+    def _create_with_error(
+        self, verbose=False, run_id=None, batch_id=None, baseline_error=None
+    ):
+        run_id = run_id if run_id is not None else _uuid()
+        summary_1 = _fixtures.summary(
+            name="read",
+            run_id=run_id,
+            batch_id=batch_id,
+        )
+        summary_2 = _fixtures.summary(
+            name="write",
+            run_id=run_id,
+            batch_id=batch_id,
+            results=None,
+            error=baseline_error,
+        )
+        entity = FakeEntity(f"{run_id}...{run_id}")
+        if verbose:
+            return [summary_1, summary_2], entity
+        return entity
+
     def test_compare(self, client):
         self.authenticate(client)
         run_id, batch_id = _uuid(), _uuid()
@@ -434,6 +455,66 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                     "name": "write",
                 },
             ],
+        )
+        self.assert_200_ok(response, expected)
+
+    def test_compare_with_error(self, client):
+        self.authenticate(client)
+        run_id, batch_id = _uuid(), _uuid()
+        error = {"stack trace": "stack trace"}
+        new_entities, compare = self._create_with_error(
+            verbose=True,
+            run_id=run_id,
+            batch_id=batch_id,
+            baseline_error=error,
+        )
+        new_ids = [e.id for e in new_entities]
+        response = client.get(f"/api/compare/runs/{compare.id}/")
+
+        # cheating by comparing run to same run
+        run_ids = [run_id, run_id]
+        batch_ids = [batch_id, batch_id]
+        batches = ["read", "write"]
+        benchmarks = [CASE, CASE]
+        expected = _api_compare_list(
+            new_ids,
+            new_ids,
+            batch_ids,
+            run_ids,
+            batches,
+            benchmarks,
+            tags=[
+                {
+                    "dataset": "nyctaxi_sample",
+                    "cpu_count": 2,
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "compression": "snappy",
+                    "name": "read",
+                },
+                {
+                    "dataset": "nyctaxi_sample",
+                    "cpu_count": 2,
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "compression": "snappy",
+                    "name": "write",
+                },
+            ],
+        )
+        expected[1].update(
+            {
+                "baseline": None,
+                "baseline_error": error,
+                "contender": None,
+                "contender_error": error,
+                "change": "0.000%",
+                "regression": False,
+                "baseline_z_score": None,
+                "contender_z_score": None,
+                "contender_z_regression": False,
+                "unit": "unknown",
+            }
         )
         self.assert_200_ok(response, expected)
 
