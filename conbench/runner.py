@@ -158,8 +158,7 @@ class MixinPython:
                 publish=False,
             )
         except Exception as e:
-            error = {"exception": str(e)}
-            print(traceback.format_exception)
+            error = {"stack_trace": traceback.format_exc()}
             benchmark, _ = self.record(
                 None,
                 name,

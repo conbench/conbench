@@ -227,7 +227,7 @@ class TestConbench(conbench.runner.Conbench):
 
 
 @conbench.runner.register_benchmark
-class SimpleBenchmarkThatAlwaysFails(conbench.runner.Benchmark):
+class SimpleBenchmarkThatFails(conbench.runner.Benchmark):
     name = "addition-with-failure"
 
     def __init__(self):
