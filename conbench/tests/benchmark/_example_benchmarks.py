@@ -214,3 +214,29 @@ class ExternalBenchmarkOptionsR(conbench.runner.Benchmark):
             "out <- run_one(arrowbench:::placebo); "
             "cat(jsonlite::toJSON(out), file='placebo.json'); "
         )
+
+
+# Overriding Conbench so it is possible to test what benchmark results are published
+class TestConbench(conbench.runner.Conbench):
+    def __init__(self):
+        self.published_benchmark = None
+        super().__init__()
+
+    def publish(self, benchmark):
+        self.published_benchmark = benchmark
+
+
+@conbench.runner.register_benchmark
+class SimpleBenchmarkThatAlwaysFails(conbench.runner.Benchmark):
+    name = "addition-with-failure"
+
+    def __init__(self):
+        self.conbench = TestConbench()
+
+    def run(self, **kwargs):
+        yield self.conbench.benchmark(
+            self._get_benchmark_function(), self.name, options=kwargs
+        )
+
+    def _get_benchmark_function(self):
+        return lambda: 1 / 0

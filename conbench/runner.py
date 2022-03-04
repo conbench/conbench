@@ -143,20 +143,38 @@ class MixinPython:
         if iterations < 1:
             raise ValueError(f"Invalid iterations: {iterations}")
 
-        data, output = self._get_timing(f, iterations, timing_options)
-        benchmark, _ = self.record(
-            {"data": data, "unit": "s"},
-            name,
-            tags=tags,
-            info=info,
-            context=context,
-            github=github,
-            options=options,
-            cluster_info=cluster_info,
-            publish=False,
-        )
-        if publish:
-            self.publish(benchmark)
+        try:
+            data, output = self._get_timing(f, iterations, timing_options)
+            benchmark, _ = self.record(
+                {"data": data, "unit": "s"},
+                name,
+                tags=tags,
+                info=info,
+                context=context,
+                github=github,
+                options=options,
+                cluster_info=cluster_info,
+                publish=False,
+            )
+        except Exception as e:
+            error = {"exception": str(e)}
+            benchmark, _ = self.record(
+                None,
+                name,
+                tags=tags,
+                info=info,
+                context=context,
+                github=github,
+                options=options,
+                cluster_info=cluster_info,
+                error=error,
+                publish=False,
+            )
+            raise e
+        finally:
+            if publish:
+                self.publish(benchmark)
+
         return benchmark, output
 
 
@@ -200,17 +218,11 @@ class Conbench(Connection, MixinPython, MixinR):
     def machine_info(self):
         return machine_info(self.config.host_name)
 
-    def record(self, result, name, publish=True, **kwargs):
+    def record(self, result, name, error=None, publish=True, **kwargs):
         """Record and publish an external benchmark result."""
         tags, info, context, github, options, cluster_info, output = self._init(kwargs)
 
         tags["name"] = name
-        stats = self._stats(
-            result["data"],
-            result["unit"],
-            result.get("times", []),
-            result.get("time_unit", "s"),
-        )
 
         batch_id = options.get("batch_id")
         if not batch_id:
@@ -224,12 +236,20 @@ class Conbench(Connection, MixinPython, MixinR):
             "run_id": run_id,
             "batch_id": batch_id,
             "timestamp": _now_formatted(),
-            "stats": stats,
             "context": context,
             "info": info,
             "tags": tags,
             "github": github,
         }
+        if error:
+            benchmark["error"] = error
+        else:
+            benchmark["stats"] = self._stats(
+                result["data"],
+                result["unit"],
+                result.get("times", []),
+                result.get("time_unit", "s"),
+            )
 
         if cluster_info:
             benchmark["cluster_info"] = cluster_info

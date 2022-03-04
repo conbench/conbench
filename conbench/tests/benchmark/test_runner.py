@@ -1,5 +1,7 @@
 import copy
 
+import pytest
+
 from ...entities.summary import BenchmarkFacadeSchema
 from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
@@ -7,13 +9,15 @@ from ._example_benchmarks import (
     CasesBenchmark,
     ExternalBenchmark,
     SimpleBenchmark,
+    SimpleBenchmarkThatAlwaysFails,
     SimpleBenchmarkWithClusterInfo,
 )
 
 REPO = "https://github.com/conbench/conbench"
 EXAMPLE = copy.deepcopy(_fixtures.VALID_PAYLOAD)
 EXAMPLE_WITH_CLUSTER_INFO = copy.deepcopy(_fixtures.VALID_PAYLOAD_FOR_CLUSTER)
-for example in [EXAMPLE, EXAMPLE_WITH_CLUSTER_INFO]:
+EXAMPLE_WITH_ERROR = copy.deepcopy(_fixtures.VALID_PAYLOAD_WITH_ERROR)
+for example in [EXAMPLE, EXAMPLE_WITH_CLUSTER_INFO, EXAMPLE_WITH_ERROR]:
     example.pop("run_name")
     example["info"] = {
         "benchmark_language_version": "Python 3.8.5",
@@ -38,7 +42,6 @@ def test_runner_simple_benchmark():
         ),
     ]:
         benchmark = benchmark_class()
-        print(benchmark)
         [(result, output)] = benchmark.run(iterations=10)
         assert not BenchmarkFacadeSchema.create.validate(result)
         expected_tags = {"name": tag}
@@ -57,6 +60,26 @@ def test_runner_simple_benchmark():
         assert len(result["stats"]["data"]) == 10
         assert result["context"]["benchmark_language"] == "Python"
         assert result["github"]["repository"] == REPO
+
+
+def test_runner_simple_benchmark_that_alway_fails():
+    benchmark = SimpleBenchmarkThatAlwaysFails()
+    tag = "addition-with-failure"
+
+    with pytest.raises(ZeroDivisionError) as e:
+        [(_, _)] = benchmark.run(iterations=10)
+
+    result = benchmark.conbench.published_benchmark
+    assert not BenchmarkFacadeSchema.create.validate(result)
+    print(result)
+    assert_keys_equal(result, EXAMPLE_WITH_ERROR)
+    for key in ["info", "context", "github", "machine_info"]:
+        assert_keys_equal(result[key], EXAMPLE_WITH_ERROR[key])
+    assert result["tags"] == {"name": tag}
+    assert result["context"]["benchmark_language"] == "Python"
+    assert result["github"]["repository"] == REPO
+    assert "stats" not in result
+    assert result["error"] == {"exception": "division by zero"}
 
 
 def test_runner_case_benchmark():
