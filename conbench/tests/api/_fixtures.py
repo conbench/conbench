@@ -142,6 +142,7 @@ def summary(
     sha=None,
     commit=None,
     pull_request=False,
+    error=None,
 ):
     data = copy.deepcopy(VALID_PAYLOAD)
     data["run_name"] = f"commit: {_uuid()}"
@@ -164,5 +165,8 @@ def summary(
     if results is not None:
         unit = unit if unit else "s"
         data["stats"] = Conbench._stats(results, unit, [], "s")
+
+    if error is not None:
+        data["error"] = error
 
     return Summary.create(data)
