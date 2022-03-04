@@ -19,7 +19,7 @@ Options:
 
 Commands:
   addition               Run addition benchmark.
-  addition-with-failure  Run addition-with-failure benchmark.
+  division-with-failure  Run division-with-failure benchmark.
   external               Run external benchmark.
   external-r             Run external-r benchmark.
   external-r-options     Run external-r-options benchmark.
@@ -36,7 +36,7 @@ CONBENCH_LIST = """
     "command": "addition --iterations=2"
   },
   {
-    "command": "addition-with-failure --iterations=2"
+    "command": "division-with-failure --iterations=2"
   },
   {
     "command": "external --iterations=2"

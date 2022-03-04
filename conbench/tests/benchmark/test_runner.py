@@ -73,7 +73,7 @@ def test_runner_simple_benchmark():
 
 def test_runner_simple_benchmark_that_fails():
     benchmark = SimpleBenchmarkThatFails()
-    tag = "addition-with-failure"
+    tag = "division-with-failure"
 
     with pytest.raises(ZeroDivisionError) as e:
         [(_, _)] = benchmark.run(iterations=10)

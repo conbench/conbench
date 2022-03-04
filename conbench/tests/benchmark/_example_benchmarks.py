@@ -228,7 +228,7 @@ class TestConbench(conbench.runner.Conbench):
 
 @conbench.runner.register_benchmark
 class SimpleBenchmarkThatFails(conbench.runner.Benchmark):
-    name = "addition-with-failure"
+    name = "division-with-failure"
 
     def __init__(self):
         self.conbench = TestConbench()
