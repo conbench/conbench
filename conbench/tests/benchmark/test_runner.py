@@ -75,7 +75,7 @@ def test_runner_simple_benchmark_that_fails():
     benchmark = SimpleBenchmarkThatFails()
     tag = "division-with-failure"
 
-    with pytest.raises(ZeroDivisionError) as e:
+    with pytest.raises(ZeroDivisionError):
         [(_, _)] = benchmark.run(iterations=10)
 
     result = benchmark.conbench.published_benchmark
