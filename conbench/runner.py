@@ -5,8 +5,8 @@ import functools
 import gc
 import statistics
 import subprocess
-import traceback
 import time
+import traceback
 import uuid
 
 import numpy as np
