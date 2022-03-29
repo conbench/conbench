@@ -33,6 +33,7 @@ jobs:
       - name: Migrations
         run: |
           alembic upgrade head
+        continue-on-error: true
         env:
           DB_USERNAME: "postgres"
           DB_HOST: "localhost"
