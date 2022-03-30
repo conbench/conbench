@@ -142,6 +142,11 @@ password in postgres to `postgres`.
     (conbench) $ pytest -vv conbench/tests/
 
 
+### Run tests with docker
+    (conbench) $ cd ~/workspace/conbench/
+    (conbench) $ docker-compose run app pytest -vv conbench/tests/
+
+
 ### Format code
     (conbench) $ cd ~/workspace/conbench/
     (conbench) $ black .
