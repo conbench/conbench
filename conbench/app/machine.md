@@ -1,29 +1,29 @@
 # Machine
 
-Currently, there are two types of hardware (Machine and Cluster) breaking down the details of these hardware below.
+A Machine class is a single infrastructure entity which holds the next fields.
 
-Machine | Specs | Description |
---- | --- | --- | 
-Machine | architecture_name | <val> |
-| | architecture_name | <val> |
-| | cpu_core_count | <val> |
-| | cpu_frequency_max_hz | <val> |
-| | cpu_l1d_cache_bytes | <val> |
-| | cpu_l1i_cache_bytes | <val> |
-| | cpu_l2_cache_bytes | <val> |
-| | cpu_l3_cache_bytes | <val>|
-| | cpu_model_name | <val> |
-| | cpu_thread_count | <val> |
-| | gpu_count | <val> |
-| | gpu_product_names | <val> |
-| | kernel_name | <val> |
-| | memory_bytes | <val> |
-| | name | <val>|
-| | os_name | <val> |
-| | os_version | <val>|
-| | type | <val>|
-Cluster | name | <val> |
-| | info | <val> |
-| | optional_info | <val> |
-| | cpu_frequency_max_hz | <val> |
-| | type | <val> |
+Field | Description |
+--- | --- | 
+architecture_name | value |
+architecture_name | value |
+cpu_core_count | value |
+cpu_frequency_max_hz | value |
+cpu_l1d_cache_bytes | value |
+cpu_l1i_cache_bytes | value |
+cpu_l2_cache_bytes | value |
+cpu_l3_cache_bytes | value|
+cpu_model_name | value |
+cpu_thread_count | value |
+gpu_count | value |
+gpu_product_names | value |
+kernel_name | value |
+memory_bytes | value |
+name | value|
+os_name | value |
+os_version | value|
+type | value|
+Cluster | name | value |
+info | value |
+optional_info | value |
+cpu_frequency_max_hz | value |
+type | value |
