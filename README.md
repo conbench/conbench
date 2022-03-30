@@ -219,8 +219,8 @@ example benchmarks and their tests can be found here:
 
 
 * [_example_benchmarks.py](https://github.com/conbench/conbench/blob/main/conbench/tests/benchmark/_example_benchmarks.py)
-* [test_cli.py](https://github.com/conbench/conbench/blob/main/conbench/tests/benchmark/test_runner.py)
-* [test_runner.py](https://github.com/conbench/conbench/blob/main/conbench/tests/benchmark/test_cli.py)
+* [test_cli.py](https://github.com/conbench/conbench/blob/main/conbench/tests/benchmark/test_cli.py)
+* [test_runner.py](https://github.com/conbench/conbench/blob/main/conbench/tests/benchmark/test_runner.py)
 
 
 ### Example simple benchmarks
