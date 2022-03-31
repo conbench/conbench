@@ -18,7 +18,7 @@ from ..entities._entity import (
 
 
 class Hardware(Base, EntityMixin):
-    __tablename__ = "machine"
+    __tablename__ = "hardware"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     name = NotNull(s.Text)
     type = NotNull(s.String(50))

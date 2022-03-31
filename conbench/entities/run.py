@@ -16,7 +16,7 @@ class Run(Base, EntityMixin):
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id"))
     commit = relationship("Commit", lazy="joined")
     has_errors = NotNull(s.Boolean, default=False)
-    hardware_id = NotNull("machine_id", s.String(50), s.ForeignKey("machine.id"))
+    hardware_id = NotNull(s.String(50), s.ForeignKey("hardware.id"))
     hardware = relationship("Hardware", lazy="joined")
 
     def get_baseline_run(self):
