@@ -60,7 +60,8 @@ class TestUser(_asserts.AppEndpointTest):
     def test_user_update_no_csrf_token(self, client):
         self.authenticate(client)
         other = self.create_random_user()
-        response = client.post(f"/users/{other.id}/", data={})
+        data = {"name": "New Name", "email": other.email}
+        response = client.post(f"/users/{other.id}/", data=data)
         self.assert_page(response, "User")
         assert b"The CSRF token is missing." in response.data
         # TODO: assert name not updated?
@@ -142,6 +143,7 @@ class TestUserCreate(_asserts.AppEndpointTest):
 
     def test_user_create_post_no_csrf_token(self, client):
         self.authenticate(client)
-        response = client.post("/users/create/", data={})
+        data = {"name": "New Name", "email": "test@test.com"}
+        response = client.post("/users/create/", data=data)
         self.assert_page(response, "User Create")
         assert b"The CSRF token is missing." in response.data
