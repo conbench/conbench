@@ -17,10 +17,12 @@ from ..entities._entity import (
 from ..entities.case import Case
 from ..entities.commit import Commit, get_github_commit, repository_to_url
 from ..entities.context import Context
+from ..entities.data import Data
 from ..entities.distribution import update_distribution
 from ..entities.hardware import Cluster, ClusterSchema, Machine, MachineSchema
 from ..entities.info import Info
 from ..entities.run import Run
+from ..entities.time import Time
 
 
 class Summary(Base, EntityMixin):
