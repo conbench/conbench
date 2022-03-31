@@ -28,6 +28,10 @@ def create_all():
 
 def drop_all():
     from .entities._entity import Base
+    from .entities.data import Data
+    from .entities.time import Time
 
     Session.close()
+    Data.__table__.drop(engine)
+    Time.__table__.drop(engine)
     Base.metadata.drop_all(engine)
