@@ -7,7 +7,7 @@ from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.case import Case
 from ..entities.distribution import set_z_scores
-from ..entities.summary import BenchmarkFacadeSchema, Summary, SummarySerializer
+from ..entities.benchmark_result import BenchmarkFacadeSchema, BenchmarkResult, BenchmarkResultSerializer
 
 
 class BenchmarkValidationMixin:
@@ -16,14 +16,14 @@ class BenchmarkValidationMixin:
 
 
 class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
-    serializer = SummarySerializer()
+    serializer = BenchmarkResultSerializer()
 
     def _get(self, benchmark_id):
         try:
-            summary = Summary.one(id=benchmark_id)
+            benchmark_result = BenchmarkResult.one(id=benchmark_id)
         except NotFound:
             self.abort_404_not_found()
-        return summary
+        return benchmark_result
 
     @maybe_login_required
     def get(self, benchmark_id):
@@ -42,9 +42,9 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
         tags:
           - Benchmarks
         """
-        summary = self._get(benchmark_id)
-        set_z_scores([summary])
-        return self.serializer.one.dump(summary)
+        benchmark_result = self._get(benchmark_id)
+        set_z_scores([benchmark_result])
+        return self.serializer.one.dump(benchmark_result)
 
     @flask_login.login_required
     def delete(self, benchmark_id):
@@ -63,13 +63,13 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
         tags:
           - Benchmarks
         """
-        summary = self._get(benchmark_id)
-        summary.delete()
+        benchmark_result = self._get(benchmark_id)
+        benchmark_result.delete()
         return self.response_204_no_content()
 
 
 class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
-    serializer = SummarySerializer()
+    serializer = BenchmarkResultSerializer()
     schema = BenchmarkFacadeSchema()
 
     @maybe_login_required
@@ -100,27 +100,27 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         batch_id = f.request.args.get("batch_id")
         run_id = f.request.args.get("run_id")
         if name:
-            summaries = Summary.search(
+            benchmark_results = BenchmarkResult.search(
                 filters=[Case.name == name],
                 joins=[Case],
             )
             # TODO: cannot currently compute z_score on an arbitrary
-            # list of summaries - assumes same machine/sha/repository.
-            for summary in summaries:
-                summary.z_score = 0
+            # list of benchmark_results - assumes same machine/sha/repository.
+            for benchmark_result in benchmark_results:
+                benchmark_result.z_score = 0
         elif batch_id:
-            summaries = Summary.all(batch_id=batch_id)
-            set_z_scores(summaries)
+            benchmark_results = BenchmarkResult.all(batch_id=batch_id)
+            set_z_scores(benchmark_results)
         elif run_id:
-            summaries = Summary.all(run_id=run_id)
-            set_z_scores(summaries)
+            benchmark_results = BenchmarkResult.all(run_id=run_id)
+            set_z_scores(benchmark_results)
         else:
-            summaries = Summary.all(order_by=Summary.timestamp.desc(), limit=500)
+            benchmark_results = BenchmarkResult.all(order_by=BenchmarkResult.timestamp.desc(), limit=500)
             # TODO: cannot currently compute z_score on an arbitrary
-            # list of summaries - assumes same machine/sha/repository.
-            for summary in summaries:
-                summary.z_score = 0
-        return self.serializer.many.dump(summaries)
+            # list of benchmark_results - assumes same machine/sha/repository.
+            for benchmark_result in benchmark_results:
+                benchmark_result.z_score = 0
+        return self.serializer.many.dump(benchmark_results)
 
     @flask_login.login_required
     def post(self):
@@ -139,9 +139,9 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
           - Benchmarks
         """
         data = self.validate_benchmark(self.schema.create)
-        summary = Summary.create(data)
-        set_z_scores([summary])
-        return self.response_201_created(self.serializer.one.dump(summary))
+        benchmark_result = BenchmarkResult.create(data)
+        set_z_scores([benchmark_result])
+        return self.response_201_created(self.serializer.one.dump(benchmark_result))
 
 
 benchmark_entity_view = BenchmarkEntityAPI.as_view("benchmark")

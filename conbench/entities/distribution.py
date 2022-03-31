@@ -62,56 +62,56 @@ def get_commits_up(commit, limit):
     )
 
 
-def get_distribution(summary, limit):
-    from ..entities.summary import Summary
+def get_distribution(benchmark_result, limit):
+    from ..entities.benchmark_result import BenchmarkResult
 
     commits_up = (
-        get_commits_up(summary.run.commit, limit).subquery().alias("commits_up")
+        get_commits_up(benchmark_result.run.commit, limit).subquery().alias("commits_up")
     )
 
     return (
         Session.query(
-            func.text(summary.case_id).label("case_id"),
-            func.text(summary.context_id).label("context_id"),
-            func.text(summary.run.commit_id).label("commit_id"),
+            func.text(benchmark_result.case_id).label("case_id"),
+            func.text(benchmark_result.context_id).label("context_id"),
+            func.text(benchmark_result.run.commit_id).label("commit_id"),
             Hardware.hash.label("hash"),
-            func.max(Summary.unit).label("unit"),
-            func.avg(Summary.mean).label("mean_mean"),
-            func.stddev(Summary.mean).label("mean_sd"),
-            func.avg(Summary.min).label("min_mean"),
-            func.stddev(Summary.min).label("min_sd"),
-            func.avg(Summary.max).label("max_mean"),
-            func.stddev(Summary.max).label("max_sd"),
-            func.avg(Summary.median).label("median_mean"),
-            func.stddev(Summary.median).label("median_sd"),
+            func.max(BenchmarkResult.unit).label("unit"),
+            func.avg(BenchmarkResult.mean).label("mean_mean"),
+            func.stddev(BenchmarkResult.mean).label("mean_sd"),
+            func.avg(BenchmarkResult.min).label("min_mean"),
+            func.stddev(BenchmarkResult.min).label("min_sd"),
+            func.avg(BenchmarkResult.max).label("max_mean"),
+            func.stddev(BenchmarkResult.max).label("max_sd"),
+            func.avg(BenchmarkResult.median).label("median_mean"),
+            func.stddev(BenchmarkResult.median).label("median_sd"),
             func.min(commits_up.c.timestamp).label("first_timestamp"),
             func.max(commits_up.c.timestamp).label("last_timestamp"),
-            func.count(Summary.mean).label("observations"),
+            func.count(BenchmarkResult.mean).label("observations"),
         )
         .group_by(
-            Summary.case_id,
-            Summary.context_id,
+            BenchmarkResult.case_id,
+            BenchmarkResult.context_id,
             Hardware.hash,
         )
-        .join(Run, Run.id == Summary.run_id)
+        .join(Run, Run.id == BenchmarkResult.run_id)
         .join(Hardware, Hardware.id == Run.hardware_id)
         .join(commits_up, commits_up.c.id == Run.commit_id)
         .filter(
             Run.name.like("commit: %"),
-            Summary.case_id == summary.case_id,
-            Summary.context_id == summary.context_id,
-            Hardware.hash == summary.run.hardware.hash,
+            BenchmarkResult.case_id == benchmark_result.case_id,
+            BenchmarkResult.context_id == benchmark_result.context_id,
+            Hardware.hash == benchmark_result.run.hardware.hash,
         )
     )
 
 
-def update_distribution(summary, limit):
+def update_distribution(benchmark_result, limit):
     from ..db import engine
 
-    if summary.run.commit.timestamp is None:
+    if benchmark_result.run.commit.timestamp is None:
         return
 
-    distribution = get_distribution(summary, limit).first()
+    distribution = get_distribution(benchmark_result, limit).first()
 
     if not distribution:
         return
@@ -170,14 +170,14 @@ def get_closest_parent(run):
     return parent
 
 
-def set_z_scores(summaries):
-    if not summaries:
+def set_z_scores(benchmark_results):
+    if not benchmark_results:
         return
 
-    for summary in summaries:
-        summary.z_score = None
+    for benchmark_result in benchmark_results:
+        benchmark_result.z_score = None
 
-    first = summaries[0]
+    first = benchmark_results[0]
     parent_commit = get_closest_parent(first.run)
     if not parent_commit:
         return
@@ -186,7 +186,7 @@ def set_z_scores(summaries):
         Distribution.commit_id == parent_commit.id,
         Distribution.hardware_hash == first.run.hardware.hash,
     ]
-    if len(summaries) == 1:
+    if len(benchmark_results) == 1:
         where.extend(
             [
                 Distribution.case_id == first.case_id,
@@ -204,12 +204,12 @@ def set_z_scores(summaries):
     distributions = Session.query(*cols).filter(*where).all()
     lookup = {f"{d.case_id}-{d.context_id}": d for d in distributions}
 
-    for summary in summaries:
-        if summary.error:
+    for benchmark_result in benchmark_results:
+        if benchmark_result.error:
             continue
 
-        d = lookup.get(f"{summary.case_id}-{summary.context_id}")
+        d = lookup.get(f"{benchmark_result.case_id}-{benchmark_result.context_id}")
         if d and d.mean_sd:
-            summary.z_score = (summary.mean - d.mean_mean) / d.mean_sd
-        if _less_is_better(summary.unit) and summary.z_score:
-            summary.z_score = summary.z_score * -1
+            benchmark_result.z_score = (benchmark_result.mean - d.mean_mean) / d.mean_sd
+        if _less_is_better(benchmark_result.unit) and benchmark_result.z_score:
+            benchmark_result.z_score = benchmark_result.z_score * -1

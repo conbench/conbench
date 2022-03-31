@@ -1,6 +1,6 @@
 import copy
 
-from ...entities.summary import Summary
+from ...entities.benchmark_result import BenchmarkResult
 from ...runner import Conbench
 from ...tests.helpers import _uuid
 
@@ -130,7 +130,7 @@ VALID_PAYLOAD_FOR_CLUSTER = dict(
 )
 
 
-def summary(
+def benchmark_result(
     name=None,
     batch_id=None,
     run_id=None,
@@ -169,4 +169,4 @@ def summary(
     if error is not None:
         data["error"] = error
 
-    return Summary.create(data)
+    return BenchmarkResult.create(data)

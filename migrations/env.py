@@ -15,7 +15,7 @@ from conbench.entities import (  # noqa  # isort:skip
     info,
     hardware,
     run,
-    summary,
+    benchmark_result,
     user,
 )
 

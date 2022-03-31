@@ -7,27 +7,27 @@ from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._comparator import BenchmarkComparator, BenchmarkListComparator
 from ..entities._entity import NotFound
 from ..entities.commit import Commit
-from ..entities.compare import CompareSummarySerializer
+from ..entities.compare import CompareBenchmarkResultSerializer
 from ..entities.distribution import set_z_scores
-from ..entities.summary import Summary
+from ..entities.benchmark_result import BenchmarkResult
 from ..hacks import set_display_batch, set_display_name
 
 
-def _compare_entity(summary):
+def _compare_entity(benchmark_result):
     return {
-        "id": summary.id,
-        "batch_id": summary.batch_id,
-        "run_id": summary.run_id,
-        "case_id": summary.case_id,
-        "context_id": summary.context_id,
-        "value": summary.mean,
-        "error": summary.error,
-        "unit": summary.unit,
-        "benchmark": summary.display_name,
-        "batch": summary.display_batch,
-        "language": summary.context.tags.get("benchmark_language", "unknown"),
-        "tags": summary.case.tags,
-        "z_score": summary.z_score,
+        "id": benchmark_result.id,
+        "batch_id": benchmark_result.batch_id,
+        "run_id": benchmark_result.run_id,
+        "case_id": benchmark_result.case_id,
+        "context_id": benchmark_result.context_id,
+        "value": benchmark_result.mean,
+        "error": benchmark_result.error,
+        "unit": benchmark_result.unit,
+        "benchmark": benchmark_result.display_name,
+        "batch": benchmark_result.display_batch,
+        "language": benchmark_result.context.tags.get("benchmark_language", "unknown"),
+        "tags": benchmark_result.case.tags,
+        "z_score": benchmark_result.z_score,
     }
 
 
@@ -131,15 +131,15 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
         args = self.get_args(compare_ids)
         raw, threshold, threshold_z, baseline_id, contender_id = args
 
-        baseline_summary = self._get(baseline_id)
-        contender_summary = self._get(contender_id)
-        set_display_name(baseline_summary)
-        set_display_name(contender_summary)
-        set_display_batch(baseline_summary)
-        set_display_batch(contender_summary)
+        baseline_benchmark_result = self._get(baseline_id)
+        contender_benchmark_result = self._get(contender_id)
+        set_display_name(baseline_benchmark_result)
+        set_display_name(contender_benchmark_result)
+        set_display_batch(baseline_benchmark_result)
+        set_display_batch(contender_benchmark_result)
 
-        baseline = _compare_entity(baseline_summary)
-        contender = _compare_entity(contender_summary)
+        baseline = _compare_entity(baseline_benchmark_result)
+        contender = _compare_entity(contender_benchmark_result)
         comparator = BenchmarkComparator(
             baseline,
             contender,
@@ -188,14 +188,14 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
         contenders = self._get(contender_id)
 
         baseline_items, contender_items = [], []
-        for summary in baselines:
-            set_display_name(summary)
-            set_display_batch(summary)
-            baseline_items.append(_compare_entity(summary))
-        for summary in contenders:
-            set_display_name(summary)
-            set_display_batch(summary)
-            contender_items.append(_compare_entity(summary))
+        for benchmark_result in baselines:
+            set_display_name(benchmark_result)
+            set_display_batch(benchmark_result)
+            baseline_items.append(_compare_entity(benchmark_result))
+        for benchmark_result in contenders:
+            set_display_name(benchmark_result)
+            set_display_batch(benchmark_result)
+            contender_items.append(_compare_entity(benchmark_result))
 
         pairs = _get_pairs(baseline_items, contender_items)
         comparator = BenchmarkListComparator(
@@ -211,33 +211,33 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
 class CompareBenchmarksAPI(CompareEntityEndpoint):
     def _get(self, benchmark_id):
         try:
-            summary = Summary.one(id=benchmark_id)
+            benchmark_result = BenchmarkResult.one(id=benchmark_id)
         except NotFound:
             self.abort_404_not_found()
-        set_z_scores([summary])
-        return summary
+        set_z_scores([benchmark_result])
+        return benchmark_result
 
 
 class CompareBatchesAPI(CompareListEndpoint):
     def _get(self, batch_id):
-        summaries = Summary.all(batch_id=batch_id)
-        if not summaries:
+        benchmark_results = BenchmarkResult.all(batch_id=batch_id)
+        if not benchmark_results:
             self.abort_404_not_found()
-        set_z_scores(summaries)
-        return summaries
+        set_z_scores(benchmark_results)
+        return benchmark_results
 
 
 class CompareRunsAPI(CompareListEndpoint):
     def _get(self, run_id):
-        summaries = Summary.all(run_id=run_id)
-        if not summaries:
+        benchmark_results = BenchmarkResult.all(run_id=run_id)
+        if not benchmark_results:
             self.abort_404_not_found()
-        set_z_scores(summaries)
-        return summaries
+        set_z_scores(benchmark_results)
+        return benchmark_results
 
 
 class CompareCommitsAPI(CompareListEndpoint):
-    serializer = CompareSummarySerializer()
+    serializer = CompareBenchmarkResultSerializer()
 
     @maybe_login_required
     def get(self, compare_shas):
@@ -245,7 +245,7 @@ class CompareCommitsAPI(CompareListEndpoint):
         ---
         description: Compare benchmark results.
         responses:
-            "200": "CompareSummary"
+            "200": "CompareBenchmarkResult"
             "401": "401"
             "404": "404"
         parameters:

@@ -23,7 +23,7 @@ def _api_user_entity(user):
 
 
 def _api_benchmark_entity(
-    summary_id, case_id, info_id, context_id, batch_id, run_id, name, error=None
+    benchmark_result_id, case_id, info_id, context_id, batch_id, run_id, name, error=None
 ):
     if error:
         stats = {
@@ -86,7 +86,7 @@ def _api_benchmark_entity(
             "z_improvement": False,
         }
     return {
-        "id": summary_id,
+        "id": benchmark_result_id,
         "run_id": run_id,
         "batch_id": batch_id,
         "timestamp": "2020-11-25T21:02:42.706806",
@@ -103,7 +103,7 @@ def _api_benchmark_entity(
         },
         "links": {
             "list": "http://localhost/api/benchmarks/",
-            "self": "http://localhost/api/benchmarks/%s/" % summary_id,
+            "self": "http://localhost/api/benchmarks/%s/" % benchmark_result_id,
             "context": "http://localhost/api/contexts/%s/" % context_id,
             "info": "http://localhost/api/info/%s/" % info_id,
             "run": "http://localhost/api/runs/%s/" % run_id,
@@ -238,7 +238,7 @@ def _api_compare_list(
     ]
 
 
-def _api_compare_summary(
+def _api_compare_benchmark_result(
     baseline_commit_id,
     contender_commit_id,
     baseline_id,
@@ -488,7 +488,7 @@ COMPARE_LIST = _api_compare_list(
         },
     ],
 )
-COMPARE_SUMMARY = _api_compare_summary(
+COMPARE_BENCHMARK_RESULT = _api_compare_benchmark_result(
     "some-baseline-commit-id",
     "some-contender-commit-id",
     "some-baseline-run-id",

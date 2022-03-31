@@ -7,8 +7,8 @@ def _expected_entity(context):
 
 
 def create_context():
-    summary = _fixtures.summary()
-    return summary.context
+    benchmark_result = _fixtures.benchmark_result()
+    return benchmark_result.context
 
 
 class TestContextGet(_asserts.GetEnforcer):

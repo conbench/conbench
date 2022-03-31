@@ -1,7 +1,7 @@
 from ...api._examples import (
     _api_compare_entity,
     _api_compare_list,
-    _api_compare_summary,
+    _api_compare_benchmark_result,
 )
 from ...api.compare import _get_pairs
 from ...tests.api import _asserts, _fixtures
@@ -15,9 +15,9 @@ class FakeEntity:
         self.id = _id
 
 
-def _fake_compare_entity(summary_id, case_id, context_id, error=None):
+def _fake_compare_entity(benchmark_result_id, case_id, context_id, error=None):
     return {
-        "id": summary_id,
+        "id": benchmark_result_id,
         "batch_id": "some_batch_id",
         "run_id": "some_run_id",
         "case_id": case_id,
@@ -177,44 +177,44 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
 
     def _create(self, name=None, verbose=False):
         # create a distribution history & a regression
-        _fixtures.summary(
+        _fixtures.benchmark_result(
             name=name,
             results=_fixtures.RESULTS_UP[0],
             sha=_fixtures.GRANDPARENT,
         )
-        summary_1 = _fixtures.summary(
+        benchmark_result_1 = _fixtures.benchmark_result(
             name=name,
             results=_fixtures.RESULTS_UP[1],
             sha=_fixtures.PARENT,
         )
-        summary_2 = _fixtures.summary(
+        benchmark_result_2 = _fixtures.benchmark_result(
             name=name,
             results=_fixtures.RESULTS_UP[2],
         )
 
-        entity = FakeEntity(f"{summary_1.id}...{summary_2.id}")
+        entity = FakeEntity(f"{benchmark_result_1.id}...{benchmark_result_2.id}")
         if verbose:
-            return [summary_1, summary_2], entity
+            return [benchmark_result_1, benchmark_result_2], entity
         return entity
 
     def _create_with_error(self, name=None, baseline_error=None, verbose=False):
         # create a distribution history & a regression
-        _fixtures.summary(
+        _fixtures.benchmark_result(
             name=name,
             results=_fixtures.RESULTS_UP[0],
             sha=_fixtures.GRANDPARENT,
         )
-        summary_1 = _fixtures.summary(
+        benchmark_result_1 = _fixtures.benchmark_result(
             name=name, results=None, sha=_fixtures.PARENT, error=baseline_error
         )
-        summary_2 = _fixtures.summary(
+        benchmark_result_2 = _fixtures.benchmark_result(
             name=name,
             results=_fixtures.RESULTS_UP[2],
         )
 
-        entity = FakeEntity(f"{summary_1.id}...{summary_2.id}")
+        entity = FakeEntity(f"{benchmark_result_1.id}...{benchmark_result_2.id}")
         if verbose:
-            return [summary_1, summary_2], entity
+            return [benchmark_result_1, benchmark_result_2], entity
         return entity
 
     def test_compare(self, client):
@@ -307,19 +307,19 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
 
     def _create(self, verbose=False, run_id=None, batch_id=None):
         batch_id = batch_id if batch_id is not None else _uuid()
-        summary_1 = _fixtures.summary(
+        benchmark_result_1 = _fixtures.benchmark_result(
             name="read",
             run_id=run_id,
             batch_id=batch_id,
         )
-        summary_2 = _fixtures.summary(
+        benchmark_result_2 = _fixtures.benchmark_result(
             name="write",
             run_id=run_id,
             batch_id=batch_id,
         )
         entity = FakeEntity(f"{batch_id}...{batch_id}")
         if verbose:
-            return [summary_1, summary_2], entity
+            return [benchmark_result_1, benchmark_result_2], entity
         return entity
 
     def test_compare(self, client):
@@ -379,31 +379,31 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
 
     def _create(self, verbose=False, run_id=None, batch_id=None):
         run_id = run_id if run_id is not None else _uuid()
-        summary_1 = _fixtures.summary(
+        benchmark_result_1 = _fixtures.benchmark_result(
             name="read",
             run_id=run_id,
             batch_id=batch_id,
         )
-        summary_2 = _fixtures.summary(
+        benchmark_result_2 = _fixtures.benchmark_result(
             name="write",
             run_id=run_id,
             batch_id=batch_id,
         )
         entity = FakeEntity(f"{run_id}...{run_id}")
         if verbose:
-            return [summary_1, summary_2], entity
+            return [benchmark_result_1, benchmark_result_2], entity
         return entity
 
     def _create_with_error(
         self, verbose=False, run_id=None, batch_id=None, baseline_error=None
     ):
         run_id = run_id if run_id is not None else _uuid()
-        summary_1 = _fixtures.summary(
+        benchmark_result_1 = _fixtures.benchmark_result(
             name="read",
             run_id=run_id,
             batch_id=batch_id,
         )
-        summary_2 = _fixtures.summary(
+        benchmark_result_2 = _fixtures.benchmark_result(
             name="write",
             run_id=run_id,
             batch_id=batch_id,
@@ -412,7 +412,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         )
         entity = FakeEntity(f"{run_id}...{run_id}")
         if verbose:
-            return [summary_1, summary_2], entity
+            return [benchmark_result_1, benchmark_result_2], entity
         return entity
 
     def test_compare(self, client):
@@ -533,11 +533,11 @@ class TestCompareCommitsGet(_asserts.GetEnforcer):
 
     def _create(self, verbose=False):
         name = _uuid()
-        contender = _fixtures.summary(
+        contender = _fixtures.benchmark_result(
             name=name,
             sha=_fixtures.CHILD,
         )
-        baseline = _fixtures.summary(
+        baseline = _fixtures.benchmark_result(
             name=name,
             sha=_fixtures.PARENT,
         )
@@ -553,7 +553,7 @@ class TestCompareCommitsGet(_asserts.GetEnforcer):
         self.authenticate(client)
         [baseline, contender], compare = self._create(verbose=True)
         response = client.get(f"/api/compare/commits/{compare.id}/")
-        expected = _api_compare_summary(
+        expected = _api_compare_benchmark_result(
             baseline.commit.id,
             contender.commit.id,
             baseline.id,

@@ -8,9 +8,9 @@ def _expected_entity(commit, parent=None):
 
 
 def create_commit():
-    _fixtures.summary(sha=_fixtures.PARENT)
-    summary = _fixtures.summary()
-    return summary.run.commit
+    _fixtures.benchmark_result(sha=_fixtures.PARENT)
+    benchmark_result = _fixtures.benchmark_result()
+    return benchmark_result.run.commit
 
 
 class TestCommitGet(_asserts.GetEnforcer):

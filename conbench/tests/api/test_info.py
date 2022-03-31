@@ -7,8 +7,8 @@ def _expected_entity(info):
 
 
 def create_info():
-    summary = _fixtures.summary()
-    return summary.info
+    benchmark_result = _fixtures.benchmark_result()
+    return benchmark_result.info
 
 
 class TestInfoGet(_asserts.GetEnforcer):
