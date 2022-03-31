@@ -23,7 +23,7 @@ def set_data_and_times():
         text(
             """UPDATE summary
            SET data = ARRAY(SELECT result FROM data WHERE summary_id = summary.id ORDER BY iteration),
-           times = ARRAY(SELECT result FROM "time" WHERE summary_id = summary.id ORDER BY iteration)
+           times = ARRAY(SELECT result FROM "time" WHERE summary_id = summary.id ORDER BY iteration);
         """
         )
     )
