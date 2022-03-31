@@ -19,8 +19,6 @@ depends_on = None
 
 def set_data_and_times():
     connection = op.get_bind()
-    # meta = sa.MetaData()
-    # meta.reflect(bind=connection)
     connection.execute(
         text(
             """UPDATE summary
