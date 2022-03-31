@@ -66,7 +66,9 @@ def get_distribution(benchmark_result, limit):
     from ..entities.benchmark_result import BenchmarkResult
 
     commits_up = (
-        get_commits_up(benchmark_result.run.commit, limit).subquery().alias("commits_up")
+        get_commits_up(benchmark_result.run.commit, limit)
+        .subquery()
+        .alias("commits_up")
     )
 
     return (

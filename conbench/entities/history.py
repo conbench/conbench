@@ -1,10 +1,10 @@
 from ..db import Session
 from ..entities._entity import EntitySerializer
+from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
 from ..entities.distribution import Distribution
 from ..entities.hardware import Hardware
 from ..entities.run import Run
-from ..entities.benchmark_result import BenchmarkResult
 
 
 class _Serializer(EntitySerializer):

@@ -20,8 +20,8 @@ class Run(Base, EntityMixin):
     hardware = relationship("Hardware", lazy="joined")
 
     def get_baseline_run(self):
-        from ..entities.distribution import get_closest_parent
         from ..entities.benchmark_result import BenchmarkResult
+        from ..entities.distribution import get_closest_parent
 
         result = (
             Session.query(

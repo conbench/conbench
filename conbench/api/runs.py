@@ -4,9 +4,9 @@ import flask_login
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
+from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
 from ..entities.run import Run, RunSerializer
-from ..entities.benchmark_result import BenchmarkResult
 
 
 class RunEntityAPI(ApiEndpoint):

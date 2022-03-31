@@ -1,7 +1,7 @@
 from ...api._examples import (
+    _api_compare_benchmark_result,
     _api_compare_entity,
     _api_compare_list,
-    _api_compare_benchmark_result,
 )
 from ...api.compare import _get_pairs
 from ...tests.api import _asserts, _fixtures

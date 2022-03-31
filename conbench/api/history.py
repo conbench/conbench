@@ -1,8 +1,8 @@
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
-from ..entities.history import HistorySerializer, get_history
 from ..entities.benchmark_result import BenchmarkResult
+from ..entities.history import HistorySerializer, get_history
 
 
 class HistoryEntityAPI(ApiEndpoint):

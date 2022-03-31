@@ -6,10 +6,10 @@ from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._comparator import BenchmarkComparator, BenchmarkListComparator
 from ..entities._entity import NotFound
+from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
 from ..entities.compare import CompareBenchmarkResultSerializer
 from ..entities.distribution import set_z_scores
-from ..entities.benchmark_result import BenchmarkResult
 from ..hacks import set_display_batch, set_display_name
 
 

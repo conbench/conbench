@@ -36,11 +36,15 @@ def test_z_score_calculations():
     assert benchmark_result_mean_2 == 20.0
 
     distribution_mean_0 = statistics.mean([benchmark_result_mean_0])
-    distribution_mean_1 = statistics.mean([benchmark_result_mean_0, benchmark_result_mean_1])
+    distribution_mean_1 = statistics.mean(
+        [benchmark_result_mean_0, benchmark_result_mean_1]
+    )
     assert distribution_mean_0 == 2.0
     assert distribution_mean_1 == 2.5
 
-    distribution_stdev_1 = statistics.stdev([benchmark_result_mean_0, benchmark_result_mean_1])
+    distribution_stdev_1 = statistics.stdev(
+        [benchmark_result_mean_0, benchmark_result_mean_1]
+    )
     assert distribution_stdev_1 == 0.7071067811865476
 
     z_score = (benchmark_result_mean_2 - distribution_mean_1) / distribution_stdev_1
@@ -56,11 +60,15 @@ def test_z_score_calculations():
     assert benchmark_result_mean_2 == 2.0
 
     distribution_mean_0 = statistics.mean([benchmark_result_mean_0])
-    distribution_mean_1 = statistics.mean([benchmark_result_mean_0, benchmark_result_mean_1])
+    distribution_mean_1 = statistics.mean(
+        [benchmark_result_mean_0, benchmark_result_mean_1]
+    )
     assert distribution_mean_0 == 11.0
     assert distribution_mean_1 == 11.5
 
-    distribution_stdev_1 = statistics.stdev([benchmark_result_mean_0, benchmark_result_mean_1])
+    distribution_stdev_1 = statistics.stdev(
+        [benchmark_result_mean_0, benchmark_result_mean_1]
+    )
     assert distribution_stdev_1 == 0.7071067811865476
 
     z_score = (benchmark_result_mean_2 - distribution_mean_1) / distribution_stdev_1
@@ -164,30 +172,46 @@ def test_distribution():
 
     name = _uuid()
     data = [2.1, 2.0, 1.99]  # first commit
-    benchmark_result_1 = _fixtures.benchmark_result(results=data, commit=commit_1, name=name)
+    benchmark_result_1 = _fixtures.benchmark_result(
+        results=data, commit=commit_1, name=name
+    )
 
     data = [1.99, 2.0, 2.1]  # stayed the same
-    benchmark_result_2 = _fixtures.benchmark_result(results=data, commit=commit_2, name=name)
+    benchmark_result_2 = _fixtures.benchmark_result(
+        results=data, commit=commit_2, name=name
+    )
 
     data = [1.1, 1.0, 0.99]  # got better
-    benchmark_result_3 = _fixtures.benchmark_result(results=data, commit=commit_3, name=name)
+    benchmark_result_3 = _fixtures.benchmark_result(
+        results=data, commit=commit_3, name=name
+    )
 
     data = [1.2, 1.1, 1.0]  # stayed about the same
-    benchmark_result_4 = _fixtures.benchmark_result(results=data, commit=commit_4, name=name)
+    benchmark_result_4 = _fixtures.benchmark_result(
+        results=data, commit=commit_4, name=name
+    )
 
     data = [3.1, 3.0, 2.99]  # got worse
-    benchmark_result_5 = _fixtures.benchmark_result(results=data, commit=commit_5, name=name)
+    benchmark_result_5 = _fixtures.benchmark_result(
+        results=data, commit=commit_5, name=name
+    )
 
     # note that benchmark_result_6 & benchmark_result_7 are intentionally missing
 
     data = [4.1, 4.0, 4.99]  # got even worse
-    benchmark_result_8 = _fixtures.benchmark_result(results=data, commit=commit_8, name=name)
+    benchmark_result_8 = _fixtures.benchmark_result(
+        results=data, commit=commit_8, name=name
+    )
 
     data = [5.1, 5.2, 5.3]  # n/a different repo
-    benchmark_result_b = _fixtures.benchmark_result(results=data, commit=commit_b, name=name)
+    benchmark_result_b = _fixtures.benchmark_result(
+        results=data, commit=commit_b, name=name
+    )
 
     data, case = [5.1, 5.2, 5.3], "different-case"  # n/a different case
-    benchmark_result_x = _fixtures.benchmark_result(results=data, commit=commit_1, name=case)
+    benchmark_result_x = _fixtures.benchmark_result(
+        results=data, commit=commit_1, name=case
+    )
 
     data = [8.1, 8.2, 8.3]  # pull request, exclude from distribution
     _fixtures.benchmark_result(results=data, commit=commit_1, pull_request=True)
@@ -388,17 +412,23 @@ def test_distribution():
 
     # forth commit, stayed about the same (but still better)
     set_z_scores([benchmark_result_4])
-    assert benchmark_result_4.z_score == decimal.Decimal("1.033456981849430176204879553")
+    assert benchmark_result_4.z_score == decimal.Decimal(
+        "1.033456981849430176204879553"
+    )
 
     # fifth commit, got worse
     set_z_scores([benchmark_result_5])
-    assert benchmark_result_5.z_score == decimal.Decimal("-2.657403264808751253340839750")
+    assert benchmark_result_5.z_score == decimal.Decimal(
+        "-2.657403264808751253340839750"
+    )
 
     # note that benchmark_result_6 & benchmark_result_7 are intentionally missing
 
     # eighth commit, got even worse
     set_z_scores([benchmark_result_8])
-    assert benchmark_result_8.z_score == decimal.Decimal("-3.071033093952584018991452191")
+    assert benchmark_result_8.z_score == decimal.Decimal(
+        "-3.071033093952584018991452191"
+    )
 
     # n/a different repo, no distribution history
     set_z_scores([benchmark_result_b])
@@ -513,7 +543,9 @@ def test_distribution_multiple_runs_same_commit():
     assert round(benchmark_result_3.z_score, 10) == -1 * round(Z_SCORE_UP_DECIMAL, 10)
 
     # re-run commit 2
-    benchmark_result_4 = _fixtures.benchmark_result(results=[0, 1, 2], commit=commit_2, name=name)
+    benchmark_result_4 = _fixtures.benchmark_result(
+        results=[0, 1, 2], commit=commit_2, name=name
+    )
     set_z_scores([benchmark_result_4])
     assert benchmark_result_4.z_score is None
 

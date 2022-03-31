@@ -5,8 +5,8 @@ import pytest
 
 from ...api._examples import _api_benchmark_entity
 from ...entities._entity import NotFound
-from ...entities.distribution import Distribution
 from ...entities.benchmark_result import BenchmarkResult
+from ...entities.distribution import Distribution
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
@@ -310,7 +310,9 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             new_id = response.json["id"]
             benchmark_result = BenchmarkResult.one(id=new_id)
             location = "http://localhost/api/benchmarks/%s/" % new_id
-            self.assert_201_created(response, _expected_entity(benchmark_result), location)
+            self.assert_201_created(
+                response, _expected_entity(benchmark_result), location
+            )
 
             assert benchmark_result.run.hardware.type == hardware_type
             for attr, value in payload[f"{hardware_type}_info"].items():
@@ -561,7 +563,9 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
-        assert benchmark_result.run.commit.sha == "testing repository with just org/repo"
+        assert (
+            benchmark_result.run.commit.sha == "testing repository with just org/repo"
+        )
         assert benchmark_result.run.commit.repository == ARROW_REPO
         assert benchmark_result.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
@@ -624,7 +628,9 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             new_id = response.json["id"]
             benchmark_result_1 = BenchmarkResult.one(id=new_id)
             location = "http://localhost/api/benchmarks/%s/" % new_id
-            self.assert_201_created(response, _expected_entity(benchmark_result_1), location)
+            self.assert_201_created(
+                response, _expected_entity(benchmark_result_1), location
+            )
             case_id = benchmark_result_1.case_id
 
             # after one result
@@ -654,10 +660,14 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             new_id = response.json["id"]
             benchmark_result_2 = BenchmarkResult.one(id=new_id)
             location = "http://localhost/api/benchmarks/%s/" % new_id
-            self.assert_201_created(response, _expected_entity(benchmark_result_2), location)
+            self.assert_201_created(
+                response, _expected_entity(benchmark_result_2), location
+            )
             assert benchmark_result_1.case_id == benchmark_result_2.case_id
             assert benchmark_result_1.context_id == benchmark_result_2.context_id
-            assert benchmark_result_1.run.hardware_id == benchmark_result_2.run.hardware_id
+            assert (
+                benchmark_result_1.run.hardware_id == benchmark_result_2.run.hardware_id
+            )
             assert benchmark_result_1.run.commit_id == benchmark_result_2.run.commit_id
 
             # after two results

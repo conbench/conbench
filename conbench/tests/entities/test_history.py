@@ -61,31 +61,47 @@ def test_history():
 
     name = _uuid()
     data = [2.1, 2.0, 1.99]  # first commit
-    benchmark_result_1 = _fixtures.benchmark_result(results=data, commit=commit_1, name=name)
+    benchmark_result_1 = _fixtures.benchmark_result(
+        results=data, commit=commit_1, name=name
+    )
 
     data = [1.99, 2.0, 2.1]  # stayed the same
-    benchmark_result_2 = _fixtures.benchmark_result(results=data, commit=commit_2, name=name)
+    benchmark_result_2 = _fixtures.benchmark_result(
+        results=data, commit=commit_2, name=name
+    )
 
     data = [1.1, 1.0, 0.99]  # got better
-    benchmark_result_3 = _fixtures.benchmark_result(results=data, commit=commit_3, name=name)
+    benchmark_result_3 = _fixtures.benchmark_result(
+        results=data, commit=commit_3, name=name
+    )
 
     data = [1.2, 1.1, 1.0]  # stayed about the same
-    benchmark_result_4 = _fixtures.benchmark_result(results=data, commit=commit_4, name=name)
+    benchmark_result_4 = _fixtures.benchmark_result(
+        results=data, commit=commit_4, name=name
+    )
 
     data = [3.1, 3.0, 2.99]  # measure commit 4 twice
-    benchmark_result_5 = _fixtures.benchmark_result(results=data, commit=commit_4, name=name)
+    benchmark_result_5 = _fixtures.benchmark_result(
+        results=data, commit=commit_4, name=name
+    )
 
     data, name = [5.1, 5.2, 5.3], "different-case"
     _fixtures.benchmark_result(results=data, commit=commit_1, name=name)
 
     data, language = [6.1, 6.2, 6.3], "different-context"
-    _fixtures.benchmark_result(results=data, commit=commit_1, name=name, language=language)
+    _fixtures.benchmark_result(
+        results=data, commit=commit_1, name=name, language=language
+    )
 
     data, machine = [7.1, 7.2, 7.3], "different-machine"
-    _fixtures.benchmark_result(results=data, commit=commit_1, name=name, hardware_name=machine)
+    _fixtures.benchmark_result(
+        results=data, commit=commit_1, name=name, hardware_name=machine
+    )
 
     data = [8.1, 8.2, 8.3]  # pull request, exclude from history
-    _fixtures.benchmark_result(results=data, commit=commit_1, name=name, pull_request=True)
+    _fixtures.benchmark_result(
+        results=data, commit=commit_1, name=name, pull_request=True
+    )
 
     assert benchmark_result_1.case_id == benchmark_result_2.case_id
     assert benchmark_result_1.case_id == benchmark_result_3.case_id

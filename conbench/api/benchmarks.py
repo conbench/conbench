@@ -5,9 +5,13 @@ from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
+from ..entities.benchmark_result import (
+    BenchmarkFacadeSchema,
+    BenchmarkResult,
+    BenchmarkResultSerializer,
+)
 from ..entities.case import Case
 from ..entities.distribution import set_z_scores
-from ..entities.benchmark_result import BenchmarkFacadeSchema, BenchmarkResult, BenchmarkResultSerializer
 
 
 class BenchmarkValidationMixin:
@@ -115,7 +119,9 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             benchmark_results = BenchmarkResult.all(run_id=run_id)
             set_z_scores(benchmark_results)
         else:
-            benchmark_results = BenchmarkResult.all(order_by=BenchmarkResult.timestamp.desc(), limit=500)
+            benchmark_results = BenchmarkResult.all(
+                order_by=BenchmarkResult.timestamp.desc(), limit=500
+            )
             # TODO: cannot currently compute z_score on an arbitrary
             # list of benchmark_results - assumes same machine/sha/repository.
             for benchmark_result in benchmark_results:

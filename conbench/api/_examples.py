@@ -23,7 +23,14 @@ def _api_user_entity(user):
 
 
 def _api_benchmark_entity(
-    benchmark_result_id, case_id, info_id, context_id, batch_id, run_id, name, error=None
+    benchmark_result_id,
+    case_id,
+    info_id,
+    context_id,
+    batch_id,
+    run_id,
+    name,
+    error=None,
 ):
     if error:
         stats = {
