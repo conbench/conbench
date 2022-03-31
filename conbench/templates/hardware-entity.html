@@ -21,8 +21,10 @@
       <tbody>
         {% for k, v in hardware.items() %}
         <tr>
-          <td>{{ k }}</td>
-          <td><div class="ellipsis-700">{{ v }}</div></td>
+          {% if k != "links" %}
+            <td>{{ k }}</td>
+            <td><div class="ellipsis-500">{{ v }}</div></td>
+          {% endif %}
         </tr>
         {% endfor %}
       </tbody>

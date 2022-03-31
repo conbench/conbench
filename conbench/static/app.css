@@ -105,10 +105,3 @@ table.dataTable td {
   white-space: nowrap;
   overflow: hidden;
 }
-
-.ellipsis-700 {
-  width: 700px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
