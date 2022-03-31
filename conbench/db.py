@@ -32,6 +32,9 @@ def drop_all():
     from .entities.time import Time
 
     Session.close()
-    Data.__table__.drop(engine)
-    Time.__table__.drop(engine)
+    try:
+        Data.__table__.drop(engine)
+        Time.__table__.drop(engine)
+    except Exception as e:
+        print(e)
     Base.metadata.drop_all(engine)
