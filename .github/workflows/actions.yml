@@ -47,6 +47,8 @@ jobs:
           isort --check .
       - name: Run tests
         run: |
+          dropdb conbench_test
+          createdb conbench_test
           coverage run --source conbench -m pytest -v --durations=20 conbench/tests/
         env:
           DB_USERNAME: postgres
