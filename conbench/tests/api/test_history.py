@@ -2,12 +2,12 @@ from ...api._examples import _api_history_entity
 from ...tests.api import _asserts, _fixtures
 
 
-def _expected_entity(summary):
+def _expected_entity(benchmark_result):
     return _api_history_entity(
-        summary.id,
-        summary.case_id,
-        summary.context_id,
-        summary.run.name,
+        benchmark_result.id,
+        benchmark_result.case_id,
+        benchmark_result.context_id,
+        benchmark_result.run.name,
     )
 
 
@@ -16,10 +16,10 @@ class TestHistoryGet(_asserts.GetEnforcer):
     public = True
 
     def _create(self):
-        return _fixtures.summary()
+        return _fixtures.benchmark_result()
 
     def test_get_history(self, client):
         self.authenticate(client)
-        summary = self._create()
-        response = client.get(f"/api/history/{summary.id}/")
-        self.assert_200_ok(response, contains=_expected_entity(summary))
+        benchmark_result = self._create()
+        response = client.get(f"/api/history/{benchmark_result.id}/")
+        self.assert_200_ok(response, contains=_expected_entity(benchmark_result))

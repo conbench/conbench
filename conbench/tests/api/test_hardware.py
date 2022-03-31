@@ -7,8 +7,8 @@ def _expected_entity(hardware):
 
 
 def create_hardware(hardware_type="machine"):
-    summary = _fixtures.summary(hardware_type=hardware_type)
-    return summary.run.hardware
+    benchmark_result = _fixtures.benchmark_result(hardware_type=hardware_type)
+    return benchmark_result.run.hardware
 
 
 class TestHardwareGet(_asserts.GetEnforcer):

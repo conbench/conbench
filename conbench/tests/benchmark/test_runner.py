@@ -2,7 +2,7 @@ import copy
 
 import pytest
 
-from ...entities.summary import BenchmarkFacadeSchema
+from ...entities.benchmark_result import BenchmarkFacadeSchema
 from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
 from ._example_benchmarks import (

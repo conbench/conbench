@@ -29,19 +29,19 @@ class TestRunGet(_asserts.GetEnforcer):
 
     def _create(self, baseline=False, name=None, language=None):
         if baseline:
-            contender = _fixtures.summary(
+            contender = _fixtures.benchmark_result(
                 name=name,
                 sha=_fixtures.CHILD,
                 language=language,
             )
-            baseline = _fixtures.summary(
+            baseline = _fixtures.benchmark_result(
                 name=name,
                 sha=_fixtures.PARENT,
                 language=language,
             )
             return contender.run, baseline.run
         else:
-            contender = _fixtures.summary()
+            contender = _fixtures.benchmark_result()
         return contender.run
 
     def test_get_run(self, client):
@@ -81,22 +81,22 @@ class TestRunGet(_asserts.GetEnforcer):
         name, machine_1, machine_2 = _uuid(), _uuid(), _uuid()
 
         self.authenticate(client)
-        contender = _fixtures.summary(
+        contender = _fixtures.benchmark_result(
             name=name,
             sha=_fixtures.CHILD,
             hardware_name=machine_1,
         )
-        _fixtures.summary(
+        _fixtures.benchmark_result(
             name=name,
             sha=_fixtures.PARENT,
             hardware_name=machine_2,
         )
-        baseline = _fixtures.summary(
+        baseline = _fixtures.benchmark_result(
             name=name,
             sha=_fixtures.GRANDPARENT,
             hardware_name=machine_1,
         )
-        _fixtures.summary(
+        _fixtures.benchmark_result(
             name=name,
             sha=_fixtures.ELDER,
             hardware_name=machine_1,
@@ -113,22 +113,22 @@ class TestRunGet(_asserts.GetEnforcer):
         name, machine_1, machine_2 = _uuid(), _uuid(), _uuid()
 
         self.authenticate(client)
-        contender = _fixtures.summary(
+        contender = _fixtures.benchmark_result(
             name=name,
             sha=_fixtures.CHILD,
             hardware_name=machine_1,
         )
-        _fixtures.summary(
+        _fixtures.benchmark_result(
             name=name,
             sha=_fixtures.PARENT,
             hardware_name=machine_2,
         )
-        testing = _fixtures.summary(
+        testing = _fixtures.benchmark_result(
             name=name,
             sha=_fixtures.GRANDPARENT,
             hardware_name=machine_1,
         )
-        baseline = _fixtures.summary(
+        baseline = _fixtures.benchmark_result(
             name=name,
             sha=_fixtures.ELDER,
             hardware_name=machine_1,
@@ -150,9 +150,9 @@ class TestRunList(_asserts.ListEnforcer):
     public = True
 
     def _create(self):
-        _fixtures.summary(sha=_fixtures.PARENT)
-        summary = _fixtures.summary()
-        return summary.run
+        _fixtures.benchmark_result(sha=_fixtures.PARENT)
+        benchmark_result = _fixtures.benchmark_result()
+        return benchmark_result.run
 
     def test_run_list(self, client):
         self.authenticate(client)
@@ -184,8 +184,8 @@ class TestRunDelete(_asserts.DeleteEnforcer):
 
     def test_delete_run(self, client):
         self.authenticate(client)
-        summary = _fixtures.summary()
-        run_id = summary.run_id
+        benchmark_result = _fixtures.benchmark_result()
+        run_id = benchmark_result.run_id
 
         # can get before delete
         Run.one(id=run_id)

@@ -23,8 +23,8 @@ from ..entities.info import Info
 from ..entities.run import Run
 
 
-class Summary(Base, EntityMixin):
-    __tablename__ = "summary"
+class BenchmarkResult(Base, EntityMixin):
+    __tablename__ = "benchmark_result"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     case_id = NotNull(s.String(50), s.ForeignKey("case.id"))
     info_id = NotNull(s.String(50), s.ForeignKey("info.id"))
@@ -57,9 +57,9 @@ class Summary(Base, EntityMixin):
         has_error = "error" in data
 
         if has_error:
-            summary_data = {"error": data["error"]}
+            benchmark_result_data = {"error": data["error"]}
         else:
-            summary_data = data["stats"]
+            benchmark_result_data = data["stats"]
 
         name = tags.pop("name")
 
@@ -126,31 +126,31 @@ class Summary(Base, EntityMixin):
                 }
             )
 
-        summary_data["run_id"] = data["run_id"]
-        summary_data["batch_id"] = data["batch_id"]
-        summary_data["timestamp"] = data["timestamp"]
-        summary_data["case_id"] = case.id
-        summary_data["info_id"] = info.id
-        summary_data["context_id"] = context.id
-        summary = Summary(**summary_data)
-        summary.save()
+        benchmark_result_data["run_id"] = data["run_id"]
+        benchmark_result_data["batch_id"] = data["batch_id"]
+        benchmark_result_data["timestamp"] = data["timestamp"]
+        benchmark_result_data["case_id"] = case.id
+        benchmark_result_data["info_id"] = info.id
+        benchmark_result_data["context_id"] = context.id
+        benchmark_result = BenchmarkResult(**benchmark_result_data)
+        benchmark_result.save()
 
         if "error" in data:
-            return summary
+            return benchmark_result
 
-        update_distribution(summary, 100)
+        update_distribution(benchmark_result, 100)
 
-        return summary
-
-
-s.Index("summary_run_id_index", Summary.run_id)
-s.Index("summary_case_id_index", Summary.case_id)
-s.Index("summary_batch_id_index", Summary.batch_id)
-s.Index("summary_info_id_index", Summary.info_id)
-s.Index("summary_context_id_index", Summary.context_id)
+        return benchmark_result
 
 
-class SummaryCreate(marshmallow.Schema):
+s.Index("benchmark_result_run_id_index", BenchmarkResult.run_id)
+s.Index("benchmark_result_case_id_index", BenchmarkResult.case_id)
+s.Index("benchmark_result_batch_id_index", BenchmarkResult.batch_id)
+s.Index("benchmark_result_info_id_index", BenchmarkResult.info_id)
+s.Index("benchmark_result_context_id_index", BenchmarkResult.context_id)
+
+
+class BenchmarkResultCreate(marshmallow.Schema):
     data = marshmallow.fields.List(marshmallow.fields.Decimal, required=True)
     times = marshmallow.fields.List(marshmallow.fields.Decimal, required=True)
     unit = marshmallow.fields.String(required=True)
@@ -166,8 +166,8 @@ class SummaryCreate(marshmallow.Schema):
     iqr = marshmallow.fields.Decimal(required=False)
 
 
-class SummarySchema:
-    create = SummaryCreate()
+class BenchmarkResultSchema:
+    create = BenchmarkResultCreate()
 
 
 def to_float(value):
@@ -175,51 +175,57 @@ def to_float(value):
 
 
 class _Serializer(EntitySerializer):
-    def _dump(self, summary):
-        z_score = float(summary.z_score) if summary.z_score else None
-        case = summary.case
+    def _dump(self, benchmark_result):
+        z_score = float(benchmark_result.z_score) if benchmark_result.z_score else None
+        case = benchmark_result.case
         tags = {"id": case.id, "name": case.name}
         tags.update(case.tags)
         return {
-            "id": summary.id,
-            "run_id": summary.run_id,
-            "batch_id": summary.batch_id,
-            "timestamp": summary.timestamp.isoformat(),
+            "id": benchmark_result.id,
+            "run_id": benchmark_result.run_id,
+            "batch_id": benchmark_result.batch_id,
+            "timestamp": benchmark_result.timestamp.isoformat(),
             "tags": tags,
             "stats": {
-                "data": [to_float(x) for x in summary.data],
-                "times": [to_float(x) for x in summary.times],
-                "unit": summary.unit,
-                "time_unit": summary.time_unit,
-                "iterations": summary.iterations,
-                "min": to_float(summary.min),
-                "max": to_float(summary.max),
-                "mean": to_float(summary.mean),
-                "median": to_float(summary.median),
-                "stdev": to_float(summary.stdev),
-                "q1": to_float(summary.q1),
-                "q3": to_float(summary.q3),
-                "iqr": to_float(summary.iqr),
+                "data": [to_float(x) for x in benchmark_result.data],
+                "times": [to_float(x) for x in benchmark_result.times],
+                "unit": benchmark_result.unit,
+                "time_unit": benchmark_result.time_unit,
+                "iterations": benchmark_result.iterations,
+                "min": to_float(benchmark_result.min),
+                "max": to_float(benchmark_result.max),
+                "mean": to_float(benchmark_result.mean),
+                "median": to_float(benchmark_result.median),
+                "stdev": to_float(benchmark_result.stdev),
+                "q1": to_float(benchmark_result.q1),
+                "q3": to_float(benchmark_result.q3),
+                "iqr": to_float(benchmark_result.iqr),
                 "z_score": z_score,
-                "z_regression": z_regression(summary.z_score),
-                "z_improvement": z_improvement(summary.z_score),
+                "z_regression": z_regression(benchmark_result.z_score),
+                "z_improvement": z_improvement(benchmark_result.z_score),
             },
-            "error": summary.error,
+            "error": benchmark_result.error,
             "links": {
                 "list": f.url_for("api.benchmarks", _external=True),
                 "self": f.url_for(
-                    "api.benchmark", benchmark_id=summary.id, _external=True
+                    "api.benchmark", benchmark_id=benchmark_result.id, _external=True
                 ),
-                "info": f.url_for("api.info", info_id=summary.info_id, _external=True),
+                "info": f.url_for(
+                    "api.info", info_id=benchmark_result.info_id, _external=True
+                ),
                 "context": f.url_for(
-                    "api.context", context_id=summary.context_id, _external=True
+                    "api.context",
+                    context_id=benchmark_result.context_id,
+                    _external=True,
                 ),
-                "run": f.url_for("api.run", run_id=summary.run_id, _external=True),
+                "run": f.url_for(
+                    "api.run", run_id=benchmark_result.run_id, _external=True
+                ),
             },
         }
 
 
-class SummarySerializer:
+class BenchmarkResultSerializer:
     one = _Serializer()
     many = _Serializer(many=True)
 
@@ -236,7 +242,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     timestamp = marshmallow.fields.DateTime(required=True)
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
     cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
-    stats = marshmallow.fields.Nested(SummarySchema().create, required=False)
+    stats = marshmallow.fields.Nested(BenchmarkResultSchema().create, required=False)
     error = marshmallow.fields.Dict(required=False)
     tags = marshmallow.fields.Dict(required=True)
     info = marshmallow.fields.Dict(required=True)

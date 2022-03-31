@@ -20,15 +20,15 @@ class Run(Base, EntityMixin):
     hardware = relationship("Hardware", lazy="joined")
 
     def get_baseline_run(self):
+        from ..entities.benchmark_result import BenchmarkResult
         from ..entities.distribution import get_closest_parent
-        from ..entities.summary import Summary
 
         result = (
             Session.query(
-                Summary.case_id,
-                Summary.context_id,
+                BenchmarkResult.case_id,
+                BenchmarkResult.context_id,
             )
-            .filter(Summary.run_id == self.id)
+            .filter(BenchmarkResult.run_id == self.id)
             .all()
         )
         run_items = [(row[0], row[1]) for row in result]
@@ -54,11 +54,11 @@ class Run(Base, EntityMixin):
         parent_run_items = {run.id: [] for run in parent_runs}
         result = (
             Session.query(
-                Summary.run_id,
-                Summary.case_id,
-                Summary.context_id,
+                BenchmarkResult.run_id,
+                BenchmarkResult.case_id,
+                BenchmarkResult.context_id,
             )
-            .filter(Summary.run_id.in_(parent_run_items.keys()))
+            .filter(BenchmarkResult.run_id.in_(parent_run_items.keys()))
             .all()
         )
         for row in result:

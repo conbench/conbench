@@ -61,54 +61,70 @@ def test_history():
 
     name = _uuid()
     data = [2.1, 2.0, 1.99]  # first commit
-    summary_1 = _fixtures.summary(results=data, commit=commit_1, name=name)
+    benchmark_result_1 = _fixtures.benchmark_result(
+        results=data, commit=commit_1, name=name
+    )
 
     data = [1.99, 2.0, 2.1]  # stayed the same
-    summary_2 = _fixtures.summary(results=data, commit=commit_2, name=name)
+    benchmark_result_2 = _fixtures.benchmark_result(
+        results=data, commit=commit_2, name=name
+    )
 
     data = [1.1, 1.0, 0.99]  # got better
-    summary_3 = _fixtures.summary(results=data, commit=commit_3, name=name)
+    benchmark_result_3 = _fixtures.benchmark_result(
+        results=data, commit=commit_3, name=name
+    )
 
     data = [1.2, 1.1, 1.0]  # stayed about the same
-    summary_4 = _fixtures.summary(results=data, commit=commit_4, name=name)
+    benchmark_result_4 = _fixtures.benchmark_result(
+        results=data, commit=commit_4, name=name
+    )
 
     data = [3.1, 3.0, 2.99]  # measure commit 4 twice
-    summary_5 = _fixtures.summary(results=data, commit=commit_4, name=name)
+    benchmark_result_5 = _fixtures.benchmark_result(
+        results=data, commit=commit_4, name=name
+    )
 
     data, name = [5.1, 5.2, 5.3], "different-case"
-    _fixtures.summary(results=data, commit=commit_1, name=name)
+    _fixtures.benchmark_result(results=data, commit=commit_1, name=name)
 
     data, language = [6.1, 6.2, 6.3], "different-context"
-    _fixtures.summary(results=data, commit=commit_1, name=name, language=language)
+    _fixtures.benchmark_result(
+        results=data, commit=commit_1, name=name, language=language
+    )
 
     data, machine = [7.1, 7.2, 7.3], "different-machine"
-    _fixtures.summary(results=data, commit=commit_1, name=name, hardware_name=machine)
+    _fixtures.benchmark_result(
+        results=data, commit=commit_1, name=name, hardware_name=machine
+    )
 
     data = [8.1, 8.2, 8.3]  # pull request, exclude from history
-    _fixtures.summary(results=data, commit=commit_1, name=name, pull_request=True)
+    _fixtures.benchmark_result(
+        results=data, commit=commit_1, name=name, pull_request=True
+    )
 
-    assert summary_1.case_id == summary_2.case_id
-    assert summary_1.case_id == summary_3.case_id
-    assert summary_1.case_id == summary_4.case_id
-    assert summary_1.case_id == summary_5.case_id
+    assert benchmark_result_1.case_id == benchmark_result_2.case_id
+    assert benchmark_result_1.case_id == benchmark_result_3.case_id
+    assert benchmark_result_1.case_id == benchmark_result_4.case_id
+    assert benchmark_result_1.case_id == benchmark_result_5.case_id
 
-    assert summary_1.run.hardware_id == summary_2.run.hardware_id
-    assert summary_1.run.hardware_id == summary_3.run.hardware_id
-    assert summary_1.run.hardware_id == summary_4.run.hardware_id
-    assert summary_1.run.hardware_id == summary_5.run.hardware_id
+    assert benchmark_result_1.run.hardware_id == benchmark_result_2.run.hardware_id
+    assert benchmark_result_1.run.hardware_id == benchmark_result_3.run.hardware_id
+    assert benchmark_result_1.run.hardware_id == benchmark_result_4.run.hardware_id
+    assert benchmark_result_1.run.hardware_id == benchmark_result_5.run.hardware_id
 
-    case_id = summary_1.case_id
-    context_id = summary_1.context_id
-    hardware_hash = summary_1.run.hardware.hash
+    case_id = benchmark_result_1.case_id
+    context_id = benchmark_result_1.context_id
+    hardware_hash = benchmark_result_1.run.hardware.hash
 
     # ----- get_commit_index
 
     expected = [
         (
-            summary_1.id,
+            benchmark_result_1.id,
             case_id,
             context_id,
-            summary_1.mean,
+            benchmark_result_1.mean,
             "s",
             hardware_hash,
             commit_1.sha,
@@ -117,13 +133,13 @@ def test_history():
             datetime.datetime(2021, 11, 1),
             decimal.Decimal("2.0300000000000000"),
             None,
-            summary_1.run.name,
+            benchmark_result_1.run.name,
         ),
         (
-            summary_2.id,
+            benchmark_result_2.id,
             case_id,
             context_id,
-            summary_2.mean,
+            benchmark_result_2.mean,
             "s",
             hardware_hash,
             commit_2.sha,
@@ -132,13 +148,13 @@ def test_history():
             datetime.datetime(2021, 11, 2),
             decimal.Decimal("2.0300000000000000"),
             decimal.Decimal("0"),
-            summary_2.run.name,
+            benchmark_result_2.run.name,
         ),
         (
-            summary_3.id,
+            benchmark_result_3.id,
             case_id,
             context_id,
-            summary_3.mean,
+            benchmark_result_3.mean,
             "s",
             hardware_hash,
             commit_3.sha,
@@ -147,13 +163,13 @@ def test_history():
             datetime.datetime(2021, 11, 3),
             decimal.Decimal("1.6966666666666667"),
             decimal.Decimal("0.57735026918962576451"),
-            summary_3.run.name,
+            benchmark_result_3.run.name,
         ),
         (
-            summary_4.id,
+            benchmark_result_4.id,
             case_id,
             context_id,
-            summary_4.mean,
+            benchmark_result_4.mean,
             "s",
             hardware_hash,
             commit_4.sha,
@@ -162,13 +178,13 @@ def test_history():
             datetime.datetime(2021, 11, 4),
             decimal.Decimal("1.8440000000000000"),
             decimal.Decimal("0.82035358230460601799"),
-            summary_4.run.name,
+            benchmark_result_4.run.name,
         ),
         (
-            summary_5.id,
+            benchmark_result_5.id,
             case_id,
             context_id,
-            summary_5.mean,
+            benchmark_result_5.mean,
             "s",
             hardware_hash,
             commit_4.sha,
@@ -177,7 +193,7 @@ def test_history():
             datetime.datetime(2021, 11, 4),
             decimal.Decimal("1.8440000000000000"),
             decimal.Decimal("0.82035358230460601799"),
-            summary_5.run.name,
+            benchmark_result_5.run.name,
         ),
     ]
     actual = get_history(case_id, context_id, hardware_hash)

@@ -4,9 +4,9 @@ import flask_login
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
+from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
 from ..entities.run import Run, RunSerializer
-from ..entities.summary import Summary
 
 
 class RunEntityAPI(ApiEndpoint):
@@ -56,9 +56,9 @@ class RunEntityAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        summaries = Summary.all(run_id=run_id)
-        for summarie in summaries:
-            summarie.delete()
+        benchmark_results = BenchmarkResult.all(run_id=run_id)
+        for benchmark_result in benchmark_results:
+            benchmark_result.delete()
         run = self._get(run_id)
         run.delete()
         return self.response_204_no_content()

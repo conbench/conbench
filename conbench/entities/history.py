@@ -1,10 +1,10 @@
 from ..db import Session
 from ..entities._entity import EntitySerializer
+from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
 from ..entities.distribution import Distribution
 from ..entities.hardware import Hardware
 from ..entities.run import Run
-from ..entities.summary import Summary
 
 
 class _Serializer(EntitySerializer):
@@ -35,11 +35,11 @@ class HistorySerializer:
 def get_history(case_id, context_id, hardware_hash):
     return (
         Session.query(
-            Summary.id,
-            Summary.case_id,
-            Summary.context_id,
-            Summary.mean,
-            Summary.unit,
+            BenchmarkResult.id,
+            BenchmarkResult.case_id,
+            BenchmarkResult.context_id,
+            BenchmarkResult.mean,
+            BenchmarkResult.unit,
             Hardware.hash,
             Commit.sha,
             Commit.repository,
@@ -49,13 +49,13 @@ def get_history(case_id, context_id, hardware_hash):
             Distribution.mean_sd,
             Run.name,
         )
-        .join(Run, Run.id == Summary.run_id)
+        .join(Run, Run.id == BenchmarkResult.run_id)
         .join(Hardware, Hardware.id == Run.hardware_id)
         .join(Commit, Commit.id == Run.commit_id)
         .join(Distribution, Distribution.commit_id == Commit.id)
         .filter(
-            Summary.case_id == case_id,
-            Summary.context_id == context_id,
+            BenchmarkResult.case_id == case_id,
+            BenchmarkResult.context_id == context_id,
             Run.name.like("commit: %"),
             Hardware.hash == hardware_hash,
             Distribution.case_id == case_id,

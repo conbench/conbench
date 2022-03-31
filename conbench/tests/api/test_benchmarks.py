@@ -5,8 +5,8 @@ import pytest
 
 from ...api._examples import _api_benchmark_entity
 from ...entities._entity import NotFound
+from ...entities.benchmark_result import BenchmarkResult
 from ...entities.distribution import Distribution
-from ...entities.summary import Summary
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
@@ -14,16 +14,16 @@ ARROW_REPO = "https://github.com/apache/arrow"
 CONBENCH_REPO = "https://github.com/conbench/conbench"
 
 
-def _expected_entity(summary):
+def _expected_entity(benchmark_result):
     return _api_benchmark_entity(
-        summary.id,
-        summary.case_id,
-        summary.info_id,
-        summary.context_id,
-        summary.batch_id,
-        summary.run_id,
-        summary.case.name,
-        summary.error,
+        benchmark_result.id,
+        benchmark_result.case_id,
+        benchmark_result.info_id,
+        benchmark_result.context_id,
+        benchmark_result.batch_id,
+        benchmark_result.run_id,
+        benchmark_result.case.name,
+        benchmark_result.error,
     )
 
 
@@ -32,7 +32,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
     public = True
 
     def _create(self, name=None, results=None, unit=None, sha=None):
-        return _fixtures.summary(
+        return _fixtures.benchmark_result(
             name=name,
             results=results,
             unit=unit,
@@ -41,9 +41,9 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
 
     def test_get_benchmark(self, client):
         self.authenticate(client)
-        summary = self._create()
-        response = client.get(f"/api/benchmarks/{summary.id}/")
-        self.assert_200_ok(response, _expected_entity(summary))
+        benchmark_result = self._create()
+        response = client.get(f"/api/benchmarks/{benchmark_result.id}/")
+        self.assert_200_ok(response, _expected_entity(benchmark_result))
 
     def test_get_benchmark_regression(self, client):
         self.authenticate(client)
@@ -63,13 +63,13 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             unit="i/s",
             sha=_fixtures.PARENT,
         )
-        summary = self._create(
+        benchmark_result = self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[2],
             unit="i/s",
         )
 
-        expected = _expected_entity(summary)
+        expected = _expected_entity(benchmark_result)
         expected["stats"].update(
             {
                 "data": [1.0, 2.0, 3.0],
@@ -89,7 +89,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             }
         )
 
-        response = client.get(f"/api/benchmarks/{summary.id}/")
+        response = client.get(f"/api/benchmarks/{benchmark_result.id}/")
         self.assert_200_ok(response, expected)
 
     def test_get_benchmark_regression_less_is_better(self, client):
@@ -110,13 +110,13 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             unit="s",
             sha=_fixtures.PARENT,
         )
-        summary = self._create(
+        benchmark_result = self._create(
             name=name,
             results=_fixtures.RESULTS_UP[2],
             unit="s",
         )
 
-        expected = _expected_entity(summary)
+        expected = _expected_entity(benchmark_result)
         expected["stats"].update(
             {
                 "data": [10.0, 20.0, 30.0],
@@ -135,7 +135,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             }
         )
 
-        response = client.get(f"/api/benchmarks/{summary.id}/")
+        response = client.get(f"/api/benchmarks/{benchmark_result.id}/")
         self.assert_200_ok(response, expected)
 
     def test_get_benchmark_improvement(self, client):
@@ -156,13 +156,13 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             unit="i/s",
             sha=_fixtures.PARENT,
         )
-        summary = self._create(
+        benchmark_result = self._create(
             name=name,
             results=_fixtures.RESULTS_UP[2],
             unit="i/s",
         )
 
-        expected = _expected_entity(summary)
+        expected = _expected_entity(benchmark_result)
         expected["stats"].update(
             {
                 "data": [10.0, 20.0, 30.0],
@@ -182,7 +182,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             }
         )
 
-        response = client.get(f"/api/benchmarks/{summary.id}/")
+        response = client.get(f"/api/benchmarks/{benchmark_result.id}/")
         self.assert_200_ok(response, expected)
 
     def test_get_benchmark_improvement_less_is_better(self, client):
@@ -203,13 +203,13 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             unit="s",
             sha=_fixtures.PARENT,
         )
-        summary = self._create(
+        benchmark_result = self._create(
             name=name,
             results=_fixtures.RESULTS_DOWN[2],
             unit="s",
         )
 
-        expected = _expected_entity(summary)
+        expected = _expected_entity(benchmark_result)
         expected["stats"].update(
             {
                 "data": [1.0, 2.0, 3.0],
@@ -228,7 +228,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             }
         )
 
-        response = client.get(f"/api/benchmarks/{summary.id}/")
+        response = client.get(f"/api/benchmarks/{benchmark_result.id}/")
         self.assert_200_ok(response, expected)
 
 
@@ -237,18 +237,18 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
 
     def test_delete_benchmark(self, client):
         self.authenticate(client)
-        summary = _fixtures.summary()
+        benchmark_result = _fixtures.benchmark_result()
 
         # can get before delete
-        Summary.one(id=summary.id)
+        BenchmarkResult.one(id=benchmark_result.id)
 
         # delete
-        response = client.delete(f"/api/benchmarks/{summary.id}/")
+        response = client.delete(f"/api/benchmarks/{benchmark_result.id}/")
         self.assert_204_no_content(response)
 
         # cannot get after delete
         with pytest.raises(NotFound):
-            Summary.one(id=summary.id)
+            BenchmarkResult.one(id=benchmark_result.id)
 
 
 class TestBenchmarkList(_asserts.ListEnforcer):
@@ -257,33 +257,33 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
     def test_benchmark_list(self, client):
         self.authenticate(client)
-        summary = _fixtures.summary()
+        benchmark_result = _fixtures.benchmark_result()
         response = client.get("/api/benchmarks/")
-        self.assert_200_ok(response, contains=_expected_entity(summary))
+        self.assert_200_ok(response, contains=_expected_entity(benchmark_result))
 
     def test_benchmark_list_filter_by_name(self, client):
         self.authenticate(client)
-        _fixtures.summary(name="aaa")
-        summary = _fixtures.summary(name="bbb")
-        _fixtures.summary(name="ccc")
+        _fixtures.benchmark_result(name="aaa")
+        benchmark_result = _fixtures.benchmark_result(name="bbb")
+        _fixtures.benchmark_result(name="ccc")
         response = client.get("/api/benchmarks/?name=bbb")
-        self.assert_200_ok(response, [_expected_entity(summary)])
+        self.assert_200_ok(response, [_expected_entity(benchmark_result)])
 
     def test_benchmark_list_filter_by_batch_id(self, client):
         self.authenticate(client)
-        _fixtures.summary(batch_id="10")
-        summary = _fixtures.summary(batch_id="20")
-        _fixtures.summary(batch_id="30")
+        _fixtures.benchmark_result(batch_id="10")
+        benchmark_result = _fixtures.benchmark_result(batch_id="20")
+        _fixtures.benchmark_result(batch_id="30")
         response = client.get("/api/benchmarks/?batch_id=20")
-        self.assert_200_ok(response, [_expected_entity(summary)])
+        self.assert_200_ok(response, [_expected_entity(benchmark_result)])
 
     def test_benchmark_list_filter_by_run_id(self, client):
         self.authenticate(client)
-        _fixtures.summary(run_id="100")
-        summary = _fixtures.summary(run_id="200")
-        _fixtures.summary(run_id="300")
+        _fixtures.benchmark_result(run_id="100")
+        benchmark_result = _fixtures.benchmark_result(run_id="200")
+        _fixtures.benchmark_result(run_id="300")
         response = client.get("/api/benchmarks/?run_id=200")
-        self.assert_200_ok(response, [_expected_entity(summary)])
+        self.assert_200_ok(response, [_expected_entity(benchmark_result)])
 
 
 class TestBenchmarkPost(_asserts.PostEnforcer):
@@ -308,31 +308,33 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             self.authenticate(client)
             response = client.post("/api/benchmarks/", json=payload)
             new_id = response.json["id"]
-            summary = Summary.one(id=new_id)
+            benchmark_result = BenchmarkResult.one(id=new_id)
             location = "http://localhost/api/benchmarks/%s/" % new_id
-            self.assert_201_created(response, _expected_entity(summary), location)
+            self.assert_201_created(
+                response, _expected_entity(benchmark_result), location
+            )
 
-            assert summary.run.hardware.type == hardware_type
+            assert benchmark_result.run.hardware.type == hardware_type
             for attr, value in payload[f"{hardware_type}_info"].items():
-                assert getattr(summary.run.hardware, attr) == value or getattr(
-                    summary.run.hardware, attr
+                assert getattr(benchmark_result.run.hardware, attr) == value or getattr(
+                    benchmark_result.run.hardware, attr
                 ) == int(value)
 
     def test_create_benchmark_with_error(self, client):
         self.authenticate(client)
         response = client.post("/api/benchmarks/", json=self.valid_payload_with_error)
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
+        benchmark_result = BenchmarkResult.one(id=new_id)
         location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
     def test_create_benchmark_for_cluster_with_optional_info_changed(self, client):
         # Post benchmarks for cluster-1
         self.authenticate(client)
         response = client.post("/api/benchmarks/", json=self.valid_payload_for_cluster)
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        hardware_id = summary.run.hardware.id
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        hardware_id = benchmark_result.run.hardware.id
 
         # Post benchmarks for cluster-1 with different optional_info but the same cluster name and info
         payload = copy.deepcopy(self.valid_payload_for_cluster)
@@ -340,10 +342,10 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         payload["run_id"] = _uuid()
         response = client.post("/api/benchmarks/", json=payload)
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.hardware.id == hardware_id
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        assert benchmark_result.run.hardware.id == hardware_id
         assert (
-            summary.run.hardware.optional_info
+            benchmark_result.run.hardware.optional_info
             == payload["cluster_info"]["optional_info"]
         )
 
@@ -352,8 +354,8 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         self.authenticate(client)
         response = client.post("/api/benchmarks/", json=self.valid_payload_for_cluster)
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        hardware_id = summary.run.hardware.id
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        hardware_id = benchmark_result.run.hardware.id
 
         # Post benchmarks for cluster-1 with different info but the same cluster name and optional_info
         payload = copy.deepcopy(self.valid_payload_for_cluster)
@@ -361,25 +363,25 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         payload["run_id"] = _uuid()
         response = client.post("/api/benchmarks/", json=payload)
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.hardware.id != hardware_id
-        assert summary.run.hardware.info == payload["cluster_info"]["info"]
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        assert benchmark_result.run.hardware.id != hardware_id
+        assert benchmark_result.run.hardware.info == payload["cluster_info"]["info"]
 
     def test_create_benchmark_normalizes_data(self, client):
         self.authenticate(client)
         response = client.post("/api/benchmarks/", json=self.valid_payload)
-        summary_1 = Summary.one(id=response.json["id"])
+        benchmark_result_1 = BenchmarkResult.one(id=response.json["id"])
         data = copy.deepcopy(self.valid_payload)
         data["run_id"] = data["run_id"] + "_X"
         response = client.post("/api/benchmarks/", json=data)
-        summary_2 = Summary.one(id=response.json["id"])
-        assert summary_1.id != summary_2.id
-        assert summary_1.case_id == summary_2.case_id
-        assert summary_1.info_id == summary_2.info_id
-        assert summary_1.context_id == summary_2.context_id
-        assert summary_1.run.hardware_id == summary_2.run.hardware_id
-        assert summary_1.run_id != summary_2.run_id
-        assert summary_1.run.commit_id == summary_2.run.commit_id
+        benchmark_result_2 = BenchmarkResult.one(id=response.json["id"])
+        assert benchmark_result_1.id != benchmark_result_2.id
+        assert benchmark_result_1.case_id == benchmark_result_2.case_id
+        assert benchmark_result_1.info_id == benchmark_result_2.info_id
+        assert benchmark_result_1.context_id == benchmark_result_2.context_id
+        assert benchmark_result_1.run.hardware_id == benchmark_result_2.run.hardware_id
+        assert benchmark_result_1.run_id != benchmark_result_2.run_id
+        assert benchmark_result_1.run.commit_id == benchmark_result_2.run.commit_id
 
     def test_create_benchmark_can_specify_run_and_batch_id(self, client):
         self.authenticate(client)
@@ -388,9 +390,9 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         data["run_id"] = run_id
         data["batch_id"] = batch_id
         response = client.post("/api/benchmarks/", json=data)
-        summary = Summary.one(id=response.json["id"])
-        assert summary.run_id == run_id
-        assert summary.batch_id == batch_id
+        benchmark_result = BenchmarkResult.one(id=response.json["id"])
+        assert benchmark_result.run_id == run_id
+        assert benchmark_result.batch_id == batch_id
 
     def test_create_benchmark_cannot_omit_batch_id(self, client):
         self.authenticate(client)
@@ -462,11 +464,11 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
     def _assert_none_commit(self, response):
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == ""
-        assert summary.run.commit.repository == ""
-        assert summary.run.commit.parent is None
-        return summary, new_id
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        assert benchmark_result.run.commit.sha == ""
+        assert benchmark_result.run.commit.repository == ""
+        assert benchmark_result.run.commit.parent is None
+        return benchmark_result, new_id
 
     def test_create_no_commit_context(self, client):
         self.authenticate(client)
@@ -476,16 +478,16 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
         # create benchmark without commit context
         response = client.post("/api/benchmarks/", json=data)
-        summary, new_id = self._assert_none_commit(response)
+        benchmark_result, new_id = self._assert_none_commit(response)
         location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
         # create another benchmark without commit context
         # (test duplicate key duplicate key -- commit_index)
         response = client.post("/api/benchmarks/", json=data)
-        summary, new_id = self._assert_none_commit(response)
+        benchmark_result, new_id = self._assert_none_commit(response)
         location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
     def test_create_empty_commit_context(self, client):
         self.authenticate(client)
@@ -496,16 +498,16 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
         # create benchmark without commit context
         response = client.post("/api/benchmarks/", json=data)
-        summary, new_id = self._assert_none_commit(response)
+        benchmark_result, new_id = self._assert_none_commit(response)
         location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
         # create another benchmark without commit context
         # (test duplicate key duplicate key -- commit_index)
         response = client.post("/api/benchmarks/", json=data)
-        summary, new_id = self._assert_none_commit(response)
+        benchmark_result, new_id = self._assert_none_commit(response)
         location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
     def test_create_unknown_commit_context(self, client):
         self.authenticate(client)
@@ -517,23 +519,23 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         # create benchmark with unknown commit context
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == "unknown commit"
-        assert summary.run.commit.repository == ARROW_REPO
-        assert summary.run.commit.parent is None
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        assert benchmark_result.run.commit.sha == "unknown commit"
+        assert benchmark_result.run.commit.repository == ARROW_REPO
+        assert benchmark_result.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
         # create another benchmark with unknown commit context
         # (test duplicate key duplicate key -- commit_index)
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == "unknown commit"
-        assert summary.run.commit.repository == ARROW_REPO
-        assert summary.run.commit.parent is None
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        assert benchmark_result.run.commit.sha == "unknown commit"
+        assert benchmark_result.run.commit.repository == ARROW_REPO
+        assert benchmark_result.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
     def test_create_different_git_repo_format(self, client):
         self.authenticate(client)
@@ -544,12 +546,12 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == "testing repository with git@g"
-        assert summary.run.commit.repository == ARROW_REPO
-        assert summary.run.commit.parent is None
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        assert benchmark_result.run.commit.sha == "testing repository with git@g"
+        assert benchmark_result.run.commit.repository == ARROW_REPO
+        assert benchmark_result.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
     def test_create_repo_not_full_url(self, client):
         self.authenticate(client)
@@ -560,12 +562,14 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == "testing repository with just org/repo"
-        assert summary.run.commit.repository == ARROW_REPO
-        assert summary.run.commit.parent is None
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        assert (
+            benchmark_result.run.commit.sha == "testing repository with just org/repo"
+        )
+        assert benchmark_result.run.commit.repository == ARROW_REPO
+        assert benchmark_result.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
     def test_create_allow_just_repository(self, client):
         self.authenticate(client)
@@ -576,12 +580,12 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == ""
-        assert summary.run.commit.repository == ARROW_REPO
-        assert summary.run.commit.parent is None
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        assert benchmark_result.run.commit.sha == ""
+        assert benchmark_result.run.commit.repository == ARROW_REPO
+        assert benchmark_result.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
         # And again with a different repository with an empty sha
         data["run_id"] = _uuid()
@@ -590,12 +594,12 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == ""
-        assert summary.run.commit.repository == CONBENCH_REPO
-        assert summary.run.commit.parent is None
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        assert benchmark_result.run.commit.sha == ""
+        assert benchmark_result.run.commit.repository == CONBENCH_REPO
+        assert benchmark_result.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
     def test_create_allow_just_sha(self, client):
         self.authenticate(client)
@@ -606,12 +610,12 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
-        summary = Summary.one(id=new_id)
-        assert summary.run.commit.sha == "something something"
-        assert summary.run.commit.repository == ""
-        assert summary.run.commit.parent is None
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        assert benchmark_result.run.commit.sha == "something something"
+        assert benchmark_result.run.commit.repository == ""
+        assert benchmark_result.run.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(summary), location)
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
     def test_create_benchmark_distribution(self, client):
         for payload in [self.valid_payload, self.valid_payload_for_cluster]:
@@ -622,10 +626,12 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             # first result
             response = client.post("/api/benchmarks/", json=data)
             new_id = response.json["id"]
-            summary_1 = Summary.one(id=new_id)
+            benchmark_result_1 = BenchmarkResult.one(id=new_id)
             location = "http://localhost/api/benchmarks/%s/" % new_id
-            self.assert_201_created(response, _expected_entity(summary_1), location)
-            case_id = summary_1.case_id
+            self.assert_201_created(
+                response, _expected_entity(benchmark_result_1), location
+            )
+            case_id = benchmark_result_1.case_id
 
             # after one result
             distributions = Distribution.all(case_id=case_id)
@@ -652,13 +658,17 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             # second result
             response = client.post("/api/benchmarks/", json=data)
             new_id = response.json["id"]
-            summary_2 = Summary.one(id=new_id)
+            benchmark_result_2 = BenchmarkResult.one(id=new_id)
             location = "http://localhost/api/benchmarks/%s/" % new_id
-            self.assert_201_created(response, _expected_entity(summary_2), location)
-            assert summary_1.case_id == summary_2.case_id
-            assert summary_1.context_id == summary_2.context_id
-            assert summary_1.run.hardware_id == summary_2.run.hardware_id
-            assert summary_1.run.commit_id == summary_2.run.commit_id
+            self.assert_201_created(
+                response, _expected_entity(benchmark_result_2), location
+            )
+            assert benchmark_result_1.case_id == benchmark_result_2.case_id
+            assert benchmark_result_1.context_id == benchmark_result_2.context_id
+            assert (
+                benchmark_result_1.run.hardware_id == benchmark_result_2.run.hardware_id
+            )
+            assert benchmark_result_1.run.commit_id == benchmark_result_2.run.commit_id
 
             # after two results
             distributions = Distribution.all(case_id=case_id)

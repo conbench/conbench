@@ -429,7 +429,7 @@
                 },
                 "description": "OK",
             },
-            "CompareSummary": {
+            "CompareBenchmarkResult": {
                 "content": {
                     "application/json": {
                         "example": {
@@ -867,7 +867,7 @@
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
                     "run_id": {"type": "string"},
                     "run_name": {"type": "string"},
-                    "stats": {"$ref": "#/components/schemas/SummaryCreate"},
+                    "stats": {"$ref": "#/components/schemas/BenchmarkResultCreate"},
                     "tags": {"type": "object"},
                     "timestamp": {"format": "date-time", "type": "string"},
                 },
@@ -1002,7 +1002,7 @@
                 "required": ["email", "name", "password", "secret"],
                 "type": "object",
             },
-            "SummaryCreate": {
+            "BenchmarkResultCreate": {
                 "properties": {
                     "data": {"items": {"type": "number"}, "type": "array"},
                     "iqr": {"type": "number"},
@@ -1216,7 +1216,7 @@
                     }
                 ],
                 "responses": {
-                    "200": {"$ref": "#/components/responses/CompareSummary"},
+                    "200": {"$ref": "#/components/responses/CompareBenchmarkResult"},
                     "401": {"$ref": "#/components/responses/401"},
                     "404": {"$ref": "#/components/responses/404"},
                 },

@@ -15,12 +15,12 @@ from ...tests.helpers import _uuid
 REPO = "https://github.com/org/something"
 MACHINE = "diana-2-2-4-17179869184"
 
-DISTRIBUTION = """SELECT text(:text_1) AS case_id, text(:text_2) AS context_id, text(:text_3) AS commit_id, machine.hash AS hash, max(summary.unit) AS unit, avg(summary.mean) AS mean_mean, stddev(summary.mean) AS mean_sd, avg(summary.min) AS min_mean, stddev(summary.min) AS min_sd, avg(summary.max) AS max_mean, stddev(summary.max) AS max_sd, avg(summary.median) AS median_mean, stddev(summary.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(summary.mean) AS observations 
-FROM summary JOIN run ON run.id = summary.run_id JOIN machine ON machine.id = run.machine_id JOIN (SELECT commit.id AS id, commit.timestamp AS timestamp 
+DISTRIBUTION = """SELECT text(:text_1) AS case_id, text(:text_2) AS context_id, text(:text_3) AS commit_id, machine.hash AS hash, max(benchmark_result.unit) AS unit, avg(benchmark_result.mean) AS mean_mean, stddev(benchmark_result.mean) AS mean_sd, avg(benchmark_result.min) AS min_mean, stddev(benchmark_result.min) AS min_sd, avg(benchmark_result.max) AS max_mean, stddev(benchmark_result.max) AS max_sd, avg(benchmark_result.median) AS median_mean, stddev(benchmark_result.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(benchmark_result.mean) AS observations 
+FROM benchmark_result JOIN run ON run.id = benchmark_result.run_id JOIN machine ON machine.id = run.machine_id JOIN (SELECT commit.id AS id, commit.timestamp AS timestamp 
 FROM commit 
 WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL AND commit.timestamp <= :timestamp_1 ORDER BY commit.timestamp DESC
  LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id 
-WHERE run.name LIKE :name_1 AND summary.case_id = :case_id_1 AND summary.context_id = :context_id_1 AND machine.hash = :hash_1 GROUP BY summary.case_id, summary.context_id, machine.hash"""  # noqa
+WHERE run.name LIKE :name_1 AND benchmark_result.case_id = :case_id_1 AND benchmark_result.context_id = :context_id_1 AND machine.hash = :hash_1 GROUP BY benchmark_result.case_id, benchmark_result.context_id, machine.hash"""  # noqa
 
 
 def test_z_score_calculations():
@@ -28,48 +28,56 @@ def test_z_score_calculations():
 
     # ----- RESULTS_UP
 
-    summary_mean_0 = statistics.mean(_fixtures.RESULTS_UP[0])
-    assert summary_mean_0 == 2.0
-    summary_mean_1 = statistics.mean(_fixtures.RESULTS_UP[1])
-    assert summary_mean_1 == 3.0
-    summary_mean_2 = statistics.mean(_fixtures.RESULTS_UP[2])
-    assert summary_mean_2 == 20.0
+    benchmark_result_mean_0 = statistics.mean(_fixtures.RESULTS_UP[0])
+    assert benchmark_result_mean_0 == 2.0
+    benchmark_result_mean_1 = statistics.mean(_fixtures.RESULTS_UP[1])
+    assert benchmark_result_mean_1 == 3.0
+    benchmark_result_mean_2 = statistics.mean(_fixtures.RESULTS_UP[2])
+    assert benchmark_result_mean_2 == 20.0
 
-    distribution_mean_0 = statistics.mean([summary_mean_0])
-    distribution_mean_1 = statistics.mean([summary_mean_0, summary_mean_1])
+    distribution_mean_0 = statistics.mean([benchmark_result_mean_0])
+    distribution_mean_1 = statistics.mean(
+        [benchmark_result_mean_0, benchmark_result_mean_1]
+    )
     assert distribution_mean_0 == 2.0
     assert distribution_mean_1 == 2.5
 
-    distribution_stdev_1 = statistics.stdev([summary_mean_0, summary_mean_1])
+    distribution_stdev_1 = statistics.stdev(
+        [benchmark_result_mean_0, benchmark_result_mean_1]
+    )
     assert distribution_stdev_1 == 0.7071067811865476
 
-    z_score = (summary_mean_2 - distribution_mean_1) / distribution_stdev_1
+    z_score = (benchmark_result_mean_2 - distribution_mean_1) / distribution_stdev_1
     assert z_score == _fixtures.Z_SCORE_UP
 
     # ----- RESULTS_DOWN
 
-    summary_mean_0 = statistics.mean(_fixtures.RESULTS_DOWN[0])
-    assert summary_mean_0 == 11.0
-    summary_mean_1 = statistics.mean(_fixtures.RESULTS_DOWN[1])
-    assert summary_mean_1 == 12.0
-    summary_mean_2 = statistics.mean(_fixtures.RESULTS_DOWN[2])
-    assert summary_mean_2 == 2.0
+    benchmark_result_mean_0 = statistics.mean(_fixtures.RESULTS_DOWN[0])
+    assert benchmark_result_mean_0 == 11.0
+    benchmark_result_mean_1 = statistics.mean(_fixtures.RESULTS_DOWN[1])
+    assert benchmark_result_mean_1 == 12.0
+    benchmark_result_mean_2 = statistics.mean(_fixtures.RESULTS_DOWN[2])
+    assert benchmark_result_mean_2 == 2.0
 
-    distribution_mean_0 = statistics.mean([summary_mean_0])
-    distribution_mean_1 = statistics.mean([summary_mean_0, summary_mean_1])
+    distribution_mean_0 = statistics.mean([benchmark_result_mean_0])
+    distribution_mean_1 = statistics.mean(
+        [benchmark_result_mean_0, benchmark_result_mean_1]
+    )
     assert distribution_mean_0 == 11.0
     assert distribution_mean_1 == 11.5
 
-    distribution_stdev_1 = statistics.stdev([summary_mean_0, summary_mean_1])
+    distribution_stdev_1 = statistics.stdev(
+        [benchmark_result_mean_0, benchmark_result_mean_1]
+    )
     assert distribution_stdev_1 == 0.7071067811865476
 
-    z_score = (summary_mean_2 - distribution_mean_1) / distribution_stdev_1
+    z_score = (benchmark_result_mean_2 - distribution_mean_1) / distribution_stdev_1
     assert z_score == _fixtures.Z_SCORE_DOWN
 
 
 def test_distribution_query():
-    summary = _fixtures.summary()
-    query = str(get_distribution(summary, 3).statement.compile())
+    benchmark_result = _fixtures.benchmark_result()
+    query = str(get_distribution(benchmark_result, 3).statement.compile())
     assert query == DISTRIBUTION
 
 
@@ -164,45 +172,61 @@ def test_distribution():
 
     name = _uuid()
     data = [2.1, 2.0, 1.99]  # first commit
-    summary_1 = _fixtures.summary(results=data, commit=commit_1, name=name)
+    benchmark_result_1 = _fixtures.benchmark_result(
+        results=data, commit=commit_1, name=name
+    )
 
     data = [1.99, 2.0, 2.1]  # stayed the same
-    summary_2 = _fixtures.summary(results=data, commit=commit_2, name=name)
+    benchmark_result_2 = _fixtures.benchmark_result(
+        results=data, commit=commit_2, name=name
+    )
 
     data = [1.1, 1.0, 0.99]  # got better
-    summary_3 = _fixtures.summary(results=data, commit=commit_3, name=name)
+    benchmark_result_3 = _fixtures.benchmark_result(
+        results=data, commit=commit_3, name=name
+    )
 
     data = [1.2, 1.1, 1.0]  # stayed about the same
-    summary_4 = _fixtures.summary(results=data, commit=commit_4, name=name)
+    benchmark_result_4 = _fixtures.benchmark_result(
+        results=data, commit=commit_4, name=name
+    )
 
     data = [3.1, 3.0, 2.99]  # got worse
-    summary_5 = _fixtures.summary(results=data, commit=commit_5, name=name)
+    benchmark_result_5 = _fixtures.benchmark_result(
+        results=data, commit=commit_5, name=name
+    )
 
-    # note that summary_6 & summary_7 are intentionally missing
+    # note that benchmark_result_6 & benchmark_result_7 are intentionally missing
 
     data = [4.1, 4.0, 4.99]  # got even worse
-    summary_8 = _fixtures.summary(results=data, commit=commit_8, name=name)
+    benchmark_result_8 = _fixtures.benchmark_result(
+        results=data, commit=commit_8, name=name
+    )
 
     data = [5.1, 5.2, 5.3]  # n/a different repo
-    summary_b = _fixtures.summary(results=data, commit=commit_b, name=name)
+    benchmark_result_b = _fixtures.benchmark_result(
+        results=data, commit=commit_b, name=name
+    )
 
     data, case = [5.1, 5.2, 5.3], "different-case"  # n/a different case
-    summary_x = _fixtures.summary(results=data, commit=commit_1, name=case)
+    benchmark_result_x = _fixtures.benchmark_result(
+        results=data, commit=commit_1, name=case
+    )
 
     data = [8.1, 8.2, 8.3]  # pull request, exclude from distribution
-    _fixtures.summary(results=data, commit=commit_1, pull_request=True)
+    _fixtures.benchmark_result(results=data, commit=commit_1, pull_request=True)
 
-    assert summary_1.case_id == summary_2.case_id
-    assert summary_1.case_id == summary_3.case_id
-    assert summary_1.case_id == summary_4.case_id
-    assert summary_1.case_id == summary_5.case_id
-    assert summary_1.case_id == summary_8.case_id
+    assert benchmark_result_1.case_id == benchmark_result_2.case_id
+    assert benchmark_result_1.case_id == benchmark_result_3.case_id
+    assert benchmark_result_1.case_id == benchmark_result_4.case_id
+    assert benchmark_result_1.case_id == benchmark_result_5.case_id
+    assert benchmark_result_1.case_id == benchmark_result_8.case_id
 
-    assert summary_1.run.hardware_id == summary_2.run.hardware_id
-    assert summary_1.run.hardware_id == summary_3.run.hardware_id
-    assert summary_1.run.hardware_id == summary_4.run.hardware_id
-    assert summary_1.run.hardware_id == summary_5.run.hardware_id
-    assert summary_1.run.hardware_id == summary_8.run.hardware_id
+    assert benchmark_result_1.run.hardware_id == benchmark_result_2.run.hardware_id
+    assert benchmark_result_1.run.hardware_id == benchmark_result_3.run.hardware_id
+    assert benchmark_result_1.run.hardware_id == benchmark_result_4.run.hardware_id
+    assert benchmark_result_1.run.hardware_id == benchmark_result_5.run.hardware_id
+    assert benchmark_result_1.run.hardware_id == benchmark_result_8.run.hardware_id
 
     # ----- get_commits_up
 
@@ -242,19 +266,19 @@ def test_distribution():
 
     # ----- get_closest_parent
 
-    assert get_closest_parent(summary_8.run).id == commit_5.id
-    assert get_closest_parent(summary_5.run).id == commit_4.id
-    assert get_closest_parent(summary_4.run).id == commit_3.id
-    assert get_closest_parent(summary_3.run).id == commit_2.id
-    assert get_closest_parent(summary_2.run).id == commit_1.id
-    assert get_closest_parent(summary_1.run) is None
+    assert get_closest_parent(benchmark_result_8.run).id == commit_5.id
+    assert get_closest_parent(benchmark_result_5.run).id == commit_4.id
+    assert get_closest_parent(benchmark_result_4.run).id == commit_3.id
+    assert get_closest_parent(benchmark_result_3.run).id == commit_2.id
+    assert get_closest_parent(benchmark_result_2.run).id == commit_1.id
+    assert get_closest_parent(benchmark_result_1.run) is None
 
     # ----- get_distribution
 
-    assert get_distribution(summary_8, 10).all() == [
+    assert get_distribution(benchmark_result_8, 10).all() == [
         (
-            summary_8.case_id,
-            summary_8.context_id,
+            benchmark_result_8.case_id,
+            benchmark_result_8.context_id,
             commit_8.id,
             MACHINE,
             "s",
@@ -271,10 +295,10 @@ def test_distribution():
             6,
         )
     ]
-    assert get_distribution(summary_5, 10).all() == [
+    assert get_distribution(benchmark_result_5, 10).all() == [
         (
-            summary_5.case_id,
-            summary_5.context_id,
+            benchmark_result_5.case_id,
+            benchmark_result_5.context_id,
             commit_5.id,
             MACHINE,
             "s",
@@ -291,10 +315,10 @@ def test_distribution():
             5,
         )
     ]
-    assert get_distribution(summary_4, 10).all() == [
+    assert get_distribution(benchmark_result_4, 10).all() == [
         (
-            summary_4.case_id,
-            summary_4.context_id,
+            benchmark_result_4.case_id,
+            benchmark_result_4.context_id,
             commit_4.id,
             MACHINE,
             "s",
@@ -311,10 +335,10 @@ def test_distribution():
             4,
         )
     ]
-    assert get_distribution(summary_3, 10).all() == [
+    assert get_distribution(benchmark_result_3, 10).all() == [
         (
-            summary_3.case_id,
-            summary_3.context_id,
+            benchmark_result_3.case_id,
+            benchmark_result_3.context_id,
             commit_3.id,
             MACHINE,
             "s",
@@ -331,10 +355,10 @@ def test_distribution():
             3,
         )
     ]
-    assert get_distribution(summary_2, 10).all() == [
+    assert get_distribution(benchmark_result_2, 10).all() == [
         (
-            summary_2.case_id,
-            summary_2.context_id,
+            benchmark_result_2.case_id,
+            benchmark_result_2.context_id,
             commit_2.id,
             MACHINE,
             "s",
@@ -351,10 +375,10 @@ def test_distribution():
             2,
         )
     ]
-    assert get_distribution(summary_1, 10).all() == [
+    assert get_distribution(benchmark_result_1, 10).all() == [
         (
-            summary_1.case_id,
-            summary_1.context_id,
+            benchmark_result_1.case_id,
+            benchmark_result_1.context_id,
             commit_1.id,
             MACHINE,
             "s",
@@ -375,38 +399,44 @@ def test_distribution():
     # ----- set_z_scores
 
     # first commit, no distribution history
-    set_z_scores([summary_1])
-    assert summary_1.z_score is None
+    set_z_scores([benchmark_result_1])
+    assert benchmark_result_1.z_score is None
 
     # second commit, no change
-    set_z_scores([summary_2])
-    assert summary_2.z_score is None
+    set_z_scores([benchmark_result_2])
+    assert benchmark_result_2.z_score is None
 
     # third commit, got better, but distribution stdev was 0
-    set_z_scores([summary_3])
-    assert summary_3.z_score is None
+    set_z_scores([benchmark_result_3])
+    assert benchmark_result_3.z_score is None
 
     # forth commit, stayed about the same (but still better)
-    set_z_scores([summary_4])
-    assert summary_4.z_score == decimal.Decimal("1.033456981849430176204879553")
+    set_z_scores([benchmark_result_4])
+    assert benchmark_result_4.z_score == decimal.Decimal(
+        "1.033456981849430176204879553"
+    )
 
     # fifth commit, got worse
-    set_z_scores([summary_5])
-    assert summary_5.z_score == decimal.Decimal("-2.657403264808751253340839750")
+    set_z_scores([benchmark_result_5])
+    assert benchmark_result_5.z_score == decimal.Decimal(
+        "-2.657403264808751253340839750"
+    )
 
-    # note that summary_6 & summary_7 are intentionally missing
+    # note that benchmark_result_6 & benchmark_result_7 are intentionally missing
 
     # eighth commit, got even worse
-    set_z_scores([summary_8])
-    assert summary_8.z_score == decimal.Decimal("-3.071033093952584018991452191")
+    set_z_scores([benchmark_result_8])
+    assert benchmark_result_8.z_score == decimal.Decimal(
+        "-3.071033093952584018991452191"
+    )
 
     # n/a different repo, no distribution history
-    set_z_scores([summary_b])
-    assert summary_b.z_score is None
+    set_z_scores([benchmark_result_b])
+    assert benchmark_result_b.z_score is None
 
     # n/a different case, no distribution history
-    set_z_scores([summary_x])
-    assert summary_x.z_score is None
+    set_z_scores([benchmark_result_x])
+    assert benchmark_result_x.z_score is None
 
 
 def test_distribution_multiple_runs_same_commit():
@@ -448,20 +478,20 @@ def test_distribution_multiple_runs_same_commit():
     )
 
     name = _uuid()
-    summary_1 = _fixtures.summary(
+    benchmark_result_1 = _fixtures.benchmark_result(
         results=_fixtures.RESULTS_UP[0], commit=commit_1, name=name
     )
-    summary_2 = _fixtures.summary(
+    benchmark_result_2 = _fixtures.benchmark_result(
         results=_fixtures.RESULTS_UP[1], commit=commit_2, name=name
     )
-    summary_3 = _fixtures.summary(
+    benchmark_result_3 = _fixtures.benchmark_result(
         results=_fixtures.RESULTS_UP[2], commit=commit_3, name=name
     )
 
-    case_id = summary_1.case_id
-    context_id = summary_1.context_id
+    case_id = benchmark_result_1.case_id
+    context_id = benchmark_result_1.context_id
 
-    assert get_distribution(summary_1, 10).all() == [
+    assert get_distribution(benchmark_result_1, 10).all() == [
         (
             case_id,
             context_id,
@@ -482,7 +512,7 @@ def test_distribution_multiple_runs_same_commit():
         )
     ]
 
-    assert get_distribution(summary_2, 10).all() == [
+    assert get_distribution(benchmark_result_2, 10).all() == [
         (
             case_id,
             context_id,
@@ -504,24 +534,26 @@ def test_distribution_multiple_runs_same_commit():
     ]
 
     # before
-    set_z_scores([summary_1])
-    assert summary_1.z_score is None
-    set_z_scores([summary_2])
-    assert summary_2.z_score is None
-    set_z_scores([summary_3])
+    set_z_scores([benchmark_result_1])
+    assert benchmark_result_1.z_score is None
+    set_z_scores([benchmark_result_2])
+    assert benchmark_result_2.z_score is None
+    set_z_scores([benchmark_result_3])
     Z_SCORE_UP_DECIMAL = decimal.Decimal(_fixtures.Z_SCORE_UP)
-    assert round(summary_3.z_score, 10) == -1 * round(Z_SCORE_UP_DECIMAL, 10)
+    assert round(benchmark_result_3.z_score, 10) == -1 * round(Z_SCORE_UP_DECIMAL, 10)
 
     # re-run commit 2
-    summary_4 = _fixtures.summary(results=[0, 1, 2], commit=commit_2, name=name)
-    set_z_scores([summary_4])
-    assert summary_4.z_score is None
+    benchmark_result_4 = _fixtures.benchmark_result(
+        results=[0, 1, 2], commit=commit_2, name=name
+    )
+    set_z_scores([benchmark_result_4])
+    assert benchmark_result_4.z_score is None
 
-    # after, summary_3 z-score changes with more info
-    set_z_scores([summary_1])
-    assert summary_1.z_score is None
-    set_z_scores([summary_2])
-    assert summary_2.z_score is None
-    set_z_scores([summary_3])
+    # after, benchmark_result_3 z-score changes with more info
+    set_z_scores([benchmark_result_1])
+    assert benchmark_result_1.z_score is None
+    set_z_scores([benchmark_result_2])
+    assert benchmark_result_2.z_score is None
+    set_z_scores([benchmark_result_3])
     Z_SCORE_UP_DECIMAL = decimal.Decimal("18.0000000000")
-    assert round(summary_3.z_score, 10) == -1 * round(Z_SCORE_UP_DECIMAL, 10)
+    assert round(benchmark_result_3.z_score, 10) == -1 * round(Z_SCORE_UP_DECIMAL, 10)

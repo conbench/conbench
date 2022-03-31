@@ -1,8 +1,8 @@
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
+from ..entities.benchmark_result import BenchmarkResult
 from ..entities.history import HistorySerializer, get_history
-from ..entities.summary import Summary
 
 
 class HistoryEntityAPI(ApiEndpoint):
@@ -10,13 +10,13 @@ class HistoryEntityAPI(ApiEndpoint):
 
     def _get(self, benchmark_id):
         try:
-            summary = Summary.one(id=benchmark_id)
+            benchmark_result = BenchmarkResult.one(id=benchmark_id)
         except NotFound:
             self.abort_404_not_found()
         return get_history(
-            summary.case_id,
-            summary.context_id,
-            summary.run.hardware.hash,
+            benchmark_result.case_id,
+            benchmark_result.context_id,
+            benchmark_result.run.hardware.hash,
         )
 
     @maybe_login_required

@@ -72,6 +72,6 @@ class _Serializer(EntitySerializer):
         return result
 
 
-class CompareSummarySerializer:
+class CompareBenchmarkResultSerializer:
     one = _Serializer()
     many = _Serializer(many=True)
