@@ -25,9 +25,6 @@ def upgrade():
         "ALTER TABLE summary RENAME CONSTRAINT summary_info_id_fkey TO benchmark_result_info_id_fkey"
     )
     op.execute(
-        "ALTER TABLE summary RENAME CONSTRAINT summary_run_id_fkey TO benchmark_result_run_id_fkey"
-    )
-    op.execute(
         "ALTER TABLE summary RENAME CONSTRAINT summary_pkey TO benchmark_result_pkey"
     )
     op.execute(
@@ -57,9 +54,6 @@ def downgrade():
     )
     op.execute(
         "ALTER TABLE benchmark_result RENAME CONSTRAINT benchmark_result_info_id_fkey TO summary_info_id_fkey"
-    )
-    op.execute(
-        "ALTER TABLE benchmark_result RENAME CONSTRAINT benchmark_result_run_id_fkey TO summary_run_id_fkey"
     )
     op.execute(
         "ALTER TABLE benchmark_result RENAME CONSTRAINT benchmark_result_pkey TO summary_pkey"
