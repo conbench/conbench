@@ -28,7 +28,7 @@ class TestHardware(_asserts.AppEndpointTest):
         response = client.get(f"/hardware/{hardware_id}/")
         self.assert_page(response, "Hardware")
         machine_name = _fixtures.VALID_PAYLOAD["machine_info"]["name"]
-        assert f"Hello {machine_name}!".encode() in response.data
+        assert f"Hardware - Conbench".encode() in response.data
 
     def test_hardware_get_unauthenticated(self, client):
         self.create_benchmark(client)
