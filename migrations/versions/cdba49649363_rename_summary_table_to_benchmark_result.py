@@ -27,34 +27,10 @@ def upgrade():
         "ALTER TABLE summary RENAME CONSTRAINT summary_info_id_fkey TO benchmark_result_info_id_fkey"
     )
     op.execute(
-        "ALTER TABLE summary RENAME CONSTRAINT summary_iqr_check TO benchmark_result_iqr_check"
-    )
-    op.execute(
-        "ALTER TABLE summary RENAME CONSTRAINT summary_iterations_check TO benchmark_result_iterations_check"
-    )
-    op.execute(
-        "ALTER TABLE summary RENAME CONSTRAINT summary_max_check TO benchmark_result_max_check"
-    )
-    op.execute(
-        "ALTER TABLE summary RENAME CONSTRAINT summary_mean_check TO benchmark_result_mean_check"
-    )
-    op.execute(
-        "ALTER TABLE summary RENAME CONSTRAINT summary_median_check TO benchmark_result_median_check"
-    )
-    op.execute(
-        "ALTER TABLE summary RENAME CONSTRAINT summary_min_check TO benchmark_result_min_check "
+        "ALTER TABLE summary RENAME CONSTRAINT summary_run_id_fkey TO benchmark_result_run_id_fkey"
     )
     op.execute(
         "ALTER TABLE summary RENAME CONSTRAINT summary_pkey TO benchmark_result_pkey"
-    )
-    op.execute(
-        "ALTER TABLE summary RENAME CONSTRAINT summary_q1_check TO benchmark_result_q1_check"
-    )
-    op.execute(
-        "ALTER TABLE summary RENAME CONSTRAINT summary_q3_check TO benchmark_result_q3_check"
-    )
-    op.execute(
-        "ALTER TABLE summary RENAME CONSTRAINT summary_stdev_check TO benchmark_result_stdev_check"
     )
     op.execute(
         "ALTER INDEX summary_batch_id_index RENAME TO benchmark_result_batch_id_index"
