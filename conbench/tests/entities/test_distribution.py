@@ -15,12 +15,12 @@ from ...tests.helpers import _uuid
 REPO = "https://github.com/org/something"
 MACHINE = "diana-2-2-4-17179869184"
 
-DISTRIBUTION = """SELECT text(:text_1) AS case_id, text(:text_2) AS context_id, text(:text_3) AS commit_id, machine.hash AS hash, max(benchmark_result.unit) AS unit, avg(benchmark_result.mean) AS mean_mean, stddev(benchmark_result.mean) AS mean_sd, avg(benchmark_result.min) AS min_mean, stddev(benchmark_result.min) AS min_sd, avg(benchmark_result.max) AS max_mean, stddev(benchmark_result.max) AS max_sd, avg(benchmark_result.median) AS median_mean, stddev(benchmark_result.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(benchmark_result.mean) AS observations 
-FROM benchmark_result JOIN run ON run.id = benchmark_result.run_id JOIN machine ON machine.id = run.hardware_id JOIN (SELECT commit.id AS id, commit.timestamp AS timestamp 
+DISTRIBUTION = """SELECT text(:text_1) AS case_id, text(:text_2) AS context_id, text(:text_3) AS commit_id, hardware.hash AS hash, max(benchmark_result.unit) AS unit, avg(benchmark_result.mean) AS mean_mean, stddev(benchmark_result.mean) AS mean_sd, avg(benchmark_result.min) AS min_mean, stddev(benchmark_result.min) AS min_sd, avg(benchmark_result.max) AS max_mean, stddev(benchmark_result.max) AS max_sd, avg(benchmark_result.median) AS median_mean, stddev(benchmark_result.median) AS median_sd, min(commits_up.timestamp) AS first_timestamp, max(commits_up.timestamp) AS last_timestamp, count(benchmark_result.mean) AS observations 
+FROM benchmark_result JOIN run ON run.id = benchmark_result.run_id JOIN hardware ON hardware.id = run.hardware_id JOIN (SELECT commit.id AS id, commit.timestamp AS timestamp 
 FROM commit 
 WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL AND commit.timestamp <= :timestamp_1 ORDER BY commit.timestamp DESC
  LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id 
-WHERE run.name LIKE :name_1 AND benchmark_result.case_id = :case_id_1 AND benchmark_result.context_id = :context_id_1 AND machine.hash = :hash_1 GROUP BY benchmark_result.case_id, benchmark_result.context_id, machine.hash"""  # noqa
+WHERE run.name LIKE :name_1 AND benchmark_result.case_id = :case_id_1 AND benchmark_result.context_id = :context_id_1 AND hardware.hash = :hash_1 GROUP BY benchmark_result.case_id, benchmark_result.context_id, hardware.hash"""  # noqa
 
 
 def test_z_score_calculations():
