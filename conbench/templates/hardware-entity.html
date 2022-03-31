@@ -19,102 +19,12 @@
           </tr>
       </thead>
       <tbody>
-        {% if hardware.os_name %}
+        {% for k, v in hardware.items() %}
         <tr>
-          <td>os_name</td>
-          <td><div class="ellipsis-500">{{ hardware.os_name }}</div></td>
+          <td>{{ k }}</td>
+          <td><div class="ellipsis-700">{{ v }}</div></td>
         </tr>
-        {% endif %}
-        {% if hardware.os_version %}
-        <tr>
-          <td>os_version</td>
-          <td><div class="ellipsis-500">{{ hardware.os_version }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.type %}
-        <tr>
-          <td>type</td>
-          <td><div class="ellipsis-500">{{ hardware.type }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.architecture_name %}
-        <tr>
-          <td>architecture_name</td>
-          <td><div class="ellipsis-500">{{ hardware.architecture_name }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.kernel_name %}
-        <tr>
-          <td>kernel_name</td>
-          <td><div class="ellipsis-500">{{ hardware.kernel_name }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.cpu_model_name %}
-        <tr>
-          <td>cpu_model_name</td>
-          <td><div class="ellipsis-500">{{ hardware.cpu_model_name }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.architecture_name %}
-        <tr>
-          <td>cpu_l1d_cache_bytes</td>
-          <td><div class="ellipsis-500">{{ hardware.cpu_l1d_cache_bytes }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.cpu_model_name %}
-        <tr>
-          <td>cpu_l1i_cache_bytes</td>
-          <td><div class="ellipsis-500"></div>{{ hardware.cpu_l1i_cache_bytes }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.cpu_model_name %}
-        <tr>
-          <td>cpu_l2_cache_bytes</td>
-          <td><div class="ellipsis-500">{{ hardware.cpu_l2_cache_bytes }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.cpu_l3_cache_bytes %}
-        <tr>
-          <td>cpu_l3_cache_bytes</td>
-          <td><div class="ellipsis-500">{{ hardware.cpu_l3_cache_bytes }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.cpu_core_count %}
-        <tr>
-          <td>cpu_core_count</td>
-          <td><div class="ellipsis-500">{{ hardware.cpu_core_count }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.cpu_thread_count %}
-        <tr>
-          <td>cpu_thread_count</td>
-          <td><div class="ellipsis-500">{{ hardware.cpu_thread_count }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.architecture_name %}
-        <tr>
-          <td>cpu_frequency_max_hz</td>
-          <td><div class="ellipsis-500">{{ hardware.cpu_frequency_max_hz }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.memory_bytes %}
-        <tr>
-          <td>memory_bytes</td>
-          <td><div class="ellipsis-500">{{ hardware.memory_bytes }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.gpu_count %}
-        <tr>
-          <td>gpu_count</td>
-          <td><div class="ellipsis-500">{{ hardware.gpu_count }}</div></td>
-        </tr>
-        {% endif %}
-        {% if hardware.gpu_product_names %}
-        <tr>
-          <td>gpu_product_names</td>
-          <td><div class="ellipsis-500">{{ hardware.gpu_product_names }}</div></td>
-        </tr>
-        {% endif %}
+        {% endfor %}
       </tbody>
     </table>
   </div>
