@@ -16,9 +16,7 @@ depends_on = None
 
 
 def upgrade():
-    op.drop_index("data_summary_id_index", table_name="data")
     op.drop_table("data")
-    op.drop_index("time_summary_id_index", table_name="time")
     op.drop_table("time")
 
 
