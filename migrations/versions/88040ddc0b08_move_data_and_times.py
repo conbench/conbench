@@ -8,6 +8,7 @@ Create Date: 2022-03-30 16:58:17.412915
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
+from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
 revision = "88040ddc0b08"
@@ -18,13 +19,15 @@ depends_on = None
 
 def set_data_and_times():
     connection = op.get_bind()
-    meta = sa.MetaData()
-    meta.reflect(bind=connection)
+    # meta = sa.MetaData()
+    # meta.reflect(bind=connection)
     connection.execute(
-        """UPDATE summary
+        text(
+            """UPDATE summary
            SET data = ARRAY(SELECT result FROM data WHERE summary_id = summary.id ORDER BY iteration),
-           times = ARRAY(SELECT result FROM "times" WHERE summary_id = summary.id ORDER BY iteration)
+           times = ARRAY(SELECT result FROM "time" WHERE summary_id = summary.id ORDER BY iteration)
         """
+        )
     )
 
 
