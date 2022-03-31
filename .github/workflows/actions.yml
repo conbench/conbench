@@ -49,7 +49,7 @@ jobs:
         run: |
           coverage run --source conbench -m pytest -v --durations=20 conbench/tests/
         env:
-          DB_USERNAME: "postgres"
+          DB_USERNAME: postgres
       - name: Publish coverage
         run: |
           coveralls --service=github
