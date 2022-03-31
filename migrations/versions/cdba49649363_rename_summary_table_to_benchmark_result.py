@@ -51,4 +51,34 @@ def upgrade():
 
 
 def downgrade():
+    op.execute(
+        "ALTER TABLE benchmark_result RENAME CONSTRAINT benchmark_result_case_id_fkey TO summary_case_id_fkey"
+    )
+    op.execute(
+        "ALTER TABLE benchmark_result RENAME CONSTRAINT benchmark_result_context_id_fkey TO summary_context_id_fkey"
+    )
+    op.execute(
+        "ALTER TABLE benchmark_result RENAME CONSTRAINT benchmark_result_info_id_fkey TO summary_info_id_fkey"
+    )
+    op.execute(
+        "ALTER TABLE benchmark_result RENAME CONSTRAINT benchmark_result_run_id_fkey TO summary_run_id_fkey"
+    )
+    op.execute(
+        "ALTER TABLE benchmark_result RENAME CONSTRAINT benchmark_result_pkey TO summary_pkey"
+    )
+    op.execute(
+        "ALTER INDEX benchmark_result_batch_id_index RENAME TO summary_batch_id_index"
+    )
+    op.execute(
+        "ALTER INDEX benchmark_result_case_id_index RENAME TO summary_case_id_index"
+    )
+    op.execute(
+        "ALTER INDEX benchmark_result_context_id_index RENAME TO summary_context_id_index"
+    )
+    op.execute(
+        "ALTER INDEX benchmark_result_info_id_index RENAME TO summary_info_id_index"
+    )
+    op.execute(
+        "ALTER INDEX benchmark_result_run_id_index RENAME TO summary_run_id_index"
+    )
     op.rename_table("benchmark_result", "summary")
