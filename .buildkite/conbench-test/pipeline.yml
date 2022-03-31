@@ -22,6 +22,7 @@ steps:
   - label: "Concurrency Gate"
     key: "concurrency-gate"
     depends_on: "test-migrations"
+    if: build.branch == 'main'
     command: "exit 0"
     concurrency: 1
     concurrency_group: "conbench-deploy"

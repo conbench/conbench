@@ -364,7 +364,8 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
                 },
             ],
         )
-        self.assert_200_ok(response, expected)
+        self.assert_200_ok(response, None, contains=expected[0])
+        self.assert_200_ok(response, None, contains=expected[1])
 
     def test_compare_unknown_compare_ids(self, client):
         self.authenticate(client)
@@ -456,7 +457,8 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                 },
             ],
         )
-        self.assert_200_ok(response, expected)
+        self.assert_200_ok(response, None, contains=expected[0])
+        self.assert_200_ok(response, None, contains=expected[1])
 
     def test_compare_with_error(self, client):
         self.authenticate(client)
@@ -516,7 +518,8 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                 "unit": "unknown",
             }
         )
-        self.assert_200_ok(response, expected)
+        self.assert_200_ok(response, None, contains=expected[0])
+        self.assert_200_ok(response, None, contains=expected[1])
 
     def test_compare_unknown_compare_ids(self, client):
         self.authenticate(client)

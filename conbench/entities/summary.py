@@ -1,5 +1,3 @@
-import decimal
-
 import flask as f
 import marshmallow
 import sqlalchemy as s
@@ -19,12 +17,10 @@ from ..entities._entity import (
 from ..entities.case import Case
 from ..entities.commit import Commit, get_github_commit, repository_to_url
 from ..entities.context import Context
-from ..entities.data import Data
 from ..entities.distribution import update_distribution
 from ..entities.hardware import Cluster, ClusterSchema, Machine, MachineSchema
 from ..entities.info import Info
 from ..entities.run import Run
-from ..entities.time import Time
 
 
 class Summary(Base, EntityMixin):
@@ -34,22 +30,12 @@ class Summary(Base, EntityMixin):
     info_id = NotNull(s.String(50), s.ForeignKey("info.id"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
     run_id = NotNull(s.Text, s.ForeignKey("run.id"))
+    data = Nullable(postgresql.ARRAY(s.Numeric), default=[])
+    times = Nullable(postgresql.ARRAY(s.Numeric), default=[])
     case = relationship("Case", lazy="joined")
     info = relationship("Info", lazy="joined")
     context = relationship("Context", lazy="joined")
     run = relationship("Run", lazy="select")
-    data = relationship(
-        "Data",
-        lazy="joined",
-        cascade="all, delete",
-        passive_deletes=True,
-    )
-    times = relationship(
-        "Time",
-        lazy="joined",
-        cascade="all, delete",
-        passive_deletes=True,
-    )
     unit = Nullable(s.Text)
     time_unit = Nullable(s.Text)
     batch_id = Nullable(s.Text)
@@ -74,8 +60,6 @@ class Summary(Base, EntityMixin):
             summary_data = {"error": data["error"]}
         else:
             summary_data = data["stats"]
-            values = summary_data.pop("data")
-            times = summary_data.pop("times")
 
         name = tags.pop("name")
 
@@ -154,18 +138,6 @@ class Summary(Base, EntityMixin):
         if "error" in data:
             return summary
 
-        values = [decimal.Decimal(x) for x in values]
-        bulk = []
-        for i, x in enumerate(values):
-            bulk.append(Data(result=x, summary_id=summary.id, iteration=i + 1))
-        Data.bulk_save_objects(bulk)
-
-        times = [decimal.Decimal(x) for x in times]
-        bulk = []
-        for i, x in enumerate(times):
-            bulk.append(Time(result=x, summary_id=summary.id, iteration=i + 1))
-        Time.bulk_save_objects(bulk)
-
         update_distribution(summary, 100)
 
         return summary
@@ -204,10 +176,6 @@ def to_float(value):
 
 class _Serializer(EntitySerializer):
     def _dump(self, summary):
-        by_iteration_data = sorted([(x.iteration, x.result) for x in summary.data])
-        data = [result for _, result in by_iteration_data]
-        by_iteration_times = sorted([(x.iteration, x.result) for x in summary.times])
-        times = [result for _, result in by_iteration_times]
         z_score = float(summary.z_score) if summary.z_score else None
         case = summary.case
         tags = {"id": case.id, "name": case.name}
@@ -219,8 +187,8 @@ class _Serializer(EntitySerializer):
             "timestamp": summary.timestamp.isoformat(),
             "tags": tags,
             "stats": {
-                "data": [float(x) for x in data],
-                "times": [float(x) for x in times],
+                "data": [to_float(x) for x in summary.data],
+                "times": [to_float(x) for x in summary.times],
                 "unit": summary.unit,
                 "time_unit": summary.time_unit,
                 "iterations": summary.iterations,
