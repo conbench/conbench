@@ -47,15 +47,9 @@ jobs:
           isort --check .
       - name: Run tests
         run: |
-          dropdb conbench_test
-          createdb conbench_test
           coverage run --source conbench -m pytest -v --durations=20 conbench/tests/
         env:
           DB_USERNAME: "postgres"
-          DB_HOST: "localhost"
-          DB_PASSWORD: "postgres"
-          DB_NAME: "conbench_test"
-          DB_PORT: "5432"
       - name: Publish coverage
         run: |
           coveralls --service=github
