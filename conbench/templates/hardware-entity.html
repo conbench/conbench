@@ -1,0 +1,23 @@
+{% extends "app.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item active"><a href="{{ url_for('app.hardwares') }}">Hardware</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ hardware.name }}</li>
+      </ol>
+    </nav>
+
+<div class="row">
+  <div class="col-md-4">
+    Hello {{ hardware.name }}!
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+<script type="text/javascript">
+</script>
+{% endblock %}
