@@ -135,7 +135,7 @@ class Cluster(Hardware):
 
 
 s.Index(
-    "machine_index",
+    "hardware_index",
     Machine.name,
     Machine.architecture_name,
     Machine.kernel_name,
