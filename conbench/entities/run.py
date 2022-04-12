@@ -64,12 +64,9 @@ class Run(Base, EntityMixin):
         for row in result:
             parent_run_items[row[0]].append((row[1], row[2]))
 
-        # return run with matching contexts & cases
-        # TODO:
-        #   - what if all the contexts/cases just aren't yet in?
-        #   - what if one of N benchmark cases failed?
+        # return last run with intersecting case and context pairs
         for parent_run in parent_runs:
-            if set(run_items) == set(parent_run_items[parent_run.id]):
+            if set(run_items) & set(parent_run_items[parent_run.id]):
                 return parent_run
 
         return None
