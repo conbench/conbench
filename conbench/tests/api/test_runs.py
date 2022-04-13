@@ -97,6 +97,7 @@ class TestRunGet(_asserts.GetEnforcer):
             name=name_1, sha=_fixtures.PARENT, language=language_2, run_id="3"
         )
         response = client.get(f"/api/runs/{1}/")
+        print(response.json)
         assert not response.json
 
     def test_closest_commit_different_machines(self, client):
