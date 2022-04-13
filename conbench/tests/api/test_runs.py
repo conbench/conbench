@@ -76,6 +76,29 @@ class TestRunGet(_asserts.GetEnforcer):
         response = client.get(f"/api/runs/{run_2.id}/")
         self.assert_200_ok(response, _expected_entity(run_2, baseline_2.id))
 
+    def test_get_run_find_correct_baseline_with_multiple_runs(self, client):
+        # same context for different benchmark runs, but different benchmarks
+        language_1, language_2, name_1, name_2 = _uuid(), _uuid(), _uuid(), _uuid()
+
+        self.authenticate(client)
+        # Create contender run with id = 1 and two benchmark results
+        _fixtures.benchmark_result(
+            name=name_1, sha=_fixtures.CHILD, language=language_1, run_id="1"
+        )
+        _fixtures.benchmark_result(
+            name=name_2, sha=_fixtures.CHILD, language=language_1, run_id="1"
+        )
+        # Create baseline run with id = 2 and one benchmark result matching contender's
+        _fixtures.benchmark_result(
+            name=name_1, sha=_fixtures.PARENT, language=language_1, run_id="2"
+        )
+        # Create baseline run with id = 3 with no benchmark results matching contender's
+        _fixtures.benchmark_result(
+            name=name_1, sha=_fixtures.PARENT, language=language_2, run_id="3"
+        )
+        response = client.get(f"/api/runs/{1}/")
+        assert not response.json
+
     def test_closest_commit_different_machines(self, client):
         # same benchmarks, different machines
         name, machine_1, machine_2 = _uuid(), _uuid(), _uuid()
