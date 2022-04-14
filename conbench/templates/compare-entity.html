@@ -44,7 +44,7 @@
                     <tr>
                          <td>
                            {% if c.contender_z_score %}
-                             {{ c.contender_z_score }} z
+                             {{ "%.3f"|format(c.contender_z_score) }} z
                            {% endif %}
                            {% if c.contender_z_regression %}
                            <span class="glyphicon glyphicon-arrow-down"></span></b>

@@ -102,11 +102,11 @@
                      <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
                      {% if benchmark.stats.z_score is not none %}
                        {% if benchmark.stats.z_regression %}
-                         <td style="color: #ff7c43;">{{ benchmark.stats.z_score }}</td>
+                         <td style="color: #ff7c43;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
                        {% elif benchmark.stats.z_improvement %}
-                         <td style="color: #61B329;">{{ benchmark.stats.z_score }}</td>
+                         <td style="color: #61B329;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
                        {% else %}
-                         <td>{{ benchmark.stats.z_score }}</td>
+                         <td>{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
                        {% endif %}
                      {% else %}
                        <td></td>
