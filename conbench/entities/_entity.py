@@ -21,6 +21,10 @@ def generate_uuid():
     return uuid.uuid4().hex
 
 
+def to_float(value):
+    return float(value) if value else None
+
+
 class EntityMixin:
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.id}>"
