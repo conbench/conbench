@@ -341,7 +341,7 @@
                                 "name": "file-read",
                             },
                             "threshold": "5.000%",
-                            "threshold_z": "5.000",
+                            "threshold_z": 5.0,
                             "unit": "s",
                         }
                     }
@@ -385,7 +385,7 @@
                                     "name": "file-read",
                                 },
                                 "threshold": "5.000%",
-                                "threshold_z": "5.000",
+                                "threshold_z": 5.0,
                                 "unit": "s",
                             },
                             {
@@ -421,7 +421,7 @@
                                     "name": "file-write",
                                 },
                                 "threshold": "5.000%",
-                                "threshold_z": "5.000",
+                                "threshold_z": 5.0,
                                 "unit": "s",
                             },
                         ]

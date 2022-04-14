@@ -13,6 +13,7 @@ from ..entities._entity import (
     NotNull,
     Nullable,
     generate_uuid,
+    to_float,
 )
 from ..entities.case import Case
 from ..entities.commit import Commit, get_github_commit, repository_to_url
@@ -168,10 +169,6 @@ class BenchmarkResultCreate(marshmallow.Schema):
 
 class BenchmarkResultSchema:
     create = BenchmarkResultCreate()
-
-
-def to_float(value):
-    return float(value) if value else None
 
 
 class _Serializer(EntitySerializer):

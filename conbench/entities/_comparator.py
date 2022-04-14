@@ -1,5 +1,6 @@
 import decimal
 
+from ..entities._entity import to_float
 from ..units import formatter_for_unit
 
 CHANGE = 5.0  # percent changed threshold
@@ -186,9 +187,9 @@ class BenchmarkComparator:
             "threshold": fmt(self.threshold) + "%",
             "regression": self.regression,
             "improvement": self.improvement,
-            "threshold_z": fmt(self.threshold_z),
-            "baseline_z_score": fmt(self.baseline_z_score),
-            "contender_z_score": fmt(self.contender_z_score),
+            "threshold_z": to_float(self.threshold_z),
+            "baseline_z_score": to_float(self.baseline_z_score),
+            "contender_z_score": to_float(self.contender_z_score),
             "baseline_z_regression": self.baseline_z_regression,
             "baseline_z_improvement": self.baseline_z_improvement,
             "contender_z_regression": self.contender_z_regression,
@@ -219,9 +220,9 @@ class BenchmarkComparator:
             "threshold": fmt(self.threshold),
             "regression": self.regression,
             "improvement": self.improvement,
-            "threshold_z": fmt(self.threshold_z),
-            "baseline_z_score": fmt(self.baseline_z_score),
-            "contender_z_score": fmt(self.contender_z_score),
+            "threshold_z": to_float(self.threshold_z),
+            "baseline_z_score": to_float(self.baseline_z_score),
+            "contender_z_score": to_float(self.contender_z_score),
             "baseline_z_regression": self.baseline_z_regression,
             "baseline_z_improvement": self.baseline_z_improvement,
             "contender_z_regression": self.contender_z_regression,
