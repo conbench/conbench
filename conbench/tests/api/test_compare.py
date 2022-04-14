@@ -248,7 +248,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "change": "-566.667%",
                 "regression": True,
                 "baseline_z_score": None,
-                "contender_z_score": _fixtures.Z_SCORE_UP,
+                "contender_z_score": -_fixtures.Z_SCORE_UP,
                 "contender_z_regression": True,
             }
         )
