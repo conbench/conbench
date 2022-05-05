@@ -143,13 +143,9 @@ var table = $('#benchmarks').dataTable( {
 } );
 
 $('#benchmarks').on( 'search.dt', function () {
-    var current_url = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.search
     var current_search_value = $('.dataTables_filter input').val();
     var new_url =  window.location.protocol + "//" + window.location.host + window.location.pathname + "?search=" + encodeURIComponent(current_search_value)
-    if (current_url != new_url) {
-        console.log("reloading")
-        window.location.href = new_url
-    }
+    window.history.replaceState(null, document.title, new_url)
 } );
 
 $(document).ready(function() {
