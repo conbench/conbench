@@ -1,3 +1,5 @@
+import flask as f
+
 from .. import __version__
 from ..app import rule
 from ..app._endpoint import AppEndpoint
@@ -21,6 +23,7 @@ class Index(AppEndpoint, RunMixin):
             has_reasons=len(reasons) > 0,
             has_authors=len(authors) > 0,
             has_commits=len(commits) > 0,
+            search_value=f.request.args.get("search"),
         )
 
     def get(self):

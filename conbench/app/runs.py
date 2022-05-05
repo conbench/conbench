@@ -3,7 +3,6 @@ import flask as f
 import flask_login
 import flask_wtf
 import wtforms as w
-from flask import request
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint
@@ -14,7 +13,7 @@ from ..config import Config
 
 
 class Run(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
-    def page(self, benchmarks, baseline_run, contender_run, form, run_id, search_value):
+    def page(self, benchmarks, baseline_run, contender_run, form, run_id):
         compare_runs_url = None
         if not flask_login.current_user.is_authenticated:
             delattr(form, "delete")
@@ -40,7 +39,7 @@ class Run(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             plot_history=plot_history,
             outlier_names=outlier_names,
             outlier_ids=outlier_ids,
-            search_value=search_value,
+            search_value=f.request.args.get("search"),
         )
 
     def get(self, run_id):
@@ -62,10 +61,7 @@ class Run(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
         for benchmark in benchmarks:
             augment(benchmark, contexts)
 
-        search_value = request.args.get("search")
-        return self.page(
-            benchmarks, baseline_run, contender_run, DeleteForm(), run_id, search_value
-        )
+        return self.page(benchmarks, baseline_run, contender_run, DeleteForm(), run_id)
 
     def _get_benchmarks(self, run_id):
         response = self.api_get("api.benchmarks", run_id=run_id)

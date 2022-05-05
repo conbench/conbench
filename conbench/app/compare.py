@@ -90,6 +90,7 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
             compare_batches_url=compare_batches_url,
             outlier_names=outlier_names,
             outlier_urls=outlier_urls,
+            search_value=f.request.args.get("search"),
         )
 
     def _get_benchmarks(self, run_id=None, batch_id=None):

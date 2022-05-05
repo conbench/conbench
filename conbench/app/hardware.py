@@ -1,3 +1,4 @@
+import flask as f
 import flask_login
 
 from ..app import rule
@@ -37,6 +38,7 @@ class HardwareList(AppEndpoint):
             application=Config.APPLICATION_NAME,
             title="Hardware",
             hardwares=hardwares,
+            search_value=f.request.args.get("search"),
         )
 
     def get(self):

@@ -149,6 +149,13 @@ $('#benchmarks').on( 'search.dt', function () {
 } );
 
 $(document).ready(function() {
+   var table =  $('#benchmarks').DataTable();
+   {% if search_value %}
+        table.search("{{ search_value }}").draw();
+   {% endif %}
+});
+
+$(document).ready(function() {
     $('#unit-tooltip').tooltip()
     {% if run_id %}
         $("#run-form").find("#delete").attr("type", "button");
@@ -158,14 +165,6 @@ $(document).ready(function() {
         $("#run-form").find("#delete").attr("data-href", "{{ url_for('app.run', run_id=run_id) }}");
         $("#run-form").find("#delete").attr("data-message", "<ul><li>Delete run: <strong>{{ run_id }}</strong></li></ul>");
     {% endif %}
-});
-
-
-$(document).ready(function() {
-   var table =  $('#benchmarks').DataTable();
-   {% if search_value %}
-        table.search("{{ search_value }}").draw();
-   {% endif %}
 });
 
 $(document).ready(function() {
