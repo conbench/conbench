@@ -5,6 +5,7 @@ from ...machine_info import (
     _round_memory,
 )
 
+MODEL_NAME = "Intel(R) Core(TM) i9-9960X CPU @ 3.10GHz"
 L1D_CACHE = 524288
 L1I_CACHE = 524288
 L2_CACHE = 16777216
@@ -276,6 +277,7 @@ CPUINFO = {
 
 def test_machine_info_from_lscpu():
     info = {
+        "cpu_model_name": "",
         "cpu_l1d_cache_bytes": "",
         "cpu_l1i_cache_bytes": "",
         "cpu_l2_cache_bytes": "",
@@ -284,6 +286,7 @@ def test_machine_info_from_lscpu():
     }
     _fill_from_lscpu(info, LSCPU)
     assert info == {
+        "cpu_model_name": MODEL_NAME,
         "cpu_l1d_cache_bytes": L1D_CACHE,
         "cpu_l1i_cache_bytes": L1I_CACHE,
         "cpu_l2_cache_bytes": L2_CACHE,
@@ -308,7 +311,7 @@ def test_machine_info_from_cpuinfo():
     }
     _fill_from_cpuinfo(info, CPUINFO)
     assert info == {
-        "cpu_model_name": "Intel(R) Core(TM) i9-9960X CPU @ 3.10GHz",
+        "cpu_model_name": MODEL_NAME,
         "cpu_l1d_cache_bytes": L1D_CACHE,
         "cpu_l1i_cache_bytes": L1I_CACHE,
         "cpu_l2_cache_bytes": L2_CACHE,
@@ -331,7 +334,7 @@ def test_fill_order():
     _fill_from_cpuinfo(info, CPUINFO)
     assert info == {
         "memory_bytes": MEMORY,
-        "cpu_model_name": "Intel(R) Core(TM) i9-9960X CPU @ 3.10GHz",
+        "cpu_model_name": MODEL_NAME,
         "cpu_l1d_cache_bytes": L1D_CACHE,
         "cpu_l1i_cache_bytes": L1I_CACHE,
         "cpu_l2_cache_bytes": L2_CACHE,
