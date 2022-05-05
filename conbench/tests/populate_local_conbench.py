@@ -59,8 +59,12 @@ def generate_benchmarks_data(
     }
 
 
-def generate_benchmarks_data_with_error(run_id, commit, benchmark_name, timestamp):
-    data = generate_benchmarks_data(run_id, commit, benchmark_name, timestamp)
+def generate_benchmarks_data_with_error(
+    run_id, commit, benchmark_name, benchmark_language, timestamp
+):
+    data = generate_benchmarks_data(
+        run_id, commit, benchmark_name, benchmark_language, timestamp
+    )
     data.pop("stats")
     data["error"] = {"command": "some command", "stack trace": "stack trace ..."}
     return data
@@ -108,7 +112,7 @@ def create_benchmarks_data():
                 timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
                 if errors[i] and benchmark_name == "csv-read":
                     benchmark_data = generate_benchmarks_data_with_error(
-                        run_id, commit, benchmark_name, timestamp
+                        run_id, commit, benchmark_name, benchmark_language, timestamp
                     )
                 else:
                     benchmark_data = generate_benchmarks_data(
