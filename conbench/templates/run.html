@@ -136,9 +136,20 @@
 
 <script type="text/javascript">
 var table = $('#benchmarks').dataTable( {
+    "search": {"return": true},
     "responsive": true,
     "order": [[5, 'asc']],
     "columnDefs": [{ "orderable": false, "targets": [4] }]
+} );
+
+$('#benchmarks').on( 'search.dt', function () {
+    var current_url = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.search
+    var current_search_value = $('.dataTables_filter input').val();
+    var new_url =  window.location.protocol + "//" + window.location.host + window.location.pathname + "?search=" + encodeURIComponent(current_search_value)
+    if (current_url != new_url) {
+        console.log("reloading")
+        window.location.href = new_url
+    }
 } );
 
 $(document).ready(function() {
@@ -151,6 +162,14 @@ $(document).ready(function() {
         $("#run-form").find("#delete").attr("data-href", "{{ url_for('app.run', run_id=run_id) }}");
         $("#run-form").find("#delete").attr("data-message", "<ul><li>Delete run: <strong>{{ run_id }}</strong></li></ul>");
     {% endif %}
+});
+
+
+$(document).ready(function() {
+   var table =  $('#benchmarks').DataTable();
+   {% if search_value %}
+        table.search("{{ search_value }}").draw();
+   {% endif %}
 });
 
 $(document).ready(function() {
