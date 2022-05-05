@@ -55,14 +55,12 @@
 <script type="text/javascript">
 {% if current_user.is_anonymous %}
   var table =  $('#benchmarks').dataTable( {
-    "search": {"return": true},
     "responsive": true,
     "order": [[0, 'desc']],
     "columnDefs": [{ "orderable": false, "targets": [3] }]
   } );
 {% else %}
   var table = $('#benchmarks').dataTable( {
-    "search": {"return": true},
     "responsive": true,
     "order": [[0, 'desc']],
     "columnDefs": [{ "orderable": false, "targets": [4, 5] }]
