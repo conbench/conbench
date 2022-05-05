@@ -62,7 +62,7 @@ class Run(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
         for benchmark in benchmarks:
             augment(benchmark, contexts)
 
-        search_value = request.args.get("search_value")
+        search_value = request.args.get("search")
         return self.page(
             benchmarks, baseline_run, contender_run, DeleteForm(), run_id, search_value
         )
