@@ -120,7 +120,7 @@ $(document).ready(function() {
     }, 2000); // <-- time in milliseconds
 });
 
-function update_url_query_string_based_on_search_value(data_table) {
+function enable_search_query_string(data_table) {
     $(data_table).on( 'search.dt', function () {
         var current_search_value = $('.dataTables_filter input').val();
         var new_url = window.location.protocol + "//" + window.location.host + window.location.pathname
@@ -129,9 +129,7 @@ function update_url_query_string_based_on_search_value(data_table) {
         }
         window.history.replaceState(null, document.title, new_url)
     });
-}
 
-function search_when_search_value_is_provided(data_table) {
     $(document).ready(function() {
         var table =  $(data_table).DataTable();
         {% if search_value %}

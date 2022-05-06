@@ -49,8 +49,7 @@ var table = $('#users').dataTable( {
     "columnDefs": [{ "orderable": false, "targets": [0, 3, 4] }]
 } );
 
-update_url_query_string_based_on_search_value('#users');
-search_when_search_value_is_provided('#users')
+enable_search_query_string('#users');
 
 </script>
 {% endblock %}

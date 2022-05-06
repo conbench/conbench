@@ -208,8 +208,7 @@ var table = $('#benchmarks').dataTable( {
      "columnDefs": [{ "orderable": false, "targets": [5, 6] }]
 });
 
-update_url_query_string_based_on_search_value('#benchmarks');
-search_when_search_value_is_provided('#benchmarks')
+enable_search_query_string('#benchmarks');
 
 $(document).ready(function() {
    $('#unit-tooltip').tooltip()
