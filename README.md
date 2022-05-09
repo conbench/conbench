@@ -201,8 +201,13 @@ password in postgres to `postgres`.
 
 
 ### To populate local conbench with sample runs and benchmarks
-    (conbench) $ dropdb conbench_prod && createdb conbench_prod && alembic upgrade head && flask run
-    (conbench) $ python -m conbench.tests.populate_local_conbench
+1. Start conbench app in Terminal window 1:
+
+        (conbench) $ dropdb conbench_prod && createdb conbench_prod && alembic upgrade head && flask run
+    
+2. Run `conbench.tests.populate_local_conbench` in Terminal window 2 while conbench app is running:
+
+        (conbench) $ python -m conbench.tests.populate_local_conbench
 
 
 ### To upload new version of conbench package to PyPI
