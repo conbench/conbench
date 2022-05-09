@@ -7,12 +7,14 @@ base_url = "http://127.0.0.1:5000/api"
 session = requests.Session()
 
 
-def generate_benchmarks_data(run_id, commit, benchmark_name, timestamp, mean=16.670462):
+def generate_benchmarks_data(
+    run_id, commit, benchmark_name, benchmark_language, timestamp, mean=16.670462
+):
     return {
         "batch_id": uuid.uuid4().hex,
         "context": {
             "arrow_compiler_flags": "-fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /var/lib/buildkite-agent/miniconda3/envs/arrow-commit/include -fdiagnostics-color=always -O3 -DNDEBUG",
-            "benchmark_language": "Python",
+            "benchmark_language": benchmark_language,
         },
         "github": {
             "commit": commit,
@@ -57,8 +59,12 @@ def generate_benchmarks_data(run_id, commit, benchmark_name, timestamp, mean=16.
     }
 
 
-def generate_benchmarks_data_with_error(run_id, commit, benchmark_name, timestamp):
-    data = generate_benchmarks_data(run_id, commit, benchmark_name, timestamp)
+def generate_benchmarks_data_with_error(
+    run_id, commit, benchmark_name, benchmark_language, timestamp
+):
+    data = generate_benchmarks_data(
+        run_id, commit, benchmark_name, benchmark_language, timestamp
+    )
     data.pop("stats")
     data["error"] = {"command": "some command", "stack trace": "stack trace ..."}
     return data
@@ -97,20 +103,28 @@ def create_benchmarks_data():
 
     benchmark_names = ["csv-read", "csv-write"]
 
-    for i in range(len(commits)):
-        for benchmark_name in benchmark_names:
-            run_id, commit, mean = i + 1, commits[i], means[i]
-            timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
-            if errors[i] and benchmark_name == "csv-read":
-                benchmark_data = generate_benchmarks_data_with_error(
-                    run_id, commit, benchmark_name, timestamp
-                )
-            else:
-                benchmark_data = generate_benchmarks_data(
-                    run_id, commit, benchmark_name, timestamp, mean
-                )
+    benchmark_languages = ["Python", "R", "JavaScript"]
 
-            post_benchmarks(benchmark_data)
+    for i in range(len(commits)):
+        for benchmark_language in benchmark_languages:
+            for benchmark_name in benchmark_names:
+                run_id, commit, mean = i + 1, commits[i], means[i]
+                timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
+                if errors[i] and benchmark_name == "csv-read":
+                    benchmark_data = generate_benchmarks_data_with_error(
+                        run_id, commit, benchmark_name, benchmark_language, timestamp
+                    )
+                else:
+                    benchmark_data = generate_benchmarks_data(
+                        run_id,
+                        commit,
+                        benchmark_name,
+                        benchmark_language,
+                        timestamp,
+                        mean,
+                    )
+
+                post_benchmarks(benchmark_data)
 
 
 register()

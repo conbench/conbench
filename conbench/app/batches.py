@@ -2,6 +2,7 @@ import collections
 import json
 
 import bokeh
+import flask as f
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint
@@ -29,6 +30,7 @@ class BatchPlot(AppEndpoint, ContextMixin):
             resources=bokeh.resources.CDN.render(),
             benchmarks=raw,
             plots=plots,
+            search_value=f.request.args.get("search"),
         )
 
     def get(self, batch_id):

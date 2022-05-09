@@ -48,5 +48,8 @@ var table = $('#users').dataTable( {
     "order": [[1, 'desc']],
     "columnDefs": [{ "orderable": false, "targets": [0, 3, 4] }]
 } );
+
+enable_search_query_string('#users');
+
 </script>
 {% endblock %}

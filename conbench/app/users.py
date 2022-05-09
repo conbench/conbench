@@ -1,3 +1,4 @@
+import flask as f
 import flask_login
 import flask_wtf
 import wtforms as w
@@ -108,6 +109,7 @@ class UserList(AppEndpoint):
             title="Users",
             users=users,
             delete_user_form=DeleteForm(),
+            search_value=f.request.args.get("search"),
         )
 
     def get(self):

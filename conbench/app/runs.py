@@ -39,6 +39,7 @@ class Run(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             plot_history=plot_history,
             outlier_names=outlier_names,
             outlier_ids=outlier_ids,
+            search_value=f.request.args.get("search"),
         )
 
     def get(self, run_id):

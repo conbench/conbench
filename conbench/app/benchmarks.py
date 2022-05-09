@@ -1,4 +1,5 @@
 import bokeh
+import flask as f
 import flask_login
 import flask_wtf
 import wtforms as w
@@ -199,6 +200,7 @@ class BenchmarkList(AppEndpoint, ContextMixin):
             title="Benchmarks",
             benchmarks=benchmarks,
             delete_benchmark_form=DeleteForm(),
+            search_value=f.request.args.get("search"),
         )
 
     def get(self):

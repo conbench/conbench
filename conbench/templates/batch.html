@@ -110,6 +110,8 @@ var table = $('#benchmarks').dataTable( {
     "columnDefs": [{ "orderable": false, "targets": [4] }]
 } );
 
+enable_search_query_string('#benchmarks');
+
 $(document).ready(function() {
     $('#unit-tooltip').tooltip()
    });

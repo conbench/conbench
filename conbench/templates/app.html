@@ -120,6 +120,24 @@ $(document).ready(function() {
     }, 2000); // <-- time in milliseconds
 });
 
+function enable_search_query_string(data_table) {
+    $(data_table).on( 'search.dt', function () {
+        var current_search_value = $('.dataTables_filter input').val();
+        var new_url = window.location.protocol + "//" + window.location.host + window.location.pathname
+        if (current_search_value) {
+            new_url += "?search=" + encodeURIComponent(current_search_value)
+        }
+        window.history.replaceState(null, document.title, new_url)
+    });
+
+    $(document).ready(function() {
+        var table =  $(data_table).DataTable();
+        {% if search_value %}
+            table.search("{{ search_value }}").draw();
+        {% endif %}
+    });
+}
+
 $("#confirm-delete").on("show.bs.modal", function(e) {
     $(this).find("#confirm-delete-message").html($(e.relatedTarget).data("message"));
     $(this).find("#delete-form-id").attr("value", $(e.relatedTarget).data("form-id"));

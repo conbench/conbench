@@ -201,7 +201,7 @@ password in postgres to `postgres`.
 
 
 ### To populate local conbench with sample runs and benchmarks
-    (conbench) $ dropdb conbench_prod && createdb conbench_prod && alembic upgrade head && alembic upgrade head && flask run
+    (conbench) $ dropdb conbench_prod && createdb conbench_prod && alembic upgrade head && flask run
     (conbench) $ python -m conbench.tests.populate_local_conbench
 
 
