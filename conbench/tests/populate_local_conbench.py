@@ -10,7 +10,7 @@ session = requests.Session()
 def generate_benchmarks_data(
     run_id, commit, benchmark_name, benchmark_language, timestamp, mean=16.670462
 ):
-    return {
+    data = {
         "batch_id": uuid.uuid4().hex,
         "context": {
             "arrow_compiler_flags": "-fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /var/lib/buildkite-agent/miniconda3/envs/arrow-commit/include -fdiagnostics-color=always -O3 -DNDEBUG",
@@ -57,6 +57,19 @@ def generate_benchmarks_data(
         },
         "timestamp": str(timestamp),
     }
+    fields_set = {
+        f"{benchmark_language}_specific_field_1": "value-1",
+        f"{benchmark_language}_specific_field_2": f"{benchmark_language}-value-2",
+        f"field_3": f"{benchmark_language}-value-2",
+        f"field_4": None if benchmark_language == "Python" else "value-4",
+    }
+    for key in ["info", "tags", "context"]:
+        data[key].update(fields_set)
+        if benchmark_language == "Python":
+            for i in range(5, 7):
+                data[key][f"field_{i}"] = f"value-{i}"
+
+    return data
 
 
 def generate_benchmarks_data_with_error(
