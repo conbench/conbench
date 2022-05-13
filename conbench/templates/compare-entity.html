@@ -1,5 +1,7 @@
 {% extends "app.html" %}
 
+{# This macro displays Tags, Hardware, Context and Info fields in comparative view so
+matching fields between baseline and contender are aligned and unmatching fields and/or values are highligted in red #}
 {% macro attribute_fields(fields, baseline_dict, contender_dict, dict_to_display) %}
     {% for field in fields %}
       {% if field != "id" and (field not in baseline_dict or field not in contender_dict or baseline_dict[field] != contender_dict[field]) %}
@@ -19,6 +21,7 @@
     {% endfor %}
 {% endmacro %}
 
+{# This macro displays Tags, Hardware, Context and Info sections for either baseline or contender #}
 {% macro sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display, run_to_display) %}
     <li class="list-group-item active">Tags</li>
     {{ attribute_fields(tags_fields, baseline.tags, contender.tags, dict_to_display=benchmark_to_display.tags) }}
