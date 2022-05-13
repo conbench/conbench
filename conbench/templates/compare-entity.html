@@ -163,16 +163,16 @@
             </li>
           {% endfor %}
           <li class="list-group-item active">Tags</li>
-          {% for tag in tags_fields %}
-            {% if tag != "id" and (tag not in baseline.tags or tag not in contender.tags or baseline.tags[tag] != contender.tags[tag]) %}
+          {% for field in tags_fields %}
+            {% if field != "id" and (field not in baseline.tags or field not in contender.tags or baseline.tags[field] != contender.tags[field]) %}
               <li class="list-group-item list-group-item-danger" style="overflow-y: auto;">
             {% else %}
                <li class="list-group-item" style="overflow-y: auto;">
             {% endif %}
-              {% if tag in baseline.tags %}
-                <b>{{ tag }}</b>
-                {% if baseline.tags[tag] is not none %}
-                  <div align="right" style="display:inline-block; float: right;">{{ baseline.tags[tag] }}</div>
+              {% if field in baseline.tags %}
+                <b>{{ field }}</b>
+                {% if baseline.tags[field] is not none %}
+                  <div align="right" style="display:inline-block; float: right;">{{ baseline.tags[field] }}</div>
                 {% endif %}
               {% else %}
                 <b>*</b>
@@ -180,23 +180,33 @@
             </li>
           {% endfor %}
           <li class="list-group-item active">Hardware</li>
-          {% for k,v in baseline_run.hardware.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-            </li>
-          {% endfor %}
-          <li class="list-group-item active" >Context</li>
-          {% for context_field in context_fields %}
-            {% if context_field != "id" and (context_field not in baseline.context or context_field not in contender.context or baseline.context[context_field] != contender.context[context_field]) %}
+          {% for field in hardware_fields %}
+            {% if field != "id" and (field not in baseline_run.hardware or field not in contender_run.hardware or baseline_run.hardware[field] != contender_run.hardware[field]) %}
               <li class="list-group-item list-group-item-danger" style="overflow-y: auto;">
             {% else %}
                <li class="list-group-item" style="overflow-y: auto;">
             {% endif %}
-              {% if context_field in baseline.context %}
-                <b>{{ context_field }}</b>
-                {% if baseline.context[context_field] is not none %}
-                  <div align="right" style="display:inline-block; float: right;">{{ baseline.context[context_field] }}</div>
+              {% if field in baseline_run.hardware %}
+                <b>{{ field }}</b>
+                {% if baseline_run.hardware[field] is not none %}
+                  <div align="right" style="display:inline-block; float: right;">{{ baseline_run.hardware[field] }}</div>
+                {% endif %}
+              {% else %}
+                <b>*</b>
+              {% endif %}
+            </li>
+          {% endfor %}
+          <li class="list-group-item active" >Context</li>
+          {% for field in context_fields %}
+            {% if field != "id" and (field not in baseline.context or field not in contender.context or baseline.context[field] != contender.context[field]) %}
+              <li class="list-group-item list-group-item-danger" style="overflow-y: auto;">
+            {% else %}
+               <li class="list-group-item" style="overflow-y: auto;">
+            {% endif %}
+              {% if field in baseline.context %}
+                <b>{{ field }}</b>
+                {% if baseline.context[field] is not none %}
+                  <div align="right" style="display:inline-block; float: right;">{{ baseline.context[field] }}</div>
                 {% endif %}
               {% else %}
                 <b>*</b>
@@ -205,10 +215,20 @@
           {% endfor %}
           {% if baseline.info and baseline.info|length > 1 %}
           <li class="list-group-item active" >Additional Information</li>
-          {% for k,v in baseline.info.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+          {% for field in info_fields %}
+            {% if field != "id" and (field not in baseline.info or field not in contender.info or baseline.info[field] != contender.info[field]) %}
+              <li class="list-group-item list-group-item-danger" style="overflow-y: auto;">
+            {% else %}
+               <li class="list-group-item" style="overflow-y: auto;">
+            {% endif %}
+              {% if field in baseline.info %}
+                <b>{{ field }}</b>
+                {% if baseline.info[field] is not none %}
+                  <div align="right" style="display:inline-block; float: right;">{{ baseline.info[field] }}</div>
+                {% endif %}
+              {% else %}
+                <b>*</b>
+              {% endif %}
             </li>
           {% endfor %}
           {% endif %}
@@ -301,16 +321,16 @@
             </li>
           {% endfor %}
           <li class="list-group-item active">Tags</li>
-          {% for tag in tags_fields %}
-            {% if tag != "id" and (tag not in baseline.tags or tag not in contender.tags or baseline.tags[tag] != contender.tags[tag]) %}
+          {% for field in tags_fields %}
+            {% if field != "id" and (field not in baseline.tags or field not in contender.tags or baseline.tags[field] != contender.tags[field]) %}
               <li class="list-group-item list-group-item-danger" style="overflow-y: auto;">
             {% else %}
                <li class="list-group-item" style="overflow-y: auto;">
             {% endif %}
-              {% if tag in contender.tags %}
-                <b>{{ tag }}</b>
-                {% if contender.tags[tag] is not none %}
-                  <div align="right" style="display:inline-block; float: right;">{{ contender.tags[tag] }}</div>
+              {% if field in contender.tags %}
+                <b>{{ field }}</b>
+                {% if contender.tags[field] is not none %}
+                  <div align="right" style="display:inline-block; float: right;">{{ contender.tags[field] }}</div>
                 {% endif %}
               {% else %}
                 <b>*</b>
@@ -318,23 +338,33 @@
             </li>
           {% endfor %}
           <li class="list-group-item active">Hardware</li>
-          {% for k,v in contender_run.hardware.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-            </li>
-          {% endfor %}
-          <li class="list-group-item active">Context</li>
-          {% for context_field in context_fields %}
-            {% if context_field != "id" and (context_field not in baseline.context or context_field not in contender.context or baseline.context[context_field] != contender.context[context_field]) %}
+          {% for field in hardware_fields %}
+            {% if field != "id" and (field not in baseline_run.hardware or field not in contender_run.hardware or baseline_run.hardware[field] != contender_run.hardware[field]) %}
               <li class="list-group-item list-group-item-danger" style="overflow-y: auto;">
             {% else %}
                <li class="list-group-item" style="overflow-y: auto;">
             {% endif %}
-              {% if context_field in contender.context %}
-                <b>{{ context_field }}</b>
-                {% if contender.context[context_field] is not none %}
-                  <div align="right" style="display:inline-block; float: right;">{{ contender.context[context_field] }}</div>
+              {% if field in contender_run.hardware %}
+                <b>{{ field }}</b>
+                {% if contender_run.hardware[field] is not none %}
+                  <div align="right" style="display:inline-block; float: right;">{{ contender_run.hardware[field] }}</div>
+                {% endif %}
+              {% else %}
+                <b>*</b>
+              {% endif %}
+            </li>
+          {% endfor %}
+          <li class="list-group-item active">Context</li>
+          {% for field in context_fields %}
+            {% if field != "id" and (field not in baseline.context or field not in contender.context or baseline.context[field] != contender.context[field]) %}
+              <li class="list-group-item list-group-item-danger" style="overflow-y: auto;">
+            {% else %}
+               <li class="list-group-item" style="overflow-y: auto;">
+            {% endif %}
+              {% if field in contender.context %}
+                <b>{{ field }}</b>
+                {% if contender.context[field] is not none %}
+                  <div align="right" style="display:inline-block; float: right;">{{ contender.context[field] }}</div>
                 {% endif %}
               {% else %}
                 <b>*</b>
@@ -343,11 +373,20 @@
           {% endfor %}
           {% if contender.info and contender.info|length > 1 %}
           <li class="list-group-item active">Additional Information</li>
-          {% for k,v in contender.info.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-            </li>
+          {% for field in info_fields %}
+            {% if field != "id" and (field not in baseline.info or field not in contender.info or baseline.info[field] != contender.info[field]) %}
+              <li class="list-group-item list-group-item-danger" style="overflow-y: auto;">
+            {% else %}
+               <li class="list-group-item" style="overflow-y: auto;">
+            {% endif %}
+              {% if field in contender.info %}
+                <b>{{ field }}</b>
+                {% if contender.info[field] is not none %}
+                  <div align="right" style="display:inline-block; float: right;">{{ contender.info[field] }}</div>
+                {% endif %}
+              {% else %}
+                <b>*</b>
+              {% endif %}
           {% endfor %}
           {% endif %}
         </ul>

@@ -98,6 +98,9 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
             tags_fields=all_keys(baseline["tags"], contender["tags"]),
             context_fields=all_keys(baseline["context"], contender["context"]),
             info_fields=all_keys(baseline["info"], contender["info"]),
+            hardware_fields=all_keys(
+                baseline_run["hardware"], contender_run["hardware"]
+            ),
         )
 
     def _get_benchmarks(self, run_id=None, batch_id=None):
