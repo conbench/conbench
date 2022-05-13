@@ -13,7 +13,7 @@ from ..config import Config
 
 
 def all_keys(dict1, dict2):
-    return sorted((set(list(dict1.keys()) + list(dict2.keys()))))
+    return sorted(set(list(dict1.keys()) + list(dict2.keys())))
 
 
 class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
