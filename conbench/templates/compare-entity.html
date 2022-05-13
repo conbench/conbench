@@ -175,7 +175,7 @@
                   <div align="right" style="display:inline-block; float: right;">{{ baseline.tags[field] }}</div>
                 {% endif %}
               {% else %}
-                <b>*</b>
+                <div class="invisible">*</div>
               {% endif %}
             </li>
           {% endfor %}
@@ -192,7 +192,7 @@
                   <div align="right" style="display:inline-block; float: right;">{{ baseline_run.hardware[field] }}</div>
                 {% endif %}
               {% else %}
-                <b>*</b>
+                <div class="invisible">*</div>
               {% endif %}
             </li>
           {% endfor %}
@@ -209,7 +209,7 @@
                   <div align="right" style="display:inline-block; float: right;">{{ baseline.context[field] }}</div>
                 {% endif %}
               {% else %}
-                <b>*</b>
+                <div class="invisible">*</div>
               {% endif %}
             </li>
           {% endfor %}
@@ -227,7 +227,7 @@
                   <div align="right" style="display:inline-block; float: right;">{{ baseline.info[field] }}</div>
                 {% endif %}
               {% else %}
-                <b>*</b>
+                <div class="invisible">*</div>
               {% endif %}
             </li>
           {% endfor %}
@@ -333,7 +333,7 @@
                   <div align="right" style="display:inline-block; float: right;">{{ contender.tags[field] }}</div>
                 {% endif %}
               {% else %}
-                <b>*</b>
+                <div class="invisible">*</div>
               {% endif %}
             </li>
           {% endfor %}
@@ -350,7 +350,7 @@
                   <div align="right" style="display:inline-block; float: right;">{{ contender_run.hardware[field] }}</div>
                 {% endif %}
               {% else %}
-                <b>*</b>
+                <div class="invisible">*</div>
               {% endif %}
             </li>
           {% endfor %}
@@ -367,7 +367,7 @@
                   <div align="right" style="display:inline-block; float: right;">{{ contender.context[field] }}</div>
                 {% endif %}
               {% else %}
-                <b>*</b>
+                <div class="invisible">*</div>
               {% endif %}
             </li>
           {% endfor %}
@@ -385,7 +385,7 @@
                   <div align="right" style="display:inline-block; float: right;">{{ contender.info[field] }}</div>
                 {% endif %}
               {% else %}
-                <b>*</b>
+                <div class="invisible">*</div>
               {% endif %}
           {% endfor %}
           {% endif %}
