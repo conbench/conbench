@@ -12,8 +12,10 @@ from ..app.benchmarks import BenchmarkMixin, RunMixin
 from ..config import Config
 
 
-def all_keys(dict1, dict2):
-    return sorted(set(list(dict1.keys()) + list(dict2.keys())))
+def all_keys(dict1, dict2, attr):
+    return sorted(
+        set(list(dict1.get(attr, {}).keys()) + list(dict2.get(attr, {}).keys()))
+    )
 
 
 class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
@@ -95,12 +97,10 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
             outlier_names=outlier_names,
             outlier_urls=outlier_urls,
             search_value=f.request.args.get("search"),
-            tags_fields=all_keys(baseline["tags"], contender["tags"]),
-            context_fields=all_keys(baseline["context"], contender["context"]),
-            info_fields=all_keys(baseline["info"], contender["info"]),
-            hardware_fields=all_keys(
-                baseline_run["hardware"], contender_run["hardware"]
-            ),
+            tags_fields=all_keys(baseline, contender, "tags"),
+            context_fields=all_keys(baseline, contender, "context"),
+            info_fields=all_keys(baseline, contender, "info"),
+            hardware_fields=all_keys(baseline_run, contender_run, "hardware"),
         )
 
     def _get_benchmarks(self, run_id=None, batch_id=None):
