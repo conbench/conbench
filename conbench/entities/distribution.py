@@ -161,6 +161,7 @@ def get_closest_parent(run):
         .order_by(Commit.timestamp.desc())
         .first()
     )
+    print('ttt',result)
 
     parent = None
     if result:
