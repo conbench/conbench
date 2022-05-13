@@ -187,10 +187,20 @@
             </li>
           {% endfor %}
           <li class="list-group-item active" >Context</li>
-          {% for k,v in baseline.context.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+          {% for context_field in context_fields %}
+            {% if context_field != "id" and (context_field not in baseline.context or context_field not in contender.context or baseline.context[context_field] != contender.context[context_field]) %}
+              <li class="list-group-item list-group-item-danger" style="overflow-y: auto;">
+            {% else %}
+               <li class="list-group-item" style="overflow-y: auto;">
+            {% endif %}
+              {% if context_field in baseline.context %}
+                <b>{{ context_field }}</b>
+                {% if baseline.context[context_field] is not none %}
+                  <div align="right" style="display:inline-block; float: right;">{{ baseline.context[context_field] }}</div>
+                {% endif %}
+              {% else %}
+                <b>*</b>
+              {% endif %}
             </li>
           {% endfor %}
           {% if baseline.info and baseline.info|length > 1 %}
@@ -315,10 +325,20 @@
             </li>
           {% endfor %}
           <li class="list-group-item active">Context</li>
-          {% for k,v in contender.context.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+          {% for context_field in context_fields %}
+            {% if context_field != "id" and (context_field not in baseline.context or context_field not in contender.context or baseline.context[context_field] != contender.context[context_field]) %}
+              <li class="list-group-item list-group-item-danger" style="overflow-y: auto;">
+            {% else %}
+               <li class="list-group-item" style="overflow-y: auto;">
+            {% endif %}
+              {% if context_field in contender.context %}
+                <b>{{ context_field }}</b>
+                {% if contender.context[context_field] is not none %}
+                  <div align="right" style="display:inline-block; float: right;">{{ contender.context[context_field] }}</div>
+                {% endif %}
+              {% else %}
+                <b>*</b>
+              {% endif %}
             </li>
           {% endfor %}
           {% if contender.info and contender.info|length > 1 %}
