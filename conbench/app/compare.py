@@ -13,6 +13,10 @@ from ..config import Config
 
 
 def all_keys(dict1, dict2, attr):
+    if dict1 is None:
+        dict1 = {}
+    if dict2 is None:
+        dict2 = {}
     return sorted(
         set(list(dict1.get(attr, {}).keys()) + list(dict2.get(attr, {}).keys()))
     )
