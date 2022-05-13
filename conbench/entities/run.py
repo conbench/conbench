@@ -34,11 +34,9 @@ class Run(Base, EntityMixin):
         run_items = [(row[0], row[1]) for row in result]
         hardware_entities = Hardware.all(hash=self.hardware.hash)
         hardware_ids = set([m.id for m in hardware_entities])
-        print(hardware_ids)
 
         parent = get_closest_parent(self)
         if not parent:
-            print('here')
             return None
 
         # possible parent runs
@@ -63,7 +61,6 @@ class Run(Base, EntityMixin):
             .filter(BenchmarkResult.run_id.in_(parent_run_items.keys()))
             .all()
         )
-        print('result', result)
         for row in result:
             parent_run_items[row[0]].append((row[1], row[2]))
 
