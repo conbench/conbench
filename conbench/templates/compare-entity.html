@@ -1,7 +1,7 @@
 {% extends "app.html" %}
 
 {# This macro displays Tags, Hardware, Context and Info fields in comparative view so
-matching fields between baseline and contender are aligned and unmatching fields and/or values are highligted in red #}
+matching fields between baseline and contender are aligned and mismatched fields and/or values are highlighted in red #}
 {% macro attribute_fields(fields, baseline_dict, contender_dict, dict_to_display) %}
     {% for field in fields %}
       {% if field != "id" and (field not in baseline_dict or field not in contender_dict or baseline_dict[field] != contender_dict[field]) %}
