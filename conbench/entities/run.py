@@ -111,3 +111,21 @@ class _Serializer(EntitySerializer):
 class RunSerializer:
     one = _Serializer()
     many = _Serializer(many=True)
+
+
+def commits_with_runs():
+    runs = Run.search(
+        filters=[
+            Run.name.like("commit: %"),
+        ],
+        joins=[Commit, Hardware],
+        order_by=Commit.timestamp.desc(),
+    )
+    results = {}
+    for run in runs:
+        if run.commit.sha not in results:
+            results[run.commit.sha] = {}
+        if run.hardware.name not in results[run.commit.sha]:
+            results[run.commit.sha][run.hardware.name] = []
+        results[run.commit.sha][run.hardware.name].append((run.name, run.id))
+    return results

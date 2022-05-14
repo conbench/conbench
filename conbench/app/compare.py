@@ -10,6 +10,7 @@ from ..app._plots import TimeSeriesPlotMixin, simple_bar_plot
 from ..app._util import augment
 from ..app.benchmarks import BenchmarkMixin, RunMixin
 from ..config import Config
+from ..entities.run import commits_with_runs
 
 
 def all_keys(dict1, dict2, attr):
@@ -79,6 +80,9 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
                 for i, b in enumerate(outliers)
             ]
 
+        result = commits_with_runs()
+        print(result)
+
         return self.render_template(
             self.html,
             application=Config.APPLICATION_NAME,
@@ -105,6 +109,7 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
             context_fields=all_keys(baseline, contender, "context"),
             info_fields=all_keys(baseline, contender, "info"),
             hardware_fields=all_keys(baseline_run, contender_run, "hardware"),
+            commit_run_map=result,
         )
 
     def _get_benchmarks(self, run_id=None, batch_id=None):

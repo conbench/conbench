@@ -194,12 +194,32 @@
         </div>
     </div>
 
+
+    <div class="form-group">
+  Baseline Commit: <select class="custom-select" name="baseline_commit" id="baseline_commit">
+    <option value="" selected="selected">Select baseline commit</option>
+  </select>
+  <br><br>
+  Hardware: <select class="custom-select" name="hardware" id="hardware">
+    <option value="" selected="selected">Please select baseline commit first</option>
+  </select>
+  <br><br>
+  Run Name: <select class="custom-select" name="run_name" id="run_name">
+    <option value="" selected="selected">Please select hardware first</option>
+  </select>
+  </div>
+    <form name="form1" id="form1"  method="get" action="/compare/runs/">
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
 {% endblock %}
 
 {% block scripts %}
 {{super()}}
 
 {{ resources | safe }}
+
+
+
 
 <script type="text/javascript">
 var table = $('#benchmarks').dataTable( {
@@ -226,6 +246,42 @@ $(document).ready(function() {
     document.getElementById("bokeh-carousel").style.visibility = "visible";
 });
 {% endif %}
+
+
+var commitRunMap = {{ commit_run_map|tojson|safe }}
+
+
+window.onload = function() {
+  var baselineCommitSel = document.getElementById("baseline_commit");
+  var hardwareSel = document.getElementById("hardware");
+  var runNameSel = document.getElementById("run_name");
+  for (var x in commitRunMap) {
+    baselineCommitSel.options[baselineCommitSel.options.length] = new Option(x, x);
+  }
+  baselineCommitSel.onchange = function() {
+    //empty Chapters- and Topics- dropdowns
+    runNameSel.length = 1;
+    hardwareSel.length = 1;
+    //display correct values
+    for (var y in commitRunMap[this.value]) {
+      hardwareSel.options[hardwareSel.options.length] = new Option(y, y);
+    }
+  }
+  hardwareSel.onchange = function() {
+    //empty Chapters dropdown
+    runNameSel.length = 1;
+    //display correct values
+    var z = commitRunMap[baselineCommitSel.value][this.value];
+    for (var i = 0; i < z.length; i++) {
+      runNameSel.options[runNameSel.options.length] = new Option(z[i][0], z[i][1]);
+    }
+  }
+}
+
+document.getElementById('run_name').onchange = function() {
+    var newaction = window.location.protocol + "//" + window.location.host + "/compare/runs/" + this.value + "..." + "{{ contender_run.id }}";
+    document.getElementById('form1').action = newaction;
+};
 </script>
 
 {% endblock %}
