@@ -1,5 +1,40 @@
 {% extends "app.html" %}
 
+{# This macro displays Tags, Hardware, Context and Info fields in comparative view so
+matching fields between baseline and contender are aligned and mismatched fields and/or values are highlighted in red #}
+{% macro attribute_fields(fields, baseline_dict, contender_dict, dict_to_display) %}
+    {% for field in fields %}
+      {% if field != "id" and (field not in baseline_dict or field not in contender_dict or baseline_dict[field] != contender_dict[field]) %}
+        <li class="list-group-item list-group-item-danger" style="overflow-y: auto;">
+      {% else %}
+        <li class="list-group-item" style="overflow-y: auto;">
+      {% endif %}
+      {% if field in dict_to_display %}
+        <b>{{ field }}</b>
+        {% if dict_to_display[field] is not none %}
+          <div align="right" style="display:inline-block; float: right;">{{ dict_to_display[field] }}</div>
+        {% endif %}
+      {% else %}
+        <div class="invisible">*</div>
+      {% endif %}
+        </li>
+    {% endfor %}
+{% endmacro %}
+
+{# This macro displays Tags, Hardware, Context and Info sections for either baseline or contender #}
+{% macro sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display, run_to_display) %}
+    <li class="list-group-item active">Tags</li>
+    {{ attribute_fields(tags_fields, baseline.tags, contender.tags, dict_to_display=benchmark_to_display.tags) }}
+    <li class="list-group-item active">Hardware</li>
+    {{ attribute_fields(hardware_fields, baseline_run.hardware, contender_run.hardware, dict_to_display=run_to_display.hardware) }}
+    <li class="list-group-item active">Context</li>
+    {{ attribute_fields(context_fields, baseline.context, contender.context, dict_to_display=benchmark_to_display.context) }}
+    {% if benchmark_to_display.info and benchmark_to_display.info|length > 1 %}
+      <li class="list-group-item active">Additional Information</li>
+      {{ attribute_fields(info_fields, baseline.info, contender.info, dict_to_display=benchmark_to_display.info) }}
+    {% endif %}
+{% endmacro %}
+
 {% block app_content %}
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
@@ -162,38 +197,7 @@
               {% endif %}
             </li>
           {% endfor %}
-          <li class="list-group-item active">Tags</li>
-          {% for k,v in baseline.tags.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              {% if v is not none %}
-                <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-              {% endif %}
-            </li>
-          {% endfor %}
-          <li class="list-group-item active">Hardware</li>
-          {% for k,v in baseline_run.hardware.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-            </li>
-          {% endfor %}
-          <li class="list-group-item active" >Context</li>
-          {% for k,v in baseline.context.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-            </li>
-          {% endfor %}
-          {% if baseline.info and baseline.info|length > 1 %}
-          <li class="list-group-item active" >Additional Information</li>
-          {% for k,v in baseline.info.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-            </li>
-          {% endfor %}
-          {% endif %}
+          {{ sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display=baseline, run_to_display=baseline_run) }}
         </ul>
       </div>
       {% endif %}
@@ -282,38 +286,7 @@
               {% endif %}
             </li>
           {% endfor %}
-          <li class="list-group-item active">Tags</li>
-          {% for k,v in contender.tags.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              {% if v is not none %}
-                <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-              {% endif %}
-            </li>
-          {% endfor %}
-          <li class="list-group-item active">Hardware</li>
-          {% for k,v in contender_run.hardware.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-            </li>
-          {% endfor %}
-          <li class="list-group-item active">Context</li>
-          {% for k,v in contender.context.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-            </li>
-          {% endfor %}
-          {% if contender.info and contender.info|length > 1 %}
-          <li class="list-group-item active">Additional Information</li>
-          {% for k,v in contender.info.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-            </li>
-          {% endfor %}
-          {% endif %}
+          {{ sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display=contender, run_to_display=contender_run) }}
         </ul>
       </div>
       {% endif %}

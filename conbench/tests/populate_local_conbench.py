@@ -8,9 +8,15 @@ session = requests.Session()
 
 
 def generate_benchmarks_data(
-    run_id, commit, benchmark_name, benchmark_language, timestamp, mean=16.670462
+    run_id,
+    commit,
+    benchmark_name,
+    benchmark_language,
+    timestamp,
+    hardware_type,
+    mean=16.670462,
 ):
-    return {
+    data = {
         "batch_id": uuid.uuid4().hex,
         "context": {
             "arrow_compiler_flags": "-fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /var/lib/buildkite-agent/miniconda3/envs/arrow-commit/include -fdiagnostics-color=always -O3 -DNDEBUG",
@@ -25,11 +31,6 @@ def generate_benchmarks_data(
             "arrow_compiler_version": "9.4.0",
             "arrow_version": "8.0.0-SNAPSHOT",
             "benchmark_language_version": "Python 3.8.12",
-        },
-        "cluster_info": {
-            "name": "cluster1",
-            "info": {"workers": 2, "scheduler": 1},
-            "optional_info": {},
         },
         "run_id": str(run_id),
         "run_name": f"commit: {commit}",
@@ -57,13 +58,52 @@ def generate_benchmarks_data(
         },
         "timestamp": str(timestamp),
     }
+    for key in ["info", "tags", "context"]:
+        fields_set = {
+            f"{benchmark_language}_specific_{key}_field_1": "value-1",
+            f"{benchmark_language}_specific_{key}_field_2": f"{benchmark_language}-{key}-value-2",
+            f"{key}_field_3": f"{benchmark_language}-{key}-value-2",
+            f"{key}_field_4": None if benchmark_language == "Python" else "value-4",
+        }
+        data[key].update(fields_set)
+        if benchmark_language == "Python":
+            for i in range(5, 7):
+                data[key][f"field_{i}"] = f"value-{i}"
+
+    if hardware_type == "cluster":
+        data["cluster_info"] = {
+            "name": "cluster1",
+            "info": {"workers": 2, "scheduler": 1},
+            "optional_info": {},
+        }
+    else:
+        data["machine_info"] = {
+            "name": "machine1",
+            "architecture_name": "aarch64",
+            "cpu_core_count": "16",
+            "cpu_frequency_max_hz": "0",
+            "cpu_l1d_cache_bytes": "65536",
+            "cpu_l1i_cache_bytes": "65536",
+            "cpu_l2_cache_bytes": "1048576",
+            "cpu_l3_cache_bytes": "33554432",
+            "cpu_model_name": "",
+            "cpu_thread_count": "16",
+            "gpu_count": "0",
+            "gpu_product_names": [],
+            "kernel_name": "4.14.248-189.473.amzn2.aarch64",
+            "memory_bytes": "64424509440",
+            "os_name": "Linux",
+            "os_version": "4.14.248-189.473.amzn2.aarch64-aarch64-with-glibc2.17",
+        }
+
+    return data
 
 
 def generate_benchmarks_data_with_error(
-    run_id, commit, benchmark_name, benchmark_language, timestamp
+    run_id, commit, benchmark_name, benchmark_language, timestamp, hardware_type
 ):
     data = generate_benchmarks_data(
-        run_id, commit, benchmark_name, benchmark_language, timestamp
+        run_id, commit, benchmark_name, benchmark_language, timestamp, hardware_type
     )
     data.pop("stats")
     data["error"] = {"command": "some command", "stack trace": "stack trace ..."}
@@ -105,26 +145,35 @@ def create_benchmarks_data():
 
     benchmark_languages = ["Python", "R", "JavaScript"]
 
-    for i in range(len(commits)):
-        for benchmark_language in benchmark_languages:
-            for benchmark_name in benchmark_names:
-                run_id, commit, mean = i + 1, commits[i], means[i]
-                timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
-                if errors[i] and benchmark_name == "csv-read":
-                    benchmark_data = generate_benchmarks_data_with_error(
-                        run_id, commit, benchmark_name, benchmark_language, timestamp
-                    )
-                else:
-                    benchmark_data = generate_benchmarks_data(
-                        run_id,
-                        commit,
-                        benchmark_name,
-                        benchmark_language,
-                        timestamp,
-                        mean,
-                    )
+    hardware_types = ["machine", "cluster"]
 
-                post_benchmarks(benchmark_data)
+    for i in range(len(commits)):
+        for hardware_type in hardware_types:
+            for benchmark_language in benchmark_languages:
+                for benchmark_name in benchmark_names:
+                    run_id, commit, mean = f"{hardware_type}{i+1}", commits[i], means[i]
+                    timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
+                    if errors[i] and benchmark_name == "csv-read":
+                        benchmark_data = generate_benchmarks_data_with_error(
+                            run_id,
+                            commit,
+                            benchmark_name,
+                            benchmark_language,
+                            timestamp,
+                            hardware_type,
+                        )
+                    else:
+                        benchmark_data = generate_benchmarks_data(
+                            run_id,
+                            commit,
+                            benchmark_name,
+                            benchmark_language,
+                            timestamp,
+                            hardware_type,
+                            mean,
+                        )
+
+                    post_benchmarks(benchmark_data)
 
 
 register()
