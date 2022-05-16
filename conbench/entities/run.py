@@ -116,17 +116,16 @@ class RunSerializer:
 # Comment what this is used for
 def commits_with_runs():
     runs = Run.search(
-        filters=[
-            Run.name.like("commit: %"),
-        ],
+        filters=[],
         joins=[Commit, Hardware],
         order_by=Commit.timestamp.desc(),
     )
     results = {}
     for run in runs:
-        if run.commit.sha not in results:
-            results[run.commit.sha] = {"date": run.commit.timestamp.strftime('%Y-%m-%d'), "hardware": {}}
-        if run.hardware.name not in results[run.commit.sha]["hardware"]:
-            results[run.commit.sha]["hardware"][run.hardware.name] = []
-        results[run.commit.sha]["hardware"][run.hardware.name].append((run.name, run.id))
+        c = f"{run.commit.sha[:6]} {run.commit.message[:50]}"
+        if c not in results:
+            results[c] = {"date": run.commit.timestamp.strftime('%Y-%m-%d'), "hardware": {}}
+        if run.hardware.name not in results[c]["hardware"]:
+            results[c]["hardware"][run.hardware.name] = []
+        results[c]["hardware"][run.hardware.name].append((f"{run.timestamp.strftime('%Y-%m-%d %H:%M')} {run.name}", run.id))
     return results

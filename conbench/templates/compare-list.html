@@ -250,10 +250,10 @@ $(document).ready(function() {
 {% endif %}
 
 
-var commitRunMap = {{ commit_run_map|tojson|safe }}
-
-var commitDate = document.getElementById("commit_date");
-if (commitDate.value == "") {
+window.onload = function() {
+    var commitRunMap = {{ commit_run_map|tojson|safe }}
+    var commitDate = document.getElementById("commit_date");
+    if (commitDate.value == "") {
       var today = new Date();
       var dd = String(today.getDate()).padStart(2, '0');
       var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
@@ -262,33 +262,26 @@ if (commitDate.value == "") {
       today = yyyy + "-" + mm + "-" + dd;
       commitDate.value = today;
   }
-
-commitDate.onchange = function(){
-    var baselineCommitSel = document.getElementById("baseline_commit");
-   var commitDate = document.getElementById("commit_date");
-   console.log("onchange")
-   console.log(commitDate.value)
-   for (var x in commitRunMap) {
-      console.log(commitRunMap[x]["date"]);
-      console.log(commitDate.value);
-      if (commitRunMap[x]["date"] == commitDate.value) {
-          baselineCommitSel.options[baselineCommitSel.options.length] = new Option(x, x);
-      }
-  }
-}
-
-
-window.onload = function() {
   var baselineCommitSel = document.getElementById("baseline_commit");
   var hardwareSel = document.getElementById("hardware");
   var runNameSel = document.getElementById("run_name");
   for (var x in commitRunMap) {
-      console.log(commitRunMap[x]["date"]);
-      console.log(commitDate.value);
       if (commitRunMap[x]["date"] ==commitDate.value) {
           baselineCommitSel.options[baselineCommitSel.options.length] = new Option(x, x);
       }
   }
+
+  commitDate.onchange = function() {
+      baselineCommitSel.length = 1
+      runNameSel.length = 1;
+      hardwareSel.length = 1;
+      for (var x in commitRunMap) {
+          if (commitRunMap[x]["date"] == commitDate.value) {
+              baselineCommitSel.options[baselineCommitSel.options.length] = new Option(x, x);
+          }
+      }
+  }
+
   baselineCommitSel.onchange = function() {
     //empty Chapters- and Topics- dropdowns
     runNameSel.length = 1;
