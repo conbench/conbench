@@ -196,6 +196,8 @@
 
 
     <div class="form-group">
+    <input type="date" id="commit_date" name="commit_date" value="">
+
   Baseline Commit: <select class="custom-select" name="baseline_commit" id="baseline_commit">
     <option value="" selected="selected">Select baseline commit</option>
   </select>
@@ -250,20 +252,49 @@ $(document).ready(function() {
 
 var commitRunMap = {{ commit_run_map|tojson|safe }}
 
+var commitDate = document.getElementById("commit_date");
+if (commitDate.value == "") {
+      var today = new Date();
+      var dd = String(today.getDate()).padStart(2, '0');
+      var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+      var yyyy = today.getFullYear();
+
+      today = yyyy + "-" + mm + "-" + dd;
+      commitDate.value = today;
+  }
+
+commitDate.onchange = function(){
+    var baselineCommitSel = document.getElementById("baseline_commit");
+   var commitDate = document.getElementById("commit_date");
+   console.log("onchange")
+   console.log(commitDate.value)
+   for (var x in commitRunMap) {
+      console.log(commitRunMap[x]["date"]);
+      console.log(commitDate.value);
+      if (commitRunMap[x]["date"] == commitDate.value) {
+          baselineCommitSel.options[baselineCommitSel.options.length] = new Option(x, x);
+      }
+  }
+}
+
 
 window.onload = function() {
   var baselineCommitSel = document.getElementById("baseline_commit");
   var hardwareSel = document.getElementById("hardware");
   var runNameSel = document.getElementById("run_name");
   for (var x in commitRunMap) {
-    baselineCommitSel.options[baselineCommitSel.options.length] = new Option(x, x);
+      console.log(commitRunMap[x]["date"]);
+      console.log(commitDate.value);
+      if (commitRunMap[x]["date"] ==commitDate.value) {
+          baselineCommitSel.options[baselineCommitSel.options.length] = new Option(x, x);
+      }
   }
   baselineCommitSel.onchange = function() {
     //empty Chapters- and Topics- dropdowns
     runNameSel.length = 1;
     hardwareSel.length = 1;
     //display correct values
-    for (var y in commitRunMap[this.value]) {
+    for (var y in commitRunMap[this.value]["hardware"]) {
       hardwareSel.options[hardwareSel.options.length] = new Option(y, y);
     }
   }
@@ -271,7 +302,7 @@ window.onload = function() {
     //empty Chapters dropdown
     runNameSel.length = 1;
     //display correct values
-    var z = commitRunMap[baselineCommitSel.value][this.value];
+    var z = commitRunMap[baselineCommitSel.value]["hardware"][this.value];
     for (var i = 0; i < z.length; i++) {
       runNameSel.options[runNameSel.options.length] = new Option(z[i][0], z[i][1]);
     }
