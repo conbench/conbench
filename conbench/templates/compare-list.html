@@ -194,25 +194,33 @@
         </div>
     </div>
 
-
-    <div class="form-group">
-    <input type="date" id="commit_date" name="commit_date" value="">
-
-  Baseline Commit: <select class="custom-select" name="baseline_commit" id="baseline_commit">
-    <option value="" selected="selected">Select baseline commit</option>
-  </select>
-  <br><br>
-  Hardware: <select class="custom-select" name="hardware" id="hardware">
-    <option value="" selected="selected">Please select baseline commit first</option>
-  </select>
-  <br><br>
-  Run Name: <select class="custom-select" name="run_name" id="run_name">
-    <option value="" selected="selected">Please select hardware first</option>
-  </select>
-  </div>
-    <form name="form1" id="form1"  method="get" action="/compare/runs/">
-  <button type="submit" class="btn btn-primary">Submit</button>
-</form>
+    <form>
+        <div class="form-group">
+            <label for="commit-date">Baseline Commit Date</label>
+            <input type="date" id="commit-date" name="commit-date" value="">
+        </div>
+        <div class="form-group">
+            <label for="baseline-commit">Baseline Commit</label>
+            <select class="custom-select" name="baseline-commit" id="baseline-commit">
+                <option value="" selected="selected">Please select baseline commit date</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="hardware">Hardware</label>
+            <select class="custom-select" name="hardware" id="hardware">
+                <option value="" selected="selected">Please select baseline commit first</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="run-name">Run Name</label>
+            <select class="custom-select" name="run-name" id="run-name">
+                <option value="" selected="selected">Please select hardware first</option>
+            </select>
+        </div>
+    </form>
+    <form name="compare-runs" id="compare-runs"  method="get" action="">
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
 {% endblock %}
 
 {% block scripts %}
@@ -250,61 +258,43 @@ $(document).ready(function() {
 {% endif %}
 
 
-window.onload = function() {
-    var commitRunMap = {{ commit_run_map|tojson|safe }}
-    var commitDate = document.getElementById("commit_date");
-    if (commitDate.value == "") {
-      var today = new Date();
-      var dd = String(today.getDate()).padStart(2, '0');
-      var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-      var yyyy = today.getFullYear();
+window.onload = function () {
+    var commitRunMap = {{ commit_run_map|tojson|safe }};
+    var commitDate = document.getElementById("commit-date");
+    var baselineCommit = document.getElementById("baseline-commit");
+    var hardware = document.getElementById("hardware");
+    var runName = document.getElementById("run-name");
 
-      today = yyyy + "-" + mm + "-" + dd;
-      commitDate.value = today;
-  }
-  var baselineCommitSel = document.getElementById("baseline_commit");
-  var hardwareSel = document.getElementById("hardware");
-  var runNameSel = document.getElementById("run_name");
-  for (var x in commitRunMap) {
-      if (commitRunMap[x]["date"] ==commitDate.value) {
-          baselineCommitSel.options[baselineCommitSel.options.length] = new Option(x, x);
-      }
-  }
-
-  commitDate.onchange = function() {
-      baselineCommitSel.length = 1
-      runNameSel.length = 1;
-      hardwareSel.length = 1;
-      for (var x in commitRunMap) {
-          if (commitRunMap[x]["date"] == commitDate.value) {
-              baselineCommitSel.options[baselineCommitSel.options.length] = new Option(x, x);
-          }
-      }
-  }
-
-  baselineCommitSel.onchange = function() {
-    //empty Chapters- and Topics- dropdowns
-    runNameSel.length = 1;
-    hardwareSel.length = 1;
-    //display correct values
-    for (var y in commitRunMap[this.value]["hardware"]) {
-      hardwareSel.options[hardwareSel.options.length] = new Option(y, y);
+    commitDate.onchange = function () {
+        runName.length = 1;
+        hardware.length = 1;
+        baselineCommit.length = 1
+        for (var x in commitRunMap) {
+            if (commitRunMap[x]["date"] == commitDate.value) {
+                baselineCommit.options[baselineCommit.options.length] = new Option(x, x);
+            }
+        }
     }
-  }
-  hardwareSel.onchange = function() {
-    //empty Chapters dropdown
-    runNameSel.length = 1;
-    //display correct values
-    var z = commitRunMap[baselineCommitSel.value]["hardware"][this.value];
-    for (var i = 0; i < z.length; i++) {
-      runNameSel.options[runNameSel.options.length] = new Option(z[i][0], z[i][1]);
+
+    baselineCommit.onchange = function () {
+        runName.length = 1;
+        hardware.length = 1;
+        for (var y in commitRunMap[this.value]["hardware"]) {
+            hardware.options[hardware.options.length] = new Option(y, y);
+        }
     }
-  }
+    hardware.onchange = function () {
+        runName.length = 1;
+        var z = commitRunMap[baselineCommit.value]["hardware"][this.value];
+        for (var i = 0; i < z.length; i++) {
+            runName.options[runName.options.length] = new Option(z[i][0], z[i][1]);
+        }
+    }
 }
 
-document.getElementById('run_name').onchange = function() {
-    var newaction = window.location.protocol + "//" + window.location.host + "/compare/runs/" + this.value + "..." + "{{ contender_run.id }}";
-    document.getElementById('form1').action = newaction;
+document.getElementById('run-name').onchange = function () {
+    var action = window.location.protocol + "//" + window.location.host + "/compare/runs/" + this.value + "..." + "{{ contender_run.id }}";
+    document.getElementById('compare-runs').action = action;
 };
 </script>
 
