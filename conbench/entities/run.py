@@ -127,7 +127,7 @@ def commit_hardware_run_map():
     }
     """
     runs = Run.search(
-        filters=[],
+        filters=[Commit.timestamp.isnot(None)],
         joins=[Commit, Hardware],
         order_by=Commit.timestamp.desc(),
     )
