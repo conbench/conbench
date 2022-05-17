@@ -194,6 +194,11 @@
         </div>
     </div>
 
+    <hr/>
+    <h4>Compare current contender run with another run:</h4>
+    <br>
+    <br>
+
     <form>
         <div class="form-group">
             <label for="commit-date">Baseline Commit Date</label>
@@ -259,7 +264,7 @@ $(document).ready(function() {
 
 
 window.onload = function () {
-    var commitRunMap = {{ commit_run_map|tojson|safe }};
+    var commitHardwareRunMap = {{ commit_hardware_run_map|tojson|safe }};
     var commitDate = document.getElementById("commit-date");
     var baselineCommit = document.getElementById("baseline-commit");
     var hardware = document.getElementById("hardware");
@@ -269,8 +274,8 @@ window.onload = function () {
         runName.length = 1;
         hardware.length = 1;
         baselineCommit.length = 1
-        for (var x in commitRunMap) {
-            if (commitRunMap[x]["date"] == commitDate.value) {
+        for (var x in commitHardwareRunMap) {
+            if (commitHardwareRunMap[x]["date"] == commitDate.value) {
                 baselineCommit.options[baselineCommit.options.length] = new Option(x, x);
             }
         }
@@ -279,13 +284,13 @@ window.onload = function () {
     baselineCommit.onchange = function () {
         runName.length = 1;
         hardware.length = 1;
-        for (var y in commitRunMap[this.value]["hardware"]) {
+        for (var y in commitHardwareRunMap[this.value]["hardware"]) {
             hardware.options[hardware.options.length] = new Option(y, y);
         }
     }
     hardware.onchange = function () {
         runName.length = 1;
-        var z = commitRunMap[baselineCommit.value]["hardware"][this.value];
+        var z = commitHardwareRunMap[baselineCommit.value]["hardware"][this.value];
         for (var i = 0; i < z.length; i++) {
             runName.options[runName.options.length] = new Option(z[i][0], z[i][1]);
         }
