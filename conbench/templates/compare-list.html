@@ -274,9 +274,9 @@ window.onload = function () {
         runName.length = 1;
         hardware.length = 1;
         baselineCommit.length = 1
-        for (var x in commitHardwareRunMap) {
-            if (commitHardwareRunMap[x]["date"] == commitDate.value) {
-                baselineCommit.options[baselineCommit.options.length] = new Option(x, x);
+        for (var commit in commitHardwareRunMap) {
+            if (commitHardwareRunMap[commit]["date"] == commitDate.value) {
+                baselineCommit.options[baselineCommit.options.length] = new Option(commit, commit);
             }
         }
     }
@@ -284,15 +284,15 @@ window.onload = function () {
     baselineCommit.onchange = function () {
         runName.length = 1;
         hardware.length = 1;
-        for (var y in commitHardwareRunMap[this.value]["hardware"]) {
-            hardware.options[hardware.options.length] = new Option(y, y);
+        for (var hardware_name in commitHardwareRunMap[this.value]["hardware"]) {
+            hardware.options[hardware.options.length] = new Option(hardware_name, hardware_name);
         }
     }
     hardware.onchange = function () {
         runName.length = 1;
-        var z = commitHardwareRunMap[baselineCommit.value]["hardware"][this.value];
-        for (var i = 0; i < z.length; i++) {
-            runName.options[runName.options.length] = new Option(z[i][0], z[i][1]);
+        var runs = commitHardwareRunMap[baselineCommit.value]["hardware"][this.value];
+        for (var i = 0; i < runs.length; i++) {
+            runName.options[runName.options.length] = new Option(runs[i][0], runs[i][1]);
         }
     }
 }
