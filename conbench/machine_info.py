@@ -35,6 +35,7 @@ COMMANDS = {
 
 
 LSCPU_MAPPING = {
+    "cpu_model_name": "Model name",
     "cpu_frequency_max_hz": "CPU max MHz",
     "cpu_l1d_cache_bytes": "L1d cache",
     "cpu_l1i_cache_bytes": "L1i cache",
@@ -87,7 +88,7 @@ def github_info():
 
 
 def machine_info(host_name):
-    os_name, os_version = platform.platform(terse=1).split("-", maxsplit=1)
+    os_name, os_version = platform.platform(terse=True).split("-", maxsplit=1)
 
     if not host_name:
         host_name = platform.node()
@@ -269,8 +270,11 @@ def _fill_from_lscpu(info, parts):
             if not info[key]:
                 if lookup.endswith("MHz"):
                     info[key] = int(float(lscpu_dict[lookup]) * 10**6)
+                elif key in MUST_BE_INTS:
+                    # lscpu sometimes includes descriptions after the value so remove that
+                    info[key] = int(float(lscpu_dict[lookup].split(maxsplit=1)[0]))
                 else:
-                    info[key] = int(float(lscpu_dict[lookup]))
+                    info[key] = lscpu_dict[lookup]
         except ValueError:
             pass
 
