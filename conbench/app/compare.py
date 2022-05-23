@@ -10,6 +10,7 @@ from ..app._plots import TimeSeriesPlotMixin, simple_bar_plot
 from ..app._util import augment
 from ..app.benchmarks import BenchmarkMixin, RunMixin
 from ..config import Config
+from ..entities.run import commit_hardware_run_map
 
 
 def all_keys(dict1, dict2, attr):
@@ -105,6 +106,7 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
             context_fields=all_keys(baseline, contender, "context"),
             info_fields=all_keys(baseline, contender, "info"),
             hardware_fields=all_keys(baseline_run, contender_run, "hardware"),
+            commit_hardware_run_map=commit_hardware_run_map(),
         )
 
     def _get_benchmarks(self, run_id=None, batch_id=None):

@@ -111,3 +111,40 @@ class _Serializer(EntitySerializer):
 class RunSerializer:
     one = _Serializer()
     many = _Serializer(many=True)
+
+
+def commit_hardware_run_map():
+    """
+    Returns:
+    {
+        '246249 ARROW-15667: [R] Test development build with ARROW_BUILD_STATIC=OFF': {
+            'date': '2022-03-03',
+            'hardware': {
+                'cluster A': [('2022-05-13 21:36 commit: 2462492389a8f2ca286c481852c84ba1f0d0eff9', 'runid1')],
+                'machine A': [('2022-05-13 21:36 commit: 2462492389a8f2ca286c481852c84ba1f0d0eff9', 'runid2')]
+            }
+        }
+    }
+    """
+    runs = Run.search(
+        filters=[Commit.timestamp.isnot(None)],
+        joins=[Commit, Hardware],
+        order_by=Commit.timestamp.desc(),
+    )
+
+    results = {}
+
+    for run in runs:
+        commit = f"{run.commit.sha[:6]} {run.commit.message[:100]}{'...' if len(run.commit.message) > 100 else ''}"
+
+        if commit not in results:
+            commit_date = run.commit.timestamp.strftime("%Y-%m-%d")
+            results[commit] = {"date": commit_date, "hardware": {}}
+
+        if run.hardware.name not in results[commit]["hardware"]:
+            results[commit]["hardware"][run.hardware.name] = []
+
+        run_value = f"{run.timestamp.strftime('%Y-%m-%d %H:%M')} {run.name}"
+        results[commit]["hardware"][run.hardware.name].append((run_value, run.id))
+
+    return results

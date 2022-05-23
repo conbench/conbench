@@ -194,12 +194,47 @@
         </div>
     </div>
 
+    <hr/>
+    <h4>Compare current contender run with another run:</h4>
+    <br>
+    <br>
+
+    <form>
+        <div class="form-group">
+            <label for="commit-date">Baseline Commit Date</label>
+            <input type="date" id="commit-date" name="commit-date" value="">
+        </div>
+        <div class="form-group">
+            <label for="baseline-commit">Baseline Commit</label>
+            <select class="custom-select" name="baseline-commit" id="baseline-commit">
+                <option value="" selected="selected">Please select baseline commit date</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="hardware">Hardware</label>
+            <select class="custom-select" name="hardware" id="hardware">
+                <option value="" selected="selected">Please select baseline commit first</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="run-name">Run Name</label>
+            <select class="custom-select" name="run-name" id="run-name">
+                <option value="" selected="selected">Please select hardware first</option>
+            </select>
+        </div>
+    </form>
+    <form name="compare-runs" id="compare-runs"  method="get" action="">
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
 {% endblock %}
 
 {% block scripts %}
 {{super()}}
 
 {{ resources | safe }}
+
+
+
 
 <script type="text/javascript">
 var table = $('#benchmarks').dataTable( {
@@ -226,6 +261,46 @@ $(document).ready(function() {
     document.getElementById("bokeh-carousel").style.visibility = "visible";
 });
 {% endif %}
+
+
+window.onload = function () {
+    var commitHardwareRunMap = {{ commit_hardware_run_map|tojson|safe }};
+    var commitDate = document.getElementById("commit-date");
+    var baselineCommit = document.getElementById("baseline-commit");
+    var hardware = document.getElementById("hardware");
+    var runName = document.getElementById("run-name");
+
+    commitDate.onchange = function () {
+        runName.length = 1;
+        hardware.length = 1;
+        baselineCommit.length = 1
+        for (var commit in commitHardwareRunMap) {
+            if (commitHardwareRunMap[commit]["date"] == commitDate.value) {
+                baselineCommit.options[baselineCommit.options.length] = new Option(commit, commit);
+            }
+        }
+    }
+
+    baselineCommit.onchange = function () {
+        runName.length = 1;
+        hardware.length = 1;
+        for (var hardware_name in commitHardwareRunMap[this.value]["hardware"]) {
+            hardware.options[hardware.options.length] = new Option(hardware_name, hardware_name);
+        }
+    }
+    hardware.onchange = function () {
+        runName.length = 1;
+        var runs = commitHardwareRunMap[baselineCommit.value]["hardware"][this.value];
+        for (var i = 0; i < runs.length; i++) {
+            runName.options[runName.options.length] = new Option(runs[i][0], runs[i][1]);
+        }
+    }
+}
+
+document.getElementById('run-name').onchange = function () {
+    var action = window.location.protocol + "//" + window.location.host + "/compare/runs/" + this.value + "..." + "{{ contender_run.id }}";
+    document.getElementById('compare-runs').action = action;
+};
 </script>
 
 {% endblock %}
