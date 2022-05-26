@@ -113,10 +113,17 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             for benchmark_result in benchmark_results:
                 benchmark_result.z_score = 0
         elif batch_id:
-            benchmark_results = BenchmarkResult.all(batch_id=batch_id)
+            batch_id_list = batch_id.split(",")
+            benchmark_results = BenchmarkResult.search(
+                filters=[BenchmarkResult.batch_id.in_(batch_id_list)]
+            )
+            # benchmark_results = BenchmarkResult.all(batch_id=batch_id)
             set_z_scores(benchmark_results)
         elif run_id:
-            benchmark_results = BenchmarkResult.all(run_id=run_id)
+            run_id_list = run_id.split(",")
+            benchmark_results = BenchmarkResult.search(
+                filters=[BenchmarkResult.run_id.in_(run_id_list)]
+            )
             set_z_scores(benchmark_results)
         else:
             benchmark_results = BenchmarkResult.all(
