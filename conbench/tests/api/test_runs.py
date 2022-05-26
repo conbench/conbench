@@ -241,10 +241,8 @@ class TestRunList(_asserts.ListEnforcer):
         response = client.get(f"/api/runs/?sha={sha1},{sha2}")
 
         self.assert_200_ok(
-            response,
-            contains = _expected_entity(run, include_baseline=False)
+            response, contains=_expected_entity(run, include_baseline=False)
         )
-
 
     def test_run_list_filter_by_sha_no_match(self, client):
         sha = "some unknown sha"
