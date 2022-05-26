@@ -8,6 +8,7 @@ from ...tests.helpers import _uuid
 
 
 def _expected_entity(run, baseline_id=None, include_baseline=True):
+    print(run.commit)
     parent = run.commit.get_parent_commit()
     return _api_run_entity(
         run.id,
@@ -237,11 +238,18 @@ class TestRunList(_asserts.ListEnforcer):
         sha1 = _fixtures.CHILD
         sha2 = _fixtures.PARENT
         self.authenticate(client)
-        run = self._create()
+        _fixtures.benchmark_result(sha=_fixtures.PARENT)
+        run1 = _fixtures.benchmark_result()
+        _fixtures.benchmark_result(sha=_fixtures.CHILD)
+        run2 = _fixtures.benchmark_result()
         response = client.get(f"/api/runs/?sha={sha1},{sha2}")
 
         self.assert_200_ok(
-            response, contains=_expected_entity(run, include_baseline=False)
+            response, contains=_expected_entity(run1.run, include_baseline=False)
+        )
+
+        self.assert_200_ok(
+            response, contains=_expected_entity(run2.run, include_baseline=False)
         )
 
     def test_run_list_filter_by_sha_no_match(self, client):
