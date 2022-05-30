@@ -8,7 +8,6 @@ from ...tests.helpers import _uuid
 
 
 def _expected_entity(run, baseline_id=None, include_baseline=True):
-    print(run.commit)
     parent = run.commit.get_parent_commit()
     return _api_run_entity(
         run.id,
