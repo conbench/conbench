@@ -271,11 +271,19 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
     def test_benchmark_list_filter_by_batch_id(self, client):
         self.authenticate(client)
-        _fixtures.benchmark_result(batch_id="10")
         benchmark_result = _fixtures.benchmark_result(batch_id="20")
-        _fixtures.benchmark_result(batch_id="30")
         response = client.get("/api/benchmarks/?batch_id=20")
         self.assert_200_ok(response, [_expected_entity(benchmark_result)])
+
+    def test_benchmark_list_filter_by_multiple_batch_id(self, client):
+        self.authenticate(client)
+        benchmark_result_1 = _fixtures.benchmark_result()
+        batch_id1 = benchmark_result_1.batch_id
+        benchmark_result_2 = _fixtures.benchmark_result()
+        batch_id2 = benchmark_result_2.batch_id
+        response = client.get(f"/api/benchmarks/?batch_id={batch_id1},{batch_id2}")
+        self.assert_200_ok(response, contains=_expected_entity(benchmark_result_1))
+        self.assert_200_ok(response, contains=_expected_entity(benchmark_result_2))
 
     def test_benchmark_list_filter_by_run_id(self, client):
         self.authenticate(client)
@@ -284,6 +292,16 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         _fixtures.benchmark_result(run_id="300")
         response = client.get("/api/benchmarks/?run_id=200")
         self.assert_200_ok(response, [_expected_entity(benchmark_result)])
+
+    def test_benchmark_list_filter_by_multiple_run_id(self, client):
+        self.authenticate(client)
+        benchmark_result_1 = _fixtures.benchmark_result()
+        run_id1 = benchmark_result_1.run_id
+        benchmark_result_2 = _fixtures.benchmark_result()
+        run_id2 = benchmark_result_2.run_id
+        response = client.get(f"/api/benchmarks/?run_id={run_id1},{run_id2}")
+        self.assert_200_ok(response, contains=_expected_entity(benchmark_result_1))
+        self.assert_200_ok(response, contains=_expected_entity(benchmark_result_2))
 
 
 class TestBenchmarkPost(_asserts.PostEnforcer):
