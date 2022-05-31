@@ -20,10 +20,9 @@ class CommitListAPI(ApiEndpoint):
         tags:
           - Commits
         """
-        commit = f.request.args.get("commit")
-        if commit:
-            commit_list = commit.split(",")
-            commits = Commit.search([Commit.sha.in_(commit_list)])
+        if sha_arg := f.request.args.get("sha"):
+            shas = sha_arg.split(",")
+            commits = Commit.search([Commit.sha.in_(shas)])
         else:
             commits = Commit.all(order_by=Commit.timestamp.desc(), limit=500)
         return self.serializer.many.dump(commits)
