@@ -83,10 +83,9 @@ class RunListAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        sha = f.request.args.get("sha")
-        if sha:
-            sha_list = sha.split(",")
-            runs = Run.search(filters=[Commit.sha.in_(sha_list)], joins=[Commit])
+        if sha_arg := f.request.args.get("sha"):
+            shas = sha_arg.split(",")
+            runs = Run.search(filters=[Commit.sha.in_(shas)], joins=[Commit])
         else:
             runs = Run.all(order_by=Run.timestamp.desc(), limit=1000)
         return self.serializer.many.dump(runs)
