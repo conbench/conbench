@@ -53,14 +53,14 @@ class TestCommitList(_asserts.ListEnforcer):
         sha2 = _fixtures.PARENT
         self.authenticate(client)
         _fixtures.benchmark_result(sha=sha1)
-        benchmark_result1 = _fixtures.benchmark_result()
+        benchmark_result_1 = _fixtures.benchmark_result()
         _fixtures.benchmark_result(sha=sha2)
-        benchmark_result2 = _fixtures.benchmark_result()
+        benchmark_result_2 = _fixtures.benchmark_result()
         response = client.get(f"/api/commits/?commit={sha1},{sha2}")
 
         self.assert_200_ok(
-            response, contains=_expected_entity(benchmark_result1.run.commit)
+            response, contains=_expected_entity(benchmark_result_1.run.commit)
         )
         self.assert_200_ok(
-            response, contains=_expected_entity(benchmark_result2.run.commit)
+            response, contains=_expected_entity(benchmark_result_2.run.commit)
         )

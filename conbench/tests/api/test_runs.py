@@ -238,17 +238,17 @@ class TestRunList(_asserts.ListEnforcer):
         sha2 = _fixtures.PARENT
         self.authenticate(client)
         _fixtures.benchmark_result(sha=_fixtures.PARENT)
-        run1 = _fixtures.benchmark_result()
+        run_1 = _fixtures.benchmark_result()
         _fixtures.benchmark_result(sha=_fixtures.CHILD)
-        run2 = _fixtures.benchmark_result()
+        run_2 = _fixtures.benchmark_result()
         response = client.get(f"/api/runs/?sha={sha1},{sha2}")
 
         self.assert_200_ok(
-            response, contains=_expected_entity(run1.run, include_baseline=False)
+            response, contains=_expected_entity(run_1.run, include_baseline=False)
         )
 
         self.assert_200_ok(
-            response, contains=_expected_entity(run2.run, include_baseline=False)
+            response, contains=_expected_entity(run_2.run, include_baseline=False)
         )
 
     def test_run_list_filter_by_sha_no_match(self, client):
