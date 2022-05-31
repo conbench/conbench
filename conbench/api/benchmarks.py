@@ -100,29 +100,25 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         tags:
           - Benchmarks
         """
-        name = f.request.args.get("name")
-        batch_id = f.request.args.get("batch_id")
-        run_id = f.request.args.get("run_id")
-        if name:
+        if name_arg := f.request.args.get("name"):
             benchmark_results = BenchmarkResult.search(
-                filters=[Case.name == name],
+                filters=[Case.name == name_arg],
                 joins=[Case],
             )
             # TODO: cannot currently compute z_score on an arbitrary
             # list of benchmark_results - assumes same machine/sha/repository.
             for benchmark_result in benchmark_results:
                 benchmark_result.z_score = 0
-        elif batch_id:
-            batch_id_list = batch_id.split(",")
+        elif batch_id_arg := f.request.args.get("batch_id"):
+            batch_ids = batch_id_arg.split(",")
             benchmark_results = BenchmarkResult.search(
-                filters=[BenchmarkResult.batch_id.in_(batch_id_list)]
+                filters=[BenchmarkResult.batch_id.in_(batch_ids)]
             )
-            # benchmark_results = BenchmarkResult.all(batch_id=batch_id)
             set_z_scores(benchmark_results)
-        elif run_id:
-            run_id_list = run_id.split(",")
+        elif run_id_arg := f.request.args.get("run_id"):
+            run_ids = run_id_arg.split(",")
             benchmark_results = BenchmarkResult.search(
-                filters=[BenchmarkResult.run_id.in_(run_id_list)]
+                filters=[BenchmarkResult.run_id.in_(run_ids)]
             )
             set_z_scores(benchmark_results)
         else:
