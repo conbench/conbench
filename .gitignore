@@ -130,3 +130,6 @@ dmypy.json
 
 # PyCharm
 .idea/
+
+# vscode project settings
+.vscode/launch.json

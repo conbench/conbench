@@ -40,3 +40,27 @@ class TestCommitList(_asserts.ListEnforcer):
         commit = self._create()
         response = client.get("/api/commits/")
         self.assert_200_ok(response, contains=_expected_entity(commit))
+
+    def test_commit_list_filter_by_sha(self, client):
+        sha = _fixtures.CHILD
+        self.authenticate(client)
+        commit = self._create()
+        response = client.get(f"/api/commits/?commit={sha}")
+        self.assert_200_ok(response, contains=_expected_entity(commit))
+
+    def test_commit_list_filter_by_multiple_sha(self, client):
+        sha1 = _fixtures.CHILD
+        sha2 = _fixtures.PARENT
+        self.authenticate(client)
+        _fixtures.benchmark_result(sha=sha1)
+        benchmark_result_1 = _fixtures.benchmark_result()
+        _fixtures.benchmark_result(sha=sha2)
+        benchmark_result_2 = _fixtures.benchmark_result()
+        response = client.get(f"/api/commits/?commit={sha1},{sha2}")
+
+        self.assert_200_ok(
+            response, contains=_expected_entity(benchmark_result_1.run.commit)
+        )
+        self.assert_200_ok(
+            response, contains=_expected_entity(benchmark_result_2.run.commit)
+        )

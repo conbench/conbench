@@ -1,3 +1,5 @@
+import flask as f
+
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
@@ -18,7 +20,11 @@ class CommitListAPI(ApiEndpoint):
         tags:
           - Commits
         """
-        commits = Commit.all(order_by=Commit.timestamp.desc(), limit=500)
+        if sha_arg := f.request.args.get("sha"):
+            shas = sha_arg.split(",")
+            commits = Commit.search([Commit.sha.in_(shas)])
+        else:
+            commits = Commit.all(order_by=Commit.timestamp.desc(), limit=500)
         return self.serializer.many.dump(commits)
 
 
