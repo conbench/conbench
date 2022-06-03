@@ -104,15 +104,21 @@ class RunMixin:
         repository_name = repository
         if "github.com/" in repository:
             repository_name = repository.split("github.com/")[1]
-        run["display_name"] = ""
-        if run["name"]:
-            run["display_name"] = run["name"].split(":", 1)[0]
+        self._display_reason(run)
         run["commit"]["display_repository"] = repository_name
         commit_message = display_message(run["commit"]["message"])
         run["commit"]["display_message"] = commit_message
 
     def _display_time(self, obj, field):
         obj[f"display_{field}"] = display_time(obj[field])
+
+    def _display_reason(self, run):
+        run["display_name"] = ""
+        if run["name"]:
+            if "nightly" in run["name"]:
+                run["display_name"] = "nightly"
+            else:
+                run["display_name"] = run["name"].split(":", 1)[0]
 
     def _get_run(self, run_id):
         response = self.api_get("api.run", run_id=run_id)

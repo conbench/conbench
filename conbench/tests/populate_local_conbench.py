@@ -14,8 +14,13 @@ def generate_benchmarks_data(
     benchmark_language,
     timestamp,
     hardware_type,
+    is_nightly,
     mean=16.670462,
 ):
+    run_name = f"commit: {commit}"
+    if is_nightly:
+        run_name += " nightly"
+
     data = {
         "batch_id": uuid.uuid4().hex,
         "context": {
@@ -33,7 +38,7 @@ def generate_benchmarks_data(
             "benchmark_language_version": "Python 3.8.12",
         },
         "run_id": str(run_id),
-        "run_name": f"commit: {commit}",
+        "run_name": run_name,
         "stats": {
             "data": ["14.928533", "14.551965", "14.530887"],
             "iqr": "0.198823",
@@ -100,10 +105,10 @@ def generate_benchmarks_data(
 
 
 def generate_benchmarks_data_with_error(
-    run_id, commit, benchmark_name, benchmark_language, timestamp, hardware_type
+    run_id, commit, benchmark_name, benchmark_language, timestamp, hardware_type, is_nightly
 ):
     data = generate_benchmarks_data(
-        run_id, commit, benchmark_name, benchmark_language, timestamp, hardware_type
+        run_id, commit, benchmark_name, benchmark_language, timestamp, hardware_type, is_nightly
     )
     data.pop("stats")
     data["error"] = {"command": "some command", "stack trace": "stack trace ..."}
@@ -140,6 +145,8 @@ def create_benchmarks_data():
     means = [16.670462, 16.4, 16.5, 16.67, 16.7, 16.7]
 
     errors = [False, False, True, False, True, True]
+    
+    nightly = [False, True] * 3
 
     benchmark_names = ["csv-read", "csv-write"]
 
@@ -152,6 +159,7 @@ def create_benchmarks_data():
             for benchmark_language in benchmark_languages:
                 for benchmark_name in benchmark_names:
                     run_id, commit, mean = f"{hardware_type}{i+1}", commits[i], means[i]
+                    is_nightly = nightly[i]
                     timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
                     if errors[i] and benchmark_name == "csv-read":
                         benchmark_data = generate_benchmarks_data_with_error(
@@ -161,6 +169,7 @@ def create_benchmarks_data():
                             benchmark_language,
                             timestamp,
                             hardware_type,
+                            is_nightly,
                         )
                     else:
                         benchmark_data = generate_benchmarks_data(
@@ -170,6 +179,7 @@ def create_benchmarks_data():
                             benchmark_language,
                             timestamp,
                             hardware_type,
+                            is_nightly,
                             mean,
                         )
 
