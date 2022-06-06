@@ -105,10 +105,22 @@ def generate_benchmarks_data(
 
 
 def generate_benchmarks_data_with_error(
-    run_id, commit, benchmark_name, benchmark_language, timestamp, hardware_type, is_nightly
+    run_id,
+    commit,
+    benchmark_name,
+    benchmark_language,
+    timestamp,
+    hardware_type,
+    is_nightly,
 ):
     data = generate_benchmarks_data(
-        run_id, commit, benchmark_name, benchmark_language, timestamp, hardware_type, is_nightly
+        run_id,
+        commit,
+        benchmark_name,
+        benchmark_language,
+        timestamp,
+        hardware_type,
+        is_nightly,
     )
     data.pop("stats")
     data["error"] = {"command": "some command", "stack trace": "stack trace ..."}
@@ -145,7 +157,7 @@ def create_benchmarks_data():
     means = [16.670462, 16.4, 16.5, 16.67, 16.7, 16.7]
 
     errors = [False, False, True, False, True, True]
-    
+
     nightly = [False, True] * 3
 
     benchmark_names = ["csv-read", "csv-write"]
