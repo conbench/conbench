@@ -14,8 +14,8 @@ html {
 }
 
 /* fix datatable sorting icons */
-table.dataTable thead .sorting, 
-table.dataTable thead .sorting_asc, 
+table.dataTable thead .sorting,
+table.dataTable thead .sorting_asc,
 table.dataTable thead .sorting_desc {
   background : none;
 }
@@ -97,6 +97,11 @@ table.dataTable td {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+}
+
+.wordbreak-175 {
+  width: 175px;
+  overflow-wrap: break-word;
 }
 
 .ellipsis-500 {
