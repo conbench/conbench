@@ -71,9 +71,7 @@ def test_history():
     )
 
     # failed
-    _fixtures.benchmark_result(
-        commit=commit_3, name=name, error={"stack_trace": "..."}
-    )
+    _fixtures.benchmark_result(commit=commit_3, name=name, error={"stack_trace": "..."})
 
     data = [1.1, 1.0, 0.99]  # got better
     benchmark_result_3 = _fixtures.benchmark_result(
