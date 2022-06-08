@@ -404,6 +404,7 @@ def _api_hardware_entity(
 def _api_run_entity(
     run_id,
     run_name,
+    run_reason,
     commit_id,
     parent_id,
     hardware_id,
@@ -417,6 +418,7 @@ def _api_run_entity(
     result = {
         "id": run_id,
         "name": run_name,
+        "reason": run_reason,
         "timestamp": now,
         "commit": _api_commit_entity(commit_id, parent_id, links=False),
         "hardware": _api_hardware_entity(
@@ -517,6 +519,7 @@ HARDWARE_ENTITY = _api_hardware_entity("some-machine-uuid-1", "some-machine-name
 RUN_ENTITY = _api_run_entity(
     "some-run-uuid-1",
     "some run name",
+    "some run reason",
     "some-commit-uuid-1",
     "some-parent-commit-uuid-1",
     "some-machine-uuid-1",
@@ -529,6 +532,7 @@ RUN_LIST = [
     _api_run_entity(
         "some-run-uuid-1",
         "some run name",
+        "some run reason",
         "some-commit-uuid-1",
         "some-parent-commit-uuid-1",
         "some-machine-uuid-1",

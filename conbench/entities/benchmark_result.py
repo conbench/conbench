@@ -111,6 +111,7 @@ class BenchmarkResult(Base, EntityMixin):
         # create if not exists
         run_id = data["run_id"]
         run_name = data.pop("run_name", None)
+        run_reason = data.pop("run_reason", None)
         run = Run.first(id=run_id)
         if run:
             if has_error:
@@ -121,6 +122,7 @@ class BenchmarkResult(Base, EntityMixin):
                 {
                     "id": run_id,
                     "name": run_name,
+                    "reason": run_reason,
                     "commit_id": commit.id,
                     "hardware_id": hardware.id,
                     "has_errors": has_error,
@@ -235,6 +237,7 @@ class GitHubCreate(marshmallow.Schema):
 class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     run_id = marshmallow.fields.String(required=True)
     run_name = marshmallow.fields.String(required=False)
+    run_reason = marshmallow.fields.String(required=False)
     batch_id = marshmallow.fields.String(required=True)
     timestamp = marshmallow.fields.DateTime(required=True)
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)

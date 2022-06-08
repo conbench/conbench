@@ -46,10 +46,18 @@
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
-              <b>reason</b>
+              <b>run name</b>
               <div align="right" style="display:inline-block; float: right;">
 	            {% if run.name %}
                   {{ run.name }}
+                {% endif %}
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>run reason</b>
+              <div align="right" style="display:inline-block; float: right;">
+	            {% if run.reason %}
+                  {{ run.reason }}
                 {% endif %}
               </div>
             </li>

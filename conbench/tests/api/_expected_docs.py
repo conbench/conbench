@@ -305,6 +305,63 @@
                 },
                 "description": "OK",
             },
+            "CompareBenchmarkResult": {
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "commits": {
+                                "baseline": {
+                                    "author_avatar": "https://avatars.githubusercontent.com/u/1299904?v=4",
+                                    "author_login": "bkietz",
+                                    "author_name": "Benjamin Kietzman",
+                                    "id": "some-baseline-commit-id",
+                                    "message": "ARROW-11767: [C++] Scalar::Hash may segfault",
+                                    "parent_sha": "6d703c4c7b15be630af48d5e9ef61628751674b2",
+                                    "repository": "https://github.com/apache/arrow",
+                                    "sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                    "timestamp": "2021-02-24T22:12:11",
+                                    "url": "https://github.com/apache/arrow/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                },
+                                "contender": {
+                                    "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                    "author_login": "dianaclarke",
+                                    "author_name": "Diana Clarke",
+                                    "id": "some-contender-commit-id",
+                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                    "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                    "repository": "https://github.com/apache/arrow",
+                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                    "timestamp": "2021-02-25T01:02:51",
+                                    "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+                                },
+                            },
+                            "links": {
+                                "self": "http://localhost/api/compare/commits/4beb514d071c9beec69b8917b5265e77ade22fb3...02addad336ba19a654f9c857ede546331be7b631/"
+                            },
+                            "runs": [
+                                {
+                                    "baseline": {
+                                        "hardware_name": "diana",
+                                        "run": "http://localhost/api/runs/some-baseline-run-id/",
+                                        "run_id": "some-baseline-run-id",
+                                        "run_name": "commit: 4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                        "run_timestamp": "2021-02-24T23:12:11",
+                                    },
+                                    "compare": "http://localhost/api/compare/runs/some-baseline-run-id...some-contender-run-id/",
+                                    "contender": {
+                                        "hardware_name": "diana",
+                                        "run": "http://localhost/api/runs/some-contender-run-id/",
+                                        "run_id": "some-contender-run-id",
+                                        "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+                                        "run_timestamp": "2021-02-25T06:02:51",
+                                    },
+                                }
+                            ],
+                        }
+                    }
+                },
+                "description": "OK",
+            },
             "CompareEntity": {
                 "content": {
                     "application/json": {
@@ -425,63 +482,6 @@
                                 "unit": "s",
                             },
                         ]
-                    }
-                },
-                "description": "OK",
-            },
-            "CompareBenchmarkResult": {
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "commits": {
-                                "baseline": {
-                                    "author_avatar": "https://avatars.githubusercontent.com/u/1299904?v=4",
-                                    "author_login": "bkietz",
-                                    "author_name": "Benjamin Kietzman",
-                                    "id": "some-baseline-commit-id",
-                                    "message": "ARROW-11767: [C++] Scalar::Hash may segfault",
-                                    "parent_sha": "6d703c4c7b15be630af48d5e9ef61628751674b2",
-                                    "repository": "https://github.com/apache/arrow",
-                                    "sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                    "timestamp": "2021-02-24T22:12:11",
-                                    "url": "https://github.com/apache/arrow/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                },
-                                "contender": {
-                                    "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
-                                    "author_login": "dianaclarke",
-                                    "author_name": "Diana Clarke",
-                                    "id": "some-contender-commit-id",
-                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
-                                    "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                    "repository": "https://github.com/apache/arrow",
-                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                    "timestamp": "2021-02-25T01:02:51",
-                                    "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
-                                },
-                            },
-                            "links": {
-                                "self": "http://localhost/api/compare/commits/4beb514d071c9beec69b8917b5265e77ade22fb3...02addad336ba19a654f9c857ede546331be7b631/"
-                            },
-                            "runs": [
-                                {
-                                    "baseline": {
-                                        "hardware_name": "diana",
-                                        "run": "http://localhost/api/runs/some-baseline-run-id/",
-                                        "run_id": "some-baseline-run-id",
-                                        "run_name": "commit: 4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                        "run_timestamp": "2021-02-24T23:12:11",
-                                    },
-                                    "compare": "http://localhost/api/compare/runs/some-baseline-run-id...some-contender-run-id/",
-                                    "contender": {
-                                        "hardware_name": "diana",
-                                        "run": "http://localhost/api/runs/some-contender-run-id/",
-                                        "run_id": "some-contender-run-id",
-                                        "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
-                                        "run_timestamp": "2021-02-25T06:02:51",
-                                    },
-                                }
-                            ],
-                        }
                     }
                 },
                 "description": "OK",
@@ -733,6 +733,7 @@
                                 "self": "http://localhost/api/runs/some-run-uuid-1/",
                             },
                             "name": "some run name",
+                            "reason": "some run reason",
                             "timestamp": "2021-02-04T17:22:05.225583",
                         }
                     }
@@ -788,6 +789,7 @@
                                     "self": "http://localhost/api/runs/some-run-uuid-1/",
                                 },
                                 "name": "some run name",
+                                "reason": "some run reason",
                                 "timestamp": "2021-02-04T17:22:05.225583",
                             }
                         ]
@@ -867,6 +869,7 @@
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
                     "run_id": {"type": "string"},
                     "run_name": {"type": "string"},
+                    "run_reason": {"type": "string"},
                     "stats": {"$ref": "#/components/schemas/BenchmarkResultCreate"},
                     "tags": {"type": "object"},
                     "timestamp": {"format": "date-time", "type": "string"},
@@ -879,6 +882,25 @@
                     "tags",
                     "timestamp",
                 ],
+                "type": "object",
+            },
+            "BenchmarkResultCreate": {
+                "properties": {
+                    "data": {"items": {"type": "number"}, "type": "array"},
+                    "iqr": {"type": "number"},
+                    "iterations": {"type": "integer"},
+                    "max": {"type": "number"},
+                    "mean": {"type": "number"},
+                    "median": {"type": "number"},
+                    "min": {"type": "number"},
+                    "q1": {"type": "number"},
+                    "q3": {"type": "number"},
+                    "stdev": {"type": "number"},
+                    "time_unit": {"type": "string"},
+                    "times": {"items": {"type": "number"}, "type": "array"},
+                    "unit": {"type": "string"},
+                },
+                "required": ["data", "iterations", "time_unit", "times", "unit"],
                 "type": "object",
             },
             "ClusterCreate": {
@@ -1000,25 +1022,6 @@
                     "secret": {"type": "string"},
                 },
                 "required": ["email", "name", "password", "secret"],
-                "type": "object",
-            },
-            "BenchmarkResultCreate": {
-                "properties": {
-                    "data": {"items": {"type": "number"}, "type": "array"},
-                    "iqr": {"type": "number"},
-                    "iterations": {"type": "integer"},
-                    "max": {"type": "number"},
-                    "mean": {"type": "number"},
-                    "median": {"type": "number"},
-                    "min": {"type": "number"},
-                    "q1": {"type": "number"},
-                    "q3": {"type": "number"},
-                    "stdev": {"type": "number"},
-                    "time_unit": {"type": "string"},
-                    "times": {"items": {"type": "number"}, "type": "array"},
-                    "unit": {"type": "string"},
-                },
-                "required": ["data", "iterations", "time_unit", "times", "unit"],
                 "type": "object",
             },
             "UserCreate": {

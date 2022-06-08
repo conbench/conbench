@@ -14,13 +14,10 @@ def generate_benchmarks_data(
     benchmark_language,
     timestamp,
     hardware_type,
-    is_nightly,
+    reason,
     mean=16.670462,
 ):
-    run_name = f"commit: {commit}"
-    if is_nightly:
-        run_name += " nightly"
-
+    run_name = f"{reason}: {commit}" if reason else commit
     data = {
         "batch_id": uuid.uuid4().hex,
         "context": {
@@ -63,6 +60,10 @@ def generate_benchmarks_data(
         },
         "timestamp": str(timestamp),
     }
+
+    if reason:
+        data["run_reason"] = reason
+
     for key in ["info", "tags", "context"]:
         fields_set = {
             f"{benchmark_language}_specific_{key}_field_1": "value-1",
@@ -111,7 +112,7 @@ def generate_benchmarks_data_with_error(
     benchmark_language,
     timestamp,
     hardware_type,
-    is_nightly,
+    reason,
 ):
     data = generate_benchmarks_data(
         run_id,
@@ -120,7 +121,7 @@ def generate_benchmarks_data_with_error(
         benchmark_language,
         timestamp,
         hardware_type,
-        is_nightly,
+        reason,
     )
     data.pop("stats")
     data["error"] = {"command": "some command", "stack trace": "stack trace ..."}
@@ -158,7 +159,7 @@ def create_benchmarks_data():
 
     errors = [False, False, True, False, True, True]
 
-    nightly = [False, True] * 3
+    reasons = ["commit", None, "pull request", "nightly", "manual", "an accident"]
 
     benchmark_names = ["csv-read", "csv-write"]
 
@@ -170,8 +171,8 @@ def create_benchmarks_data():
         for hardware_type in hardware_types:
             for benchmark_language in benchmark_languages:
                 for benchmark_name in benchmark_names:
-                    run_id, commit, mean = f"{hardware_type}{i+1}", commits[i], means[i]
-                    is_nightly = nightly[i]
+                    run_id = f"{hardware_type}{i+1}"
+                    commit, mean, reason = commits[i], means[i], reasons[i]
                     timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
                     if errors[i] and benchmark_name == "csv-read":
                         benchmark_data = generate_benchmarks_data_with_error(
@@ -181,7 +182,7 @@ def create_benchmarks_data():
                             benchmark_language,
                             timestamp,
                             hardware_type,
-                            is_nightly,
+                            reason,
                         )
                     else:
                         benchmark_data = generate_benchmarks_data(
@@ -191,7 +192,7 @@ def create_benchmarks_data():
                             benchmark_language,
                             timestamp,
                             hardware_type,
-                            is_nightly,
+                            reason,
                             mean,
                         )
 

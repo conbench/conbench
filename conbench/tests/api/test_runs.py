@@ -12,6 +12,7 @@ def _expected_entity(run, baseline_id=None, include_baseline=True):
     return _api_run_entity(
         run.id,
         run.name,
+        run.reason,
         run.commit_id,
         parent.id,
         run.hardware_id,
