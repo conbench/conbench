@@ -129,7 +129,14 @@ for name, benchmark in BENCHMARKS.items():
         click.Option(
             ("--run-name",),
             type=str,
-            help="Name of run (commit, pull request, etc).",
+            help="Free-text name of run (commit ABC, pull request 123, etc).",
+        )
+    )
+    params.append(
+        click.Option(
+            ("--run-reason",),
+            type=str,
+            help="Low-cardinality reason for run (commit, pull request, manual, etc).",
         )
     )
 
