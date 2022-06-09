@@ -13,7 +13,6 @@ from ._example_benchmarks import (
     SimpleBenchmarkWithClusterInfo,
 )
 
-REPO = "https://github.com/conbench/conbench"
 EXAMPLE = copy.deepcopy(_fixtures.VALID_PAYLOAD)
 EXAMPLE_WITH_CLUSTER_INFO = copy.deepcopy(_fixtures.VALID_PAYLOAD_FOR_CLUSTER)
 EXAMPLE_WITH_ERROR = copy.deepcopy(_fixtures.VALID_PAYLOAD_WITH_ERROR)
@@ -29,6 +28,11 @@ for example in [EXAMPLE, EXAMPLE_WITH_CLUSTER_INFO, EXAMPLE_WITH_ERROR]:
 
 def assert_keys_equal(a, b):
     assert set(a.keys()) == set(b.keys())
+
+
+def assert_repo_is_valid(repo):
+    assert repo.startswith("https://github.com/") or repo.startswith("git@github.com:")
+    assert repo.endswith("/conbench")
 
 
 def test_runner_simple_benchmark():
@@ -59,7 +63,7 @@ def test_runner_simple_benchmark():
         assert result["stats"]["iterations"] == 10
         assert len(result["stats"]["data"]) == 10
         assert result["context"]["benchmark_language"] == "Python"
-        assert result["github"]["repository"] == REPO
+        assert_repo_is_valid(result["github"]["repository"])
 
 
 def test_runner_simple_benchmark_that_fails():
@@ -77,7 +81,7 @@ def test_runner_simple_benchmark_that_fails():
         assert_keys_equal(result[key], EXAMPLE_WITH_ERROR[key])
     assert result["tags"] == {"name": tag}
     assert result["context"]["benchmark_language"] == "Python"
-    assert result["github"]["repository"] == REPO
+    assert_repo_is_valid(result["github"]["repository"])
     assert "stats" not in result
     assert "stack_trace" in result["error"]
     for text in [
@@ -113,7 +117,7 @@ def test_runner_case_benchmark():
     assert result["stats"]["iterations"] == 10
     assert len(result["stats"]["data"]) == 10
     assert result["context"]["benchmark_language"] == "Python"
-    assert result["github"]["repository"] == REPO
+    assert_repo_is_valid(result["github"]["repository"])
 
 
 def test_runner_external_benchmark():
@@ -136,7 +140,7 @@ def test_runner_external_benchmark():
     assert result["stats"]["iterations"] == 3
     assert len(result["stats"]["data"]) == 3
     assert result["context"] == {"benchmark_language": "C++"}
-    assert result["github"]["repository"] == REPO
+    assert_repo_is_valid(result["github"]["repository"])
 
 
 def test_runner_can_specify_run_and_batch_id():
