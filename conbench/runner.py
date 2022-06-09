@@ -63,7 +63,10 @@ class Benchmark(abc.ABC):
         run_id : str, optional
             Group executions together with a run id.
         run_name : str, optional
-            Name of run (commit, pull request, etc).
+            Free-text name of run (commit ABC, pull request 123, etc).
+        run_reason : str, optional
+            Reason for run (commit, pull request, manual, etc). Probably will be used
+            to group runs, so try to keep the cardinality low.
         Returns
         -------
         (result, output) : sequence
@@ -260,6 +263,10 @@ class Conbench(Connection, MixinPython, MixinR):
         run_name = options.get("run_name")
         if run_name is not None:
             benchmark["run_name"] = run_name
+
+        run_reason = options.get("run_reason")
+        if run_reason is not None:
+            benchmark["run_reason"] = run_reason
 
         if publish:
             self.publish(benchmark)

@@ -12,6 +12,7 @@ class Run(Base, EntityMixin):
     __tablename__ = "run"
     id = NotNull(s.String(50), primary_key=True)
     name = Nullable(s.String(250))
+    reason = Nullable(s.String(250))
     timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id"))
     commit = relationship("Commit", lazy="joined")
@@ -85,6 +86,7 @@ class _Serializer(EntitySerializer):
         result = {
             "id": run.id,
             "name": run.name,
+            "reason": run.reason,
             "timestamp": run.timestamp.isoformat(),
             "commit": commit,
             "hardware": hardware,
