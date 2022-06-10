@@ -36,7 +36,6 @@
                     <th scope="col">Hash</th>
                     <th scope="col">Hardware</th>
                     <th scope="col">Reason</th>
-                    <th scope="col">Name</th>
                 </tr>
             </thead>
             <tbody>
@@ -74,12 +73,6 @@
 
                      {% if run.reason %}
                        <td><div class="ellipsis-175">{{ run.reason }}</div></td>
-                     {% else %}
-                       <td></td>
-                     {% endif %}
-
-                     {% if run.name %}
-                       <td><div class="wordbreak-175">{{ run.name }}</div></td>
                      {% else %}
                        <td></td>
                      {% endif %}
