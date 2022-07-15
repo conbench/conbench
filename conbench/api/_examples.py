@@ -450,7 +450,7 @@ BENCHMARK_ENTITY = _api_benchmark_entity(
     "some-batch-uuid-1",
     "some-run-uuid-1",
     "file-write",
-    "Python"
+    "Python",
 )
 COMMIT_ENTITY = _api_commit_entity(
     "some-commit-uuid-1",

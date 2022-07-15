@@ -185,7 +185,9 @@ class _Serializer(EntitySerializer):
             "run_id": benchmark_result.run_id,
             "batch_id": benchmark_result.batch_id,
             "timestamp": benchmark_result.timestamp.isoformat(),
-            "language": benchmark_result.context.tags.get("benchmark_language", "unknown"),
+            "language": benchmark_result.context.tags.get(
+                "benchmark_language", "unknown"
+            ),
             "tags": tags,
             "stats": {
                 "data": [to_float(x) for x in benchmark_result.data],
