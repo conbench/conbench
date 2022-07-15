@@ -30,6 +30,7 @@ def _api_benchmark_entity(
     batch_id,
     run_id,
     name,
+    language,
     error=None,
 ):
     if error:
@@ -97,6 +98,7 @@ def _api_benchmark_entity(
         "run_id": run_id,
         "batch_id": batch_id,
         "timestamp": "2020-11-25T21:02:42.706806",
+        "language": "Python",
         "stats": stats,
         "error": error,
         "tags": {
@@ -448,6 +450,7 @@ BENCHMARK_ENTITY = _api_benchmark_entity(
     "some-batch-uuid-1",
     "some-run-uuid-1",
     "file-write",
+    "Python"
 )
 COMMIT_ENTITY = _api_commit_entity(
     "some-commit-uuid-1",

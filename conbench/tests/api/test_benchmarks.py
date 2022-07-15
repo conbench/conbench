@@ -23,6 +23,7 @@ def _expected_entity(benchmark_result):
         benchmark_result.batch_id,
         benchmark_result.run_id,
         benchmark_result.case.name,
+        benchmark_result.language,
         benchmark_result.error,
     )
 
