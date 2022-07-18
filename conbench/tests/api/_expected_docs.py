@@ -50,6 +50,7 @@
                             "batch_id": "some-batch-uuid-1",
                             "error": None,
                             "id": "some-benchmark-uuid-1",
+                            "language": "Python",
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "info": "http://localhost/api/info/some-info-uuid-1/",
@@ -120,6 +121,7 @@
                             "batch_id": "some-batch-uuid-1",
                             "error": None,
                             "id": "some-benchmark-uuid-1",
+                            "language": "Python",
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "info": "http://localhost/api/info/some-info-uuid-1/",
@@ -191,6 +193,7 @@
                                 "batch_id": "some-batch-uuid-1",
                                 "error": None,
                                 "id": "some-benchmark-uuid-1",
+                                "language": "Python",
                                 "links": {
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                     "info": "http://localhost/api/info/some-info-uuid-1/",
