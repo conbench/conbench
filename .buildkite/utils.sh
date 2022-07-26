@@ -105,6 +105,7 @@ upload_conbench_to_pypi() {
 rollback() {
   set -x
   aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
+  kubectl config set-context --current --namespace=${NAMESPACE}
   kubectl rollout undo deployment.v1.apps/conbench-deployment
   kubectl rollout status deployment/conbench-deployment
 }
