@@ -43,12 +43,3 @@ steps:
     concurrency_group: "conbench-deploy"
     command:
       - source .buildkite/utils.sh upload_conbench_to_pypi
-
-
-  - block: "Rollback"
-    if: build.branch == 'main'
-    prompt: "Do you want to rollback?"
-
-  - label: "Rollback"
-    trigger: "conbench-rollback"
-    if: build.branch == 'main'
