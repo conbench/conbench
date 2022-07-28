@@ -6,7 +6,6 @@
 
 # Conbench
 
-
 <img src="https://raw.githubusercontent.com/conbench/conbench/main/conbench.png" alt="Language-independent Continuous Benchmarking (CB) Framework">
 
 
