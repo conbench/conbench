@@ -2,9 +2,14 @@ import pathlib
 
 import setuptools
 
-with open("README.md", "r") as readme:
+repo_root = pathlib.Path(__file__).parent
+
+with open(repo_root / "README.md", "r") as readme:
     long_description = readme.read()
 
+__version__ = ""
+with open(repo_root / "conbencher" / "_version.py", "r") as f:
+    exec(f.read())  # only overwrites the __version__ variable
 
 install_requires = [
     line.strip()
@@ -16,7 +21,7 @@ install_requires = [
 
 setuptools.setup(
     name="conbencher",
-    version="0.0.1",
+    version=__version__,
     description="Utilities for Conbench Runs",
     long_description=long_description,
     long_description_content_type="text/markdown",
