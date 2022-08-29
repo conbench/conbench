@@ -1,27 +1,29 @@
 import abc
 import subprocess
 
-from .client import ConbenchClient
-from .log import fatal_and_log
-from .result import BenchmarkResult
+from ..client import ConbenchClient
+from ..log import fatal_and_log
+from ..result import BenchmarkResult
 
 
-class BenchmarkRunner(abc.ABC):
+class _BenchmarkRunner(abc.ABC):
     """
     An abstract class to run benchmarks, transform results into conbench form,
     and send them to a conbench server
 
-    Parameters
+    Attributes
     ----------
     command : list[str]
         A list of args to be run on the command line, as would be passed
-        to `subprocess.run()`
+        to `subprocess.run()`. Must be specified in child classes.
+    results : list[BenchmarkResult]
+        Once `run()` has been called, results from that run
     """
 
+    command: list[str]
     results: list[BenchmarkResult] = None
 
-    def __init__(self, command: list[str]) -> None:
-        self.command = command
+    def __init__(self) -> None:
         self.client = ConbenchClient()
 
     def __call__(self, **kwargs) -> list:
