@@ -8,8 +8,8 @@ from .result import BenchmarkResult
 
 class BenchmarkRunner(abc.ABC):
     """
-    An abstract class to run a benchmark, transform its results into
-    conbench form, and send them to a conbench server
+    An abstract class to run benchmarks, transform results into conbench form,
+    and send them to a conbench server
 
     Parameters
     ----------
@@ -24,9 +24,21 @@ class BenchmarkRunner(abc.ABC):
         self.command = command
         self.client = ConbenchClient()
 
+    def __call__(self, **kwargs) -> list:
+        """
+        Run benchmarks and post results to conbench server
+
+        Parameters
+        ----------
+        kwargs
+            Passed through to `run()`
+        """
+        self.run(**kwargs)
+        self.post_results()
+
     def run(self, params: list[str] = None, **kwargs) -> list[BenchmarkResult]:
         """
-        Run a benchmark
+        Run benchmarks
 
         Parameters
         ----------
