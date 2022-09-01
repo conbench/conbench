@@ -1,6 +1,8 @@
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict
 
+from .machine_info import github_info, machine_info
+
 
 @dataclass
 class BenchmarkResult:
@@ -63,7 +65,7 @@ class BenchmarkResult:
     machine_info: Dict[str, Any] = None
     cluster_info: Dict[str, Any] = None
     context: Dict[str, Any] = None
-    github: Dict[str, Any] = None
+    github: Dict[str, Any] = field(default_factory=github_info)
     options: Dict[str, Any] = None
     output: str = None
     error: str = None
@@ -71,6 +73,12 @@ class BenchmarkResult:
     def __post_init__(self):
         if self.name and not self.tags.get("name"):
             self.tags["name"] = self.name
+
+        if self.options.get("run_name") and not self.run_name:
+            self.run_name = self.options["run_name"]
+
+        if not self.machine_info and not self.cluster_info:
+            self.machine_info = machine_info(host_name=None)
 
     def to_publishable_dict(self):
         """Returns a dict suitable for sending to conbench"""

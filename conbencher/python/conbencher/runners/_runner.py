@@ -23,9 +23,6 @@ class _BenchmarkRunner(abc.ABC):
     command: list[str]
     results: list[BenchmarkResult] = None
 
-    def __init__(self) -> None:
-        self.client = ConbenchClient()
-
     def __call__(self, **kwargs) -> list:
         """
         Run benchmarks and post results to conbench server
@@ -72,6 +69,8 @@ class _BenchmarkRunner(abc.ABC):
         """
         Post results of run to conbench
         """
+        client = ConbenchClient()
+
         if not self.results:
             fatal_and_log(
                 "No results attribute to post! Was `run()` called on this instance?"
@@ -80,7 +79,7 @@ class _BenchmarkRunner(abc.ABC):
         res_list = []
         for result in self.results:
             result_dict = result.to_publishable_dict()
-            res = self.client.post(path="/benchmarks", json=result_dict)
+            res = client.post(path="/benchmarks", json=result_dict)
             res_list.append(res)
 
         return res_list

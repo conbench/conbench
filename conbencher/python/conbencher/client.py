@@ -59,23 +59,24 @@ class ConbenchClient(_BaseClient):
     Environment variables
     ---------------------
     CONBENCH_URL
-        The URL of the Conbench server.
+        The URL of the Conbench server. Required.
     CONBENCH_EMAIL
-        The email to use for Conbench login.
+        The email to use for Conbench login. Only required if the server is private.
     CONBENCH_PASSWORD
-        The password to use for Conbench login.
+        The password to use for Conbench login. Only required if the server is private.
     """
 
     def __init__(self, adapter: Optional[HTTPAdapter] = None):
+        url = os.getenv("CONBENCH_URL")
+        if not url:
+            fatal_and_log("Environment variable CONBENCH_URL not found")
+
+        super().__init__(adapter=adapter)
+        self.base_url = url + "/api"
+
         login_creds = {
-            "url": os.getenv("CONBENCH_URL"),
             "email": os.getenv("CONBENCH_EMAIL"),
             "password": os.getenv("CONBENCH_PASSWORD"),
         }
-        for cred in login_creds:
-            if not login_creds[cred]:
-                fatal_and_log(f"Environment variable CONBENCH_{cred.upper()} not found")
-
-        super().__init__(adapter=adapter)
-        self.base_url = login_creds.pop("url") + "/api"
-        self.post("/login/", json=login_creds)
+        if login_creds["email"] and login_creds["password"]:
+            self.post("/login/", json=login_creds)
