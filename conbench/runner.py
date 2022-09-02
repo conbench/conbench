@@ -224,7 +224,7 @@ class Conbench(Connection, MixinPython, MixinR):
 
     def record(self, result, name, error=None, publish=True, **kwargs):
         """Record and publish an external benchmark result."""
-        tags, info, context, github, options, cluster_info, output = self._init(kwargs)
+        tags, info, context, github, options, cluster_info, output, remaining_kwargs = self._init(kwargs)
 
         tags["name"] = name
 
@@ -260,13 +260,16 @@ class Conbench(Connection, MixinPython, MixinR):
         else:
             benchmark["machine_info"] = self.machine_info
 
-        run_name = options.get("run_name")
-        if run_name is not None:
-            benchmark["run_name"] = run_name
+        benchmark["run_name"] = options.get("run_name") or remaining_kwargs.pop('run_name', None)
+        if benchmark["run_name"] is None:
+            raise RuntimeError("conbench requires run_name to be set via --run-name CLI or passing run_name kwarg to `record()` func")
 
-        run_reason = options.get("run_reason")
-        if run_reason is not None:
-            benchmark["run_reason"] = run_reason
+        benchmark["run_reason"] = options.get("run_reason") or remaining_kwargs.pop('run_reason', None)
+        if benchmark["run_reason"] is None:
+            raise RuntimeError("conbench requires run_reason to be set via --run-reason CLI or passing run_reason kwarg to `record()` func")
+
+        if remaining_kwargs:
+            raise RuntimeError(f"There are remaining kwargs that Conbench.record(...) isn't processing: {remaining_kwargs}")
 
         if publish:
             self.publish(benchmark)
@@ -302,14 +305,16 @@ class Conbench(Connection, MixinPython, MixinR):
         return False
 
     def _init(self, kwargs):
-        tags = kwargs.get("tags", {})
-        info = kwargs.get("info", {})
-        context = kwargs.get("context", {})
-        github = kwargs.get("github", {})
-        options = kwargs.get("options", {})
-        cluster_info = kwargs.get("cluster_info", {})
+        kwargs = kwargs.copy()
+        tags = kwargs.pop("tags", {})
+        info = kwargs.pop("info", {})
+        context = kwargs.pop("context", {})
+        github = kwargs.pop("github", {})
+        options = kwargs.pop("options", {})
+        cluster_info = kwargs.pop("cluster_info", {})
         github = github if github else self.github_info
-        return tags, info, context, github, options, cluster_info, kwargs.get("output")
+        output = kwargs.pop("output", None)
+        return tags, info, context, github, options, cluster_info, output, kwargs
 
     def _get_timing(self, f, iterations, options):
         times, output = [], None
