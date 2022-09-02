@@ -48,7 +48,7 @@ class GbenchRunner(_BenchmarkRunner):
             tags["gbench_contex"] = gbench_context
 
         res = BenchmarkResult(
-            name=name,
+            run_name=name,
             batch_id=batch_id,
             timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
             stats={
@@ -63,9 +63,6 @@ class GbenchRunner(_BenchmarkRunner):
             tags=tags,
             info={},
             context={"benchmark_language": "C++"},
-            options={},  # TODO
-            # are there any logs or more useful things we could insert here?
-            output=json.dumps(result),
         )
 
         return res

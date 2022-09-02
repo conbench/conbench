@@ -35,7 +35,7 @@ class _BenchmarkRunner(abc.ABC):
         self.run(**kwargs)
         self.post_results()
 
-    def run(self, params: list[str] = None, **kwargs) -> list[BenchmarkResult]:
+    def run(self, params: list[str] = None) -> list[BenchmarkResult]:
         """
         Run benchmarks
 
@@ -43,14 +43,12 @@ class _BenchmarkRunner(abc.ABC):
         ----------
         params : list[str]
             Additional parameters to be appended to the command before running
-        kwargs : dict[str, Any]
-            Named arguments passed through to `subprocess.run()`
         """
         command = self.command
         if params:
             command += params
 
-        res = subprocess.run(args=command, **kwargs)
+        res = subprocess.run(args=command)
         res.check_returncode()
 
         self.results = self.transform_results()

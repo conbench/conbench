@@ -14,7 +14,7 @@ class ArcheryRunner(GbenchRunner):
             raw_results = json.load(f)
 
         parsed_results = []
-        for suite in raw_results["suite"]:
+        for suite in raw_results["suites"]:
             parsed_results += self._parse_results(
                 results=suite,
                 extra_tags={"suite": suite["name"], "source": "cpp-micro"},
