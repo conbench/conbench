@@ -23,8 +23,10 @@ class GbenchRunner(_BenchmarkRunner):
         self, results: dict, extra_tags: dict = None
     ) -> list[BenchmarkResult]:
         """Parse a blob of results from gbench into a list of `BenchmarkResult` instances"""
+        # all results share a batch id
         batch_id = uuid.uuid4().hex
         gbench_context = results.get("context")
+
         parsed_results = []
         for result in results["benchmarks"]:
             result_parsed = self._parse_benchmark(
