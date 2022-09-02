@@ -28,16 +28,14 @@ class ArcheryRunner(_BenchmarkRunner):
     def _parse_results(
         self, results: dict, extra_tags: dict = None
     ) -> list[BenchmarkResult]:
-        """Parse a blob of results from gbench into a list of `BenchmarkResult` instances"""
+        """Parse a blob of results from archery into a list of `BenchmarkResult` instances"""
         # all results share a batch id
         batch_id = uuid.uuid4().hex
-        gbench_context = results.get("context")
 
         parsed_results = []
         for result in results["benchmarks"]:
             result_parsed = self._parse_benchmark(
                 result=result,
-                gbench_context=gbench_context,
                 batch_id=batch_id,
                 extra_tags=extra_tags,
             )
@@ -46,14 +44,12 @@ class ArcheryRunner(_BenchmarkRunner):
         return parsed_results
 
     def _parse_benchmark(
-        self, result: dict, gbench_context: dict, batch_id: str, extra_tags: dict
+        self, result: dict, batch_id: str, extra_tags: dict
     ) -> BenchmarkResult:
-        """Parse a gbench json benchmark result into a `BenchmarkResult` instance"""
+        """Parse an archery json benchmark result into a `BenchmarkResult` instance"""
         name, tags = _parse_benchmark_name(result["name"])
         if extra_tags:
             tags.update(extra_tags)
-        if gbench_context:
-            tags["gbench_contex"] = gbench_context
 
         res = BenchmarkResult(
             run_name=name,
