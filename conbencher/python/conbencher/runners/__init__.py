@@ -1,4 +1,4 @@
 from .archery import ArcheryRunner
-from .gbench import GbenchRunner
+from .gbench import GoogleBenchmarkRunner
 
-__all__ = ["ArcheryRunner", "GbenchRunner"]
+__all__ = ["ArcheryRunner", "GoogleBenchmarkRunner"]
