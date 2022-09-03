@@ -3,8 +3,8 @@ import json
 import uuid
 
 from ..result import BenchmarkResult
-from .gbench import _parse_benchmark_name
 from ._runner import _BenchmarkRunner
+from .gbench import _parse_benchmark_name
 
 
 class ArcheryRunner(_BenchmarkRunner):
