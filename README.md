@@ -259,6 +259,10 @@ class SimpleBenchmark(conbench.runner.Benchmark):
 ```
 
 Successfully registered benchmarks appear in the `conbench --help` list.
+For this benchmark to appear, the file must match the following paterns (documented in the [`utils.py:register_benchmarks` function](https://github.com/conbench/conbench/blob/35fde9954e2b365e36472f16b46fe3067e9dc455/conbench/util.py#L104):
+* `benchmark*.py`
+* `*benchmark.py`
+* `*benchmarks.py`
 
 ```
 (conbench) $ cd ~/workspace/conbench/conbench/tests/benchmark/
