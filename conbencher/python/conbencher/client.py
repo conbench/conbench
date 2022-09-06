@@ -1,3 +1,7 @@
+# All copied from https://github.com/conbench/benchalerts/blob/main/benchalerts/clients.py
+# TODO: extract client into a package and have both packages use it as a dep (or otherwise
+# use the same code somehow)
+
 import abc
 import os
 from typing import Optional

@@ -1,33 +1,15 @@
 import datetime
 import json
 import uuid
+from dataclasses import dataclass
 from itertools import groupby
+from tempfile import NamedTemporaryFile
 
 from ..result import BenchmarkResult
 from ._runner import _BenchmarkRunner
 
 
-def _parse_benchmark_name(full_name: str) -> tuple[str, dict[str, str]]:
-    """Split gbench name into benchmark name and tags"""
-    parts = full_name.split("/", 1)
-    name, params = parts[0], ""
-    if len(parts) == 2:
-        params = parts[1]
-
-    parts = name.split("<", 1)
-    if len(parts) == 2:
-        if params:
-            name, params = parts[0], f"<{parts[1]}/{params}"
-        else:
-            name, params = parts[0], f"<{parts[1]}"
-
-    tags = {}
-    if params:
-        tags["params"] = params
-
-    return name, tags
-
-
+# adapted from https://github.com/apache/arrow/blob/master/dev/archery/archery/benchmark/google.py
 class GoogleBenchmarkObservation:
     """Represents one run of a single (google c++) benchmark.
     Aggregates are reported by Google Benchmark executables alongside
@@ -101,11 +83,23 @@ class GoogleBenchmarkObservation:
             return self.time_unit
 
 
-class GoogleBenchmarkGroup:
+@dataclass
+class GoogleBenchmark:
     """A set of GoogleBenchmarkObservations."""
 
-    def __init__(self, name, runs):
-        """Initialize a GoogleBenchmarkGroup.
+    name: str
+    unit: str
+    time_unit: str
+    less_is_better: bool
+    values: list[float]
+    times: list[float]
+    counters: list = None
+
+    @classmethod
+    def from_runs(cls, name: str, runs: list[GoogleBenchmarkObservation]):
+        """
+        Create a GoogleBenchmarkGroup instance from a list of observations
+
         Parameters
         ----------
         name: str
@@ -113,43 +107,47 @@ class GoogleBenchmarkGroup:
         runs: list(GoogleBenchmarkObservation)
               Repetitions of GoogleBenchmarkObservation run.
         """
-        self.name = name
-        self.runs = runs
-        self.unit = self.runs[0].unit
-        self.time_unit = self.runs[0].time_unit
-        self.less_is_better = not self.unit.endswith("per_second")
-        self.values = [b.value for b in self.runs]
-        self.times = [b.real_time for b in self.runs]
-        # Slight kludge to extract the UserCounters for each benchmark
-        self.counters = self.runs[0].counters
+        return cls(
+            name=name,
+            unit=runs[0].unit,
+            time_unit=runs[0].time_unit,
+            less_is_better=not runs[0].unit.endswith("per_second"),
+            values=[b.value for b in runs],
+            times=[b.real_time for b in runs],
+        )
 
 
 class GoogleBenchmarkRunner(_BenchmarkRunner):
-    result_file = "gbench-results.json"
-    command = ["gbench", "benchmark", "run", "--output", result_file]
+    """A class for running Google Benchmarks and sending the results to conbench"""
+
+    command = ["gbench", "benchmark", "run"]
+
+    def __init__(self) -> None:
+        self.result_file = NamedTemporaryFile().name
+        self.command += ["--output", self.result_file]
+
+        super().__init__()
 
     def transform_results(self) -> list[BenchmarkResult]:
         """Transform gbench results into a list of BenchmarkResult instances"""
         with open(self.result_file, "r") as f:
             raw_results = json.load(f)
 
-        parsed_results = self._parse_results(raw_results)
+        parsed_results = self._parse_results(results=raw_results, extra_tags={})
 
         return parsed_results
 
-    def _parse_results(
-        self, results: dict, extra_tags: dict = None
-    ) -> list[BenchmarkResult]:
+    def _parse_results(self, results: dict, extra_tags: dict) -> list[BenchmarkResult]:
         """Parse a blob of results from gbench into a list of `BenchmarkResult` instances"""
         # all results share a batch id
         batch_id = uuid.uuid4().hex
-        gbench_context, benchmark_groups = self.parse_gbench_json(results)
+        gbench_context, benchmark_groups = self._parse_gbench_json(results)
+        extra_tags["gbench_context"] = gbench_context
 
         parsed_results = []
         for benchmark in benchmark_groups:
             result_parsed = self._parse_benchmark(
                 result=benchmark,
-                gbench_context=gbench_context,
                 batch_id=batch_id,
                 extra_tags=extra_tags,
             )
@@ -157,15 +155,33 @@ class GoogleBenchmarkRunner(_BenchmarkRunner):
 
         return parsed_results
 
+    @staticmethod
+    def _parse_gbench_json(raw_json: dict) -> tuple[dict, list]:
+        """Parse gbench result json into a context dict and a list of grouped benchmarks"""
+        gbench_context = raw_json.get("context")
+
+        # Follow archery approach in ignoring aggregate results
+        non_agg_benchmarks = [
+            b for b in raw_json["benchmarks"] if b["run_type"] != "aggregate"
+        ]
+
+        benchmark_groups = groupby(
+            sorted(non_agg_benchmarks, key=lambda x: x["name"]), lambda x: x["name"]
+        )
+
+        benchmarks = []
+        for name, group in benchmark_groups:
+            runs = [GoogleBenchmarkObservation(**obs) for obs in group]
+            benchmarks.append(GoogleBenchmark.from_runs(name=name, runs=runs))
+
+        return gbench_context, benchmarks
+
     def _parse_benchmark(
-        self, result: list, gbench_context: dict, batch_id: str, extra_tags: dict
+        self, result: GoogleBenchmark, batch_id: str, extra_tags: dict
     ) -> BenchmarkResult:
-        """Parse a group of gbench json benchmark results into a `BenchmarkResult` instance"""
-        name, tags = _parse_benchmark_name(result.name)
-        if extra_tags:
-            tags.update(extra_tags)
-        if gbench_context:
-            tags["gbench_context"] = gbench_context
+        """Parse a GoogleBenchmark instance into a `BenchmarkResult` instance"""
+        name, tags = self._parse_benchmark_name(result.name)
+        tags.update(extra_tags)
 
         res = BenchmarkResult(
             run_name=name,
@@ -188,21 +204,22 @@ class GoogleBenchmarkRunner(_BenchmarkRunner):
         return res
 
     @staticmethod
-    def parse_gbench_json(raw_json: dict) -> tuple[dict, list]:
-        """Parse gbench result json into a context dict and a list of grouped benchmarks"""
-        gbench_context = raw_json.get("context")
+    def _parse_benchmark_name(full_name: str) -> tuple[str, dict[str, str]]:
+        """Split gbench name into benchmark name and tags"""
+        parts = full_name.split("/", 1)
+        name, params = parts[0], ""
+        if len(parts) == 2:
+            params = parts[1]
 
-        non_agg_benchmarks = [
-            b for b in raw_json["benchmarks"] if b["run_type"] != "aggregate"
-        ]
+        parts = name.split("<", 1)
+        if len(parts) == 2:
+            if params:
+                name, params = parts[0], f"<{parts[1]}/{params}"
+            else:
+                name, params = parts[0], f"<{parts[1]}"
 
-        benchmark_groups = groupby(
-            sorted(non_agg_benchmarks, key=lambda x: x["name"]), lambda x: x["name"]
-        )
+        tags = {}
+        if params:
+            tags["params"] = params
 
-        benchmarks = []
-        for name, group in benchmark_groups:
-            runs = [GoogleBenchmarkObservation(**obs) for obs in group]
-            benchmarks.append(GoogleBenchmarkGroup(name=name, runs=runs))
-
-        return gbench_context, benchmarks
+        return name, tags
