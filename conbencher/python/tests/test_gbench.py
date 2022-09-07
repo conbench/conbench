@@ -2,7 +2,7 @@ import json
 
 import pytest
 from conbencher.result import BenchmarkResult
-from conbencher.runners import GoogleBenchmarkRunner
+from conbencher.adapters import GoogleBenchmarkAdapter
 
 gbench_json = {
     "context": {
@@ -189,19 +189,19 @@ gbench_json = {
 }
 
 
-class TestGbenchRunner:
+class TestGbenchAdapter:
     @pytest.fixture(scope="class")
-    def gbench_runner(self):
-        gbench_runner = GoogleBenchmarkRunner()
-        gbench_runner.command = ["echo", "'Hello, world!'"]
+    def gbench_adapter(self):
+        gbench_adapter = GoogleBenchmarkAdapter()
+        gbench_adapter.command = ["echo", "'Hello, world!'"]
 
-        with open(gbench_runner.result_file, "w") as f:
+        with open(gbench_adapter.result_file, "w") as f:
             json.dump(gbench_json, f)
 
-        return gbench_runner
+        return gbench_adapter
 
-    def test_transform_results(self, gbench_runner) -> None:
-        results = gbench_runner.transform_results()
+    def test_transform_results(self, gbench_adapter) -> None:
+        results = gbench_adapter.transform_results()
 
         assert len(results) == 2
         for result, original in zip(results, gbench_json["benchmarks"]):
@@ -211,6 +211,6 @@ class TestGbenchRunner:
             assert "params" in result.tags
             assert result.machine_info is not None
 
-    def test_run(self, gbench_runner) -> None:
-        results = gbench_runner.run()
+    def test_run(self, gbench_adapter) -> None:
+        results = gbench_adapter.run()
         assert len(results) == 2

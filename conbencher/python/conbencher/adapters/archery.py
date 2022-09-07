@@ -2,10 +2,10 @@ import json
 import uuid
 
 from ..result import BenchmarkResult
-from .gbench import GoogleBenchmark, GoogleBenchmarkRunner
+from .gbench import GoogleBenchmark, GoogleBenchmarkAdapter
 
 
-class ArcheryRunner(GoogleBenchmarkRunner):
+class ArcheryAdapter(GoogleBenchmarkAdapter):
     """A class for running Apache Arrow's archery benchmarks and sending the results to conbench"""
 
     command = ["archery", "benchmark", "run"]

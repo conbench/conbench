@@ -6,7 +6,7 @@ from itertools import groupby
 from tempfile import NamedTemporaryFile
 
 from ..result import BenchmarkResult
-from ._runner import _BenchmarkRunner
+from ._adapter import _BenchmarkAdapter
 
 
 # adapted from https://github.com/apache/arrow/blob/master/dev/archery/archery/benchmark/google.py
@@ -117,7 +117,7 @@ class GoogleBenchmark:
         )
 
 
-class GoogleBenchmarkRunner(_BenchmarkRunner):
+class GoogleBenchmarkAdapter(_BenchmarkAdapter):
     """A class for running Google Benchmarks and sending the results to conbench"""
 
     command = ["gbench", "benchmark", "run"]

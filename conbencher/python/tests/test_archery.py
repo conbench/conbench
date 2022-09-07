@@ -2,7 +2,7 @@ import json
 
 import pytest
 from conbencher.result import BenchmarkResult
-from conbencher.runners import ArcheryRunner
+from conbencher.adapters import ArcheryAdapter
 
 archery_json = {
     "suites": [
@@ -57,19 +57,19 @@ archery_json = {
 }
 
 
-class TestArcheryRunner:
+class TestArcheryAdapter:
     @pytest.fixture(scope="class")
-    def archery_runner(self):
-        archery_runner = ArcheryRunner()
-        archery_runner.command = ["echo", "'Hello, world!'"]
+    def archery_adapter(self):
+        archery_adapter = ArcheryAdapter()
+        archery_adapter.command = ["echo", "'Hello, world!'"]
 
-        with open(archery_runner.result_file, "w") as f:
+        with open(archery_adapter.result_file, "w") as f:
             json.dump(archery_json, f)
 
-        return archery_runner
+        return archery_adapter
 
-    def test_transform_results(self, archery_runner) -> None:
-        results = archery_runner.transform_results()
+    def test_transform_results(self, archery_adapter) -> None:
+        results = archery_adapter.transform_results()
 
         assert len(results) == len(archery_json["suites"][0]["benchmarks"])
         for result, original in zip(results, archery_json["suites"][0]["benchmarks"]):
@@ -81,6 +81,6 @@ class TestArcheryRunner:
             assert result.stats["data"] == original["values"]
             assert result.stats["times"] == original["times"]
 
-    def test_run(self, archery_runner) -> None:
-        results = archery_runner.run()
+    def test_run(self, archery_adapter) -> None:
+        results = archery_adapter.run()
         assert len(results) == len(archery_json["suites"][0]["benchmarks"])
