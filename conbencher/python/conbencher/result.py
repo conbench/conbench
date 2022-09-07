@@ -1,3 +1,4 @@
+import datetime
 import uuid
 import warnings
 from dataclasses import asdict, dataclass, field
@@ -52,7 +53,9 @@ class BenchmarkResult:
     run_id: str = field(default_factory=lambda: uuid.uuid4().hex)
     batch_id: str = field(default_factory=lambda: uuid.uuid4().hex)
     run_reason: str = None
-    timestamp: str = None
+    timestamp: str = field(
+        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat()
+    )
     stats: Dict[str, Any] = None
     tags: Dict[str, Any] = field(default_factory=dict)
     info: Dict[str, Any] = None

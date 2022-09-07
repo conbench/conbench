@@ -8,7 +8,8 @@ from .gbench import GoogleBenchmark, GoogleBenchmarkAdapter
 class ArcheryAdapter(GoogleBenchmarkAdapter):
     """A class for running Apache Arrow's archery benchmarks and sending the results to conbench"""
 
-    command = ["archery", "benchmark", "run"]
+    def __init__(self) -> None:
+        super().__init__(command=["archery", "benchmark", "run"])
 
     def transform_results(self) -> list[BenchmarkResult]:
         """Transform archery results into a list of BenchmarkResult instances"""

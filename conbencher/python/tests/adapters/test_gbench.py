@@ -192,8 +192,7 @@ gbench_json = {
 class TestGbenchAdapter:
     @pytest.fixture(scope="class")
     def gbench_adapter(self):
-        gbench_adapter = GoogleBenchmarkAdapter()
-        gbench_adapter.command = ["echo", "'Hello, world!'"]
+        gbench_adapter = GoogleBenchmarkAdapter(command=["echo", "'Hello, world!'"])
 
         with open(gbench_adapter.result_file, "w") as f:
             json.dump(gbench_json, f)

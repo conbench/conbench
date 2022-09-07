@@ -1,4 +1,3 @@
-import datetime
 import json
 import uuid
 from dataclasses import dataclass
@@ -120,13 +119,16 @@ class GoogleBenchmark:
 class GoogleBenchmarkAdapter(_BenchmarkAdapter):
     """A class for running Google Benchmarks and sending the results to conbench"""
 
-    command = ["gbench", "benchmark", "run"]
-
-    def __init__(self) -> None:
+    def __init__(self, command: list[str]) -> None:
+        """
+        Parameters
+        ----------
+        command : list[str]
+            A list of strings defining a shell command to run the benchmarks
+        """
         self.result_file = NamedTemporaryFile().name
+        super().__init__(command=command)
         self.command += ["--output", self.result_file]
-
-        super().__init__()
 
     def transform_results(self) -> list[BenchmarkResult]:
         """Transform gbench results into a list of BenchmarkResult instances"""
@@ -186,7 +188,6 @@ class GoogleBenchmarkAdapter(_BenchmarkAdapter):
         res = BenchmarkResult(
             run_name=name,
             batch_id=batch_id,
-            timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
             stats={
                 "data": result.values,
                 "unit": {

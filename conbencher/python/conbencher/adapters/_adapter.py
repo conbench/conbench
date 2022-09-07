@@ -15,13 +15,16 @@ class _BenchmarkAdapter(abc.ABC):
     ----------
     command : list[str]
         A list of args to be run on the command line, as would be passed
-        to `subprocess.run()`. Must be specified in child classes.
+        to `subprocess.run()`.
     results : list[BenchmarkResult]
         Once `run()` has been called, results from that run
     """
 
     command: list[str]
     results: list[BenchmarkResult] = None
+
+    def __init__(self, command: list[str]) -> None:
+        self.command = command
 
     def __call__(self, **kwargs) -> list:
         """
