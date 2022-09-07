@@ -1,8 +1,8 @@
 import json
 
 import pytest
-from conbencher.result import BenchmarkResult
 from conbencher.adapters import GoogleBenchmarkAdapter
+from conbencher.result import BenchmarkResult
 
 gbench_json = {
     "context": {
