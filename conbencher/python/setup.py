@@ -22,17 +22,17 @@ install_requires = [
 setuptools.setup(
     name="conbencher",
     version=__version__,
-    description="Utilities for Conbench Runs",
+    description="Adapters for Running and Tracking Benchmarks",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3.8",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache Software License",
     ],
     python_requires=">=3.8",
-    maintainer="Apache Arrow Developers",
-    maintainer_email="dev@arrow.apache.org",
+    maintainer="Voltron Data",
+    maintainer_email="conbench@voltrondata.com",
     url="https://github.com/conbench/conbencher",
     install_requires=install_requires,
 )

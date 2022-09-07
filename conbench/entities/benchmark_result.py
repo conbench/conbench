@@ -75,23 +75,22 @@ class BenchmarkResult(Base, EntityMixin):
         # explicit `is None` because `stdev` is often 0
         elif any([data["stats"].get(field) is None for field in stats_fields]):
             dat = data["stats"]["data"]
-            fmt = "{:.6f}"  # not really sure why we're doing this, but now here for backwards consistency
             q1, q3 = np.percentile(dat, [25, 75])
 
             benchmark_result_data = {
-                "data": [fmt.format(x) for x in dat],
-                "times": [fmt.format(x) for x in data["stats"].get("times", [])],
+                "data": [x for x in dat],
+                "times": [x for x in data["stats"].get("times", [])],
                 "unit": data["stats"]["unit"],
                 "time_unit": data["stats"].get("time_unit", "s"),
                 "iterations": len(dat),
-                "mean": fmt.format(np.mean(dat)),
-                "median": fmt.format(np.median(dat)),
-                "min": fmt.format(np.min(dat)),
-                "max": fmt.format(np.max(dat)),
-                "stdev": fmt.format(np.std(dat) if len(dat) > 2 else 0),
-                "q1": fmt.format(q1),
-                "q3": fmt.format(q3),
-                "iqr": fmt.format(q3 - q1),
+                "mean": np.mean(dat),
+                "median": np.median(dat),
+                "min": np.min(dat),
+                "max": np.max(dat),
+                "stdev": np.std(dat) if len(dat) > 2 else 0,
+                "q1": q1,
+                "q3": q3,
+                "iqr": q3 - q1,
             }
         else:
             benchmark_result_data = data["stats"]
