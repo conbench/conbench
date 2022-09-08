@@ -63,21 +63,20 @@ class BenchmarkResult(Base, EntityMixin):
         # calculate any missing stats if data available
         elif data["stats"].get("data"):
             benchmark_result_data = data["stats"]
-            q1, q3 = np.percentile(benchmark_result_data, [25, 75])
+            dat = [float(x) for x in benchmark_result_data["data"]]
+            q1, q3 = np.percentile(dat, [25, 75])
 
             calculated_result_data = {
-                "data": benchmark_result_data["data"],
+                "data": dat,
                 "times": data["stats"].get("times", []),
                 "unit": data["stats"]["unit"],
                 "time_unit": data["stats"].get("time_unit", "s"),
-                "iterations": len(benchmark_result_data["data"]),
-                "mean": np.mean(benchmark_result_data["data"]),
-                "median": np.median(benchmark_result_data["data"]),
-                "min": np.min(benchmark_result_data["data"]),
-                "max": np.max(benchmark_result_data["data"]),
-                "stdev": np.std(benchmark_result_data["data"])
-                if len(benchmark_result_data["data"]) > 2
-                else 0,
+                "iterations": len(dat),
+                "mean": np.mean(dat),
+                "median": np.median(dat),
+                "min": np.min(dat),
+                "max": np.max(dat),
+                "stdev": np.std(dat) if len(dat) > 2 else 0,
                 "q1": q1,
                 "q3": q3,
                 "iqr": q3 - q1,
