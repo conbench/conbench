@@ -1,8 +1,8 @@
 import json
 
 import pytest
-from conbencher.adapters import ArcheryAdapter
-from conbencher.result import BenchmarkResult
+from benchadapt.adapters import ArcheryAdapter
+from benchadapt.result import BenchmarkResult
 
 archery_json = {
     "suites": [

@@ -1,4 +1,4 @@
-# conbencher
+# benchadapt
 
 Packages in multiple languages containing utilities for running benchmarks and
 sending the results to a conbench server.

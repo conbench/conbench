@@ -8,7 +8,7 @@ with open(repo_root / "README.md", "r") as readme:
     long_description = readme.read()
 
 __version__ = ""
-with open(repo_root / "conbencher" / "_version.py", "r") as f:
+with open(repo_root / "benchadapt" / "_version.py", "r") as f:
     exec(f.read())  # only overwrites the __version__ variable
 
 install_requires = [
@@ -20,7 +20,7 @@ install_requires = [
 ]
 
 setuptools.setup(
-    name="conbencher",
+    name="benchadapt",
     version=__version__,
     description="Adapters for Running and Tracking Benchmarks",
     long_description=long_description,
@@ -33,6 +33,6 @@ setuptools.setup(
     python_requires=">=3.8",
     maintainer="Voltron Data",
     maintainer_email="conbench@voltrondata.com",
-    url="https://github.com/conbench/conbencher",
+    url="https://github.com/conbench/benchadapt",
     install_requires=install_requires,
 )

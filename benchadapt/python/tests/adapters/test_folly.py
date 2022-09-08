@@ -3,8 +3,9 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from conbencher.adapters import FollyAdapter
-from conbencher.result import BenchmarkResult
+
+from benchadapt.adapters import FollyAdapter
+from benchadapt.result import BenchmarkResult
 
 folly_jsons = {
     "velox_benchmark_basic_selectivity_vector.json": [

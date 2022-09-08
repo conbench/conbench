@@ -3,8 +3,9 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from conbencher.adapters import GoogleBenchmarkAdapter
-from conbencher.result import BenchmarkResult
+
+from benchadapt.adapters import GoogleBenchmarkAdapter
+from benchadapt.result import BenchmarkResult
 
 gbench_json = {
     "context": {
