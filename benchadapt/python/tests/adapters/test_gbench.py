@@ -3,7 +3,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 from benchadapt.adapters import GoogleBenchmarkAdapter
 from benchadapt.result import BenchmarkResult
 
