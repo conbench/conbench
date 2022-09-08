@@ -1,6 +1,6 @@
 import json
+import tempfile
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
 from conbencher.adapters import FollyAdapter
@@ -62,8 +62,7 @@ class TestFollyAdapter:
 
     @pytest.fixture(scope="class")
     def folly_adapter(self):
-        tempdir = Path(TemporaryDirectory().name)
-        tempdir.mkdir()
+        tempdir = Path(tempfile.mkdtemp())
 
         folly_adapter = FollyAdapter(
             command=["echo", "'Hello, world!'"],

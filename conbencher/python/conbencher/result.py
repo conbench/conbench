@@ -69,9 +69,6 @@ class BenchmarkResult:
         if not self.machine_info and not self.cluster_info:
             self.machine_info = machine_info(host_name=None)
 
-        if self.run_reason:
-            assert self.run_reason in {"commit", "merge", "nightly"}
-
     def to_publishable_dict(self):
         """Returns a dict suitable for sending to conbench"""
         res_dict = asdict(self)

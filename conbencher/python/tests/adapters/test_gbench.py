@@ -1,4 +1,6 @@
 import json
+import tempfile
+from pathlib import Path
 
 import pytest
 from conbencher.adapters import GoogleBenchmarkAdapter
@@ -192,7 +194,10 @@ gbench_json = {
 class TestGbenchAdapter:
     @pytest.fixture(scope="class")
     def gbench_adapter(self):
-        gbench_adapter = GoogleBenchmarkAdapter(command=["echo", "'Hello, world!'"])
+        result_file = tempfile.mktemp(suffix=".json")
+        gbench_adapter = GoogleBenchmarkAdapter(
+            command=["echo", "'Hello, world!'"], result_file=Path(result_file)
+        )
 
         with open(gbench_adapter.result_file, "w") as f:
             json.dump(gbench_json, f)

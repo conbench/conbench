@@ -52,9 +52,7 @@ class _BenchmarkAdapter(abc.ABC):
         if params:
             command += params
 
-        res = subprocess.run(args=command)
-        res.check_returncode()
-
+        subprocess.run(args=command, check=True)
         self.results = self.transform_results()
 
         return self.results
@@ -65,7 +63,6 @@ class _BenchmarkAdapter(abc.ABC):
         Method to transform results from the command line call into a list of
         instances of `BenchmarkResult`.
         """
-        raise NotImplementedError
 
     def post_results(self) -> list:
         """

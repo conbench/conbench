@@ -1,5 +1,7 @@
 import json
 import uuid
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import List
 
 from ..result import BenchmarkResult
@@ -10,7 +12,10 @@ class ArcheryAdapter(GoogleBenchmarkAdapter):
     """A class for running Apache Arrow's archery benchmarks and sending the results to conbench"""
 
     def __init__(self) -> None:
-        super().__init__(command=["archery", "benchmark", "run"])
+        result_file = NamedTemporaryFile()
+        super().__init__(
+            command=["archery", "benchmark", "run"], result_file=Path(result_file.name)
+        )
 
     def transform_results(self) -> List[BenchmarkResult]:
         """Transform archery results into a list of BenchmarkResult instances"""

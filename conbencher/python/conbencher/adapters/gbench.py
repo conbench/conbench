@@ -2,7 +2,7 @@ import json
 import uuid
 from dataclasses import dataclass
 from itertools import groupby
-from tempfile import NamedTemporaryFile
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 from ..result import BenchmarkResult
@@ -120,16 +120,17 @@ class GoogleBenchmark:
 class GoogleBenchmarkAdapter(_BenchmarkAdapter):
     """A class for running Google Benchmarks and sending the results to conbench"""
 
-    def __init__(self, command: list[str]) -> None:
+    def __init__(self, command: list[str], result_file: Path) -> None:
         """
         Parameters
         ----------
         command : list[str]
             A list of strings defining a shell command to run the benchmarks
+        result_file : Path
+            The path to a file of benchmark results that will be generated when ``.run()`` is called
         """
-        self.result_file = NamedTemporaryFile().name
+        self.result_file = Path(result_file)
         super().__init__(command=command)
-        self.command += ["--output", self.result_file]
 
     def transform_results(self) -> List[BenchmarkResult]:
         """Transform gbench results into a list of BenchmarkResult instances"""
