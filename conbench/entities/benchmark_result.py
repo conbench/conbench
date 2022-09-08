@@ -58,40 +58,35 @@ class BenchmarkResult(Base, EntityMixin):
         tags = data["tags"]
         has_error = "error" in data
 
-        stats_fields = [
-            "iterations",
-            "mean",
-            "median",
-            "min",
-            "max",
-            "stdev",
-            "q1",
-            "q3",
-            "iqr",
-        ]
         if has_error:
             benchmark_result_data = {"error": data["error"]}
-        # calculate stats if any missing
-        # explicit `is None` because `stdev` is often 0
-        elif any([data["stats"].get(field) is None for field in stats_fields]):
-            dat = data["stats"]["data"]
-            q1, q3 = np.percentile(dat, [25, 75])
+        # calculate any missing stats if data available
+        elif data["stats"].get("data"):
+            benchmark_result_data = data["stats"]["data"]
+            q1, q3 = np.percentile(benchmark_result_data, [25, 75])
 
-            benchmark_result_data = {
-                "data": dat,
+            calculated_result_data = {
+                "data": benchmark_result_data,
                 "times": data["stats"].get("times", []),
                 "unit": data["stats"]["unit"],
                 "time_unit": data["stats"].get("time_unit", "s"),
-                "iterations": len(dat),
-                "mean": np.mean(dat),
-                "median": np.median(dat),
-                "min": np.min(dat),
-                "max": np.max(dat),
-                "stdev": np.std(dat) if len(dat) > 2 else 0,
+                "iterations": len(benchmark_result_data),
+                "mean": np.mean(benchmark_result_data),
+                "median": np.median(benchmark_result_data),
+                "min": np.min(benchmark_result_data),
+                "max": np.max(benchmark_result_data),
+                "stdev": np.std(benchmark_result_data)
+                if len(benchmark_result_data) > 2
+                else 0,
                 "q1": q1,
                 "q3": q3,
                 "iqr": q3 - q1,
             }
+
+            for field in calculated_result_data:
+                # explicit `is None` because `stdev` is often 0
+                if benchmark_result_data.get(field) is None:
+                    benchmark_result_data[field] = calculated_result_data[field]
         else:
             benchmark_result_data = data["stats"]
 
