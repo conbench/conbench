@@ -1,6 +1,7 @@
 import json
 import uuid
 from pathlib import Path
+from typing import List
 
 from ..result import BenchmarkResult
 from ._adapter import _BenchmarkAdapter
@@ -11,7 +12,7 @@ class FollyAdapter(_BenchmarkAdapter):
 
     result_dir: Path
 
-    def __init__(self, command: list[str], result_dir: Path) -> None:
+    def __init__(self, command: List[str], result_dir: Path) -> None:
         """
         Parameters
         ----------
@@ -23,7 +24,7 @@ class FollyAdapter(_BenchmarkAdapter):
         self.result_dir = Path(result_dir)
         super().__init__(command=command)
 
-    def transform_results(self) -> list[BenchmarkResult]:
+    def transform_results(self) -> List[BenchmarkResult]:
         """Transform folly results into conbench form"""
 
         parsed_benchmarks = []
@@ -61,11 +62,3 @@ class FollyAdapter(_BenchmarkAdapter):
                 parsed_benchmarks.append(parsed_benchmark)
 
         return parsed_benchmarks
-
-
-if __name__ == "__main__":
-    folly_adapter = FollyAdapter(
-        ["echo", "hello"], Path("~", "Downloads", "tmpn4lr6v57").expanduser()
-    )
-
-    print(folly_adapter.transform_results())

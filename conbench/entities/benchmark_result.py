@@ -78,8 +78,8 @@ class BenchmarkResult(Base, EntityMixin):
             q1, q3 = np.percentile(dat, [25, 75])
 
             benchmark_result_data = {
-                "data": [x for x in dat],
-                "times": [x for x in data["stats"].get("times", [])],
+                "data": dat,
+                "times": data["stats"].get("times", []),
                 "unit": data["stats"]["unit"],
                 "time_unit": data["stats"].get("time_unit", "s"),
                 "iterations": len(dat),

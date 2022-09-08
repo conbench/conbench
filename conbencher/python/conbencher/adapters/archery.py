@@ -1,5 +1,6 @@
 import json
 import uuid
+from typing import List
 
 from ..result import BenchmarkResult
 from .gbench import GoogleBenchmark, GoogleBenchmarkAdapter
@@ -11,7 +12,7 @@ class ArcheryAdapter(GoogleBenchmarkAdapter):
     def __init__(self) -> None:
         super().__init__(command=["archery", "benchmark", "run"])
 
-    def transform_results(self) -> list[BenchmarkResult]:
+    def transform_results(self) -> List[BenchmarkResult]:
         """Transform archery results into a list of BenchmarkResult instances"""
         with open(self.result_file, "r") as f:
             raw_results = json.load(f)

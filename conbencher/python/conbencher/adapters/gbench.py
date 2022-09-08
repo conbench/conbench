@@ -3,6 +3,7 @@ import uuid
 from dataclasses import dataclass
 from itertools import groupby
 from tempfile import NamedTemporaryFile
+from typing import Dict, List, Tuple
 
 from ..result import BenchmarkResult
 from ._adapter import _BenchmarkAdapter
@@ -130,7 +131,7 @@ class GoogleBenchmarkAdapter(_BenchmarkAdapter):
         super().__init__(command=command)
         self.command += ["--output", self.result_file]
 
-    def transform_results(self) -> list[BenchmarkResult]:
+    def transform_results(self) -> List[BenchmarkResult]:
         """Transform gbench results into a list of BenchmarkResult instances"""
         with open(self.result_file, "r") as f:
             raw_results = json.load(f)
@@ -139,7 +140,7 @@ class GoogleBenchmarkAdapter(_BenchmarkAdapter):
 
         return parsed_results
 
-    def _parse_results(self, results: dict, extra_tags: dict) -> list[BenchmarkResult]:
+    def _parse_results(self, results: dict, extra_tags: dict) -> List[BenchmarkResult]:
         """Parse a blob of results from gbench into a list of `BenchmarkResult` instances"""
         # all results share a batch id
         batch_id = uuid.uuid4().hex
@@ -158,7 +159,7 @@ class GoogleBenchmarkAdapter(_BenchmarkAdapter):
         return parsed_results
 
     @staticmethod
-    def _parse_gbench_json(raw_json: dict) -> tuple[dict, list]:
+    def _parse_gbench_json(raw_json: dict) -> Tuple[dict, list]:
         """Parse gbench result json into a context dict and a list of grouped benchmarks"""
         gbench_context = raw_json.get("context")
 
@@ -205,7 +206,7 @@ class GoogleBenchmarkAdapter(_BenchmarkAdapter):
         return res
 
     @staticmethod
-    def _parse_benchmark_name(full_name: str) -> tuple[str, dict[str, str]]:
+    def _parse_benchmark_name(full_name: str) -> Tuple[str, Dict[str, str]]:
         """Split gbench name into benchmark name and tags"""
         parts = full_name.split("/", 1)
         name, params = parts[0], ""

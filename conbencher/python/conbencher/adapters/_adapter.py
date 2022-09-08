@@ -1,5 +1,6 @@
 import abc
 import subprocess
+from typing import List
 
 from ..client import ConbenchClient
 from ..log import fatal_and_log
@@ -13,17 +14,17 @@ class _BenchmarkAdapter(abc.ABC):
 
     Attributes
     ----------
-    command : list[str]
+    command : List[str]
         A list of args to be run on the command line, as would be passed
         to `subprocess.run()`.
-    results : list[BenchmarkResult]
+    results : List[BenchmarkResult]
         Once `run()` has been called, results from that run
     """
 
-    command: list[str]
-    results: list[BenchmarkResult] = None
+    command: List[str]
+    results: List[BenchmarkResult] = None
 
-    def __init__(self, command: list[str]) -> None:
+    def __init__(self, command: List[str]) -> None:
         self.command = command
 
     def __call__(self, **kwargs) -> list:
@@ -38,13 +39,13 @@ class _BenchmarkAdapter(abc.ABC):
         self.run(**kwargs)
         self.post_results()
 
-    def run(self, params: list[str] = None) -> list[BenchmarkResult]:
+    def run(self, params: List[str] = None) -> List[BenchmarkResult]:
         """
         Run benchmarks
 
         Parameters
         ----------
-        params : list[str]
+        params : List[str]
             Additional parameters to be appended to the command before running
         """
         command = self.command
@@ -59,7 +60,7 @@ class _BenchmarkAdapter(abc.ABC):
         return self.results
 
     @abc.abstractmethod
-    def transform_results(self) -> list[BenchmarkResult]:
+    def transform_results(self) -> List[BenchmarkResult]:
         """
         Method to transform results from the command line call into a list of
         instances of `BenchmarkResult`.
