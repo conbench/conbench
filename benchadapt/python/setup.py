@@ -33,6 +33,6 @@ setuptools.setup(
     python_requires=">=3.8",
     maintainer="Voltron Data",
     maintainer_email="conbench@voltrondata.com",
-    url="https://github.com/conbench/benchadapt",
+    url="https://github.com/conbench/conbench/tree/main/benchadapt",
     install_requires=install_requires,
 )
