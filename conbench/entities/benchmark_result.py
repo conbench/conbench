@@ -1,5 +1,6 @@
 import flask as f
 import marshmallow
+import numpy as np
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy.dialects import postgresql
@@ -59,6 +60,32 @@ class BenchmarkResult(Base, EntityMixin):
 
         if has_error:
             benchmark_result_data = {"error": data["error"]}
+        # calculate any missing stats if data available
+        elif data["stats"].get("data"):
+            benchmark_result_data = data["stats"]
+            dat = [float(x) for x in benchmark_result_data["data"]]
+            q1, q3 = np.percentile(dat, [25, 75])
+
+            calculated_result_data = {
+                "data": dat,
+                "times": data["stats"].get("times", []),
+                "unit": data["stats"]["unit"],
+                "time_unit": data["stats"].get("time_unit", "s"),
+                "iterations": len(dat),
+                "mean": np.mean(dat),
+                "median": np.median(dat),
+                "min": np.min(dat),
+                "max": np.max(dat),
+                "stdev": np.std(dat) if len(dat) > 2 else 0,
+                "q1": q1,
+                "q3": q3,
+                "iqr": q3 - q1,
+            }
+
+            for field in calculated_result_data:
+                # explicit `is None` because `stdev` is often 0
+                if benchmark_result_data.get(field) is None:
+                    benchmark_result_data[field] = calculated_result_data[field]
         else:
             benchmark_result_data = data["stats"]
 
