@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 from ..result import BenchmarkResult
-from ._adapter import _BenchmarkAdapter
+from ._adapter import BenchmarkAdapter
 
 
 # adapted from https://github.com/apache/arrow/blob/master/dev/archery/archery/benchmark/google.py
@@ -117,7 +117,7 @@ class GoogleBenchmark:
         )
 
 
-class GoogleBenchmarkAdapter(_BenchmarkAdapter):
+class GoogleBenchmarkAdapter(BenchmarkAdapter):
     """A class for running Google Benchmarks and sending the results to conbench"""
 
     def __init__(self, command: list[str], result_file: Path) -> None:

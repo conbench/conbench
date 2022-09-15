@@ -7,7 +7,7 @@ from ..log import fatal_and_log
 from ..result import BenchmarkResult
 
 
-class _BenchmarkAdapter(abc.ABC):
+class BenchmarkAdapter(abc.ABC):
     """
     An abstract class to run benchmarks, transform results into conbench form,
     and send them to a conbench server
