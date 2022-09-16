@@ -91,12 +91,12 @@ class GoogleBenchmark:
     unit: str
     time_unit: str
     less_is_better: bool
-    values: list[float]
-    times: list[float]
-    counters: list = None
+    values: List[float]
+    times: List[float]
+    counters: List = None
 
     @classmethod
-    def from_runs(cls, name: str, runs: list[GoogleBenchmarkObservation]):
+    def from_runs(cls, name: str, runs: List[GoogleBenchmarkObservation]):
         """
         Create a GoogleBenchmarkGroup instance from a list of observations
 
@@ -104,7 +104,7 @@ class GoogleBenchmark:
         ----------
         name: str
               Name of the benchmark
-        runs: list(GoogleBenchmarkObservation)
+        runs: List(GoogleBenchmarkObservation)
               Repetitions of GoogleBenchmarkObservation run.
         """
         return cls(
@@ -120,11 +120,11 @@ class GoogleBenchmark:
 class GoogleBenchmarkAdapter(BenchmarkAdapter):
     """A class for running Google Benchmarks and sending the results to conbench"""
 
-    def __init__(self, command: list[str], result_file: Path) -> None:
+    def __init__(self, command: List[str], result_file: Path) -> None:
         """
         Parameters
         ----------
-        command : list[str]
+        command : List[str]
             A list of strings defining a shell command to run the benchmarks
         result_file : Path
             The path to a file of benchmark results that will be generated when ``.run()`` is called
