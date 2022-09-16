@@ -34,7 +34,7 @@ class ArcheryAdapter(GoogleBenchmarkAdapter):
 
     def _parse_suite(
         self, results: dict, extra_tags: dict = None
-    ) -> list[BenchmarkResult]:
+    ) -> List[BenchmarkResult]:
         """Parse a blob of results from archery into a list of `BenchmarkResult` instances"""
         # all results share a batch id
         batch_id = uuid.uuid4().hex

@@ -16,7 +16,7 @@ class FollyAdapter(BenchmarkAdapter):
         """
         Parameters
         ----------
-        command : list[str]
+        command : List[str]
             A list of strings defining a shell command to run folly benchmarks
         result_dir : Path
             Path to directory where folly results will be populated
