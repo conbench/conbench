@@ -4,10 +4,10 @@ from pathlib import Path
 from typing import List
 
 from ..result import BenchmarkResult
-from ._adapter import _BenchmarkAdapter
+from ._adapter import BenchmarkAdapter
 
 
-class FollyAdapter(_BenchmarkAdapter):
+class FollyAdapter(BenchmarkAdapter):
     """Run folly benchmarks and send the results to conbench"""
 
     result_dir: Path

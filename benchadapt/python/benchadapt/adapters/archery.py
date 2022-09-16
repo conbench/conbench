@@ -12,8 +12,10 @@ class ArcheryAdapter(GoogleBenchmarkAdapter):
     """A class for running Apache Arrow's archery benchmarks and sending the results to conbench"""
 
     def __init__(self) -> None:
+        result_file = Path(tempfile.mktemp())
         super().__init__(
-            command=["archery", "benchmark", "run"], result_file=Path(tempfile.mktemp())
+            command=["archery", "benchmark", "run", "--output", result_file],
+            result_file=result_file,
         )
 
     def transform_results(self) -> List[BenchmarkResult]:

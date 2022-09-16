@@ -78,7 +78,7 @@ class BenchmarkResult:
                 "Result not publishable! `machine_info` xor `cluster_info` must be specified"
             )
 
-        if bool(res_dict["stats"]) != bool(res_dict["error"]):
+        if bool(res_dict["stats"]) == bool(res_dict["error"]):
             warnings.warn(
                 "Result not publishable! `stats` xor `error` must be be specified"
             )
