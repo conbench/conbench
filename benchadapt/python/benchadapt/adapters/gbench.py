@@ -3,7 +3,7 @@ import uuid
 from dataclasses import dataclass
 from itertools import groupby
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from ..result import BenchmarkResult
 from ._adapter import BenchmarkAdapter
@@ -120,7 +120,13 @@ class GoogleBenchmark:
 class GoogleBenchmarkAdapter(BenchmarkAdapter):
     """A class for running Google Benchmarks and sending the results to conbench"""
 
-    def __init__(self, command: List[str], result_file: Path) -> None:
+    def __init__(
+        self,
+        command: List[str],
+        result_file: Path,
+        result_defaults_override: Dict[str, Any] = None,
+        result_defaults_append: Dict[str, Any] = None,
+    ) -> None:
         """
         Parameters
         ----------
@@ -128,9 +134,25 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
             A list of strings defining a shell command to run the benchmarks
         result_file : Path
             The path to a file of benchmark results that will be generated when ``.run()`` is called
+        result_defaults_override : Dict[str, Any]
+            A dict of default values to be passed to `BenchmarkResult`. Useful for
+            specifying metadata only available at runtime, e.g. build info. Overrides
+            `BenchmarkResult` defaults; is overridden by values passed in
+            ``transform_results()``. Values of ``None`` do not unset defaults, just as
+            when passed to ``BenchmarkResult`'s init method.
+        results_defaults_append : Dict[str, Any]
+            A dict of default values to be appended to `BenchmarkResult` values.
+            Appended after instantiation. Useful for appending extra tags or other
+            metadata in addition to that gathered elsewhere. Only applicable for dict
+            attributes. For each element, will override any keys that already exist,
+            i.e. it does not append recursively.
         """
         self.result_file = Path(result_file)
-        super().__init__(command=command)
+        super().__init__(
+            command=command,
+            result_defaults_override=result_defaults_override,
+            result_defaults_append=result_defaults_append,
+        )
 
     def transform_results(self) -> List[BenchmarkResult]:
         """Transform gbench results into a list of BenchmarkResult instances"""
@@ -187,7 +209,7 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
         name, tags = self._parse_benchmark_name(result.name)
         tags.update(extra_tags)
 
-        res = BenchmarkResult(
+        res = self.curried_benchmark_result(
             run_name=name,
             batch_id=batch_id,
             stats={

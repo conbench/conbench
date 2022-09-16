@@ -1,7 +1,7 @@
 import json
 import uuid
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List
 
 from ..result import BenchmarkResult
 from ._adapter import BenchmarkAdapter
@@ -12,7 +12,13 @@ class FollyAdapter(BenchmarkAdapter):
 
     result_dir: Path
 
-    def __init__(self, command: List[str], result_dir: Path) -> None:
+    def __init__(
+        self,
+        command: List[str],
+        result_dir: Path,
+        result_defaults_override: Dict[str, Any] = None,
+        result_defaults_append: Dict[str, Any] = None,
+    ) -> None:
         """
         Parameters
         ----------
@@ -20,9 +26,25 @@ class FollyAdapter(BenchmarkAdapter):
             A list of strings defining a shell command to run folly benchmarks
         result_dir : Path
             Path to directory where folly results will be populated
+        result_defaults_override : Dict[str, Any]
+            A dict of default values to be passed to `BenchmarkResult`. Useful for
+            specifying metadata only available at runtime, e.g. build info. Overrides
+            `BenchmarkResult` defaults; is overridden by values passed in
+            ``transform_results()``. Values of ``None`` do not unset defaults, just as
+            when passed to ``BenchmarkResult`'s init method.
+        results_defaults_append : Dict[str, Any]
+            A dict of default values to be appended to `BenchmarkResult` values.
+            Appended after instantiation. Useful for appending extra tags or other
+            metadata in addition to that gathered elsewhere. Only applicable for dict
+            attributes. For each element, will override any keys that already exist,
+            i.e. it does not append recursively.
         """
         self.result_dir = Path(result_dir)
-        super().__init__(command=command)
+        super().__init__(
+            command=command,
+            result_defaults_override=result_defaults_override,
+            result_defaults_append=result_defaults_append,
+        )
 
     def transform_results(self) -> List[BenchmarkResult]:
         """Transform folly results into conbench form"""
@@ -43,7 +65,7 @@ class FollyAdapter(BenchmarkAdapter):
 
                 bm_name = result[1].lstrip("%")
 
-                parsed_benchmark = BenchmarkResult(
+                parsed_benchmark = self.curried_benchmark_result(
                     run_name=suite,
                     batch_id=batch_id,
                     stats={

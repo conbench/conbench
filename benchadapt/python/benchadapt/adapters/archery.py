@@ -2,7 +2,7 @@ import json
 import tempfile
 import uuid
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List
 
 from ..result import BenchmarkResult
 from .gbench import GoogleBenchmark, GoogleBenchmarkAdapter
@@ -11,11 +11,17 @@ from .gbench import GoogleBenchmark, GoogleBenchmarkAdapter
 class ArcheryAdapter(GoogleBenchmarkAdapter):
     """A class for running Apache Arrow's archery benchmarks and sending the results to conbench"""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        result_defaults_override: Dict[str, Any] = None,
+        result_defaults_append: Dict[str, Any] = None,
+    ) -> None:
         result_file = Path(tempfile.mktemp())
         super().__init__(
             command=["archery", "benchmark", "run", "--output", result_file],
             result_file=result_file,
+            result_defaults_override=result_defaults_override,
+            result_defaults_append=result_defaults_append,
         )
 
     def transform_results(self) -> List[BenchmarkResult]:
