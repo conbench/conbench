@@ -1,8 +1,8 @@
 from typing import List
 
-from benchadapt import BenchmarkResult
 from benchadapt.adapters import BenchmarkAdapter
 
+from benchadapt import BenchmarkResult
 
 RESULTS_DICT = {
     "run_name": "very-real-benchmark",
