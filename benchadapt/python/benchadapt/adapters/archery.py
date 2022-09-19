@@ -13,18 +13,18 @@ class ArcheryAdapter(GoogleBenchmarkAdapter):
 
     def __init__(
         self,
-        result_defaults_override: Dict[str, Any] = None,
-        result_defaults_append: Dict[str, Any] = None,
+        result_fields_override: Dict[str, Any] = None,
+        result_fields_append: Dict[str, Any] = None,
     ) -> None:
         result_file = Path(tempfile.mktemp())
         super().__init__(
             command=["archery", "benchmark", "run", "--output", result_file],
             result_file=result_file,
-            result_defaults_override=result_defaults_override,
-            result_defaults_append=result_defaults_append,
+            result_fields_override=result_fields_override,
+            result_fields_append=result_fields_append,
         )
 
-    def transform_results(self) -> List[BenchmarkResult]:
+    def _transform_results(self) -> List[BenchmarkResult]:
         """Transform archery results into a list of BenchmarkResult instances"""
         with open(self.result_file, "r") as f:
             raw_results = json.load(f)

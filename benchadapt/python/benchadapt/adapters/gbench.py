@@ -124,8 +124,8 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
         self,
         command: List[str],
         result_file: Path,
-        result_defaults_override: Dict[str, Any] = None,
-        result_defaults_append: Dict[str, Any] = None,
+        result_fields_override: Dict[str, Any] = None,
+        result_fields_append: Dict[str, Any] = None,
     ) -> None:
         """
         Parameters
@@ -134,27 +134,25 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
             A list of strings defining a shell command to run the benchmarks
         result_file : Path
             The path to a file of benchmark results that will be generated when ``.run()`` is called
-        result_defaults_override : Dict[str, Any]
-            A dict of default values to be passed to `BenchmarkResult`. Useful for
-            specifying metadata only available at runtime, e.g. build info. Overrides
-            `BenchmarkResult` defaults; is overridden by values passed in
-            ``transform_results()``. Values of ``None`` do not unset defaults, just as
-            when passed to ``BenchmarkResult`'s init method.
-        results_defaults_append : Dict[str, Any]
-            A dict of default values to be appended to `BenchmarkResult` values.
-            Appended after instantiation. Useful for appending extra tags or other
-            metadata in addition to that gathered elsewhere. Only applicable for dict
-            attributes. For each element, will override any keys that already exist,
-            i.e. it does not append recursively.
+        result_fields_override : Dict[str, Any]
+            A dict of values to override on each instance of `BenchmarkResult`. Useful
+            for specifying metadata only available at runtime, e.g. build info. Applied
+            before ``results_field_append``.
+        results_fields_append : Dict[str, Any]
+            A dict of default values to be appended to `BenchmarkResult` values after
+            instantiation. Useful for appending extra tags or other metadata in addition
+            to that gathered elsewhere. Only applicable for dict attributes. For each
+            element, will override any keys that already exist, i.e. it does not append
+            recursively.
         """
         self.result_file = Path(result_file)
         super().__init__(
             command=command,
-            result_defaults_override=result_defaults_override,
-            result_defaults_append=result_defaults_append,
+            result_fields_override=result_fields_override,
+            result_fields_append=result_fields_append,
         )
 
-    def transform_results(self) -> List[BenchmarkResult]:
+    def _transform_results(self) -> List[BenchmarkResult]:
         """Transform gbench results into a list of BenchmarkResult instances"""
         with open(self.result_file, "r") as f:
             raw_results = json.load(f)
@@ -209,7 +207,7 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
         name, tags = self._parse_benchmark_name(result.name)
         tags.update(extra_tags)
 
-        res = self.curried_benchmark_result(
+        res = BenchmarkResult(
             run_name=name,
             batch_id=batch_id,
             stats={

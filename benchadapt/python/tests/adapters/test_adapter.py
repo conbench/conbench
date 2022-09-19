@@ -31,8 +31,8 @@ RESULTS_DICT = {
 
 
 class FakeAdapter(BenchmarkAdapter):
-    def transform_results(self) -> List[BenchmarkResult]:
-        return [self.curried_benchmark_result(**RESULTS_DICT)]
+    def _transform_results(self) -> List[BenchmarkResult]:
+        return [BenchmarkResult(**RESULTS_DICT)]
 
 
 class TestBenchmarkAdapter:
@@ -43,15 +43,15 @@ class TestBenchmarkAdapter:
         assert res_list[0] == BenchmarkResult(**RESULTS_DICT)
 
     def test_override_results(self) -> None:
-        result_defaults_override = {"cluster_info": {"size": "v big"}}
+        result_fields_override = {"cluster_info": {"size": "v big"}}
 
         fake_adapter = FakeAdapter(
             command=["echo", "hello"],
-            result_defaults_override=result_defaults_override,
+            result_fields_override=result_fields_override,
         )
 
         res_list = fake_adapter.transform_results()
-        assert res_list[0].cluster_info == result_defaults_override["cluster_info"]
+        assert res_list[0].cluster_info == result_fields_override["cluster_info"]
         assert res_list[0].machine_info is None
 
     def test_append_results(self) -> None:
@@ -59,7 +59,7 @@ class TestBenchmarkAdapter:
 
         fake_adapter = FakeAdapter(
             command=["echo", "hello"],
-            result_defaults_append=results_defaults_append,
+            result_fields_append=results_defaults_append,
         )
 
         res_list = fake_adapter.transform_results()

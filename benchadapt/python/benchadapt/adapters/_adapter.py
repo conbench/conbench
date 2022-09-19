@@ -17,41 +17,34 @@ class BenchmarkAdapter(abc.ABC):
     command : List[str]
         A list of args to be run on the command line, as would be passed
         to `subprocess.run()`.
-    result_defaults_override : Dict[str, Any]
-        A dict of default values to be passed to `BenchmarkResult`. Useful for
-        specifying metadata only available at runtime, e.g. build info. Overrides
-        `BenchmarkResult` defaults; is overridden by values passed in
-        ``transform_results()``. Values of ``None`` do not unset defaults, just as
-        when passed to ``BenchmarkResult`'s init method.
-    results_defaults_append : Dict[str, Any]
-        A dict of default values to be appended to `BenchmarkResult` values.
-        Appended after instantiation. Useful for appending extra tags or other
-        metadata in addition to that gathered elsewhere. Only applicable for dict
-        attributes. For each element, will override any keys that already exist,
-        i.e. it does not append recursively.
+    result_fields_override : Dict[str, Any]
+        A dict of values to override on each instance of `BenchmarkResult`. Useful
+        for specifying metadata only available at runtime, e.g. build info. Applied
+        before ``results_field_append``.
+    results_fields_append : Dict[str, Any]
+        A dict of default values to be appended to `BenchmarkResult` values after
+        instantiation. Useful for appending extra tags or other metadata in addition
+        to that gathered elsewhere. Only applicable for dict attributes. For each
+        element, will override any keys that already exist, i.e. it does not append
+        recursively.
     results : List[BenchmarkResult]
         Once `run()` has been called, results from that run
     """
 
     command: List[str]
-    result_defaults_override: Dict[str, Any] = None
+    result_fields_override: Dict[str, Any] = None
+    result_fields_append: Dict[str, Any] = None
     results: List[BenchmarkResult] = None
 
     def __init__(
         self,
         command: List[str],
-        result_defaults_override: Dict[str, Any] = None,
-        result_defaults_append: Dict[str, Any] = None,
+        result_fields_override: Dict[str, Any] = None,
+        result_fields_append: Dict[str, Any] = None,
     ) -> None:
         self.command = command
-
-        if not result_defaults_override:
-            result_defaults_override = {}
-        self.result_defaults_override = result_defaults_override
-
-        if not result_defaults_append:
-            result_defaults_append = {}
-        self.result_defaults_append = result_defaults_append
+        self.result_fields_override = result_fields_override or {}
+        self.result_fields_append = result_fields_append or {}
 
     def __call__(self, **kwargs) -> list:
         """
@@ -83,34 +76,45 @@ class BenchmarkAdapter(abc.ABC):
 
         return self.results
 
-    @abc.abstractmethod
     def transform_results(self) -> List[BenchmarkResult]:
         """
         Method to transform results from the command line call into a list of
-        instances of `BenchmarkResult`.
+        instances of `BenchmarkResult`. This method returns results updated
+        with runtime metadata values specified on init.
+        """
+        results = self._transform_results()
+        self.results = [self.update_benchmark_result(res) for res in results]
+        return self.results
+
+    @abc.abstractmethod
+    def _transform_results(self) -> List[BenchmarkResult]:
+        """
+        Method to transform results from the command line call into a list of
+        instances of `BenchmarkResult`. The results of this method will be
+        updated to apply runtime metadata values specified on init.
         """
 
-    def curried_benchmark_result(self, **kwargs) -> BenchmarkResult:
+    def update_benchmark_result(self, result: BenchmarkResult) -> BenchmarkResult:
         """
-        A method to create instances of `BenchmarkResult` with defaults filled with
-        any specified on init in ``result_defaults``.
+        A method to update instances of `BenchmarkResult` with vallues specified on
+        init in ``result_fields_override`` and/or ``result_fields_append``.
 
         Parameters
         ----------
-        kwargs
-            Named arguments to parameters of `BenchmarkResult`. Takes priority over
-            arguments from ``result_defaults`` and `BenchmarkResult`'s defaults.
+        result
+            An instance of `BenchmarkResult` to update
         """
-        res = BenchmarkResult(**{**self.result_defaults_override, **kwargs})
+        for param in self.result_fields_override:
+            setattr(result, param, self.result_fields_override[param])
 
-        for param in self.result_defaults_append:
+        for param in self.result_fields_append:
             setattr(
-                res,
+                result,
                 param,
-                {**getattr(res, param), **self.result_defaults_append[param]},
+                {**getattr(result, param), **self.result_fields_append[param]},
             )
 
-        return res
+        return result
 
     def post_results(self) -> list:
         """
