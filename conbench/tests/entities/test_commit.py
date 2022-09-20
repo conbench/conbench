@@ -32,6 +32,7 @@ def test_repository_to_url():
     assert repository_to_url("") == ""
     assert repository_to_url("blah blah") == "https://github.com/blah blah"
     assert repository_to_url("apache/arrow") == expected
+    assert repository_to_url("https://github.com/apache/Arrow") == expected
     assert repository_to_url("https://github.com/apache/arrow") == expected
     assert repository_to_url("git@github.com:apache/arrow") == expected
 
