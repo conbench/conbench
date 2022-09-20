@@ -3,7 +3,7 @@ import uuid
 from dataclasses import dataclass
 from itertools import groupby
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from ..result import BenchmarkResult
 from ._adapter import BenchmarkAdapter
@@ -120,7 +120,13 @@ class GoogleBenchmark:
 class GoogleBenchmarkAdapter(BenchmarkAdapter):
     """A class for running Google Benchmarks and sending the results to conbench"""
 
-    def __init__(self, command: List[str], result_file: Path) -> None:
+    def __init__(
+        self,
+        command: List[str],
+        result_file: Path,
+        result_fields_override: Dict[str, Any] = None,
+        result_fields_append: Dict[str, Any] = None,
+    ) -> None:
         """
         Parameters
         ----------
@@ -128,11 +134,25 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
             A list of strings defining a shell command to run the benchmarks
         result_file : Path
             The path to a file of benchmark results that will be generated when ``.run()`` is called
+        result_fields_override : Dict[str, Any]
+            A dict of values to override on each instance of `BenchmarkResult`. Useful
+            for specifying metadata only available at runtime, e.g. build info. Applied
+            before ``results_field_append``.
+        results_fields_append : Dict[str, Any]
+            A dict of default values to be appended to `BenchmarkResult` values after
+            instantiation. Useful for appending extra tags or other metadata in addition
+            to that gathered elsewhere. Only applicable for dict attributes. For each
+            element, will override any keys that already exist, i.e. it does not append
+            recursively.
         """
         self.result_file = Path(result_file)
-        super().__init__(command=command)
+        super().__init__(
+            command=command,
+            result_fields_override=result_fields_override,
+            result_fields_append=result_fields_append,
+        )
 
-    def transform_results(self) -> List[BenchmarkResult]:
+    def _transform_results(self) -> List[BenchmarkResult]:
         """Transform gbench results into a list of BenchmarkResult instances"""
         with open(self.result_file, "r") as f:
             raw_results = json.load(f)
