@@ -96,7 +96,7 @@ class BenchmarkAdapter(abc.ABC):
 
     def update_benchmark_result(self, result: BenchmarkResult) -> BenchmarkResult:
         """
-        A method to update instances of `BenchmarkResult` with vallues specified on
+        A method to update instances of `BenchmarkResult` with values specified on
         init in ``result_fields_override`` and/or ``result_fields_append``.
 
         Parameters
