@@ -68,14 +68,14 @@ class BenchmarkResult:
     error: str = None
 
     @property
-    def _cluster_info(self) -> Dict[str, Any]:
-        return self.__cluster_info
+    def _cluster_info_property(self) -> Dict[str, Any]:
+        return self._cluster_info_cache
 
-    @_cluster_info.setter
-    def _cluster_info(self, value: Dict[str, Any]) -> None:
+    @_cluster_info_property.setter
+    def _cluster_info_property(self, value: Dict[str, Any]) -> None:
         if value:
             self.machine_info = None
-        self.__cluster_info = value
+        self._cluster_info_cache = value
 
     def to_publishable_dict(self):
         """Returns a dict suitable for sending to conbench"""
@@ -99,4 +99,4 @@ class BenchmarkResult:
 
 
 # Ugly, but per https://stackoverflow.com/a/61480946 lets us keep defaults and order
-BenchmarkResult.cluster_info = BenchmarkResult._cluster_info
+BenchmarkResult.cluster_info = BenchmarkResult._cluster_info_property

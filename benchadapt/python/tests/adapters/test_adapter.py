@@ -52,18 +52,20 @@ class TestBenchmarkAdapter:
 
         res_list = fake_adapter.transform_results()
         assert res_list[0].cluster_info == result_fields_override["cluster_info"]
+        # `machine_info` normally autopopulated, but should be depopulated when
+        # `cluster_info` is specified
         assert res_list[0].machine_info is None
 
     def test_append_results(self) -> None:
-        results_defaults_append = {"tags": {"price": "$15.99"}}
+        results_fields_append = {"tags": {"price": "$15.99"}}
 
         fake_adapter = FakeAdapter(
             command=["echo", "hello"],
-            result_fields_append=results_defaults_append,
+            result_fields_append=results_fields_append,
         )
 
         res_list = fake_adapter.transform_results()
         assert res_list[0].tags == {
             **RESULTS_DICT["tags"],
-            **results_defaults_append["tags"],
+            **results_fields_append["tags"],
         }
