@@ -125,7 +125,6 @@ class BenchmarkResult(Base, EntityMixin):
             repository = repository_to_url(data["github"]["repository"])
 
         # create if not exists
-        repository = repository.lower() if repository else None
         commit = Commit.first(sha=sha, repository=repository)
         if not commit:
             github = get_github_commit(repository, sha)
