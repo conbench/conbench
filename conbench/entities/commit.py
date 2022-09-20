@@ -139,7 +139,7 @@ def repository_to_name(repository):
 
 def repository_to_url(repository):
     name = repository_to_name(repository)
-    return f"https://github.com/{name}" if name else ""
+    return f"https://github.com/{name.lower()}" if name else ""
 
 
 def get_github_commit(repository, sha):
