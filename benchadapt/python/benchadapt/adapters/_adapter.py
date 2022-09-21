@@ -1,9 +1,10 @@
 import abc
+import json
 import subprocess
 from typing import Any, Dict, List
 
 from ..client import ConbenchClient
-from ..log import fatal_and_log
+from ..log import fatal_and_log, log
 from ..result import BenchmarkResult
 
 
@@ -42,6 +43,7 @@ class BenchmarkAdapter(abc.ABC):
         result_fields_override: Dict[str, Any] = None,
         result_fields_append: Dict[str, Any] = None,
     ) -> None:
+        log.info("Initializing adapter")
         self.command = command
         self.result_fields_override = result_fields_override or {}
         self.result_fields_append = result_fields_append or {}
@@ -71,7 +73,9 @@ class BenchmarkAdapter(abc.ABC):
         if params:
             command += params
 
+        log.info(f"Running benchmarks with command: `{' '.join(command)}`")
         subprocess.run(args=command, check=True)
+        log.info("Benchmark run completed")
         self.results = self.transform_results()
 
         return self.results
@@ -82,8 +86,10 @@ class BenchmarkAdapter(abc.ABC):
         instances of `BenchmarkResult`. This method returns results updated
         with runtime metadata values specified on init.
         """
+        log.info("Transforming results for conbench")
         results = self._transform_results()
         self.results = [self.update_benchmark_result(res) for res in results]
+        log.info("Results transformation completed")
         return self.results
 
     @abc.abstractmethod
@@ -120,17 +126,23 @@ class BenchmarkAdapter(abc.ABC):
         """
         Post results of run to conbench
         """
-        client = ConbenchClient()
-
         if not self.results:
             fatal_and_log(
                 "No results attribute to post! Was `run()` called on this instance?"
             )
 
+        log.info("Initializing conbench client")
+        client = ConbenchClient()
+
+        log.info("Posting results to conbench")
         res_list = []
         for result in self.results:
             result_dict = result.to_publishable_dict()
+            log.debug(
+                f"Posting benchmark result to conbench: `{json.dumps(result_dict)}`"
+            )
             res = client.post(path="/benchmarks", json=result_dict)
             res_list.append(res)
 
+        log.info("All results sent to conbench")
         return res_list
