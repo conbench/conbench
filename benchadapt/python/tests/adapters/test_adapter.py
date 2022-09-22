@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List
 
 from benchadapt.adapters import BenchmarkAdapter
@@ -40,6 +41,12 @@ class TestBenchmarkAdapter:
         fake_adapter = FakeAdapter(command=["echo", "hello"])
 
         res_list = fake_adapter.transform_results()
+        assert res_list[0] == BenchmarkResult(**RESULTS_DICT)
+
+    def test_run(self) -> None:
+        fake_adapter = FakeAdapter(command=["echo", Path(".").resolve()])
+
+        res_list = fake_adapter.run()
         assert res_list[0] == BenchmarkResult(**RESULTS_DICT)
 
     def test_override_results(self) -> None:

@@ -73,7 +73,9 @@ class BenchmarkAdapter(abc.ABC):
         if params:
             command += params
 
-        log.info(f"Running benchmarks with command: `{' '.join(command)}`")
+        log.info(
+            f"Running benchmarks with command: `{' '.join([str(x) for x in command])}`"
+        )
         subprocess.run(args=command, check=True)
         log.info("Benchmark run completed")
         self.results = self.transform_results()
