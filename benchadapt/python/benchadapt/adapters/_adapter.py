@@ -143,7 +143,7 @@ class BenchmarkAdapter(abc.ABC):
             log.debug(
                 f"Posting benchmark result to conbench: `{json.dumps(result_dict)}`"
             )
-            res = client.post(path="/benchmarks", json=result_dict)
+            res = client.post(path="/benchmarks/", json=result_dict)
             res_list.append(res)
 
         log.info("All results sent to conbench")
