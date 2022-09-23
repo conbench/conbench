@@ -27,7 +27,8 @@ class BenchmarkResult:
     stats : Dict[str, Any]
         Measurement data and summary statistics
     tags : Dict[str, Any]
-        Many things. Determines history runs
+        Many things. Must include a ``name`` element; often includes parameters either as
+        separate keys or as a string in a ``params`` key. Determines history runs.
     info : Dict[str, Any]
         Things like ``arrow_version``, ``arrow_compiler_id``, ``arrow_compiler_version``,
         ``benchmark_language_version, ``arrow_version_r``
@@ -58,12 +59,12 @@ class BenchmarkResult:
     )
     stats: Dict[str, Any] = None
     tags: Dict[str, Any] = field(default_factory=dict)
-    info: Dict[str, Any] = None
+    info: Dict[str, Any] = field(default_factory=dict)
     machine_info: Dict[str, Any] = field(
         default_factory=lambda: machine_info(host_name=None)
     )
     cluster_info: Dict[str, Any] = None
-    context: Dict[str, Any] = None
+    context: Dict[str, Any] = field(default_factory=dict)
     github: Dict[str, Any] = field(default_factory=github_info)
     error: str = None
 
