@@ -1,5 +1,4 @@
 import abc
-import json
 import subprocess
 from typing import Any, Dict, List
 
@@ -140,9 +139,6 @@ class BenchmarkAdapter(abc.ABC):
         res_list = []
         for result in self.results:
             result_dict = result.to_publishable_dict()
-            log.debug(
-                f"Posting benchmark result to conbench: `{json.dumps(result_dict)}`"
-            )
             res = client.post(path="/benchmarks/", json=result_dict)
             res_list.append(res)
 

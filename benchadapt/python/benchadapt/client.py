@@ -4,6 +4,7 @@
 
 import abc
 import os
+from json import dumps
 from typing import Optional
 
 import requests
@@ -41,14 +42,26 @@ class _BaseClient(abc.ABC):
         url = self.base_url + path
         log.debug(f"GET {url}")
         res = self.session.get(url=url, timeout=self.timeout_s)
-        res.raise_for_status()
+
+        try:
+            res.raise_for_status()
+        except requests.HTTPError as e:
+            print(e.response.content)
+            raise
+
         return res.json()
 
     def post(self, path: str, json: dict) -> Optional[dict]:
         url = self.base_url + path
-        log.debug(f"POST {url} {json}")
+        log.debug(f"POST {url} {dumps(json)}")
         res = self.session.post(url=url, json=json, timeout=self.timeout_s)
-        res.raise_for_status()
+
+        try:
+            res.raise_for_status()
+        except requests.HTTPError as e:
+            print(e.response.content)
+            raise
+
         if res.content:
             return res.json()
 
