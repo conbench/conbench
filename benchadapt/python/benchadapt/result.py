@@ -15,17 +15,24 @@ class BenchmarkResult:
     Attributes
     ----------
     run_name : str
-        run name
+        Name for the run. Current convention is ``f"{run_reason}: {github['commit']}"``.
+        If missing and ``github["commmit"]`` exists, ``run_name`` will be populated
+        according to that pattern (even if ``run_reason`` is ``None``); otherwise it will
+        remain ``None``.
     run_id : str
-        ID string for the run
+        ID for the run; should be consistent for all results of the run. Adapters will
+        handle this for you.
     batch_id : str
         ID string for the batch
     run_reason : str
-        Reason for run (e.g. "nightly")
+        Reason for run (e.g. commit, PR, merge, nightly). In many cases will be set at
+        runtime via an adapter's ``result_fields_override`` init parameter.
     timestamp : str
         Timestamp of call, in ISO format
     stats : Dict[str, Any]
-        Measurement data and summary statistics
+        Measurement data and summary statistics. If ``data`` (a list of metric values),
+        ``unit`` (for that metric, e.g. ``"s"``), and ``iterations`` (replications for
+        microbenchmarks) are specified, summary statistics will be filled in server-side.
     tags : Dict[str, Any]
         Many things. Must include a ``name`` element; often includes parameters either as
         separate keys or as a string in a ``params`` key. Determines history runs.
@@ -38,9 +45,10 @@ class BenchmarkResult:
     cluster_info : Dict[str, Any]
         For benchmarks run on a cluster, information about the cluster
     context : Dict[str, Any]
-        ``arrow_compiler_flags``, ``benchmark_language``
+        Should include ``benchmark_language`` and other relevant metadata like compiler flags
     github : Dict[str, Any]
-        ``repository``, ``commit``
+        Keys: ``repository``, ``commit``. If unspecified, will be auto-populated based on
+        the current git state.
     error : str
         stderr from process running the benchmark
 
@@ -51,7 +59,7 @@ class BenchmarkResult:
     """
 
     run_name: str = None
-    run_id: str = field(default_factory=lambda: uuid.uuid4().hex)
+    run_id: str = None
     batch_id: str = field(default_factory=lambda: uuid.uuid4().hex)
     run_reason: str = None
     timestamp: str = field(
@@ -67,6 +75,10 @@ class BenchmarkResult:
     context: Dict[str, Any] = field(default_factory=dict)
     github: Dict[str, Any] = field(default_factory=github_info)
     error: str = None
+
+    def __post_init__(self) -> None:
+        if not self.run_name and self.github.get("commit"):
+            self.run_name = f"{self.run_reason}: {self.github['commit']}"
 
     @property
     def _cluster_info_property(self) -> Dict[str, Any]:

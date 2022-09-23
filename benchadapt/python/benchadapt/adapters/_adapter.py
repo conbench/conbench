@@ -1,5 +1,6 @@
 import abc
 import subprocess
+import uuid
 from typing import Any, Dict, List
 
 from ..client import ConbenchClient
@@ -19,8 +20,8 @@ class BenchmarkAdapter(abc.ABC):
         to `subprocess.run()`.
     result_fields_override : Dict[str, Any]
         A dict of values to override on each instance of `BenchmarkResult`. Useful
-        for specifying metadata only available at runtime, e.g. build info. Applied
-        before ``results_field_append``.
+        for specifying metadata only available at runtime, e.g. ``run_reason`` and
+        build info. Applied before ``results_field_append``.
     results_fields_append : Dict[str, Any]
         A dict of default values to be appended to `BenchmarkResult` values after
         instantiation. Useful for appending extra tags or other metadata in addition
@@ -29,12 +30,16 @@ class BenchmarkAdapter(abc.ABC):
         recursively.
     results : List[BenchmarkResult]
         Once `run()` has been called, results from that run
+    run_id : str
+        A hex UUID that will be used as the ``run_id`` for ``BenchmarkResult``
+        instances unless one is already specified elsewhere.
     """
 
     command: List[str]
     result_fields_override: Dict[str, Any] = None
     result_fields_append: Dict[str, Any] = None
     results: List[BenchmarkResult] = None
+    run_id: str = None
 
     def __init__(
         self,
@@ -46,6 +51,7 @@ class BenchmarkAdapter(abc.ABC):
         self.command = command
         self.result_fields_override = result_fields_override or {}
         self.result_fields_append = result_fields_append or {}
+        self.run_id = uuid.uuid4().hex
 
     def __call__(self, **kwargs) -> list:
         """
@@ -120,6 +126,9 @@ class BenchmarkAdapter(abc.ABC):
                 param,
                 {**getattr(result, param), **self.result_fields_append[param]},
             )
+
+        if not result.run_id:
+            result.run_id = self.run_id
 
         return result
 
