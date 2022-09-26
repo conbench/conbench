@@ -210,7 +210,7 @@ class TestGbenchAdapter:
         assert len(results) == 2
         for result, original in zip(results, gbench_json["benchmarks"]):
             assert isinstance(result, BenchmarkResult)
-            assert result.run_name.endswith("MajorTensorConversionFixture")
+            assert result.tags["name"].endswith("MajorTensorConversionFixture")
             assert result.context == {"benchmark_language": "C++"}
             assert "params" in result.tags
             assert result.machine_info is not None

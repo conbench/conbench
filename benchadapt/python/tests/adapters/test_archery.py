@@ -74,7 +74,7 @@ class TestArcheryAdapter:
         assert len(results) == len(archery_json["suites"][0]["benchmarks"])
         for result, original in zip(results, archery_json["suites"][0]["benchmarks"]):
             assert isinstance(result, BenchmarkResult)
-            assert result.run_name == "DoubleColumnMajorTensorConversionFixture"
+            assert result.tags["name"] == "DoubleColumnMajorTensorConversionFixture"
             assert result.context == {"benchmark_language": "C++"}
             assert "params" in result.tags
             assert result.machine_info is not None
