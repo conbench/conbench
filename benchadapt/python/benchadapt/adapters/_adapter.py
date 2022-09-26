@@ -11,7 +11,9 @@ from ..result import BenchmarkResult
 class BenchmarkAdapter(abc.ABC):
     """
     An abstract class to run benchmarks, transform results into conbench form,
-    and send them to a conbench server
+    and send them to a conbench server.
+
+    In general, one instance should correspond to one run (likely of many benchmarks).
 
     Attributes
     ----------
@@ -103,6 +105,15 @@ class BenchmarkAdapter(abc.ABC):
         Method to transform results from the command line call into a list of
         instances of `BenchmarkResult`. The results of this method will be
         updated to apply runtime metadata values specified on init.
+
+        If a benchmark run produces multiple files, this method should handle
+        all files in one run.
+
+        It should generally not populate ``run_id`` (which the adapter will
+        handle correctly if unspecified), ``run_name`` (which will get generated
+        if the git commit is available), and ``run_reason`` (which should usually
+        be specified in ``result_fields_override`` on initialization, as it will
+        vary).
         """
 
     def update_benchmark_result(
