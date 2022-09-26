@@ -64,7 +64,6 @@ class FollyAdapter(BenchmarkAdapter):
                 bm_name = result[1].lstrip("%")
 
                 parsed_benchmark = BenchmarkResult(
-                    run_name=suite,
                     batch_id=batch_id,
                     stats={
                         # Folly always returns in ns, so use that. All benchmarks are times,
