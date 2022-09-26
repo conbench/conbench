@@ -30,16 +30,12 @@ class BenchmarkAdapter(abc.ABC):
         recursively.
     results : List[BenchmarkResult]
         Once `run()` has been called, results from that run
-    run_id : str
-        A hex UUID that will be used as the ``run_id`` for ``BenchmarkResult``
-        instances unless one is already specified elsewhere.
     """
 
     command: List[str]
     result_fields_override: Dict[str, Any] = None
     result_fields_append: Dict[str, Any] = None
     results: List[BenchmarkResult] = None
-    run_id: str = None
 
     def __init__(
         self,
@@ -51,7 +47,6 @@ class BenchmarkAdapter(abc.ABC):
         self.command = command
         self.result_fields_override = result_fields_override or {}
         self.result_fields_append = result_fields_append or {}
-        self.run_id = uuid.uuid4().hex
 
     def __call__(self, **kwargs) -> list:
         """
@@ -95,7 +90,10 @@ class BenchmarkAdapter(abc.ABC):
         """
         log.info("Transforming results for conbench")
         results = self._transform_results()
-        self.results = [self.update_benchmark_result(res) for res in results]
+        run_id = uuid.uuid4().hex
+        self.results = [
+            self.update_benchmark_result(res, run_id=run_id) for res in results
+        ]
         log.info("Results transformation completed")
         return self.results
 
@@ -107,15 +105,22 @@ class BenchmarkAdapter(abc.ABC):
         updated to apply runtime metadata values specified on init.
         """
 
-    def update_benchmark_result(self, result: BenchmarkResult) -> BenchmarkResult:
+    def update_benchmark_result(
+        self, result: BenchmarkResult, run_id: str
+    ) -> BenchmarkResult:
         """
         A method to update instances of `BenchmarkResult` with values specified on
         init in ``result_fields_override`` and/or ``result_fields_append``.
 
         Parameters
         ----------
-        result
+        result : BenchmarkResult
             An instance of `BenchmarkResult` to update
+        run_id : str
+            Value to use for ``run_id`` if it is not already set directly in a
+            ``_tranform_results()`` implementation or via ``result_fields_override``).
+            Should match for all results for a run, so a hex UUID is generated in
+            ``transform_results()`` in normal usage.
         """
         for param in self.result_fields_override:
             setattr(result, param, self.result_fields_override[param])
@@ -128,7 +133,7 @@ class BenchmarkAdapter(abc.ABC):
             )
 
         if not result.run_id:
-            result.run_id = self.run_id
+            result.run_id = run_id
 
         return result
 
