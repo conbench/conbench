@@ -81,7 +81,7 @@ class TestFollyAdapter:
         assert len(results) == len(self.folly_bms)
         for result, original in zip(results, self.folly_bms):
             assert isinstance(result, BenchmarkResult)
-            assert result.run_name in [
+            assert result.tags["suite"] in [
                 "velox_benchmark_basic_selectivity_vector",
                 "velox_benchmark_feature_normalization",
             ]

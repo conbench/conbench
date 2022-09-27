@@ -205,10 +205,10 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
     ) -> BenchmarkResult:
         """Parse a GoogleBenchmark instance into a `BenchmarkResult` instance"""
         name, tags = self._parse_benchmark_name(result.name)
+        tags["name"] = name
         tags.update(extra_tags)
 
         res = BenchmarkResult(
-            run_name=name,
             batch_id=batch_id,
             stats={
                 "data": result.values,

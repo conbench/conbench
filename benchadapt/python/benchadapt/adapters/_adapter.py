@@ -1,5 +1,6 @@
 import abc
 import subprocess
+import uuid
 from typing import Any, Dict, List
 
 from ..client import ConbenchClient
@@ -10,7 +11,9 @@ from ..result import BenchmarkResult
 class BenchmarkAdapter(abc.ABC):
     """
     An abstract class to run benchmarks, transform results into conbench form,
-    and send them to a conbench server
+    and send them to a conbench server.
+
+    In general, one instance should correspond to one run (likely of many benchmarks).
 
     Attributes
     ----------
@@ -19,8 +22,8 @@ class BenchmarkAdapter(abc.ABC):
         to `subprocess.run()`.
     result_fields_override : Dict[str, Any]
         A dict of values to override on each instance of `BenchmarkResult`. Useful
-        for specifying metadata only available at runtime, e.g. build info. Applied
-        before ``results_field_append``.
+        for specifying metadata only available at runtime, e.g. ``run_reason`` and
+        build info. Applied before ``results_field_append``.
     results_fields_append : Dict[str, Any]
         A dict of default values to be appended to `BenchmarkResult` values after
         instantiation. Useful for appending extra tags or other metadata in addition
@@ -89,7 +92,10 @@ class BenchmarkAdapter(abc.ABC):
         """
         log.info("Transforming results for conbench")
         results = self._transform_results()
-        self.results = [self.update_benchmark_result(res) for res in results]
+        run_id = uuid.uuid4().hex
+        self.results = [
+            self.update_benchmark_result(res, run_id=run_id) for res in results
+        ]
         log.info("Results transformation completed")
         return self.results
 
@@ -99,17 +105,33 @@ class BenchmarkAdapter(abc.ABC):
         Method to transform results from the command line call into a list of
         instances of `BenchmarkResult`. The results of this method will be
         updated to apply runtime metadata values specified on init.
+
+        If a benchmark run produces multiple files, this method should handle
+        all files in one run.
+
+        It should generally not populate ``run_id`` (which the adapter will
+        handle correctly if unspecified), ``run_name`` (which will get generated
+        if the git commit is available), and ``run_reason`` (which should usually
+        be specified in ``result_fields_override`` on initialization, as it will
+        vary).
         """
 
-    def update_benchmark_result(self, result: BenchmarkResult) -> BenchmarkResult:
+    def update_benchmark_result(
+        self, result: BenchmarkResult, run_id: str
+    ) -> BenchmarkResult:
         """
         A method to update instances of `BenchmarkResult` with values specified on
         init in ``result_fields_override`` and/or ``result_fields_append``.
 
         Parameters
         ----------
-        result
+        result : BenchmarkResult
             An instance of `BenchmarkResult` to update
+        run_id : str
+            Value to use for ``run_id`` if it is not already set directly in a
+            ``_tranform_results()`` implementation or via ``result_fields_override``).
+            Should match for all results for a run, so a hex UUID is generated in
+            ``transform_results()`` in normal usage.
         """
         for param in self.result_fields_override:
             setattr(result, param, self.result_fields_override[param])
@@ -120,6 +142,9 @@ class BenchmarkAdapter(abc.ABC):
                 param,
                 {**getattr(result, param), **self.result_fields_append[param]},
             )
+
+        if not result.run_id:
+            result.run_id = run_id
 
         return result
 

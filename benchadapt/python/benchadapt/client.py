@@ -42,12 +42,7 @@ class _BaseClient(abc.ABC):
         url = self.base_url + path
         log.debug(f"GET {url}")
         res = self.session.get(url=url, timeout=self.timeout_s)
-
-        try:
-            res.raise_for_status()
-        except requests.HTTPError as e:
-            print(e.response.content)
-            raise
+        self._maybe_raise(res=res)
 
         return res.json()
 
@@ -55,15 +50,22 @@ class _BaseClient(abc.ABC):
         url = self.base_url + path
         log.debug(f"POST {url} {dumps(json)}")
         res = self.session.post(url=url, json=json, timeout=self.timeout_s)
-
-        try:
-            res.raise_for_status()
-        except requests.HTTPError as e:
-            print(e.response.content)
-            raise
+        self._maybe_raise(res=res)
 
         if res.content:
             return res.json()
+
+    @staticmethod
+    def _maybe_raise(res: requests.Response):
+        try:
+            res.raise_for_status()
+        except requests.HTTPError as e:
+            try:
+                res_content = e.response.content.decode()
+            except AttributeError:
+                res_content = e.response.content
+            log.error(f"Response content: {res_content}")
+            raise
 
 
 class ConbenchClient(_BaseClient):
