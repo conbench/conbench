@@ -17,7 +17,10 @@ class Config:
         f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
     CREATE_ALL_TABLES = os.environ.get("CREATE_ALL_TABLES", "true") == "true"
-    # Number of commits to use when calculating statistics
+    # An integer number of commits to use when calculating
+    # statistics. The default is 100; larger numbers will lead to more false negatives,
+    # especially after large changes. We recommend leaving it as the default. Previously
+    # recorded values will not be recalculated if this value is changed.
     DISTRIBUTION_COMMITS = int(os.environ.get("DISTRIBUTION_COMMITS", 100))
 
 
