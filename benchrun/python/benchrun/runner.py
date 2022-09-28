@@ -2,38 +2,19 @@ import abc
 import copy
 import gc
 import multiprocessing as mp
-import subprocess
 import time
 import warnings
 
 from benchadapt import BenchmarkResult
 
-
-class CacheManager:
-    _drop_failed = False
-    _purge_failed = False
-
-    def sync_and_drop(self):
-        if not self._drop_failed:
-            command = "sync; echo 3 | sudo tee /proc/sys/vm/drop_caches"
-            try:
-                subprocess.run(command, shell=True, check=True)
-                return True
-            except subprocess.CalledProcessError:
-                self._drop_failed = True
-
-        if not self._purge_failed:
-            command = "sync; sudo purge"
-            try:
-                subprocess.run(command, shell=True, check=True)
-                return True
-            except subprocess.CalledProcessError:
-                self._purge_failed = True
-
-        return False
+from .cache import CacheManager
 
 
 class Iteration(abc.ABC):
+    """
+    Abstract class defining how to run one iteration of a benchmark.
+    """
+
     cache = None
 
     def __init__(self) -> None:
@@ -83,7 +64,24 @@ class Iteration(abc.ABC):
 
 class Benchmark:
     """
-    An abstract class defining the bits required for running a benchmark
+    A class that takes an `Iteration` instance and runs it correctly for each case
+
+    Parameters
+    ----------
+    iteration : Iteration
+        An instance of `Iteration` defining code to benchmark
+    drop_caches : bool
+        Try to drop disk caches?
+    gc_collect : bool
+        Run garbage collection before timing code?
+    gc_disable : bool
+        Disable garbage collection during timing?
+    error_handling : str
+        What should happen if a benchmark errors out? Options: ``"stop"`` (skip future iterations
+        and report only error), ``"break"`` (skip future iterations and report everything so far),
+        ``"continue"`` (run all iterations even if they fail and report everything). As we currently
+        can't report both metrics and errors for the same benchmark, ``"stop"`` and ``"break"`` are
+        currently identical, and ``"continue"`` may run longer, but will report the same thing.
     """
 
     iteration = None
@@ -96,12 +94,16 @@ class Benchmark:
         drop_caches: bool = False,
         gc_collect: bool = True,
         gc_disable: bool = True,
+        error_handling: str = "stop",
     ) -> None:
+        assert error_handling in ["stop", "break", "continue"]
+
         self.iteration = iteration
         self.settings = {
             "drop_caches": drop_caches,
             "gc_collect": gc_collect,
             "gc_disable": gc_disable,
+            "error_handling": error_handling,
         }
 
         self.cache = CacheManager()
@@ -123,6 +125,9 @@ class Benchmark:
             res = self.run_iteration(params=params)
             if res["error"]:
                 error = res["error"]
+
+                if self.settings["error_handling"] in ["stop", "break"]:
+                    break
             else:
                 times.append(res["time"])
 
@@ -138,26 +143,3 @@ class Benchmark:
         )
 
         return res
-
-
-import pyarrow as pa
-import pyarrow.parquet as pq
-
-
-class MyIteration(Iteration):
-    def setup(self, params: dict) -> dict:
-        df = pq.read_table("/Users/alistaire/data/benchmarks/data/nation_1.parquet")
-        return {"df": df}
-
-    def run(self, params: dict, setup_results: dict) -> float:
-        ar = setup_results["df"]["n_regionkey"].chunk(0)
-        sc = pa.scalar(params["x"], pa.int32())
-        return pa.compute.add(ar, sc) + 1
-
-
-if __name__ == "__main__":
-    import json
-
-    my_bm = Benchmark(iteration=MyIteration())
-    bm_res = my_bm.run_case(params={"x": 2}, iterations=3)
-    print(json.dumps(bm_res.to_publishable_dict(), indent=2))
