@@ -225,7 +225,9 @@ Most are self-descriptive, e.g. `DB_PORT`. Exceptions:
 * `DISTRIBUTION_COMMITS`: An integer number of commits to use when calculating
 statistics. The default is 100; larger numbers will lead to more false negatives,
 especially after large changes. We recommend leaving it as the default. Previously
-recorded values will not be recalculated if this value is changed.
+recorded values will not be recalculated if this value is changed. If you would
+like to change previous values, you would need to write a migration of the data
+to recalculate history.
 
 ## Authoring benchmarks
 
