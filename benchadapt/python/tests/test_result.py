@@ -13,6 +13,7 @@ res_json = {
         "unit": "ns",
         "times": [3.3, 2.2, 1.1],
         "time_unit": "ns",
+        "iterations": 3,
     },
     "tags": {
         "name": "very-real-benchmark",

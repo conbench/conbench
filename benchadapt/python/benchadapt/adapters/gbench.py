@@ -218,6 +218,7 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
                 }.get(result.unit, result.unit),
                 "times": result.times,
                 "time_unit": result.time_unit,
+                "iterations": len(result.values),
             },
             tags=tags,
             info={},

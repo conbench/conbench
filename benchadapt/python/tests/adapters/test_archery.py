@@ -80,6 +80,7 @@ class TestArcheryAdapter:
             assert result.machine_info is not None
             assert result.stats["data"] == original["values"]
             assert result.stats["times"] == original["times"]
+            assert result.stats["iterations"] == len(original["values"])
 
     def test_run(self, archery_adapter) -> None:
         results = archery_adapter.run()
