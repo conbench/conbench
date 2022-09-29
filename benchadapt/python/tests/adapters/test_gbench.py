@@ -214,6 +214,7 @@ class TestGbenchAdapter:
             assert result.context == {"benchmark_language": "C++"}
             assert "params" in result.tags
             assert result.machine_info is not None
+            assert result.stats["iterations"] == 3
 
     def test_run(self, gbench_adapter) -> None:
         results = gbench_adapter.run()
