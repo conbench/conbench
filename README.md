@@ -50,6 +50,7 @@ repository, and the results are hosted on the
 ## Index
 
 * [Contributing](https://github.com/conbench/conbench#contributing)
+* [Configuring the server](https://github.com/conbench/conbench#configuring-the-server)
 * [Authoring benchmarks](https://github.com/conbench/conbench#authoring-benchmarks)
   * [Simple benchmarks](https://github.com/conbench/conbench#example-simple-benchmarks)
   * [External benchmarks](https://github.com/conbench/conbench#example-external-benchmarks)
@@ -193,7 +194,7 @@ password in postgres to `postgres`.
     (conbench) $ brew services start postgres
     (conbench) $ dropdb conbench_prod
     (conbench) $ createdb conbench_prod
-    (conbench) $ git checkout main && git pull    
+    (conbench) $ git checkout main && git pull
     (conbench) $ alembic upgrade head
     (conbench) $ git checkout your-branch
     (conbench) $ alembic revision --autogenerate -m "new"
@@ -203,7 +204,7 @@ password in postgres to `postgres`.
 1. Start conbench app in Terminal window 1:
 
         (conbench) $ dropdb conbench_prod && createdb conbench_prod && alembic upgrade head && flask run
-    
+
 2. Run `conbench.tests.populate_local_conbench` in Terminal window 2 while conbench app is running:
 
         (conbench) $ python -m conbench.tests.populate_local_conbench
@@ -214,6 +215,19 @@ password in postgres to `postgres`.
 2. Commit your change into `main` branch
 
 New version of conbench package will be uploaded into PyPI by a new build for [conbench-deploy](.buildkite/conbench-deploy/pipeline.yml) Buildkite pipeline
+
+## Configuring the server
+
+The conbench server can be configured with various environment variables as
+defined in [config.py](https://github.com/conbench/conbench/blob/main/conbench/config.py).
+Most are self-descriptive, e.g. `DB_PORT`. Exceptions:
+
+* `DISTRIBUTION_COMMITS`: An integer number of commits to use when calculating
+statistics. The default is 100; larger numbers will lead to more false negatives,
+especially after large changes. We recommend leaving it as the default. Previously
+recorded values will not be recalculated if this value is changed. If you would
+like to change previous values, you would need to write a migration of the data
+to recalculate history.
 
 ## Authoring benchmarks
 
@@ -619,7 +633,7 @@ Benchmark result:
 If your benchmark is executed on a machine cluster instead of one machine, you
 can capture cluster info in the following manner.
 Note that a benchmark will have a continuous history on a specific cluster as long as cluster's `name` and `info` do not change.
-There is also an `optional_info` field for information that should not impact the cluster's hash (and thus disrupt the distribution history), but should still be recorded. 
+There is also an `optional_info` field for information that should not impact the cluster's hash (and thus disrupt the distribution history), but should still be recorded.
 ```python
 import conbench.runner
 

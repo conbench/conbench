@@ -6,6 +6,7 @@ from sqlalchemy import CheckConstraint as check
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship
 
+from ..config import Config
 from ..entities._comparator import z_improvement, z_regression
 from ..entities._entity import (
     Base,
@@ -168,7 +169,7 @@ class BenchmarkResult(Base, EntityMixin):
         if "error" in data:
             return benchmark_result
 
-        update_distribution(benchmark_result, 100)
+        update_distribution(benchmark_result, limit=Config.DISTRIBUTION_COMMITS)
 
         return benchmark_result
 
