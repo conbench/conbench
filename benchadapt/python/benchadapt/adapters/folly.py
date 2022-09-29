@@ -72,6 +72,7 @@ class FollyAdapter(BenchmarkAdapter):
                         "unit": "ns",
                         "times": [result[2]],
                         "time_unit": "ns",
+                        "iterations": 1,
                     },
                     tags={"name": bm_name, "suite": suite, "source": "cpp-micro"},
                     info={},
