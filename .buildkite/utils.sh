@@ -42,6 +42,7 @@ deploy_secrets_and_config() {
         s/{{DB_HOST}}/${DB_HOST}/g;\
         s/{{DB_PORT}}/${DB_PORT}/g;\
         s/{{FLASK_APP}}/${FLASK_APP}/g;\
+        s/{{DISTRIBUTION_COMMITS}}/${DISTRIBUTION_COMMITS}/g;" \
         s/{{BENCHMARKS_DATA_PUBLIC}}/${BENCHMARKS_DATA_PUBLIC}/g" | kubectl apply -f -
 }
 
