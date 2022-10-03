@@ -1,8 +1,9 @@
+"""isort:skip_file"""
 import multiprocessing as mp
 
 import pytest
-
 from benchadapt.result import BenchmarkResult
+
 from benchrun import Benchmark, CaseList, Iteration
 from benchrun.cache import CacheManager
 
