@@ -25,7 +25,7 @@ class BenchmarkAdapter(abc.ABC):
         for specifying metadata only available at runtime, e.g. ``run_reason`` and
         build info. Applied before ``results_field_append``.
     results_fields_append : Dict[str, Any]
-        A dict of default values to be appended to `BenchmarkResult` values after
+        A dict of values to be appended to `BenchmarkResult` values after
         instantiation. Useful for appending extra tags or other metadata in addition
         to that gathered elsewhere. Only applicable for dict attributes. For each
         element, will override any keys that already exist, i.e. it does not append
