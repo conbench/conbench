@@ -31,6 +31,7 @@ class Iteration(abc.ABC):
     cache = None
 
     def __init__(self) -> None:
+        assert self.name
         self.cache = CacheManager()
 
     def setup(self, case: dict) -> dict:
