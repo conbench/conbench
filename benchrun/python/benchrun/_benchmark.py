@@ -25,16 +25,26 @@ class Iteration(abc.ABC):
     cache : CacheManager
         An CacheManager instance for clearing the disk cache when specified.
         Do not mess with this.
+    env : dict
+        A dict stages can use to pass data between them.
     """
 
     name: str
     cache = None
+    env: dict = None
 
     def __init__(self) -> None:
         assert self.name
         self.cache = CacheManager()
+        self.env = {}
 
-    def setup(self, case: dict) -> dict:
+    def setup(self, case: dict) -> None:
+        """
+        Global setup that runs once before any iteration.
+        """
+        pass
+
+    def before_each(self, case: dict) -> None:
         """
         Code to run in each iteration before timing.
 
@@ -42,15 +52,11 @@ class Iteration(abc.ABC):
         ----------
         case : dict
             A dict where keys are parameters and values are scalar arguments for a benchmark
-
-        Returns
-        -------
-        A dict passed to the ``setup_results`` param of ``run()`` when the class is called.
         """
-        return {}
+        pass
 
     @abc.abstractmethod
-    def run(self, case: dict, setup_results: dict) -> dict:
+    def run(self, case: dict) -> None:
         """
         Code to time.
 
@@ -58,15 +64,9 @@ class Iteration(abc.ABC):
         ----------
         case : dict
             A dict where keys are parameters and values are scalar arguments for a benchmark
-        setup_results : dict
-            The results of calling ``setup()``. Use for passing data between stages.
-
-        Returns
-        -------
-        A dict passed to the ``run_results`` param of ``teardown()`` when the class is called.
         """
 
-    def teardown(self, case: dict, run_results: dict) -> None:
+    def after_each(self, case: dict) -> None:
         """
         Code to run in each iteration after timing.
 
@@ -74,25 +74,61 @@ class Iteration(abc.ABC):
         ----------
         case : dict
             A dict where keys are parameters and values are scalar arguments for a benchmark
-        run_results : dict
-            The results of calling ``run()``. Use for passing data between stages.
         """
         pass
 
-    def __call__(self, case: dict, settings: dict, queue: mp.Queue) -> float:
+    def teardown(self, case: dict) -> None:
+        """Global teardown that runs once after all iterations"""
+        pass
+
+    def __call__(
+        self, case: dict, iterations: int, settings: dict, queue: mp.Queue
+    ) -> dict:
         """
-        Run all stages and return a time.
+        Run iterations and return list of times.
 
         Parameters
         ----------
         case : dict
             A dict where keys are parameters and values are scalar arguments for a benchmark
+        iterations : int
+            Integer of repetitions to run
         settings : dict
             A dict containing keys ``drop_caches``, ``gc_collect``, and ``gc_disable`` with bool values.
         queue : multiprocessing.Queue
             An instance of `multiprocessing.Queue` used for sending data back to a parent process.
-        """
 
+        Returns
+        -------
+        A dict with ``stats`` and ``error`` keys with values suitable for the respective
+        ``BenchmarkResult`` fields.
+        """
+        self.setup(case=case)
+
+        times = []
+        error = None
+        for _ in range(iterations):
+            res = self.run_iteration(case=case, settings=settings)
+            if res["error"]:
+                error = res["error"]
+
+                if self.settings["error_handling"] in ["stop", "break"]:
+                    break
+            else:
+                times.append(res["time"])
+
+        if len(times) > 0:
+            stats = {"data": times, "units": "s", "iterations": iterations}
+        else:
+            stats = None
+
+        result = {"stats": stats, "error": error}
+        queue.put(result)
+        self.teardown(case=case)
+        return result
+
+    def run_iteration(self, case: dict, settings: dict) -> dict:
+        """Run a single iteration, without setup or teardown"""
         if settings["drop_caches"]:
             self.cache.sync_and_drop()
         if settings["gc_collect"]:
@@ -103,20 +139,18 @@ class Iteration(abc.ABC):
         elapsed_time = None
         error = None
         try:
-            setup_results = self.setup(case=case)
+            self.before_each(case=case)
             start_time = time.time()
-            run_results = self.run(case=case, setup_results=setup_results)
+            self.run(case=case)
             end_time = time.time()
-            self.teardown(case=case, run_results=run_results)
+            self.after_each(case=case)
             elapsed_time = end_time - start_time
         except Exception as e:
             error = repr(e)
             warnings.warn(error)
 
         gc.enable()
-
-        queue.put({"time": elapsed_time, "error": error})
-        return elapsed_time
+        return {"time": elapsed_time, "error": error}
 
 
 class Benchmark:
@@ -181,15 +215,6 @@ class Benchmark:
         }
         self.cache = CacheManager()
 
-    def run_iteration(self, case: dict) -> dict:
-        iteration = copy.deepcopy(self.iteration)
-        queue = mp.Queue()
-        proc = mp.Process(target=iteration, args=(case, self.settings, queue))
-        proc.start()
-        res = queue.get()
-        proc.join()
-        return res
-
     def run_case(
         self,
         case: dict,
@@ -199,31 +224,22 @@ class Benchmark:
         run_id: str,
         batch_id: str,
     ) -> BenchmarkResult:
+        iteration = copy.deepcopy(self.iteration)
+        queue = mp.Queue()
+        proc = mp.Process(
+            target=iteration, args=(case, iterations, self.settings, queue)
+        )
+        proc.start()
+        res = queue.get()
+        proc.join()
 
-        times = []
-        error = None
-        for _ in range(iterations):
-            res = self.run_iteration(case=case)
-            if res["error"]:
-                error = res["error"]
-
-                if self.settings["error_handling"] in ["stop", "break"]:
-                    break
-            else:
-                times.append(res["time"])
-
-        if len(times) > 0:
-            stats = {"data": times, "units": "s", "iterations": iterations}
-        else:
-            stats = None
-
-        res = BenchmarkResult(
+        result = BenchmarkResult(
             run_name=run_name,
             run_id=run_id,
             batch_id=batch_id,
             run_reason=run_reason,
-            stats=stats,
-            error=error,
+            stats=res["stats"],
+            error=res["error"],
             tags={"name": self.iteration.name, **case},
             # info={},  # TODO: is there common detectable metadata worth putting here?
             context={"benchmark_language": "Python"},
@@ -231,12 +247,12 @@ class Benchmark:
 
         for param in self.result_fields_append:
             setattr(
-                res,
+                result,
                 param,
-                {**getattr(res, param), **self.result_fields_append[param]},
+                {**getattr(result, param), **self.result_fields_append[param]},
             )
 
-        return res
+        return result
 
     def run(
         self,

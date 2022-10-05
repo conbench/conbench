@@ -18,8 +18,10 @@ pip install benchrun@git+https://github.com/conbench/conbench.git@main#subdirect
 
 The code to run for a benchmark is contained in a class inheriting from the abstract
 `Iteration` class. At a minimum, users must override the `name` attribute and `run()`
-method (the code to time), but can also override `setup()` and `teardown()` methods.
-A simple implementation might look like
+method (the code to time), but may also override `setup()`, `before_each()`,
+`after_each()` and `teardown()` methods, where `*_each()` runs before/after each
+iteration, and `setup()` and `teardown()` run once before/after all iterations. A
+simple implementation might look like
 
 ```python
 import time
@@ -29,13 +31,18 @@ from benchrun import Iteration
 class MyIteration(Iteration):
     name = "my-iteration"
 
-    def run(self, case: dict, setup_results: dict) -> dict:
+    def before_each(self, case: dict) -> None:
+        # use the `env` dict attribute to pass data between stages
+        self.env = {"success": False}
+
+    def run(self, case: dict) -> dict:
         # code to time goes here
         time.sleep(case["sleep_seconds"])
-        return {"success": True}
+        self.env["success"] = True
 
-    def teardown(self, case: dict, run_results: dict) -> None:
+    def after_each(self, case: dict) -> None:
         assert run_results["success"]
+        self.env = {}
 ```
 
 ### `CaseList`

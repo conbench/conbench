@@ -1,5 +1,6 @@
 """isort:skip_file"""
 import multiprocessing as mp
+from time import sleep
 
 import pytest
 from benchadapt.result import BenchmarkResult
@@ -11,66 +12,81 @@ from benchrun.cache import CacheManager
 class FakeIteration(Iteration):
     name: str = "fake-benchmark"
 
-    def setup(self, case: dict) -> dict:
-        return {"case": case, "setup": True, "x": 1}
+    def setup(self, case: dict) -> None:
+        self.env = {"setup": True}
 
-    def run(self, case: dict, setup_results: dict) -> dict:
-        setup_results["run"] = True
-        setup_results["x"] += 1
-        return setup_results
+    def before_each(self, case: dict) -> None:
+        self.env["case"] = case
+        self.env["before_each"] = True
+        self.env["x"] = 1
 
-    def teardown(self, case: dict, run_results: dict) -> dict:
-        run_results["teardown"] = True
-        run_results["x"] += 1
-        return run_results
+    def run(self, case: dict) -> None:
+        sleep(0.1)
+        self.env["run"] = True
+        self.env["x"] += 1
+
+    def after_each(self, case: dict) -> None:
+        self.env["after_each"] = True
+        self.env["x"] += 1
+
+    def teardown(self, case: dict) -> None:
+        self.env = {}
 
 
 class TestIteration:
     iteration = FakeIteration()
-    setup_results: dict = None
-    run_results: dict = None
-
-    def setup(self) -> None:
-        self.setup_results = self.iteration.setup(case={"param": "arg"})
-
-    def run(self) -> None:
-        self.run_results = self.iteration.run(
-            case={"param": "arg"}, setup_results=self.setup_results
-        )
 
     def test_init(self) -> None:
         assert self.iteration.name == "fake-benchmark"
         assert isinstance(self.iteration.cache, CacheManager)
 
     def test_setup(self) -> None:
-        self.setup()
-        assert self.setup_results["setup"]
-        assert self.setup_results["x"] == 1
-        assert self.setup_results["case"]["param"] == "arg"
+        self.iteration.setup(case={"param": "arg"})
+        assert self.iteration.env == {"setup": True}
+
+    def test_before_each(self) -> None:
+        self.iteration.setup(case={"param": "arg"})
+        self.iteration.before_each(case={"param": "arg"})
+        assert self.iteration.env["setup"]
+        assert self.iteration.env["before_each"]
+        assert self.iteration.env["x"] == 1
+        assert self.iteration.env["case"]["param"] == "arg"
 
     def test_run(self) -> None:
-        self.run()
-        assert self.run_results["setup"]
-        assert self.run_results["run"]
-        assert self.run_results["x"] == 2
-        assert self.run_results["case"]["param"] == "arg"
+        self.iteration.setup(case={"param": "arg"})
+        self.iteration.before_each(case={"param": "arg"})
+        self.iteration.run(case={"param": "arg"})
+        assert self.iteration.env["setup"]
+        assert self.iteration.env["before_each"]
+        assert self.iteration.env["run"]
+        assert self.iteration.env["x"] == 2
+        assert self.iteration.env["case"]["param"] == "arg"
+
+    def test_after_each(self) -> None:
+        self.iteration.setup(case={"param": "arg"})
+        self.iteration.before_each(case={"param": "arg"})
+        self.iteration.run(case={"param": "arg"})
+        self.iteration.after_each(case={"param": "arg"})
+        assert self.iteration.env["setup"]
+        assert self.iteration.env["before_each"]
+        assert self.iteration.env["run"]
+        assert self.iteration.env["after_each"]
+        assert self.iteration.env["x"] == 3
+        assert self.iteration.env["case"]["param"] == "arg"
 
     def test_teardown(self) -> None:
-        self.setup()
-        self.run()
-        teardown_results = self.iteration.teardown(
-            case={"param": "arg"}, run_results=self.run_results
-        )
-        assert teardown_results["setup"]
-        assert teardown_results["run"]
-        assert teardown_results["teardown"]
-        assert teardown_results["x"] == 3
-        assert teardown_results["case"]["param"] == "arg"
+        self.iteration.setup(case={"param": "arg"})
+        self.iteration.before_each(case={"param": "arg"})
+        self.iteration.run(case={"param": "arg"})
+        self.iteration.after_each(case={"param": "arg"})
+        self.iteration.teardown(case={"param": "arg"})
+        assert self.iteration.env == {}
 
     def test_call(self) -> None:
         queue = mp.Queue()
-        time = self.iteration(
+        result_direct = self.iteration(
             case={"param": "arg"},
+            iterations=2,
             settings={
                 "drop_caches": False,
                 "gc_collect": True,
@@ -79,11 +95,14 @@ class TestIteration:
             },
             queue=queue,
         )
-        assert time > 0
 
-        result = queue.get()
-        assert time == result["time"]
-        assert result["error"] is None
+        result_queue = queue.get()
+
+        for res in [result_direct, result_queue]:
+            for time in res["stats"]["data"]:
+                assert time > 0
+            assert res["stats"]["iterations"] == 2
+            assert res["error"] is None
 
 
 class TestBenchmark:
@@ -102,11 +121,6 @@ class TestBenchmark:
             "error_handling": "stop",
         }
         assert isinstance(self.benchmark.cache, CacheManager)
-
-    def test_run_iteration(self) -> None:
-        result = self.benchmark.run_iteration(case=self.case_list.case_list[0])
-        assert result["time"] > 0
-        assert result["error"] is None
 
     @pytest.mark.parametrize("case", case_list.case_list)
     def test_run_case(self, case: dict) -> None:

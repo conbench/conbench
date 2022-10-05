@@ -4,8 +4,8 @@ from benchrun import Benchmark, BenchmarkList, CaseList, Iteration
 class FakeIteration(Iteration):
     name: str = "fake-benchmark"
 
-    def run(self, case: dict, setup_results: dict) -> dict:
-        return {"x": 1, "case": case, "setup_results": setup_results}
+    def run(self, case: dict) -> None:
+        self.env = {"x": 1, "case": case}
 
 
 class TestBenchmarkList:
