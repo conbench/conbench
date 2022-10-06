@@ -51,6 +51,7 @@ repository, and the results are hosted on the
 
 * [Contributing](https://github.com/conbench/conbench#contributing)
 * [Configuring the server](https://github.com/conbench/conbench#configuring-the-server)
+* [Creating accounts](https://github.com/conbench/conbench#creating-accounts)
 * [Authoring benchmarks](https://github.com/conbench/conbench#authoring-benchmarks)
   * [Simple benchmarks](https://github.com/conbench/conbench#example-simple-benchmarks)
   * [External benchmarks](https://github.com/conbench/conbench#example-external-benchmarks)
@@ -228,6 +229,14 @@ especially after large changes. We recommend leaving it as the default. Previous
 recorded values will not be recalculated if this value is changed. If you would
 like to change previous values, you would need to write a migration of the data
 to recalculate history.
+
+## Creating accounts
+
+Follow the login screen's "Sign Up" link, and use the registration key specified
+in the server configuration above.
+
+To create an additional account, when logged in, go to the gear menu / Users and
+use the "Add User" button to create a new account without the registration key.
 
 ## Authoring benchmarks
 
