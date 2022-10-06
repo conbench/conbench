@@ -20,7 +20,7 @@ FROM benchmark_result JOIN run ON run.id = benchmark_result.run_id JOIN hardware
 FROM commit 
 WHERE commit.repository = :repository_1 AND commit.timestamp IS NOT NULL AND commit.timestamp <= :timestamp_1 ORDER BY commit.timestamp DESC
  LIMIT :param_1) AS commits_up ON commits_up.id = run.commit_id 
-WHERE run.name LIKE :name_1 AND benchmark_result.error IS NULL AND benchmark_result.case_id = :case_id_1 AND benchmark_result.context_id = :context_id_1 AND hardware.hash = :hash_1 GROUP BY benchmark_result.case_id, benchmark_result.context_id, hardware.hash"""  # noqa
+WHERE run.reason = :reason_1 AND benchmark_result.error IS NULL AND benchmark_result.case_id = :case_id_1 AND benchmark_result.context_id = :context_id_1 AND hardware.hash = :hash_1 GROUP BY benchmark_result.case_id, benchmark_result.context_id, hardware.hash"""  # noqa
 
 
 def test_z_score_calculations():

@@ -45,7 +45,7 @@ class Run(Base, EntityMixin):
             filters=[
                 Commit.sha == parent.sha,
                 Hardware.id.in_(hardware_ids),
-                Run.name.like("commit: %"),
+                Run.reason == "commit",
             ],
             joins=[Commit, Hardware],
             order_by=Run.timestamp.desc(),
