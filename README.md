@@ -51,6 +51,7 @@ repository, and the results are hosted on the
 
 * [Contributing](https://github.com/conbench/conbench#contributing)
 * [Configuring the server](https://github.com/conbench/conbench#configuring-the-server)
+* [Creating accounts](https://github.com/conbench/conbench#creating-accounts)
 * [Authoring benchmarks](https://github.com/conbench/conbench#authoring-benchmarks)
   * [Simple benchmarks](https://github.com/conbench/conbench#example-simple-benchmarks)
   * [External benchmarks](https://github.com/conbench/conbench#example-external-benchmarks)
@@ -228,6 +229,23 @@ especially after large changes. We recommend leaving it as the default. Previous
 recorded values will not be recalculated if this value is changed. If you would
 like to change previous values, you would need to write a migration of the data
 to recalculate history.
+
+## Creating accounts
+
+By default, conbench has open read access, so a user account is not required to
+view results or read from the API. An account is required only if the conbench
+instance is private or to write data to conbench.
+
+If you do need an account, follow the login screen's "Sign Up" link, and use the
+registration key specified in the server configuration above. If you are a user
+of conbench, you may need to talk to your user administrator to get the
+registration key. SSO can be configured to avoid requiring the registration key.
+
+If you have an account and need to create an additional account (say for a machine
+user of the API) either repeat the process if you have the registration key, or if
+you don't have the registration key (say if your account uses SSO), when logged in,
+go to the gear menu / Users and use the "Add User" button to create a new account
+without the registration key.
 
 ## Authoring benchmarks
 
