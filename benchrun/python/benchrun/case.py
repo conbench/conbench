@@ -25,7 +25,9 @@ class CaseList:
         self.params = params
 
         crossed_case_list = [
+            # each case a dict of scalars
             dict(zip(self.params.keys(), tup))
+            # cross join of value lists
             for tup in itertools.product(*self.params.values())
         ]
 

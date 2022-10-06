@@ -179,7 +179,7 @@ class Benchmark:
     gc_disable : bool
         Disable garbage collection during timing?
     error_handling : str
-        What should happen if a benchmark errors out? Options: ``"stop"`` (skip future iterations
+        What should happen if an iteration errors out? Options: ``"stop"`` (skip future iterations
         and report only error), ``"break"`` (skip future iterations and report everything so far),
         ``"continue"`` (run all iterations even if they fail and report everything). As we currently
         can't report both metrics and errors for the same benchmark, ``"stop"`` and ``"break"`` are
@@ -208,6 +208,7 @@ class Benchmark:
         self.case_list = case_list
         self.result_fields_append = result_fields_append or {}
         self.settings = {
+            # TODO: Figure out if we should change `drop_caches` default to True
             "drop_caches": drop_caches,
             "gc_collect": gc_collect,
             "gc_disable": gc_disable,
