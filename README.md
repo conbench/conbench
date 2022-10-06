@@ -233,8 +233,8 @@ to recalculate history.
 ## Creating accounts
 
 By default, conbench has open read access, so a user account is not required to
-view results or read from the API. An account is required if the conbench instance
-is private or to write data to conbench.
+view results or read from the API. An account is required only if the conbench
+instance is private or to write data to conbench.
 
 If you do need an account, follow the login screen's "Sign Up" link, and use the
 registration key specified in the server configuration above. If you are a user
