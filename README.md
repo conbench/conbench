@@ -232,11 +232,20 @@ to recalculate history.
 
 ## Creating accounts
 
-Follow the login screen's "Sign Up" link, and use the registration key specified
-in the server configuration above.
+By default, conbench has open read access, so a user account is not required to
+view results or read from the API. An account is required if the conbench instance
+is private or to write data to conbench.
 
-To create an additional account, when logged in, go to the gear menu / Users and
-use the "Add User" button to create a new account without the registration key.
+If you do need an account, follow the login screen's "Sign Up" link, and use the
+registration key specified in the server configuration above. If you are a user
+of conbench, you may need to talk to your user administrator to get the
+registration key. SSO can be configured to avoid requiring the registration key.
+
+If you have an account and need to create an additional account (say for a machine
+user of the API) either repeat the process if you have the registration key, or if
+you don't have the registration key (say if your account uses SSO), when logged in,
+go to the gear menu / Users and use the "Add User" button to create a new account
+without the registration key.
 
 ## Authoring benchmarks
 
