@@ -32,7 +32,7 @@ steps:
   - label: "Deploy"
     key: "deploy"
 #    if: build.branch == 'main'
-    depends_on: "run-migrations"
+#    depends_on: "run-migrations"
     concurrency: 1
     concurrency_group: "conbench-deploy"
     command:
