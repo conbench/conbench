@@ -60,7 +60,7 @@ spec:
   selector:
     app: "conbench"
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: "conbench-ingress"
@@ -76,11 +76,17 @@ spec:
   rules:
   - http:
       paths:
-      - path: /*
-        backend:
-          serviceName: ssl-redirect
-          servicePort: use-annotation
-      - path: /*
-        backend:
-          serviceName: "conbench-service"
-          servicePort: 80
+      - backend:
+          service:
+            name: ssl-redirect
+            port:
+              name: use-annotation
+        path: /*
+        pathType: ImplementationSpecific
+      - backend:
+          service:
+            name: conbench-service
+            port:
+              number: 80
+        path: /*
+        pathType: ImplementationSpecific
