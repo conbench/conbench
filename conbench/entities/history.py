@@ -57,7 +57,7 @@ def get_history(case_id, context_id, hardware_hash):
             BenchmarkResult.case_id == case_id,
             BenchmarkResult.context_id == context_id,
             BenchmarkResult.error.is_(None),
-            Run.name.like("commit: %"),
+            Run.reason == "commit",
             Hardware.hash == hardware_hash,
             Distribution.case_id == case_id,
             Distribution.context_id == context_id,

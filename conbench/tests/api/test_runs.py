@@ -61,6 +61,7 @@ class TestRunGet(_asserts.GetEnforcer):
         self.authenticate(client)
         run, baseline = self._create(baseline=True, name=name, language=language)
         baseline.name = "testing"
+        baseline.reason = "test"
         baseline.save()
         response = client.get(f"/api/runs/{run.id}/")
         self.assert_200_ok(response, _expected_entity(run, None))
@@ -199,6 +200,7 @@ class TestRunGet(_asserts.GetEnforcer):
 
         testing_run = testing.run
         testing_run.name = "testing"
+        testing_run.reason = "test"
         testing_run.save()
 
         contender_run = contender.run

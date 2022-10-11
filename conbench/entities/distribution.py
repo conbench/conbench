@@ -99,7 +99,7 @@ def get_distribution(benchmark_result, limit):
         .join(Hardware, Hardware.id == Run.hardware_id)
         .join(commits_up, commits_up.c.id == Run.commit_id)
         .filter(
-            Run.name.like("commit: %"),
+            Run.reason == "commit",
             BenchmarkResult.error.is_(None),
             BenchmarkResult.case_id == benchmark_result.case_id,
             BenchmarkResult.context_id == benchmark_result.context_id,
@@ -153,7 +153,7 @@ def get_closest_parent(run):
         .join(Commit, Commit.id == Run.commit_id)
         .join(Hardware, Hardware.id == Run.hardware_id)
         .filter(
-            Run.name.like("commit: %"),
+            Run.reason == "commit",
             Hardware.id.in_(hardware_ids),
             Commit.timestamp.isnot(None),
             Commit.timestamp < commit.timestamp,
