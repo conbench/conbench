@@ -51,7 +51,7 @@ An `Iteration`'s methods are parameterized with `case`, a dict where keys are
 parameters for the benchmark, and the values are scalar arguments. Cases are managed
 with an instance of `CaseList`, a class which takes a `params` dict, which is like a
 case dict with the difference that the arguments are lists of valid arguments, not
-scalars. `CaseList` will populate a `case_list` attribute` which contains the grid of
+scalars. `CaseList` will populate a `case_list` attribute which contains the grid of
 specified cases to be run:
 
 ```python
