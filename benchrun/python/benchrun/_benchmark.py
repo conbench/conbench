@@ -23,7 +23,7 @@ class Iteration(abc.ABC):
     name : str
         A name for the benchmark. Should be specified when inheriting.
     cache : CacheManager
-        An CacheManager instance for clearing the disk cache when specified.
+        A CacheManager instance for clearing the disk cache when specified.
         Do not mess with this.
     env : dict
         A dict stages can use to pass data between them.
