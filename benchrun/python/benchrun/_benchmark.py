@@ -196,7 +196,7 @@ class Benchmark:
         self,
         iteration: Iteration,
         case_list: CaseList,
-        result_fields_append: Dict[str, Any] = {},
+        result_fields_append: Dict[str, Any] = None,
         drop_caches: bool = False,
         gc_collect: bool = True,
         gc_disable: bool = True,
