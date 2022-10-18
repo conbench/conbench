@@ -91,6 +91,7 @@ class TestIteration:
                 "drop_caches": False,
                 "gc_collect": True,
                 "gc_disable": True,
+                "subprocess": True,
                 "error_handling": "stop",
             },
             queue=queue,
@@ -109,6 +110,9 @@ class TestBenchmark:
     iteration = FakeIteration()
     case_list = CaseList(params={"foo": [1, 10, 100]})
     benchmark = Benchmark(iteration=iteration, case_list=case_list)
+    benchmark_single_process = Benchmark(
+        iteration=iteration, case_list=case_list, subprocess=False
+    )
 
     def test_init(self) -> None:
         assert self.benchmark.iteration == self.iteration
@@ -118,13 +122,15 @@ class TestBenchmark:
             "drop_caches": False,
             "gc_collect": True,
             "gc_disable": True,
+            "subprocess": True,
             "error_handling": "stop",
         }
         assert isinstance(self.benchmark.cache, CacheManager)
 
+    @pytest.mark.parametrize("benchmark", [benchmark, benchmark_single_process])
     @pytest.mark.parametrize("case", case_list.case_list)
-    def test_run_case(self, case: dict) -> None:
-        result = self.benchmark.run_case(
+    def test_run_case(self, case: dict, benchmark: Benchmark) -> None:
+        result = benchmark.run_case(
             case=case,
             iterations=2,
             run_reason="test",
@@ -146,8 +152,9 @@ class TestBenchmark:
         assert result.info == {}
         assert result.context == {"benchmark_language": "Python"}
 
-    def test_run(self) -> None:
-        result_list = self.benchmark.run(
+    @pytest.mark.parametrize("benchmark", [benchmark, benchmark_single_process])
+    def test_run(self, benchmark: Benchmark) -> None:
+        result_list = benchmark.run(
             run_reason="test",
             run_name="test-run-name",
             run_id="test-run-run-id",

@@ -178,6 +178,8 @@ class Benchmark:
         Run garbage collection before timing code?
     gc_disable : bool
         Disable garbage collection during timing?
+    subprocess : bool
+        Run all benchmarks in a subprocess?
     error_handling : str
         What should happen if an iteration errors out? Options: ``"stop"`` (skip future iterations
         and report only error), ``"break"`` (skip future iterations and report everything so far),
@@ -200,6 +202,7 @@ class Benchmark:
         drop_caches: bool = False,
         gc_collect: bool = True,
         gc_disable: bool = True,
+        subprocess: bool = True,
         error_handling: str = "stop",
     ) -> None:
         assert error_handling in ["stop", "break", "continue"]
@@ -212,6 +215,7 @@ class Benchmark:
             "drop_caches": drop_caches,
             "gc_collect": gc_collect,
             "gc_disable": gc_disable,
+            "subprocess": subprocess,
             "error_handling": error_handling,
         }
         self.cache = CacheManager()
@@ -227,12 +231,18 @@ class Benchmark:
     ) -> BenchmarkResult:
         iteration = copy.deepcopy(self.iteration)
         queue = mp.Queue()
-        proc = mp.Process(
-            target=iteration, args=(case, iterations, self.settings, queue)
-        )
-        proc.start()
-        res = queue.get()
-        proc.join()
+        if self.settings["subprocess"]:
+            proc = mp.Process(
+                target=iteration, args=(case, iterations, self.settings, queue)
+            )
+            proc.start()
+            res = queue.get()
+            proc.join()
+        else:
+            iteration(
+                case=case, iterations=iterations, settings=self.settings, queue=queue
+            )
+            res = queue.get()
 
         result = BenchmarkResult(
             run_name=run_name,
