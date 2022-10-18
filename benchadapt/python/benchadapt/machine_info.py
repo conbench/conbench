@@ -1,5 +1,6 @@
 import os
 import platform
+import re
 import subprocess
 from typing import Optional
 
@@ -73,9 +74,14 @@ def python_info():
 def github_info():
     commit = _exec_command(["git", "rev-parse", "HEAD"])
     repository = _exec_command(["git", "remote", "get-url", "origin"])
+    branch = _exec_command(["git", "branch", "--show-current"])
+    remote = _exec_command(["git", "remote", "get-url", "origin"])
+    fork = re.search("(?<=.com[/:])([^/]*?)(?=/)", remote).group(0)
+
     return {
         "commit": commit,
         "repository": repository.rsplit(".git")[0],
+        "branch": f"{fork}:{branch}",
     }
 
 

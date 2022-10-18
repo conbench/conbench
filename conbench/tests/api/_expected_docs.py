@@ -1099,6 +1099,7 @@
                 "properties": {
                     "commit": {"type": "string"},
                     "repository": {"type": "string"},
+                    "branch": {"type": "string"},
                 },
                 "required": ["commit", "repository"],
                 "type": "object",

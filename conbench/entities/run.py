@@ -48,16 +48,17 @@ class Run(Base, EntityMixin):
         )
         hardware = hardware_type.upsert(**data.pop(field_name))
 
-        sha, repository = None, None
+        sha, branch, repository = None, None, None
 
         if github_data := data.pop("github", None):
             sha = github_data["commit"]
+            branch = github_data.get("branch")
             repository = repository_to_url(github_data["repository"])
 
         # create if not exists
         commit = Commit.first(sha=sha, repository=repository)
         if not commit:
-            github = get_github_commit(repository, sha)
+            github = get_github_commit(repository=repository, branch=branch, sha=sha)
             if github:
                 commit = Commit.create_github_context(sha, repository, github)
             elif sha or repository:
@@ -210,6 +211,7 @@ def commit_hardware_run_map():
 class GitHubCreate(marshmallow.Schema):
     commit = marshmallow.fields.String(required=True)
     repository = marshmallow.fields.String(required=True)
+    branch = marshmallow.fields.String(required=False)
 
 
 field_descriptions = {

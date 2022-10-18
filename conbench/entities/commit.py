@@ -21,6 +21,8 @@ class Commit(Base, EntityMixin):
     __tablename__ = "commit"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     sha = NotNull(s.String(50))
+    branch = Nullable(s.String(100))  # github max chars: 255
+    fork_point_sha = Nullable(s.String(50))
     parent = Nullable(s.String(50))
     repository = NotNull(s.String(100))
     message = NotNull(s.String(250))
@@ -62,10 +64,12 @@ class Commit(Base, EntityMixin):
         )
 
     @staticmethod
-    def create_github_context(sha, repository, github):
+    def create_github_context(sha, repository: str, github: dict):
         return Commit.create(
             {
                 "sha": sha,
+                "branch": github["branch"],
+                "fork_point_sha": github["fork_point_sha"],
                 "repository": repository,
                 "parent": github["parent"],
                 "timestamp": github["date"],
@@ -94,6 +98,8 @@ class _Serializer(EntitySerializer):
         result = {
             "id": commit.id,
             "sha": commit.sha,
+            "branch": commit.branch,
+            "fork_point_sha": commit.fork_point_sha,
             "url": url,
             "parent_sha": commit.parent,
             "repository": commit.repository,
@@ -142,7 +148,7 @@ def repository_to_url(repository):
     return f"https://github.com/{name.lower()}" if name else ""
 
 
-def get_github_commit(repository, sha):
+def get_github_commit(repository: str, branch: str, sha: str) -> dict:
     if not repository or not sha:
         return {}
 
@@ -151,6 +157,11 @@ def get_github_commit(repository, sha):
     commit = github.get_commit(name, sha)
     if commit is None:
         return {}
+
+    commit["branch"] = branch
+    commit["fork_point_sha"] = github.compare_branch_to_default(
+        name=name, branch=branch
+    )
 
     parent = commit["parent"]
     commits = github.get_commits(name, parent)
@@ -234,6 +245,25 @@ class GitHub:
             response = self._get_response(url)
         return self._parse_commit(response) if response else None
 
+    def compare_branch_to_default(self, name: str, branch: str) -> dict:
+        """
+        Get the most common ancestor commit between a branch and the default branch.
+
+        Returns ``None`` if branch is not supplied or is the default branch, otherwise
+        returns the fork point sha, called the "merge base" in git-speak.
+        """
+        if not name:
+            return None
+
+        base = self.get_default_branch(name=name)
+        if branch == base:
+            return None
+
+        url = f"{GITHUB}/repos/{name}/compare/{base}...{branch}"
+        response = self._get_response(url=url)
+        fork_point_sha = response["merge_base_commit"]["sha"]
+        return fork_point_sha
+
     @functools.cached_property
     def session(self):
         token, session = os.getenv("GITHUB_API_TOKEN"), None
@@ -257,6 +287,7 @@ class GitHub:
         author = commit.get("author")
         commit_author = commit["commit"]["author"]
         return {
+            # 'fork_point': commit['merge_base_commit']['sha'],
             "parent": commit["parents"][0]["sha"],
             "date": dateutil.parser.isoparse(commit_author["date"]),
             "message": commit["commit"]["message"].split("\n")[0],
