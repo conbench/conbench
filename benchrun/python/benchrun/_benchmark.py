@@ -3,6 +3,7 @@ import copy
 import gc
 import multiprocessing as mp
 import time
+import traceback
 import uuid
 import warnings
 from typing import Any, Dict, List
@@ -112,7 +113,7 @@ class Iteration(abc.ABC):
             if res["error"]:
                 error = res["error"]
 
-                if self.settings["error_handling"] in ["stop", "break"]:
+                if settings["error_handling"] in ["stop", "break"]:
                     break
             else:
                 times.append(res["time"])
@@ -146,8 +147,8 @@ class Iteration(abc.ABC):
             self.after_each(case=case)
             elapsed_time = end_time - start_time
         except Exception as e:
-            error = repr(e)
-            warnings.warn(error)
+            error = {"error": repr(e), "stack_trace": traceback.format_exc()}
+            warnings.warn(error["error"])
 
         gc.enable()
         return {"time": elapsed_time, "error": error}

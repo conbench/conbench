@@ -52,8 +52,9 @@ class BenchmarkResult:
     github : Dict[str, Any]
         Keys: ``repository``, ``commit``. If unspecified, will be auto-populated based on
         the current git state.
-    error : str
-        stderr from process running the benchmark
+    error : Dict[str, Any]
+        A dict containing information about errors raised when running the benchmark. Any
+        schema is acceptable, but may contain stderr, a traceback, etc.
 
     Fields one of which must be supplied, the other of which will not be posted to conbench:
 
@@ -99,7 +100,7 @@ class BenchmarkResult:
     cluster_info: Dict[str, Any] = None
     context: Dict[str, Any] = field(default_factory=dict)
     github: Dict[str, Any] = field(default_factory=github_info)
-    error: str = None
+    error: Dict[str, Any] = None
 
     def __post_init__(self) -> None:
         if not self.run_name and self.github.get("commit"):

@@ -25,6 +25,9 @@ class FakeIteration(Iteration):
         self.env["run"] = True
         self.env["x"] += 1
 
+        if "error" in case:
+            raise Exception(case["error"])
+
     def after_each(self, case: dict) -> None:
         self.env["after_each"] = True
         self.env["x"] += 1
@@ -104,6 +107,29 @@ class TestIteration:
                 assert time > 0
             assert res["stats"]["iterations"] == 2
             assert res["error"] is None
+
+        error_message = "You told me to fail!"
+        with pytest.warns(UserWarning, match=error_message):
+            result_direct_error = self.iteration(
+                case={"param": "arg", "error": error_message},
+                iterations=2,
+                settings={
+                    "drop_caches": False,
+                    "gc_collect": True,
+                    "gc_disable": True,
+                    "subprocess": True,
+                    "error_handling": "stop",
+                },
+                queue=queue,
+            )
+
+        result_queue_error = queue.get()
+
+        for res in [result_direct_error, result_queue_error]:
+            assert res["stats"] is None
+            assert res["error"]["error"] == f"Exception('{error_message}')"
+            assert "Traceback (most recent call last):" in res["error"]["stack_trace"]
+            assert 'raise Exception(case["error"])' in res["error"]["stack_trace"]
 
 
 class TestBenchmark:
