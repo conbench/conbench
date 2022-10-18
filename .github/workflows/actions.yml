@@ -30,6 +30,7 @@ jobs:
           pip install -r requirements-build.txt
           pip install .
           pip install coveralls
+          pip install -r benchadapt/python/requirements.txt
       - name: Migrations
         run: |
           alembic upgrade head
@@ -55,3 +56,9 @@ jobs:
           coveralls --service=github
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Test benchadapt
+        run: |
+          pytest -vvvv benchadapt/python/tests
+      - name: Test benchrun
+        run: |
+          pytest -vvvv benchrun/python/tests
