@@ -79,11 +79,15 @@ repository, and the results are hosted on the
 
 
 ### Install dependencies
+
+Install options:
+
+* `pip install conbench`: installs CLI dependencies
+* `pip install conbench[server]`: installs CLI and server dependencies
+* `pip install conbench[dev]`: ` installs CLI, server, and testing/CI dependencies
+
     (conbench) $ cd ~/workspace/conbench/
-    (conbench) $ pip install -r requirements-test.txt
-    (conbench) $ pip install -r requirements-build.txt
-    (conbench) $ pip install -r requirements-cli.txt
-    (conbench) $ pip install -e .
+    (conbench) $ pip install -e .[dev]
 
 
 ### Start postgres
