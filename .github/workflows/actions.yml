@@ -25,14 +25,9 @@ jobs:
           src: .
       - name: Install dependencies
         run: |
-          pip install -r requirements-test.txt
-          pip install -r requirements-cli.txt
-          pip install -r requirements-build.txt
-          pip install .
-          pip install coveralls
-          pip install -r benchadapt/python/requirements.txt
-          pip install benchadapt/python
-          pip install benchrun/python
+          pip install -e .[dev] \
+            -e benchadapt/python \
+            -e benchrun/python
       - name: Migrations
         run: |
           alembic upgrade head
@@ -60,7 +55,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Test benchadapt
         run: |
-          pytest -vvvv benchadapt/python/tests
+          pytest -vv benchadapt/python/tests
       - name: Test benchrun
         run: |
-          pytest -vvvv benchrun/python/tests
+          pytest -vv benchrun/python/tests
