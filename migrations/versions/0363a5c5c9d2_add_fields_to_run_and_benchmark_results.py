@@ -29,17 +29,17 @@ def upgrade():
         sa.Column("error_info", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     )
     op.add_column("run", sa.Column("error_type", sa.String(length=250), nullable=True))
-    op.add_column(
-        "run",
-        sa.Column(
-            "started_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
-        ),
+    op.add_column("run", sa.Column("finished_timestamp", sa.DateTime(), nullable=True))
+    op.alter_column(
+        "run", "hardware_id", existing_type=sa.VARCHAR(length=50), nullable=True
     )
-    op.add_column("run", sa.Column("finished_at", sa.DateTime(), nullable=True))
 
 
 def downgrade():
-    op.drop_column("run", "finished_at")
+    op.alter_column(
+        "run", "hardware_id", existing_type=sa.VARCHAR(length=50), nullable=False
+    )
+    op.drop_column("run", "finished_timestamp")
     op.drop_column("run", "started_at")
     op.drop_column("run", "error_type")
     op.drop_column("run", "error_info")

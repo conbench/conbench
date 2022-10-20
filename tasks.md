@@ -1,0 +1,11 @@
+Tests:
+- [ ] Run create (no hardware)
+- [ ] Run create (with hardware)
+- [ ] Run update
+- [ ] Run add benchmark results (update hardware)
+- [ ] Run add benchmark results with error
+- [ ] Run update
+- [ ] Run update finished_timestamp
+- [ ] Benchmark results with validation JSON
+- [ ] Verify run get returns all correct results
+- [ ] Verify benchmark_results get returns all correct results

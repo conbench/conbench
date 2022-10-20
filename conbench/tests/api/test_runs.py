@@ -14,7 +14,7 @@ def _expected_entity(run, baseline_id=None, include_baseline=True):
         run.name,
         run.reason,
         run.commit_id,
-        parent.id,
+        parent.id if parent else None,
         run.hardware_id,
         run.hardware.name,
         run.hardware.type,
@@ -280,3 +280,45 @@ class TestRunDelete(_asserts.DeleteEnforcer):
         # cannot get after delete
         with pytest.raises(NotFound):
             Run.one(id=run_id)
+
+
+class TestRunPost(_asserts.PostEnforcer):
+    url = "/api/runs/"
+    valid_payload = _fixtures.VALID_RUN_PAYLOAD
+    valid_payload_for_cluster = _fixtures.VALID_RUN_PAYLOAD_FOR_CLUSTER
+    valid_payload_with_error = _fixtures.VALID_RUN_PAYLOAD_WITH_ERROR
+    required_fields = ["id"]
+
+    # This test does not apply
+    def test_cannot_set_id(self, client):
+        pass
+
+    def test_create_run(self, client):
+        for hardware_type, payload in [
+            ("machine", self.valid_payload),
+            ("cluster", self.valid_payload_for_cluster),
+        ]:
+            self.authenticate(client)
+            run_id = payload["id"]
+            assert not Run.first(id=run_id)
+            response = client.post(self.url, json=payload)
+            print(response)
+            print(response.json)
+            run = Run.one(id=run_id)
+            location = f"http://localhost/api/runs/{run_id}/"
+            self.assert_201_created(response, _expected_entity(run), location)
+
+            assert run.hardware.type == hardware_type
+            for attr, value in payload[f"{hardware_type}_info"].items():
+                assert getattr(run.hardware, attr) == value or getattr(
+                    run.hardware, attr
+                ) == int(value)
+
+    def test_create_run_with_error(self, client):
+        self.authenticate(client)
+        run_id = self.valid_payload_with_error["id"]
+        assert not Run.first(id=run_id)
+        response = client.post(self.url, json=self.valid_payload_with_error)
+        run = Run.one(id=run_id)
+        location = f"http://localhost/api/runs/{run_id}/"
+        self.assert_201_created(response, _expected_entity(run), location)

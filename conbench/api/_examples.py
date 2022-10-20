@@ -389,7 +389,8 @@ def _api_hardware_entity(
         result = {
             "id": hardware_id,
             "type": "cluster",
-            "info": {"workers": 2},
+            "info": {"gpu": 1},
+            "optional_info": {"workers": 1},
             "name": hardware_name,
             "links": {
                 "list": "http://localhost/api/hardware/",

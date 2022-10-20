@@ -6,7 +6,7 @@ from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
-from ..entities.run import Run, RunSerializer
+from ..entities.run import Run, RunSerializer, RunFacadeSchema
 
 
 class RunEntityAPI(ApiEndpoint):
@@ -66,6 +66,7 @@ class RunEntityAPI(ApiEndpoint):
 
 class RunListAPI(ApiEndpoint):
     serializer = RunSerializer()
+    schema = RunFacadeSchema()
 
     @maybe_login_required
     def get(self):
@@ -90,6 +91,26 @@ class RunListAPI(ApiEndpoint):
             runs = Run.all(order_by=Run.timestamp.desc(), limit=1000)
         return self.serializer.many.dump(runs)
 
+    @flask_login.login_required
+    def post(self):
+        """
+        ---
+        description: Create a run.
+        responses:
+            "201": "RunCreated"
+            "400": "400"
+            "401": "401"
+        requestBody:
+            content:
+                application/json:
+                    schema: RunCreate
+        tags:
+          - Runs
+        """
+        data = self.validate(self.schema.create)
+        run = Run.create(data)
+        return self.response_201_created(self.serializer.one.dump(run))
+
 
 run_entity_view = RunEntityAPI.as_view("run")
 run_list_view = RunListAPI.as_view("runs")
@@ -97,10 +118,10 @@ run_list_view = RunListAPI.as_view("runs")
 rule(
     "/runs/",
     view_func=run_list_view,
-    methods=["GET"],
+    methods=["GET", "POST"],
 )
 rule(
     "/runs/<run_id>/",
     view_func=run_entity_view,
-    methods=["GET", "DELETE"],
+    methods=["GET", "DELETE", "PUT"],
 )

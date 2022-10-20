@@ -1,12 +1,25 @@
 import flask as f
+import marshmallow
 import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship
 
 from ..db import Session
 from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
-from ..entities.commit import Commit, CommitSerializer
-from ..entities.hardware import Hardware, HardwareSerializer
+from ..entities.commit import (
+    Commit,
+    CommitSerializer,
+    get_github_commit,
+    repository_to_url,
+)
+from ..entities.hardware import (
+    ClusterSchema,
+    Hardware,
+    HardwareSerializer,
+    MachineSchema,
+    Machine,
+    Cluster,
+)
 
 
 class Run(Base, EntityMixin):
@@ -14,17 +27,47 @@ class Run(Base, EntityMixin):
     id = NotNull(s.String(50), primary_key=True)
     name = Nullable(s.String(250))
     reason = Nullable(s.String(250))
+    timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
+    finished_timestamp = Nullable(s.DateTime(timezone=False))
     info = Nullable(postgresql.JSONB)
     error_info = Nullable(postgresql.JSONB)
     error_type = Nullable(s.String(250))
-    started_at = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
-    finished_at = Nullable(s.DateTime(timezone=False))
-    timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id"))
     commit = relationship("Commit", lazy="joined")
     has_errors = NotNull(s.Boolean, default=False)
-    hardware_id = NotNull(s.String(50), s.ForeignKey("hardware.id"))
+    hardware_id = Nullable(s.String(50), s.ForeignKey("hardware.id"))
     hardware = relationship("Hardware", lazy="joined")
+
+    @staticmethod
+    def create(data):
+        # create if not exists
+        hardware_type, field_name = (
+            (Machine, "machine_info")
+            if "machine_info" in data
+            else (Cluster, "cluster_info")
+        )
+        hardware = hardware_type.upsert(**data.pop(field_name))
+
+        sha, repository = None, None
+        if "github" in data:
+            github = data.pop("github")
+            sha = github["commit"]
+            repository = repository_to_url(github["repository"])
+
+        # create if not exists
+        commit = Commit.first(sha=sha, repository=repository)
+        if not commit:
+            github = get_github_commit(repository, sha)
+            if github:
+                commit = Commit.create_github_context(sha, repository, github)
+            elif sha or repository:
+                commit = Commit.create_unknown_context(sha, repository)
+            else:
+                commit = Commit.create_no_context()
+
+        run = Run(**data, commit_id=commit.id, hardware_id=hardware.id)
+        run.save()
+        return run
 
     def get_baseline_run(self):
         from ..entities.benchmark_result import BenchmarkResult
@@ -156,3 +199,36 @@ def commit_hardware_run_map():
         results[commit]["hardware"][run.hardware.name].append((run_value, run.id))
 
     return results
+
+
+class GitHubCreate(marshmallow.Schema):
+    commit = marshmallow.fields.String(required=True)
+    repository = marshmallow.fields.String(required=True)
+
+
+class _RunFacadeSchemaCreate(marshmallow.Schema):
+    id = marshmallow.fields.String(required=True)
+    name = marshmallow.fields.String(required=False)
+    reason = marshmallow.fields.String(required=False)
+    finished_timestamp = marshmallow.fields.DateTime(required=False)
+    info = marshmallow.fields.Dict(required=False)
+    error_info = marshmallow.fields.Dict(required=False)
+    error_type = marshmallow.fields.String(required=False)
+    github = marshmallow.fields.Nested(GitHubCreate(), required=False)
+    machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
+    cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
+
+    @marshmallow.validates_schema
+    def validate_hardware_info_fields(self, data, **kwargs):
+        if "machine_info" not in data and "cluster_info" not in data:
+            raise marshmallow.ValidationError(
+                "Either machine_info or cluster_info field is required"
+            )
+        if "machine_info" in data and "cluster_info" in data:
+            raise marshmallow.ValidationError(
+                "machine_info and cluster_info fields can not be used at the same time"
+            )
+
+
+class RunFacadeSchema:
+    create = _RunFacadeSchemaCreate()

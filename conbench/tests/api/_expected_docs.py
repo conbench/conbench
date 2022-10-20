@@ -1436,7 +1436,23 @@
                     "401": {"$ref": "#/components/responses/401"},
                 },
                 "tags": ["Runs"],
-            }
+            },
+            "post": {
+                "description": "Create a run.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/RunCreate"}
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {"$ref": "#/components/responses/RunCreated"},
+                    "400": {"$ref": "#/components/responses/400"},
+                    "401": {"$ref": "#/components/responses/401"},
+                },
+                "tags": ["Runs"],
+            },
         },
         "/api/runs/{run_id}/": {
             "delete": {

@@ -21,6 +21,31 @@ Z_SCORE_DOWN_COMPUTED_VIA_POSTGRES = (
     Z_SCORE_DOWN - 0.000000000000002
 )  # Computed using sqlalchemy.func.stddev()
 
+CLUSTER_INFO = {
+    "name": f"cluster-{_uuid()}",
+    "info": {"gpu": 1},
+    "optional_info": {"workers": 1},
+}
+
+MACHINE_INFO = {
+    "architecture_name": "x86_64",
+    "cpu_l1d_cache_bytes": "32768",
+    "cpu_l1i_cache_bytes": "32768",
+    "cpu_l2_cache_bytes": "262144",
+    "cpu_l3_cache_bytes": "4194304",
+    "cpu_core_count": "2",
+    "cpu_frequency_max_hz": "3500000000",
+    "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+    "cpu_thread_count": "4",
+    "kernel_name": "19.6.0",
+    "memory_bytes": "17179869184",
+    "name": "diana",
+    "os_name": "macOS",
+    "os_version": "10.15.7",
+    "gpu_count": "2",
+    "gpu_product_names": ["Tesla T4", "GeForce GTX 1060 3GB"],
+}
+
 VALID_PAYLOAD = {
     "run_id": "2a5709d179f349cba69ed242be3e6321",
     "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
@@ -41,24 +66,7 @@ VALID_PAYLOAD = {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",
         "repository": "https://github.com/apache/arrow",
     },
-    "machine_info": {
-        "architecture_name": "x86_64",
-        "cpu_l1d_cache_bytes": "32768",
-        "cpu_l1i_cache_bytes": "32768",
-        "cpu_l2_cache_bytes": "262144",
-        "cpu_l3_cache_bytes": "4194304",
-        "cpu_core_count": "2",
-        "cpu_frequency_max_hz": "3500000000",
-        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
-        "cpu_thread_count": "4",
-        "kernel_name": "19.6.0",
-        "memory_bytes": "17179869184",
-        "name": "diana",
-        "os_name": "macOS",
-        "os_version": "10.15.7",
-        "gpu_count": "2",
-        "gpu_product_names": ["Tesla T4", "GeForce GTX 1060 3GB"],
-    },
+    "machine_info": MACHINE_INFO,
     "stats": {
         "data": [
             "0.099094",
@@ -118,16 +126,44 @@ VALID_PAYLOAD_WITH_ERROR = dict(
 
 VALID_PAYLOAD_FOR_CLUSTER = dict(
     run_id="3a5709d179f349cba69ed242be3e6323",
-    cluster_info={
-        "name": "cluster-1",
-        "info": {"gpu": 1},
-        "optional_info": {"workers": 1},
-    },
+    cluster_info=CLUSTER_INFO,
     **{
         key: value
         for key, value in VALID_PAYLOAD.items()
         if key not in ("machine_info", "run_id")
     },
+)
+
+VALID_RUN_PAYLOAD = {
+    "id": _uuid(),
+    "name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
+    "reason": "commit",
+    "finished_timestamp": "2020-11-25T21:02:42.706806+00:00",
+    "info": {
+        "setup": "passed",
+    },
+    "github": {
+        "commit": "02addad336ba19a654f9c857ede546331be7b631",
+        "repository": "https://github.com/apache/arrow",
+    },
+    "machine_info": MACHINE_INFO,
+}
+
+VALID_RUN_PAYLOAD_FOR_CLUSTER = dict(
+    id=_uuid(),
+    cluster_info=CLUSTER_INFO,
+    **{
+        key: value
+        for key, value in VALID_RUN_PAYLOAD.items()
+        if key not in ("machine_info", "id")
+    },
+)
+
+VALID_RUN_PAYLOAD_WITH_ERROR = dict(
+    id=_uuid(),
+    error_info={"error": "error", "stack_trace": "stack_trace", "fatal": True},
+    error_type="fatal",
+    **{key: value for key, value in VALID_RUN_PAYLOAD.items() if key not in ("id")},
 )
 
 

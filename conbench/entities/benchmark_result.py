@@ -23,7 +23,7 @@ from ..entities.context import Context
 from ..entities.distribution import update_distribution
 from ..entities.hardware import Cluster, ClusterSchema, Machine, MachineSchema
 from ..entities.info import Info
-from ..entities.run import Run
+from ..entities.run import Run, GitHubCreate
 
 
 class BenchmarkResult(Base, EntityMixin):
@@ -256,11 +256,6 @@ class _Serializer(EntitySerializer):
 class BenchmarkResultSerializer:
     one = _Serializer()
     many = _Serializer(many=True)
-
-
-class GitHubCreate(marshmallow.Schema):
-    commit = marshmallow.fields.String(required=True)
-    repository = marshmallow.fields.String(required=True)
 
 
 class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
