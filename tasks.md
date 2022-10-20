@@ -1,7 +1,7 @@
 Tests:
-- [ ] Run create (no hardware)
-- [ ] Run create (with hardware)
-- [ ] Run update
+- [x] Run create (no hardware)
+- [x] Run create (with hardware)
+- [x] Run update
 - [ ] Run add benchmark results (update hardware)
 - [ ] Run add benchmark results with error
 - [ ] Run update

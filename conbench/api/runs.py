@@ -12,6 +12,7 @@ from ..entities.run import Run, RunFacadeSchema, RunSerializer
 
 class RunEntityAPI(ApiEndpoint):
     serializer = RunSerializer()
+    schema = RunFacadeSchema()
 
     def _get(self, run_id):
         try:
@@ -38,6 +39,32 @@ class RunEntityAPI(ApiEndpoint):
           - Runs
         """
         run = self._get(run_id)
+        return self.serializer.one.dump(run)
+
+    @flask_login.login_required
+    def put(self, run_id):
+        """
+        ---
+        description: Edit a run.
+        responses:
+            "200": "RunEntity"
+            "401": "401"
+            "404": "404"
+        parameters:
+          - name: run_id
+            in: path
+            schema:
+                type: string
+        requestBody:
+            content:
+                application/json:
+                    schema: RunUpdate
+        tags:
+          - Runs
+        """
+        run = self._get(run_id)
+        data = self.validate(self.schema.update)
+        run.update(data)
         return self.serializer.one.dump(run)
 
     @flask_login.login_required
@@ -127,3 +154,4 @@ rule(
     methods=["GET", "DELETE", "PUT"],
 )
 spec.components.schema("RunCreate", schema=RunFacadeSchema.create)
+spec.components.schema("RunUpdate", schema=RunFacadeSchema.update)

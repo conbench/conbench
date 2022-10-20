@@ -230,5 +230,13 @@ class _RunFacadeSchemaCreate(marshmallow.Schema):
             )
 
 
+class _RunFacadeSchemaUpdate(marshmallow.Schema):
+    finished_timestamp = marshmallow.fields.DateTime(required=False)
+    info = marshmallow.fields.Dict(required=False)
+    error_info = marshmallow.fields.Dict(required=False)
+    error_type = marshmallow.fields.String(required=False)
+
+
 class RunFacadeSchema:
     create = _RunFacadeSchemaCreate()
+    update = _RunFacadeSchemaUpdate()

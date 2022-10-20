@@ -282,6 +282,42 @@ class TestRunDelete(_asserts.DeleteEnforcer):
             Run.one(id=run_id)
 
 
+class TestRunPut(_asserts.PutEnforcer):
+    url = "/api/runs/{}/"
+    valid_payload = {
+        "finished_timestamp": "2022-11-25 21:02:42.706806",
+        "info": {"setup": "passed"},
+        "error_info": {"error": "error", "stack_trace": "stack_trace", "fatal": True},
+        "error_type": "fatal",
+    }
+
+    def setup(self):
+        Run.delete_all()
+
+    def _create_entity_to_update(self):
+        _fixtures.benchmark_result(sha=_fixtures.PARENT)
+        benchmark_result = _fixtures.benchmark_result()
+        return benchmark_result.run
+
+    def test_update_allowed_fields(self, client):
+        self.authenticate(client)
+
+        # before
+        before = self._create_entity_to_update()
+        for key in self.valid_payload.keys():
+            assert getattr(before, key) is None
+
+        # after
+        response = client.put(f"/api/runs/{before.id}/", json=self.valid_payload)
+        after = Run.one(id=before.id)
+        self.assert_200_ok(response, _expected_entity(after))
+        for key, value in self.valid_payload.items():
+            if key == "finished_timestamp":
+                assert str(getattr(after, key)) == value
+            else:
+                assert getattr(after, key) == value
+
+
 class TestRunPost(_asserts.PostEnforcer):
     url = "/api/runs/"
     valid_payload = _fixtures.VALID_RUN_PAYLOAD
