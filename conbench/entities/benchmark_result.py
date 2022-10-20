@@ -100,14 +100,6 @@ class BenchmarkResult(Base, EntityMixin):
             case = Case.create(c)
 
         # create if not exists
-        hardware_type, field_name = (
-            (Machine, "machine_info")
-            if "machine_info" in data
-            else (Cluster, "cluster_info")
-        )
-        hardware = hardware_type.upsert(**data[field_name])
-
-        # create if not exists
         if "context" not in data:
             data["context"] = {}
         context = Context.first(tags=data["context"])
@@ -121,39 +113,21 @@ class BenchmarkResult(Base, EntityMixin):
         if not info:
             info = Info.create({"tags": data["info"]})
 
-        sha, repository = None, None
-        if "github" in data:
-            sha = data["github"]["commit"]
-            repository = repository_to_url(data["github"]["repository"])
-
         # create if not exists
-        commit = Commit.first(sha=sha, repository=repository)
-        if not commit:
-            github = get_github_commit(repository, sha)
-            if github:
-                commit = Commit.create_github_context(sha, repository, github)
-            elif sha or repository:
-                commit = Commit.create_unknown_context(sha, repository)
-            else:
-                commit = Commit.create_no_context()
-
-        # create if not exists
-        run_id = data["run_id"]
-        run_name = data.pop("run_name", None)
-        run_reason = data.pop("run_reason", None)
-        run = Run.first(id=run_id)
+        run = Run.first(id=data["run_id"])
         if run:
             if has_error:
                 run.has_errors = True
                 run.save()
         else:
-            run = Run.create(
+            hardware_type = "machine" if "machine_info" in data else "cluster"
+            Run.create(
                 {
-                    "id": run_id,
-                    "name": run_name,
-                    "reason": run_reason,
-                    "commit_id": commit.id,
-                    "hardware_id": hardware.id,
+                    "id": data["run_id"],
+                    "name": data.pop("run_name", None),
+                    "reason": data.pop("run_reason", None),
+                    "github": data.pop("github", None),
+                    f"{hardware_type}_info": data[f"{hardware_type}_info"],
                     "has_errors": has_error,
                 }
             )
