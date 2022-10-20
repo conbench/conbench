@@ -35,7 +35,7 @@ class Run(Base, EntityMixin):
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id"))
     commit = relationship("Commit", lazy="joined")
     has_errors = NotNull(s.Boolean, default=False)
-    hardware_id = Nullable(s.String(50), s.ForeignKey("hardware.id"))
+    hardware_id = NotNull(s.String(50), s.ForeignKey("hardware.id"))
     hardware = relationship("Hardware", lazy="joined")
 
     @staticmethod

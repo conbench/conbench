@@ -7,5 +7,6 @@ Tests:
 - [x] Run update
 - [x] Run update finished_timestamp
 - [ ] Benchmark results with validation JSON
-- [ ] Verify run get returns all correct results
-- [ ] Verify benchmark_results get returns all correct results
+- [x] Verify run get returns all correct results
+- [x] Verify benchmark_results get returns all correct results
+- [ ] Update UI

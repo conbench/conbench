@@ -1096,6 +1096,15 @@
                 "required": ["id"],
                 "type": "object",
             },
+            "RunUpdate": {
+                "properties": {
+                    "error_info": {"type": "object"},
+                    "error_type": {"type": "string"},
+                    "finished_timestamp": {"format": "date-time", "type": "string"},
+                    "info": {"type": "object"},
+                },
+                "type": "object",
+            },
             "UserCreate": {
                 "properties": {
                     "email": {"format": "email", "type": "string"},
@@ -1554,6 +1563,30 @@
                         "schema": {"type": "string"},
                     }
                 ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/RunEntity"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Runs"],
+            },
+            "put": {
+                "description": "Edit a run.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "run_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/RunUpdate"}
+                        }
+                    }
+                },
                 "responses": {
                     "200": {"$ref": "#/components/responses/RunEntity"},
                     "401": {"$ref": "#/components/responses/401"},
