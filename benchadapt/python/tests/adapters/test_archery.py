@@ -72,7 +72,12 @@ class TestArcheryAdapter:
         results = archery_adapter.transform_results()
 
         assert len(results) == len(archery_json["suites"][0]["benchmarks"])
-        for result, original in zip(results, archery_json["suites"][0]["benchmarks"]):
+        for result in results:
+            original = [
+                blob
+                for blob in archery_json["suites"][0]["benchmarks"]
+                if result.tags["params"] in blob["name"]
+            ][0]
             assert isinstance(result, BenchmarkResult)
             assert result.tags["name"] == "DoubleColumnMajorTensorConversionFixture"
             assert result.context == {"benchmark_language": "C++"}

@@ -6,13 +6,19 @@ with open("README.md", "r") as readme:
     long_description = readme.read()
 
 
-install_requires = [
-    line.strip()
-    for line in pathlib.Path(__file__)
-    .parent.joinpath("requirements-cli.txt")
-    .read_text()
-    .splitlines()
-]
+def parse_requirements(path: str):
+    return [
+        line.strip()
+        for line in pathlib.Path(__file__)
+        .parent.joinpath(path)
+        .read_text()
+        .splitlines()
+    ]
+
+
+requirements_cli = parse_requirements(path="requirements-cli.txt")
+requirements_server = parse_requirements(path="requirements-build.txt")
+requirements_test = parse_requirements(path="requirements-test.txt")
 
 setuptools.setup(
     name="conbench",
@@ -34,5 +40,9 @@ setuptools.setup(
     maintainer="Apache Arrow Developers",
     maintainer_email="dev@arrow.apache.org",
     url="https://github.com/conbench/conbench",
-    install_requires=install_requires,
+    install_requires=requirements_cli,
+    extras_require={
+        "server": requirements_server,
+        "dev": requirements_server + requirements_test,
+    },
 )

@@ -208,7 +208,7 @@ class TestGbenchAdapter:
         results = gbench_adapter.transform_results()
 
         assert len(results) == 2
-        for result, original in zip(results, gbench_json["benchmarks"]):
+        for result in results:
             assert isinstance(result, BenchmarkResult)
             assert result.tags["name"].endswith("MajorTensorConversionFixture")
             assert result.context == {"benchmark_language": "C++"}

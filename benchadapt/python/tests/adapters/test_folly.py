@@ -79,7 +79,12 @@ class TestFollyAdapter:
         results = folly_adapter.transform_results()
 
         assert len(results) == len(self.folly_bms)
-        for result, original in zip(results, self.folly_bms):
+        for result in results:
+            original = [
+                blob
+                for blob in folly_jsons[result.tags["suite"] + ".json"]
+                if blob[1] == result.tags["name"]
+            ][0]
             assert isinstance(result, BenchmarkResult)
             assert result.tags["suite"] in [
                 "velox_benchmark_basic_selectivity_vector",
