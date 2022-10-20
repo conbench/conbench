@@ -7,6 +7,7 @@ from ...api._examples import _api_benchmark_entity
 from ...entities._entity import NotFound
 from ...entities.benchmark_result import BenchmarkResult
 from ...entities.distribution import Distribution
+from ...entities.run import Run
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
@@ -338,6 +339,36 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
                     benchmark_result.run.hardware, attr
                 ) == int(value)
 
+    def test_create_benchmark_after_run_was_created(self, client):
+        for hardware_type, run_payload, benchmark_results_payload in [
+            ("machine", _fixtures.VALID_RUN_PAYLOAD, self.valid_payload),
+            (
+                "cluster",
+                _fixtures.VALID_RUN_PAYLOAD_FOR_CLUSTER,
+                self.valid_payload_for_cluster,
+            ),
+        ]:
+            self.authenticate(client)
+            client.post("/api/runs/", json=run_payload)
+            run_id = run_payload["id"]
+            benchmark_results_payload["run_id"] = run_id
+            response = client.post("/api/benchmarks/", json=benchmark_results_payload)
+            new_id = response.json["id"]
+            benchmark_result = BenchmarkResult.one(id=new_id)
+            assert benchmark_result.run_id == run_id
+            location = f"http://localhost/api/benchmarks/{new_id}/"
+            self.assert_201_created(
+                response, _expected_entity(benchmark_result), location
+            )
+
+            assert benchmark_result.run.hardware.type == hardware_type
+            for attr, value in benchmark_results_payload[
+                f"{hardware_type}_info"
+            ].items():
+                assert getattr(benchmark_result.run.hardware, attr) == value or getattr(
+                    benchmark_result.run.hardware, attr
+                ) == int(value)
+
     def test_create_benchmark_with_error(self, client):
         self.authenticate(client)
         response = client.post("/api/benchmarks/", json=self.valid_payload_with_error)
@@ -345,6 +376,21 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         benchmark_result = BenchmarkResult.one(id=new_id)
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
+
+    def test_create_benchmark_with_error_after_run_was_created(self, client):
+        self.authenticate(client)
+        run_payload = _fixtures.VALID_RUN_PAYLOAD
+        benchmark_results_payload = self.valid_payload_with_error
+        benchmark_results_payload["run_id"] = run_payload["id"]
+        client.post("/api/runs/", json=run_payload)
+        assert Run.one(id=run_payload["id"]).has_errors is False
+
+        response = client.post("/api/benchmarks/", json=benchmark_results_payload)
+        new_id = response.json["id"]
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        location = f"http://localhost/api/benchmarks/{new_id}/"
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
+        assert Run.one(id=run_payload["id"]).has_errors is True
 
     def test_create_benchmark_for_cluster_with_optional_info_changed(self, client):
         # Post benchmarks for cluster-1

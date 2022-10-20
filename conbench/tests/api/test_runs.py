@@ -325,7 +325,7 @@ class TestRunPost(_asserts.PostEnforcer):
     valid_payload_with_error = _fixtures.VALID_RUN_PAYLOAD_WITH_ERROR
     required_fields = ["id"]
 
-    # This test does not apply
+    # This test does not apply because we expect users to send run id when creating runs
     def test_cannot_set_id(self, client):
         pass
 
