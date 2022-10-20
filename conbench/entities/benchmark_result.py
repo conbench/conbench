@@ -18,10 +18,9 @@ from ..entities._entity import (
     to_float,
 )
 from ..entities.case import Case
-from ..entities.commit import Commit, get_github_commit, repository_to_url
 from ..entities.context import Context
 from ..entities.distribution import update_distribution
-from ..entities.hardware import Cluster, ClusterSchema, Machine, MachineSchema
+from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info
 from ..entities.run import Run, GitHubCreate
 
@@ -120,14 +119,16 @@ class BenchmarkResult(Base, EntityMixin):
                 run.has_errors = True
                 run.save()
         else:
-            hardware_type = "machine" if "machine_info" in data else "cluster"
+            hardware_info_field = (
+                "machine_info" if "machine_info" in data else "cluster_info"
+            )
             Run.create(
                 {
                     "id": data["run_id"],
                     "name": data.pop("run_name", None),
                     "reason": data.pop("run_reason", None),
                     "github": data.pop("github", None),
-                    f"{hardware_type}_info": data[f"{hardware_type}_info"],
+                    hardware_info_field: data.pop(hardware_info_field),
                     "has_errors": has_error,
                 }
             )

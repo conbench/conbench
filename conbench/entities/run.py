@@ -49,10 +49,10 @@ class Run(Base, EntityMixin):
         hardware = hardware_type.upsert(**data.pop(field_name))
 
         sha, repository = None, None
-        if "github" in data:
-            github = data.pop("github")
-            sha = github["commit"]
-            repository = repository_to_url(github["repository"])
+
+        if github_data := data.pop("github", None):
+            sha = github_data["commit"]
+            repository = repository_to_url(github_data["repository"])
 
         # create if not exists
         commit = Commit.first(sha=sha, repository=repository)

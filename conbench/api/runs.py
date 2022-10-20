@@ -2,6 +2,7 @@ import flask as f
 import flask_login
 
 from ..api import rule
+from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import BenchmarkResult
@@ -125,3 +126,4 @@ rule(
     view_func=run_entity_view,
     methods=["GET", "DELETE", "PUT"],
 )
+spec.components.schema("RunCreate", schema=RunFacadeSchema.create)

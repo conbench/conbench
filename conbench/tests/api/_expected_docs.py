@@ -684,6 +684,62 @@
                 },
                 "description": "OK",
             },
+            "RunCreated": {
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "commit": {
+                                "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                "author_login": "dianaclarke",
+                                "author_name": "Diana Clarke",
+                                "id": "some-commit-uuid-1",
+                                "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                "repository": "https://github.com/apache/arrow",
+                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                "timestamp": "2021-02-25T01:02:51",
+                                "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+                            },
+                            "hardware": {
+                                "architecture_name": "x86_64",
+                                "cpu_core_count": 2,
+                                "cpu_frequency_max_hz": 3500000000,
+                                "cpu_l1d_cache_bytes": 32768,
+                                "cpu_l1i_cache_bytes": 32768,
+                                "cpu_l2_cache_bytes": 262144,
+                                "cpu_l3_cache_bytes": 4194304,
+                                "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                "cpu_thread_count": 4,
+                                "gpu_count": 2,
+                                "gpu_product_names": [
+                                    "Tesla T4",
+                                    "GeForce GTX 1060 3GB",
+                                ],
+                                "id": "some-machine-uuid-1",
+                                "kernel_name": "19.6.0",
+                                "memory_bytes": 17179869184,
+                                "name": "some-machine-name",
+                                "os_name": "macOS",
+                                "os_version": "10.15.7",
+                                "type": "machine",
+                            },
+                            "has_errors": False,
+                            "id": "some-run-uuid-1",
+                            "links": {
+                                "baseline": "http://localhost/api/runs/some-run-uuid-0/",
+                                "commit": "http://localhost/api/commits/some-commit-uuid-1/",
+                                "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
+                                "list": "http://localhost/api/runs/",
+                                "self": "http://localhost/api/runs/some-run-uuid-1/",
+                            },
+                            "name": "some run name",
+                            "reason": "some run reason",
+                            "timestamp": "2021-02-04T17:22:05.225583",
+                        }
+                    }
+                },
+                "description": "Created \n\n The resulting entity URL is returned in the Location header.",
+            },
             "RunEntity": {
                 "content": {
                     "application/json": {
@@ -1022,6 +1078,22 @@
                     "secret": {"type": "string"},
                 },
                 "required": ["email", "name", "password", "secret"],
+                "type": "object",
+            },
+            "RunCreate": {
+                "properties": {
+                    "cluster_info": {"$ref": "#/components/schemas/ClusterCreate"},
+                    "error_info": {"type": "object"},
+                    "error_type": {"type": "string"},
+                    "finished_timestamp": {"format": "date-time", "type": "string"},
+                    "github": {"$ref": "#/components/schemas/GitHubCreate"},
+                    "id": {"type": "string"},
+                    "info": {"type": "object"},
+                    "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
+                    "name": {"type": "string"},
+                    "reason": {"type": "string"},
+                },
+                "required": ["id"],
                 "type": "object",
             },
             "UserCreate": {
