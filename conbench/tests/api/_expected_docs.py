@@ -929,6 +929,7 @@
                     "stats": {"$ref": "#/components/schemas/BenchmarkResultCreate"},
                     "tags": {"type": "object"},
                     "timestamp": {"format": "date-time", "type": "string"},
+                    "validation": {"type": "object"},
                 },
                 "required": [
                     "batch_id",

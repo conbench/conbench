@@ -62,6 +62,7 @@ VALID_PAYLOAD = {
         "arrow_compiler_version": "11.0.0.11000033",
         "arrow_compiler_id": "AppleClang",
     },
+    "validation": {"type": "pandas.testing", "success": True},
     "github": {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",
         "repository": "https://github.com/apache/arrow",

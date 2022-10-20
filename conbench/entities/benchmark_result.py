@@ -245,6 +245,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     error = marshmallow.fields.Dict(required=False)
     tags = marshmallow.fields.Dict(required=True)
     info = marshmallow.fields.Dict(required=True)
+    validation = marshmallow.fields.Dict(required=False)
     context = marshmallow.fields.Dict(required=True)
     github = marshmallow.fields.Nested(GitHubCreate(), required=False)
 
