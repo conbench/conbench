@@ -53,6 +53,7 @@ class BenchmarkResult(Base, EntityMixin):
     q3 = Nullable(s.Numeric, check("q3>=0"))
     iqr = Nullable(s.Numeric, check("iqr>=0"))
     error = Nullable(postgresql.JSONB)
+    validation = Nullable(postgresql.JSONB)
 
     @staticmethod
     def create(data):

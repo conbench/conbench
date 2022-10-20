@@ -1,5 +1,6 @@
 import flask as f
 import sqlalchemy as s
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship
 
 from ..db import Session
@@ -13,6 +14,11 @@ class Run(Base, EntityMixin):
     id = NotNull(s.String(50), primary_key=True)
     name = Nullable(s.String(250))
     reason = Nullable(s.String(250))
+    info = Nullable(postgresql.JSONB)
+    error_info = Nullable(postgresql.JSONB)
+    error_type = Nullable(s.String(250))
+    started_at = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
+    finished_at = Nullable(s.DateTime(timezone=False))
     timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
     commit_id = NotNull(s.String(50), s.ForeignKey("commit.id"))
     commit = relationship("Commit", lazy="joined")
