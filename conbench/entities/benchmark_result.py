@@ -22,7 +22,7 @@ from ..entities.context import Context
 from ..entities.distribution import update_distribution
 from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info
-from ..entities.run import Run, GitHubCreate
+from ..entities.run import GitHubCreate, Run
 
 
 class BenchmarkResult(Base, EntityMixin):

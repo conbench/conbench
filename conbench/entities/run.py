@@ -13,12 +13,12 @@ from ..entities.commit import (
     repository_to_url,
 )
 from ..entities.hardware import (
+    Cluster,
     ClusterSchema,
     Hardware,
     HardwareSerializer,
-    MachineSchema,
     Machine,
-    Cluster,
+    MachineSchema,
 )
 
 

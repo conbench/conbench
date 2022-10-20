@@ -7,7 +7,7 @@ from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
-from ..entities.run import Run, RunSerializer, RunFacadeSchema
+from ..entities.run import Run, RunFacadeSchema, RunSerializer
 
 
 class RunEntityAPI(ApiEndpoint):
