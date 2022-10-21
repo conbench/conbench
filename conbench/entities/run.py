@@ -212,14 +212,34 @@ class GitHubCreate(marshmallow.Schema):
     repository = marshmallow.fields.String(required=True)
 
 
+field_descriptions = {
+    "finished_timestamp": "The datetime the run finished",
+    "info": "Run's metadata",
+    "error_info": "Metadata for run's error that prevented all or some benchmarks from running",
+    "error_type": """Run's error type. Possible values: none, catastrophic, partial. 
+                    None = all attempted benchmarks are good. 
+                    Catastrophic =no benchmarks completed successfully. 
+                    Partial = some benchmarks completed, some failed""",
+}
+
+
 class _RunFacadeSchemaCreate(marshmallow.Schema):
     id = marshmallow.fields.String(required=True)
     name = marshmallow.fields.String(required=False)
     reason = marshmallow.fields.String(required=False)
-    finished_timestamp = marshmallow.fields.DateTime(required=False)
-    info = marshmallow.fields.Dict(required=False)
-    error_info = marshmallow.fields.Dict(required=False)
-    error_type = marshmallow.fields.String(required=False)
+    finished_timestamp = marshmallow.fields.DateTime(
+        required=False,
+        metadata={"description": field_descriptions["finished_timestamp"]},
+    )
+    info = marshmallow.fields.Dict(
+        required=False, metadata={"description": field_descriptions["info"]}
+    )
+    error_info = marshmallow.fields.Dict(
+        required=False, metadata={"description": field_descriptions["error_info"]}
+    )
+    error_type = marshmallow.fields.String(
+        required=False, metadata={"description": field_descriptions["error_type"]}
+    )
     github = marshmallow.fields.Nested(GitHubCreate(), required=False)
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
     cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
@@ -237,10 +257,19 @@ class _RunFacadeSchemaCreate(marshmallow.Schema):
 
 
 class _RunFacadeSchemaUpdate(marshmallow.Schema):
-    finished_timestamp = marshmallow.fields.DateTime(required=False)
-    info = marshmallow.fields.Dict(required=False)
-    error_info = marshmallow.fields.Dict(required=False)
-    error_type = marshmallow.fields.String(required=False)
+    finished_timestamp = marshmallow.fields.DateTime(
+        required=False,
+        metadata={"description": field_descriptions["finished_timestamp"]},
+    )
+    info = marshmallow.fields.Dict(
+        required=False, metadata={"description": field_descriptions["info"]}
+    )
+    error_info = marshmallow.fields.Dict(
+        required=False, metadata={"description": field_descriptions["error_info"]}
+    )
+    error_type = marshmallow.fields.String(
+        required=False, metadata={"description": field_descriptions["error_type"]}
+    )
 
 
 class RunFacadeSchema:

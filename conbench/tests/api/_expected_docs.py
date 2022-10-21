@@ -703,6 +703,9 @@
                                 "timestamp": "2021-02-25T01:02:51",
                                 "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                             },
+                            "error_info": None,
+                            "error_type": None,
+                            "finished_timestamp": None,
                             "hardware": {
                                 "architecture_name": "x86_64",
                                 "cpu_core_count": 2,
@@ -728,6 +731,7 @@
                             },
                             "has_errors": False,
                             "id": "some-run-uuid-1",
+                            "info": None,
                             "links": {
                                 "baseline": "http://localhost/api/runs/some-run-uuid-0/",
                                 "commit": "http://localhost/api/commits/some-commit-uuid-1/",
@@ -759,6 +763,9 @@
                                 "timestamp": "2021-02-25T01:02:51",
                                 "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                             },
+                            "error_info": None,
+                            "error_type": None,
+                            "finished_timestamp": None,
                             "hardware": {
                                 "architecture_name": "x86_64",
                                 "cpu_core_count": 2,
@@ -784,6 +791,7 @@
                             },
                             "has_errors": False,
                             "id": "some-run-uuid-1",
+                            "info": None,
                             "links": {
                                 "baseline": "http://localhost/api/runs/some-run-uuid-0/",
                                 "commit": "http://localhost/api/commits/some-commit-uuid-1/",
@@ -816,6 +824,9 @@
                                     "timestamp": "2021-02-25T01:02:51",
                                     "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                                 },
+                                "error_info": None,
+                                "error_type": None,
+                                "finished_timestamp": None,
                                 "hardware": {
                                     "architecture_name": "x86_64",
                                     "cpu_core_count": 2,
@@ -841,6 +852,7 @@
                                 },
                                 "has_errors": False,
                                 "id": "some-run-uuid-1",
+                                "info": None,
                                 "links": {
                                     "commit": "http://localhost/api/commits/some-commit-uuid-1/",
                                     "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
@@ -932,7 +944,10 @@
                     "stats": {"$ref": "#/components/schemas/BenchmarkResultCreate"},
                     "tags": {"type": "object"},
                     "timestamp": {"format": "date-time", "type": "string"},
-                    "validation": {"type": "object"},
+                    "validation": {
+                        "description": "Benchmark results validation metadata (e.g., errors, validation types)",
+                        "type": "object",
+                    },
                 },
                 "required": [
                     "batch_id",
@@ -1087,12 +1102,22 @@
             "RunCreate": {
                 "properties": {
                     "cluster_info": {"$ref": "#/components/schemas/ClusterCreate"},
-                    "error_info": {"type": "object"},
-                    "error_type": {"type": "string"},
-                    "finished_timestamp": {"format": "date-time", "type": "string"},
+                    "error_info": {
+                        "description": "Metadata for run's error that prevented all or some benchmarks from running",
+                        "type": "object",
+                    },
+                    "error_type": {
+                        "description": "Run's error type. Possible values: none, catastrophic, partial. \n                    None = all attempted benchmarks are good. \n                    Catastrophic =no benchmarks completed successfully. \n                    Partial = some benchmarks completed, some failed",
+                        "type": "string",
+                    },
+                    "finished_timestamp": {
+                        "description": "The datetime the run finished",
+                        "format": "date-time",
+                        "type": "string",
+                    },
                     "github": {"$ref": "#/components/schemas/GitHubCreate"},
                     "id": {"type": "string"},
-                    "info": {"type": "object"},
+                    "info": {"description": "Run's metadata", "type": "object"},
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
                     "name": {"type": "string"},
                     "reason": {"type": "string"},
@@ -1102,10 +1127,20 @@
             },
             "RunUpdate": {
                 "properties": {
-                    "error_info": {"type": "object"},
-                    "error_type": {"type": "string"},
-                    "finished_timestamp": {"format": "date-time", "type": "string"},
-                    "info": {"type": "object"},
+                    "error_info": {
+                        "description": "Metadata for run's error that prevented all or some benchmarks from running",
+                        "type": "object",
+                    },
+                    "error_type": {
+                        "description": "Run's error type. Possible values: none, catastrophic, partial. \n                    None = all attempted benchmarks are good. \n                    Catastrophic =no benchmarks completed successfully. \n                    Partial = some benchmarks completed, some failed",
+                        "type": "string",
+                    },
+                    "finished_timestamp": {
+                        "description": "The datetime the run finished",
+                        "format": "date-time",
+                        "type": "string",
+                    },
+                    "info": {"description": "Run's metadata", "type": "object"},
                 },
                 "type": "object",
             },
