@@ -180,7 +180,10 @@ class Benchmark:
     gc_disable : bool
         Disable garbage collection during timing?
     subprocess : bool
-        Run all benchmarks in a subprocess?
+        Run benchmarks in a subprocess? If `True` and run with `CallableBenchmarkList`, all cases
+        will run in a subprocess (i.e. one subprocess per benchmark). With a `GeneratorBenchmarkList`,
+        each case will run in a new subprocess, which may cause the accrual of nontrivial overhead
+        if the number of cases is very large.
     error_handling : str
         What should happen if an iteration errors out? Options: ``"stop"`` (skip future iterations
         and report only error), ``"break"`` (skip future iterations and report everything so far),

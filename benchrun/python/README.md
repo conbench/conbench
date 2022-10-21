@@ -107,31 +107,39 @@ my_benchmark = Benchmark(iteration=my_iteration, case_list=my_case_list)
 This class has a `run()` method to run all cases, or `run_case()` to run a single
 case.
 
-### `BenchmarkList`
+### `CallableBenchmarkList` and `GeneratorBenchmarkList`
 
-A `BenchmarkList` is a lightweight class to tie together all the instances of
-`Benchmark` that should be run together (e.g. all the benchmarks for a package).
+`CallableBenchmarkList` and `GeneratorBenchmarkList` lightweight classes to tie
+together all the instances of `Benchmark` that should be run together (e.g. all
+the benchmarks for a package).
 
 ```python
 from benchrun import BenchmarkList
 
-my_benchmark_list = BenchmarkList(benchmarks = [my_benchmark])
+my_benchmark_list = CallableBenchmarkList(benchmarks = [my_benchmark])
 ```
 
-The class has a `__call__()` method that will run all benchmarks in its list,
+These classes has a `__call__()` method that will run all benchmarks in the list,
 taking care that they all use the same `run_id` so they will all appear together
 on conbench.
 
+The difference is what their `__call__()` returns—`CallableBenchmarkList`'s will
+return a list of all of the `BenchmarkResult` instances, whereas
+`GeneratorBenchmarkList`'s is a generator that will yield one `BenchmarkResult`
+instance at a time.
+
 ## Running benchmarks and sending results to conbench
 
-`BenchmarkList` is designed to work seamlessly with
+`CallableBenchmarkList` is designed to work seamlessly with
 {[benchadapt](https://github.com/conbench/conbench/tree/main/benchadapt/python)}'s
-`CallableAdapter` class:
+`CallableAdapter` class, which will run all the benchmarks in the list and then
+post their results to a Conbench instance:
 
 ```python
 from benchadapt.adapters import CallableAdapter
 
 my_adapter = CallableAdapter(callable=my_benchmark_list)
+my_adapter()
 ```
 
 Like all adapters, it then has a `run()` method to run all the benchmarks it
@@ -139,6 +147,10 @@ contains (handling generic metadata appropriately for you), a `post_results()`
 method that will send the results to a conbench server, and a `__call__()` method
 that will do both. These are the methods that should be called in whatever CI or
 automated build system will be used for running benchmarks.
+
+Accordingly, `GeneratorBenchmarkList` is designed to work seamlessly with
+benchadapt's `GeneratorAdapter` class, which when called will instead post
+results for each benchmark before running the next.
 
 ## Setting more metadata
 

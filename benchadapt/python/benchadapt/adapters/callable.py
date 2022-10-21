@@ -35,13 +35,13 @@ class CallableAdapter(BenchmarkAdapter):
             result_fields_append=result_fields_append,
         )
 
-    def run(self, params: List[str] = None) -> List[BenchmarkResult]:
+    def run(self, params: Dict[str, Any] = None) -> List[BenchmarkResult]:
         """
         Run benchmarks
 
         Parameters
         ----------
-        params : List[str]
+        params : Dict[str, Any]
             Additional kwargs to be passed though to the callable
         """
         params = params or {}

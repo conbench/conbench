@@ -50,7 +50,7 @@ class BenchmarkAdapter(abc.ABC):
         self.result_fields_override = result_fields_override or {}
         self.result_fields_append = result_fields_append or {}
 
-    def __call__(self, **kwargs) -> list:
+    def __call__(self, **kwargs) -> None:
         """
         Run benchmarks and post results to conbench server
 
