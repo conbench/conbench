@@ -108,6 +108,7 @@
                                 "name": "file-write",
                             },
                             "timestamp": "2020-11-25T21:02:42.706806",
+                            "validation": None,
                         }
                     }
                 },
@@ -178,6 +179,7 @@
                                 "name": "file-write",
                             },
                             "timestamp": "2020-11-25T21:02:42.706806",
+                            "validation": None,
                         }
                     }
                 },
@@ -249,6 +251,7 @@
                                     "name": "file-write",
                                 },
                                 "timestamp": "2020-11-25T21:02:42.706806",
+                                "validation": None,
                             }
                         ]
                     }
@@ -684,7 +687,7 @@
                 },
                 "description": "OK",
             },
-            "RunEntity": {
+            "RunCreated": {
                 "content": {
                     "application/json": {
                         "example": {
@@ -700,6 +703,9 @@
                                 "timestamp": "2021-02-25T01:02:51",
                                 "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                             },
+                            "error_info": None,
+                            "error_type": None,
+                            "finished_timestamp": None,
                             "hardware": {
                                 "architecture_name": "x86_64",
                                 "cpu_core_count": 2,
@@ -725,6 +731,67 @@
                             },
                             "has_errors": False,
                             "id": "some-run-uuid-1",
+                            "info": None,
+                            "links": {
+                                "baseline": "http://localhost/api/runs/some-run-uuid-0/",
+                                "commit": "http://localhost/api/commits/some-commit-uuid-1/",
+                                "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
+                                "list": "http://localhost/api/runs/",
+                                "self": "http://localhost/api/runs/some-run-uuid-1/",
+                            },
+                            "name": "some run name",
+                            "reason": "some run reason",
+                            "timestamp": "2021-02-04T17:22:05.225583",
+                        }
+                    }
+                },
+                "description": "Created \n\n The resulting entity URL is returned in the Location header.",
+            },
+            "RunEntity": {
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "commit": {
+                                "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                "author_login": "dianaclarke",
+                                "author_name": "Diana Clarke",
+                                "id": "some-commit-uuid-1",
+                                "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                "repository": "https://github.com/apache/arrow",
+                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                "timestamp": "2021-02-25T01:02:51",
+                                "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+                            },
+                            "error_info": None,
+                            "error_type": None,
+                            "finished_timestamp": None,
+                            "hardware": {
+                                "architecture_name": "x86_64",
+                                "cpu_core_count": 2,
+                                "cpu_frequency_max_hz": 3500000000,
+                                "cpu_l1d_cache_bytes": 32768,
+                                "cpu_l1i_cache_bytes": 32768,
+                                "cpu_l2_cache_bytes": 262144,
+                                "cpu_l3_cache_bytes": 4194304,
+                                "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                "cpu_thread_count": 4,
+                                "gpu_count": 2,
+                                "gpu_product_names": [
+                                    "Tesla T4",
+                                    "GeForce GTX 1060 3GB",
+                                ],
+                                "id": "some-machine-uuid-1",
+                                "kernel_name": "19.6.0",
+                                "memory_bytes": 17179869184,
+                                "name": "some-machine-name",
+                                "os_name": "macOS",
+                                "os_version": "10.15.7",
+                                "type": "machine",
+                            },
+                            "has_errors": False,
+                            "id": "some-run-uuid-1",
+                            "info": None,
                             "links": {
                                 "baseline": "http://localhost/api/runs/some-run-uuid-0/",
                                 "commit": "http://localhost/api/commits/some-commit-uuid-1/",
@@ -757,6 +824,9 @@
                                     "timestamp": "2021-02-25T01:02:51",
                                     "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
                                 },
+                                "error_info": None,
+                                "error_type": None,
+                                "finished_timestamp": None,
                                 "hardware": {
                                     "architecture_name": "x86_64",
                                     "cpu_core_count": 2,
@@ -782,6 +852,7 @@
                                 },
                                 "has_errors": False,
                                 "id": "some-run-uuid-1",
+                                "info": None,
                                 "links": {
                                     "commit": "http://localhost/api/commits/some-commit-uuid-1/",
                                     "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
@@ -873,6 +944,10 @@
                     "stats": {"$ref": "#/components/schemas/BenchmarkResultCreate"},
                     "tags": {"type": "object"},
                     "timestamp": {"format": "date-time", "type": "string"},
+                    "validation": {
+                        "description": "Benchmark results validation metadata (e.g., errors, validation types)",
+                        "type": "object",
+                    },
                 },
                 "required": [
                     "batch_id",
@@ -1022,6 +1097,51 @@
                     "secret": {"type": "string"},
                 },
                 "required": ["email", "name", "password", "secret"],
+                "type": "object",
+            },
+            "RunCreate": {
+                "properties": {
+                    "cluster_info": {"$ref": "#/components/schemas/ClusterCreate"},
+                    "error_info": {
+                        "description": "Metadata for run's error that prevented all or some benchmarks from running",
+                        "type": "object",
+                    },
+                    "error_type": {
+                        "description": "Run's error type. Possible values: none, catastrophic, partial. \n                    None = all attempted benchmarks are good. \n                    Catastrophic =no benchmarks completed successfully. \n                    Partial = some benchmarks completed, some failed",
+                        "type": "string",
+                    },
+                    "finished_timestamp": {
+                        "description": "The datetime the run finished",
+                        "format": "date-time",
+                        "type": "string",
+                    },
+                    "github": {"$ref": "#/components/schemas/GitHubCreate"},
+                    "id": {"type": "string"},
+                    "info": {"description": "Run's metadata", "type": "object"},
+                    "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
+                    "name": {"type": "string"},
+                    "reason": {"type": "string"},
+                },
+                "required": ["id"],
+                "type": "object",
+            },
+            "RunUpdate": {
+                "properties": {
+                    "error_info": {
+                        "description": "Metadata for run's error that prevented all or some benchmarks from running",
+                        "type": "object",
+                    },
+                    "error_type": {
+                        "description": "Run's error type. Possible values: none, catastrophic, partial. \n                    None = all attempted benchmarks are good. \n                    Catastrophic =no benchmarks completed successfully. \n                    Partial = some benchmarks completed, some failed",
+                        "type": "string",
+                    },
+                    "finished_timestamp": {
+                        "description": "The datetime the run finished",
+                        "format": "date-time",
+                        "type": "string",
+                    },
+                    "info": {"description": "Run's metadata", "type": "object"},
+                },
                 "type": "object",
             },
             "UserCreate": {
@@ -1436,7 +1556,23 @@
                     "401": {"$ref": "#/components/responses/401"},
                 },
                 "tags": ["Runs"],
-            }
+            },
+            "post": {
+                "description": "Create a run.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/RunCreate"}
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {"$ref": "#/components/responses/RunCreated"},
+                    "400": {"$ref": "#/components/responses/400"},
+                    "401": {"$ref": "#/components/responses/401"},
+                },
+                "tags": ["Runs"],
+            },
         },
         "/api/runs/{run_id}/": {
             "delete": {
@@ -1466,6 +1602,30 @@
                         "schema": {"type": "string"},
                     }
                 ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/RunEntity"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Runs"],
+            },
+            "put": {
+                "description": "Edit a run.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "run_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/RunUpdate"}
+                        }
+                    }
+                },
                 "responses": {
                     "200": {"$ref": "#/components/responses/RunEntity"},
                     "401": {"$ref": "#/components/responses/401"},

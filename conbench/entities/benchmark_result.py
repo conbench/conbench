@@ -18,12 +18,11 @@ from ..entities._entity import (
     to_float,
 )
 from ..entities.case import Case
-from ..entities.commit import Commit, get_github_commit, repository_to_url
 from ..entities.context import Context
 from ..entities.distribution import update_distribution
-from ..entities.hardware import Cluster, ClusterSchema, Machine, MachineSchema
+from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info
-from ..entities.run import Run
+from ..entities.run import GitHubCreate, Run
 
 
 class BenchmarkResult(Base, EntityMixin):
@@ -53,6 +52,7 @@ class BenchmarkResult(Base, EntityMixin):
     q3 = Nullable(s.Numeric, check("q3>=0"))
     iqr = Nullable(s.Numeric, check("iqr>=0"))
     error = Nullable(postgresql.JSONB)
+    validation = Nullable(postgresql.JSONB)
 
     @staticmethod
     def create(data):
@@ -99,14 +99,6 @@ class BenchmarkResult(Base, EntityMixin):
             case = Case.create(c)
 
         # create if not exists
-        hardware_type, field_name = (
-            (Machine, "machine_info")
-            if "machine_info" in data
-            else (Cluster, "cluster_info")
-        )
-        hardware = hardware_type.upsert(**data[field_name])
-
-        # create if not exists
         if "context" not in data:
             data["context"] = {}
         context = Context.first(tags=data["context"])
@@ -120,39 +112,23 @@ class BenchmarkResult(Base, EntityMixin):
         if not info:
             info = Info.create({"tags": data["info"]})
 
-        sha, repository = None, None
-        if "github" in data:
-            sha = data["github"]["commit"]
-            repository = repository_to_url(data["github"]["repository"])
-
         # create if not exists
-        commit = Commit.first(sha=sha, repository=repository)
-        if not commit:
-            github = get_github_commit(repository, sha)
-            if github:
-                commit = Commit.create_github_context(sha, repository, github)
-            elif sha or repository:
-                commit = Commit.create_unknown_context(sha, repository)
-            else:
-                commit = Commit.create_no_context()
-
-        # create if not exists
-        run_id = data["run_id"]
-        run_name = data.pop("run_name", None)
-        run_reason = data.pop("run_reason", None)
-        run = Run.first(id=run_id)
+        run = Run.first(id=data["run_id"])
         if run:
             if has_error:
                 run.has_errors = True
                 run.save()
         else:
-            run = Run.create(
+            hardware_info_field = (
+                "machine_info" if "machine_info" in data else "cluster_info"
+            )
+            Run.create(
                 {
-                    "id": run_id,
-                    "name": run_name,
-                    "reason": run_reason,
-                    "commit_id": commit.id,
-                    "hardware_id": hardware.id,
+                    "id": data["run_id"],
+                    "name": data.pop("run_name", None),
+                    "reason": data.pop("run_reason", None),
+                    "github": data.pop("github", None),
+                    hardware_info_field: data.pop(hardware_info_field),
                     "has_errors": has_error,
                 }
             )
@@ -160,6 +136,7 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_result_data["run_id"] = data["run_id"]
         benchmark_result_data["batch_id"] = data["batch_id"]
         benchmark_result_data["timestamp"] = data["timestamp"]
+        benchmark_result_data["validation"] = data.get("validation")
         benchmark_result_data["case_id"] = case.id
         benchmark_result_data["info_id"] = info.id
         benchmark_result_data["context_id"] = context.id
@@ -213,6 +190,7 @@ class _Serializer(EntitySerializer):
             "batch_id": benchmark_result.batch_id,
             "timestamp": benchmark_result.timestamp.isoformat(),
             "tags": tags,
+            "validation": benchmark_result.validation,
             "stats": {
                 "data": [to_float(x) for x in benchmark_result.data],
                 "times": [to_float(x) for x in benchmark_result.times],
@@ -257,11 +235,6 @@ class BenchmarkResultSerializer:
     many = _Serializer(many=True)
 
 
-class GitHubCreate(marshmallow.Schema):
-    commit = marshmallow.fields.String(required=True)
-    repository = marshmallow.fields.String(required=True)
-
-
 class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     run_id = marshmallow.fields.String(required=True)
     run_name = marshmallow.fields.String(required=False)
@@ -274,6 +247,12 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     error = marshmallow.fields.Dict(required=False)
     tags = marshmallow.fields.Dict(required=True)
     info = marshmallow.fields.Dict(required=True)
+    validation = marshmallow.fields.Dict(
+        required=False,
+        metadata={
+            "description": "Benchmark results validation metadata (e.g., errors, validation types)"
+        },
+    )
     context = marshmallow.fields.Dict(required=True)
     github = marshmallow.fields.Nested(GitHubCreate(), required=False)
 

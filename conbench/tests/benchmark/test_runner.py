@@ -19,6 +19,7 @@ EXAMPLE_WITH_ERROR = copy.deepcopy(_fixtures.VALID_PAYLOAD_WITH_ERROR)
 for example in [EXAMPLE, EXAMPLE_WITH_CLUSTER_INFO, EXAMPLE_WITH_ERROR]:
     example.pop("run_name")
     example.pop("run_reason")
+    example.pop("validation")
     example["info"] = {
         "benchmark_language_version": "Python 3.8.5",
     }

@@ -9,18 +9,24 @@ from ...tests.helpers import _uuid
 
 def _expected_entity(run, baseline_id=None, include_baseline=True):
     parent = run.commit.get_parent_commit()
+    has_errors = False
     return _api_run_entity(
         run.id,
         run.name,
         run.reason,
         run.commit_id,
-        parent.id,
+        parent.id if parent else None,
         run.hardware_id,
         run.hardware.name,
         run.hardware.type,
         run.timestamp.isoformat(),
         baseline_id,
         include_baseline,
+        has_errors,
+        run.finished_timestamp.isoformat() if run.finished_timestamp else None,
+        run.info,
+        run.error_info,
+        run.error_type,
     )
 
 
@@ -280,3 +286,81 @@ class TestRunDelete(_asserts.DeleteEnforcer):
         # cannot get after delete
         with pytest.raises(NotFound):
             Run.one(id=run_id)
+
+
+class TestRunPut(_asserts.PutEnforcer):
+    url = "/api/runs/{}/"
+    valid_payload = {
+        "finished_timestamp": "2022-11-25 21:02:42.706806",
+        "info": {"setup": "passed"},
+        "error_info": {"error": "error", "stack_trace": "stack_trace", "fatal": True},
+        "error_type": "fatal",
+    }
+
+    def setup(self):
+        Run.delete_all()
+
+    def _create_entity_to_update(self):
+        _fixtures.benchmark_result(sha=_fixtures.PARENT)
+        benchmark_result = _fixtures.benchmark_result()
+        return benchmark_result.run
+
+    def test_update_allowed_fields(self, client):
+        self.authenticate(client)
+
+        # before
+        before = self._create_entity_to_update()
+        for key in self.valid_payload.keys():
+            assert getattr(before, key) is None
+
+        # after
+        response = client.put(f"/api/runs/{before.id}/", json=self.valid_payload)
+        after = Run.one(id=before.id)
+        self.assert_200_ok(response, _expected_entity(after))
+        for key, value in self.valid_payload.items():
+            if key == "finished_timestamp":
+                assert str(getattr(after, key)) == value
+            else:
+                assert getattr(after, key) == value
+
+
+class TestRunPost(_asserts.PostEnforcer):
+    url = "/api/runs/"
+    valid_payload = _fixtures.VALID_RUN_PAYLOAD
+    valid_payload_for_cluster = _fixtures.VALID_RUN_PAYLOAD_FOR_CLUSTER
+    valid_payload_with_error = _fixtures.VALID_RUN_PAYLOAD_WITH_ERROR
+    required_fields = ["id"]
+
+    # This test does not apply because we expect users to send run id when creating runs
+    def test_cannot_set_id(self, client):
+        pass
+
+    def test_create_run(self, client):
+        for hardware_type, payload in [
+            ("machine", self.valid_payload),
+            ("cluster", self.valid_payload_for_cluster),
+        ]:
+            self.authenticate(client)
+            run_id = payload["id"]
+            assert not Run.first(id=run_id)
+            response = client.post(self.url, json=payload)
+            print(response)
+            print(response.json)
+            run = Run.one(id=run_id)
+            location = f"http://localhost/api/runs/{run_id}/"
+            self.assert_201_created(response, _expected_entity(run), location)
+
+            assert run.hardware.type == hardware_type
+            for attr, value in payload[f"{hardware_type}_info"].items():
+                assert getattr(run.hardware, attr) == value or getattr(
+                    run.hardware, attr
+                ) == int(value)
+
+    def test_create_run_with_error(self, client):
+        self.authenticate(client)
+        run_id = self.valid_payload_with_error["id"]
+        assert not Run.first(id=run_id)
+        response = client.post(self.url, json=self.valid_payload_with_error)
+        run = Run.one(id=run_id)
+        location = f"http://localhost/api/runs/{run_id}/"
+        self.assert_201_created(response, _expected_entity(run), location)
