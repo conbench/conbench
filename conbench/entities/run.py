@@ -216,9 +216,9 @@ field_descriptions = {
     "finished_timestamp": "The datetime the run finished",
     "info": "Run's metadata",
     "error_info": "Metadata for run's error that prevented all or some benchmarks from running",
-    "error_type": """Run's error type. Possible values: none, catastrophic, partial. 
-                    None = all attempted benchmarks are good. 
-                    Catastrophic =no benchmarks completed successfully. 
+    "error_type": """Run's error type. Possible values: none, catastrophic, partial.
+                    None = all attempted benchmarks are good.
+                    Catastrophic =no benchmarks completed successfully.
                     Partial = some benchmarks completed, some failed""",
 }
 
