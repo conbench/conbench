@@ -137,7 +137,9 @@ class _Serializer(EntitySerializer):
             "name": run.name,
             "reason": run.reason,
             "timestamp": run.timestamp.isoformat(),
-            "finished_timestamp": run.finished_timestamp.isoformat() if run.finished_timestamp else None,
+            "finished_timestamp": run.finished_timestamp.isoformat()
+            if run.finished_timestamp
+            else None,
             "info": run.info,
             "error_info": run.error_info,
             "error_type": run.error_type,
