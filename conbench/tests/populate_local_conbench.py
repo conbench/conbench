@@ -147,7 +147,7 @@ def post_benchmarks(data):
 
 
 def update_run(run_id, data):
-    url = f"{base_url}/runs/{run_id}"
+    url = f"{base_url}/runs/{run_id}/"
     print(session.put(url, json=data))
 
 
@@ -217,7 +217,8 @@ def create_benchmarks_data():
                     post_benchmarks(benchmark_data)
                     runs.append((run_id, timestamp))
 
-    update_run_with_info(runs[-1])
+    run_id, timestamp = runs[-1]
+    update_run_with_info(run_id, timestamp)
 
 
 register()
