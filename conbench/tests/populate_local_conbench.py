@@ -59,6 +59,7 @@ def generate_benchmarks_data(
             "streaming": "streaming",
         },
         "timestamp": str(timestamp),
+        "validation": {"type": "pandas.testing", "success": True},
     }
 
     if reason:
@@ -145,6 +146,21 @@ def post_benchmarks(data):
     print(session.post(url, json=data))
 
 
+def update_run(run_id, data):
+    url = f"{base_url}/runs/{run_id}"
+    print(session.put(url, json=data))
+
+
+def update_run_with_info(run_id, timestamp):
+    data = {
+        "finished_timestamp": str(timestamp + datetime.timedelta(hours=1)),
+        "info": {"setup": "passed"},
+        "error_info": {"error": "error", "stack_trace": "stack_trace", "fatal": True},
+        "error_type": "fatal",
+    }
+    update_run(run_id, data)
+
+
 def create_benchmarks_data():
     commits = [
         "e314d8d0d611c7f9ca7f2fbee174fcea3d0c66f2",
@@ -166,6 +182,8 @@ def create_benchmarks_data():
     benchmark_languages = ["Python", "R", "JavaScript"]
 
     hardware_types = ["machine", "cluster"]
+
+    runs = []
 
     for i in range(len(commits)):
         for hardware_type in hardware_types:
@@ -197,6 +215,9 @@ def create_benchmarks_data():
                         )
 
                     post_benchmarks(benchmark_data)
+                    runs.append((run_id, timestamp))
+
+    update_run_with_info(runs[-1])
 
 
 register()

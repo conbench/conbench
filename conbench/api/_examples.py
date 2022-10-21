@@ -31,6 +31,7 @@ def _api_benchmark_entity(
     run_id,
     name,
     error=None,
+    validation=None,
 ):
     if error:
         stats = {
@@ -99,6 +100,7 @@ def _api_benchmark_entity(
         "timestamp": "2020-11-25T21:02:42.706806",
         "stats": stats,
         "error": error,
+        "validation": validation,
         "tags": {
             "id": case_id,
             "compression": "snappy",

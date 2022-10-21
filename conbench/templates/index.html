@@ -42,11 +42,11 @@
                 {% for run in runs %}
                 <tr>
                      <td style="white-space: nowrap;">
-                         {% if run.has_errors %}
+                         {% if run.has_errors or run.error_info %}
                              <i class="glyphicon glyphicon-exclamation-sign text-danger"
                                 data-toggle="tooltip"
                                 data-placement="top"
-                                title="Some benchmarks have errors"></i>
+                                title="Run or some benchmarks have errors"></i>
                          {% else %}
                             <i class="glyphicon glyphicon-ok-circle text-success"></i>
                          {% endif %}

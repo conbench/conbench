@@ -136,6 +136,7 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_result_data["run_id"] = data["run_id"]
         benchmark_result_data["batch_id"] = data["batch_id"]
         benchmark_result_data["timestamp"] = data["timestamp"]
+        benchmark_result_data["validation"] = data["validation"]
         benchmark_result_data["case_id"] = case.id
         benchmark_result_data["info_id"] = info.id
         benchmark_result_data["context_id"] = context.id
@@ -189,6 +190,7 @@ class _Serializer(EntitySerializer):
             "batch_id": benchmark_result.batch_id,
             "timestamp": benchmark_result.timestamp.isoformat(),
             "tags": tags,
+            "validation": benchmark_result.validation,
             "stats": {
                 "data": [to_float(x) for x in benchmark_result.data],
                 "times": [to_float(x) for x in benchmark_result.times],

@@ -108,6 +108,7 @@
                                 "name": "file-write",
                             },
                             "timestamp": "2020-11-25T21:02:42.706806",
+                            "validation": None,
                         }
                     }
                 },
@@ -178,6 +179,7 @@
                                 "name": "file-write",
                             },
                             "timestamp": "2020-11-25T21:02:42.706806",
+                            "validation": None,
                         }
                     }
                 },
@@ -249,6 +251,7 @@
                                     "name": "file-write",
                                 },
                                 "timestamp": "2020-11-25T21:02:42.706806",
+                                "validation": None,
                             }
                         ]
                     }

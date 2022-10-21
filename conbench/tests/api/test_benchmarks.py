@@ -25,6 +25,7 @@ def _expected_entity(benchmark_result):
         benchmark_result.run_id,
         benchmark_result.case.name,
         benchmark_result.error,
+        benchmark_result.validation,
     )
 
 
