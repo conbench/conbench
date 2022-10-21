@@ -136,7 +136,7 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_result_data["run_id"] = data["run_id"]
         benchmark_result_data["batch_id"] = data["batch_id"]
         benchmark_result_data["timestamp"] = data["timestamp"]
-        benchmark_result_data["validation"] = data["validation"]
+        benchmark_result_data["validation"] = data.get("validation")
         benchmark_result_data["case_id"] = case.id
         benchmark_result_data["info_id"] = info.id
         benchmark_result_data["context_id"] = context.id
