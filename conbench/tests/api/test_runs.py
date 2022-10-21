@@ -9,6 +9,7 @@ from ...tests.helpers import _uuid
 
 def _expected_entity(run, baseline_id=None, include_baseline=True):
     parent = run.commit.get_parent_commit()
+    has_errors = False
     return _api_run_entity(
         run.id,
         run.name,
@@ -21,6 +22,11 @@ def _expected_entity(run, baseline_id=None, include_baseline=True):
         run.timestamp.isoformat(),
         baseline_id,
         include_baseline,
+        has_errors,
+        run.finished_timestamp.isoformat() if run.finished_timestamp else None,
+        run.info,
+        run.error_info,
+        run.error_type,
     )
 
 

@@ -417,12 +417,20 @@ def _api_run_entity(
     baseline_id,
     include_baseline=True,
     has_errors=False,
+    finished_timestamp=None,
+    info=None,
+    error_info=None,
+    error_type=None,
 ):
     result = {
         "id": run_id,
         "name": run_name,
         "reason": run_reason,
         "timestamp": now,
+        "finished_timestamp": finished_timestamp,
+        "info": info,
+        "error_info": error_info,
+        "error_type": error_type,
         "commit": _api_commit_entity(commit_id, parent_id, links=False),
         "hardware": _api_hardware_entity(
             hardware_id, hardware_name, hardware_type, links=False

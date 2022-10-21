@@ -51,9 +51,6 @@ class BenchmarkMixin:
             "api.benchmark",
             benchmark_id=benchmark_id,
         )
-        print("response")
-        print(response.json)
-        print("-----")
         return response.json, response
 
     def _get_context(self, benchmark):
@@ -137,8 +134,6 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
 
         if benchmark is None:
             return self.redirect("app.index")
-
-        print(benchmark)
 
         return self.render_template(
             "benchmark-entity.html",
