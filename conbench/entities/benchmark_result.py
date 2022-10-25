@@ -36,7 +36,7 @@ class BenchmarkResult(Base, EntityMixin):
     times = Nullable(postgresql.ARRAY(s.Numeric), default=[])
     case = relationship("Case", lazy="joined")
     # optional info at the benchmark level (i.e. information that isn't a tag that should create a separate case, but information that's good to hold around like links to logs)
-    optional_info = Nullable(postgresql.JSONB) 
+    optional_info = Nullable(postgresql.JSONB)
     # this info should probably be called something like context-info it's details about the context that are optional | we believe won't impact performance
     info = relationship("Info", lazy="joined")
     context = relationship("Context", lazy="joined")

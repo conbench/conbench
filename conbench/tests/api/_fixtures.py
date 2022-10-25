@@ -62,6 +62,7 @@ VALID_PAYLOAD = {
         "arrow_compiler_version": "11.0.0.11000033",
         "arrow_compiler_id": "AppleClang",
     },
+    "optional_info": {"trace_id": "some trace id", "logs": "some log uri"},
     "validation": {"type": "pandas.testing", "success": True},
     "github": {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",
@@ -118,7 +119,6 @@ VALID_PAYLOAD = {
 VALID_PAYLOAD_WITH_ERROR = dict(
     run_id="ya5709d179f349cba69ed242be3e6323",
     error={"stack_trace": "some trace", "command": "ls"},
-    optional_info={"trace_id": "some trace id", "logs": "some log uri"},
     **{
         key: value
         for key, value in VALID_PAYLOAD.items()
