@@ -35,6 +35,9 @@ class BenchmarkResult(Base, EntityMixin):
     data = Nullable(postgresql.ARRAY(s.Numeric), default=[])
     times = Nullable(postgresql.ARRAY(s.Numeric), default=[])
     case = relationship("Case", lazy="joined")
+    # optional info at the benchmark level (i.e. information that isn't a tag that should create a separate case, but information that's good to hold around like links to logs)
+    optional_info = Nullable(postgresql.JSONB) 
+    # this info should probably be called something like context-info it's details about the context that are optional | we believe won't impact performance
     info = relationship("Info", lazy="joined")
     context = relationship("Context", lazy="joined")
     run = relationship("Run", lazy="select")
@@ -138,6 +141,7 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_result_data["timestamp"] = data["timestamp"]
         benchmark_result_data["validation"] = data.get("validation")
         benchmark_result_data["case_id"] = case.id
+        benchmark_result_data["optional_info"] = data.get("optional_info")
         benchmark_result_data["info_id"] = info.id
         benchmark_result_data["context_id"] = context.id
         benchmark_result = BenchmarkResult(**benchmark_result_data)
@@ -190,6 +194,7 @@ class _Serializer(EntitySerializer):
             "batch_id": benchmark_result.batch_id,
             "timestamp": benchmark_result.timestamp.isoformat(),
             "tags": tags,
+            "optional_info": benchmark_result.optional_info,
             "validation": benchmark_result.validation,
             "stats": {
                 "data": [to_float(x) for x in benchmark_result.data],
@@ -247,6 +252,12 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     error = marshmallow.fields.Dict(required=False)
     tags = marshmallow.fields.Dict(required=True)
     info = marshmallow.fields.Dict(required=True)
+    optional_info = marshmallow.fields.Dict(
+        required=False,
+        metadata={
+            "description": "Opptional information about Benchmark results (e.g., telemetry links, logs links)"
+        },
+    )
     validation = marshmallow.fields.Dict(
         required=False,
         metadata={

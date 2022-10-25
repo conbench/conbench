@@ -104,6 +104,17 @@
               {% endif %}
             </li>
           {% endfor %}
+          {% if benchmark.optional_info %}
+            <li class="list-group-item active">Additional information</li>
+            {% for k,v in benchmark.optional_info.items() %}
+              <li class="list-group-item" style="overflow-y: auto;">
+                <b>{{ k }}</b>
+                  {% if v is not none %}
+                    <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+                  {% endif %}
+              </li>
+            {% endfor %}
+          {% endif %}
           {% if benchmark.validation %}
             <li class="list-group-item active">Validation</li>
             {% for k,v in benchmark.validation.items() %}

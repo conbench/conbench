@@ -376,6 +376,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
         location = "http://localhost/api/benchmarks/%s/" % new_id
+        assert benchmark_result.optional_info == {"trace_id": "some trace id", "logs": "some log uri"}
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
     def test_create_benchmark_with_error_after_run_was_created(self, client):

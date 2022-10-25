@@ -32,6 +32,7 @@ def _api_benchmark_entity(
     name,
     error=None,
     validation=None,
+    optional_info=None,
 ):
     if error:
         stats = {
@@ -101,6 +102,7 @@ def _api_benchmark_entity(
         "stats": stats,
         "error": error,
         "validation": validation,
+        "optional_info": optional_info
         "tags": {
             "id": case_id,
             "compression": "snappy",
