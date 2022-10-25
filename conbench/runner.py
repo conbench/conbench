@@ -139,7 +139,16 @@ class MixinPython:
 
     def benchmark(self, f, name, publish=True, **kwargs):
         """Benchmark a function and publish the result."""
-        tags, info, context, github, options, cluster_info, _ = self._init(kwargs)
+        (
+            tags,
+            optional_info,
+            context,
+            info,
+            github,
+            options,
+            cluster_info,
+            _,
+        ) = self._init(kwargs)
         self.set_python_info_and_context(info, context)
 
         timing_options = self._get_timing_options(options)
@@ -153,8 +162,9 @@ class MixinPython:
                 {"data": data, "unit": "s"},
                 name,
                 tags=tags,
-                info=info,
+                optional_info=optional_info,
                 context=context,
+                info=info,
                 github=github,
                 options=options,
                 cluster_info=cluster_info,
@@ -166,8 +176,9 @@ class MixinPython:
                 None,
                 name,
                 tags=tags,
-                info=info,
+                optional_info=optional_info,
                 context=context,
+                info=info,
                 github=github,
                 options=options,
                 cluster_info=cluster_info,
@@ -224,7 +235,16 @@ class Conbench(Connection, MixinPython, MixinR):
 
     def record(self, result, name, error=None, publish=True, **kwargs):
         """Record and publish an external benchmark result."""
-        tags, info, context, github, options, cluster_info, output = self._init(kwargs)
+        (
+            tags,
+            optional_info,
+            context,
+            info,
+            github,
+            options,
+            cluster_info,
+            output,
+        ) = self._init(kwargs)
 
         tags["name"] = name
 
@@ -243,6 +263,7 @@ class Conbench(Connection, MixinPython, MixinR):
             "context": context,
             "info": info,
             "tags": tags,
+            "optional_info": optional_info,
             "github": github,
         }
         if error:
@@ -303,13 +324,23 @@ class Conbench(Connection, MixinPython, MixinR):
 
     def _init(self, kwargs):
         tags = kwargs.get("tags", {})
-        info = kwargs.get("info", {})
+        optional_info = kwargs.get("optional_info", {})
         context = kwargs.get("context", {})
+        info = kwargs.get("info", {})
         github = kwargs.get("github", {})
         options = kwargs.get("options", {})
         cluster_info = kwargs.get("cluster_info", {})
         github = github if github else self.github_info
-        return tags, info, context, github, options, cluster_info, kwargs.get("output")
+        return (
+            tags,
+            optional_info,
+            context,
+            info,
+            github,
+            options,
+            cluster_info,
+            kwargs.get("output"),
+        )
 
     def _get_timing(self, f, iterations, options):
         times, output = [], None
