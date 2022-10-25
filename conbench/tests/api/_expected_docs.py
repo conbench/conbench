@@ -57,6 +57,7 @@
                                 "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
+                            "optional_info": None,
                             "run_id": "some-run-uuid-1",
                             "stats": {
                                 "data": [
@@ -128,6 +129,7 @@
                                 "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
+                            "optional_info": None,
                             "run_id": "some-run-uuid-1",
                             "stats": {
                                 "data": [
@@ -200,6 +202,7 @@
                                     "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                                 },
+                                "optional_info": None,
                                 "run_id": "some-run-uuid-1",
                                 "stats": {
                                     "data": [
@@ -938,6 +941,10 @@
                     "github": {"$ref": "#/components/schemas/GitHubCreate"},
                     "info": {"type": "object"},
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
+                    "optional_info": {
+                        "description": "Opptional information about Benchmark results (e.g., telemetry links, logs links)",
+                        "type": "object",
+                    },
                     "run_id": {"type": "string"},
                     "run_name": {"type": "string"},
                     "run_reason": {"type": "string"},
@@ -1107,7 +1114,7 @@
                         "type": "object",
                     },
                     "error_type": {
-                        "description": "Run's error type. Possible values: none, catastrophic, partial. \n                    None = all attempted benchmarks are good. \n                    Catastrophic =no benchmarks completed successfully. \n                    Partial = some benchmarks completed, some failed",
+                        "description": "Run's error type. Possible values: none, catastrophic, partial.\n                    None = all attempted benchmarks are good.\n                    Catastrophic =no benchmarks completed successfully.\n                    Partial = some benchmarks completed, some failed",
                         "type": "string",
                     },
                     "finished_timestamp": {
@@ -1132,7 +1139,7 @@
                         "type": "object",
                     },
                     "error_type": {
-                        "description": "Run's error type. Possible values: none, catastrophic, partial. \n                    None = all attempted benchmarks are good. \n                    Catastrophic =no benchmarks completed successfully. \n                    Partial = some benchmarks completed, some failed",
+                        "description": "Run's error type. Possible values: none, catastrophic, partial.\n                    None = all attempted benchmarks are good.\n                    Catastrophic =no benchmarks completed successfully.\n                    Partial = some benchmarks completed, some failed",
                         "type": "string",
                     },
                     "finished_timestamp": {
