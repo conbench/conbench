@@ -26,6 +26,7 @@ def _expected_entity(benchmark_result):
         benchmark_result.case.name,
         benchmark_result.error,
         benchmark_result.validation,
+        benchmark_result.optional_benchmark_info,
     )
 
 
@@ -756,6 +757,18 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
                 "0.00898800000000000000"
             )
             assert distributions[0].median_sd == decimal.Decimal("0")
+
+    def test_valid_payload_with_optional_benchmark_info(self, client):
+        self.authenticate(client)
+        response = client.post("/api/benchmarks/", json=self.valid_payload)
+        new_id = response.json["id"]
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        assert benchmark_result.optional_benchmark_info == {
+            "trace_id": "some trace id",
+            "logs": "some log uri",
+        }
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
     def test_one_hardware_field_is_present(self, client):
         self.authenticate(client)

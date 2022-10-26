@@ -35,6 +35,9 @@ class BenchmarkResult(Base, EntityMixin):
     data = Nullable(postgresql.ARRAY(s.Numeric), default=[])
     times = Nullable(postgresql.ARRAY(s.Numeric), default=[])
     case = relationship("Case", lazy="joined")
+    # optional info at the benchmark level (i.e. information that isn't a tag that should create a separate case, but information that's good to hold around like links to logs)
+    optional_benchmark_info = Nullable(postgresql.JSONB)
+    # this info should probably be called something like context-info it's details about the context that are optional | we believe won't impact performance
     info = relationship("Info", lazy="joined")
     context = relationship("Context", lazy="joined")
     run = relationship("Run", lazy="select")
@@ -138,6 +141,9 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_result_data["timestamp"] = data["timestamp"]
         benchmark_result_data["validation"] = data.get("validation")
         benchmark_result_data["case_id"] = case.id
+        benchmark_result_data["optional_benchmark_info"] = data.get(
+            "optional_benchmark_info"
+        )
         benchmark_result_data["info_id"] = info.id
         benchmark_result_data["context_id"] = context.id
         benchmark_result = BenchmarkResult(**benchmark_result_data)
@@ -190,6 +196,7 @@ class _Serializer(EntitySerializer):
             "batch_id": benchmark_result.batch_id,
             "timestamp": benchmark_result.timestamp.isoformat(),
             "tags": tags,
+            "optional_benchmark_info": benchmark_result.optional_benchmark_info,
             "validation": benchmark_result.validation,
             "stats": {
                 "data": [to_float(x) for x in benchmark_result.data],
@@ -236,24 +243,65 @@ class BenchmarkResultSerializer:
 
 
 class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
-    run_id = marshmallow.fields.String(required=True)
-    run_name = marshmallow.fields.String(required=False)
-    run_reason = marshmallow.fields.String(required=False)
+    run_id = marshmallow.fields.String(
+        required=True,
+        metadata={"description": "Unique identifier for a run of benchmarks."},
+    )
+    run_name = marshmallow.fields.String(
+        required=False,
+        metadata={
+            "description": "Name for the run. When run in CI, this should be of the style '{run reason}: {commit sha}'."
+        },
+    )
+    run_reason = marshmallow.fields.String(
+        required=False,
+        metadata={
+            "description": "Reason for run (commit, pull request, manual, etc). This should be low cardinality. 'commit' is a special run_reason for commits on the default branch which are used for history"
+        },
+    )
     batch_id = marshmallow.fields.String(required=True)
-    timestamp = marshmallow.fields.DateTime(required=True)
+    timestamp = marshmallow.fields.DateTime(
+        required=True, metadata={"description": "Timestamp the benchmark ran"}
+    )
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
     cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
     stats = marshmallow.fields.Nested(BenchmarkResultSchema().create, required=False)
-    error = marshmallow.fields.Dict(required=False)
-    tags = marshmallow.fields.Dict(required=True)
-    info = marshmallow.fields.Dict(required=True)
+    error = marshmallow.fields.Dict(
+        required=False,
+        metadata={
+            "description": "Details about an error that occured while the benchamrk was running (free-form JSON)."
+        },
+    )
+    tags = marshmallow.fields.Dict(
+        required=True,
+        metadata={
+            "description": "Details that define the individual benchmark case that is being run (e.g. name, query type, data source, parameters). These are details about a benchmark that define different cases, for example: for a file reading benchmark, some tags might be: the data source being read, the compression that file is written in, the output format, etc."
+        },
+    )
+    optional_benchmark_info = marshmallow.fields.Dict(
+        required=False,
+        metadata={
+            "description": "Optional information about Benchmark results (e.g., telemetry links, logs links). These are unique to each benchmark that is run, but are information that aren't reasonably expected to impact benchmark performance. Helpful for adding debugging or additional links and context for a benchmark (free-form JSON)"
+        },
+    )
+    context = marshmallow.fields.Dict(
+        required=True,
+        metadata={
+            "description": "Information about the context the benchmark was run in (e.g. compiler flags, benchmark langauge) that are reasonably expected to have an impact on benchmark performance. This information is expected to be the same across a number of benchmarks. (free-form JSON)"
+        },
+    )
+    info = marshmallow.fields.Dict(
+        required=True,
+        metadata={
+            "description": "Additional information about the context the benchmark was run in that is not expected to have an impact on benchmark performance (e.g. benchmark language version, compiler version). This information is expected to be the same across a number of benchmarks. (free-form JSON)"
+        },
+    )
     validation = marshmallow.fields.Dict(
         required=False,
         metadata={
-            "description": "Benchmark results validation metadata (e.g., errors, validation types)"
+            "description": "Benchmark results validation metadata (e.g., errors, validation types)."
         },
     )
-    context = marshmallow.fields.Dict(required=True)
     github = marshmallow.fields.Nested(GitHubCreate(), required=False)
 
     @marshmallow.validates_schema

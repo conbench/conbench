@@ -57,6 +57,7 @@
                                 "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
+                            "optional_benchmark_info": None,
                             "run_id": "some-run-uuid-1",
                             "stats": {
                                 "data": [
@@ -128,6 +129,7 @@
                                 "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
+                            "optional_benchmark_info": None,
                             "run_id": "some-run-uuid-1",
                             "stats": {
                                 "data": [
@@ -200,6 +202,7 @@
                                     "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                                 },
+                                "optional_benchmark_info": None,
                                 "run_id": "some-run-uuid-1",
                                 "stats": {
                                     "data": [
@@ -933,19 +936,48 @@
                 "properties": {
                     "batch_id": {"type": "string"},
                     "cluster_info": {"$ref": "#/components/schemas/ClusterCreate"},
-                    "context": {"type": "object"},
-                    "error": {"type": "object"},
+                    "context": {
+                        "description": "Information about the context the benchmark was run in (e.g. compiler flags, benchmark langauge) that are reasonably expected to have an impact on benchmark performance. This information is expected to be the same across a number of benchmarks. (free-form JSON)",
+                        "type": "object",
+                    },
+                    "error": {
+                        "description": "Details about an error that occured while the benchamrk was running (free-form JSON).",
+                        "type": "object",
+                    },
                     "github": {"$ref": "#/components/schemas/GitHubCreate"},
-                    "info": {"type": "object"},
+                    "info": {
+                        "description": "Additional information about the context the benchmark was run in that is not expected to have an impact on benchmark performance (e.g. benchmark language version, compiler version). This information is expected to be the same across a number of benchmarks. (free-form JSON)",
+                        "type": "object",
+                    },
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
-                    "run_id": {"type": "string"},
-                    "run_name": {"type": "string"},
-                    "run_reason": {"type": "string"},
+                    "optional_benchmark_info": {
+                        "description": "Optional information about Benchmark results (e.g., telemetry links, logs links). These are unique to each benchmark that is run, but are information that aren't reasonably expected to impact benchmark performance. Helpful for adding debugging or additional links and context for a benchmark (free-form JSON)",
+                        "type": "object",
+                    },
+                    "run_id": {
+                        "description": "Unique identifier for a run of benchmarks.",
+                        "type": "string",
+                    },
+                    "run_name": {
+                        "description": "Name for the run. When run in CI, this should be of the style '{run reason}: {commit sha}'.",
+                        "type": "string",
+                    },
+                    "run_reason": {
+                        "description": "Reason for run (commit, pull request, manual, etc). This should be low cardinality. 'commit' is a special run_reason for commits on the default branch which are used for history",
+                        "type": "string",
+                    },
                     "stats": {"$ref": "#/components/schemas/BenchmarkResultCreate"},
-                    "tags": {"type": "object"},
-                    "timestamp": {"format": "date-time", "type": "string"},
+                    "tags": {
+                        "description": "Details that define the individual benchmark case that is being run (e.g. name, query type, data source, parameters). These are details about a benchmark that define different cases, for example: for a file reading benchmark, some tags might be: the data source being read, the compression that file is written in, the output format, etc.",
+                        "type": "object",
+                    },
+                    "timestamp": {
+                        "description": "Timestamp the benchmark ran",
+                        "format": "date-time",
+                        "type": "string",
+                    },
                     "validation": {
-                        "description": "Benchmark results validation metadata (e.g., errors, validation types)",
+                        "description": "Benchmark results validation metadata (e.g., errors, validation types).",
                         "type": "object",
                     },
                 },
@@ -1107,7 +1139,7 @@
                         "type": "object",
                     },
                     "error_type": {
-                        "description": "Run's error type. Possible values: none, catastrophic, partial. \n                    None = all attempted benchmarks are good. \n                    Catastrophic =no benchmarks completed successfully. \n                    Partial = some benchmarks completed, some failed",
+                        "description": "Run's error type. Possible values: none, catastrophic, partial.\n                    None = all attempted benchmarks are good.\n                    Catastrophic =no benchmarks completed successfully.\n                    Partial = some benchmarks completed, some failed",
                         "type": "string",
                     },
                     "finished_timestamp": {
@@ -1132,7 +1164,7 @@
                         "type": "object",
                     },
                     "error_type": {
-                        "description": "Run's error type. Possible values: none, catastrophic, partial. \n                    None = all attempted benchmarks are good. \n                    Catastrophic =no benchmarks completed successfully. \n                    Partial = some benchmarks completed, some failed",
+                        "description": "Run's error type. Possible values: none, catastrophic, partial.\n                    None = all attempted benchmarks are good.\n                    Catastrophic =no benchmarks completed successfully.\n                    Partial = some benchmarks completed, some failed",
                         "type": "string",
                     },
                     "finished_timestamp": {
