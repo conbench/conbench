@@ -141,7 +141,7 @@ class MixinPython:
         """Benchmark a function and publish the result."""
         (
             tags,
-            optional_info,
+            optional_benchmark_info,
             context,
             info,
             github,
@@ -162,7 +162,7 @@ class MixinPython:
                 {"data": data, "unit": "s"},
                 name,
                 tags=tags,
-                optional_info=optional_info,
+                optional_benchmark_info=optional_benchmark_info,
                 context=context,
                 info=info,
                 github=github,
@@ -176,7 +176,7 @@ class MixinPython:
                 None,
                 name,
                 tags=tags,
-                optional_info=optional_info,
+                optional_benchmark_info=optional_benchmark_info,
                 context=context,
                 info=info,
                 github=github,
@@ -237,7 +237,7 @@ class Conbench(Connection, MixinPython, MixinR):
         """Record and publish an external benchmark result."""
         (
             tags,
-            optional_info,
+            optional_benchmark_info,
             context,
             info,
             github,
@@ -263,7 +263,7 @@ class Conbench(Connection, MixinPython, MixinR):
             "context": context,
             "info": info,
             "tags": tags,
-            "optional_info": optional_info,
+            "optional_benchmark_info": optional_benchmark_info,
             "github": github,
         }
         if error:
@@ -324,7 +324,7 @@ class Conbench(Connection, MixinPython, MixinR):
 
     def _init(self, kwargs):
         tags = kwargs.get("tags", {})
-        optional_info = kwargs.get("optional_info", {})
+        optional_benchmark_info = kwargs.get("optional_benchmark_info", {})
         context = kwargs.get("context", {})
         info = kwargs.get("info", {})
         github = kwargs.get("github", {})
@@ -333,7 +333,7 @@ class Conbench(Connection, MixinPython, MixinR):
         github = github if github else self.github_info
         return (
             tags,
-            optional_info,
+            optional_benchmark_info,
             context,
             info,
             github,

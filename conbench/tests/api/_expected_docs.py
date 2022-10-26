@@ -57,7 +57,7 @@
                                 "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
-                            "optional_info": None,
+                            "optional_benchmark_info": None,
                             "run_id": "some-run-uuid-1",
                             "stats": {
                                 "data": [
@@ -129,7 +129,7 @@
                                 "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
-                            "optional_info": None,
+                            "optional_benchmark_info": None,
                             "run_id": "some-run-uuid-1",
                             "stats": {
                                 "data": [
@@ -202,7 +202,7 @@
                                     "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                                 },
-                                "optional_info": None,
+                                "optional_benchmark_info": None,
                                 "run_id": "some-run-uuid-1",
                                 "stats": {
                                     "data": [
@@ -941,7 +941,7 @@
                     "github": {"$ref": "#/components/schemas/GitHubCreate"},
                     "info": {"type": "object"},
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
-                    "optional_info": {
+                    "optional_benchmark_info": {
                         "description": "Opptional information about Benchmark results (e.g., telemetry links, logs links)",
                         "type": "object",
                     },

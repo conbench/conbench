@@ -36,7 +36,7 @@ class BenchmarkResult(Base, EntityMixin):
     times = Nullable(postgresql.ARRAY(s.Numeric), default=[])
     case = relationship("Case", lazy="joined")
     # optional info at the benchmark level (i.e. information that isn't a tag that should create a separate case, but information that's good to hold around like links to logs)
-    optional_info = Nullable(postgresql.JSONB)
+    optional_benchmark_info = Nullable(postgresql.JSONB)
     # this info should probably be called something like context-info it's details about the context that are optional | we believe won't impact performance
     info = relationship("Info", lazy="joined")
     context = relationship("Context", lazy="joined")
@@ -141,7 +141,9 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_result_data["timestamp"] = data["timestamp"]
         benchmark_result_data["validation"] = data.get("validation")
         benchmark_result_data["case_id"] = case.id
-        benchmark_result_data["optional_info"] = data.get("optional_info")
+        benchmark_result_data["optional_benchmark_info"] = data.get(
+            "optional_benchmark_info"
+        )
         benchmark_result_data["info_id"] = info.id
         benchmark_result_data["context_id"] = context.id
         benchmark_result = BenchmarkResult(**benchmark_result_data)
@@ -194,7 +196,7 @@ class _Serializer(EntitySerializer):
             "batch_id": benchmark_result.batch_id,
             "timestamp": benchmark_result.timestamp.isoformat(),
             "tags": tags,
-            "optional_info": benchmark_result.optional_info,
+            "optional_benchmark_info": benchmark_result.optional_benchmark_info,
             "validation": benchmark_result.validation,
             "stats": {
                 "data": [to_float(x) for x in benchmark_result.data],
@@ -276,7 +278,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
             "description": "Details that define the individual benchmark case that is being run (e.g. name, query type, data source, parameters). These are details about a benchmark that define different cases, for example: for a file reading benchmark, some tags might be: the data source being read, the compression that file is written in, the output format, etc."
         },
     )
-    optional_info = marshmallow.fields.Dict(
+    optional_benchmark_info = marshmallow.fields.Dict(
         required=False,
         metadata={
             "description": "Optional information about Benchmark results (e.g., telemetry links, logs links). These are unique to each benchmark that is run, but are information that aren't reasonably expected to impact benchmark performance. Helpful for adding debugging or additional links and context for a benchmark (free-form JSON)"

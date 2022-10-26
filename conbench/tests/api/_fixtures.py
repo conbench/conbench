@@ -62,7 +62,7 @@ VALID_PAYLOAD = {
         "arrow_compiler_version": "11.0.0.11000033",
         "arrow_compiler_id": "AppleClang",
     },
-    "optional_info": {"trace_id": "some trace id", "logs": "some log uri"},
+    "optional_benchmark_info": {"trace_id": "some trace id", "logs": "some log uri"},
     "validation": {"type": "pandas.testing", "success": True},
     "github": {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",

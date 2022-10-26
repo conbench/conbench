@@ -104,9 +104,9 @@
         {% endif %}
       </li>
       {% endfor %}
-      {% if benchmark.optional_info %}
+      {% if benchmark.optional_benchmark_info %}
       <li class="list-group-item active">Additional Benchmark Details</li>
-      {% for k,v in benchmark.optional_info.items() %}
+      {% for k,v in benchmark.optional_benchmark_info.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
         {% if v is not none %}
