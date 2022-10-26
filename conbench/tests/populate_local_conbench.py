@@ -65,6 +65,8 @@ def generate_benchmarks_data(
     if reason:
         data["run_reason"] = reason
 
+    data["optional_info"] = {"log uri": "s3://some/log", "trace uri": "s3://some/trace"}
+
     for key in ["info", "tags", "context"]:
         fields_set = {
             f"{benchmark_language}_specific_{key}_field_1": "value-1",
