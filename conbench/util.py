@@ -142,4 +142,4 @@ def register_benchmarks(directory=None):
                     or filename.endswith("benchmark.py")
                     or filename.endswith("benchmarks.py")
                 ):
-                    import_path(f"{directory}/{filename}")
+                    import_path(f"{directory}/{filename}", root=entry)
