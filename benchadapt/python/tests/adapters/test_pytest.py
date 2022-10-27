@@ -3,10 +3,8 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
-from benchadapt import BenchmarkResult
 from benchadapt.adapters import PytestAdapter
-
+from benchadapt.result import BenchmarkResult
 
 PYTEST_BENCHMARK_JSON = {
     "machine_info": {
