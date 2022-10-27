@@ -61,37 +61,56 @@ class BenchmarkResult(Base, EntityMixin):
     def create(data):
         tags = data["tags"]
         has_error = "error" in data
+        has_stats = "stats" in data
+
+        # defaults
+        benchmark_result_data = {}
+        complete_iterations = False
+
+        if has_stats:
+            benchmark_result_data = data["stats"]
+
+            # calculate any missing stats if data available
+            if data["stats"].get("data"):
+                dat = [to_float(x) for x in benchmark_result_data["data"]]
+
+                # defaults
+                q1 = q3 = mean = median = min = max = stdev = iqr = None
+
+                # calculate stats only if the data is complete
+                complete_iterations = all([x is not None for x in dat])
+                if complete_iterations:
+                    q1, q3 = np.percentile(dat, [25, 75])
+                    mean = np.mean(dat)
+                    median = np.median(dat)
+                    min = np.min(dat)
+                    max = np.max(dat)
+                    stdev = np.std(dat) if len(dat) > 2 else 0
+                    iqr = q3 - q1
+
+                calculated_result_data = {
+                    "data": dat,
+                    "times": data["stats"].get("times", []),
+                    "unit": data["stats"]["unit"],
+                    "time_unit": data["stats"].get("time_unit", "s"),
+                    "iterations": len(dat),
+                    "mean": mean,
+                    "median": median,
+                    "min": min,
+                    "max": max,
+                    "stdev": stdev,
+                    "q1": q1,
+                    "q3": q3,
+                    "iqr": iqr,
+                }
+
+                for field in calculated_result_data:
+                    # explicit `is None` because `stdev` is often 0
+                    if benchmark_result_data.get(field) is None:
+                        benchmark_result_data[field] = calculated_result_data[field]
 
         if has_error:
-            benchmark_result_data = {"error": data["error"]}
-        # calculate any missing stats if data available
-        elif data["stats"].get("data"):
-            benchmark_result_data = data["stats"]
-            dat = [float(x) for x in benchmark_result_data["data"]]
-            q1, q3 = np.percentile(dat, [25, 75])
-
-            calculated_result_data = {
-                "data": dat,
-                "times": data["stats"].get("times", []),
-                "unit": data["stats"]["unit"],
-                "time_unit": data["stats"].get("time_unit", "s"),
-                "iterations": len(dat),
-                "mean": np.mean(dat),
-                "median": np.median(dat),
-                "min": np.min(dat),
-                "max": np.max(dat),
-                "stdev": np.std(dat) if len(dat) > 2 else 0,
-                "q1": q1,
-                "q3": q3,
-                "iqr": q3 - q1,
-            }
-
-            for field in calculated_result_data:
-                # explicit `is None` because `stdev` is often 0
-                if benchmark_result_data.get(field) is None:
-                    benchmark_result_data[field] = calculated_result_data[field]
-        else:
-            benchmark_result_data = data["stats"]
+            benchmark_result_data["error"] = data["error"]
 
         name = tags.pop("name")
 
@@ -149,7 +168,7 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_result = BenchmarkResult(**benchmark_result_data)
         benchmark_result.save()
 
-        if "error" in data:
+        if "error" in data or not complete_iterations:
             return benchmark_result
 
         update_distribution(benchmark_result, limit=Config.DISTRIBUTION_COMMITS)
@@ -165,8 +184,12 @@ s.Index("benchmark_result_context_id_index", BenchmarkResult.context_id)
 
 
 class BenchmarkResultCreate(marshmallow.Schema):
-    data = marshmallow.fields.List(marshmallow.fields.Decimal, required=True)
-    times = marshmallow.fields.List(marshmallow.fields.Decimal, required=True)
+    data = marshmallow.fields.List(
+        marshmallow.fields.Decimal(allow_none=True), required=True
+    )
+    times = marshmallow.fields.List(
+        marshmallow.fields.Decimal(allow_none=True), required=True
+    )
     unit = marshmallow.fields.String(required=True)
     time_unit = marshmallow.fields.String(required=True)
     iterations = marshmallow.fields.Integer(required=True)
@@ -320,11 +343,6 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     def validate_stats_or_error_field_is_present(self, data, **kwargs):
         if "stats" not in data and "error" not in data:
             raise marshmallow.ValidationError("Either stats or error field is required")
-
-        if "stats" in data and "error" in data:
-            raise marshmallow.ValidationError(
-                "stats and error fields can not be used at the same time"
-            )
 
 
 class BenchmarkFacadeSchema:

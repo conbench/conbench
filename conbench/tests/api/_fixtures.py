@@ -126,6 +126,45 @@ VALID_PAYLOAD_WITH_ERROR = dict(
     },
 )
 
+VALID_PAYLOAD_WITH_ITERATION_ERROR = dict(
+    run_id="ya5709d179f349cba69ed242be3e6323",
+    error={"stack_trace": "some trace", "command": "ls"},
+    **{
+        key: value
+        for key, value in VALID_PAYLOAD.items()
+        if key not in ("stats", "run_id")
+    },
+    stats={
+        "data": [
+            "0.099094",
+            None,
+            "0.036381",
+            "0.148896",
+            "0.008104",
+            "0.005496",
+            "0.009871",
+            "0.006008",
+            "0.007978",
+            "0.004733",
+        ],
+        "times": [
+            "0.099094",
+            None,
+            "0.036381",
+            "0.148896",
+            "0.008104",
+            "0.005496",
+            "0.009871",
+            "0.006008",
+            "0.007978",
+            "0.004733",
+        ],
+        "unit": "s",
+        "time_unit": "s",
+        "iterations": 10,
+    },
+)
+
 VALID_PAYLOAD_FOR_CLUSTER = dict(
     run_id="3a5709d179f349cba69ed242be3e6323",
     cluster_info=CLUSTER_INFO,
@@ -182,6 +221,7 @@ def benchmark_result(
     commit=None,
     pull_request=False,
     error=None,
+    empty_results=False,
 ):
     data = copy.deepcopy(VALID_PAYLOAD)
     data["run_name"] = f"commit: {_uuid()}"
@@ -206,6 +246,9 @@ def benchmark_result(
     if results is not None:
         unit = unit if unit else "s"
         data["stats"] = Conbench._stats(results, unit, [], "s")
+
+    if empty_results:
+        data.pop("stats", None)
 
     if error is not None:
         data["error"] = error

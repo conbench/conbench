@@ -993,7 +993,10 @@
             },
             "BenchmarkResultCreate": {
                 "properties": {
-                    "data": {"items": {"type": "number"}, "type": "array"},
+                    "data": {
+                        "items": {"nullable": True, "type": "number"},
+                        "type": "array",
+                    },
                     "iqr": {"type": "number"},
                     "iterations": {"type": "integer"},
                     "max": {"type": "number"},
@@ -1004,7 +1007,10 @@
                     "q3": {"type": "number"},
                     "stdev": {"type": "number"},
                     "time_unit": {"type": "string"},
-                    "times": {"items": {"type": "number"}, "type": "array"},
+                    "times": {
+                        "items": {"nullable": True, "type": "number"},
+                        "type": "array",
+                    },
                     "unit": {"type": "string"},
                 },
                 "required": ["data", "iterations", "time_unit", "times", "unit"],
