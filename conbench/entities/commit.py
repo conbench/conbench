@@ -159,9 +159,7 @@ def get_github_commit(repository: str, branch: str, sha: str) -> dict:
         return {}
 
     commit["branch"] = branch
-    commit["fork_point_sha"] = github.compare_branch_to_default(
-        name=name, branch=branch
-    )
+    commit["fork_point_sha"] = github.get_fork_point_sha(name=name, sha=sha)
 
     parent = commit["parent"]
     commits = github.get_commits(name, parent)
@@ -245,25 +243,26 @@ class GitHub:
             response = self._get_response(url)
         return self._parse_commit(response) if response else None
 
-    def compare_branch_to_default(self, name: str, branch: str) -> str:
+    def get_fork_point_sha(self, name: str, sha: str) -> str:
         """
-        Get the most common ancestor commit between a branch and the default branch.
+        Get the most common ancestor commit between an arbitrary SHA and the default
+        branch.
 
-        Returns ``None`` if branch is not supplied or is the default branch, otherwise
+        Returns ``None`` if sha is not supplied or if GitHub can't find it, otherwise
         returns the fork point sha, called the "merge base" in git-speak.
         """
-        if name == "apache/arrow" and branch == "conbench:my_branch":
+        if sha in self.test_commits:
             return "some_fork_point_sha"
 
-        if not name or not branch:
+        if not name or not sha:
             return None
 
         base = self.get_default_branch(name=name)
-        if branch == base:
+        url = f"{GITHUB}/repos/{name}/compare/{base}...{sha}"
+        response = self._get_response(url=url)
+        if not response:
             return None
 
-        url = f"{GITHUB}/repos/{name}/compare/{base}...{branch}"
-        response = self._get_response(url=url)
         fork_point_sha = response["merge_base_commit"]["sha"]
         return fork_point_sha
 
