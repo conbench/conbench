@@ -158,6 +158,8 @@ def _api_commit_entity(commit_id, parent_id, links=True):
             "list": "http://localhost/api/commits/",
             "self": "http://localhost/api/commits/%s/" % commit_id,
         },
+        "branch": "conbench:my_branch",
+        "fork_point_sha": "some_fork_point_sha",
     }
     if parent_id:
         result["links"]["parent"] = "http://localhost/api/commits/%s/" % parent_id
@@ -292,6 +294,8 @@ def _api_compare_benchmark_result(
                 "sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
                 "timestamp": "2021-02-24T22:12:11",
                 "url": "https://github.com/apache/arrow/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
+                "branch": "conbench:my_branch",
+                "fork_point_sha": "some_fork_point_sha",
             },
             "contender": {
                 "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
@@ -304,6 +308,8 @@ def _api_compare_benchmark_result(
                 "sha": "02addad336ba19a654f9c857ede546331be7b631",
                 "timestamp": "2021-02-25T01:02:51",
                 "url": "https://github.com/apache/arrow/commit/02addad336ba19a654f9c857ede546331be7b631",
+                "branch": "conbench:my_branch",
+                "fork_point_sha": "some_fork_point_sha",
             },
         },
         "links": {

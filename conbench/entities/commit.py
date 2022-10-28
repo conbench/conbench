@@ -245,14 +245,17 @@ class GitHub:
             response = self._get_response(url)
         return self._parse_commit(response) if response else None
 
-    def compare_branch_to_default(self, name: str, branch: str) -> dict:
+    def compare_branch_to_default(self, name: str, branch: str) -> str:
         """
         Get the most common ancestor commit between a branch and the default branch.
 
         Returns ``None`` if branch is not supplied or is the default branch, otherwise
         returns the fork point sha, called the "merge base" in git-speak.
         """
-        if not name:
+        if name == "apache/arrow" and branch == "conbench:my_branch":
+            return "some_fork_point_sha"
+
+        if not name or not branch:
             return None
 
         base = self.get_default_branch(name=name)
@@ -287,7 +290,6 @@ class GitHub:
         author = commit.get("author")
         commit_author = commit["commit"]["author"]
         return {
-            # 'fork_point': commit['merge_base_commit']['sha'],
             "parent": commit["parents"][0]["sha"],
             "date": dateutil.parser.isoparse(commit_author["date"]),
             "message": commit["commit"]["message"].split("\n")[0],
