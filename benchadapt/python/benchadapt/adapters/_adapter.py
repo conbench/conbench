@@ -1,4 +1,5 @@
 import abc
+import datetime
 import subprocess
 import uuid
 from typing import Any, Dict, List
@@ -170,17 +171,25 @@ class BenchmarkAdapter(abc.ABC):
 
             try:
                 res = client.post(path="/benchmarks/", json=result_dict)
-            except requests.exceptions.ReadTimeout:
-                print("POST timed out. Retrying...")
+            except requests.exceptions.ReadTimeout as e:
+                error_time = datetime.datetime.utcnow()
+                print(f"{error_time} POST timed out: {repr(e)}. Retrying...")
                 try:
                     res = client.post(path="/benchmarks/", json=result_dict)
                 except requests.exceptions.ReadTimeout as ee:
+                    error_time2 = datetime.datetime.utcnow()
+                    print(
+                        (
+                            f"{error_time2} POST timed out again: {repr(ee)}. "
+                            "Skipping and continuing to other results."
+                        )
+                    )
                     error = ee
 
             res_list.append(res)
 
         if error:
-            print("Prior POST timed out twice:")
+            print(f"POST at {error_time} timed out twice:")
             raise error
 
         log.info("All results sent to conbench")
