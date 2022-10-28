@@ -170,8 +170,8 @@ class BenchmarkAdapter(abc.ABC):
 
             try:
                 res = client.post(path="/benchmarks/", json=result_dict)
-            except requests.exceptions.ReadTimeout as e:
-                print(f"POST timed out: {e.response.content.decode()}. Retrying...")
+            except requests.exceptions.ReadTimeout:
+                print("POST timed out. Retrying...")
                 try:
                     res = client.post(path="/benchmarks/", json=result_dict)
                 except requests.exceptions.ReadTimeout as ee:
@@ -180,6 +180,7 @@ class BenchmarkAdapter(abc.ABC):
             res_list.append(res)
 
         if error:
+            print("Prior POST timed out twice:")
             raise error
 
         log.info("All results sent to conbench")
