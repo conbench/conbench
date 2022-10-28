@@ -2,6 +2,6 @@ click
 numpy
 psutil
 py-cpuinfo
-pytest
+pytest>=7.0.0
 PyYAML
 requests

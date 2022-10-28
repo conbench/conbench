@@ -3,4 +3,4 @@ coverage
 coveralls
 flake8
 isort
-pytest
+pytest>=7.0.0
