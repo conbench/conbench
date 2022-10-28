@@ -48,7 +48,10 @@ class _BaseClient(abc.ABC):
 
     def post(self, path: str, json: dict) -> Optional[dict]:
         url = self.base_url + path
-        log.debug(f"POST {url} {dumps(json)}")
+
+        # log.debug(f"POST {url} {dumps(json)}")
+        print(f"POST {url} {dumps(json)}")
+
         res = self.session.post(url=url, json=json, timeout=self.timeout_s)
         self._maybe_raise(res=res)
 
