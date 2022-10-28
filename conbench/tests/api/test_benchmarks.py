@@ -414,6 +414,28 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             benchmark_result.error == self.valid_payload_with_iteration_error["error"]
         )
 
+    def test_create_benchmark_with_one_iteration_no_error(self, client):
+        self.authenticate(client)
+        benchmark_data = self.valid_payload_with_iteration_error
+
+        # remove the error to simulate only sending partial results
+        benchmark_data.pop("error", None)
+
+        response = client.post("/api/benchmarks/", json=benchmark_data)
+
+        new_id = response.json["id"]
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        stats = self.valid_payload_with_iteration_error["stats"]
+        stats["data"] = [float(x) if x else None for x in stats["data"]]
+        stats["times"] = [float(x) if x else None for x in stats["times"]]
+        self.assert_201_created(
+            response, _expected_entity(benchmark_result, stats), location
+        )
+        assert benchmark_result.error == {
+            "status": "Partial result: not all iterations completed"
+        }
+
     def test_create_benchmark_for_cluster_with_optional_info_changed(self, client):
         # Post benchmarks for cluster-1
         self.authenticate(client)

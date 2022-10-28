@@ -210,7 +210,7 @@ def set_z_scores(benchmark_results):
             continue
 
         d = lookup.get(f"{benchmark_result.case_id}-{benchmark_result.context_id}")
-        if d and d.mean_sd:
+        if d and d.mean_sd and benchmark_result.mean:
             benchmark_result.z_score = (benchmark_result.mean - d.mean_mean) / d.mean_sd
         if _less_is_better(benchmark_result.unit) and benchmark_result.z_score:
             benchmark_result.z_score = benchmark_result.z_score * -1

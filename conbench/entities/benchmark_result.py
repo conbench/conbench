@@ -112,6 +112,15 @@ class BenchmarkResult(Base, EntityMixin):
         if has_error:
             benchmark_result_data["error"] = data["error"]
 
+        # If there was no explicit error *and* the iterations aren't complete, we should add an error
+        if (
+            benchmark_result_data.get("error", None) is None
+            and complete_iterations is False
+        ):
+            benchmark_result_data["error"] = {
+                "status": "Partial result: not all iterations completed"
+            }
+
         name = tags.pop("name")
 
         # create if not exists
