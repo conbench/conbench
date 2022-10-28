@@ -3,6 +3,8 @@ import subprocess
 import uuid
 from typing import Any, Dict, List
 
+import requests
+
 from ..client import ConbenchClient
 from ..log import fatal_and_log, log
 from ..result import BenchmarkResult
@@ -162,10 +164,23 @@ class BenchmarkAdapter(abc.ABC):
 
         log.info("Posting results to conbench")
         res_list = []
+        error = None
         for result in self.results:
             result_dict = result.to_publishable_dict()
-            res = client.post(path="/benchmarks/", json=result_dict)
+
+            try:
+                res = client.post(path="/benchmarks/", json=result_dict)
+            except requests.exceptions.ReadTimeout as e:
+                print(f"POST timed out: {e.response.content.decode()}. Retrying...")
+                try:
+                    res = client.post(path="/benchmarks/", json=result_dict)
+                except requests.exceptions.ReadTimeout as ee:
+                    error = ee
+
             res_list.append(res)
+
+        if error:
+            raise error
 
         log.info("All results sent to conbench")
         return res_list

@@ -52,13 +52,7 @@ class _BaseClient(abc.ABC):
         # log.debug(f"POST {url} {dumps(json)}")
         print(f"POST {url} {dumps(json)}")
 
-        try:
-            res = self.session.post(url=url, json=json, timeout=self.timeout_s)
-        except requests.exceptions.ReadTimeout as e:
-            print(f"POST timed out: {e.response.content.decode()}. Retrying...")
-            print(f"POST {url} {dumps(json)}")
-            res = self.session.post(url=url, json=json, timeout=self.timeout_s)
-
+        res = self.session.post(url=url, json=json, timeout=self.timeout_s)
         self._maybe_raise(res=res)
 
         if res.content:
