@@ -66,6 +66,7 @@ def test_get_github_commit_and_fork_point_sha():
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
         "branch": branch,
+        # this is the master branch, so the fork point sha == the commit sha
         "fork_point_sha": sha,
     }
     assert get_github_commit(repo, branch=branch, sha=sha) == expected
