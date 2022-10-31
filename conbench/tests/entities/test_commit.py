@@ -40,20 +40,23 @@ def test_repository_to_url():
 def test_get_github_commit_none():
     repo = "https://github.com/apache/arrow"
     sha = "3decc46119d583df56c7c66c77cf2803441c4458"
+    branch = "conbench:my_branch"
 
     assert get_github_commit(None, None, None) == {}
     assert get_github_commit("", "", "") == {}
     assert get_github_commit(repo, None, None) == {}
+    assert get_github_commit(None, branch, None) == {}
     assert get_github_commit(None, None, sha) == {}
 
 
 @pytest.mark.slow
-def test_get_github_commit():
+def test_get_github_commit_and_fork_point_sha():
     # NOTE: This integration test intentionally hits GitHub.
     # TODO: This test will fail once it's no longer one of the most recent 1000
     # commits to the apache/arrow repository.
     repo = "https://github.com/apache/arrow"
     sha = "3decc46119d583df56c7c66c77cf2803441c4458"
+    branch = "apache:master"
     tz = dateutil.tz.tzutc()
     expected = {
         "parent": "fcaa422c84796bcf7dbe328ee3612f434cd4d356",
@@ -62,27 +65,32 @@ def test_get_github_commit():
         "author_name": "Diana Clarke",
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+        "branch": branch,
+        "fork_point_sha": sha,
     }
-    assert get_github_commit(repo, branch=None, sha=sha) == expected
+    assert get_github_commit(repo, branch=branch, sha=sha) == expected
 
 
 @pytest.mark.slow
-def test_get_github_commit_pull_request():
+def test_get_github_commit_and_fork_point_sha_pull_request():
     # NOTE: This integration test intentionally hits GitHub.
     # TODO: This test will fail once it's no longer one of the most recent 1000
     # commits to the apache/arrow repository.
     repo = "https://github.com/apache/arrow"
     sha = "982023150ccbb06a6f581f6797c017492485b58c"
+    branch = "dianaclarke:ARROW-13266"
     tz = dateutil.tz.tzutc()
     expected = {
-        "parent": "780e95c512d63bbea1e040af0eb44a0bf63c4d72",
+        "parent": "c8668f85a465ea05b2724ec47ff72c4db4d7dfe6",
         "date": datetime.datetime(2021, 7, 6, 21, 51, 48, tzinfo=tz),
         "message": "ARROW-13266: [JS] Improve benchmark names",
         "author_name": "Diana Clarke",
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+        "branch": branch,
+        "fork_point_sha": "780e95c512d63bbea1e040af0eb44a0bf63c4d72",
     }
-    assert get_github_commit(repo, branch=None, sha=sha) == expected
+    assert get_github_commit(repo, branch=branch, sha=sha) == expected
 
 
 def test_parse_commits():
