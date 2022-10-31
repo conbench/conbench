@@ -194,22 +194,83 @@ s.Index("benchmark_result_context_id_index", BenchmarkResult.context_id)
 
 class BenchmarkResultCreate(marshmallow.Schema):
     data = marshmallow.fields.List(
-        marshmallow.fields.Decimal(allow_none=True), required=True
+        marshmallow.fields.Decimal(allow_none=True),
+        required=True,
+        metadata={
+            "description": "A list of benchmark results (e.g. durations, throughput). This will be used as the main + only metric for regression and improvement. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`."
+        },
     )
     times = marshmallow.fields.List(
-        marshmallow.fields.Decimal(allow_none=True), required=True
+        marshmallow.fields.Decimal(allow_none=True),
+        required=True,
+        metadata={
+            "description": "A list of benchmark durations. If `data` is a duration measure, this should be a duplicate of that object. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`."
+        },
     )
-    unit = marshmallow.fields.String(required=True)
-    time_unit = marshmallow.fields.String(required=True)
-    iterations = marshmallow.fields.Integer(required=True)
-    min = marshmallow.fields.Decimal(required=False)
-    max = marshmallow.fields.Decimal(required=False)
-    mean = marshmallow.fields.Decimal(required=False)
-    median = marshmallow.fields.Decimal(required=False)
-    stdev = marshmallow.fields.Decimal(required=False)
-    q1 = marshmallow.fields.Decimal(required=False)
-    q3 = marshmallow.fields.Decimal(required=False)
-    iqr = marshmallow.fields.Decimal(required=False)
+    unit = marshmallow.fields.String(
+        required=True,
+        metadata={"description": "The unit of the data object (e.g. seconds, B/s)"},
+    )
+    time_unit = marshmallow.fields.String(
+        required=True,
+        metadata={
+            "description": "The unit of the times object (e.g. seconds, nanoseconds)"
+        },
+    )
+    iterations = marshmallow.fields.Integer(
+        required=True,
+        metadata={
+            "description": "Number of iterations that were executed (should be the length of `data` and `times`)"
+        },
+    )
+    min = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The minimum from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    max = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The maximum from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    mean = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The mean from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    median = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The median from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    stdev = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The standard deviation from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    q1 = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The first quartile from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    q3 = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The third quartile from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    iqr = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The inter-quartile range from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
 
 
 class BenchmarkResultSchema:

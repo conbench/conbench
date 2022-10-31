@@ -994,24 +994,59 @@
             "BenchmarkResultCreate": {
                 "properties": {
                     "data": {
+                        "description": "A list of benchmark results (e.g. durations, throughput). This will be used as the main + only metric for regression and improvement. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`.",
                         "items": {"nullable": True, "type": "number"},
                         "type": "array",
                     },
-                    "iqr": {"type": "number"},
-                    "iterations": {"type": "integer"},
-                    "max": {"type": "number"},
-                    "mean": {"type": "number"},
-                    "median": {"type": "number"},
-                    "min": {"type": "number"},
-                    "q1": {"type": "number"},
-                    "q3": {"type": "number"},
-                    "stdev": {"type": "number"},
-                    "time_unit": {"type": "string"},
+                    "iqr": {
+                        "description": "The inter-quartile range from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "iterations": {
+                        "description": "Number of iterations that were executed (should be the length of `data` and `times`)",
+                        "type": "integer",
+                    },
+                    "max": {
+                        "description": "The maximum from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "mean": {
+                        "description": "The mean from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "median": {
+                        "description": "The median from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "min": {
+                        "description": "The minimum from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "q1": {
+                        "description": "The first quartile from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "q3": {
+                        "description": "The third quartile from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "stdev": {
+                        "description": "The standard deviation from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "time_unit": {
+                        "description": "The unit of the times object (e.g. seconds, nanoseconds)",
+                        "type": "string",
+                    },
                     "times": {
+                        "description": "A list of benchmark durations. If `data` is a duration measure, this should be a duplicate of that object. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`.",
                         "items": {"nullable": True, "type": "number"},
                         "type": "array",
                     },
-                    "unit": {"type": "string"},
+                    "unit": {
+                        "description": "The unit of the data object (e.g. seconds, B/s)",
+                        "type": "string",
+                    },
                 },
                 "required": ["data", "iterations", "time_unit", "times", "unit"],
                 "type": "object",
