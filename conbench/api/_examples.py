@@ -30,11 +30,31 @@ def _api_benchmark_entity(
     batch_id,
     run_id,
     name,
+    stats=None,
     error=None,
     validation=None,
     optional_benchmark_info=None,
 ):
-    if error:
+    if stats:
+        stats = {
+            "data": stats.get("data"),
+            "times": stats.get("times"),
+            "unit": "s",
+            "time_unit": "s",
+            "iqr": None,
+            "iterations": 10,
+            "max": None,
+            "mean": None,
+            "median": None,
+            "min": None,
+            "q1": None,
+            "q3": None,
+            "stdev": None,
+            "z_score": None,
+            "z_regression": False,
+            "z_improvement": False,
+        }
+    elif error:
         stats = {
             "data": [],
             "times": [],

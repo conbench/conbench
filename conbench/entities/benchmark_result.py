@@ -61,37 +61,65 @@ class BenchmarkResult(Base, EntityMixin):
     def create(data):
         tags = data["tags"]
         has_error = "error" in data
+        has_stats = "stats" in data
+
+        # defaults
+        benchmark_result_data = {}
+        complete_iterations = False
+
+        if has_stats:
+            benchmark_result_data = data["stats"]
+
+            # calculate any missing stats if data available
+            if data["stats"].get("data"):
+                dat = [to_float(x) for x in benchmark_result_data["data"]]
+
+                # defaults
+                q1 = q3 = mean = median = min = max = stdev = iqr = None
+
+                # calculate stats only if the data is complete
+                complete_iterations = all([x is not None for x in dat])
+                if complete_iterations:
+                    q1, q3 = np.percentile(dat, [25, 75])
+                    mean = np.mean(dat)
+                    median = np.median(dat)
+                    min = np.min(dat)
+                    max = np.max(dat)
+                    stdev = np.std(dat) if len(dat) > 2 else 0
+                    iqr = q3 - q1
+
+                calculated_result_data = {
+                    "data": dat,
+                    "times": data["stats"].get("times", []),
+                    "unit": data["stats"]["unit"],
+                    "time_unit": data["stats"].get("time_unit", "s"),
+                    "iterations": len(dat),
+                    "mean": mean,
+                    "median": median,
+                    "min": min,
+                    "max": max,
+                    "stdev": stdev,
+                    "q1": q1,
+                    "q3": q3,
+                    "iqr": iqr,
+                }
+
+                for field in calculated_result_data:
+                    # explicit `is None` because `stdev` is often 0
+                    if benchmark_result_data.get(field) is None:
+                        benchmark_result_data[field] = calculated_result_data[field]
 
         if has_error:
-            benchmark_result_data = {"error": data["error"]}
-        # calculate any missing stats if data available
-        elif data["stats"].get("data"):
-            benchmark_result_data = data["stats"]
-            dat = [float(x) for x in benchmark_result_data["data"]]
-            q1, q3 = np.percentile(dat, [25, 75])
+            benchmark_result_data["error"] = data["error"]
 
-            calculated_result_data = {
-                "data": dat,
-                "times": data["stats"].get("times", []),
-                "unit": data["stats"]["unit"],
-                "time_unit": data["stats"].get("time_unit", "s"),
-                "iterations": len(dat),
-                "mean": np.mean(dat),
-                "median": np.median(dat),
-                "min": np.min(dat),
-                "max": np.max(dat),
-                "stdev": np.std(dat) if len(dat) > 2 else 0,
-                "q1": q1,
-                "q3": q3,
-                "iqr": q3 - q1,
+        # If there was no explicit error *and* the iterations aren't complete, we should add an error
+        if (
+            benchmark_result_data.get("error", None) is None
+            and complete_iterations is False
+        ):
+            benchmark_result_data["error"] = {
+                "status": "Partial result: not all iterations completed"
             }
-
-            for field in calculated_result_data:
-                # explicit `is None` because `stdev` is often 0
-                if benchmark_result_data.get(field) is None:
-                    benchmark_result_data[field] = calculated_result_data[field]
-        else:
-            benchmark_result_data = data["stats"]
 
         name = tags.pop("name")
 
@@ -149,7 +177,7 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_result = BenchmarkResult(**benchmark_result_data)
         benchmark_result.save()
 
-        if "error" in data:
+        if "error" in data or not complete_iterations:
             return benchmark_result
 
         update_distribution(benchmark_result, limit=Config.DISTRIBUTION_COMMITS)
@@ -165,19 +193,84 @@ s.Index("benchmark_result_context_id_index", BenchmarkResult.context_id)
 
 
 class BenchmarkResultCreate(marshmallow.Schema):
-    data = marshmallow.fields.List(marshmallow.fields.Decimal, required=True)
-    times = marshmallow.fields.List(marshmallow.fields.Decimal, required=True)
-    unit = marshmallow.fields.String(required=True)
-    time_unit = marshmallow.fields.String(required=True)
-    iterations = marshmallow.fields.Integer(required=True)
-    min = marshmallow.fields.Decimal(required=False)
-    max = marshmallow.fields.Decimal(required=False)
-    mean = marshmallow.fields.Decimal(required=False)
-    median = marshmallow.fields.Decimal(required=False)
-    stdev = marshmallow.fields.Decimal(required=False)
-    q1 = marshmallow.fields.Decimal(required=False)
-    q3 = marshmallow.fields.Decimal(required=False)
-    iqr = marshmallow.fields.Decimal(required=False)
+    data = marshmallow.fields.List(
+        marshmallow.fields.Decimal(allow_none=True),
+        required=True,
+        metadata={
+            "description": "A list of benchmark results (e.g. durations, throughput). This will be used as the main + only metric for regression and improvement. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`."
+        },
+    )
+    times = marshmallow.fields.List(
+        marshmallow.fields.Decimal(allow_none=True),
+        required=True,
+        metadata={
+            "description": "A list of benchmark durations. If `data` is a duration measure, this should be a duplicate of that object. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`."
+        },
+    )
+    unit = marshmallow.fields.String(
+        required=True,
+        metadata={"description": "The unit of the data object (e.g. seconds, B/s)"},
+    )
+    time_unit = marshmallow.fields.String(
+        required=True,
+        metadata={
+            "description": "The unit of the times object (e.g. seconds, nanoseconds)"
+        },
+    )
+    iterations = marshmallow.fields.Integer(
+        required=True,
+        metadata={
+            "description": "Number of iterations that were executed (should be the length of `data` and `times`)"
+        },
+    )
+    min = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The minimum from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    max = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The maximum from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    mean = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The mean from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    median = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The median from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    stdev = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The standard deviation from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    q1 = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The first quartile from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    q3 = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The third quartile from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
+    iqr = marshmallow.fields.Decimal(
+        required=False,
+        metadata={
+            "description": "The inter-quartile range from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+        },
+    )
 
 
 class BenchmarkResultSchema:
@@ -320,11 +413,6 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     def validate_stats_or_error_field_is_present(self, data, **kwargs):
         if "stats" not in data and "error" not in data:
             raise marshmallow.ValidationError("Either stats or error field is required")
-
-        if "stats" in data and "error" in data:
-            raise marshmallow.ValidationError(
-                "stats and error fields can not be used at the same time"
-            )
 
 
 class BenchmarkFacadeSchema:

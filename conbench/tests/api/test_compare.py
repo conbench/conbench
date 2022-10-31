@@ -205,7 +205,11 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
             sha=_fixtures.GRANDPARENT,
         )
         benchmark_result_1 = _fixtures.benchmark_result(
-            name=name, results=None, sha=_fixtures.PARENT, error=baseline_error
+            name=name,
+            results=None,
+            sha=_fixtures.PARENT,
+            error=baseline_error,
+            empty_results=True,
         )
         benchmark_result_2 = _fixtures.benchmark_result(
             name=name,
@@ -293,6 +297,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "contender_z_regression": False,
             }
         )
+
         self.assert_200_ok(response, expected)
 
     def test_compare_unknown_compare_ids(self, client):
@@ -409,6 +414,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             batch_id=batch_id,
             results=None,
             error=baseline_error,
+            empty_results=True,
         )
         entity = FakeEntity(f"{run_id}...{run_id}")
         if verbose:

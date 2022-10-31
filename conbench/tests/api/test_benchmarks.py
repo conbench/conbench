@@ -15,7 +15,7 @@ ARROW_REPO = "https://github.com/apache/arrow"
 CONBENCH_REPO = "https://github.com/conbench/conbench"
 
 
-def _expected_entity(benchmark_result):
+def _expected_entity(benchmark_result, stats=None):
     return _api_benchmark_entity(
         benchmark_result.id,
         benchmark_result.case_id,
@@ -24,6 +24,7 @@ def _expected_entity(benchmark_result):
         benchmark_result.batch_id,
         benchmark_result.run_id,
         benchmark_result.case.name,
+        stats,
         benchmark_result.error,
         benchmark_result.validation,
         benchmark_result.optional_benchmark_info,
@@ -312,6 +313,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
     valid_payload = _fixtures.VALID_PAYLOAD
     valid_payload_for_cluster = _fixtures.VALID_PAYLOAD_FOR_CLUSTER
     valid_payload_with_error = _fixtures.VALID_PAYLOAD_WITH_ERROR
+    valid_payload_with_iteration_error = _fixtures.VALID_PAYLOAD_WITH_ITERATION_ERROR
     required_fields = [
         "batch_id",
         "context",
@@ -393,6 +395,46 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         location = f"http://localhost/api/benchmarks/{new_id}/"
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
         assert Run.one(id=run_payload["id"]).has_errors is True
+
+    def test_create_benchmark_with_one_iteration_error(self, client):
+        self.authenticate(client)
+        response = client.post(
+            "/api/benchmarks/", json=self.valid_payload_with_iteration_error
+        )
+        new_id = response.json["id"]
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        stats = self.valid_payload_with_iteration_error["stats"]
+        stats["data"] = [float(x) if x else None for x in stats["data"]]
+        stats["times"] = [float(x) if x else None for x in stats["times"]]
+        self.assert_201_created(
+            response, _expected_entity(benchmark_result, stats), location
+        )
+        assert (
+            benchmark_result.error == self.valid_payload_with_iteration_error["error"]
+        )
+
+    def test_create_benchmark_with_one_iteration_no_error(self, client):
+        self.authenticate(client)
+        benchmark_data = self.valid_payload_with_iteration_error
+
+        # remove the error to simulate only sending partial results
+        benchmark_data.pop("error", None)
+
+        response = client.post("/api/benchmarks/", json=benchmark_data)
+
+        new_id = response.json["id"]
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        stats = self.valid_payload_with_iteration_error["stats"]
+        stats["data"] = [float(x) if x else None for x in stats["data"]]
+        stats["times"] = [float(x) if x else None for x in stats["times"]]
+        self.assert_201_created(
+            response, _expected_entity(benchmark_result, stats), location
+        )
+        assert benchmark_result.error == {
+            "status": "Partial result: not all iterations completed"
+        }
 
     def test_create_benchmark_for_cluster_with_optional_info_changed(self, client):
         # Post benchmarks for cluster-1
@@ -800,14 +842,4 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         del data["stats"]
         response = client.post(self.url, json=data)
         message = {"_schema": ["Either stats or error field is required"]}
-        self.assert_400_bad_request(response, message)
-
-    def test_stats_and_error_fields_are_present(self, client):
-        self.authenticate(client)
-        data = copy.deepcopy(self.valid_payload)
-        data["error"] = {}
-        response = client.post(self.url, json=data)
-        message = {
-            "_schema": ["stats and error fields can not be used at the same time"]
-        }
         self.assert_400_bad_request(response, message)

@@ -1,3 +1,5 @@
+# Setting a GitHub API token in the GITHUB_API_TOKEN env var will let this population script find history + get commit details too
+
 import datetime
 import uuid
 
@@ -134,6 +136,40 @@ def generate_benchmarks_data_with_error(
     return data
 
 
+def generate_benchmarks_data_with_iteration_missing(
+    run_id,
+    commit,
+    benchmark_name,
+    benchmark_language,
+    timestamp,
+    hardware_type,
+    reason,
+    with_error=True,
+):
+    data = generate_benchmarks_data(
+        run_id,
+        commit,
+        benchmark_name,
+        benchmark_language,
+        timestamp,
+        hardware_type,
+        reason,
+    )
+    stats = data.pop("stats")
+
+    # mark the middle iteration as failed
+    stats["data"] = [stats["data"][0], None, stats["data"][2]]
+
+    # remove all the calculated stats details
+    for key in ["iqr", "max", "mean", "median", "min", "q1", "q3", "stdev"]:
+        stats.pop(key, None)
+
+    data["stats"] = stats
+    if with_error:
+        data["error"] = {"command": "some command", "stack trace": "stack trace ..."}
+    return data
+
+
 def register():
     url = f"{base_url}/register/"
     data = {"email": "e@e.com", "password": "test", "name": "e", "secret": "conbench"}
@@ -226,6 +262,64 @@ def create_benchmarks_data():
     update_run_with_info(run_id, timestamp)
 
 
+def create_benchmarks_with_history():
+    # 5 commits in a row in apache/arrow
+    commits = [
+        "a2114c0605be66bb16d16ee0b25c9d81ab68f5ce",
+        "cab3e216e17ce8422a15f91480bb408a052b578c",
+        "d404c9c6a0d6ce94f054596e667205995ef944d2",
+        "73cdd6a59b52781cc43e097ccd63ac36f705ee2e",
+        "88b42ef66fe664043c5ee5274b2982a3858b414e",
+    ]
+
+    means = [16.670462, 16.4, 16.5, 16.67, 16.7]
+
+    benchmark_names = ["csv-read", "csv-write"]
+
+    partial_successes = [False, True]
+
+    runs = []
+
+    i = 0
+    n = 0
+    for commit in commits:
+        mean = means[i]
+        i += 1
+        for partial_success in partial_successes:
+            n += 1
+            run_id = f"history_machine{n}"
+
+            for benchmark_name in benchmark_names:
+                timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
+                if partial_success:
+                    benchmark_data = generate_benchmarks_data_with_iteration_missing(
+                        run_id,
+                        commit,
+                        benchmark_name,
+                        "Python",
+                        timestamp,
+                        "machine",
+                        reason="commit",
+                        # in order to see the auto-populating of errors on partial completes
+                        with_error=True if benchmark_name == "csv-read" else False,
+                    )
+                else:
+                    benchmark_data = generate_benchmarks_data(
+                        run_id,
+                        commit,
+                        benchmark_name,
+                        "Python",
+                        timestamp,
+                        "machine",
+                        reason="commit",
+                        mean=mean,
+                    )
+
+                post_benchmarks(benchmark_data)
+                runs.append((run_id, timestamp))
+
+
 register()
 login()
 create_benchmarks_data()
+create_benchmarks_with_history()
