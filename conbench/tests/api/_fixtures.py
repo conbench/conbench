@@ -67,7 +67,7 @@ VALID_PAYLOAD = {
     "github": {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",
         "repository": "https://github.com/apache/arrow",
-        "branch": "conbench:my_branch",
+        "branch": "some_user_or_org:some_branch",
     },
     "machine_info": MACHINE_INFO,
     "stats": {
@@ -187,7 +187,7 @@ VALID_RUN_PAYLOAD = {
     "github": {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",
         "repository": "https://github.com/apache/arrow",
-        "branch": "conbench:my_branch",
+        "branch": "some_user_or_org:some_branch",
     },
     "machine_info": MACHINE_INFO,
 }

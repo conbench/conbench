@@ -40,7 +40,7 @@ def test_repository_to_url():
 def test_get_github_commit_none():
     repo = "https://github.com/apache/arrow"
     sha = "3decc46119d583df56c7c66c77cf2803441c4458"
-    branch = "conbench:my_branch"
+    branch = "some_user_or_org:some_branch"
 
     assert get_github_commit(None, None, None) == {}
     assert get_github_commit("", "", "") == {}

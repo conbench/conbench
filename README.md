@@ -95,7 +95,7 @@ Install options:
 
 Mac
 
-    $ brew services start postgres
+    $ brew services start postgresql
 
 Linux
 
