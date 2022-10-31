@@ -1,7 +1,7 @@
 alembic
 apispec
 apispec-webframeworks
-bokeh>=3.0.0
+bokeh
 click
 python-dateutil
 email-validator
