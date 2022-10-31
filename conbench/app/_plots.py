@@ -60,16 +60,16 @@ def get_display_unit(unit):
 def get_date_format():
     date_format = "%Y-%m-%d"
     return bokeh.models.DatetimeTickFormatter(
-        microseconds=[date_format],
-        milliseconds=[date_format],
-        seconds=[date_format],
-        minsec=[date_format],
-        minutes=[date_format],
-        hourmin=[date_format],
-        hours=[date_format],
-        days=[date_format],
-        months=[date_format],
-        years=[date_format],
+        microseconds=date_format,
+        milliseconds=date_format,
+        seconds=date_format,
+        minsec=date_format,
+        minutes=date_format,
+        hourmin=date_format,
+        hours=date_format,
+        days=date_format,
+        months=date_format,
+        years=date_format,
     )
 
 
@@ -121,8 +121,8 @@ def simple_bar_plot(benchmarks, height=400, width=400, vbar_width=0.7):
     p = bokeh.plotting.figure(
         x_range=source.data["x"],
         toolbar_location=None,
-        plot_height=height,
-        plot_width=width,
+        height=height,
+        width=width,
         tools=[hover],
     )
     p.vbar(
@@ -213,21 +213,11 @@ def time_series_plot(history, benchmark, run, height=250, width=1000):
     source_alert_min = _source(with_dist, unit, formatted=formatted, alert_min=True)
     source_alert_max = _source(with_dist, unit, formatted=formatted, alert_max=True)
 
-    tooltips = [
-        ("date", "$x{%F}"),
-        ("mean", "@means"),
-        ("commit", "@commits"),
-    ]
-    hover = bokeh.models.HoverTool(
-        tooltips=tooltips,
-        formatters={"$x": "datetime"},
-        names=["history", "benchmark"],
-    )
     p = bokeh.plotting.figure(
         x_axis_type="datetime",
-        plot_height=height,
-        plot_width=width,
-        tools=[hover, "pan", "zoom_in", "zoom_out", "reset"],
+        height=height,
+        width=width,
+        tools=["pan", "zoom_in", "zoom_out", "reset"],
         x_range=(source.data["x"][0], source.data["x"][-1]),
     )
     p.toolbar.logo = None
@@ -236,16 +226,27 @@ def time_series_plot(history, benchmark, run, height=250, width=1000):
     p.xaxis.major_label_orientation = 1
     p.yaxis.axis_label = axis_unit
 
-    p.line(source=source, legend_label="History", name="history")
+    hist_line = p.line(source=source, legend_label="History", name="history")
     p.line(source=source_mean, color="#ffa600", legend_label="Mean")
     p.line(source=source_alert_min, color="Silver", legend_label="+/- 5 σ")
     p.line(source=source_alert_max, color="Silver")
-    p.circle(
+    bench_circle = p.circle(
         source=source_x,
         size=8,
         color="#ff6361",
         legend_label="Benchmark",
         name="benchmark",
+    )
+    p.add_tools(
+        bokeh.models.HoverTool(
+            tooltips=[
+                ("date", "$x{%F}"),
+                ("mean", "@means"),
+                ("commit", "@commits"),
+            ],
+            formatters={"$x": "datetime"},
+            renderers=[hist_line, bench_circle],
+        )
     )
 
     p.legend.title_text_color = "darkgray"
@@ -274,10 +275,14 @@ def time_series_plot(history, benchmark, run, height=250, width=1000):
     select.axis.visible = False
     select.title.text_font_style = "italic"
 
-    spacer = bokeh.plotting.figure(
-        toolbar_location=None,
-        height=20,
-    )
-    spacer.outline_line_color = None
+    spacers = []
+    for _ in range(2):
+        spacer = bokeh.plotting.figure(
+            toolbar_location=None,
+            height=20,
+        )
+        spacer.outline_line_color = None
+        spacers.append(spacer)
+        print(f"Ignore any MISSING_RENDERERS warning for id={spacer.id}")
 
-    return bokeh.layouts.column(p, spacer, select, spacer)
+    return bokeh.layouts.column(p, spacers[0], select, spacers[1])
