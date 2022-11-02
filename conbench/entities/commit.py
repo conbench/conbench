@@ -21,7 +21,7 @@ class Commit(Base, EntityMixin):
     __tablename__ = "commit"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     sha = NotNull(s.String(50))
-    branch = Nullable(s.String(100))  # github max chars: 255
+    branch = Nullable(s.String(510))
     fork_point_sha = Nullable(s.String(50))
     parent = Nullable(s.String(50))
     repository = NotNull(s.String(100))
@@ -148,7 +148,7 @@ def repository_to_url(repository):
     return f"https://github.com/{name.lower()}" if name else ""
 
 
-def get_github_commit(repository: str, branch: str, sha: str) -> dict:
+def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) -> dict:
     if not repository or not sha:
         return {}
 
@@ -158,7 +158,15 @@ def get_github_commit(repository: str, branch: str, sha: str) -> dict:
     if commit is None:
         return {}
 
-    commit["branch"] = branch
+    if branch:
+        commit["branch"] = branch
+    elif pr_number:
+        commit["branch"] = github.get_branch_from_pr_number(
+            name=name, pr_number=pr_number
+        )
+    else:
+        commit["branch"] = github.get_default_branch(name=name)
+
     commit["fork_point_sha"] = github.get_fork_point_sha(name=name, sha=sha)
 
     parent = commit["parent"]
@@ -265,6 +273,18 @@ class GitHub:
 
         fork_point_sha = response["merge_base_commit"]["sha"]
         return fork_point_sha
+
+    def get_branch_from_pr_number(self, name: str, pr_number: str) -> str:
+        if not name or not pr_number:
+            return None
+
+        url = f"{GITHUB}/repos/{name}/pulls/{pr_number}"
+        response = self._get_response(url=url)
+        if not response:
+            return None
+
+        branch = response["head"]["label"]
+        return branch
 
     @functools.cached_property
     def session(self):

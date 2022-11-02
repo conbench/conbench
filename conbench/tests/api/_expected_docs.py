@@ -1111,8 +1111,9 @@
             },
             "GitHubCreate": {
                 "properties": {
-                    "branch": {"type": "string"},
+                    "branch": {"nullable": True, "type": "string"},
                     "commit": {"type": "string"},
+                    "pr_number": {"nullable": True, "type": "string"},
                     "repository": {"type": "string"},
                 },
                 "required": ["commit", "repository"],

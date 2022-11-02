@@ -72,16 +72,39 @@ def python_info():
 
 
 def github_info():
+    """Attempts to inspect a locally cloned repository for git information that can be
+    posted to the "github" key when creating a run.
+
+    It's recommended to NOT use this function, and instead manually supply the commit
+    and repository (in the form "org/repo"). When doing so, ignore the "branch" key
+    and only supply the "pr_number" (or leave it None if it's a commit to the default
+    branch).
+    """
     commit = _exec_command(["git", "rev-parse", "HEAD"])
-    repository = _exec_command(["git", "remote", "get-url", "origin"])
-    branch = _exec_command(["git", "branch", "--show-current"])
-    remote = _exec_command(["git", "remote", "get-url", "origin"])
-    fork = re.search("(?<=.com[/:])([^/]*?)(?=/)", remote).group(0)
+    if not commit:
+        # probably not in a git repo
+        return None
+
+    branches = _exec_command(["git", "branch", "-vv"])
+    if "* (HEAD detached" in branches:
+        # can't parse a detatched HEAD
+        return None
+
+    current_branch = [b for b in branches.split("\n") if b.startswith("*")][0]
+    _, branch_name, _, upstream, *_ = current_branch.split()
+    if not upstream.startswith("["):
+        # this branch isn't tracked upstream
+        return None
+
+    remote = upstream[1:].split("/")[0]
+    remote_url = _exec_command(["git", "remote", "get-url", remote])
+    fork = re.search("(?<=.com[/:])([^/]*?)(?=/)", remote_url).group(0)
 
     return {
         "commit": commit,
-        "repository": repository.rsplit(".git")[0],
-        "branch": f"{fork}:{branch}",
+        "repository": remote_url.rsplit(".git")[0],
+        "branch": f"{fork}:{branch_name}",
+        "pr_number": None,
     }
 
 

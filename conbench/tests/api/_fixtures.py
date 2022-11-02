@@ -68,6 +68,7 @@ VALID_PAYLOAD = {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",
         "repository": "https://github.com/apache/arrow",
         "branch": "some_user_or_org:some_branch",
+        "pr_number": None,
     },
     "machine_info": MACHINE_INFO,
     "stats": {
