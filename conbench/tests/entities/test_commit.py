@@ -59,8 +59,6 @@ def test_get_github_commit_none():
         None,
         # like github_info() called on main repo
         "apache:master",
-        # like github_info() called on fork
-        "dianaclarke:master",
     ],
 )
 def test_get_github_commit_and_fork_point_sha(branch):
@@ -77,7 +75,7 @@ def test_get_github_commit_and_fork_point_sha(branch):
         "author_name": "Diana Clarke",
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
-        "branch": branch if branch else "master",
+        "branch": "apache:master",
         # this is the master branch, so the fork point sha == the commit sha
         "fork_point_sha": sha,
     }
