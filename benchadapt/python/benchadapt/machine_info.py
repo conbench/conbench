@@ -82,18 +82,18 @@ def github_info():
     """
     commit = _exec_command(["git", "rev-parse", "HEAD"])
     if not commit:
-        # probably not in a git repo
+        print("error in github_info(): probably not in a git repo")
         return None
 
     branches = _exec_command(["git", "branch", "-vv"])
     if "* (HEAD detached" in branches:
-        # can't parse a detatched HEAD
+        print("error in github_info(): can't parse a detatched HEAD")
         return None
 
     current_branch = [b for b in branches.split("\n") if b.startswith("*")][0]
     _, branch_name, _, upstream, *_ = current_branch.split()
     if not upstream.startswith("["):
-        # this branch isn't tracked upstream
+        print("error in github_info(): this branch isn't tracked upstream")
         return None
 
     remote = upstream[1:].split("/")[0]

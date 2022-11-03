@@ -51,7 +51,7 @@ jobs:
           isort --check .
       - name: Run tests
         run: |
-          coverage run --source conbench -m pytest -v --durations=20 conbench/tests/
+          coverage run --source conbench -m pytest -vv --durations=20 conbench/tests/
         env:
           DB_USERNAME: postgres
       - name: Publish coverage
