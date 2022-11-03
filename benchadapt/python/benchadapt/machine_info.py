@@ -3,6 +3,7 @@ import platform
 import re
 import subprocess
 from typing import Optional
+import warnings
 
 
 def _sysctl(stat):
@@ -82,28 +83,37 @@ def github_info():
     """
     commit = _exec_command(["git", "rev-parse", "HEAD"])
     if not commit:
-        print("error in github_info(): probably not in a git repo")
-        return None
+        warnings.warn(
+            "error in github_info(): probably not in a git repo; returning {}"
+        )
+        return {}
 
     branches = _exec_command(["git", "branch", "-vv"])
     if "* (HEAD detached" in branches:
-        print("error in github_info(): can't parse a detatched HEAD")
-        return None
+        remote = "origin"
+        branch = "<DETATCHED BRANCH>"
+        warnings.warn(f"error in github_info(): detached HEAD; returning {branch=}")
 
-    current_branch = [b for b in branches.split("\n") if b.startswith("*")][0]
-    _, branch_name, _, upstream, *_ = current_branch.split()
-    if not upstream.startswith("["):
-        print("error in github_info(): this branch isn't tracked upstream")
-        return None
+    else:
+        current_branch = [b for b in branches.split("\n") if b.startswith("*")][0]
+        _, branch_name, _, upstream, *_ = current_branch.split()
+        if not upstream.startswith("["):
+            remote = "origin"
+            branch = _exec_command(["git", "branch", "--show-current"])
+            warnings.warn(
+                f"error in github_info(): untracked branch; returning {branch=}"
+            )
+        else:
+            remote = upstream[1:].split("/")[0]
+            branch = branch_name
 
-    remote = upstream[1:].split("/")[0]
     remote_url = _exec_command(["git", "remote", "get-url", remote])
     fork = re.search("(?<=.com[/:])([^/]*?)(?=/)", remote_url).group(0)
 
     return {
         "commit": commit,
         "repository": remote_url.rsplit(".git")[0],
-        "branch": f"{fork}:{branch_name}",
+        "branch": f"{fork}:{branch}",
         "pr_number": None,
     }
 
