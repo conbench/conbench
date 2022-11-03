@@ -143,6 +143,7 @@ def generate_benchmarks_data_with_error(
 def generate_benchmarks_data_with_iteration_missing(
     run_id,
     commit,
+    branch,
     benchmark_name,
     benchmark_language,
     timestamp,
@@ -153,6 +154,7 @@ def generate_benchmarks_data_with_iteration_missing(
     data = generate_benchmarks_data(
         run_id,
         commit,
+        branch,
         benchmark_name,
         benchmark_language,
         timestamp,
@@ -216,7 +218,7 @@ def create_benchmarks_data():
         "2462492389a8f2ca286c481852c84ba1f0d0eff9",
     ]
 
-    branches = ["apache:master", "austin3dickey:decimal256"] * 3
+    branches = ["apache:master", "austin3dickey:decimal256", None] * 2
 
     means = [16.670462, 16.4, 16.5, 16.67, 16.7, 16.7]
 
@@ -304,6 +306,7 @@ def create_benchmarks_with_history():
                     benchmark_data = generate_benchmarks_data_with_iteration_missing(
                         run_id,
                         commit,
+                        None,
                         benchmark_name,
                         "Python",
                         timestamp,
@@ -316,6 +319,7 @@ def create_benchmarks_with_history():
                     benchmark_data = generate_benchmarks_data(
                         run_id,
                         commit,
+                        None,
                         benchmark_name,
                         "Python",
                         timestamp,

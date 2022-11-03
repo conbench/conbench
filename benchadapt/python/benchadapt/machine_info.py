@@ -2,8 +2,8 @@ import os
 import platform
 import re
 import subprocess
-from typing import Optional
 import warnings
+from typing import Optional
 
 
 def _sysctl(stat):
