@@ -31,7 +31,8 @@ jobs:
           src: .
       - name: Install dependencies
         run: |
-          pip install -e .[dev] \
+          pip install -U \
+            -e .[dev] \
             -e benchadapt/python \
             -e benchrun/python
       - name: Migrations
