@@ -297,7 +297,7 @@ class TestRunPut(_asserts.PutEnforcer):
         "error_type": "fatal",
     }
 
-    def setup(self):
+    def setup_method(self):
         Run.delete_all()
 
     def _create_entity_to_update(self):

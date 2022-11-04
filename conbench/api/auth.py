@@ -13,7 +13,7 @@ from ..api.users import User
 class LoginSchema(marshmallow.Schema):
     email = marshmallow.fields.Email(required=True)
     password = marshmallow.fields.String(required=True)
-    remember_me = marshmallow.fields.Boolean(default=False)
+    remember_me = marshmallow.fields.Boolean(dump_default=False)
 
 
 class LoginAPI(ApiEndpoint):

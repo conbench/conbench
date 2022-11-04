@@ -55,7 +55,9 @@ class IndexAPI(ApiEndpoint):
 
 
 class PingSchema(marshmallow.Schema):
-    date = marshmallow.fields.DateTime(description="Current date & time", required=True)
+    date = marshmallow.fields.DateTime(
+        metadata={"description": "Current date & time"}, required=True
+    )
 
 
 class PingAPI(ApiEndpoint):

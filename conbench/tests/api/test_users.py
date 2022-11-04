@@ -60,7 +60,7 @@ class TestUserPost(_asserts.PostEnforcer):
         "name": "New name",
     }
 
-    def setup(self):
+    def setup_method(self):
         User.delete_all()
 
     def test_create_user(self, client):
@@ -95,7 +95,7 @@ class TestUserPut(_asserts.PutEnforcer):
         "name": "Updated name",
     }
 
-    def setup(self):
+    def setup_method(self):
         User.delete_all()
 
     def _create_entity_to_update(self):
@@ -179,7 +179,7 @@ class TestRegisterPost(_asserts.PostEnforcer):
         "secret": TestConfig.REGISTRATION_KEY,
     }
 
-    def setup(self):
+    def setup_method(self):
         User.delete_all()
 
     def test_register(self, client):

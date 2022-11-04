@@ -8,6 +8,7 @@ from ...util import register_benchmarks
 
 __version__ = importlib_metadata.version("conbench")
 
+pytestmark = pytest.mark.filterwarnings("ignore::conbench.machine_info.GitParseWarning")
 
 CONBENCH = """
 Usage: conbench [OPTIONS] COMMAND [ARGS]...
