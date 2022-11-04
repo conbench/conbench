@@ -9,6 +9,7 @@ from .logging import fatal_and_log
 
 class ConbenchClient(BaseClient):
     """A client to interact with a Conbench server.
+
     Parameters
     ----------
     adapter
