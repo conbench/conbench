@@ -40,18 +40,30 @@ def test_repository_to_url():
 def test_get_github_commit_none():
     repo = "https://github.com/apache/arrow"
     sha = "3decc46119d583df56c7c66c77cf2803441c4458"
+    branch = "some_user_or_org:some_branch"
+    pr_number = 123
 
-    assert get_github_commit(None, None) == {}
-    assert get_github_commit("", "") == {}
-    assert get_github_commit(repo, None) == {}
-    assert get_github_commit(None, sha) == {}
+    assert get_github_commit(None, None, None, None) == {}
+    assert get_github_commit("", "", "", "") == {}
+    assert get_github_commit(repo, None, None, None) == {}
+    assert get_github_commit(None, pr_number, None, None) == {}
+    assert get_github_commit(None, None, branch, None) == {}
+    assert get_github_commit(None, None, None, sha) == {}
 
 
-@pytest.mark.slow
-def test_get_github_commit():
+@pytest.mark.parametrize(
+    "branch",
+    [
+        # as if github info were provided the recommended, manual way: only providing
+        # commit, repository, and pr_number, not branch
+        None,
+        # as if github info were provided the advanced, github_info() way: that function
+        # returns a branch string like this
+        "apache:master",
+    ],
+)
+def test_get_github_commit_and_fork_point_sha(branch):
     # NOTE: This integration test intentionally hits GitHub.
-    # TODO: This test will fail once it's no longer one of the most recent 1000
-    # commits to the apache/arrow repository.
     repo = "https://github.com/apache/arrow"
     sha = "3decc46119d583df56c7c66c77cf2803441c4458"
     tz = dateutil.tz.tzutc()
@@ -62,27 +74,42 @@ def test_get_github_commit():
         "author_name": "Diana Clarke",
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+        "branch": "apache:master",
+        # this is the master branch, so the fork point sha == the commit sha
+        "fork_point_sha": sha,
     }
-    assert get_github_commit(repo, sha) == expected
+    assert get_github_commit(repo, branch=branch, sha=sha, pr_number=None) == expected
 
 
-@pytest.mark.slow
-def test_get_github_commit_pull_request():
+@pytest.mark.parametrize(
+    ["branch", "pr_number"],
+    [
+        # as if github info were provided the recommended, manual way: only providing
+        # commit, repository, and pr_number, not branch
+        (None, 10665),
+        # as if github info were provided the advanced, github_info() way: that function
+        # returns a branch string like this, and no pr_number
+        ("dianaclarke:ARROW-13266", None),
+    ],
+)
+def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
     # NOTE: This integration test intentionally hits GitHub.
-    # TODO: This test will fail once it's no longer one of the most recent 1000
-    # commits to the apache/arrow repository.
     repo = "https://github.com/apache/arrow"
     sha = "982023150ccbb06a6f581f6797c017492485b58c"
     tz = dateutil.tz.tzutc()
     expected = {
-        "parent": "780e95c512d63bbea1e040af0eb44a0bf63c4d72",
+        "parent": "c8668f85a465ea05b2724ec47ff72c4db4d7dfe6",
         "date": datetime.datetime(2021, 7, 6, 21, 51, 48, tzinfo=tz),
         "message": "ARROW-13266: [JS] Improve benchmark names",
         "author_name": "Diana Clarke",
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+        "branch": "dianaclarke:ARROW-13266",
+        "fork_point_sha": "780e95c512d63bbea1e040af0eb44a0bf63c4d72",
     }
-    assert get_github_commit(repo, sha) == expected
+    assert (
+        get_github_commit(repo, branch=branch, sha=sha, pr_number=pr_number) == expected
+    )
 
 
 def test_parse_commits():

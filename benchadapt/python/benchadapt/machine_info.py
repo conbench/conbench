@@ -1,6 +1,8 @@
 import os
 import platform
+import re
 import subprocess
+import warnings
 from typing import Optional
 
 
@@ -71,11 +73,48 @@ def python_info():
 
 
 def github_info():
+    """Attempts to inspect a locally cloned repository for git information that can be
+    posted to the "github" key when creating a run.
+
+    It's recommended to NOT use this function, and instead manually supply the commit
+    and repository (in the form "org/repo"). When doing so, ignore the "branch" key
+    and only supply the "pr_number" (or leave it None if it's a commit to the default
+    branch).
+    """
     commit = _exec_command(["git", "rev-parse", "HEAD"])
-    repository = _exec_command(["git", "remote", "get-url", "origin"])
+    if not commit:
+        warnings.warn(
+            "error in github_info(): probably not in a git repo; returning {}"
+        )
+        return {}
+
+    branches = _exec_command(["git", "branch", "-vv"])
+    if "* (HEAD detached" in branches:
+        remote = "origin"
+        branch = "<DETATCHED BRANCH>"
+        warnings.warn(f"error in github_info(): detached HEAD; returning {branch=}")
+
+    else:
+        current_branch = [b for b in branches.split("\n") if b.startswith("*")][0]
+        _, branch_name, _, upstream, *_ = current_branch.split()
+        if not upstream.startswith("["):
+            remote = "origin"
+            branch = _exec_command(["git", "branch", "--show-current"])
+            warnings.warn(
+                f"error in github_info(): untracked branch; returning {branch=}"
+            )
+        else:
+            remote = upstream[1:].split("/")[0]
+            branch = branch_name
+
+    remote_url = _exec_command(["git", "remote", "get-url", remote])
+    fork = re.search("(?<=.com[/:])([^/]*?)(?=/)", remote_url).group(0)
+
     return {
         "commit": commit,
-        "repository": repository.rsplit(".git")[0],
+        "repository": remote_url.rsplit(".git")[0],
+        "branch": f"{fork}:{branch}",
+        "pr_number": None,
     }
 
 

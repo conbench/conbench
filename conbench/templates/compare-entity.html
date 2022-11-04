@@ -175,6 +175,22 @@ matching fields between baseline and contender are aligned and mismatched fields
               </div>
             </li>
             {% endif %}
+            {% if baseline_run.commit.branch %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>branch</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ baseline_run.commit.branch }}
+              </div>
+            </li>
+            {% endif %}
+            {% if baseline_run.commit.fork_point_sha %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>forked from default at</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ baseline_run.commit.fork_point_sha }}
+              </div>
+            </li>
+            {% endif %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>hardware</b>
               <div align="right" style="display:inline-block; float: right;">
@@ -261,6 +277,22 @@ matching fields between baseline and contender are aligned and mismatched fields
               <b>repository</b>
               <div align="right" style="display:inline-block; float: right;">
                 <a href="{{ contender_run.commit.repository }}">{{ contender_run.commit.display_repository }}</a>
+              </div>
+            </li>
+            {% endif %}
+            {% if contender_run.commit.branch %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>branch</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ contender_run.commit.branch }}
+              </div>
+            </li>
+            {% endif %}
+            {% if contender_run.commit.fork_point_sha %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>forked from default at</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ contender_run.commit.fork_point_sha }}
               </div>
             </li>
             {% endif %}

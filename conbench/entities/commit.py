@@ -21,6 +21,8 @@ class Commit(Base, EntityMixin):
     __tablename__ = "commit"
     id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
     sha = NotNull(s.String(50))
+    branch = Nullable(s.String(510))
+    fork_point_sha = Nullable(s.String(50))
     parent = Nullable(s.String(50))
     repository = NotNull(s.String(100))
     message = NotNull(s.String(250))
@@ -62,10 +64,12 @@ class Commit(Base, EntityMixin):
         )
 
     @staticmethod
-    def create_github_context(sha, repository, github):
+    def create_github_context(sha, repository: str, github: dict):
         return Commit.create(
             {
                 "sha": sha,
+                "branch": github["branch"],
+                "fork_point_sha": github["fork_point_sha"],
                 "repository": repository,
                 "parent": github["parent"],
                 "timestamp": github["date"],
@@ -94,6 +98,8 @@ class _Serializer(EntitySerializer):
         result = {
             "id": commit.id,
             "sha": commit.sha,
+            "branch": commit.branch,
+            "fork_point_sha": commit.fork_point_sha,
             "url": url,
             "parent_sha": commit.parent,
             "repository": commit.repository,
@@ -142,7 +148,7 @@ def repository_to_url(repository):
     return f"https://github.com/{name.lower()}" if name else ""
 
 
-def get_github_commit(repository, sha):
+def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) -> dict:
     if not repository or not sha:
         return {}
 
@@ -152,29 +158,17 @@ def get_github_commit(repository, sha):
     if commit is None:
         return {}
 
-    parent = commit["parent"]
-    commits = github.get_commits(name, parent)
-    if parent in commits:
-        return commit
+    if branch:
+        commit["branch"] = branch
+    elif pr_number:
+        commit["branch"] = github.get_branch_from_pr_number(
+            name=name, pr_number=pr_number
+        )
     else:
-        # TODO: Need a better heuristic for determining if this is a pull
-        # request. It might just be a commit to a branch that isn't the default
-        # branch.
+        commit["branch"] = github.get_default_branch(name=name)
 
-        # Assuming this is a pull request, find the parent of the first commit.
-        # TODO: This will fail if the pull request has more than 50 commits.
-        # It will also give up if it can't find the parent after 50 tries
-        # (which could happen for a really old pull request).
-        for _ in range(50):
-            other = github.get_commit(name, parent)
-            if other["parent"] in commits:
-                commit["parent"] = other["parent"]
-                return commit
-            else:
-                parent = other["parent"]
+    commit["fork_point_sha"] = github.get_fork_point_sha(name=name, sha=sha)
 
-    # TODO: Couldn't find pull request parent or commit was not to the
-    # default branch.
     return commit
 
 
@@ -192,39 +186,25 @@ class GitHub:
             "6d703c4c7b15be630af48d5e9ef61628751674b2",
             "81e9417eb68171e03a304097ae86e1fd83307130",
             "4de992c60ba433ad9b15ca1c41e6ec40bc542c2a",
+            "unknown commit",
+            "testing repository with just org/repo",
+            "testing repository with git@g",
         ]
 
     def get_default_branch(self, name):
         url = f"{GITHUB}/repos/{name}"
         response = self._get_response(url)
-        if response:
-            return response["default_branch"]
-        return "main"
+        if not response:
+            return None
 
-    def get_commits(self, name, sha):
-        if sha in self.test_commits:
-            return self.test_commits
+        if response["fork"]:
+            org = response["source"]["owner"]["login"]
+            branch = response["source"]["default_branch"]
+        else:
+            org = response["owner"]["login"]
+            branch = response["default_branch"]
 
-        commits = []
-
-        # Grabs the last 1000 commits to the default branch. TODO: If the pull
-        # request is old, the parent may not be in the last 1000 commits.
-        branch = self.get_default_branch(name)
-        url = f"{GITHUB}/repos/{name}/commits?sha={branch}&per_page=100"
-        response = self._get_response(url)
-        if response:
-            commits = self._parse_commits(response)
-            if sha in commits:
-                return commits
-            for page in range(2, 11):
-                url = f"{GITHUB}/repos/{name}/commits?sha={branch}&per_page=100&page={page}"
-                response = self._get_response(url)
-                if response:
-                    commits.extend(self._parse_commits(response))
-                    if sha in commits:
-                        return commits
-
-        return commits
+        return f"{org}:{branch}"
 
     def get_commit(self, name, sha):
         if sha in self.test_commits:
@@ -233,6 +213,45 @@ class GitHub:
             url = f"{GITHUB}/repos/{name}/commits/{sha}"
             response = self._get_response(url)
         return self._parse_commit(response) if response else None
+
+    def get_fork_point_sha(self, name: str, sha: str) -> str:
+        """
+        Get the most common ancestor commit between an arbitrary SHA and the default
+        branch.
+
+        Returns ``None`` if sha is not supplied or if GitHub can't find it, otherwise
+        returns the fork point sha, called the "merge base" in git-speak.
+        """
+        if sha in self.test_commits:
+            return "some_fork_point_sha"
+
+        if not name or not sha:
+            return None
+
+        base = self.get_default_branch(name=name)
+        url = f"{GITHUB}/repos/{name}/compare/{base}...{sha}"
+        response = self._get_response(url=url)
+        if not response:
+            return None
+
+        fork_point_sha = response["merge_base_commit"]["sha"]
+        return fork_point_sha
+
+    def get_branch_from_pr_number(self, name: str, pr_number: str) -> str:
+        if pr_number == 12345678:
+            # test case
+            return "some_user_or_org:some_branch"
+
+        if not name or not pr_number:
+            return None
+
+        url = f"{GITHUB}/repos/{name}/pulls/{pr_number}"
+        response = self._get_response(url=url)
+        if not response:
+            return None
+
+        branch = response["head"]["label"]
+        return branch
 
     @functools.cached_property
     def session(self):
@@ -243,6 +262,8 @@ class GitHub:
         return session
 
     def test_commit(self, sha):
+        if "unknown" in sha or "testing" in sha:
+            return None
         fixture = f"../tests/entities/{self.test_shas[sha]}"
         path = os.path.join(this_dir, fixture)
         with open(path) as fixture:

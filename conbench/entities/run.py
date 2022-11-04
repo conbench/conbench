@@ -48,16 +48,20 @@ class Run(Base, EntityMixin):
         )
         hardware = hardware_type.upsert(**data.pop(field_name))
 
-        sha, repository = None, None
+        repository, pr_number, branch, sha = None, None, None, None
 
         if github_data := data.pop("github", None):
-            sha = github_data["commit"]
             repository = repository_to_url(github_data["repository"])
+            pr_number = github_data.get("pr_number")
+            branch = github_data.get("branch")
+            sha = github_data["commit"]
 
         # create if not exists
         commit = Commit.first(sha=sha, repository=repository)
         if not commit:
-            github = get_github_commit(repository, sha)
+            github = get_github_commit(
+                repository=repository, pr_number=pr_number, branch=branch, sha=sha
+            )
             if github:
                 commit = Commit.create_github_context(sha, repository, github)
             elif sha or repository:
@@ -208,8 +212,36 @@ def commit_hardware_run_map():
 
 
 class GitHubCreate(marshmallow.Schema):
-    commit = marshmallow.fields.String(required=True)
-    repository = marshmallow.fields.String(required=True)
+    commit = marshmallow.fields.String(
+        required=True,
+        metadata={
+            "description": "The 40-character commit SHA of the repo being benchmarked"
+        },
+    )
+    repository = marshmallow.fields.String(
+        required=True,
+        metadata={
+            "description": "The repository name (in the format `org/repo`) or the URL "
+            "(in the format `https://github.com/org/repo`)"
+        },
+    )
+    pr_number = marshmallow.fields.Integer(
+        required=False,
+        allow_none=True,
+        metadata={
+            "description": "[recommended] The number of the GitHub pull request that "
+            "is running this benchmark, or `null` if it's a run on the default branch"
+        },
+    )
+    branch = marshmallow.fields.String(
+        required=False,
+        allow_none=True,
+        metadata={
+            "description": "[not recommended] Instead of supplying `pr_number` you may "
+            "supply this, the branch name in the form `org:branch`. Only do so if you "
+            "know exactly what you're doing."
+        },
+    )
 
 
 field_descriptions = {

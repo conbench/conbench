@@ -12,6 +12,7 @@ session = requests.Session()
 def generate_benchmarks_data(
     run_id,
     commit,
+    branch,
     benchmark_name,
     benchmark_language,
     timestamp,
@@ -29,6 +30,7 @@ def generate_benchmarks_data(
         "github": {
             "commit": commit,
             "repository": "https://github.com/apache/arrow",
+            "branch": branch,
         },
         "info": {
             "arrow_compiler_id": "GNU",
@@ -116,6 +118,7 @@ def generate_benchmarks_data(
 def generate_benchmarks_data_with_error(
     run_id,
     commit,
+    branch,
     benchmark_name,
     benchmark_language,
     timestamp,
@@ -125,6 +128,7 @@ def generate_benchmarks_data_with_error(
     data = generate_benchmarks_data(
         run_id,
         commit,
+        branch,
         benchmark_name,
         benchmark_language,
         timestamp,
@@ -139,6 +143,7 @@ def generate_benchmarks_data_with_error(
 def generate_benchmarks_data_with_iteration_missing(
     run_id,
     commit,
+    branch,
     benchmark_name,
     benchmark_language,
     timestamp,
@@ -149,6 +154,7 @@ def generate_benchmarks_data_with_iteration_missing(
     data = generate_benchmarks_data(
         run_id,
         commit,
+        branch,
         benchmark_name,
         benchmark_language,
         timestamp,
@@ -212,6 +218,8 @@ def create_benchmarks_data():
         "2462492389a8f2ca286c481852c84ba1f0d0eff9",
     ]
 
+    branches = ["apache:master", "austin3dickey:decimal256", None] * 2
+
     means = [16.670462, 16.4, 16.5, 16.67, 16.7, 16.7]
 
     errors = [False, False, True, False, True, True]
@@ -231,12 +239,14 @@ def create_benchmarks_data():
             for benchmark_language in benchmark_languages:
                 for benchmark_name in benchmark_names:
                     run_id = f"{hardware_type}{i+1}"
-                    commit, mean, reason = commits[i], means[i], reasons[i]
+                    commit, branch = commits[i], branches[i]
+                    mean, reason = means[i], reasons[i]
                     timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
                     if errors[i] and benchmark_name == "csv-read":
                         benchmark_data = generate_benchmarks_data_with_error(
                             run_id,
                             commit,
+                            branch,
                             benchmark_name,
                             benchmark_language,
                             timestamp,
@@ -247,6 +257,7 @@ def create_benchmarks_data():
                         benchmark_data = generate_benchmarks_data(
                             run_id,
                             commit,
+                            branch,
                             benchmark_name,
                             benchmark_language,
                             timestamp,
@@ -295,6 +306,7 @@ def create_benchmarks_with_history():
                     benchmark_data = generate_benchmarks_data_with_iteration_missing(
                         run_id,
                         commit,
+                        None,
                         benchmark_name,
                         "Python",
                         timestamp,
@@ -307,6 +319,7 @@ def create_benchmarks_with_history():
                     benchmark_data = generate_benchmarks_data(
                         run_id,
                         commit,
+                        None,
                         benchmark_name,
                         "Python",
                         timestamp,

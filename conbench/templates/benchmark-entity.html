@@ -166,6 +166,22 @@
           <a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a>
         </div>
       </li>
+      {% if run.commit.branch %}
+      <li class="list-group-item" style="overflow-y: auto;">
+        <b>branch</b>
+        <div align="right" style="display:inline-block; float: right;">
+          {{ run.commit.branch }}
+        </div>
+      </li>
+      {% endif %}
+      {% if run.commit.fork_point_sha %}
+      <li class="list-group-item" style="overflow-y: auto;">
+        <b>forked from default at</b>
+        <div align="right" style="display:inline-block; float: right;">
+          {{ run.commit.fork_point_sha }}
+        </div>
+      </li>
+      {% endif %}
       {% endif %}
       <li class="list-group-item active">Hardware</li>
       {% for k,v in run.hardware.items() %}
