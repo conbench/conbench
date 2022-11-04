@@ -7,7 +7,7 @@ on:
   pull_request:
 
 env:
-  PYTHON_VERSION: '3.8'
+  PYTHON_VERSION: "3.8"
 
 jobs:
   build:
@@ -36,11 +36,12 @@ jobs:
           src: .
       - name: Install dependencies
         run: |
-          pip install \
+          pip install -e benchadapt/python --no-deps && \
+            pip install \
             -U --upgrade-strategy eager \
             -e .[dev] \
-            -e benchadapt/python \
-            -e benchrun/python
+              -e benchclients/python \
+              -e benchrun/python
       - name: Migrations
         run: |
           alembic upgrade head
@@ -66,6 +67,9 @@ jobs:
           coveralls --service=github
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Test benchclients
+        run: |
+          pytest -vv benchclients/python/tests
       - name: Test benchadapt
         run: |
           pytest -vv benchadapt/python/tests
