@@ -51,20 +51,19 @@ def test_get_github_commit_none():
     assert get_github_commit(None, None, None, sha) == {}
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize(
     "branch",
     [
-        # as if supplied manually
+        # as if github info were provided the recommended, manual way: only providing
+        # commit, repository, and pr_number, not branch
         None,
-        # like github_info() called on main repo
+        # as if github info were provided the advanced, github_info() way: that function
+        # returns a branch string like this
         "apache:master",
     ],
 )
 def test_get_github_commit_and_fork_point_sha(branch):
     # NOTE: This integration test intentionally hits GitHub.
-    # TODO: This test will fail once it's no longer one of the most recent 1000
-    # commits to the apache/arrow repository.
     repo = "https://github.com/apache/arrow"
     sha = "3decc46119d583df56c7c66c77cf2803441c4458"
     tz = dateutil.tz.tzutc()
@@ -82,20 +81,19 @@ def test_get_github_commit_and_fork_point_sha(branch):
     assert get_github_commit(repo, branch=branch, sha=sha, pr_number=None) == expected
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize(
     ["branch", "pr_number"],
     [
-        # as if supplied manually
+        # as if github info were provided the recommended, manual way: only providing
+        # commit, repository, and pr_number, not branch
         (None, 10665),
-        # like github_info() called in forked PR
+        # as if github info were provided the advanced, github_info() way: that function
+        # returns a branch string like this, and no pr_number
         ("dianaclarke:ARROW-13266", None),
     ],
 )
 def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
     # NOTE: This integration test intentionally hits GitHub.
-    # TODO: This test will fail once it's no longer one of the most recent 1000
-    # commits to the apache/arrow repository.
     repo = "https://github.com/apache/arrow"
     sha = "982023150ccbb06a6f581f6797c017492485b58c"
     tz = dateutil.tz.tzutc()

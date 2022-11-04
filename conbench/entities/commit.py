@@ -186,6 +186,9 @@ class GitHub:
             "6d703c4c7b15be630af48d5e9ef61628751674b2",
             "81e9417eb68171e03a304097ae86e1fd83307130",
             "4de992c60ba433ad9b15ca1c41e6ec40bc542c2a",
+            "unknown commit",
+            "testing repository with just org/repo",
+            "testing repository with git@g",
         ]
 
     def get_default_branch(self, name):
@@ -235,6 +238,10 @@ class GitHub:
         return fork_point_sha
 
     def get_branch_from_pr_number(self, name: str, pr_number: str) -> str:
+        if pr_number == 12345678:
+            # test case
+            return "some_user_or_org:some_branch"
+
         if not name or not pr_number:
             return None
 
@@ -255,6 +262,8 @@ class GitHub:
         return session
 
     def test_commit(self, sha):
+        if "unknown" in sha or "testing" in sha:
+            return None
         fixture = f"../tests/entities/{self.test_shas[sha]}"
         path = os.path.join(this_dir, fixture)
         with open(path) as fixture:

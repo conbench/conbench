@@ -121,7 +121,7 @@ def test_distribution():
     commit_b = Commit.create(
         {
             "sha": "bbbbb",
-            "repository": "not arrow",
+            "repository": "https://github.com/not arrow",
             "parent": "aaaaa",
             "timestamp": datetime.datetime(2021, 11, 3),
             "message": "NOT an arrow commit",

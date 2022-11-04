@@ -212,10 +212,36 @@ def commit_hardware_run_map():
 
 
 class GitHubCreate(marshmallow.Schema):
-    commit = marshmallow.fields.String(required=True)
-    repository = marshmallow.fields.String(required=True)
-    branch = marshmallow.fields.String(required=False, allow_none=True)
-    pr_number = marshmallow.fields.String(required=False, allow_none=True)
+    commit = marshmallow.fields.String(
+        required=True,
+        metadata={
+            "description": "The 40-character commit SHA of the repo being benchmarked"
+        },
+    )
+    repository = marshmallow.fields.String(
+        required=True,
+        metadata={
+            "description": "The repository name (in the format `org/repo`) or the URL "
+            "(in the format `https://github.com/org/repo`)"
+        },
+    )
+    pr_number = marshmallow.fields.Integer(
+        required=False,
+        allow_none=True,
+        metadata={
+            "description": "[recommended] The number of the GitHub pull request that "
+            "is running this benchmark, or `null` if it's a run on the default branch"
+        },
+    )
+    branch = marshmallow.fields.String(
+        required=False,
+        allow_none=True,
+        metadata={
+            "description": "[not recommended] Instead of supplying `pr_number` you may "
+            "supply this, the branch name in the form `org:branch`. Only do so if you "
+            "know exactly what you're doing."
+        },
+    )
 
 
 field_descriptions = {

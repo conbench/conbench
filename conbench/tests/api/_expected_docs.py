@@ -1111,10 +1111,24 @@
             },
             "GitHubCreate": {
                 "properties": {
-                    "branch": {"nullable": True, "type": "string"},
-                    "commit": {"type": "string"},
-                    "pr_number": {"nullable": True, "type": "string"},
-                    "repository": {"type": "string"},
+                    "branch": {
+                        "description": "[not recommended] Instead of supplying `pr_number` you may supply this, the branch name in the form `org:branch`. Only do so if you know exactly what you're doing.",
+                        "nullable": True,
+                        "type": "string",
+                    },
+                    "commit": {
+                        "description": "The 40-character commit SHA of the repo being benchmarked",
+                        "type": "string",
+                    },
+                    "pr_number": {
+                        "description": "[recommended] The number of the GitHub pull request that is running this benchmark, or `null` if it's a run on the default branch",
+                        "nullable": True,
+                        "type": "integer",
+                    },
+                    "repository": {
+                        "description": "The repository name (in the format `org/repo`) or the URL (in the format `https://github.com/org/repo`)",
+                        "type": "string",
+                    },
                 },
                 "required": ["commit", "repository"],
                 "type": "object",
