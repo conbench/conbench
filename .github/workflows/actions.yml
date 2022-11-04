@@ -36,12 +36,13 @@ jobs:
           src: .
       - name: Install dependencies
         run: |
-          pip install -e benchadapt/python --no-deps && \
-            pip install \
+          pip install --no-deps \
+            -e benchadapt/python \
+            -e benchrun/python && \
+          pip install \
             -U --upgrade-strategy eager \
             -e .[dev] \
-              -e benchclients/python \
-              -e benchrun/python
+            -e benchclients/python
       - name: Migrations
         run: |
           alembic upgrade head
