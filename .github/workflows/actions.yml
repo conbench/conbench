@@ -38,7 +38,8 @@ jobs:
         run: |
           pip install --no-deps \
             -e benchadapt/python \
-            -e benchrun/python && \
+            -e benchrun/python \
+            -e benchconnect && \
           pip install \
             -U --upgrade-strategy eager \
             -e .[dev] \
@@ -77,3 +78,6 @@ jobs:
       - name: Test benchrun
         run: |
           pytest -vv benchrun/python/tests
+      - name: Test benchconnect
+        run: |
+          pytest -vv benchconnect
