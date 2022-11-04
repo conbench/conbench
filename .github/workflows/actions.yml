@@ -31,7 +31,8 @@ jobs:
           src: .
       - name: Install dependencies
         run: |
-          pip install -U \
+          pip install \
+            --no-cache-dir \
             -e .[dev] \
             -e benchadapt/python \
             -e benchrun/python
