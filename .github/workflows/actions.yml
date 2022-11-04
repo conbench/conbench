@@ -31,8 +31,8 @@ jobs:
           src: .
       - name: Install dependencies
         run: |
-          pip uninstall click && \
           pip install \
+            -U --upgrade-strategy eager \
             -e .[dev] \
             -e benchadapt/python \
             -e benchrun/python
