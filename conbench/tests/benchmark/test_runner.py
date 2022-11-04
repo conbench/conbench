@@ -13,6 +13,8 @@ from ._example_benchmarks import (
     SimpleBenchmarkWithClusterInfo,
 )
 
+pytestmark = pytest.mark.filterwarnings("ignore::conbench.machine_info.GitParseWarning")
+
 EXAMPLE = copy.deepcopy(_fixtures.VALID_PAYLOAD)
 EXAMPLE_WITH_CLUSTER_INFO = copy.deepcopy(_fixtures.VALID_PAYLOAD_FOR_CLUSTER)
 EXAMPLE_WITH_ERROR = copy.deepcopy(_fixtures.VALID_PAYLOAD_WITH_ERROR)

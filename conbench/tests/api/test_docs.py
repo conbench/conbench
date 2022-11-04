@@ -20,6 +20,13 @@ class TestDocs(_asserts.ApiEndpointTest):
         try:
             self.assert_200_ok(response, expected_docs)
         except AssertionError:
+            if os.getenv("CI"):
+                raise RuntimeError(
+                    "The 'CI' env var was set so we're assuming this test was run in "
+                    f"CI. However, {path} was not updated with the latest docs "
+                    "changes. Run `pytest conbench/tests/api/test_docs.py` locally to "
+                    "fix the file automatically."
+                )
             # update expected docs on API changes
             # (onus is on devs to review diff)
             with open(path, "w") as f:

@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+env:
+  PYTHON_VERSION: '3.8'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,9 +24,11 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Checkout conbench
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Lint (black)
         uses: psf/black@stable
         with:
@@ -31,7 +36,9 @@ jobs:
           src: .
       - name: Install dependencies
         run: |
-          pip install -e .[dev] \
+          pip install \
+            -U --upgrade-strategy eager \
+            -e .[dev] \
             -e benchadapt/python \
             -e benchrun/python
       - name: Migrations

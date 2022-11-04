@@ -72,6 +72,10 @@ def python_info():
     }
 
 
+class GitParseWarning(RuntimeWarning):
+    pass
+
+
 def github_info():
     """Attempts to inspect a locally cloned repository for git information that can be
     posted to the "github" key when creating a run.
@@ -84,7 +88,8 @@ def github_info():
     commit = _exec_command(["git", "rev-parse", "HEAD"])
     if not commit:
         warnings.warn(
-            "error in github_info(): probably not in a git repo; returning {}"
+            "error in github_info(): probably not in a git repo; returning {}",
+            GitParseWarning,
         )
         return {}
 
@@ -92,7 +97,10 @@ def github_info():
     if "* (HEAD detached" in branches:
         remote = "origin"
         branch = "<DETATCHED BRANCH>"
-        warnings.warn(f"error in github_info(): detached HEAD; returning {branch=}")
+        warnings.warn(
+            f"error in github_info(): detached HEAD; returning {branch=}",
+            GitParseWarning,
+        )
 
     else:
         current_branch = [b for b in branches.split("\n") if b.startswith("*")][0]
@@ -101,7 +109,8 @@ def github_info():
             remote = "origin"
             branch = _exec_command(["git", "branch", "--show-current"])
             warnings.warn(
-                f"error in github_info(): untracked branch; returning {branch=}"
+                f"error in github_info(): untracked branch; returning {branch=}",
+                GitParseWarning,
             )
         else:
             remote = upstream[1:].split("/")[0]
