@@ -1,6 +1,7 @@
 from typing import Any, Callable, Dict, List
 
-from ..log import log
+from benchclients import log
+
 from ..result import BenchmarkResult
 from ._adapter import BenchmarkAdapter
 

@@ -2,7 +2,7 @@ from json import load, loads
 from pathlib import Path
 
 import click
-from benchadapt.client import ConbenchClient
+from benchclients.conbench import ConbenchClient
 
 
 def post_blob(json: dict, endpoint: str, client: ConbenchClient) -> None:

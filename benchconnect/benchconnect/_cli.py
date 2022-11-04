@@ -1,7 +1,7 @@
 import logging
 
 import click
-from benchadapt.log import log
+from benchclients.logging import log
 
 import benchconnect._augment as _augment
 import benchconnect._post as _post
