@@ -74,7 +74,8 @@
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
         <br> <br />
-        <div align="left" style="display:inline-block; white-space: pre; float: center;">{{ v }}</div>
+        <div align="left" style="display:inline-block; white-space: pre; float: center;">{{ v | urlize(target="_blank")
+          }}</div>
       </li>
       {% endfor %}
       {% endif %}
@@ -111,7 +112,7 @@
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
         {% if v is not none %}
-        <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+        <div align="right" style="display:inline-block; float: right;">{{ v | urlize(target="_blank") }}</div>
         {% endif %}
       </li>
       {% endfor %}
@@ -202,7 +203,7 @@
       {% for k,v in benchmark.info.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
-        <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+        <div align="right" style="display:inline-block; float: right;">{{ v | urlize(target="_blank") }}</div>
       </li>
       {% endfor %}
       {% endif %}
