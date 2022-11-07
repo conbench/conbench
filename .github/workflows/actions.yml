@@ -64,6 +64,7 @@ jobs:
           coverage run --source conbench -m pytest -vv --durations=20 conbench/tests/
         env:
           DB_USERNAME: postgres
+          GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish coverage
         run: |
           coveralls --service=github
