@@ -49,8 +49,14 @@ class EntityMixin:
         return q.filter(*filters).all()
 
     @classmethod
-    def all(cls, limit=None, order_by=None, **kwargs):
+    def all(cls, limit=None, order_by=None, filter_args=None, **kwargs):
+        """Filter using filter_args and/or kwargs. If you just need WHERE x = y, you can
+        use kwargs, e.g. ``all(x=y)``. Else if you need something more complicated, use
+        e.g. ``all(filter_args=[cls.x != y])``.
+        """
         query = Session.query(cls)
+        if filter_args:
+            query = query.filter(*filter_args)
         if kwargs:
             query = query.filter_by(**kwargs)
         if order_by is not None:

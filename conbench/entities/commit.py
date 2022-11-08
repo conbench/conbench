@@ -1,6 +1,8 @@
 import functools
 import json
 import os
+from datetime import datetime
+from typing import List
 
 import dateutil.parser
 import flask as f
@@ -81,6 +83,12 @@ class Commit(Base, EntityMixin):
         )
 
 
+# NB: this assumes only one branch will be associated with a SHA when posting to
+# Conbench. Subsequent posts with the same SHA on a new branch will fail.
+# That should be impossible with a "normal" CI setup, and only possible if people post
+# manually outside of CI.
+#
+# We impose this limitation here to make history queries easier to manage.
 s.Index(
     "commit_index",
     Commit.sha,
@@ -172,6 +180,62 @@ def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) ->
     return commit
 
 
+def backfill_default_branch_commits(
+    repository: str, new_commit: Commit
+) -> List[Commit]:
+    """Catches up the default-branch commits in the database.
+
+    Will search GitHub for any untracked commits, between the given new_commit back in
+    time to the last tracked commit, and backfill all of them.
+
+    Won't backfill any commits before the last tracked commit. But if there are no
+    commits in the database, will backfill them all.
+    """
+    github = GitHub()
+    name = repository_to_name(repository)
+    default_branch = github.get_default_branch(name)
+
+    last_tracked_commit = Commit.all(
+        filter_args=[Commit.sha != new_commit.sha, Commit.timestamp.isnot(None)],
+        branch=default_branch,
+        repository=repository,
+        order_by=Commit.timestamp.desc(),
+        limit=1,
+    )
+
+    if last_tracked_commit:
+        since = last_tracked_commit[0].timestamp
+    elif os.getenv("DB_HOST") == "localhost":
+        # only for conbench/tests/populate_local_conbench.py
+        since = datetime(2022, 1, 1)
+    else:
+        since = datetime(1970, 1, 1)
+
+    commits = github.get_commits_to_branch(
+        name=name,
+        branch=default_branch,
+        since=since,
+        until=new_commit.timestamp,
+    )
+    commits_to_try = commits[1:-1]  # since/until are inclusive; we want exclusive
+    backfilled_commits = []
+
+    print(f"Backfilling {len(commits_to_try)} commit(s)")
+    for commit_info in commits_to_try:
+        commit_info["github"]["branch"] = default_branch
+        commit_info["github"]["fork_point_sha"] = commit_info["sha"]
+        try:
+            commit = Commit.create_github_context(**commit_info)
+            backfilled_commits.append(commit)
+        except s.exc.IntegrityError as e:
+            if "commit_index" in str(e):
+                print(f"Commit {commit_info['sha']} already existed in the database")
+            else:
+                raise
+
+    return backfilled_commits
+
+
 class GitHub:
     def __init__(self):
         self.test_shas = {
@@ -192,6 +256,10 @@ class GitHub:
         ]
 
     def get_default_branch(self, name):
+        if name == "org/repo":
+            # test case
+            return "org:default_branch"
+
         url = f"{GITHUB}/repos/{name}"
         response = self._get_response(url)
         if not response:
@@ -213,6 +281,53 @@ class GitHub:
             url = f"{GITHUB}/repos/{name}/commits/{sha}"
             response = self._get_response(url)
         return self._parse_commit(response) if response else None
+
+    def get_commits_to_branch(
+        self, name: str, branch: str, since: datetime, until: datetime
+    ) -> List[dict]:
+        """Get information about each commit on a given branch.
+
+        since and until are inclusive.
+        """
+        if name == "org/repo":
+            # test case
+            return []
+
+        if ":" in branch:
+            branch = branch.split(":")[1]
+        since = since.replace(tzinfo=None).isoformat() + "Z"
+        until = until.replace(tzinfo=None).isoformat() + "Z"
+
+        print(
+            f"Finding all commits to the {branch} branch of {name} between {since} and "
+            f"{until}"
+        )
+        url = (
+            f"{GITHUB}/repos/{name}/commits?per_page=100&sha={branch}"
+            f"&since={since}&until={until}"
+        )
+        commits = []
+        page = 1
+
+        this_page = self._get_response(url + f"&page={page}")
+        if not this_page:
+            print("API request failed")
+            return []
+        commits += this_page
+
+        while len(this_page) == 100:
+            page += 1
+            this_page = self._get_response(url + f"&page={page}")
+            commits += this_page
+
+        return [
+            {
+                "sha": commit["sha"],
+                "repository": repository_to_url(name),
+                "github": self._parse_commit(commit),
+            }
+            for commit in commits
+        ]
 
     def get_fork_point_sha(self, name: str, sha: str) -> str:
         """
@@ -278,7 +393,7 @@ class GitHub:
         author = commit.get("author")
         commit_author = commit["commit"]["author"]
         return {
-            "parent": commit["parents"][0]["sha"],
+            "parent": commit["parents"][0]["sha"] if commit["parents"] else None,
             "date": dateutil.parser.isoparse(commit_author["date"]),
             "message": commit["commit"]["message"].split("\n")[0],
             "author_name": commit_author["name"],
