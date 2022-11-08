@@ -206,7 +206,11 @@ def backfill_default_branch_commits(
     if last_tracked_commit:
         since = last_tracked_commit[0].timestamp
     elif os.getenv("DB_HOST") == "localhost":
-        # only for conbench/tests/populate_local_conbench.py
+        print(
+            "Your DB_HOST is localhost, so assuming you're running "
+            "conbench/tests/populate_local_conbench.py. Backfilling the DB only from "
+            "2022-01-01 in order to save time."
+        )
         since = datetime(2022, 1, 1)
     else:
         since = datetime(1970, 1, 1)
