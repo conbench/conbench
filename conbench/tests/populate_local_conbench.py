@@ -275,7 +275,7 @@ def create_benchmarks_data():
 
 
 def create_benchmarks_with_history():
-    # 7 commits in a row in apache/arrow, one missing
+    # 7 commits in a row in apache/arrow, the commented one is missing
     commits = [
         "17d6fdc0e9c00534e4de7bfb193c33c86cab7e15",
         # "3a1ec998539cd6da1bccb7f06e68448846b6e318",
