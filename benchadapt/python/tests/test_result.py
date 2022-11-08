@@ -6,7 +6,7 @@ res_json = {
     "run_name": "very-real-benchmark",
     "run_id": "ezf69672dc3741259aac97650414a18c",
     "batch_id": "1z21bd2477d04ca8be0f4bad58c61757",
-    "run_reason": None,
+    "run_reason": "test",
     "timestamp": "2202-09-16T15:42:27.527948+00:00",
     "stats": {
         "data": [1.1, 2.2, 3.3],
@@ -15,12 +15,15 @@ res_json = {
         "time_unit": "ns",
         "iterations": 3,
     },
+    "error": {"stack_trace": ["nothing", "really", "went", "wrong"]},
+    "validation": {"worked_as_expected": True},
     "tags": {
         "name": "very-real-benchmark",
         "suite": "dope-benchmarks",
         "source": "app-micro",
     },
     "info": {},
+    "optional_benchmark_info": {"foo": "bar"},
     "machine_info": {
         "name": "beepboop.local",
         "os_name": "macOS",
