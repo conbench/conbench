@@ -1,8 +1,7 @@
-from json import load, loads
-from pathlib import Path
-
 import click
 from benchclients.conbench import ConbenchClient
+
+from .utils import ENV_VAR_HELP, load_json
 
 
 def post_blob(json: dict, endpoint: str, client: ConbenchClient) -> None:
@@ -10,30 +9,14 @@ def post_blob(json: dict, endpoint: str, client: ConbenchClient) -> None:
     client.post(path=endpoint, json=json)
 
 
-def post_file(path: str, client: ConbenchClient, endpoint: str) -> None:
-    "Load a JSON file and post it to Conbench"
-    with open(Path(path).resolve(), "r") as f:
-        json = load(f)
-
-    post_blob(json=json, endpoint=endpoint, client=client)
-
-
-def poster(json: str, path: str, endpoint: str) -> None:
+def poster(json: str, path: str, ndjson: str, endpoint: str) -> None:
     "Take either a blob or a path and post the resulting JSON to Conbench"
     client = ConbenchClient()
 
-    if json:
-        post_blob(json=loads(json), endpoint=endpoint, client=client)
+    blob_list = load_json(json=json, path=path, ndjson=ndjson)
 
-    elif path and Path(path).resolve().is_file():
-        post_file(path=path, client=client)
-
-    elif path and Path(path).resolve().is_dir():
-        for file in Path(path).resolve().glob("*.json"):
-            post_file(path=file, endpoint=endpoint, client=client)
-
-    else:
-        click.echo("No data to post found!")
+    for blob in blob_list:
+        post_blob(json=blob, endpoint=endpoint, client=client)
 
 
 @click.command(
@@ -42,11 +25,10 @@ Post benchmark result JSON[s] to a Conbench API
 
 Specify either `--json` or `--path`.
 
-For Conbench environment variables, see `benchconnect post --help`.
-
 JSON will not be altered before posting; to fill in missing fields, see
 `benchconnect augment result --help`.
 """
+    + ENV_VAR_HELP
 )
 @click.option(
     "--json", default=None, help="A JSON dict suitable for sending to a Conbench API"
@@ -54,10 +36,16 @@ JSON will not be altered before posting; to fill in missing fields, see
 @click.option(
     "--path",
     default=None,
+    type=click.Path(exists=True, resolve_path=True),
     help="Path to a JSON file or directory of JSON files containing results to send to a Conbench API",
 )
-def result(json: dict, path: str):
-    poster(json=json, path=path, endpoint="/benchmarks/")
+@click.argument(
+    "ndjson",
+    required=False,
+    default=None,  # help="Newline-delimited JSON of results to post"
+)
+def result(json: dict, path: str, ndjson: str):
+    poster(json=json, path=path, ndjson=ndjson, endpoint="/benchmarks/")
 
 
 @click.command(
@@ -66,11 +54,10 @@ Post JSON[s] for a new run to a Conbench API
 
 Specify either `--json` or `--path`.
 
-For Conbench environment variables, see `benchconnect post --help`.
-
 JSON will not be altered before posting; to fill in missing fields, see
 `benchconnect augment run --help`.
 """
+    + ENV_VAR_HELP
 )
 @click.option(
     "--json", default=None, help="A JSON dict suitable for sending to a Conbench API"
@@ -78,7 +65,9 @@ JSON will not be altered before posting; to fill in missing fields, see
 @click.option(
     "--path",
     default=None,
+    type=click.Path(exists=True, resolve_path=True),
     help="Path to a JSON file or directory of JSON files containing runs to send to a Conbench API",
 )
-def run(json: dict, path: str):
-    poster(json=json, path=path, endpoint="/runs/")
+@click.argument("ndjson", required=False)
+def run(json: dict, path: str, ndjson: str):
+    poster(json=json, path=path, ndjson=ndjson, endpoint="/runs/")

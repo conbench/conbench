@@ -1,51 +1,24 @@
-from json import dumps, load, loads
-from pathlib import Path
 from typing import Callable
 
 import click
 from benchadapt.result import BenchmarkResult
 from benchadapt.run import BenchmarkRun
 
-
-def read_json_file(path: str) -> dict:
-    "Read a JSON field into a Python object"
-    with open(Path(path).resolve(), "r") as f:
-        return load(f)
+from .utils import load_json, print_json
 
 
-def augment_blob(json: dict, cls: Callable):
+def augment_blob(json: dict, cls: Callable) -> dict:
     "Use dataclass to append default fields to a parsed JSON blob"
     return cls(**json).to_publishable_dict()
 
 
-def print_json(json: dict) -> None:
-    "Print JSON nicely"
-    click.echo(dumps(json))
-
-
-def augment_and_print_blob(json: dict, cls: Callable) -> None:
-    "Append default fields to a blob and print as JSON to stdout"
-    augmented = augment_blob(json=json, cls=cls)
-    print_json(augmented)
-
-
-def augmentor(json: str, path: str, cls: Callable) -> None:
+def augmentor(json: str, path: str, ndjson: str, cls: Callable) -> None:
     "For a given class, load data, augment it, and print it"
-    if json:
-        blob = loads(json)
-        augment_and_print_blob(json=blob, cls=cls)
+    blob_list = load_json(json=json, path=path, ndjson=ndjson)
 
-    elif path and Path(path).resolve().is_file():
-        blob = read_json_file(path=path)
-        augment_and_print_blob(json=blob, cls=cls)
-
-    elif path and Path(path).resolve().is_dir():
-        for file in Path(path).resolve().glob("*.json"):
-            blob = read_json_file(path=file)
-            augment_and_print_blob(json=blob, cls=cls)
-
-    else:
-        click.echo("No data to augment found!")
+    for blob in blob_list:
+        augmented = augment_blob(json=blob, cls=cls)
+        print_json(augmented)
 
 
 @click.command(
@@ -62,16 +35,16 @@ like before posting the results.
 Augmented JSON will be printed one blob to a line, i.e. newline-delimited.
 """
 )
-@click.option(
-    "--json", default=None, help="A JSON dict suitable for sending to augment"
-)
+@click.option("--json", default=None, help="A JSON dict of a result to augment")
 @click.option(
     "--path",
     default=None,
+    type=click.Path(exists=True, resolve_path=True),
     help="Path to a JSON file or directory of JSON files containing results to augment",
 )
-def result(json: str, path: str):
-    augmentor(json=json, path=path, cls=BenchmarkResult)
+@click.argument("ndjson", required=False)
+def result(json: str, path: str, ndjson: str):
+    augmentor(json=json, path=path, ndjson=ndjson, cls=BenchmarkResult)
 
 
 @click.command(
@@ -91,7 +64,9 @@ Augmented JSON will be printed one blob to a line, i.e. newline-delimited.
 @click.option(
     "--path",
     default=None,
+    type=click.Path(exists=True, resolve_path=True),
     help="Path to a JSON file or directory of JSON files containing runs to augment",
 )
-def run(json: str, path: str):
-    augmentor(json=json, path=path, cls=BenchmarkRun)
+@click.argument("ndjson", required=False)
+def run(json: str, path: str, ndjson: str):
+    augmentor(json=json, path=path, ndjson=ndjson, cls=BenchmarkRun)

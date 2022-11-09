@@ -1,7 +1,7 @@
 import uuid
 import warnings
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from .machine_info import github_info, machine_info
 
@@ -31,8 +31,13 @@ class BenchmarkRun:
     cluster_info : Dict[str, Any]
         For benchmarks run on a cluster, information about the cluster
     github : Dict[str, Any]
-        Keys: ``repository``, ``commit``. If unspecified, will be auto-populated based on
-        the current git state.
+        Keys: ``repository`` (in the format ``org/repo``), ``commit``, and ``pr_number``.
+        If this is a benchmark on the default branch, you may leave out ``pr_number``.
+        If it's a non-default-branch & non-PR commit, you may supply the branch name to
+        the optional ``branch`` key in the format ``org:branch``.
+
+        Advanced: if you have a locally cloned repo, you may explicitly supply ``None``
+        to this argument and its information will be scraped from the cloned repo.
     finished_timestamp : str
         Timestamp the run finished, in ISO format, UTC or with timezone offset
     error_type: str
@@ -55,6 +60,7 @@ class BenchmarkRun:
     - ``name``
     - ``id``
     - ``reason``
+    - ``github``
 
     Fields without comprehensive defaults which should be specified directly:
 
@@ -67,7 +73,6 @@ class BenchmarkRun:
 
     - ``machine_info`` if not run on the current machine
     - ``cluster_info`` if run on a cluster
-    - ``github`` if current git info is unavailable or inaccurate
     """
 
     name: str = None
@@ -78,7 +83,7 @@ class BenchmarkRun:
         default_factory=lambda: machine_info(host_name=None)
     )
     cluster_info: Dict[str, Any] = None
-    github: Dict[str, Any] = field(default_factory=github_info)
+    github: Dict[str, Any] = None
     finished_timestamp: str = None
     error_type: str = None
     error_info: Dict[str, Any] = None
@@ -86,6 +91,16 @@ class BenchmarkRun:
     def __post_init__(self) -> None:
         if not self.name and self.github.get("commit"):
             self.name = f"{self.reason}: {self.github['commit']}"
+
+    @property
+    def _github_property(self):
+        return self._github_cache
+
+    @_github_property.setter
+    def _github_property(self, value: Optional[dict]):
+        if value is None:
+            value = github_info()
+        self._github_cache = value
 
     @property
     def _cluster_info_property(self) -> Dict[str, Any]:
@@ -121,3 +136,4 @@ class BenchmarkRun:
 
 # Ugly, but per https://stackoverflow.com/a/61480946 lets us keep defaults and order
 BenchmarkRun.cluster_info = BenchmarkRun._cluster_info_property
+BenchmarkRun.github = BenchmarkRun._github_property
