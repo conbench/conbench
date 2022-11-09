@@ -66,7 +66,7 @@ VALID_PAYLOAD = {
     "validation": {"type": "pandas.testing", "success": True},
     "github": {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",
-        "repository": "https://github.com/apache/arrow",
+        "repository": "https://github.com/org/repo",
         "branch": None,
         "pr_number": 12345678,
     },
@@ -187,7 +187,7 @@ VALID_RUN_PAYLOAD = {
     },
     "github": {
         "commit": "02addad336ba19a654f9c857ede546331be7b631",
-        "repository": "https://github.com/apache/arrow",
+        "repository": "https://github.com/org/repo",
         "branch": None,
         "pr_number": 12345678,
     },

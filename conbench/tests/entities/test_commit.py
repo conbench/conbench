@@ -6,7 +6,9 @@ import dateutil
 import pytest
 
 from ...entities.commit import (
+    Commit,
     GitHub,
+    backfill_default_branch_commits,
     get_github_commit,
     repository_to_name,
     repository_to_url,
@@ -110,6 +112,93 @@ def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
     assert (
         get_github_commit(repo, branch=branch, sha=sha, pr_number=pr_number) == expected
     )
+
+
+def test_backfill_default_branch_commits():
+    # NOTE: This integration test intentionally hits GitHub.
+    repository = "https://github.com/conbench/conbench"
+    default_branch = "conbench:main"
+    author = "Austin Dickey"
+    tz = dateutil.tz.tzutc()
+
+    # 5 commits in a row on conbench:main, starting with the 335th commit to the repo
+    test_shas = [
+        "ef88d427dd6be11cdd95e17da4e9940927da37e5",
+        "f15747a3389e65a4060f3333a0b5450fe6867292",
+        "564bc7c0498e06a4ca260e8ce050304a506c06c7",
+        "df237339a06caa3fe6994dc4ee59ecded04517dc",
+        "70e023ee9e2319d43fd3bd08a8402bd6d045e8b7",
+    ]
+
+    assert len(Commit.all(branch=default_branch, repository=repository)) == 0
+
+    # start the test with the 336th commit to the repo
+    commit_1 = Commit.create(
+        dict(
+            sha=test_shas[1],
+            branch=default_branch,
+            repository=repository,
+            fork_point_sha=test_shas[1],
+            message="Fix what bokeh 3.0.0 broke (#420)",
+            author_name=author,
+            timestamp=datetime.datetime(2022, 10, 31, 18, 5, 14, tzinfo=tz),
+        )
+    )
+
+    # this should backfill all 335 default-branch commits before that one
+    backfilled_commits = backfill_default_branch_commits(repository, commit_1)
+    assert len(backfilled_commits) == 335
+    # make sure the direct parent is in there, fully fleshed out
+    parent = [commit for commit in backfilled_commits if commit.sha == test_shas[0]][0]
+    assert parent.message == "Print instead of log what's posted (#418)"
+
+    # pretend we skipped test_shas[2], and ensure it's backfilled
+    commit_2 = Commit.create(
+        dict(
+            sha=test_shas[3],
+            branch=default_branch,
+            repository=repository,
+            fork_point_sha=test_shas[3],
+            message="Store branch information on Commits (#417)",
+            author_name=author,
+            timestamp=datetime.datetime(2022, 11, 4, 17, 18, 19, tzinfo=tz),
+        )
+    )
+
+    backfilled_commits = backfill_default_branch_commits(repository, commit_2)
+    assert len(backfilled_commits) == 1
+    assert backfilled_commits[0].sha == test_shas[2]
+
+    # post the next commit and ensure there's no backfill
+    commit_3 = Commit.create(
+        dict(
+            sha=test_shas[4],
+            branch=default_branch,
+            repository=repository,
+            fork_point_sha=test_shas[4],
+            message="Fixed up test warnings (#424)",
+            author_name=author,
+            timestamp=datetime.datetime(2022, 11, 4, 19, 13, 41, tzinfo=tz),
+        )
+    )
+
+    backfilled_commits = backfill_default_branch_commits(repository, commit_3)
+    assert len(backfilled_commits) == 0
+
+    # post a commit from some other branch back in time, to test out-of-order commits
+    commit_4 = Commit.create(
+        dict(
+            sha="a" * 40,
+            branch="some_fork:some_branch",
+            repository=repository,
+            fork_point_sha=test_shas[0],
+            message="did nothing",
+            author_name=author,
+            timestamp=datetime.datetime(2022, 10, 29, tzinfo=tz),
+        )
+    )
+    backfilled_commits = backfill_default_branch_commits(repository, commit_4)
+    assert len(backfilled_commits) == 0
 
 
 def test_parse_commits():

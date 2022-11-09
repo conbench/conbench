@@ -191,7 +191,15 @@ def login():
 
 def post_benchmarks(data):
     url = f"{base_url}/benchmarks/"
-    print(session.post(url, json=data))
+    time = datetime.datetime.now()
+    res = session.post(url, json=data)
+    delta = datetime.datetime.now() - time
+    print(
+        f"Posted a benchmark with run_id '{data.get('run_id')}' "
+        f"and commit {data.get('github', {}).get('commit')}. "
+        f"Received status code {res.status_code}. "
+        f"It took {int(delta.total_seconds() * 1000)} ms."
+    )
 
 
 def update_run(run_id, data):
@@ -219,7 +227,7 @@ def create_benchmarks_data():
         "2462492389a8f2ca286c481852c84ba1f0d0eff9",
     ]
 
-    branches = ["apache:master", "austin3dickey:decimal256", None] * 2
+    branches = ["apache:master", None] * 3
 
     means = [16.670462, 16.4, 16.5, 16.67, 16.7, 16.7]
 
@@ -275,8 +283,10 @@ def create_benchmarks_data():
 
 
 def create_benchmarks_with_history():
-    # 5 commits in a row in apache/arrow
+    # 7 commits in a row in apache/arrow, the commented one is missing
     commits = [
+        "17d6fdc0e9c00534e4de7bfb193c33c86cab7e15",
+        # "3a1ec998539cd6da1bccb7f06e68448846b6e318",
         "a2114c0605be66bb16d16ee0b25c9d81ab68f5ce",
         "cab3e216e17ce8422a15f91480bb408a052b578c",
         "d404c9c6a0d6ce94f054596e667205995ef944d2",
@@ -284,7 +294,7 @@ def create_benchmarks_with_history():
         "88b42ef66fe664043c5ee5274b2982a3858b414e",
     ]
 
-    means = [16.670462, 16.4, 16.5, 16.67, 16.7]
+    means = [16.5, 16.670462, 16.4, 16.5, 16.67, 16.7]
 
     benchmark_names = ["csv-read", "csv-write"]
 
@@ -335,5 +345,7 @@ def create_benchmarks_with_history():
 
 register()
 login()
+print("start create_benchmarks_data()")
 create_benchmarks_data()
+print("start create_benchmarks_with_history()")
 create_benchmarks_with_history()

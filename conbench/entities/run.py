@@ -9,6 +9,7 @@ from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nul
 from ..entities.commit import (
     Commit,
     CommitSerializer,
+    backfill_default_branch_commits,
     get_github_commit,
     repository_to_url,
 )
@@ -64,6 +65,7 @@ class Run(Base, EntityMixin):
             )
             if github:
                 commit = Commit.create_github_context(sha, repository, github)
+                backfill_default_branch_commits(repository, commit)
             elif sha or repository:
                 commit = Commit.create_unknown_context(sha, repository)
             else:
