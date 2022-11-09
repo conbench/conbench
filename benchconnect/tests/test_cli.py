@@ -1,7 +1,7 @@
 import pytest
 from click.testing import CliRunner
 
-from benchconnect._cli import augment, cli, post, put, start, submit, finish
+from benchconnect._cli import augment, cli, finish, post, put, start, submit
 
 runner = CliRunner()
 
