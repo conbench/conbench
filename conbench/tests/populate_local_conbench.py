@@ -191,7 +191,15 @@ def login():
 
 def post_benchmarks(data):
     url = f"{base_url}/benchmarks/"
-    print(session.post(url, json=data))
+    time = datetime.datetime.now()
+    res = session.post(url, json=data)
+    delta = datetime.datetime.now() - time
+    print(
+        f"Posted a benchmark with run_id '{data.get('run_id')}' "
+        f"and commit {data.get('github', {}).get('commit')}. "
+        f"Received status code {res.status_code}. "
+        f"It took {int(delta.total_seconds() * 1000)} ms."
+    )
 
 
 def update_run(run_id, data):
@@ -337,5 +345,7 @@ def create_benchmarks_with_history():
 
 register()
 login()
+print("start create_benchmarks_data()")
 create_benchmarks_data()
+print("start create_benchmarks_with_history()")
 create_benchmarks_with_history()
