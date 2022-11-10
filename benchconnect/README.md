@@ -20,6 +20,27 @@ pipx install benchconnect@git+https://github.com/conbench/conbench.git@main#subd
 
 ## Usage
 
+### Benchmark run workflow
+
+To submit a run of benchmark results to a Conbench server, benchconnect can
+open a run, modify submitted results to be a part of that run, and close it.
+
+A minimal example:
+
+```shell
+benchconnect start run '{"run_reason": "test"}'
+
+# pass one result or a whole set at a time, inline or from files
+benchconnect submit result --path my-results/
+
+benchconnect finish run
+```
+
+Additional metadata can be passed via JSON, e.g. `name` and `github` when
+creating the run, or `error_type` and `error_info` when closing it.
+
+### Manual API
+
 See the man pages:
 
 ```shell

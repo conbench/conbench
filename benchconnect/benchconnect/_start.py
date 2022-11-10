@@ -59,7 +59,7 @@ to debug and augment without posting.
 
 When successful, this command will store a statefile called {STATEFILE} in the
 current working directory which will be used to align metadata on subsequent
-data. Accordingly, only on run can be active at a time, and changing the
+data. Accordingly, only one run can be active at a time, and changing the
 working directory or deleting the statefile during a run will cause future
 calls to fail.
 
