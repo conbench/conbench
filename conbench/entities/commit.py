@@ -314,9 +314,13 @@ class GitHub:
         page = 1
 
         this_page = self._get_response(url + f"&page={page}")
-        if not this_page:
+        if this_page is None:
             print("API request failed")
             return []
+        elif len(this_page) == 0:
+            print("API returned no commits")
+            return []
+
         commits += this_page
 
         while len(this_page) == 100:
