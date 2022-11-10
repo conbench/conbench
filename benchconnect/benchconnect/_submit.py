@@ -4,6 +4,7 @@ from pathlib import Path
 import click
 from benchadapt.result import BenchmarkResult
 from benchclients.conbench import ConbenchClient
+from benchclients.logging import fatal_and_log
 
 from ._augment import augment_blob
 from ._post import post_blob
@@ -16,20 +17,22 @@ def augment_and_post_result(json: dict, client: ConbenchClient) -> None:
     statefile_path = Path(STATEFILE).resolve()
 
     if not statefile_path.exists():
-        raise FileNotFoundError(
-            f"Statefile not found at {statefile_path}! Call `benchconnect start run` first."
+        fatal_and_log(
+            f"Statefile not found at {statefile_path}! Call `benchconnect start run` first.",
+            FileNotFoundError,
         )
 
     with open(statefile_path, "r") as f:
         abstract_result = load(f)
 
     for result_key in abstract_result:
-        if result_key in json:
-            assert abstract_result[result_key] == json[result_key], click.BadParameter(
+        if result_key in json and abstract_result[result_key] != json[result_key]:
+            fatal_and_log(
                 "Result metadata does not match run metadata! "
                 f"Key: {result_key} "
                 f"Run: {abstract_result[result_key]} "
-                f"Result: {json[result_key]}"
+                f"Result: {json[result_key]}",
+                click.BadParameter,
             )
 
         json[result_key] = abstract_result[result_key]

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import click
+from benchclients.logging import fatal_and_log, log
 
 ENV_VAR_HELP = """
 
@@ -22,9 +23,15 @@ def load_json(json: str, path: str, ndjson: str) -> List[Dict[str, Any]]:
         ndjson = stdin.read()
 
     if json:
+        if path or ndjson:
+            log.warning("Multiple inputs supplied! Using `--json`")
+
         return [loads(json)]
 
     elif ndjson:
+        if path:
+            log.warning("Multiple inputs supplied! Using `NDJSON`")
+
         return [loads(blob) for blob in ndjson.strip().splitlines()]
 
     elif path and Path(path).resolve().is_file():
@@ -40,7 +47,7 @@ def load_json(json: str, path: str, ndjson: str) -> List[Dict[str, Any]]:
         return json_list
 
     else:
-        raise click.BadParameter("No JSON data found!")
+        fatal_and_log("No JSON data found!", click.BadParameter)
 
 
 def print_json(json: dict) -> None:

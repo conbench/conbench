@@ -3,6 +3,7 @@ from json import dumps, load
 from pathlib import Path
 
 import click
+from benchclients.logging import fatal_and_log
 
 from ._put import putter
 from ._start import STATEFILE
@@ -15,8 +16,10 @@ def finalize_run(json: dict) -> None:
     with open(statefile_path, "r") as f:
         abstract_result = load(f)
 
-    if "id" in json:
-        assert json["id"] == abstract_result["id"]
+    if "id" in json and json["id"] != abstract_result["id"]:
+        fatal_and_log(
+            f"Run ID {json['id']} does not match statefile {statefile_path} value {abstract_result['id']}"
+        )
 
     json["id"] = abstract_result["run_id"]
 
