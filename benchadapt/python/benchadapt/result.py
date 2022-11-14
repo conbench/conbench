@@ -96,6 +96,17 @@ class BenchmarkResult:
     - ``timestamp`` if run time is inaccurate
     - ``machine_info`` if not run on the current machine
     - ``cluster_info`` if run on a cluster
+
+    If a result with a new ``run_id`` is posted, a new record for the run will be
+    created. If a run record with that ID already exists, either because of a
+    previous result or the run being posted directly, the following fields will be
+    effectively ignored, as they are only stored on the run:
+
+    - ``run_name``
+    - ``run_reason``
+    - ``github``
+    - ``machine_info``
+    - ``cluster_info
     """
 
     run_name: str = None

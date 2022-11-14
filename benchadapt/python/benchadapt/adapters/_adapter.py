@@ -5,9 +5,9 @@ import uuid
 from typing import Any, Dict, List
 
 import requests
+from benchclients.conbench import ConbenchClient
+from benchclients.logging import fatal_and_log, log
 
-from ..client import ConbenchClient
-from ..log import fatal_and_log, log
 from ..result import BenchmarkResult
 
 
