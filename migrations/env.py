@@ -22,7 +22,13 @@ from conbench.entities import (  # noqa  # isort:skip
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-sqlalchemy_url = str(engine.url) if engine else Config.SQLALCHEMY_DATABASE_URI
+
+if engine:
+    sqlalchemy_url = engine.url.render_as_string(hide_password=False)
+else:
+    sqlalchemy_url = Config.SQLALCHEMY_DATABASE_URI
+
+
 config.set_main_option("sqlalchemy.url", sqlalchemy_url)
 
 
