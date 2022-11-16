@@ -13,7 +13,7 @@ spec = apispec.APISpec(
         apispec_webframeworks.flask.FlaskPlugin(),
         apispec.ext.marshmallow.MarshmallowPlugin(),
     ],
-    servers=[{"url": "http://localhost:5000/"}],
+    servers=[{"url": Config.INTENDED_BASE_URL}],
 )
 
 
