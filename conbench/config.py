@@ -44,7 +44,10 @@ class Config:
         "CONBENCH_INTENDED_BASE_URL", "http://127.0.0.1:5000/"
     )
     # Require trailing slash towards tidy URL generation.
-    assert INTENDED_BASE_URL.endswith("/"), "INTENDED_BASE_URL must have trailing slash"
+    # Note: might want to catch bad input via e.g.
+    # https://validators.readthedocs.io/en/latest/#module-validators.url
+    if not INTENDED_BASE_URL.endswith("/"):
+        INTENDED_BASE_URL += "/"
 
 
 class TestConfig(Config):
