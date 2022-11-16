@@ -1,4 +1,8 @@
-"""backfill_all_commits
+"""Backfill all commits
+
+Ensures that all default-branch commits are populated correctly in the database, and
+that the database doesn't have non-default-branch commits that lie and say they're on
+the default branch.
 
 Revision ID: d3515ecea53d
 Revises: 480dbbd48927
@@ -54,6 +58,7 @@ def upgrade():
         db_commits_by_sha = {commit.sha: commit for commit in db_commits}
         print(f"Found {len(db_commits)} commits in the database")
 
+        # Go through each default-branch commit and ensure it's correct in the database
         for commit_info in all_commits:
             sha = commit_info["sha"]
             if sha in db_commits_by_sha:
@@ -86,6 +91,23 @@ def upgrade():
                         author_login=commit_info["github"]["author_login"],
                         author_avatar=commit_info["github"]["author_avatar"],
                     )
+                )
+
+        # Ensure there aren't any db commits lying that they're on the default branch
+        default_branch_shas = [commit_info["sha"] for commit_info in all_commits]
+        for db_commit in db_commits:
+            if (
+                db_commit.branch == default_branch
+                and db_commit.sha not in default_branch_shas
+            ):
+                print(
+                    f"Removing branch from sha {db_commit.sha[:7]} because it's not "
+                    "actually on the default branch"
+                )
+                connection.execute(
+                    commit_table.update()
+                    .where(commit_table.c.id == db_commit.id)
+                    .values(branch=None)
                 )
 
 
