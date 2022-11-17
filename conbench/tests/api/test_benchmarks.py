@@ -869,7 +869,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         resp = client.post(self.url, json=payload)
         assert resp.status_code == 201, f"unexpected response: {resp.text}"
 
-        bechmark_id = resp.json["id"]
+        benchmark_id = resp.json["id"]
         # Confirm that an empty context was created.
         context_url = resp.json["links"]["context"]
         resp = client.get(context_url)
@@ -883,7 +883,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         # object. There was a time when the benchmark-entity template failed
         # rendering for empty contexts, see
         # https://github.com/conbench/conbench/issues/365
-        resp = client.get(f"/benchmarks/{bechmark_id}/")
+        resp = client.get(f"/benchmarks/{benchmark_id}/")
         assert resp.status_code == 200, f"unexpected response: {resp.text}"
 
         # As of today the rendered view shows the context ID. Confirm that. In
