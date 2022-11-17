@@ -256,6 +256,11 @@ def test_parse_commit():
     }
     assert GitHub._parse_commit(commit) == expected
 
+    # test a long message
+    commit["commit"]["message"] = "a" * 500
+    expected["message"] = "a" * 240
+    assert GitHub._parse_commit(commit) == expected
+
 
 def test_parse_commit_no_author():
     path = os.path.join(this_dir, "github_commit_no_author.json")
