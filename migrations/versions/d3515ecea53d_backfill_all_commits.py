@@ -86,8 +86,8 @@ def upgrade():
                         repository=repo,
                         parent=commit_info["github"]["parent"],
                         timestamp=commit_info["github"]["date"],
-                        message=commit_info["github"]["message"],
-                        author_name=commit_info["github"]["author_name"],
+                        message=commit_info["github"]["message"][:240],
+                        author_name=commit_info["github"]["author_name"][:90],
                         author_login=commit_info["github"]["author_login"],
                         author_avatar=commit_info["github"]["author_avatar"],
                     )
