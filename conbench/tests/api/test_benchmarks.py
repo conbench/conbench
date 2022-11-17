@@ -843,3 +843,50 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         response = client.post(self.url, json=data)
         message = {"_schema": ["Either stats or error field is required"]}
         self.assert_400_bad_request(response, message)
+
+    def test_create_benchmark_context_missing(self, client):
+        self.authenticate(client)
+        payload = _fixtures.VALID_PAYLOAD.copy()
+        del payload["context"]
+        resp = client.post(self.url, json=payload)
+        assert resp.status_code == 400, f"unexpected response: {resp.text}"
+        assert '"context": ["Missing data for required field."]' in resp.text
+
+    def test_create_benchmark_context_empty(self, client):
+        """
+        It is an error to provide no context object (see test above). Whether
+        an empty context object is something we want to accept is debatable. As
+        part of working on https://github.com/conbench/conbench/issues/365 we
+        for now opt for accepting it, i.e. HTML template rendering must expect
+        this scenario.
+        """
+        self.authenticate(client)
+        payload = _fixtures.VALID_PAYLOAD.copy()
+        payload["run_id"] = _uuid()
+        payload["batch_id"] = _uuid()
+
+        payload["context"] = {}
+        resp = client.post(self.url, json=payload)
+        assert resp.status_code == 201, f"unexpected response: {resp.text}"
+
+        benchmark_id = resp.json["id"]
+        # Confirm that an empty context was created.
+        context_url = resp.json["links"]["context"]
+        resp = client.get(context_url)
+        assert resp.status_code == 200, f"unexpected response: {resp.text}"
+
+        # expected keys: 'id', 'links' -- no more keys: empty context
+        assert set(resp.json.keys()) == set(["id", "links"])
+        context_id = resp.json["id"]
+
+        # Test benchmark HTML template renderer with above-created benchmark
+        # object. There was a time when the benchmark-entity template failed
+        # rendering for empty contexts, see
+        # https://github.com/conbench/conbench/issues/365
+        resp = client.get(f"/benchmarks/{benchmark_id}/")
+        assert resp.status_code == 200, f"unexpected response: {resp.text}"
+
+        # As of today the rendered view shows the context ID. Confirm that. In
+        # the future it might be reasonable to not show the context ID, but
+        # maybe only a helpful placeholder such as "empty context".
+        assert context_id in resp.text
