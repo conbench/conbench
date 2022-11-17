@@ -231,7 +231,7 @@ def backfill_default_branch_commits(
         try:
             commit = Commit.create_github_context(**commit_info)
             backfilled_commits.append(commit)
-        except s.exc.IntegrityError as e:
+        except Exception as e:
             if "commit_index" in str(e):
                 print(f"Commit {commit_info['sha']} already existed in the database")
             else:
