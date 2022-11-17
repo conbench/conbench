@@ -1,4 +1,5 @@
 import importlib.metadata as importlib_metadata
+import json
 import os
 
 try:
@@ -14,7 +15,14 @@ def create_application(config):
 
     application = f.Flask(__name__)
     application.config.from_object(config)
+
     _init_application(application)
+
+    if application.config["DEBUG"]:
+        print(
+            f"* Flask config:\n{json.dumps(application.config, sort_keys=True, default=str, indent=2)}"
+        )
+
     return application
 
 
