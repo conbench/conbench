@@ -77,17 +77,6 @@ def upgrade():
             else:
                 # insert this commit into the db
                 print(f"Inserting sha {sha[:7]} into the db")
-                message = commit_info["github"]["message"]
-                author_name = commit_info["github"]["author_name"]
-                try:
-                    message = message[:240]
-                except:
-                    pass
-                try:
-                    author_name = author_name[:90]
-                except:
-                    pass
-
                 connection.execute(
                     commit_table.insert().values(
                         id=uuid.uuid4().hex,
@@ -97,8 +86,8 @@ def upgrade():
                         repository=repo,
                         parent=commit_info["github"]["parent"],
                         timestamp=commit_info["github"]["date"],
-                        message=message,
-                        author_name=author_name,
+                        message=commit_info["github"]["message"],
+                        author_name=commit_info["github"]["author_name"],
                         author_login=commit_info["github"]["author_login"],
                         author_avatar=commit_info["github"]["author_avatar"],
                     )

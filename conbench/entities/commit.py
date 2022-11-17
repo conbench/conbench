@@ -403,7 +403,7 @@ class GitHub:
         return {
             "parent": commit["parents"][0]["sha"] if commit["parents"] else None,
             "date": dateutil.parser.isoparse(commit_author["date"]),
-            "message": commit["commit"]["message"].split("\n")[0],
+            "message": commit["commit"]["message"].split("\n")[0][:240],
             "author_name": commit_author["name"],
             "author_login": author["login"] if author else None,
             "author_avatar": author["avatar_url"] if author else None,
