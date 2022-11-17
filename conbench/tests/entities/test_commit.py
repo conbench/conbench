@@ -66,6 +66,11 @@ def test_get_github_commit_none():
 )
 def test_get_github_commit_and_fork_point_sha(branch):
     # NOTE: This integration test intentionally hits GitHub.
+    if os.getenv("BUILDKITE"):
+        pytest.skip(
+            "Buildkite doesn't have a GITHUB_API_TOKEN so we won't hit the GitHub API"
+        )
+
     repo = "https://github.com/apache/arrow"
     sha = "3decc46119d583df56c7c66c77cf2803441c4458"
     tz = dateutil.tz.tzutc()
@@ -96,6 +101,11 @@ def test_get_github_commit_and_fork_point_sha(branch):
 )
 def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
     # NOTE: This integration test intentionally hits GitHub.
+    if os.getenv("BUILDKITE"):
+        pytest.skip(
+            "Buildkite doesn't have a GITHUB_API_TOKEN so we won't hit the GitHub API"
+        )
+
     repo = "https://github.com/apache/arrow"
     sha = "982023150ccbb06a6f581f6797c017492485b58c"
     tz = dateutil.tz.tzutc()
@@ -116,6 +126,11 @@ def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
 
 def test_backfill_default_branch_commits():
     # NOTE: This integration test intentionally hits GitHub.
+    if os.getenv("BUILDKITE"):
+        pytest.skip(
+            "Buildkite doesn't have a GITHUB_API_TOKEN so we won't hit the GitHub API"
+        )
+
     repository = "https://github.com/conbench/conbench"
     default_branch = "conbench:main"
     author = "Austin Dickey"
@@ -254,6 +269,11 @@ def test_parse_commit():
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
     }
+    assert GitHub._parse_commit(commit) == expected
+
+    # test a long message
+    commit["commit"]["message"] = "a" * 500
+    expected["message"] = "a" * 240
     assert GitHub._parse_commit(commit) == expected
 
 
