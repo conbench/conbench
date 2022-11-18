@@ -2,6 +2,7 @@ import os
 
 import flask_login
 import flask_wtf
+import flask as f
 import wtforms as w
 import wtforms.validators as v
 
@@ -45,9 +46,19 @@ class Login(AppEndpoint):
         }
 
     def get(self):
+
+        # Read query parameter `target`. Assume that the value is the URL that
+        # the user actually wanted to visit before they were redirected to the
+        # login page. `f.request.args` holds parsed URL query parameters.
+        user_came_from_url = ""
+        if "target" in f.request.args:
+            user_came_from_url = f.request.args.get("target")
+
         if flask_login.current_user.is_authenticated:
+            # redirect to target if set?
             return self.redirect("app.index")
-        return self.page(self.form())
+
+        return self.page(self.form(), target=user_came_from_url)
 
     def post(self):
         if flask_login.current_user.is_authenticated:
