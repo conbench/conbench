@@ -12,7 +12,11 @@
   <p>New user? <a href="{{ url_for('app.register') }}">Sign Up</a></p>
   {% if sso %}
   <hr>
-  <a href="{{ url_for('api.google') }}">Google Login</a>
+    {% if target %}
+    <a href="{{ url_for('api.google', target=target) }}">Google Login</a>
+    {% else %}
+    <a href="{{ url_for('api.google' ) }}">Google Login</a>
+    {% endif %}
   {% endif %}
 </div>
 
