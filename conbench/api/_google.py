@@ -2,17 +2,22 @@ import json
 import logging
 import time
 
+import urllib.parse
+
 import flask as f
+
+
 import requests
 
 from ..config import Config
+
 
 log = logging.getLogger(__name__)
 
 
 def get_oidc_config():
     # Rely on three config parameters to be set in a meaningful way:
-    # Config.OIDC_ISSUER_URL, Config.OIDC_CLIENT_ID,Config.OIDC_CLIENT_SECRET
+    # Config.OIDC_ISSUER_URL, Config.OIDC_CLIENT_ID, Config.OIDC_CLIENT_SECRET
     discovery_url = Config.OIDC_ISSUER_URL + "/.well-known/openid-configuration"
     return discovery_url, Config.OIDC_CLIENT_ID, Config.OIDC_CLIENT_SECRET
 
@@ -37,13 +42,11 @@ def get_oidc_client():
     return client, oidc_provider_config
 
 
-def auth_google_user():
+def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
     """
     Generate and return a URL that will be sent to the user agent in an HTTP
-    redirect response.
-
-    That URL represents a so-called authorization request against the identity
-    provider.
+    redirect response. That URL represents a so-called authorization request
+    against the identity provider.
 
     This function here is expected to be called in the context of processing an
     incoming HTTP request.
@@ -70,6 +73,12 @@ def auth_google_user():
     https://github.com/conbench/conbench/pull/454#issuecomment-1326338524 and
     in https://github.com/conbench/conbench/issues/464
 
+    Technically, a more controlled and predictable way to construct the
+    callback URL would be using Config.INTENDED_BASE_URL. However, as long as
+    that configuration parameter is not required to be set to a meaningful
+    value we should not rely on that yet (breaks compatibility with old
+    deployment configs).
+
     If either redirect URL or the authorization endpoint (at the OP) do not use
     the HTTPS scheme then the oauthlib method `prepare_request_uri()` below is
     expected to throw `InsecureTransportError`. For testing, this can be
@@ -88,34 +97,87 @@ def auth_google_user():
             "api.callback", _external=True, _scheme="https"
         )
 
-    return client.prepare_request_uri(
+    camefrom_encoded = ""
+    try:
+        camefrom_encoded = urllib.parse.quote(user_came_from_url)
+    except Exception as exc:
+        # Continue with the login flow w/o carrying the target URL around.
+        log.info("drop target URL: encoding failed with: %s", exc)
+
+    print(f"{user_came_from_url=}")
+    print(f"Initiate SSO flow. redirect_uri: {abs_oidc_callback_url}")
+    url_to_redirect_user_to, _, _ = client.prepare_request_uri(
         oidc_provider_config["authorization_endpoint"],
         redirect_uri=abs_oidc_callback_url,
+        # The `openid` scope renders this OAuth2 flow to be an OpenIDConnect
+        # (OIDC) flow.
         scope=["openid", "email", "profile"],
+        # Additional parameter to carry across the flow. Usually security
+        # purpose. TODO: combine with non-guessable state.
+        state=camefrom_encoded,
     )
 
+    return url_to_redirect_user_to
 
-def get_google_user():
+
+def conclude_oidc_flow():
     client, oidc_provider_config = get_oidc_client()
     _, client_id, client_secret = get_oidc_config()
 
+    # Prepare a token creation request. Note that this is executed as part of
+    # the HTTP request to the callback endpoint, and the URL contains the
+    # so-called authorization response sent by the identity provider, via query
+    # parameters. Among this is the OAuth2 authorization code, because we're in
+    # the middle of a so-called authorization code flow. That is, all the juicy
+    # detail to continue the flow is in the query parameter section of
+    # `f.request.url`, and that also helps understanding
+    # `authorization_response=f.request.url`. Note that authorization response
+    # parsing is done according to specs, and that requires that last redirect
+    # (to here) to have happened via TLS.
     token_url, headers, body = client.prepare_token_request(
         oidc_provider_config["token_endpoint"],
         authorization_response=f.request.url,
         redirect_url=f.request.base_url,
-        code=f.request.args.get("code"),
+        # code=f.request.args.get("code"),
     )
+
+    print(f"token_url: {token_url}")
+
+    # Extract authorization response structure from incoming URL.
+    # Response is expected to have retained the `state` parameter which we're
+    # using to store the URL the user actually wanted to visit before going
+    # into the login flow.
+    authorization_response = client.parse_request_uri_response(
+        f.request.url.replace("http://", "https://")
+    )
+    print(f"authorization_response: {authorization_response}")
+
+    # Inverse operation of urllib.parse.quote(), i.e. URL-decode the URL.
+    user_came_from_url = urllib.parse.unquote(authorization_response["state"])
+
+    print(f"user_came_from_url: {user_came_from_url}")
+
+    # Get an access token. The response is expected to also contain an
+    # ID Token, though.
     token_response = requests.post(
         token_url,
         headers=headers,
         data=body,
         auth=(client_id, client_secret),
     )
+
+    print(f"access token response: {token_response}, {token_response.text}")
+
     client.parse_request_body_response(json.dumps(token_response.json()))
 
-    uri, headers, body = client.add_token(oidc_provider_config["userinfo_endpoint"])
-    return requests.get(
-        uri,
+    userinfo_url, headers, body = client.add_token(
+        oidc_provider_config["userinfo_endpoint"]
+    )
+
+    userinfo = requests.get(
+        userinfo_url,
         headers=headers,
         data=body,
     ).json()
+
+    return user_came_from_url, userinfo
