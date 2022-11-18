@@ -28,14 +28,16 @@ class LoginForm(flask_wtf.FlaskForm):
 class Login(AppEndpoint):
     form = LoginForm
 
-    def page(self, form):
-        sso = os.environ.get("GOOGLE_CLIENT_ID", None) is not None
+    def page(self, form, target: str):
+        # sso = os.environ.get("GOOGLE_CLIENT_ID", None) is not None
+        sso = True
         return self.render_template(
             "login.html",
             application=Config.APPLICATION_NAME,
             title="Sign In",
             form=form,
             sso=sso,
+            target=target,
         )
 
     def data(self, form):
