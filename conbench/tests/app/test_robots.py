@@ -1,6 +1,6 @@
 expected_text = """
 User-Agent: *
-Disallow: /
+Allow: /
 """
 
 
