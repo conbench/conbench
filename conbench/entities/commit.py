@@ -67,7 +67,7 @@ class Commit(Base, EntityMixin):
 
     @staticmethod
     def create_github_context(sha, repository: str, github: dict):
-        return Commit.create(
+        return Commit.upsert_do_nothing(
             {
                 "sha": sha,
                 "branch": github["branch"],
@@ -228,14 +228,9 @@ def backfill_default_branch_commits(
     for commit_info in commits_to_try:
         commit_info["github"]["branch"] = default_branch
         commit_info["github"]["fork_point_sha"] = commit_info["sha"]
-        try:
-            commit = Commit.create_github_context(**commit_info)
+        commit = Commit.create_github_context(**commit_info)
+        if commit:
             backfilled_commits.append(commit)
-        except Exception as e:
-            if "commit_index" in str(e):
-                print(f"Commit {commit_info['sha']} already existed in the database")
-            else:
-                raise
 
     return backfilled_commits
 

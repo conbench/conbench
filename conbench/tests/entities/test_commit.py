@@ -18,6 +18,30 @@ from ...tests.api import _fixtures
 this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
+def test_create_github_context():
+    """Upserting should work correctly."""
+    fake_github_info = {
+        "branch": "branch",
+        "fork_point_sha": "fork_point_sha",
+        "parent": "parent",
+        "date": datetime.datetime(2022, 11, 21),
+        "message": "message",
+        "author_name": "author_name",
+        "author_login": "author_login",
+        "author_avatar": "author_avatar",
+    }
+
+    commit = Commit.create_github_context(
+        sha="sha", repository="repository", github=fake_github_info
+    )
+    assert commit.id
+
+    commit_2 = Commit.create_github_context(
+        sha="sha", repository="repository", github=fake_github_info
+    )
+    assert commit == commit_2
+
+
 def test_repository_to_name():
     expected = "apache/arrow"
     assert repository_to_name(None) == ""

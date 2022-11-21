@@ -3,6 +3,7 @@ import uuid
 
 import flask as f
 from sqlalchemy import Column, distinct
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -90,6 +91,15 @@ class EntityMixin:
         entity = cls(**data)
         entity.save()
         return entity
+
+    @classmethod
+    def upsert_do_nothing(cls, data):
+        """Try to insert a row. If there is a conflict, do nothing."""
+        statement = insert(cls).values([data]).on_conflict_do_nothing()
+        Session.execute(statement)
+        Session.commit()
+        # return the row that (now) exists in the database
+        return cls.first(**data)
 
     @classmethod
     def bulk_save_objects(self, bulk):

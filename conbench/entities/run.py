@@ -65,7 +65,12 @@ class Run(Base, EntityMixin):
             )
             if github:
                 commit = Commit.create_github_context(sha, repository, github)
-                backfill_default_branch_commits(repository, commit)
+                try:
+                    backfill_default_branch_commits(repository, commit)
+                except Exception as e:
+                    # no matter what happened during backfilling, we want to return a
+                    # successful status code because the commit was created
+                    print(f"Could not backfill default branch commits due to: {e}")
             elif sha or repository:
                 commit = Commit.create_unknown_context(sha, repository)
             else:
