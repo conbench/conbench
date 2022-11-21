@@ -5,7 +5,7 @@ from ..app._endpoint import AppEndpoint
 
 text = """
 User-Agent: *
-Disallow: /
+Allow: /
 """
 
 
