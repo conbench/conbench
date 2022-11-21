@@ -8,7 +8,7 @@ steps:
   - label: "Test"
     key: "test"
     depends_on: "build"
-    command: docker-compose run app pytest -vv conbench/tests/
+    command: docker-compose run -e BUILDKITE=true app pytest -vv conbench/tests/
 
   - label: "Test Migrations"
     key: "test-migrations"
