@@ -1,9 +1,10 @@
 import functools
 import uuid
+from typing import List
 
 import flask as f
 from sqlalchemy import Column, distinct
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -93,13 +94,11 @@ class EntityMixin:
         return entity
 
     @classmethod
-    def upsert_do_nothing(cls, data):
-        """Try to insert a row. If there is a conflict, do nothing."""
-        statement = insert(cls).values([data]).on_conflict_do_nothing()
+    def upsert_do_nothing(cls, row_list: List[dict]):
+        """Try to insert rows. If there is a conflict on any row, ignore that row."""
+        statement = postgresql_insert(cls).values(row_list).on_conflict_do_nothing()
         Session.execute(statement)
         Session.commit()
-        # return the row that (now) exists in the database
-        return cls.first(**data)
 
     @classmethod
     def bulk_save_objects(self, bulk):

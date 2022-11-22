@@ -18,27 +18,23 @@ from ...tests.api import _fixtures
 this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
-def test_create_github_context():
+def test_upsert_do_nothing():
     """Upserting should work correctly."""
-    fake_github_info = {
-        "branch": "branch",
-        "fork_point_sha": "fork_point_sha",
-        "parent": "parent",
-        "date": datetime.datetime(2022, 11, 21),
-        "message": "message",
-        "author_name": "author_name",
-        "author_login": "author_login",
-        "author_avatar": "author_avatar",
-    }
+    data = [
+        {
+            "sha": "sha",
+            "repository": "repository",
+            "message": "message",
+            "author_name": "author_name",
+        }
+    ]
 
-    commit = Commit.create_github_context(
-        sha="sha", repository="repository", github=fake_github_info
-    )
+    Commit.upsert_do_nothing(data)
+    commit = Commit.first(**data[0])
     assert commit.id
 
-    commit_2 = Commit.create_github_context(
-        sha="sha", repository="repository", github=fake_github_info
-    )
+    Commit.upsert_do_nothing(data)
+    commit_2 = Commit.first(**data[0])
     assert commit == commit_2
 
 
@@ -185,10 +181,11 @@ def test_backfill_default_branch_commits():
     )
 
     # this should backfill all 335 default-branch commits before that one
-    backfilled_commits = backfill_default_branch_commits(repository, commit_1)
-    assert len(backfilled_commits) == 335
+    backfill_default_branch_commits(repository, commit_1)
+    commits = Commit.all(branch=default_branch, repository=repository)
+    assert len(commits) == 336
     # make sure the direct parent is in there, fully fleshed out
-    parent = [commit for commit in backfilled_commits if commit.sha == test_shas[0]][0]
+    parent = [commit for commit in commits if commit.sha == test_shas[0]][0]
     assert parent.message == "Print instead of log what's posted (#418)"
 
     # pretend we skipped test_shas[2], and ensure it's backfilled
@@ -204,9 +201,12 @@ def test_backfill_default_branch_commits():
         )
     )
 
-    backfilled_commits = backfill_default_branch_commits(repository, commit_2)
-    assert len(backfilled_commits) == 1
-    assert backfilled_commits[0].sha == test_shas[2]
+    backfill_default_branch_commits(repository, commit_2)
+    commits = Commit.all(
+        branch=default_branch, repository=repository, order_by=Commit.timestamp.desc()
+    )
+    assert len(commits) == 338
+    assert commits[1].sha == test_shas[2]
 
     # post the next commit and ensure there's no backfill
     commit_3 = Commit.create(
@@ -221,8 +221,9 @@ def test_backfill_default_branch_commits():
         )
     )
 
-    backfilled_commits = backfill_default_branch_commits(repository, commit_3)
-    assert len(backfilled_commits) == 0
+    backfill_default_branch_commits(repository, commit_3)
+    commits = Commit.all(branch=default_branch, repository=repository)
+    assert len(commits) == 339
 
     # post a commit from some other branch back in time, to test out-of-order commits
     commit_4 = Commit.create(
@@ -236,8 +237,9 @@ def test_backfill_default_branch_commits():
             timestamp=datetime.datetime(2022, 10, 29, tzinfo=tz),
         )
     )
-    backfilled_commits = backfill_default_branch_commits(repository, commit_4)
-    assert len(backfilled_commits) == 0
+    backfill_default_branch_commits(repository, commit_4)
+    commits = Commit.all(branch=default_branch, repository=repository)
+    assert len(commits) == 339
 
 
 def test_parse_commits():
