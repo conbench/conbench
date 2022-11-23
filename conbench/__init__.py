@@ -1,6 +1,9 @@
 import importlib.metadata as importlib_metadata
 import json
+import logging
 import os
+
+import conbench.logger
 
 try:
     __version__ = importlib_metadata.version(__name__)
@@ -10,20 +13,31 @@ except Exception:
 del importlib_metadata
 
 
+# Pre-configure logging before reading user-given configuration.
+conbench.logger.setup(level_stderr="DEBUG", level_file=None)
+log = logging.getLogger(__name__)
+
+
 def create_application(config):
     import flask as f
 
-    application = f.Flask(__name__)
-    application.config.from_object(config)
+    app = f.Flask(__name__)
+    app.config.from_object(config)
 
-    _init_application(application)
+    _init_application(app)
 
-    if application.config["DEBUG"]:
-        print(
-            f"* Flask config:\n{json.dumps(application.config, sort_keys=True, default=str, indent=2)}"
-        )
+    # Re-configure logging using user-given configuration details.
+    log.debug("re-configure logging")
+    conbench.logger.setup(
+        level_stderr=app.config["LOG_LEVEL_STDERR"],
+        level_file=app.config["LOG_LEVEL_FILE"],
+    )
 
-    return application
+    log.debug(
+        "flask app config:\n%s",
+        json.dumps(app.config, sort_keys=True, default=str, indent=2),
+    )
+    return app
 
 
 def _init_application(application):
