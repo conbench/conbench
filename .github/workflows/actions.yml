@@ -36,7 +36,7 @@ jobs:
             -e benchclients/python
       - name: Start PostgreSQL DB
         run: |
-          docker compose run db
+          docker compose up db
       - name: Migrations
         run: |
           alembic upgrade head
