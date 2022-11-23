@@ -69,6 +69,17 @@ class Config:
         if "GOOGLE_CLIENT_ID" in os.environ:
             OIDC_ISSUER_URL = "https://accounts.google.com"
 
+    # Note that GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET are the legacy env vars
+    # previously used for enabling OIDC SSO. Keep using these env vars for now.
+    OIDC_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
+    OIDC_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
+
+    # Require client ID and client secret to be set if issuer is configured.
+    # Those three parameters are all required for an OIDC authorization code
+    # flow.
+    if OIDC_ISSUER_URL is not None:
+        assert OIDC_CLIENT_ID is not None
+        assert OIDC_CLIENT_SECRET is not None
 
 class TestConfig(Config):
     DB_NAME = os.environ.get("DB_NAME", f"{APPLICATION_NAME.lower()}_test")

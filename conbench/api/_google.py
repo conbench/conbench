@@ -12,10 +12,10 @@ log = logging.getLogger(__name__)
 
 
 def get_oidc_config():
-    client_id = os.environ.get("GOOGLE_CLIENT_ID", None)
-    client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", None)
+    # Rely on three config parameters to be set in a meaningful way:
+    # Config.OIDC_ISSUER_URL, Config.OIDC_CLIENT_ID,Config.OIDC_CLIENT_SECRET
     discovery_url = Config.OIDC_ISSUER_URL + "/.well-known/openid-configuration"
-    return discovery_url, client_id, client_secret
+    return discovery_url, Config.OIDC_CLIENT_ID, Config.OIDC_CLIENT_SECRET
 
 
 def get_oidc_client():
