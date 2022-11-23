@@ -1,4 +1,5 @@
 black
+bs4
 coverage
 coveralls
 flake8

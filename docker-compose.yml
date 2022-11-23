@@ -8,6 +8,9 @@ services:
     command: ["gunicorn", "-b", "0.0.0.0:5000", "-w", "5", "conbench:application", "--access-logfile=-", "--error-logfile=-", "--preload"]
     volumes:
       - ${PWD}/_conbench-coverage-dir:/etc/conbench-coverage-dir
+    depends_on:
+      - dex
+      - db
     environment:
       APPLICATION_NAME: "Conbench"
       DB_USERNAME: "postgres"
@@ -27,9 +30,17 @@ services:
       SECRET_KEY: "Person, woman, man, camera, TV"
       # Default log level is INFO, change to DEBUG as needed.
       # CONBENCH_LOG_LEVEL_STDERR: DEBUG
-    depends_on:
-      db:
-        condition: service_healthy
+      OAUTHLIB_INSECURE_TRANSPORT: 1
+      GOOGLE_CLIENT_ID: conbench-test-client
+      GOOGLE_CLIENT_SECRET: AnotherStaticSecret
+      CONBENCH_OIDC_ISSUER_URL: http://dex:5556/dex-for-conbench
+
+  dex:
+    image: dexidp/dex:v2.35.3
+    volumes:
+      - ${PWD}/conbench/tests/containers/dex/config.yml:/etc/dex/config.docker.yaml
+    ports:
+      - "5556:5556"
 
   db:
     image: library/postgres:12.4
