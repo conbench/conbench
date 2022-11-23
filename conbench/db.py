@@ -1,12 +1,9 @@
 import logging
 
-
 import sqlalchemy.exc
+import tenacity
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
-
-import tenacity
-
 
 engine = None
 session_maker = sessionmaker(future=True)
