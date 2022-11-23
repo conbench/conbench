@@ -19,6 +19,7 @@ services:
       FLASK_ENV: "development"
       REGISTRATION_KEY: "code"
       SECRET_KEY: "Person, woman, man, camera, TV"
+      CREATE_ALL_TABLES
     depends_on:
       db:
         condition: service_healthy
