@@ -12,7 +12,6 @@ flask-swagger-ui
 Flask-WTF
 gitpython
 gunicorn
-lxml
 marshmallow
 numpy
 oauthlib
