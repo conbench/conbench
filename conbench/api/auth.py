@@ -92,7 +92,9 @@ class CallbackAPI(ApiEndpoint):
         try:
             google_user = _google.get_google_user()
         except Exception as e:
-            self.abort_400_bad_request(f"OpenID Connect single sign-on flow failed: {e}.")
+            self.abort_400_bad_request(
+                f"OpenID Connect single sign-on flow failed: {e}."
+            )
 
         email = google_user["email"]
         given = google_user["given_name"]
