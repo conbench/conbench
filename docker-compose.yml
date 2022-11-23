@@ -9,23 +9,22 @@ services:
     volumes:
       - ${PWD}/_conbench-coverage-datafile:/etc/conbench-coverage-datafile
     environment:
-      - APPLICATION_NAME: "Conbench"
-      - DB_USERNAME: "postgres"
+      APPLICATION_NAME: "Conbench"
+      DB_USERNAME: "postgres"
       # From the docker-compose docs: "By default Compose sets up a single
       # network for your app. Each container for a service joins the default
       # network and is both reachable by other containers on that network, and
       # discoverable by them at a hostname identical to the container name."
       # That is why the DNS name `db` works.
-      - DB_HOST: "db"
-      - DB_PASSWORD: "postgres"
-      - DB_NAME: "postgres"
-      - DB_PORT: "5432"
-      - FLASK_APP: "conbench"
-      - FLASK_ENV: "development"
-      - FLASK_DEBUG: "true"
-      - REGISTRATION_KEY: "code"
-      - SECRET_KEY: "Person, woman, man, camera, TV"
-      - CREATE_ALL_TABLES
+      DB_HOST: "db"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "postgres"
+      DB_PORT: "5432"
+      FLASK_APP: "conbench"
+      FLASK_ENV: "development"
+      FLASK_DEBUG: "true"
+      REGISTRATION_KEY: "code"
+      SECRET_KEY: "Person, woman, man, camera, TV"
     depends_on:
       db:
         condition: service_healthy

@@ -41,7 +41,7 @@ jobs:
       # the network that the DB is also in, reachable via DNS name `db`
       - name: Migrations
         run: |
-          docker-compose run app alembic upgrade head
+          docker-compose run -e CREATE_ALL_TABLES app alembic upgrade head
         env:
           CREATE_ALL_TABLES: false
       - name: Lint (flake8)
