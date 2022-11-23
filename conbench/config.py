@@ -49,6 +49,10 @@ class Config:
     if not INTENDED_BASE_URL.endswith("/"):
         INTENDED_BASE_URL += "/"
 
+    LOG_LEVEL_STDERR = os.environ.get("CONBENCH_LOG_LEVEL_STDERR", "INFO")
+    LOG_LEVEL_FILE = None
+    LOG_LEVEL_SQLALCHEMY = "WARNING"
+
 
 class TestConfig(Config):
     DB_NAME = os.environ.get("DB_NAME", f"{APPLICATION_NAME.lower()}_test")
