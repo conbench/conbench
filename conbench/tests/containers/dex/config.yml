@@ -14,7 +14,10 @@ web:
   # tlsCert: /dexcerts/server.crt
   # tlsKey: /dexcerts/server.key
 
-# Also support the implicit flow (tested) and hybrid flows (untested)
+# Technically, only `code` is needed for the so-called authorization code flow
+# where the RP fetches the ID Token from the OP via the so-called backchannel.
+# If we ever want to support the implicit flow, that's where the id_token scope
+# comes in handy.
 oauth2:
   responseTypes: ["code", "token", "id_token"]
 
