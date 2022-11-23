@@ -37,12 +37,14 @@ jobs:
       - name: Start PostgreSQL DB
         run: |
           docker-compose run --detach db
+      # Run `alembic upgrade head` via docker-compose so that it is within
+      # the network that the DB is also in, reachable via DNS name `db`
       - name: Migrations
         run: |
-          alembic upgrade head
+          docker-compose run app alembic upgrade head
         env:
           DB_USERNAME: "postgres"
-          DB_HOST: "localhost"
+          DB_HOST: "db"
           DB_PASSWORD: "postgres"
           DB_NAME: "conbench_test"
           DB_PORT: "5432"
