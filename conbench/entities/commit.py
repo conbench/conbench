@@ -222,22 +222,26 @@ def backfill_default_branch_commits(
         until=new_commit.timestamp,
     )
     commits_to_try = commits[1:-1]  # since/until are inclusive; we want exclusive
-    backfilled_commits = []
 
     print(f"Backfilling {len(commits_to_try)} commit(s)")
-    for commit_info in commits_to_try:
-        commit_info["github"]["branch"] = default_branch
-        commit_info["github"]["fork_point_sha"] = commit_info["sha"]
-        try:
-            commit = Commit.create_github_context(**commit_info)
-            backfilled_commits.append(commit)
-        except Exception as e:
-            if "commit_index" in str(e):
-                print(f"Commit {commit_info['sha']} already existed in the database")
-            else:
-                raise
-
-    return backfilled_commits
+    if commits_to_try:
+        Commit.upsert_do_nothing(
+            [
+                {
+                    "sha": commit_info["sha"],
+                    "branch": default_branch,
+                    "fork_point_sha": commit_info["sha"],
+                    "repository": commit_info["repository"],
+                    "parent": commit_info["github"]["parent"],
+                    "timestamp": commit_info["github"]["date"],
+                    "message": commit_info["github"]["message"],
+                    "author_name": commit_info["github"]["author_name"],
+                    "author_login": commit_info["github"]["author_login"],
+                    "author_avatar": commit_info["github"]["author_avatar"],
+                }
+                for commit_info in commits_to_try
+            ]
+        )
 
 
 class GitHub:
