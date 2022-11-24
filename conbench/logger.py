@@ -17,7 +17,7 @@ picking a logger name starting with `conbench.`, for example:
     log = logging.getLogger('conbench.foobar')
 
 Usually, the module's name in the hierarchy as given by __name__ achieves that
-which is why most Python module in this code base use
+which is why most Python modules in this code base use
 
     log = logging.getLogger(__name__)
 """
