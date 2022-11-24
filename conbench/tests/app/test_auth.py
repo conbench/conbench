@@ -146,11 +146,19 @@ class TestLoginOIDC(_asserts.AppEndpointTest):
 
     def test_oidc_flow_against_dex(self, client):
 
-        # r = client.get("/login/", follow_redirects=True)
-        # TODO: parse this from the HTML doc
-        # initiate_flow_url = "http://127.0.0.1:5000/api/google/"
-        # follow_redirects=True)
-        r0 = client.get("/api/google/")
+        # TODO: parse this 'initiate flow URL' from the HTML login page, i.e.
+        # from the button/ link that people would actually click. If that is a
+        # _relative_ href then construct an absolute URL from it (see below).
+
+        # As long as `client` is the Flask test client we do not use an actual
+        # HTTP client/server interaction. The URL here must be specified in
+        # absolute terms because the request handler uses scheme, host, port to
+        # dynamically generate the OIDC callback URL. We could set any scheme
+        # and host, but we want to match the allow-listed callback URL that Dex
+        # is aware of. That is is currently set to
+        # http://127.0.0.1:5000/api/google/callback -- see
+        # containders/dex/config.yml
+        r0 = client.get("http://127.0.0.1:5000/api/google/")
 
         # `r0` is meant to be a redirect response, redirecting to the identity
         # provider. Extract the full URL we've been redirected to. The URL
