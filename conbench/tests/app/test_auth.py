@@ -1,5 +1,5 @@
 import logging
-from urllib.parse import urljoin, parse_qs
+from urllib.parse import parse_qs, urljoin
 
 import requests
 from bs4 import BeautifulSoup
