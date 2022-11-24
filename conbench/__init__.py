@@ -31,6 +31,7 @@ def create_application(config):
     conbench.logger.setup(
         level_stderr=app.config["LOG_LEVEL_STDERR"],
         level_file=app.config["LOG_LEVEL_FILE"],
+        level_sqlalchemy=app.config["LOG_LEVEL_SQLALCHEMY"],
     )
 
     log.debug(
