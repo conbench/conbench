@@ -24,6 +24,12 @@ jobs:
         with:
           options: --check --diff
           src: .
+      - name: Install flake8, isort
+        run: pip install flake8 isort
+      - name: Lint (flake8)
+        run: flake8
+      - name: Lint (isort)
+        run: isort --check .
       - name: Start PostgreSQL DB
         run: docker-compose run --detach db
       # Run `alembic upgrade head` via docker-compose so that it is within
@@ -32,12 +38,6 @@ jobs:
         run: docker-compose run -e CREATE_ALL_TABLES app alembic upgrade head
         env:
           CREATE_ALL_TABLES: false
-      - name: Install flake8, isort
-        run: pip install flake8 isort
-      - name: Lint (flake8)
-        run: flake8
-      - name: Lint (isort)
-        run: isort --check .
       - name: Run tests, generate coverage data
         run: |
           docker-compose down && \
