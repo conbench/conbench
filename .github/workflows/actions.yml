@@ -55,7 +55,8 @@ jobs:
           docker-compose down && \
           docker-compose build app && \
           docker-compose run app coverage run \
-            --data-file=/etc/conbench-coverage-datafile --source conbench -m pytest -vv -s --durations=20 conbench/tests/
+            --data-file=/etc/conbench-coverage-dir/.coverage --source conbench \
+              -m pytest -vv -s -k test_dynamic_callback_url --durations=20 conbench/tests/
         env:
           DB_USERNAME: postgres
           GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
