@@ -24,16 +24,14 @@ jobs:
         with:
           options: --check --diff
           src: .
-      # - name: Start PostgreSQL DB
-      #   run: |
-      #     docker-compose run --detach db
+      - name: Start PostgreSQL DB
+        run: docker-compose run --detach db
       # Run `alembic upgrade head` via docker-compose so that it is within
       # the network that the DB is also in, reachable via DNS name `db`
-      # - name: Migrations
-      #   run: |
-      #     docker-compose run -e CREATE_ALL_TABLES app alembic upgrade head
-      #   env:
-      #     CREATE_ALL_TABLES: false
+      - name: Migrations
+        run: docker-compose run -e CREATE_ALL_TABLES app alembic upgrade head
+        env:
+          CREATE_ALL_TABLES: false
       - name: Install flake8, isort
         run: pip install flake8 isort
       - name: Lint (flake8)
@@ -46,7 +44,7 @@ jobs:
           docker-compose build app && \
           docker-compose run -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage app \
             coverage run --source conbench \
-              -m pytest -vv -s -k test_users -k test_plots --durations=20 conbench/tests/
+              -m pytest -vv -s --durations=20 conbench/tests/
       - name: Convert coverage data to LCOV
         run: |
           docker-compose run -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage app \
