@@ -46,7 +46,7 @@ jobs:
           docker-compose build app && \
           docker-compose run -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage app \
             coverage run --source conbench \
-              -m pytest -vv -s --durations=20 conbench/tests/
+              -m pytest -vv -s -k test_users -k test_plots --durations=20 conbench/tests/
       - name: Convert coverage data to LCOV
         run: |
           docker-compose run -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage app \
