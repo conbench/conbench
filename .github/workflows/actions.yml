@@ -34,9 +34,9 @@ jobs:
             -U --upgrade-strategy eager \
             -e .[dev] \
             -e benchclients/python
-      - name: Start PostgreSQL DB
-        run: |
-          docker-compose run --detach db
+      # - name: Start PostgreSQL DB
+      #   run: |
+      #     docker-compose run --detach db
       # Run `alembic upgrade head` via docker-compose so that it is within
       # the network that the DB is also in, reachable via DNS name `db`
       # - name: Migrations
