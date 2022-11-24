@@ -75,7 +75,7 @@ def auth_google_user():
     """
 
     client, oidc_provider_config = get_oidc_client()
-    abs_oidc_callback_url = f.url_for("api.callback", _external=True, _scheme="https")
+    abs_oidc_callback_url = f.url_for("api.callback", _external=True)
 
     return client.prepare_request_uri(
         oidc_provider_config["authorization_endpoint"],
