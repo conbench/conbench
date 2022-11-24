@@ -25,6 +25,8 @@ services:
       FLASK_DEBUG: "true"
       REGISTRATION_KEY: "code"
       SECRET_KEY: "Person, woman, man, camera, TV"
+      # Default log level is INFO, change to DEBUG as needed.
+      # CONBENCH_LOG_LEVEL_STDERR: DEBUG
     depends_on:
       db:
         condition: service_healthy
