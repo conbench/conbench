@@ -166,7 +166,7 @@ class TestLoginOIDC(_asserts.AppEndpointTest):
         # we expect it to send a login page in the response. That login
         # page shows an email/password login form. Extract form submission
         # endpoint URL from login page. It's a relative URL.
-        assert r1.status_code == 200
+        assert r1.status_code == 200, f"bad response: {r1.text}"
         rel_login_post_url = parse_login_page(r1.text)
         log.info("rel_login_post_url: %s", rel_login_post_url)
 
