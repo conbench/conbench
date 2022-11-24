@@ -17,10 +17,10 @@ import logging.handlers
 
 
 def setup(
-    level_stderr="ERROR",
-    level_file="DEBUG",
+    level_stderr,
+    level_file,
+    level_sqlalchemy,
     logfilepath="conbench.log",
-    level_sqlalchemy="WARNING",
 ):
     """Set up root logger for the Conbench application.
 
