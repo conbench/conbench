@@ -59,7 +59,10 @@ jobs:
               -m pytest -vv -s -k test_dynamic_callback_url --durations=20 conbench/tests/
       - name: Publish coverage
         run: |
-          docker-compose run app coveralls --service=github
+          docker-compose run \
+            -e GITHUB_TOKEN \
+            -e COVERAGE_FILE \
+            app coveralls --service=github
         env:
           COVERAGE_FILE: /etc/conbench-coverage-dir/.coverage
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
