@@ -67,7 +67,7 @@ jobs:
           CONBENCH_OIDC_ISSUER_URL: http://dex:5556/dex-for-conbench
       - name: Publish coverage
         run: |
-          cp _conbench-coverage-datafile .coverage && \
+          cp _conbench-coverage-dir/.coverage .coverage && \
           coveralls --service=github
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
