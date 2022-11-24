@@ -53,6 +53,22 @@ class Config:
     LOG_LEVEL_FILE = None
     LOG_LEVEL_SQLALCHEMY = "WARNING"
 
+    # If `OIDC_ISSUER_URL` is after all `None`: disable OpenID Connect (OIDC)
+    # single sign-on. If this is not `None` then it must be a valid OIDC issuer
+    # notation (that is, a URL).
+    OIDC_ISSUER_URL = os.environ.get("CONBENCH_OIDC_ISSUER_URL", None)
+    if OIDC_ISSUER_URL is not None:
+        assert OIDC_ISSUER_URL.startswith("http")
+        # Remove all trailing slashes.
+        OIDC_ISSUER_URL = OIDC_ISSUER_URL.rstrip("/")
+    else:
+        # legacy config support: when CONBENCH_OIDC_ISSUER_URL is set in the
+        # environment it takes precedence. If it is not set and if
+        # GOOGLE_CLIENT_ID is set in the environment then set issuer to
+        # "https://accounts.google.com"
+        if "GOOGLE_CLIENT_ID" in os.environ:
+            OIDC_ISSUER_URL = "https://accounts.google.com"
+
 
 class TestConfig(Config):
     DB_NAME = os.environ.get("DB_NAME", f"{APPLICATION_NAME.lower()}_test")
