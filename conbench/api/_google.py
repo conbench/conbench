@@ -90,8 +90,8 @@ def get_google_user():
 
     token_url, headers, body = client.prepare_token_request(
         oidc_provider_config["token_endpoint"],
-        authorization_response=f.request.url,  # .replace("http://", "https://"),
-        redirect_url=f.request.base_url,  # replace("http://", "https://"),
+        authorization_response=f.request.url,
+        redirect_url=f.request.base_url,
         code=f.request.args.get("code"),
     )
     token_response = requests.post(
