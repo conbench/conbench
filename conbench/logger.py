@@ -1,14 +1,25 @@
 """
 Set up Python's logging infrastructure for the web application.
 
-Acquire root logger instance and populate it with handlers, applying a certain
-log format. This takes effect for Conbench code as well as integrated
-libraries, such as SQLAlchemy
+Construct root logger instance and populate it with handlers, applying a
+certain log format. This takes effect for Conbench code as well as for
+integrated libraries, such as SQLAlchemy, urllib, flask, etc.
+
+Building this root logger and associating it with output (as opposed to having
+no root logger or having a root logger with no output handlers attached)
+enables us to see log messages emitted from within libraries in the first place
+(this is the way to see log msgs from SQLAlchemy etc).
 
 A package or module within Conbench should obtain and use a logger instance in
-the 'conbench' sub-tree of the logging namespace hierarchy, via e.g.
+the 'conbench' sub-tree of the logging namespace hierarchy. This is achieved by
+picking a logger name starting with `conbench.`, for example:
 
-    log = logging.getLogger('conbench.xxx')
+    log = logging.getLogger('conbench.foobar')
+
+Usually, the module's name in the hierarchy as given by __name__ achieves that
+which is why most Python module in this code base use
+
+    log = logging.getLogger(__name__)
 """
 
 
