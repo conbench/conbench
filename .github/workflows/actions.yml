@@ -55,17 +55,14 @@ jobs:
           docker-compose down && \
           docker-compose build app && \
           docker-compose run app coverage run \
-            --data-file=/etc/conbench-coverage-dir/.coverage --source conbench \
-              -m pytest -vv -s -k test_dynamic_callback_url --durations=20 conbench/tests/
+            --source conbench \
+              -m pytest -vv -s -k test_dynamic_callback_url --durations=20 conbench/tests/ \ &&
+          docker-compose run app coverage lcov -o /etc/conbench-coverage-dir/coverage.lcov
       - name: Publish coverage
-        run: |
-          docker-compose run \
-            -e GITHUB_TOKEN \
-            -e COVERAGE_FILE \
-            app coveralls --service=github
-        env:
-          COVERAGE_FILE: /etc/conbench-coverage-dir/.coverage
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: _conbench-coverage-dir/coverage.lcov
       - name: Test benchclients
         run: |
           pytest -vv benchclients/python/tests
