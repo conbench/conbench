@@ -10,9 +10,6 @@ from ..config import Config
 
 log = logging.getLogger(__name__)
 
-# Rely on INTENDED_BASE_URL to have a trailing slash.
-OIDC_CALLBACK_URL = Config.INTENDED_BASE_URL + "api/google/callback"
-
 
 def get_oidc_config():
     client_id = os.environ.get("GOOGLE_CLIENT_ID", None)
@@ -42,19 +39,47 @@ def get_oidc_client():
 
 
 def auth_google_user():
+    """
+    Generate and return a URL that will be sent to the user agent in an HTTP
+    redirect response.
+
+    That URL represents a so-called authorization request against the identity
+    provider.
+
+    This function here is expected to be called in the context of processing an
+    incoming HTTP request.
+
+    As part of constructing the authorization request details: build an
+    absolute URL to the OIDC callback endpoint served by this app. That
+    absolute URL is deployment-specific. Two examples:
+
+        http://127.0.0.1:5000/api/google/callback
+        https://conbench.ursa.dev/api/google/callback
+
+    Flask's url_for(..., _external=True, ...) constructs the base URL using
+    scheme, host, port information from the currently incoming HTTP request (in
+    particular from the HOST header field). Further analysis and discussion can
+    be found at
+    https://github.com/conbench/conbench/pull/454#issuecomment-1326338524
+
+    Technically, a more controlled and precitable way to construct the callback
+    URL would be using Config.INTENDED_BASE_URL. However, as long as that
+    configuration parameter is not required to be set to a meaningful value we
+    should not rely on that yet (breaks compatibility with old deployment
+    configs).
+
+    If either redirect URL or the authorization endpoint (at the OP) do not use
+    the HTTPS scheme then the oauthlib method `prepare_request_uri()` below is
+    expected to throw `InsecureTransportError`. For testing, this can be
+    changed by setting the environment variable OAUTHLIB_INSECURE_TRANSPORT.
+    """
+
     client, oidc_provider_config = get_oidc_client()
-
-    # http://127.0.0.1:5000/api/google/callback
-    # redirect_uri = f.url_for("api.callback", _external=True, _scheme="https")
-
-    # If either redirect URL or the authorization endpoint (at the OP) do not
-    # use the HTTPS scheme then the function below is expected to throw
-    # `InsecureTransportError`. For testing, this can be changed by setting
-    # the environment variable OAUTHLIB_INSECURE_TRANSPORT.
+    abs_oidc_callback_url = f.url_for("api.callback", _external=True, _scheme="https")
 
     return client.prepare_request_uri(
         oidc_provider_config["authorization_endpoint"],
-        redirect_uri=OIDC_CALLBACK_URL,
+        redirect_uri=abs_oidc_callback_url,
         scope=["openid", "email", "profile"],
     )
 
