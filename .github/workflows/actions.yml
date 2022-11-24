@@ -40,13 +40,15 @@ jobs:
       - name: Lint (isort)
         run: |
           isort --check .
-      - name: Run tests, generate coverage report
+      - name: Run tests, generate coverage data
         run: |
           docker-compose down && \
           docker-compose build app && \
           docker-compose run app coverage run \
             --source conbench \
-              -m pytest -vv -s -k test_dynamic_callback_url --durations=20 conbench/tests/ \ &&
+              -m pytest -vv -s -k test_dynamic_callback_url --durations=20 conbench/tests/
+      - name: Convert coverage data to LCOV
+        run: |
           docker-compose run app coverage lcov -o /etc/conbench-coverage-dir/coverage.lcov
       - name: Publish coverage
         uses: coverallsapp/github-action@master
