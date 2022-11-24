@@ -81,6 +81,7 @@ class Config:
         assert OIDC_CLIENT_ID is not None
         assert OIDC_CLIENT_SECRET is not None
 
+
 class TestConfig(Config):
     DB_NAME = os.environ.get("DB_NAME", f"{APPLICATION_NAME.lower()}_test")
     SQLALCHEMY_DATABASE_URI = (
