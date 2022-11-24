@@ -24,16 +24,6 @@ jobs:
         with:
           options: --check --diff
           src: .
-      - name: Install dependencies
-        run: |
-          pip install --no-deps \
-            -e benchadapt/python \
-            -e benchrun/python \
-            -e benchconnect && \
-          pip install \
-            -U --upgrade-strategy eager \
-            -e .[dev] \
-            -e benchclients/python
       # - name: Start PostgreSQL DB
       #   run: |
       #     docker-compose run --detach db
@@ -63,6 +53,16 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: _conbench-coverage-dir/coverage.lcov
+      - name: Install dependencies
+        run: |
+          pip install --no-deps \
+            -e benchadapt/python \
+            -e benchrun/python \
+            -e benchconnect && \
+          pip install \
+            -U --upgrade-strategy eager \
+            -e .[dev] \
+            -e benchclients/python
       - name: Test benchclients
         run: |
           pytest -vv benchclients/python/tests
