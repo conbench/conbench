@@ -14,7 +14,7 @@ del importlib_metadata
 
 
 # Pre-configure logging before reading user-given configuration.
-conbench.logger.setup(level_stderr="DEBUG", level_file=None)
+conbench.logger.setup(level_stderr="DEBUG", level_file=None, level_sqlalchemy="WARNING")
 log = logging.getLogger(__name__)
 
 
@@ -31,6 +31,7 @@ def create_application(config):
     conbench.logger.setup(
         level_stderr=app.config["LOG_LEVEL_STDERR"],
         level_file=app.config["LOG_LEVEL_FILE"],
+        level_sqlalchemy=app.config["LOG_LEVEL_SQLALCHEMY"],
     )
 
     log.debug(
