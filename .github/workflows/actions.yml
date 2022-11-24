@@ -34,22 +34,12 @@ jobs:
       #     docker-compose run -e CREATE_ALL_TABLES app alembic upgrade head
       #   env:
       #     CREATE_ALL_TABLES: false
-      # - name: Install dependencies
-      #   run: |
-      #     pip install --no-deps \
-      #       -e benchadapt/python \
-      #       -e benchrun/python \
-      #       -e benchconnect && \
-      #     pip install \
-      #       -U --upgrade-strategy eager \
-      #       -e .[dev] \
-      #       -e benchclients/python
-      # - name: Lint (flake8)
-      #   run: |
-      #     flake8
-      # - name: Lint (isort)
-      #   run: |
-      #     isort --check .
+      - name: Install flake8, isort
+        run: pip install flake8 isort
+       - name: Lint (flake8)
+        run: flake8
+      - name: Lint (isort)
+        run: isort --check .
       - name: Run tests, generate coverage data
         run: |
           docker-compose down && \
