@@ -36,7 +36,7 @@ jobs:
       #     CREATE_ALL_TABLES: false
       - name: Install flake8, isort
         run: pip install flake8 isort
-       - name: Lint (flake8)
+      - name: Lint (flake8)
         run: flake8
       - name: Lint (isort)
         run: isort --check .
