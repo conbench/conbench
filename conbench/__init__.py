@@ -14,7 +14,7 @@ del importlib_metadata
 
 
 # Pre-configure logging before reading user-given configuration.
-conbench.logger.setup(level_stderr="DEBUG", level_file=None)
+conbench.logger.setup(level_stderr="DEBUG", level_file=None, level_sqlalchemy="WARNING")
 log = logging.getLogger(__name__)
 
 
