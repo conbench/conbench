@@ -57,19 +57,11 @@ jobs:
           docker-compose run app coverage run \
             --data-file=/etc/conbench-coverage-dir/.coverage --source conbench \
               -m pytest -vv -s -k test_dynamic_callback_url --durations=20 conbench/tests/
-        env:
-          DB_USERNAME: postgres
-          GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OAUTHLIB_INSECURE_TRANSPORT: 1
-          GOOGLE_CLIENT_ID: conbench-test-client
-          GOOGLE_CLIENT_SECRET: AnotherStaticSecret
-          CONBENCH_LOG_LEVEL_STDERR: DEBUG
-          CONBENCH_OIDC_ISSUER_URL: http://dex:5556/dex-for-conbench
       - name: Publish coverage
         run: |
-          cp _conbench-coverage-dir/.coverage .coverage && \
-          coveralls --service=github
+          docker-compose run app coveralls --service=github
         env:
+          COVERAGE_FILE: /etc/conbench-coverage-dir/.coverage
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Test benchclients
         run: |
