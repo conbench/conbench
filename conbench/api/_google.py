@@ -61,7 +61,7 @@ def auth_google_user():
     be found at
     https://github.com/conbench/conbench/pull/454#issuecomment-1326338524
 
-    Technically, a more controlled and precitable way to construct the callback
+    Technically, a more controlled and predictable way to construct the callback
     URL would be using Config.INTENDED_BASE_URL. However, as long as that
     configuration parameter is not required to be set to a meaningful value we
     should not rely on that yet (breaks compatibility with old deployment
