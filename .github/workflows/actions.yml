@@ -34,12 +34,22 @@ jobs:
       #     docker-compose run -e CREATE_ALL_TABLES app alembic upgrade head
       #   env:
       #     CREATE_ALL_TABLES: false
-      - name: Lint (flake8)
-        run: |
-          flake8
-      - name: Lint (isort)
-        run: |
-          isort --check .
+      # - name: Install dependencies
+      #   run: |
+      #     pip install --no-deps \
+      #       -e benchadapt/python \
+      #       -e benchrun/python \
+      #       -e benchconnect && \
+      #     pip install \
+      #       -U --upgrade-strategy eager \
+      #       -e .[dev] \
+      #       -e benchclients/python
+      # - name: Lint (flake8)
+      #   run: |
+      #     flake8
+      # - name: Lint (isort)
+      #   run: |
+      #     isort --check .
       - name: Run tests, generate coverage data
         run: |
           docker-compose down && \
@@ -55,16 +65,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: _conbench-coverage-dir/coverage.lcov
-      - name: Install dependencies
-        run: |
-          pip install --no-deps \
-            -e benchadapt/python \
-            -e benchrun/python \
-            -e benchconnect && \
-          pip install \
-            -U --upgrade-strategy eager \
-            -e .[dev] \
-            -e benchclients/python
       - name: Test benchclients
         run: |
           pytest -vv benchclients/python/tests
