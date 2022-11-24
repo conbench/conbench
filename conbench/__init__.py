@@ -63,6 +63,7 @@ def _init_application(application):
     # Do not create all tables when running alembic migrations in
     # production (CREATE_ALL_TABLES=false) using k8s migration job
     if Config.CREATE_ALL_TABLES:
+        log.debug("Config.CREATE_ALL_TABLES appears to be set, call create_all()")
         create_all()
 
     application.register_blueprint(app, url_prefix="/")

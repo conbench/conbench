@@ -12,16 +12,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:11
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: conbench_test
-        ports:
-          - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Checkout conbench
         uses: actions/checkout@v3
@@ -34,6 +24,36 @@ jobs:
         with:
           options: --check --diff
           src: .
+      - name: Install flake8, isort
+        run: pip install flake8 isort
+      - name: Lint (flake8)
+        run: flake8
+      - name: Lint (isort)
+        run: isort --check .
+      - name: Start PostgreSQL DB
+        run: docker-compose run --detach db
+      # Run `alembic upgrade head` via docker-compose so that it is within
+      # the network that the DB is also in, reachable via DNS name `db`
+      - name: Migrations
+        run: docker-compose run -e CREATE_ALL_TABLES app alembic upgrade head
+        env:
+          CREATE_ALL_TABLES: false
+      - name: Run tests, generate coverage data
+        run: |
+          docker-compose down && \
+          docker-compose build app && \
+          docker-compose run -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage app \
+            coverage run --source conbench \
+              -m pytest -vv -s --durations=20 conbench/tests/
+      - name: Convert coverage data to LCOV
+        run: |
+          docker-compose run -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage app \
+            coverage lcov -o /etc/conbench-coverage-dir/coverage.lcov
+      - name: Publish coverage
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: _conbench-coverage-dir/coverage.lcov
       - name: Install dependencies
         run: |
           pip install --no-deps \
@@ -44,32 +64,6 @@ jobs:
             -U --upgrade-strategy eager \
             -e .[dev] \
             -e benchclients/python
-      - name: Migrations
-        run: |
-          alembic upgrade head
-        env:
-          DB_USERNAME: "postgres"
-          DB_HOST: "localhost"
-          DB_PASSWORD: "postgres"
-          DB_NAME: "conbench_test"
-          DB_PORT: "5432"
-      - name: Lint (flake8)
-        run: |
-          flake8
-      - name: Lint (isort)
-        run: |
-          isort --check .
-      - name: Run tests
-        run: |
-          coverage run --source conbench -m pytest -vv --durations=20 conbench/tests/
-        env:
-          DB_USERNAME: postgres
-          GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish coverage
-        run: |
-          coveralls --service=github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Test benchclients
         run: |
           pytest -vv benchclients/python/tests

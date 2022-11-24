@@ -6,17 +6,27 @@ services:
       context: .
       dockerfile: Dockerfile
     command: ["gunicorn", "-b", "0.0.0.0:5000", "-w", "5", "conbench:application", "--access-logfile=-", "--error-logfile=-", "--preload"]
+    volumes:
+      - ${PWD}/_conbench-coverage-dir:/etc/conbench-coverage-dir
     environment:
       APPLICATION_NAME: "Conbench"
       DB_USERNAME: "postgres"
+      # From the docker-compose docs: "By default Compose sets up a single
+      # network for your app. Each container for a service joins the default
+      # network and is both reachable by other containers on that network, and
+      # discoverable by them at a hostname identical to the container name."
+      # That is why the DNS name `db` works.
       DB_HOST: "db"
       DB_PASSWORD: "postgres"
       DB_NAME: "postgres"
       DB_PORT: "5432"
       FLASK_APP: "conbench"
       FLASK_ENV: "development"
+      FLASK_DEBUG: "true"
       REGISTRATION_KEY: "code"
       SECRET_KEY: "Person, woman, man, camera, TV"
+      # Default log level is INFO, change to DEBUG as needed.
+      # CONBENCH_LOG_LEVEL_STDERR: DEBUG
     depends_on:
       db:
         condition: service_healthy
