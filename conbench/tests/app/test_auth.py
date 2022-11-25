@@ -2,7 +2,9 @@ import logging
 from urllib.parse import urljoin
 
 import requests
+import pytest
 from bs4 import BeautifulSoup
+
 
 from ...config import TestConfig
 from ...tests.app import _asserts
@@ -144,8 +146,11 @@ class TestLoginOIDC(_asserts.AppEndpointTest):
         r = client.get("/login/", follow_redirects=True)
         assert "Google Login" in r.text
 
-    def test_oidc_flow_against_dex(self, client):
-
+    @pytest.mark.parametrize(
+        "target_url",
+        [None, "https://rofl.com"],  # "/relative", "https://foo.bar?x=y"]
+    )
+    def test_oidc_flow_against_dex(self, client, target_url):
         # TODO: parse this 'initiate flow URL' from the HTML login page, i.e.
         # from the button/ link that people would actually click. If that is a
         # _relative_ href then construct an absolute URL from it (see below).
@@ -158,7 +163,10 @@ class TestLoginOIDC(_asserts.AppEndpointTest):
         # is aware of. That is is currently set to
         # http://127.0.0.1:5000/api/google/callback -- see
         # containders/dex/config.yml
-        r0 = client.get("http://127.0.0.1:5000/api/google/")
+        if target_url is None:
+            r0 = client.get("http://127.0.0.1:5000/api/google/")
+        else:
+            r0 = client.get(f"http://127.0.0.1:5000/api/google?target={target_url}")
 
         # `r0` is meant to be a redirect response, redirecting to the identity
         # provider. Extract the full URL we've been redirected to. The URL
@@ -226,11 +234,18 @@ class TestLoginOIDC(_asserts.AppEndpointTest):
         # seems to deal fine with the absolute nature of
         # `callback_request_url`.
         r4 = client.get(callback_request_url)
+        # The expected response is a 302 redirect response.
+        assert r4.status_code == 302, f"bad response: {r4.text}"
         log.info(r4.headers)
 
         # Confirm that the api has returned authentication proof.
         assert "set-cookie" in r4.headers
         assert "session" in r4.headers["set-cookie"]
+
+        if target_url is None:
+            assert r4.headers["location"] == "/"
+        else:
+            assert r4.headers["location"] == target_url
 
 
 def parse_login_page(html):
