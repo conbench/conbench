@@ -105,9 +105,11 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
         camefrom_encoded = urllib.parse.quote(user_came_from_url)
     except Exception as exc:
         # Continue with the login flow w/o carrying the target URL around.
+        # NOTE: maybe emit a 400 Bad Request response instead, showing err
+        # detail.
         log.info("drop target URL: encoding failed with: %s", exc)
 
-    url_to_redirect_user_to, _, _ = client.prepare_request_uri(
+    url_to_redirect_user_to = client.prepare_request_uri(
         oidc_provider_config["authorization_endpoint"],
         redirect_uri=abs_oidc_callback_url,
         # The `openid` scope renders this OAuth2 flow to be an OpenIDConnect
@@ -115,7 +117,7 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
         scope=["openid", "email", "profile"],
         # Additional parameter to carry across the flow. Usually security
         # purpose. TODO: combine with non-guessable state.
-        state=camefrom_encoded,
+        state="RANDOM" + camefrom_encoded,
     )
 
     return url_to_redirect_user_to
@@ -148,15 +150,13 @@ def conclude_oidc_flow():
     # Response is expected to have retained the `state` parameter which we're
     # using to store the URL the user actually wanted to visit before going
     # into the login flow.
-    authorization_response = client.parse_request_uri_response(
-        f.request.url.replace("http://", "https://")
-    )
+    authorization_response = client.parse_request_uri_response(f.request.url)
     log.debug("authorization_response: %s", authorization_response)
 
     # Parse encoded target URL from state (i.e. separate the OIDC state from
     # application-logic state). TODO: actually use OIDC state, then adjust this
-    # here.
-    camefrom_encoded = authorization_response["state"]
+    # here. Expect random state of length 6.
+    camefrom_encoded = authorization_response["state"][6:]
 
     # Inverse operation of urllib.parse.quote(), i.e. URL-decode the URL.
     try:

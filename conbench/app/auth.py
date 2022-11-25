@@ -37,6 +37,8 @@ class Login(AppEndpoint):
             title="Sign In",
             form=form,
             sso=sso,
+            # If `target` is Falsy (e.g. emtpy string) then expect
+            # template to _not_ add a query parameter anywhere.
             target=target,
         )
 
@@ -72,12 +74,16 @@ class Login(AppEndpoint):
             if response.status_code == 204:
                 # TODO: remove this last query from frontend
                 user = User.first(email=form.email.data)
+                # NOTE(JP): this is the second time that we call
+                # `flask_login.login_user` while the actual user agent waits
+                # for an HTTP response.
                 flask_login.login_user(user, remember=form.remember_me.data)
                 return self.redirect("app.index")
             else:
                 self.flash("Invalid email or password.", "danger")
 
-        return self.page(form)
+        # TODO: set `target` parameter.
+        return self.page(form, target="")
 
 
 class RegistrationForm(flask_wtf.FlaskForm):

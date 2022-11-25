@@ -81,7 +81,7 @@ class GoogleAPI(ApiEndpoint):
         if "target" in f.request.args:
             user_came_from_url = f.request.args.get("target")
 
-        return f.redirect(_google.auth_google_user(user_came_from_url))
+        return f.redirect(_google.gen_oidc_authz_req_url(user_came_from_url))
 
 
 class CallbackAPI(ApiEndpoint):
