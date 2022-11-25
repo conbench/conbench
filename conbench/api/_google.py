@@ -97,6 +97,9 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
             "api.callback", _external=True, _scheme="https"
         )
 
+    log.debug("Initiate OIDC SSO flow. redirect_uri: %s", abs_oidc_callback_url)
+    log.debug("user_came_from_url: %s", user_came_from_url)
+
     camefrom_encoded = ""
     try:
         camefrom_encoded = urllib.parse.quote(user_came_from_url)
@@ -104,8 +107,6 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
         # Continue with the login flow w/o carrying the target URL around.
         log.info("drop target URL: encoding failed with: %s", exc)
 
-    print(f"{user_came_from_url=}")
-    print(f"Initiate SSO flow. redirect_uri: {abs_oidc_callback_url}")
     url_to_redirect_user_to, _, _ = client.prepare_request_uri(
         oidc_provider_config["authorization_endpoint"],
         redirect_uri=abs_oidc_callback_url,
@@ -141,7 +142,7 @@ def conclude_oidc_flow():
         # code=f.request.args.get("code"),
     )
 
-    print(f"token_url: {token_url}")
+    log.debug("token_url: %s", token_url)
 
     # Extract authorization response structure from incoming URL.
     # Response is expected to have retained the `state` parameter which we're
@@ -150,12 +151,22 @@ def conclude_oidc_flow():
     authorization_response = client.parse_request_uri_response(
         f.request.url.replace("http://", "https://")
     )
-    print(f"authorization_response: {authorization_response}")
+    log.debug("authorization_response: %s", authorization_response)
+
+    # Parse encoded target URL from state (i.e. separate the OIDC state from
+    # application-logic state). TODO: actually use OIDC state, then adjust this
+    # here.
+    camefrom_encoded = authorization_response["state"]
 
     # Inverse operation of urllib.parse.quote(), i.e. URL-decode the URL.
-    user_came_from_url = urllib.parse.unquote(authorization_response["state"])
+    try:
+        user_came_from_url = urllib.parse.unquote(camefrom_encoded)
+    except Exception as exc:
+        # Continue with the login flow w/o using the target URL around.
+        log.info("drop target URL: decoding failed with: %s", exc)
+        log.debug("camefrom_encoded: %s", camefrom_encoded)
 
-    print(f"user_came_from_url: {user_came_from_url}")
+    log.info("user_came_from_url: %s", user_came_from_url)
 
     # Get an access token. The response is expected to also contain an
     # ID Token, though.
@@ -166,7 +177,7 @@ def conclude_oidc_flow():
         auth=(client_id, client_secret),
     )
 
-    print(f"access token response: {token_response}, {token_response.text}")
+    log.debug("access token response: %s, %s", token_response, token_response.text)
 
     client.parse_request_body_response(json.dumps(token_response.json()))
 
