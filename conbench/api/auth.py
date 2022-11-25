@@ -97,8 +97,8 @@ class CallbackAPI(ApiEndpoint):
             )
 
         email = google_user["email"]
-        given = google_user["given_name"]
-        family = google_user["family_name"]
+        given = google_user.get("given_name", "")
+        family = google_user.get("family_name", "")
         user = User.first(email=email)
         if user is None:
             data = {

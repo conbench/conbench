@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import time
 
 import flask as f
@@ -12,10 +11,10 @@ log = logging.getLogger(__name__)
 
 
 def get_oidc_config():
-    client_id = os.environ.get("GOOGLE_CLIENT_ID", None)
-    client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", None)
+    # Rely on three config parameters to be set in a meaningful way:
+    # Config.OIDC_ISSUER_URL, Config.OIDC_CLIENT_ID,Config.OIDC_CLIENT_SECRET
     discovery_url = Config.OIDC_ISSUER_URL + "/.well-known/openid-configuration"
-    return discovery_url, client_id, client_secret
+    return discovery_url, Config.OIDC_CLIENT_ID, Config.OIDC_CLIENT_SECRET
 
 
 def get_oidc_client():
@@ -62,7 +61,7 @@ def auth_google_user():
     be found at
     https://github.com/conbench/conbench/pull/454#issuecomment-1326338524
 
-    Technically, a more controlled and precitable way to construct the callback
+    Technically, a more controlled and predictable way to construct the callback
     URL would be using Config.INTENDED_BASE_URL. However, as long as that
     configuration parameter is not required to be set to a meaningful value we
     should not rely on that yet (breaks compatibility with old deployment
