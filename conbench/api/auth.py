@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 import flask as f
@@ -8,6 +9,9 @@ from ..api import _google, rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint
 from ..api.users import User
+
+
+log = logging.getLogger(__name__)
 
 
 class LoginSchema(marshmallow.Schema):
@@ -80,6 +84,7 @@ class GoogleAPI(ApiEndpoint):
         user_came_from_url = ""
         if "target" in f.request.args:
             user_came_from_url = f.request.args.get("target")
+            log.info(f"api/google/, {user_came_from_url=}")
 
         return f.redirect(_google.gen_oidc_authz_req_url(user_came_from_url))
 

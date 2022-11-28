@@ -166,10 +166,16 @@ class TestLoginOIDC(_asserts.AppEndpointTest):
         if target_url is None:
             r0 = client.get("http://127.0.0.1:5000/api/google/")
         else:
-            r0 = client.get(f"http://127.0.0.1:5000/api/google?target={target_url}")
+            # The slash before the question mark is required, otherwise Flask
+            # will emit a 308 redirect to the slashy version first.
+            r0 = client.get(f"http://127.0.0.1:5000/api/google/?target={target_url}")
 
         # `r0` is meant to be a redirect response, redirecting to the identity
-        # provider. Extract the full URL we've been redirected to. The URL
+        # provider.  The redirect is expected to be delivered via a 302
+        # response.
+        assert r0.status_code == 302, f"unexpected response: {r0.text}"
+
+        # Extract the full URL we've been redirected to. The URL
         # represents a so-called authorization request, with all the parameters
         # for that request being encoded in the URL query parameters
         authorization_request_url = r0.headers["location"]
