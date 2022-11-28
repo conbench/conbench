@@ -11,8 +11,43 @@ def as_bool(x):
 
 class AppEndpoint(flask.views.MethodView):
     def public_data_off(self):
-        public = as_bool(os.getenv("BENCHMARKS_DATA_PUBLIC", "yes"))
-        return not flask_login.current_user.is_authenticated and not public
+        """
+        Compute whether data/view should be hidden from an anonymous user.
+
+        When BENCHMARKS_DATA_PUBLIC is set to a true-ish value then always show
+        benchmark data (regardless of whether the request is anonymous or not).
+
+        When BENCHMARK_DATA_PUBLIC is set to a false-ish value then decide to
+        hide the view (return True) when the access is from anonymous.
+
+        Note, just a quick thought dump: this needs a bit of consolidation for
+        easier code readability, and for de-duplicating per-view code. In
+        individual views this method is so far used to short-cut request
+        processing and redirect to the login page if needed. Maybe build a
+        simple decorator instead with a name that relates to access control
+        (such as `enforce_access_control()`). Decorated views enforce access
+        control (with the business logic as in _this_ function here),
+        non-decorated views do not enforce. If access is denied then the
+        redirect to the login page should be emitted from that decorator -- the
+        redirect will contain view-specific parameters (target URL).
+        """
+
+        # TODO(JP): the environment variable readout should be managed via the
+        # config.py module, and here we should only access the app's config
+        # object. So that config.py can be the place that pragmatically
+        # documents all supported environment variables and their meaning.
+        is_public = as_bool(os.getenv("BENCHMARKS_DATA_PUBLIC", "yes"))
+
+        if is_public:
+            # Never hide.
+            return False
+
+        if flask_login.current_user.is_authenticated:
+            # Non-anonymous access: do not hide
+            return False
+
+        # Anonymous access: hide.
+        return True
 
     def redirect(self, endpoint, **kwargs):
         return f.redirect(f.url_for(endpoint, **kwargs))
