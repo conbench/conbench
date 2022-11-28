@@ -6,6 +6,8 @@ import flask as f
 import wtforms as w
 import wtforms.validators as v
 
+from typing import Optional
+
 from ..app import rule
 from ..app._endpoint import AppEndpoint
 from ..config import Config
@@ -28,18 +30,35 @@ class LoginForm(flask_wtf.FlaskForm):
 class Login(AppEndpoint):
     form = LoginForm
 
-    def page(self, form, target: str):
-        # sso = os.environ.get("GOOGLE_CLIENT_ID", None) is not None
-        sso = True
+    def page(self, form, target_url_after_login: Optional[str]):
+        """
+        `target_url_after_login` is meant to carry an absolute or relative URL,
+        the target to redirect the user to after login was successful.
+        """
+
+        show_sso_button = False
+
+        if (
+            Config.OIDC_CLIENT_ID
+            and Config.OIDC_CLIENT_SECRET
+            and Config.OIDC_ISSUER_URL
+        ):
+            show_sso_button = True
+
+        # Legacy method for determining whether or not to show the SSO
+        # link/button: remove when GOOGLE_CLIENT_ID gets phased out.
+        if os.environ.get("GOOGLE_CLIENT_ID") is not None:
+            show_sso_button = True
+
         return self.render_template(
             "login.html",
             application=Config.APPLICATION_NAME,
             title="Sign In",
             form=form,
-            sso=sso,
-            # If `target` is Falsy (e.g. emtpy string) then expect
-            # template to _not_ add a query parameter anywhere.
-            target=target,
+            sso=show_sso_button,
+            # If `target_url_after_login`` is Falsy (e.g. emtpy string) then
+            # expect template to _not_ add a query parameter anywhere. Note
+            target_url_after_login=target_url_after_login,
         )
 
     def data(self, form):
