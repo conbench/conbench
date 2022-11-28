@@ -1,10 +1,9 @@
 import logging
 from urllib.parse import urljoin
 
-import requests
 import pytest
+import requests
 from bs4 import BeautifulSoup
-
 
 from ...config import TestConfig
 from ...tests.app import _asserts

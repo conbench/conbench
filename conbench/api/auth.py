@@ -10,7 +10,6 @@ from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint
 from ..api.users import User
 
-
 log = logging.getLogger(__name__)
 
 

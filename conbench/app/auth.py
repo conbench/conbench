@@ -1,12 +1,11 @@
 import os
+from typing import Optional
 
+import flask as f
 import flask_login
 import flask_wtf
-import flask as f
 import wtforms as w
 import wtforms.validators as v
-
-from typing import Optional
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint
