@@ -12,8 +12,11 @@
   <p>New user? <a href="{{ url_for('app.register') }}">Sign Up</a></p>
   {% if sso %}
   <hr>
+    {# Dynamically add `target` URL query parameter. `url_for()` is documented
+    with "unknown keys are appended as query string arguments". I think
+    that url_for() automatically performs URL-encoding. #}
     {% if target %}
-    <a href="{{ url_for('api.google', target=target) }}">Google Login</a>
+    <a href="{{ url_for('api.google', target=target_url_after_login) }}">Google Login</a>
     {% else %}
     <a href="{{ url_for('api.google' ) }}">Google Login</a>
     {% endif %}
