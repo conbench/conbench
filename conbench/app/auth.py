@@ -72,13 +72,14 @@ class Login(AppEndpoint):
 
         # Read query parameter `target`. Assume that the value is the URL that
         # the user actually wanted to visit before they were redirected to the
-        # login page. `f.request.args` holds parsed URL query parameters.
+        # login page. `f.request.args` holds parsed (i.e. URL-decoded) URL
+        # query parameters.
         user_came_from_url = ""
         if "target" in f.request.args:
             user_came_from_url = f.request.args.get("target")
 
         if flask_login.current_user.is_authenticated:
-            # redirect to target if set?
+            # Redirect to target if set? Might create infinite redirect loop.
             return self.redirect("app.index")
 
         return self.page(self.form(), target=user_came_from_url)
