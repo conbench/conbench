@@ -81,8 +81,9 @@ class GoogleAPI(ApiEndpoint):
         # Read query parameter `target`. Assume that the value is the URL that
         # the user actually wanted to visit before they were redirected to the
         # login page. `f.request.args` holds parsed URL query parameters.
-        user_came_from_url = ""
+        user_came_from_url = None
         if "target" in f.request.args:
+            # Rely on Flask to do have done one level of URL-decoding
             user_came_from_url = f.request.args.get("target")
             log.info(f"api/google/, {user_came_from_url=}")
 

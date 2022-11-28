@@ -148,7 +148,19 @@ class TestLoginOIDC(_asserts.AppEndpointTest):
 
     @pytest.mark.parametrize(
         "target_url",
-        [None, "https://rofl.com"],  # "/relative", "https://foo.bar?x=y"]
+        [
+            None,
+            "/relative",
+            "https://rofl.com",
+            "https://foo.bar?x=y",
+            # Test a literal %20 and a literal %2F to be carried across the
+            # flow. This is a good way to find flaws in the
+            # URL-encoding-decoding information flow (the goal is that these
+            # character sequences are communicated verbatim, i.e. end up being
+            # emitted as-is in the final redirect URL).
+            "https://foo.bar/path/?x=%20yz",
+            "https://foo.bar/path/?x=y%2Fz",
+        ],
     )
     def test_oidc_flow_against_dex(self, client, target_url):
         # TODO: parse this 'initiate flow URL' from the HTML login page, i.e.
@@ -167,8 +179,16 @@ class TestLoginOIDC(_asserts.AppEndpointTest):
             r0 = client.get("http://127.0.0.1:5000/api/google/")
         else:
             # The slash before the question mark is required, otherwise Flask
-            # will emit a 308 redirect to the slashy version first.
-            r0 = client.get(f"http://127.0.0.1:5000/api/google/?target={target_url}")
+            # will emit a 308 redirect to the slashy version first. Note that
+            # when manually putting the URL together like this there is no
+            # URL-encoding happening on the query string. In the Werkzeug test
+            # client automatic construction of a URL query string is done by
+            # providing the `query_string` arg with a dictionary as value --
+            # URL-encoding is then automatically done by the client before
+            # sending the request.
+            r0 = client.get(
+                "http://127.0.0.1:5000/api/google/", query_string={"target": target_url}
+            )
 
         # `r0` is meant to be a redirect response, redirecting to the identity
         # provider.  The redirect is expected to be delivered via a 302
