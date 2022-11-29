@@ -81,7 +81,7 @@ class Login(AppEndpoint):
             # Redirect to target if set? Might create infinite redirect loop.
             return self.redirect("app.index")
 
-        return self.page(self.form(), target=user_came_from_url)
+        return self.page(self.form(), target_url_after_login=user_came_from_url)
 
     def post(self):
         if flask_login.current_user.is_authenticated:
