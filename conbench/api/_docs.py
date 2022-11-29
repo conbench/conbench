@@ -5,7 +5,6 @@ import apispec_webframeworks.flask
 from ..api import _examples as ex
 from ..config import Config
 
-
 # `api_server_url` is used for populating the 'Servers' dropdown in the
 # Swagger/OpenAPI docs website. The default value is tailored to the Flask
 # development HTTP server defaults (non-TLS, binds on 127.0.0.1, port 5000).
