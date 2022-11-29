@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import Optional
 
 import flask as f
@@ -11,6 +12,8 @@ from ..app import rule
 from ..app._endpoint import AppEndpoint
 from ..config import Config
 from ..entities.user import User
+
+log = logging.getLogger(__name__)
 
 
 class Logout(AppEndpoint):
@@ -76,6 +79,7 @@ class Login(AppEndpoint):
         user_came_from_url = ""
         if "target" in f.request.args:
             user_came_from_url = f.request.args.get("target")
+            log.debug("render login page. target param: %s", user_came_from_url)
 
         if flask_login.current_user.is_authenticated:
             # Redirect to target if set? Might create infinite redirect loop.
