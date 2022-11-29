@@ -29,7 +29,7 @@ class LoginForm(flask_wtf.FlaskForm):
 class Login(AppEndpoint):
     form = LoginForm
 
-    def page(self, form, target_url_after_login: Optional[str]):
+    def page(self, form, target_url_after_login: Optional[str] = None):
         """
         `target_url_after_login` is meant to carry an absolute or relative URL,
         the target to redirect the user to after login was successful.
@@ -84,6 +84,9 @@ class Login(AppEndpoint):
         return self.page(self.form(), target_url_after_login=user_came_from_url)
 
     def post(self):
+        """
+        Note: redirect-to-target-after-login not yet implemented
+        """
         if flask_login.current_user.is_authenticated:
             return self.redirect("app.index")
 
@@ -97,12 +100,12 @@ class Login(AppEndpoint):
                 # `flask_login.login_user` while the actual user agent waits
                 # for an HTTP response.
                 flask_login.login_user(user, remember=form.remember_me.data)
+
                 return self.redirect("app.index")
             else:
                 self.flash("Invalid email or password.", "danger")
 
-        # TODO: set `target` parameter.
-        return self.page(form, target="")
+        return self.page(form)
 
 
 class RegistrationForm(flask_wtf.FlaskForm):
