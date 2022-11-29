@@ -25,19 +25,18 @@ class Config:
     # to recalculate history.
     DISTRIBUTION_COMMITS = int(os.environ.get("DISTRIBUTION_COMMITS", 100))
 
-    # The base URL (scheme, DNS name, path prefix) that regular HTTP clients
-    # are expected to use for reaching the HTTP server exposing the app.
-    # Depends on the deployment and cannot generally be determined by the app
-    # itself (requires human input). Three interesting scenarios:
-    # - local dev setup with custom listen address: user should set meaningful
-    #   value
-    # - prod/staging setup: user should set meaningful value such as for
-    #   example https://conbench.ursa.dev/
+    # `INTENDED_BASE_URL` is the base URL (scheme, DNS name, path prefix) that
+    # regular HTTP clients are expected to use for reaching the HTTP server
+    # exposing the app. Depends on the deployment and cannot generally be
+    # determined by the app itself (requires human input). Meaningful values
+    # may look like
     #
-    # In the future it may be wise to require this to be set by the user,
-    # especially for enabling single sign-on. Until then, the default value of
-    # `None` is used by business logic to detect when this value was not
-    # provided, for supporting legacy configuration environments.
+    #    https://conbench.ursa.dev/  or  http://127.0.0.1:9000/
+    #
+    # In the future, it may be wise to require this parameter to be set by the
+    # operator (especially for enabling single sign-on). Until then, the
+    # default value of `None` is used within app logic to detect when this
+    # value was not provided, for supporting legacy configuration environments.
     INTENDED_BASE_URL = os.environ.get("CONBENCH_INTENDED_BASE_URL", None)
 
     # Require trailing slash towards tidy URL generation.
