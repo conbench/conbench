@@ -5,6 +5,17 @@ import apispec_webframeworks.flask
 from ..api import _examples as ex
 from ..config import Config
 
+
+# `api_server_url` is used for populating the 'Servers' dropdown in the
+# Swagger/OpenAPI docs website. The default value is tailored to the Flask
+# development HTTP server defaults (non-TLS, binds on 127.0.0.1, port 5000).
+# Can be adjusted via the `--host` and `--port` command line flags when
+# invoking `flask run`.
+api_server_url = "http://127.0.0.1:5000/"
+if Config.INTENDED_BASE_URL is not None:
+    api_server_url = Config.INTENDED_BASE_URL
+
+
 spec = apispec.APISpec(
     title=Config.APPLICATION_NAME,
     version="1.0.0",
@@ -13,7 +24,7 @@ spec = apispec.APISpec(
         apispec_webframeworks.flask.FlaskPlugin(),
         apispec.ext.marshmallow.MarshmallowPlugin(),
     ],
-    servers=[{"url": Config.INTENDED_BASE_URL}],
+    servers=[{"url": api_server_url}],
 )
 
 
