@@ -15,7 +15,7 @@
     {# Dynamically add `target` URL query parameter. `url_for()` is documented
     with "unknown keys are appended as query string arguments". I think
     that url_for() automatically performs URL-encoding. #}
-    {% if target %}
+    {% if target_url_after_login %}
     <a href="{{ url_for('api.google', target=target_url_after_login) }}">Google Login</a>
     {% else %}
     <a href="{{ url_for('api.google' ) }}">Google Login</a>
