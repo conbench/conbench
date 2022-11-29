@@ -142,12 +142,19 @@ class TestLogout(_asserts.AppEndpointTest):
 
 class TestLoginOIDC(_asserts.AppEndpointTest):
     def test_login_page_shows_sso_link(self, client):
-        # In the test suite, this is currently expected to show because
-        # GOOGLE_CLIENT_ID is set.
+        # In the test suite the "Google Login" link is currently expected to
+        # show because GOOGLE_CLIENT_ID is set. Note that this label should
+        # change into something more generic or into a value configured by the
+        # operator.
         r = client.get("/login/", follow_redirects=True)
-        # Note that this label should change into something more generig or
-        # into a value configured by the operator.
         assert "Google Login" in r.text
+
+    def test_login_link_carries_target_param(self, client):
+        # When rendering the login page with a `target` query parameter, expect
+        # the same parameter to be added to the rendered SSO login link,
+        # example: <a href="/api/google/?target=bubaz">Google Login</a>
+        r = client.get("/login/?target=bubaz")
+        assert "target=bubaz" in r.text
 
     @pytest.mark.parametrize(
         "target_url",
