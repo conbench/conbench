@@ -57,7 +57,7 @@ def auth_google_user():
 
     Scheme, host, port information depend on the deployment and cannot
     generally be determined by the app itself (requires human input). Hence,
-    the least error-prone method is to construct the callback URL is via
+    the least error-prone method is to construct the callback URL via
     Config.INTENDED_BASE_URL.
 
     However, Config.INTENDED_BASE_URL is not yet required to be set by Conbench
