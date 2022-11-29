@@ -142,7 +142,11 @@ class TestLogout(_asserts.AppEndpointTest):
 
 class TestLoginOIDC(_asserts.AppEndpointTest):
     def test_login_page_shows_sso_link(self, client):
+        # In the test suite, this is currently expected to show because
+        # GOOGLE_CLIENT_ID is set.
         r = client.get("/login/", follow_redirects=True)
+        # Note that this label should change into something more generig or
+        # into a value configured by the operator.
         assert "Google Login" in r.text
 
     @pytest.mark.parametrize(
