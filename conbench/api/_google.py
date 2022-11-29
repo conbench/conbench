@@ -56,8 +56,8 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
 
     Scheme, host, port information depend on the deployment and cannot
     generally be determined by the app itself (requires human input). Hence,
-    the least error-prone method is to construct the callback URL via
-    Config.INTENDED_BASE_URL.
+    the most maintainable (controlled, predictable) way to construct the
+    callback URL would be using Config.INTENDED_BASE_URL.
 
     However, Config.INTENDED_BASE_URL is not yet required to be set by Conbench
     operators (as that would break compatibility with legacy deployments). For
@@ -68,12 +68,6 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
     Further analysis and discussion can be found at
     https://github.com/conbench/conbench/pull/454#issuecomment-1326338524 and
     in https://github.com/conbench/conbench/issues/464
-
-    Technically, a more controlled and predictable way to construct the
-    callback URL would be using Config.INTENDED_BASE_URL. However, as long as
-    that configuration parameter is not required to be set to a meaningful
-    value we should not rely on that yet (breaks compatibility with old
-    deployment configs).
 
     If either redirect URL or the authorization endpoint (at the OP) do not use
     the HTTPS scheme then the oauthlib method `prepare_request_uri()` below is
