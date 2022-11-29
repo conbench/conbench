@@ -55,17 +55,20 @@ def auth_google_user():
         http://127.0.0.1:5000/api/google/callback
         https://conbench.ursa.dev/api/google/callback
 
-    Flask's url_for(..., _external=True, ...) constructs the base URL using
-    scheme, host, port information from the currently incoming HTTP request (in
-    particular from the HOST header field). Further analysis and discussion can
-    be found at
-    https://github.com/conbench/conbench/pull/454#issuecomment-1326338524
+    Scheme, host, port information depend on the deployment and cannot
+    generally be determined by the app itself (requires human input). Hence,
+    the least error-prone method is to construct the callback URL via
+    Config.INTENDED_BASE_URL.
 
-    Technically, a more controlled and predictable way to construct the callback
-    URL would be using Config.INTENDED_BASE_URL. However, as long as that
-    configuration parameter is not required to be set to a meaningful value we
-    should not rely on that yet (breaks compatibility with old deployment
-    configs).
+    However, Config.INTENDED_BASE_URL is not yet required to be set by Conbench
+    operators (as that would break compatibility with legacy deployments). For
+    those deployments, keep using Flask's url_for(..., _external=True,
+    https=true) to construct the base URL using the host from the currently
+    incoming HTTP request (from the HOST header field). Keep hard-coding the
+    scheme to HTTPS, otherwise those legacy environments may break, too.
+    Further analysis and discussion can be found at
+    https://github.com/conbench/conbench/pull/454#issuecomment-1326338524 and
+    in https://github.com/conbench/conbench/issues/464
 
     If either redirect URL or the authorization endpoint (at the OP) do not use
     the HTTPS scheme then the oauthlib method `prepare_request_uri()` below is
@@ -74,7 +77,14 @@ def auth_google_user():
     """
 
     client, oidc_provider_config = get_oidc_client()
-    abs_oidc_callback_url = f.url_for("api.callback", _external=True)
+
+    # INTENDED_BASE_URL takes precedence.
+    if Config.INTENDED_BASE_URL is not None:
+        abs_oidc_callback_url = Config.INTENDED_BASE_URL + "api/google/callback"
+    else:
+        # Fallback method for legacy deployments that do not set
+        # INTENDED_BASE_URL. Code path is not executed by the test suite.
+        abs_oidc_callback_url = f.url_for("api.callback", _external=True, https=True)
 
     return client.prepare_request_uri(
         oidc_provider_config["authorization_endpoint"],

@@ -25,28 +25,24 @@ class Config:
     # to recalculate history.
     DISTRIBUTION_COMMITS = int(os.environ.get("DISTRIBUTION_COMMITS", 100))
 
-    # The base URL (scheme, DNS name, path prefix) that regular HTTP clients
-    # are expected to use for reaching the HTTP server exposing the app.
-    # Depends on the deployment and cannot generally be determined by the app
-    # itself (requires human input). The default value is tailored to the Flask
-    # development HTTP server defaults (non-TLS, binds on 127.0.0.1, port
-    # 5000). Can be adjusted via the `--host` and `--port` command line flags
-    # when invoking `flask run`. Three interesting scenarios:
-    # - local dev setup with default listen address: no action needed
-    # - local dev setup with custom listen address: user should set meaningful
-    #   value
-    # - prod/staging setup: user should set meaningful value such as for
-    #   example https://conbench.ursa.dev/
+    # `INTENDED_BASE_URL` is the base URL (scheme, DNS name, path prefix) that
+    # regular HTTP clients are expected to use for reaching the HTTP server
+    # exposing the app. Depends on the deployment and cannot generally be
+    # determined by the app itself (requires human input). Meaningful values
+    # may look like
     #
-    # Currently used for populating the 'Servers' dropdown in the
-    # Swagger/OpenAPI docs website.
-    INTENDED_BASE_URL = os.environ.get(
-        "CONBENCH_INTENDED_BASE_URL", "http://127.0.0.1:5000/"
-    )
+    #    https://conbench.ursa.dev/  or  http://127.0.0.1:9000/
+    #
+    # In the future, it may be wise to require this parameter to be set by the
+    # operator (especially for enabling single sign-on). Until then, the
+    # default value of `None` is used within app logic to detect when this
+    # value was not provided, for supporting legacy configuration environments.
+    INTENDED_BASE_URL = os.environ.get("CONBENCH_INTENDED_BASE_URL", None)
+
     # Require trailing slash towards tidy URL generation.
     # Note: might want to catch bad input via e.g.
     # https://validators.readthedocs.io/en/latest/#module-validators.url
-    if not INTENDED_BASE_URL.endswith("/"):
+    if INTENDED_BASE_URL and not INTENDED_BASE_URL.endswith("/"):
         INTENDED_BASE_URL += "/"
 
     LOG_LEVEL_STDERR = os.environ.get("CONBENCH_LOG_LEVEL_STDERR", "INFO")

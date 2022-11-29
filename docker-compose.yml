@@ -34,6 +34,7 @@ services:
       GOOGLE_CLIENT_ID: conbench-test-client
       GOOGLE_CLIENT_SECRET: AnotherStaticSecret
       CONBENCH_OIDC_ISSUER_URL: http://dex:5556/dex-for-conbench
+      CONBENCH_INTENDED_BASE_URL: http://127.0.0.1:5000/
 
   dex:
     image: dexidp/dex:v2.35.3
