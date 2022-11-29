@@ -198,8 +198,8 @@ class ClusterCreate(marshmallow.Schema):
         required=True,
         metadata={
             "description": "Information related to cluster (e.g. `hosts`, `nodes` or `number of workers`) "
-                           "configured to run a set of benchmarks. Used to differentiate between similar "
-                           "benchmark runs performed on different sets of hardware"
+            "configured to run a set of benchmarks. Used to differentiate between similar "
+            "benchmark runs performed on different sets of hardware"
         },
     )
     optional_info = marshmallow.fields.Dict(
