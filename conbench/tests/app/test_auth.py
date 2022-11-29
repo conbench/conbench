@@ -144,27 +144,6 @@ class TestLoginOIDC(_asserts.AppEndpointTest):
         r = client.get("/login/", follow_redirects=True)
         assert "Google Login" in r.text
 
-    def test_dynamic_callback_url(self, client):
-        """This test is mainly for demonstration purposes how the dynamic
-        OIDC callback URL construction works. One important bit that it covers
-        though is that all three parts of the base url are dynamically
-        constructed: scheme, host, port.
-
-        OIDC callback URL construction does not need to stay dynamic. If we
-        decide to make it static (based on INTENDED_BASE_URL) then this test
-        here can be removed.
-        """
-        r0 = client.get("http://foobar:7000/api/google/")
-        authorization_request_url = r0.headers["location"]
-        data = parse_qs(authorization_request_url)
-        assert "redirect_uri" in data
-        assert "foobar:7000" in data["redirect_uri"][0]
-
-        # Now check that scheme is dynamic, too.
-        data = parse_qs(client.get("https://foo/api/google/").headers["location"])
-        assert "redirect_uri" in data
-        assert "https://foo" in data["redirect_uri"][0]
-
     def test_oidc_flow_against_dex(self, client):
 
         # TODO: parse this 'initiate flow URL' from the HTML login page, i.e.
