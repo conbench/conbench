@@ -118,6 +118,22 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
 
 
 def conclude_oidc_flow():
+    """
+    Note(JP): I'd prefer to have this part of the flow implemented with the
+    help of a more appropriate library than oauthlib. oauthlib is old and was
+    mainly intended to build identity providers. It's difficult to use its
+    primitives in a correct, secure way, and the outcome is hard to read and
+    maintain.
+
+    After all, I think in the current implementation we're doing more HTTP
+    requests than necessary (we should be OK with just getting an ID token,
+    maybe do not need to do the /userinfo request).
+
+    In the current iteration it's about adding some code comments, and about
+    covering what we have in tests. It will then be easier to potentially
+    transition to a different library.
+    """
+
     client, oidc_provider_config = get_oidc_client()
     _, client_id, client_secret = get_oidc_config()
 
