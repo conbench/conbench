@@ -147,12 +147,16 @@ def conclude_oidc_flow():
     # `authorization_response=f.request.url`. Note that authorization response
     # parsing is done according to specs, and that requires that last redirect
     # (to here) to have happened via TLS.
-    token_url, headers, body = client.prepare_token_request(
-        oidc_provider_config["token_endpoint"],
-        authorization_response=f.request.url,
-        redirect_url=f.request.base_url,
-        # code=f.request.args.get("code"),
-    )
+    try:
+        token_url, headers, body = client.prepare_token_request(
+            oidc_provider_config["token_endpoint"],
+            authorization_response=f.request.url,
+            redirect_url=f.request.base_url,
+            # code=f.request.args.get("code"),
+        )
+    except Exception as exc:
+        log.info("prepare_token_request() failed: %s", exc)
+        raise exc from None
 
     log.debug("token_url: %s", token_url)
 
@@ -160,21 +164,14 @@ def conclude_oidc_flow():
     # Response is expected to have retained the `state` parameter which we're
     # using to store the URL the user actually wanted to visit before going
     # into the login flow.
-    authorization_response = client.parse_request_uri_response(f.request.url)
+    try:
+        authorization_response = client.parse_request_uri_response(f.request.url)
+    except Exception as exc:
+        log.info("parse_request_uri_response() failed: %s", exc)
+        raise exc from None
+
     log.debug("authorization_response: %s", authorization_response)
 
-    # Parse encoded target URL from state (i.e. separate the OIDC state from
-    # application-logic state). TODO: actually use OIDC state, then adjust this
-    # here. Expect random state of length 6.
-    camefrom_encoded = authorization_response["state"][6:]
-
-    # Inverse operation of urllib.parse.quote(), i.e. URL-decode the URL.
-    try:
-        user_came_from_url = urllib.parse.unquote(camefrom_encoded)
-    except Exception as exc:
-        # Continue with the login flow w/o using the target URL around.
-        log.info("drop target URL: decoding failed with: %s", exc)
-        log.debug("camefrom_encoded: %s", camefrom_encoded)
     # Parse encoded target URL from state.
     user_came_from_url = ""
     if "state" in authorization_response:
@@ -195,7 +192,13 @@ def conclude_oidc_flow():
 
     log.debug("access token response: %s, %s", token_response, token_response.text)
 
-    client.parse_request_body_response(json.dumps(token_response.json()))
+    try:
+        # client.parse_request_body_response(json.dumps(token_response.json()))
+        # Expect token_response.text to be a JSON document
+        client.parse_request_body_response(token_response.text)
+    except Exception as exc:
+        log.info("parse_request_body_response err: %s", exc)
+        raise exc from None
 
     userinfo_url, headers, body = client.add_token(
         oidc_provider_config["userinfo_endpoint"]
