@@ -58,8 +58,8 @@ class Login(AppEndpoint):
             title="Sign In",
             form=form,
             sso=show_sso_button,
-            # If `target_url_after_login`` is Falsy (e.g. emtpy string) then
-            # expect template to _not_ add a query parameter anywhere. Note
+            # If `target_url_after_login` is Falsy (e.g. emtpy string) then
+            # expect template to not add a query parameter to the login link.
             target_url_after_login=target_url_after_login,
         )
 

@@ -197,7 +197,6 @@ def conclude_oidc_flow():
     log.debug("access token response: %s, %s", token_response, token_response.text)
 
     try:
-        # client.parse_request_body_response(json.dumps(token_response.json()))
         # Expect token_response.text to be a JSON document
         client.parse_request_body_response(token_response.text)
     except Exception as exc:
