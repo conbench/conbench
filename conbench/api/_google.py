@@ -1,3 +1,4 @@
+import base64
 import json
 import logging
 import time
@@ -90,24 +91,27 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
     log.debug("Initiate OIDC SSO flow. redirect_uri: %s", abs_oidc_callback_url)
     log.debug("user_came_from_url: %s", user_came_from_url)
 
-    camefrom_encoded = ""
-    try:
-        camefrom_encoded = urllib.parse.quote(user_came_from_url)
-    except Exception as exc:
-        # Continue with the login flow w/o carrying the target URL around.
-        # NOTE: maybe emit a 400 Bad Request response instead, showing err
-        # detail.
-        log.info("drop target URL: encoding failed with: %s", exc)
+    state = encode_target_url(user_came_from_url)
+    if not state:
+        # In case `encode_target_url()` returned a zero-length string pass
+        # state=None into `prepare_request_uri()` below, resulting in oauthlib
+        # to generate random state -- although there does not seem to be a
+        # security gain (there is no validation at the end of the flow) that
+        # enhances compatiblity (and also resembles legacy behavior).
+        state = None
 
     url_to_redirect_user_to = client.prepare_request_uri(
         oidc_provider_config["authorization_endpoint"],
         redirect_uri=abs_oidc_callback_url,
-        # The `openid` scope renders this OAuth2 flow to be an OpenIDConnect
-        # (OIDC) flow.
+        # The `openid` scope is an essential ingredient to make this OAuth2
+        # flow be an OpenID Connect (OIDC) flow.
         scope=["openid", "email", "profile"],
-        # Additional parameter to carry across the flow. Usually security
-        # purpose. TODO: combine with non-guessable state.
-        state="RANDOM" + camefrom_encoded,
+        # Additional parameter to carry across the flow. Usually this parameter
+        # has a security purpose. For the time being we do not use it for that,
+        # but we use it for communicating `camefrom_encoded` across the flow.
+        # Discussion can be found in
+        # https://github.com/conbench/conbench/pull/462.
+        state=state,
     )
 
     return url_to_redirect_user_to
@@ -155,6 +159,12 @@ def conclude_oidc_flow():
         # Continue with the login flow w/o using the target URL around.
         log.info("drop target URL: decoding failed with: %s", exc)
         log.debug("camefrom_encoded: %s", camefrom_encoded)
+    # Parse encoded target URL from state.
+    user_came_from_url = ""
+    if "state" in authorization_response:
+        user_came_from_url = decode_target_url_from_oidc_state(
+            authorization_response["state"]
+        )
 
     log.info("user_came_from_url: %s", user_came_from_url)
 
@@ -182,6 +192,9 @@ def conclude_oidc_flow():
     ).json()
 
     return user_came_from_url, userinfo
+
+
+def encode_target_url(u: str) -> str:
     """
     Return empty string upon encoding error or zero-length input.
 
