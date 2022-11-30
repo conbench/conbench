@@ -190,13 +190,7 @@ class MachineCreate(marshmallow.Schema):
 class ClusterCreate(marshmallow.Schema):
     name = marshmallow.fields.String(required=True)
     info = marshmallow.fields.Dict(required=True)
-    optional_info = marshmallow.fields.Dict(
-        required=True,
-        metadata={
-            "description": "Additional optional information about the cluster, which is not likely to impact the "
-            "benchmark performance (e.g. region, settings like logging type, etc)."
-        },
-    )
+    optional_info = marshmallow.fields.Dict(required=True)
 
 
 class MachineSchema:
