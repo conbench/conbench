@@ -188,9 +188,27 @@ class MachineCreate(marshmallow.Schema):
 
 
 class ClusterCreate(marshmallow.Schema):
-    name = marshmallow.fields.String(required=True)
-    info = marshmallow.fields.Dict(required=True)
-    optional_info = marshmallow.fields.Dict(required=True)
+    name = marshmallow.fields.String(
+        required=True,
+        metadata={
+            "description": "Distinct name of the cluster, to be displayed on the web UI."
+        },
+    )
+    info = marshmallow.fields.Dict(
+        required=True,
+        metadata={
+            "description": "Information related to cluster (e.g. `hosts`, `nodes` or `number of workers`) "
+            "configured to run a set of benchmarks. Used to differentiate between similar "
+            "benchmark runs performed on different sets of hardware"
+        },
+    )
+    optional_info = marshmallow.fields.Dict(
+        required=True,
+        metadata={
+            "description": "Additional optional information about the cluster, which is not likely to impact the "
+            "benchmark performance (e.g. region, settings like logging type, etc)."
+        },
+    )
 
 
 class MachineSchema:

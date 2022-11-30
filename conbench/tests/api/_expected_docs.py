@@ -1067,9 +1067,18 @@
             },
             "ClusterCreate": {
                 "properties": {
-                    "info": {"type": "object"},
-                    "name": {"type": "string"},
-                    "optional_info": {"type": "object"},
+                    "info": {
+                        "description": "Information related to cluster (e.g. `hosts`, `nodes` or `number of workers`) configured to run a set of benchmarks. Used to differentiate between similar benchmark runs performed on different sets of hardware",
+                        "type": "object",
+                    },
+                    "name": {
+                        "description": "Distinct name of the cluster, to be displayed on the web UI.",
+                        "type": "string",
+                    },
+                    "optional_info": {
+                        "description": "Additional optional information about the cluster, which is not likely to impact the benchmark performance (e.g. region, settings like logging type, etc).",
+                        "type": "object",
+                    },
                 },
                 "required": ["info", "name", "optional_info"],
                 "type": "object",
