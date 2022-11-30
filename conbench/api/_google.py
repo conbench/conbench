@@ -84,7 +84,9 @@ def auth_google_user():
     else:
         # Fallback method for legacy deployments that do not set
         # INTENDED_BASE_URL. Code path is not executed by the test suite.
-        abs_oidc_callback_url = f.url_for("api.callback", _external=True, https=True)
+        abs_oidc_callback_url = f.url_for(
+            "api.callback", _external=True, _scheme="https"
+        )
 
     return client.prepare_request_uri(
         oidc_provider_config["authorization_endpoint"],
