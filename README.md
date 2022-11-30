@@ -143,13 +143,23 @@ password in postgres to `postgres`.
 
 
 ### Run tests
-    (conbench) $ cd ~/workspace/conbench/
-    (conbench) $ pytest -vv conbench/tests/
 
+The canonical test invocation method for now is via `docker-compose` (manages test dependencies automatically, and is also used in CI):
 
-### Run tests with docker
-    (conbench) $ cd ~/workspace/conbench/
-    (conbench) $ docker-compose run app pytest -vv conbench/tests/
+```
+$ docker-compose down && docker-compose build app && \
+    docker-compose run app \
+    pytest -vv conbench/tests
+```
+
+This command attempts to stop and remove previously spawned test runner containers, and it rebuilds the `app` container image prior to running tests to pick up code changes in the local checkout.
+
+Useful command line arguments for local development (can be combined as desired):
+
+* `... pytest -k test_login`: run only string-matching tests
+* `... pytest -x`: exit upon first error
+* `... pytest -s`: do not swallow log output during run
+* `... run -e CONBENCH_LOG_LEVEL_STDERR=DEBUG app ...`
 
 
 ### Format code
