@@ -106,7 +106,7 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
         scope=["openid", "email", "profile"],
         # Additional parameter to carry across the flow. Usually this parameter
         # has a security purpose. For the time being we do not use it for that,
-        # but we use it for communicating `camefrom_encoded` across the flow.
+        # but we use it for communicating the target URL across the flow.
         # Discussion can be found in
         # https://github.com/conbench/conbench/pull/462.
         state=state,
@@ -118,10 +118,14 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
 def conclude_oidc_flow():
     """
     Note(JP): I'd prefer to have this part of the flow implemented with the
-    help of a more appropriate library than oauthlib. oauthlib is old and was
-    mainly intended to build identity providers. It's difficult to use its
-    primitives in a correct, secure way, and the outcome is hard to read and
-    maintain.
+    help of a more appropriate library than oauthlib. oauthlib is a generic
+    OAuth2 library and mainly intended to build identity providers. It's
+    difficult to use its primitives in a correct, secure way, and the outcome
+    is hard to read and maintain.
+
+    Relevant docs:
+    https://oauthlib.readthedocs.io/en/latest/oauth2/clients/baseclient.html
+    https://oauthlib.readthedocs.io/en/latest/oauth2/clients/webapplicationclient.html
 
     After all, I think in the current implementation we're doing more HTTP
     requests than necessary (we should be OK with just getting an ID token,
@@ -150,6 +154,8 @@ def conclude_oidc_flow():
             oidc_provider_config["token_endpoint"],
             authorization_response=f.request.url,
             redirect_url=f.request.base_url,
+            # Note(JP): the code arg is not documented at
+            # https://oauthlib.readthedocs.io/en/latest/oauth2/clients/baseclient.html
             # code=f.request.args.get("code"),
         )
     except Exception as exc:
