@@ -182,3 +182,50 @@ def conclude_oidc_flow():
     ).json()
 
     return user_came_from_url, userinfo
+    """
+    Return empty string upon encoding error or zero-length input.
+
+    Return encoded input otherwise.
+
+    Never raise an exception.
+
+    The return value can/should be used straight as the `state` string for the
+    OIDC flow.
+    """
+
+    if not u:
+        return ""
+
+    try:
+        return "target-" + base64.urlsafe_b64encode(u.encode("utf8")).decode("utf8")
+    except Exception as exc:
+        # Continue with the login flow w/o carrying the target URL around.
+        # Maybe some would consider it nicer to emit a 400 Bad Request response
+        # instead, showing err detail. However, at this time I think that it's
+        # better UX to at least make the flow succeed.
+        log.info("target URL: encoding failed with: %s (ignore)", exc)
+
+    return ""
+
+
+def decode_target_url_from_oidc_state(state: str) -> str:
+    """
+    `state` is supposed to the exact state string as communicated in the OIDC
+    flow.
+
+    Never raise an exception.
+    """
+
+    # Empty input or unexpected input:
+    if not state.startswith("target-"):
+        return ""
+
+    # Remove prefix, turn into byte sequence.
+    encoded = state[7:].encode("utf8")
+
+    try:
+        return base64.urlsafe_b64decode(encoded).decode("utf8")
+    except Exception as exc:
+        log.info("state: %s, decoding target URL failed with: %s (ignore)", state, exc)
+
+    return ""
