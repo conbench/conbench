@@ -191,6 +191,9 @@ def conclude_oidc_flow():
         data=body,
     ).json()
 
+    # For the consumer of this 2-tuple: expect `user_came_from_url` to always
+    # be a string. It has length 0 in case no target URL was communicated or if
+    # there was a decoding issue along the way.
     return user_came_from_url, userinfo
 
 
