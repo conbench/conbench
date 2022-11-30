@@ -1,8 +1,6 @@
 import base64
-import json
 import logging
 import time
-import urllib.parse
 
 import flask as f
 import requests
