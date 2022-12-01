@@ -1,6 +1,7 @@
 import logging
 from urllib.parse import urljoin
 
+import pytest
 import requests
 from bs4 import BeautifulSoup
 
@@ -141,11 +142,37 @@ class TestLogout(_asserts.AppEndpointTest):
 
 class TestLoginOIDC(_asserts.AppEndpointTest):
     def test_login_page_shows_sso_link(self, client):
+        # In the test suite the "Google Login" link is currently expected to
+        # show because GOOGLE_CLIENT_ID is set. Note that this label should
+        # change into something more generic or into a value configured by the
+        # operator.
         r = client.get("/login/", follow_redirects=True)
         assert "Google Login" in r.text
 
-    def test_oidc_flow_against_dex(self, client):
+    def test_login_link_carries_target_param(self, client):
+        # When rendering the login page with a `target` query parameter, expect
+        # the same parameter to be added to the rendered SSO login link,
+        # example: <a href="/api/google/?target=bubaz">Google Login</a>
+        r = client.get("/login/?target=bubaz")
+        assert "target=bubaz" in r.text
 
+    @pytest.mark.parametrize(
+        "target_url",
+        [
+            None,
+            "/relative",
+            "https://rofl.com",
+            "https://foo.bar?x=y",
+            # Test a literal %20 and a literal %2F to be carried across the
+            # flow. This is a good way to find flaws in the
+            # URL-encoding-decoding information flow (the goal is that these
+            # character sequences are communicated verbatim, i.e. end up being
+            # emitted as-is in the final redirect URL).
+            "https://foo.bar/path/?x=%20yz",
+            "https://foo.bar/path/?x=y%2Fz",
+        ],
+    )
+    def test_oidc_flow_against_dex(self, client, target_url):
         # TODO: parse this 'initiate flow URL' from the HTML login page, i.e.
         # from the button/ link that people would actually click. If that is a
         # _relative_ href then construct an absolute URL from it (see below).
@@ -158,10 +185,27 @@ class TestLoginOIDC(_asserts.AppEndpointTest):
         # is aware of. That is is currently set to
         # http://127.0.0.1:5000/api/google/callback -- see
         # containders/dex/config.yml
-        r0 = client.get("http://127.0.0.1:5000/api/google/")
+        if target_url is None:
+            r0 = client.get("http://127.0.0.1:5000/api/google/")
+        else:
+            # The slash before the question mark is required, otherwise Flask
+            # will emit a 308 redirect to the slashy version first. Note that
+            # when manually putting the URL together like this there is no
+            # URL-encoding happening on the query string. In the Werkzeug test
+            # client automatic construction of a URL query string is done by
+            # providing the `query_string` arg with a dictionary as value --
+            # URL-encoding is then automatically done by the client before
+            # sending the request.
+            r0 = client.get(
+                "http://127.0.0.1:5000/api/google/", query_string={"target": target_url}
+            )
 
         # `r0` is meant to be a redirect response, redirecting to the identity
-        # provider. Extract the full URL we've been redirected to. The URL
+        # provider.  The redirect is expected to be delivered via a 302
+        # response.
+        assert r0.status_code == 302, f"unexpected response: {r0.text}"
+
+        # Extract the full URL we've been redirected to. The URL
         # represents a so-called authorization request, with all the parameters
         # for that request being encoded in the URL query parameters
         authorization_request_url = r0.headers["location"]
@@ -226,11 +270,18 @@ class TestLoginOIDC(_asserts.AppEndpointTest):
         # seems to deal fine with the absolute nature of
         # `callback_request_url`.
         r4 = client.get(callback_request_url)
+        # The expected response is a 302 redirect response.
+        assert r4.status_code == 302, f"bad response: {r4.text}"
         log.info(r4.headers)
 
         # Confirm that the api has returned authentication proof.
         assert "set-cookie" in r4.headers
         assert "session" in r4.headers["set-cookie"]
+
+        if target_url is None:
+            assert r4.headers["location"] == "/"
+        else:
+            assert r4.headers["location"] == target_url
 
 
 def parse_login_page(html):
