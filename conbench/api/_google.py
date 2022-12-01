@@ -1,5 +1,6 @@
 import base64
 import logging
+import os
 import time
 
 import flask as f
@@ -145,15 +146,44 @@ def conclude_oidc_flow():
     # parameters. Among this is the OAuth2 authorization code, because we're in
     # the middle of a so-called authorization code flow. That is, all the juicy
     # detail to continue the flow is in the query parameter section of
-    # `f.request.url`, and that also helps understanding
-    # `authorization_response=f.request.url`. Note that authorization response
-    # parsing is done according to specs, and that requires that last redirect
-    # (to here) to have happened via TLS.
+    # `f.request.url` (which is the URL used by the user agent to get here).
+    # Note that authorization response parsing is done by oauthlib according to
+    # specs, and that requires that last redirect (to here) to have happened
+    # via TLS. However, in some legacy deployments the URL scheme communicated
+    # via WSGI is not actual. See
+    # https://github.com/conbench/conbench/issues/480. That is, `f.request.url`
+    # might start with HTTP although the actual user agent used HTTPS. That's
+    # why in legacy code we always did .replace("http://", "https://").
+    # However, since introduction of local tests this needs differentiated
+    # handling. See below.
+
+    # Never rely on oauthlib to perform 'security validation' on the scheme of
+    # the URL that is passed in as `authorization_response` argument. That's
+    # the URL where it parses the authorization code etc from (i.e. short-lived
+    # credentials emitted by the identity provider). That security mechanism is
+    # not needed: for serious deployments, operators are required to expose
+    # Conbench exclusively via HTTPS.
+    cur_request_url_abs = f.request.url.replace("http://", "https://")
+
+    # For the dynamically reconstructed redirect URL, for now do the
+    # replacement from http:// to https:// only when _not_ in a testing
+    # environment. That allows tests to be built with ease, while still keeping
+    # this legacy hack in place for legacy deployments. This test-specific
+    # logic can disappear once INTENDED_BASE_URL becomes required.
+    cur_request_url_wo_query = f.request.base_url
+    if os.getenv("FLASK_ENV", "None") != "development":
+        cur_request_url_wo_query = cur_request_url_wo_query.replace(
+            "http://", "https://"
+        )
+
     try:
         token_url, headers, body = client.prepare_token_request(
             oidc_provider_config["token_endpoint"],
-            authorization_response=f.request.url,
-            redirect_url=f.request.base_url,
+            authorization_response=cur_request_url_abs,
+            # This is included in the token request to the identity provider,
+            # and the identity provider actually compares that to the redirect
+            # URL it has seen in the initial authorization request.
+            redirect_url=cur_request_url_wo_query,
             # Note(JP): the code arg is not documented at
             # https://oauthlib.readthedocs.io/en/latest/oauth2/clients/baseclient.html
             # code=f.request.args.get("code"),
