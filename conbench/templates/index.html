@@ -68,9 +68,7 @@
                            <a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.commit.display_message }}</a>
                        </td>
                      {% else %}
-                       <td>
-                           <a href="{{ run.commit.url }}">{{ run.commit.sha }}</a>
-                       </td>
+                       <td><a href="{{ run.commit.url }}">{{ run.commit.sha }}</a></td>
                      {% endif %}
 
                      <td>{{ run.commit.sha }}</td>
