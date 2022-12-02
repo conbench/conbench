@@ -1,6 +1,5 @@
 import base64
 import logging
-import os
 import time
 
 import flask as f
