@@ -34,16 +34,24 @@ def create_application(config):
         level_sqlalchemy=app.config["LOG_LEVEL_SQLALCHEMY"],
     )
 
-    # TODO: sanitize sensitive configuration values so that the INFO log of the
-    # app does not contain obvious secrets.
-    log_cfg_msg = "app config object:\n" + json.dumps(
-        app.config, sort_keys=True, default=str, indent=2
+    # The global Config object is different from Flask's application.config
+    # object. Here, log Flask's config object which contains more keys. Note:
+    # sanitize sensitive configuration values so that the INFO log of the app
+    # does not contain obvious secrets -- this needs constant review of the
+    # `to_nonsensitive_string()`` method
+    log_cfg_msg = (
+        "Flask app config object:\n"
+        + dict_or_objattrs_to_nonsensitive_string(app.config)
+        + "\n\n"
+        + "Conbench config object:\n"
+        + dict_or_objattrs_to_nonsensitive_string(config)
     )
 
     # In non-testing, INFO-log the configuration details. In testing, DEBUG-log
     # them (in the test suite, the app gets re-initialized for each test).
-    # Note: maybe change the test suite to init the app object only once.
-    if app.config.TESTING:
+    # Note: this is an attempt to control log verbosity of the test suite.
+    # Maybe change the test suite to init the app object only once.
+    if app.config["TESTING"]:
         log.debug(log_cfg_msg)
     else:
         log.info(log_cfg_msg)
@@ -121,6 +129,46 @@ def _json_http_errors(e):
     response.data = f.json.dumps(data)
     response.content_type = "application/json"
     return response
+
+
+def dict_or_objattrs_to_nonsensitive_string(obj):
+    """Generate a sorted and indented JSON string from the keys and values
+    given by `obj`. Sanitize values if they appear to be sensitive.
+
+    If `obj` looks like a dictionary then take keys and values from there.
+
+    For all other object types use `dir(obj)` to look up instance and class
+    attributes, but ignore all those that start with an underscore.
+    """
+
+    # Fragments are matched w/o considering case.
+    sensitive_key_fragments = ["SECRET", "REGISTRATION_KEY", "PASSWORD", "TOKEN"]
+
+    if isinstance(obj, dict):
+        keys = list(obj.keys())
+        values = list(obj.values())
+    else:
+        keys = list(dir(obj))
+        values = [getattr(obj, k) for k in keys if not k.startswith("_")]
+
+    sanitized = {}
+
+    # Iterate over all object and class attributes,
+    for k, v in zip(keys, values):
+
+        for fragment in sensitive_key_fragments:
+            if fragment.lower() in k.lower():
+                # If the 'secret' is shorter than four characters then this
+                # will reveal the entire secret. That's OK, an actual
+                # secret should be way longer.
+                sanitized[k] = "*******" + v[-3:]
+                break
+        else:
+            # `else` should have been called `nobreak`. That's what it is :)
+            # Key appears to be non-senstive, take value as-is.
+            sanitized[k] = v
+
+    return json.dumps(sanitized, sort_keys=True, default=str, indent=2)
 
 
 # see .flaskenv used by `$ flask run`
