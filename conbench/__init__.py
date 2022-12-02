@@ -156,13 +156,10 @@ def dict_or_objattrs_to_nonsensitive_string(obj):
     # Iterate over all object and class attributes,
     for k, v in zip(keys, values):
 
-        if v is None:
-            # Keep None's as they are in the output.
-            sanitized[k] = v
-            continue
-
-        # Skip if value does not appear to be a string.
         if not isinstance(v, str):
+            # Keep Nones and booleans as they are (stringified after all
+            # by json.dumps() below)
+            sanitized[k] = v
             continue
 
         for fragment in sensitive_key_fragments:
