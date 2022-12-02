@@ -148,13 +148,22 @@ def dict_or_objattrs_to_nonsensitive_string(obj):
         keys = list(obj.keys())
         values = list(obj.values())
     else:
-        keys = list(dir(obj))
-        values = [getattr(obj, k) for k in keys if not k.startswith("_")]
+        keys = list(k for k in dir(obj) if not k.startswith("_"))
+        values = [getattr(obj, k) for k in keys]
 
     sanitized = {}
 
     # Iterate over all object and class attributes,
     for k, v in zip(keys, values):
+
+        if v is None:
+            # Keep None's as they are in the output.
+            sanitized[k] = v
+            continue
+
+        # Skip if value does not appear to be a string.
+        if not isinstance(v, str):
+            continue
 
         for fragment in sensitive_key_fragments:
             if fragment.lower() in k.lower():
