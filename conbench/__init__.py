@@ -34,10 +34,20 @@ def create_application(config):
         level_sqlalchemy=app.config["LOG_LEVEL_SQLALCHEMY"],
     )
 
-    log.debug(
-        "flask app config:\n%s",
-        json.dumps(app.config, sort_keys=True, default=str, indent=2),
+    # TODO: sanitize sensitive configuration values so that the INFO log of the
+    # app does not contain obvious secrets.
+    log_cfg_msg = "app config object:\n" + json.dumps(
+        app.config, sort_keys=True, default=str, indent=2
     )
+
+    # In non-testing, INFO-log the configuration details. In testing, DEBUG-log
+    # them (in the test suite, the app gets re-initialized for each test).
+    # Note: maybe change the test suite to init the app object only once.
+    if app.config.TESTING:
+        log.debug(log_cfg_msg)
+    else:
+        log.info(log_cfg_msg)
+
     return app
 
 

@@ -77,6 +77,15 @@ class Config:
         assert OIDC_CLIENT_ID is not None
         assert OIDC_CLIENT_SECRET is not None
 
+    # Introduce a `Config.TESTING` boolean that application logic can use to
+    # know when code is executed in the context of the test suite. This can be
+    # useful for example for logging more or less detail in the context of the
+    # test suite. For now use the FLASK_ENV environment variable to detect
+    # this.
+    TESTING = False
+    if os.environ.get("FLASK_ENV", "development"):
+        TESTING = True
+
 
 class TestConfig(Config):
     DB_NAME = os.environ.get("DB_NAME", f"{APPLICATION_NAME.lower()}_test")

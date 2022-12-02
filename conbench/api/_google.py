@@ -171,7 +171,7 @@ def conclude_oidc_flow():
     # this legacy hack in place for legacy deployments. This test-specific
     # logic can disappear once INTENDED_BASE_URL becomes required.
     cur_request_url_wo_query = f.request.base_url
-    if os.getenv("FLASK_ENV", "None") != "development":
+    if not Config.TESTING:
         cur_request_url_wo_query = cur_request_url_wo_query.replace(
             "http://", "https://"
         )
