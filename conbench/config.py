@@ -84,7 +84,7 @@ class Config:
     # test suite. For now use the FLASK_ENV environment variable to detect
     # this.
     TESTING = False
-    if os.environ.get("FLASK_ENV", "development"):
+    if os.environ.get("FLASK_ENV") == "development":
         TESTING = True
 
 
