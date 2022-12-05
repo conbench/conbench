@@ -4,11 +4,9 @@ import time
 
 import flask as f
 import requests
-
 from oauthlib.oauth2 import WebApplicationClient
 
 from ..config import Config
-
 
 log = logging.getLogger(__name__)
 
