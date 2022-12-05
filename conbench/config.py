@@ -32,26 +32,6 @@ class ConfigClass:
     # to recalculate history.
     DISTRIBUTION_COMMITS = int(os.environ.get("DISTRIBUTION_COMMITS", 100))
 
-    # `INTENDED_BASE_URL` is the base URL (scheme, DNS name, path prefix) that
-    # regular HTTP clients are expected to use for reaching the HTTP server
-    # exposing the app. Depends on the deployment and cannot generally be
-    # determined by the app itself (requires human input). Meaningful values
-    # may look like
-    #
-    #    https://conbench.ursa.dev/  or  http://127.0.0.1:9000/
-    #
-    # In the future, it may be wise to require this parameter to be set by the
-    # operator (especially for enabling single sign-on). Until then, the
-    # default value of `None` is used within app logic to detect when this
-    # value was not provided, for supporting legacy configuration environments.
-    INTENDED_BASE_URL = os.environ.get("CONBENCH_INTENDED_BASE_URL", None)
-
-    # Require trailing slash towards tidy URL generation.
-    # Note: might want to catch bad input via e.g.
-    # https://validators.readthedocs.io/en/latest/#module-validators.url
-    if INTENDED_BASE_URL and not INTENDED_BASE_URL.endswith("/"):
-        INTENDED_BASE_URL += "/"
-
     LOG_LEVEL_STDERR = os.environ.get("CONBENCH_LOG_LEVEL_STDERR", "INFO")
     LOG_LEVEL_FILE = None
     LOG_LEVEL_SQLALCHEMY = "WARNING"
@@ -71,7 +51,45 @@ class ConfigClass:
         TESTING = True
 
     def __init__(self):
+        self.INTENDED_BASE_URL = self._get_intended_base_url_from_env_or_exit()
         self.OIDC_ISSUER_URL = self._get_oidc_issuer_url_from_env_or_exit()
+
+    def _get_intended_base_url_from_env_or_exit(self) -> Optional[str]:
+        """
+        If this function returns then the output is guaranteed to start with 'http'
+        and ends with a slash.
+
+        Note: might want to do a little more URL-specific input validation via e.g.
+        https://validators.readthedocs.io/en/latest/#module-validators.url
+
+
+        `INTENDED_BASE_URL` is the base URL (scheme, DNS name, path prefix) that
+        regular HTTP clients are expected to use for reaching the HTTP server
+        exposing the app. Depends on the deployment and cannot generally be
+        determined by the app itself (requires human input). Meaningful values may
+        look like
+
+        https://conbench.ursa.dev/  or  http://127.0.0.1:9000/
+
+        This value is required to be provided by operators. That reduces code
+        complexity and enhances maintainability and security. Notably, this
+        simplifies code, reasoning, testing in the context of single sign-on.
+        """
+        ibu = os.environ.get("CONBENCH_INTENDED_BASE_URL", None)
+
+        # Strip leading and trailing whitespace.
+        ibu = ibu.strip()
+
+        if not ibu.startswith("http"):
+            sys.exit(
+                f"CONBENCH_INTENDED_BASE_URL must start with 'http'. Got instead:`{ibu}`"
+            )
+
+        # Require trailing slash towards tidy URL generation.
+        if not ibu.endswith("/"):
+            ibu += "/"
+
+        return ibu
 
     def _get_oidc_issuer_url_from_env_or_exit(self) -> Optional[str]:
         """Return `None` or a string.
