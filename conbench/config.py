@@ -18,7 +18,12 @@ class ConfigClass:
     SQLALCHEMY_DATABASE_URI = (
         f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
+
+    # When this appears to be `true` then the application initialization phase
+    # executes code that _attempts_ to create all database tables. That code
+    # does not error out when it finds that the database tables already exist.
     CREATE_ALL_TABLES = os.environ.get("CREATE_ALL_TABLES", "true") == "true"
+
     # An integer number of commits to use when calculating
     # statistics. The default is 100; larger numbers will lead to more false negatives,
     # especially after large changes. We recommend leaving it as the default. Previously
