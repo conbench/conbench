@@ -151,6 +151,9 @@ def conclude_oidc_flow():
     # confirm that (it cannot reliably know).
     cur_request_url_abs = f.request.url.replace("http://", "https://")
 
+    # Parse target URL from state parameter in authorization response. If it's
+    # not an empty string then treat this as the URL the user actually wanted
+    # to visit before going into the login flow.
     user_came_from_url = parse_state_from_authorization_response(
         client, cur_request_url_abs
     )
@@ -207,20 +210,23 @@ def conclude_oidc_flow():
 
 def parse_state_from_authorization_response(c: WebApplicationClient, url: str) -> str:
     """
+    Parse target URL from state parameter in authorization response.
+
+    Raise exception or return the target URL as a string (may be of length 0).
+
     url: absolute URL that the user agent used to get here (modulo scheme, it's
     always expected to be HTTPS, see considerations above).
 
     Extract authorization response structure from incoming URL. Response is
-    expected to have retained the `state` parameter which we're using to store
-    the URL the user actually wanted to visit before going into the login flow.
-
-    This is expected to raise an exception or return a string object (which may
-    be of length 0).
+    expected to have retained the `state` parameter. Extract that, and then
+    decode
     """
     try:
         # This performs standards-compliant parsing of the so-called
         # authorization response and can therefore raise various oauthlib
-        # exceptions.
+        # exceptions. `url` is expected to always start with https:// which is
+        # why this is not expected raise an exception related to insecure
+        # transport.
         authorization_resp = c.parse_request_uri_response(url)
     except Exception as exc:
         log.info("parse_request_uri_response() failed: %s", exc)
