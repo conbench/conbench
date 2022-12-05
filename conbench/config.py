@@ -73,12 +73,6 @@ class ConfigClass:
     def __init__(self):
         self.OIDC_ISSUER_URL = self._get_oidc_issuer_url_from_env_or_exit()
 
-class TestConfig(Config):
-    DB_NAME = os.environ.get("DB_NAME", f"{APPLICATION_NAME.lower()}_test")
-    SQLALCHEMY_DATABASE_URI = (
-        f"postgresql://{Config.DB_USERNAME}:{Config.DB_PASSWORD}"
-        f"@{Config.DB_HOST}:{Config.DB_PORT}/{DB_NAME}"
-    )
     def _get_oidc_issuer_url_from_env_or_exit(self) -> Optional[str]:
         """Return `None` or a string.
 
