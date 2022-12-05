@@ -5,7 +5,10 @@ import time
 import flask as f
 import requests
 
+from oauthlib.oauth2 import WebApplicationClient
+
 from ..config import Config
+
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +24,6 @@ def get_oidc_config():
 
 
 def get_oidc_client():
-    from oauthlib.oauth2 import WebApplicationClient
 
     discovery_url, client_id, _ = get_oidc_config()
 
@@ -149,6 +151,11 @@ def conclude_oidc_flow():
     # confirm that (it cannot reliably know).
     cur_request_url_abs = f.request.url.replace("http://", "https://")
 
+    user_came_from_url = parse_state_from_authorization_response(
+        client, cur_request_url_abs
+    )
+    log.info("user_came_from_url: %s", user_came_from_url)
+
     try:
         token_url, headers, body = client.prepare_token_request(
             oidc_provider_config["token_endpoint"],
@@ -162,28 +169,7 @@ def conclude_oidc_flow():
         log.info("prepare_token_request() failed: %s", exc)
         raise exc from None
 
-    log.debug("token_url: %s", token_url)
-
-    # Extract authorization response structure from incoming URL.
-    # Response is expected to have retained the `state` parameter which we're
-    # using to store the URL the user actually wanted to visit before going
-    # into the login flow.
-    try:
-        authorization_response = client.parse_request_uri_response(f.request.url)
-    except Exception as exc:
-        log.info("parse_request_uri_response() failed: %s", exc)
-        raise exc from None
-
-    log.debug("authorization_response: %s", authorization_response)
-
-    # Parse encoded target URL from state.
-    user_came_from_url = ""
-    if "state" in authorization_response:
-        user_came_from_url = decode_target_url_from_oidc_state(
-            authorization_response["state"]
-        )
-
-    log.info("user_came_from_url: %s", user_came_from_url)
+    log.debug("token_url (for fetching access token): %s", token_url)
 
     # Get an access token. The response is expected to also contain an
     # ID Token, though.
@@ -217,6 +203,39 @@ def conclude_oidc_flow():
     # be a string. It has length 0 in case no target URL was communicated or if
     # there was a decoding issue along the way.
     return user_came_from_url, userinfo
+
+
+def parse_state_from_authorization_response(c: WebApplicationClient, url: str) -> str:
+    """
+    url: absolute URL that the user agent used to get here (modulo scheme, it's
+    always expected to be HTTPS, see considerations above).
+
+    Extract authorization response structure from incoming URL. Response is
+    expected to have retained the `state` parameter which we're using to store
+    the URL the user actually wanted to visit before going into the login flow.
+
+    This is expected to raise an exception or return a string object (which may
+    be of length 0).
+    """
+    try:
+        # This performs standards-compliant parsing of the so-called
+        # authorization response and can therefore raise various oauthlib
+        # exceptions.
+        authorization_resp = c.parse_request_uri_response(url)
+    except Exception as exc:
+        log.info("parse_request_uri_response() failed: %s", exc)
+        raise exc from None
+
+    log.debug("authorization response: %s", authorization_resp)
+
+    # Parse encoded target URL from state.
+    user_came_from_url = ""
+    if "state" in authorization_resp:
+        user_came_from_url = decode_target_url_from_oidc_state(
+            authorization_resp["state"]
+        )
+
+    return user_came_from_url
 
 
 def encode_target_url(u: str) -> str:
