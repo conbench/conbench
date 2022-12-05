@@ -53,7 +53,7 @@ class ConfigClass:
         self.INTENDED_BASE_URL = self._get_intended_base_url_from_env_or_exit()
         self.OIDC_ISSUER_URL = self._get_oidc_issuer_url_from_env_or_exit()
 
-    def _get_intended_base_url_from_env_or_exit(self) -> Optional[str]:
+    def _get_intended_base_url_from_env_or_exit(self) -> str:
         """
         If this function returns then the output is guaranteed to start with 'http'
         and ends with a slash.
@@ -93,7 +93,7 @@ class ConfigClass:
 
         return ibu
 
-    def _get_oidc_issuer_url_from_env_or_exit(self) -> str:
+    def _get_oidc_issuer_url_from_env_or_exit(self) -> Optional[str]:
         """Return `None` or a string.
 
         If `OIDC_ISSUER_URL` is after all `None`: disable OpenID Connect (OIDC)
