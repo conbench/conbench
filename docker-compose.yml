@@ -12,7 +12,7 @@ services:
       - dex
       - db
     environment:
-      APPLICATION_NAME: "Conbench"
+      APPLICATION_NAME: "conbench-for-pytest"
       DB_USERNAME: "postgres"
       # From the docker-compose docs: "By default Compose sets up a single
       # network for your app. Each container for a service joins the default

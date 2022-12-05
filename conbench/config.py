@@ -1,12 +1,11 @@
 import getpass
 import os
 
-APPLICATION_NAME = "Conbench"
 
 
 class Config:
 
-    APPLICATION_NAME = os.environ.get("APPLICATION_NAME", APPLICATION_NAME)
+    APPLICATION_NAME = os.environ.get("APPLICATION_NAME", "Conbench")
     DB_HOST = os.environ.get("DB_HOST", "localhost")
     DB_NAME = os.environ.get("DB_NAME", f"{APPLICATION_NAME.lower()}_prod")
     DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")

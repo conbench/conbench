@@ -115,7 +115,7 @@ class ListEnforcer(Enforcer):
         self.logout(client)
         response = client.get(self.url, follow_redirects=True)
         assert new_id.encode() not in response.data
-        assert b"Sign In - Conbench" in response.data, response.data
+        assert b"Sign In - conbench-for-pytest" in response.data, response.data
 
 
 class GetEnforcer(Enforcer):
@@ -146,16 +146,16 @@ class GetEnforcer(Enforcer):
         self.logout(client)
         response = client.get(entity_url, follow_redirects=True)
         assert new_id.encode() not in response.data
-        assert b"Sign In - Conbench" in response.data, response.data
+        assert b"Sign In - conbench-for-pytest" in response.data, response.data
 
     def test_unknown(self, client):
         self.authenticate(client)
         unknown_url = self.url.format("unknown")
         response = client.get(unknown_url, follow_redirects=True)
         if getattr(self, "redirect_on_unknown", True):
-            assert b"Home - Conbench" in response.data, response.data
+            assert b"Home - conbench-for-pytest" in response.data, response.data
         else:
-            title = "{} - Conbench".format(self.title).encode()
+            title = "{} - conbench-for-pytest".format(self.title).encode()
             assert title in response.data, response.data
 
 
