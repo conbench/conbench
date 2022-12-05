@@ -1,9 +1,11 @@
 import getpass
 import os
+import sys
+
+from typing import Optional
 
 
-
-class Config:
+class ConfigClass:
 
     APPLICATION_NAME = os.environ.get("APPLICATION_NAME", "Conbench")
     DB_HOST = os.environ.get("DB_HOST", "localhost")
@@ -49,33 +51,10 @@ class Config:
     LOG_LEVEL_FILE = None
     LOG_LEVEL_SQLALCHEMY = "WARNING"
 
-    # If `OIDC_ISSUER_URL` is after all `None`: disable OpenID Connect (OIDC)
-    # single sign-on. If this is not `None` then it must be a valid OIDC issuer
-    # notation (that is, a URL).
-    OIDC_ISSUER_URL = os.environ.get("CONBENCH_OIDC_ISSUER_URL", None)
-    if OIDC_ISSUER_URL is not None:
-        assert OIDC_ISSUER_URL.startswith("http")
-        # Remove all trailing slashes.
-        OIDC_ISSUER_URL = OIDC_ISSUER_URL.rstrip("/")
-    else:
-        # legacy config support: when CONBENCH_OIDC_ISSUER_URL is set in the
-        # environment it takes precedence. If it is not set and if
-        # GOOGLE_CLIENT_ID is set in the environment then set issuer to
-        # "https://accounts.google.com"
-        if "GOOGLE_CLIENT_ID" in os.environ:
-            OIDC_ISSUER_URL = "https://accounts.google.com"
-
     # Note that GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET are the legacy env vars
     # previously used for enabling OIDC SSO. Keep using these env vars for now.
     OIDC_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
     OIDC_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
-
-    # Require client ID and client secret to be set if issuer is configured.
-    # Those three parameters are all required for an OIDC authorization code
-    # flow.
-    if OIDC_ISSUER_URL is not None:
-        assert OIDC_CLIENT_ID is not None
-        assert OIDC_CLIENT_SECRET is not None
 
     # Introduce a `Config.TESTING` boolean that application logic can use to
     # know when code is executed in the context of the test suite. This can be
@@ -86,6 +65,8 @@ class Config:
     if os.environ.get("FLASK_ENV") == "development":
         TESTING = True
 
+    def __init__(self):
+        self.OIDC_ISSUER_URL = self._get_oidc_issuer_url_from_env_or_exit()
 
 class TestConfig(Config):
     DB_NAME = os.environ.get("DB_NAME", f"{APPLICATION_NAME.lower()}_test")
@@ -93,3 +74,39 @@ class TestConfig(Config):
         f"postgresql://{Config.DB_USERNAME}:{Config.DB_PASSWORD}"
         f"@{Config.DB_HOST}:{Config.DB_PORT}/{DB_NAME}"
     )
+    def _get_oidc_issuer_url_from_env_or_exit(self) -> Optional[str]:
+        """Return `None` or a string.
+
+        If `OIDC_ISSUER_URL` is after all `None`: disable OpenID Connect (OIDC)
+        single sign-on. If this is not `None` then it must be a valid OIDC issuer
+        notation (that is, a URL).
+        """
+
+        oiu = os.environ.get("CONBENCH_OIDC_ISSUER_URL", None)
+        if oiu is not None:
+            assert oiu.startswith("http")
+            # Remove all trailing slashes to make URL construction predictable.
+            # ALos, the canonical form of an OIDC issuer URL does not have
+            # trailing slashes.
+            oiu = oiu.rstrip("/")
+        else:
+            # legacy config support: when CONBENCH_OIDC_ISSUER_URL is set in the
+            # environment it takes precedence. If it is not set and if
+            # GOOGLE_CLIENT_ID is set in the environment then set issuer to
+            # "https://accounts.google.com"
+            if "GOOGLE_CLIENT_ID" in os.environ:
+                oiu = "https://accounts.google.com"
+
+        # Require client ID and client secret to be set if issuer is configured.
+        # Those three parameters are all required for an OIDC authorization code
+        # flow.
+        if oiu is not None:
+            assert self.OIDC_CLIENT_ID is not None
+            assert self.OIDC_CLIENT_SECRET is not None
+
+        return oiu
+
+
+Config = ConfigClass()
+# for legacy code that imports via `from ..config import TestConfig`
+TestConfig = Config
