@@ -1,7 +1,6 @@
 import getpass
 import os
 import sys
-
 from typing import Optional
 
 
