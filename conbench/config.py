@@ -77,6 +77,9 @@ class ConfigClass:
         """
         ibu = os.environ.get("CONBENCH_INTENDED_BASE_URL", None)
 
+        if ibu is None:
+            sys.exit("enviroment: CONBENCH_INTENDED_BASE_URL is required but not set")
+
         # Strip leading and trailing whitespace.
         ibu = ibu.strip()
 
@@ -91,7 +94,7 @@ class ConfigClass:
 
         return ibu
 
-    def _get_oidc_issuer_url_from_env_or_exit(self) -> Optional[str]:
+    def _get_oidc_issuer_url_from_env_or_exit(self) -> str:
         """Return `None` or a string.
 
         If `OIDC_ISSUER_URL` is after all `None`: disable OpenID Connect (OIDC)
