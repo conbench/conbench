@@ -1275,7 +1275,7 @@
             },
         },
     },
-    "info": {"title": "Conbench", "version": "1.0.0"},
+    "info": {"title": "conbench-for-pytest", "version": "1.0.0"},
     "openapi": "3.0.2",
     "paths": {
         "/api/": {
