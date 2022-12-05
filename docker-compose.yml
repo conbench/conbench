@@ -61,7 +61,7 @@ services:
       dockerfile: Dockerfile
     command: ["alembic", "upgrade", "head"]
     environment:
-      APPLICATION_NAME: "Conbench"
+      APPLICATION_NAME: "conbench-for-pytest"
       CREATE_ALL_TABLES: "false"
       DB_USERNAME: "postgres"
       DB_HOST: "db"
@@ -72,6 +72,7 @@ services:
       FLASK_ENV: "development"
       REGISTRATION_KEY: "code"
       SECRET_KEY: "Person, woman, man, camera, TV"
+      CONBENCH_INTENDED_BASE_URL: http://127.0.0.1:5000/
     depends_on:
       db:
         condition: service_healthy
