@@ -10,6 +10,9 @@ from ..config import Config
 log = logging.getLogger(__name__)
 
 
+OIDC_CALLBACK_URL = Config.INTENDED_BASE_URL + "api/google/callback"
+
+
 def get_oidc_config():
     # Rely on three config parameters to be set in a meaningful way:
     # Config.OIDC_ISSUER_URL, Config.OIDC_CLIENT_ID, Config.OIDC_CLIENT_SECRET
@@ -56,17 +59,11 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
     Scheme, host, port information depend on the deployment and cannot
     generally be determined by the app itself (requires human input). Hence,
     the most maintainable (controlled, predictable) way to construct the
-    callback URL would be using Config.INTENDED_BASE_URL.
-
-    However, Config.INTENDED_BASE_URL is not yet required to be set by Conbench
-    operators (as that would break compatibility with legacy deployments). For
-    those deployments, keep using Flask's url_for(..., _external=True,
-    https=true) to construct the base URL using the host from the currently
-    incoming HTTP request (from the HOST header field). Keep hard-coding the
-    scheme to HTTPS, otherwise those legacy environments may break, too.
-    Further analysis and discussion can be found at
-    https://github.com/conbench/conbench/pull/454#issuecomment-1326338524 and
-    in https://github.com/conbench/conbench/issues/464
+    callback URL is by using Config.INTENDED_BASE_URL set by the operator. Note
+    that we cannot rely on the WSGI information on the URL scheme that the user
+    used to reach the application. Further analysis and discussion can be found
+    at https://github.com/conbench/conbench/pull/454#issuecomment-1326338524
+    and in https://github.com/conbench/conbench/issues/464
 
     If either redirect URL or the authorization endpoint (at the OP) do not use
     the HTTPS scheme then the oauthlib method `prepare_request_uri()` below is
@@ -76,17 +73,7 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
 
     client, oidc_provider_config = get_oidc_client()
 
-    # INTENDED_BASE_URL takes precedence.
-    if Config.INTENDED_BASE_URL is not None:
-        abs_oidc_callback_url = Config.INTENDED_BASE_URL + "api/google/callback"
-    else:
-        # Fallback method for legacy deployments that do not set
-        # INTENDED_BASE_URL. Code path is not executed by the test suite.
-        abs_oidc_callback_url = f.url_for(
-            "api.callback", _external=True, _scheme="https"
-        )
-
-    log.debug("Initiate OIDC SSO flow. redirect_uri: %s", abs_oidc_callback_url)
+    log.debug("Initiate OIDC SSO flow. redirect_uri: %s", OIDC_CALLBACK_URL)
     log.debug("user_came_from_url: %s", user_came_from_url)
 
     state = encode_target_url(user_came_from_url)
@@ -100,7 +87,7 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
 
     url_to_redirect_user_to = client.prepare_request_uri(
         oidc_provider_config["authorization_endpoint"],
-        redirect_uri=abs_oidc_callback_url,
+        redirect_uri=OIDC_CALLBACK_URL,
         # The `openid` scope is an essential ingredient to make this OAuth2
         # flow be an OpenID Connect (OIDC) flow.
         scope=["openid", "email", "profile"],
@@ -140,40 +127,27 @@ def conclude_oidc_flow():
     _, client_id, client_secret = get_oidc_config()
 
     # Prepare a token creation request. Note that this is executed as part of
-    # the HTTP request to the callback endpoint, and the URL contains the
-    # so-called authorization response sent by the identity provider, via query
-    # parameters. Among this is the OAuth2 authorization code, because we're in
-    # the middle of a so-called authorization code flow. That is, all the juicy
-    # detail to continue the flow is in the query parameter section of
-    # `f.request.url` (which is the URL used by the user agent to get here).
+    # processing an HTTP request to the callback endpoint. The URL used for
+    # reaching that callback endpoint contains the so-called authorization
+    # response sent by the identity provider, via query parameters. Among this
+    # is the short-lived OAuth2 authorization code, because we're in the middle
+    # of a so-called authorization code flow. That is, all the juicy detail to
+    # continue the flow is in the query parameter section of `f.request.url`.
+
     # Note that authorization response parsing is done by oauthlib according to
     # specs, and that requires that last redirect (to here) to have happened
     # via TLS. However, in some legacy deployments the URL scheme communicated
     # via WSGI is not actual. See
     # https://github.com/conbench/conbench/issues/480. That is, `f.request.url`
-    # might start with HTTP although the actual user agent used HTTPS. That's
-    # why in legacy code we always did .replace("http://", "https://").
-    # However, since introduction of local tests this needs differentiated
-    # handling. See below.
-
-    # Never rely on oauthlib to perform 'security validation' on the scheme of
-    # the URL that is passed in as `authorization_response` argument. That's
-    # the URL where it parses the authorization code etc from (i.e. short-lived
-    # credentials emitted by the identity provider). That security mechanism is
-    # not needed: for serious deployments, operators are required to expose
-    # Conbench exclusively via HTTPS.
+    # might start with HTTP although the actual user agent used HTTPS.
+    #
+    # As a result, do not rely on oauthlib to perform this kind of security
+    # validation on the scheme of `f.request.url`. Pragmatically disable this
+    # validation by always rewriting the scheme from http to https. A note on
+    # security: for serious deployments, operators are required to expose
+    # Conbench exclusively via HTTPS and we do not need oauthlib to try to
+    # confirm that (it cannot reliably know).
     cur_request_url_abs = f.request.url.replace("http://", "https://")
-
-    # For the dynamically reconstructed redirect URL, for now do the
-    # replacement from http:// to https:// only when _not_ in a testing
-    # environment. That allows tests to be built with ease, while still keeping
-    # this legacy hack in place for legacy deployments. This test-specific
-    # logic can disappear once INTENDED_BASE_URL becomes required.
-    cur_request_url_wo_query = f.request.base_url
-    if not Config.TESTING:
-        cur_request_url_wo_query = cur_request_url_wo_query.replace(
-            "http://", "https://"
-        )
 
     try:
         token_url, headers, body = client.prepare_token_request(
@@ -182,10 +156,7 @@ def conclude_oidc_flow():
             # This is included in the token request to the identity provider,
             # and the identity provider actually compares that to the redirect
             # URL it has seen in the initial authorization request.
-            redirect_url=cur_request_url_wo_query,
-            # Note(JP): the code arg is not documented at
-            # https://oauthlib.readthedocs.io/en/latest/oauth2/clients/baseclient.html
-            # code=f.request.args.get("code"),
+            redirect_url=OIDC_CALLBACK_URL,
         )
     except Exception as exc:
         log.info("prepare_token_request() failed: %s", exc)
