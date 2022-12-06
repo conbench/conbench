@@ -48,6 +48,11 @@ rebuild-expected-api-docs: run-app-in-background
 	git diff ./conbench/tests/api/_expected_docs.py
 
 
+.PHONY: run-app
+run-app:
+	docker compose down && docker compose up --build
+
+
 .PHONY: run-app-in-background
 run-app-in-background:
 	docker compose up --build --wait --detach
