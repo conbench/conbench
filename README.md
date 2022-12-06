@@ -73,6 +73,8 @@ repository, and the results are hosted on the
     $ python3 -m venv conbench
     $ source conbench/bin/activate
 
+Note that the CPython version that Conbench is tested with in CI and that it is recommended to be deployed with is currently the latest 3.10.x release, as also defined in `Dockerfile` at the root of this repository.
+
 
 ### Clone repository
     (conbench) $ cd ~/workspace/
