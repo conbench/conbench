@@ -1,11 +1,15 @@
-
-version: '3.5'
+version: "3.9"
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
     command: ["gunicorn", "-b", "0.0.0.0:5000", "-w", "5", "conbench:application", "--access-logfile=-", "--error-logfile=-", "--preload"]
+    ports:
+      # `docker-compose port app 5000` will return the port on the host that
+      # can be used to reach the internal port 5000. The host port is dynamic
+      # to survive collisions.
+      - "127.0.0.1::5000"
     volumes:
       - ${PWD}/_conbench-coverage-dir:/etc/conbench-coverage-dir
     depends_on:
@@ -35,6 +39,12 @@ services:
       GOOGLE_CLIENT_SECRET: AnotherStaticSecret
       CONBENCH_OIDC_ISSUER_URL: http://dex:5556/dex-for-conbench
       CONBENCH_INTENDED_BASE_URL: http://127.0.0.1:5000/
+    healthcheck:
+      test: "curl -sfS http://0.0.0.0:5000/api/ping/"
+      interval: 5s
+      timeout: 20s
+      retries: 5
+
 
   dex:
     image: dexidp/dex:v2.35.3
@@ -51,6 +61,8 @@ services:
       POSTGRES_PASSWORD: "postgres"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
+      interval: 2s
       timeout: 5s
       retries: 5
+    ports:
+      - "5432:5432"
