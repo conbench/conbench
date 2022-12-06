@@ -1,14 +1,23 @@
+import logging
+from typing import TYPE_CHECKING, List, Optional
+
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import Query
 
 from ..db import Session
 from ..entities._comparator import _less_is_better
 from ..entities._entity import Base, EntityMixin, NotNull, Nullable, generate_uuid
-from ..entities.commit import Commit
+from ..entities.commit import CantFindAncestorCommitsError, Commit
 from ..entities.hardware import Hardware
 from ..entities.run import Run
+
+if TYPE_CHECKING:
+    from ..entities.benchmark_result import BenchmarkResult
+
+log = logging.getLogger(__name__)
 
 
 class Distribution(Base, EntityMixin):
@@ -50,26 +59,21 @@ s.Index(
 )
 
 
-def get_commits_up(commit, limit):
-    # NOTE this query will fail if commit.timestamp is None
-    return (
-        Session.query(Commit.id, Commit.timestamp)
-        .filter(Commit.repository == commit.repository)
-        .filter(Commit.timestamp.isnot(None))
-        .filter(Commit.timestamp <= commit.timestamp)
-        .order_by(Commit.timestamp.desc())
-        .limit(limit)
-    )
+def _distribution_query(
+    benchmark_result: "BenchmarkResult", commit_limit: int
+) -> Query:
+    """Return a query that returns 0 or 1 row, giving statistics about the set of
+    error-free BenchmarkResults that share the given benchmark_result's case, context,
+    and hardware, and that are in the given benchmark_result's direct commit ancestry,
+    including the given benchmark_result's commit up to some given limit of ancestor
+    commits.
 
-
-def get_distribution(benchmark_result, limit):
+    Might raise CantFindAncestorCommitsError.
+    """
     from ..entities.benchmark_result import BenchmarkResult
 
-    commits_up = (
-        get_commits_up(benchmark_result.run.commit, limit)
-        .subquery()
-        .alias("commits_up")
-    )
+    commit: Commit = benchmark_result.run.commit
+    ancestor_commits = commit.ancestor_commit_query.limit(commit_limit).subquery()
 
     return (
         Session.query(
@@ -86,8 +90,8 @@ def get_distribution(benchmark_result, limit):
             func.stddev(BenchmarkResult.max).label("max_sd"),
             func.avg(BenchmarkResult.median).label("median_mean"),
             func.stddev(BenchmarkResult.median).label("median_sd"),
-            func.min(commits_up.c.timestamp).label("first_timestamp"),
-            func.max(commits_up.c.timestamp).label("last_timestamp"),
+            func.min(ancestor_commits.c.ancestor_timestamp).label("first_timestamp"),
+            func.max(ancestor_commits.c.ancestor_timestamp).label("last_timestamp"),
             func.count(BenchmarkResult.mean).label("observations"),
         )
         .group_by(
@@ -97,9 +101,8 @@ def get_distribution(benchmark_result, limit):
         )
         .join(Run, Run.id == BenchmarkResult.run_id)
         .join(Hardware, Hardware.id == Run.hardware_id)
-        .join(commits_up, commits_up.c.id == Run.commit_id)
+        .join(ancestor_commits, ancestor_commits.c.ancestor_id == Run.commit_id)
         .filter(
-            Run.reason == "commit",
             BenchmarkResult.error.is_(None),
             BenchmarkResult.case_id == benchmark_result.case_id,
             BenchmarkResult.context_id == benchmark_result.context_id,
@@ -108,109 +111,160 @@ def get_distribution(benchmark_result, limit):
     )
 
 
-def update_distribution(benchmark_result, limit):
-    from ..db import engine
+def update_distribution(
+    benchmark_result: "BenchmarkResult", commit_limit: int
+) -> Optional[dict]:
+    """Try to upsert a Distribution table row, with the given benchmark_result as the
+    most recent BenchmarkResult in the distribution.
 
-    if benchmark_result.run.commit.timestamp is None:
-        return
+    Returns a dict of values if those values were upserted, else returns None. Should
+    not raise anything.
+    """
+    try:
+        distribution_query = _distribution_query(benchmark_result, commit_limit)
+    except CantFindAncestorCommitsError as e:
+        log.debug(
+            f"Not updating distribution: couldn't find ancestor commits, because {e}"
+        )
+        return None
 
-    distribution = get_distribution(benchmark_result, limit).first()
-
+    distribution = distribution_query.first()
     if not distribution:
-        return
+        log.debug("Not updating distribution: the distribution query returned 0 rows")
+        return None
 
     values = dict(distribution)
     hardware_hash = values.pop("hash")
     values["hardware_hash"] = hardware_hash
-    values["limit"] = limit
+    values["limit"] = commit_limit
 
-    with engine.connect() as conn:
-        conn.execute(
-            insert(Distribution.__table__)
-            .values(values)
-            .on_conflict_do_update(
-                index_elements=["case_id", "context_id", "commit_id", "hardware_hash"],
-                set_=values,
-            )
+    Session.execute(
+        insert(Distribution.__table__)
+        .values(values)
+        .on_conflict_do_update(
+            index_elements=["case_id", "context_id", "commit_id", "hardware_hash"],
+            set_=values,
         )
-        conn.commit()
+    )
+    Session.commit()
+    return values
 
 
-def get_closest_parent(run):
-    commit = run.commit
-    if commit.timestamp is None:
+def get_closest_ancestor(
+    benchmark_result: "BenchmarkResult", branch: Optional[str] = None
+) -> Optional[Commit]:
+    """Given a BenchmarkResult, return the most recent ancestor commit on the given
+    branch that also has a BenchmarkResult in the database with the same
+    hardware/case/context. If branch is not given (default), search all branches.
+
+    Return None if one isn't found. Should not raise anything.
+    """
+    from ..entities.benchmark_result import BenchmarkResult
+
+    commit: Commit = benchmark_result.run.commit
+    try:
+        ancestor_commits = commit.ancestor_commit_query.subquery()
+    except CantFindAncestorCommitsError as e:
+        log.debug(f"Couldn't find closest ancestor because {e}")
         return None
 
-    hardware_entities = Hardware.all(hash=run.hardware.hash)
-    hardware_ids = set([m.id for m in hardware_entities])
-
-    # TODO: what about matching contexts
-    result = (
-        Session.query(
-            Run.id,
-            Commit.id,
-        )
-        .join(Commit, Commit.id == Run.commit_id)
+    query = (
+        Session.query(BenchmarkResult)
+        .join(Run, Run.id == BenchmarkResult.run_id)
         .join(Hardware, Hardware.id == Run.hardware_id)
+        .join(ancestor_commits, ancestor_commits.c.ancestor_id == Run.commit_id)
         .filter(
-            Run.reason == "commit",
-            Hardware.id.in_(hardware_ids),
-            Commit.timestamp.isnot(None),
-            Commit.timestamp < commit.timestamp,
-            Commit.repository == commit.repository,
+            BenchmarkResult.case_id == benchmark_result.case_id,
+            BenchmarkResult.context_id == benchmark_result.context_id,
+            Hardware.hash == benchmark_result.run.hardware.hash,
+            ancestor_commits.c.ancestor_id != commit.id,
         )
-        .order_by(Commit.timestamp.desc())
-        .first()
     )
+    if branch:
+        query = query.filter(ancestor_commits.c.ancestor_branch == branch)
 
-    parent = None
-    if result:
-        commit_id = result[1]
-        parent = Commit.get(commit_id)
+    # see Commit.ancestor_commit_query() comments for why we order this way
+    closest_benchmark_result = query.order_by(
+        "branch_order", ancestor_commits.c.ancestor_timestamp.desc()
+    ).first()
 
-    return parent
+    if not closest_benchmark_result:
+        log.debug(
+            "Couldn't find closest ancestor: there were no matching BenchmarkResults"
+        )
+        return None
+
+    return closest_benchmark_result.run.commit
 
 
-def set_z_scores(benchmark_results):
+def set_z_scores(benchmark_results: List["BenchmarkResult"]):
+    """Populate the "z_score" attribute of each given BenchmarkResult, comparing it to
+    the distribution of BenchmarkResults that share the same hardware/case/context,
+    ending with the most recent BenchmarkResult in the given BenchmarkResult's commit
+    ancestry on the default branch.
+
+    We choose a commit from the default branch as the end commit, because we probably
+    don't want "bad" commits early on in a PR to set artificially low z-scores later in
+    the PR.
+
+    For the start commit of the distribution, uses whatever commit_limit was used when
+    writing to the Distribution table.
+
+    Should not raise anything. If we can't find a z-score for some reason, the z_score
+    attribute will be None on that BenchmarkResult.
+    """
     if not benchmark_results:
         return
 
+    # Find the default branch first. If we can't find it, we'll just find the closest
+    # ancestor commit to each BenchmarkResult regardless of branch, which isn't ideal
+    # (see docstring) but it's good enough.
+    a_default_commit = benchmark_results[0].run.commit.get_fork_point_commit()
+    default_branch = a_default_commit.branch if a_default_commit else None
+
+    # Cache Distribution query results by commit/hardware/case/context, in case multiple
+    # input benchmark_results (e.g. from the same Run) share those attributes
+    cached_distributions = {}
+
     for benchmark_result in benchmark_results:
         benchmark_result.z_score = None
-
-    first = benchmark_results[0]
-    parent_commit = get_closest_parent(first.run)
-    if not parent_commit:
-        return
-
-    where = [
-        Distribution.commit_id == parent_commit.id,
-        Distribution.hardware_hash == first.run.hardware.hash,
-    ]
-    if len(benchmark_results) == 1:
-        where.extend(
-            [
-                Distribution.case_id == first.case_id,
-                Distribution.context_id == first.context_id,
-            ]
-        )
-
-    cols = [
-        Distribution.case_id,
-        Distribution.context_id,
-        Distribution.mean_mean,
-        Distribution.mean_sd,
-    ]
-
-    distributions = Session.query(*cols).filter(*where).all()
-    lookup = {f"{d.case_id}-{d.context_id}": d for d in distributions}
-
-    for benchmark_result in benchmark_results:
         if benchmark_result.error:
             continue
 
-        d = lookup.get(f"{benchmark_result.case_id}-{benchmark_result.context_id}")
-        if d and d.mean_sd and benchmark_result.mean:
-            benchmark_result.z_score = (benchmark_result.mean - d.mean_mean) / d.mean_sd
+        closest_ancestor = get_closest_ancestor(benchmark_result, branch=default_branch)
+        if not closest_ancestor:
+            log.debug("Setting benchmark_result.z_score = None")
+            continue
+
+        commit = closest_ancestor.id
+        hardware = benchmark_result.run.hardware.hash
+        case = benchmark_result.case_id
+        context = benchmark_result.context_id
+
+        if (commit, hardware, case, context) in cached_distributions:
+            distribution = cached_distributions[(commit, hardware, case, context)]
+        else:
+            distribution = (
+                Session.query(Distribution)
+                .filter_by(
+                    commit_id=commit,
+                    hardware_hash=hardware,
+                    case_id=case,
+                    context_id=context,
+                )
+                .first()
+            )
+            cached_distributions[(commit, hardware, case, context)] = distribution
+
+        if (
+            benchmark_result.mean is not None
+            and distribution
+            and distribution.mean_mean is not None
+            and distribution.mean_sd  # is positive
+        ):
+            benchmark_result.z_score = (
+                benchmark_result.mean - distribution.mean_mean
+            ) / distribution.mean_sd
+
         if _less_is_better(benchmark_result.unit) and benchmark_result.z_score:
             benchmark_result.z_score = benchmark_result.z_score * -1

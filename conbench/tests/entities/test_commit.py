@@ -7,6 +7,7 @@ import dateutil
 import pytest
 
 from ...entities.commit import (
+    CantFindAncestorCommitsError,
     Commit,
     GitHub,
     backfill_default_branch_commits,
@@ -51,6 +52,71 @@ def test_upsert_do_nothing():
     Commit.upsert_do_nothing(data)
     commit_2 = Commit.first(**data[0])
     assert commit == commit_2
+
+
+def test_ancestor_commit_query():
+    commits, _ = _fixtures.gen_fake_data()
+    for commit_sha, expected_ancestor_commit_shas in [
+        ("11111", ["11111"]),
+        ("22222", ["22222", "11111"]),
+        ("33333", ["33333", "22222", "11111"]),
+        ("44444", ["44444", "33333", "22222", "11111"]),
+        ("55555", ["55555", "44444", "33333", "22222", "11111"]),
+        ("66666", ["66666", "55555", "44444", "33333", "22222", "11111"]),
+        ("aaaaa", ["aaaaa", "22222", "11111"]),
+        ("bbbbb", ["bbbbb", "aaaaa", "22222", "11111"]),
+        ("ccccc", ["ccccc", "33333", "22222", "11111"]),
+        ("ddddd", ["ddddd", "ccccc", "33333", "22222", "11111"]),
+        ("eeeee", ["eeeee", "44444", "33333", "22222", "11111"]),
+        ("fffff", ["fffff", "eeeee", "44444", "33333", "22222", "11111"]),
+        ("00000", ["00000", "fffff", "eeeee", "44444", "33333", "22222", "11111"]),
+        ("abcde", ["abcde"]),
+        # the other fake commits don't have enough information to find ancestors
+    ]:
+        query_result = commits[commit_sha].ancestor_commit_query.all()
+        actual_ancestor_ids = [row[0] for row in query_result]
+        expected_ancestor_ids = [
+            commits[name].id for name in expected_ancestor_commit_shas
+        ]
+        assert actual_ancestor_ids == expected_ancestor_ids
+
+
+def test_ancestor_commit_query_bad_input():
+    default_kwargs = {"repository": "r", "message": "m", "author_name": "a"}
+    kwargs = default_kwargs.copy()
+
+    commit = Commit.create({"sha": "1", **kwargs})
+    with pytest.raises(CantFindAncestorCommitsError, match="branch"):
+        commit.ancestor_commit_query
+
+    kwargs["branch"] = "b"
+    commit = Commit.create({"sha": "2", **kwargs})
+    with pytest.raises(CantFindAncestorCommitsError, match="timestamp"):
+        commit.ancestor_commit_query
+
+    kwargs["timestamp"] = datetime.datetime(2022, 1, 1)
+    commit = Commit.create({"sha": "3", **kwargs})
+    with pytest.raises(CantFindAncestorCommitsError, match="fork_point_sha"):
+        commit.ancestor_commit_query
+
+    kwargs["fork_point_sha"] = "0"
+    commit = Commit.create({"sha": "4", **kwargs})
+    with pytest.raises(CantFindAncestorCommitsError, match="isn't in the db"):
+        commit.ancestor_commit_query
+
+    fp_kwargs = default_kwargs.copy()
+    Commit.create({"sha": "0", **fp_kwargs})
+    with pytest.raises(CantFindAncestorCommitsError, match="fork_point_commit branch"):
+        commit.ancestor_commit_query
+
+    fp_kwargs["branch"] = "b"
+    Commit.create({"sha": "00", **fp_kwargs})
+    kwargs["fork_point_sha"] = "00"
+    commit = Commit.create({"sha": "5", **kwargs})
+    with pytest.raises(
+        CantFindAncestorCommitsError, match="fork_point_commit timestamp"
+    ):
+        commit.ancestor_commit_query
 
 
 def test_repository_to_name():

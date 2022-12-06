@@ -1,3 +1,5 @@
+from typing import List
+
 from ..db import Session
 from ..entities._entity import EntitySerializer
 from ..entities.benchmark_result import BenchmarkResult
@@ -32,7 +34,14 @@ class HistorySerializer:
     many = _Serializer(many=True)
 
 
-def get_history(case_id, context_id, hardware_hash):
+def get_history(case_id, context_id, hardware_hash, repo) -> List[tuple]:
+    """Given a case/context/hardware/repo, return all non-errored BenchmarkResults
+    (past, present, and future) on the default branch that match those criteria, along
+    with information about the stats of the distribution as of each BenchmarkResult.
+    Order is not guaranteed.
+
+    Primarily used to power the blue line in the timeseries plots.
+    """
     return (
         Session.query(
             BenchmarkResult.id,
@@ -57,7 +66,8 @@ def get_history(case_id, context_id, hardware_hash):
             BenchmarkResult.case_id == case_id,
             BenchmarkResult.context_id == context_id,
             BenchmarkResult.error.is_(None),
-            Run.reason == "commit",
+            Commit.sha == Commit.fork_point_sha,  # on default branch
+            Commit.repository == repo,
             Hardware.hash == hardware_hash,
             Distribution.case_id == case_id,
             Distribution.context_id == context_id,

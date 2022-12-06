@@ -3,13 +3,15 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 import dateutil.parser
 import flask as f
 import requests
 import sqlalchemy as s
+from sqlalchemy.orm import Query
 
+from ..db import Session
 from ..entities._entity import (
     Base,
     EntityMixin,
@@ -20,6 +22,10 @@ from ..entities._entity import (
 )
 
 log = logging.getLogger(__name__)
+
+
+class CantFindAncestorCommitsError(Exception):
+    pass
 
 
 class Commit(Base, EntityMixin):
@@ -38,6 +44,69 @@ class Commit(Base, EntityMixin):
 
     def get_parent_commit(self):
         return Commit.first(sha=self.parent, repository=self.repository)
+
+    def get_fork_point_commit(self) -> Optional["Commit"]:
+        if self.sha == self.fork_point_sha:
+            return self
+        else:
+            return Commit.first(sha=self.fork_point_sha, repository=self.repository)
+
+    @property
+    def ancestor_commit_query(self) -> Query:
+        """Return a query that returns the IDs and timestamps of all Commits in the
+        direct ancestry of this commit, ordered starting with this commit, backwards in
+        lineage.
+
+        Might raise CantFindAncestorCommitsError.
+        """
+        if not self.branch:
+            raise CantFindAncestorCommitsError("commit branch is null")
+        if not self.timestamp:
+            raise CantFindAncestorCommitsError("commit timestamp is null")
+        if not self.fork_point_sha:
+            raise CantFindAncestorCommitsError("commit fork_point_sha is null")
+
+        fork_point_commit = self.get_fork_point_commit()
+        if not fork_point_commit:
+            raise CantFindAncestorCommitsError("the fork point commit isn't in the db")
+        if not fork_point_commit.branch:
+            raise CantFindAncestorCommitsError("fork_point_commit branch is null")
+        if not fork_point_commit.timestamp:
+            raise CantFindAncestorCommitsError("fork_point_commit timestamp is null")
+
+        # Note on "branch_order" in the following code: we can't rely on timestamp
+        # alone to successfully order the commits, because after a rebase, the
+        # timestamps might be mixed up among the default and non-default branch commits.
+        # So we have to manually order non-default commits before default commits.
+
+        # Get default branch commits before/including the fork point
+        query = Session.query(
+            Commit.id.label("ancestor_id"),
+            Commit.timestamp.label("ancestor_timestamp"),
+            Commit.branch.label("ancestor_branch"),
+            s.sql.expression.literal_column("2").label("branch_order"),
+        ).filter(
+            Commit.repository == self.repository,
+            Commit.branch == fork_point_commit.branch,
+            Commit.timestamp <= fork_point_commit.timestamp,
+        )
+
+        # If this commit is on a non-default branch, add all commits since the fork point
+        if self != fork_point_commit:
+            branch_query = Session.query(
+                Commit.id.label("ancestor_id"),
+                Commit.timestamp.label("ancestor_timestamp"),
+                Commit.branch.label("ancestor_branch"),
+                s.sql.expression.literal_column("1").label("branch_order"),
+            ).filter(
+                Commit.repository == self.repository,
+                Commit.branch == self.branch,
+                Commit.fork_point_sha == self.fork_point_sha,
+                Commit.timestamp <= self.timestamp,
+            )
+            query = query.union(branch_query)
+
+        return query.order_by("branch_order", Commit.timestamp.desc())
 
     @staticmethod
     def create_no_context():
@@ -376,7 +445,8 @@ class GitHub:
         returns the fork point sha, called the "merge base" in git-speak.
         """
         if sha in self.test_commits:
-            return "some_fork_point_sha"
+            # they're on the default branch, so sha==fork_point_sha
+            return sha
 
         if not name or not sha:
             return None
