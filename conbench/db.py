@@ -1,9 +1,12 @@
+import functools
 import logging
 
 import sqlalchemy.exc
 import tenacity
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+
+from .config import Config
 
 engine = None
 session_maker = sessionmaker(future=True)
@@ -24,6 +27,50 @@ def configure_engine(url):
         connect_args={"options": "-c timezone=utc -c statement_timeout=30s"},
     )
     session_maker.configure(bind=engine)
+
+
+# compute this only once.
+@functools.cache
+def get_tables_in_cleanup_order():
+    # We need to remove rows from the many-to-many tables first to avoid
+    # foreign key violations.
+
+    from .entities._entity import Base as delarative_base
+
+    tables = delarative_base.metadata.sorted_tables
+
+    sort_by_name = ["benchmark_result", "run"]
+
+    tabledict = {t.name: t for t in tables}
+    sorted_tables = []
+    for name in sort_by_name:
+        # find table with that name, destructure `tabledict`. Assume that
+        # `sort_by_name` only contains known table names.
+        sorted_tables.append(tabledict.pop(name))
+
+    unsorted_tables = list(tabledict.values())
+
+    # Stich both lists together.
+    return sorted_tables + unsorted_tables
+
+
+def empty_db_tables():
+    """
+    For speeding up the test suite.
+
+    Make sure that all tables are empty. A drop_all()/create_all() is a little
+    slower than deleting individual table contents, especially when not using
+    an in-memory database, as of the file system operations.
+    """
+    if not Config.TESTING:
+        log.warning("empty_db_tables() called in non-testing mode, skip")
+        return
+
+    tables = get_tables_in_cleanup_order()
+
+    for table in tables:
+        Session.execute(table.delete())
+        log.debug("deleted table: %s", table)
 
 
 def log_after_retry_attempt(retry_state: tenacity.RetryCallState):
