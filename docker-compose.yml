@@ -1,11 +1,15 @@
-
-version: '3.5'
+version: "3.9"
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
     command: ["gunicorn", "-b", "0.0.0.0:5000", "-w", "5", "conbench:application", "--access-logfile=-", "--error-logfile=-", "--preload"]
+    ports:
+      # `docker-compose port app 5000` will return the port on the host that
+      # can be used to reach the internal port 5000. The host port is dynamic
+      # to survive collisions.
+      - "127.0.0.1::5000"
     volumes:
       - ${PWD}/_conbench-coverage-dir:/etc/conbench-coverage-dir
     depends_on:
