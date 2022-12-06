@@ -1,6 +1,5 @@
 import functools
 import logging
-import time
 
 import sqlalchemy.exc
 import tenacity
