@@ -35,7 +35,7 @@ jobs:
       # Run `alembic upgrade head` via docker-compose so that it is within
       # the network that the DB is also in, reachable via DNS name `db`
       - name: Migrations
-        run: docker-compose run -e CREATE_ALL_TABLES app alembic upgrade head
+        run: docker-compose run migrations
         env:
           CREATE_ALL_TABLES: false
       - name: Run tests, generate coverage data
