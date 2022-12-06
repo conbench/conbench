@@ -1,10 +1,12 @@
 import ast
+import logging
 import os
-import subprocess
 
 from openapi_spec_validator import validate_spec
 
 from ...tests.api import _asserts
+
+log = logging.getLogger(__name__)
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -12,27 +14,30 @@ this_dir = os.path.abspath(os.path.dirname(__file__))
 class TestDocs(_asserts.ApiEndpointTest):
     def test_docs(self, client):
         response = client.get("/api/docs.json")
+
         path = os.path.join(this_dir, "_expected_docs.py")
 
         with open(path) as f:
             expected_docs = ast.literal_eval(f.read())
 
         try:
+            # Note(JP): it seems that the hope here is that `assert_200_ok`
+            # performs a deep object equality inspection, relying on the
+            # `assert r.json == expected` equality check in the implementaion
+            # of `assert_200_ok()`. But how deep is that, really? Typically,
+            # the safest way to make sure that all details are after all equal
+            # is to perform stable string serialization. What would we lose if
+            # we were to compare JSON documents here?
             self.assert_200_ok(response, expected_docs)
-        except AssertionError:
-            if os.getenv("CI"):
-                raise RuntimeError(
-                    "The 'CI' env var was set so we're assuming this test was run in "
-                    f"CI. However, {path} was not updated with the latest docs "
-                    "changes. Run `pytest conbench/tests/api/test_docs.py` locally to "
-                    "fix the file automatically."
-                )
-            # update expected docs on API changes
-            # (onus is on devs to review diff)
-            with open(path, "w") as f:
-                f.write(str(response.json))
-            subprocess.run(["black", path])
+        except AssertionError as exc:
+            # Hoping that this shows a useful diff.
+            log.info("caught assertion error: %s", exc)
+            raise Exception(
+                "/api/docs.json and _expected_docs.py are out of sync. "
+                "Run `make rebuild-expected-api-docs` to regenerate "
+                "_expected_docs.py and then review the diff manually."
+            )
 
-        with open(path) as f:
-            expected_docs = ast.literal_eval(f.read())
+        # Maybe this is where we need a Python object structure, and not just
+        # a JSON document.
         validate_spec(expected_docs)
