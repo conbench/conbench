@@ -66,3 +66,8 @@ jobs:
       - name: Test benchconnect
         run: |
           pytest -vv benchconnect
+      # This is to confirm that commonly used developer commands still work
+      - name: Test dev commands
+        run: |
+          make rebuild-expected-api-docs
+
