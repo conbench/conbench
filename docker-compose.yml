@@ -54,25 +54,3 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  migration:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: ["alembic", "upgrade", "head"]
-    environment:
-      APPLICATION_NAME: "conbench-for-pytest"
-      CREATE_ALL_TABLES: "false"
-      DB_USERNAME: "postgres"
-      DB_HOST: "db"
-      DB_PASSWORD: "postgres"
-      DB_NAME: "postgres"
-      DB_PORT: "5432"
-      FLASK_APP: "conbench"
-      FLASK_ENV: "development"
-      REGISTRATION_KEY: "code"
-      SECRET_KEY: "Person, woman, man, camera, TV"
-      CONBENCH_INTENDED_BASE_URL: http://127.0.0.1:5000/
-    depends_on:
-      db:
-        condition: service_healthy
