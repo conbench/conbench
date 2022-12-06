@@ -19,17 +19,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: Lint (black)
-        uses: psf/black@stable
-        with:
-          options: --check --diff
-          src: .
-      - name: Install flake8, isort
-        run: pip install flake8 isort
-      - name: Lint (flake8)
-        run: flake8
-      - name: Lint (isort)
-        run: isort --check .
+      - name: Install linting dependencies
+        run: pip install flake8 isort black
+      - name: Lint
+        run: make lint-ci
       - name: Start PostgreSQL DB
         run: docker-compose run --detach db
       # Run `alembic upgrade head` via docker-compose so that it is within
@@ -39,15 +32,9 @@ jobs:
         env:
           CREATE_ALL_TABLES: false
       - name: Run tests, generate coverage data
-        run: |
-          docker-compose down && \
-          docker-compose build app && \
-          docker-compose run \
-            -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage \
-            -e CI=true \
-            app \
-            coverage run --source conbench \
-              -m pytest -vv -s --durations=20 conbench/tests/
+        # This is expected to create /etc/conbench-coverage-dir/.coverage
+        # in the `app` service container.
+        run: make tests
       - name: Convert coverage data to LCOV
         run: |
           docker-compose run -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage app \
