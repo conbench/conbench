@@ -63,10 +63,9 @@
                      <td><a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a></td>
 
                      {% if run.commit.display_message %}
-                       <td>
-                           <a href="{{ run.commit.url }}"><img src="{{ url_for('static', filename='GitHub-logo.png') }}" alt="GitHub logo" style="width:30px;height:30px;"></a>
-                           <a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.commit.display_message }}</a>
-                       </td>
+
+                       <td><a href="{{ run.commit.url }}">{{ run.commit.sha[:7] }} {{ run.commit.display_message }}</a></td>
+
                      {% else %}
                        <td><a href="{{ run.commit.url }}">{{ run.commit.sha }}</a></td>
                      {% endif %}

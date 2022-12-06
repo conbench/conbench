@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 import flask as f
@@ -8,6 +9,8 @@ from ..api import _google, rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint
 from ..api.users import User
+
+log = logging.getLogger(__name__)
 
 
 class LoginSchema(marshmallow.Schema):
@@ -74,7 +77,16 @@ class GoogleAPI(ApiEndpoint):
           - Authentication
         """
 
-        return f.redirect(_google.auth_google_user())
+        # Read query parameter `target`. Assume that the value is the URL that
+        # the user actually wanted to visit before they were redirected to the
+        # login page. `f.request.args` holds parsed URL query parameters.
+        user_came_from_url = None
+        if "target" in f.request.args:
+            # Rely on Flask to do have done one level of URL-decoding
+            user_came_from_url = f.request.args.get("target")
+            log.info(f"api/google/, {user_came_from_url=}")
+
+        return f.redirect(_google.gen_oidc_authz_req_url(user_came_from_url))
 
 
 class CallbackAPI(ApiEndpoint):
@@ -90,15 +102,16 @@ class CallbackAPI(ApiEndpoint):
         """
 
         try:
-            google_user = _google.get_google_user()
+            user_came_from_url, oidc_user = _google.conclude_oidc_flow()
         except Exception as e:
             self.abort_400_bad_request(
                 f"OpenID Connect single sign-on flow failed: {e}."
             )
 
-        email = google_user["email"]
-        given = google_user.get("given_name", "")
-        family = google_user.get("family_name", "")
+        email = oidc_user["email"]
+        given = oidc_user.get("given_name", "")
+        family = oidc_user.get("family_name", "")
+
         user = User.first(email=email)
         if user is None:
             data = {
@@ -108,6 +121,10 @@ class CallbackAPI(ApiEndpoint):
             }
             user = User.create(data)
         flask_login.login_user(user)
+
+        if len(user_came_from_url):
+            return f.redirect(user_came_from_url)
+
         return self.redirect("app.index")
 
 

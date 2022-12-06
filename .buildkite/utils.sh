@@ -36,6 +36,7 @@ deploy_secrets_and_config() {
 
 
   cat conbench-config.yml | sed "\
+        s|{{CONBENCH_INTENDED_BASE_URL}}|${CONBENCH_INTENDED_BASE_URL}|g; \
         s/{{APPLICATION_NAME}}/${APPLICATION_NAME}/g;\
         s/{{BENCHMARKS_DATA_PUBLIC}}/${BENCHMARKS_DATA_PUBLIC}/g;\
         s/{{DB_NAME}}/${DB_NAME}/g;\

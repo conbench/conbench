@@ -26,10 +26,3 @@ steps:
     command: "exit 0"
     concurrency: 1
     concurrency_group: "conbench-deploy"
-
-  - label: "Deploy"
-    depends_on: "concurrency-gate"
-    trigger: "conbench-deploy"
-    if: build.branch == 'main'
-    build:
-      commit: "$BUILDKITE_COMMIT"
