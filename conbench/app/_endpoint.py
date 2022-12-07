@@ -1,8 +1,16 @@
+import logging
 import os
 
 import flask as f
 import flask.views
 import flask_login
+
+from flask import Response
+
+
+from typing import Optional
+
+log = logging.getLogger(__name__)
 
 
 def as_bool(x):
@@ -10,9 +18,39 @@ def as_bool(x):
 
 
 class AppEndpoint(flask.views.MethodView):
-    def public_data_off(self):
+    def authorize_or_terminate(self) -> Optional[Response]:
         """
-        Compute whether data/view should be hidden from an anonymous user.
+        Inspect request and application config. Make an access control decision
+        and enforce it. If access is denied then this function generates a
+        `Response` object which signals to the caller that it must _terminate_
+        request handling by emitting that response to the user agent.
+        """
+
+        if self._should_access_be_denied():
+            # Redirect user to the login page. Set a query parameter `target`
+            # with the value set to the _relative_ URL the user tried to
+            # access, retaining all query arguments of that URL. This allows
+            # for the login machinery to redirect the user back to where they
+            # actually wanted to go (after successful login). Flask's
+            # `full_path` on the request object is documented as "requested
+            # path, including the query string."
+            if f.request.full_path != "/":
+                log.info("authorizer for url: %s", f.request.full_path)
+                return self.redirect("app.login", target=f.request.full_path)
+            else:
+                return self.redirect("app.login")
+
+        # Explicit None: caller is OK to proceed.
+        return None
+
+    def public_data_off(self):
+        # An alias, to not break old code.
+        return self._should_access_be_denied()
+
+    def _should_access_be_denied(self):
+        """
+        Inspect authentication state of the incoming request. Compute whether
+        data/view should be hidden (return `True`) or not (return `False`).
 
         When BENCHMARKS_DATA_PUBLIC is set to a true-ish value then always show
         benchmark data (regardless of whether the request is anonymous or not).
@@ -36,6 +74,8 @@ class AppEndpoint(flask.views.MethodView):
         # config.py module, and here we should only access the app's config
         # object. So that config.py can be the place that pragmatically
         # documents all supported environment variables and their meaning.
+        # I see that tests make use of mocking this, i.e. changing behavior
+        # is a little bit of work.
         is_public = as_bool(os.getenv("BENCHMARKS_DATA_PUBLIC", "yes"))
 
         if is_public:
