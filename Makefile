@@ -36,7 +36,7 @@ lint-ci:
 
 
 .PHONY: rebuild-expected-api-docs
-rebuild-expected-api-docs: run-app-in-background
+rebuild-expected-api-docs: run-app-bg
 	echo "using $(shell docker-compose port app 5000) to reach app"
 	curl --silent --show-error --fail --retry 10 \
 		--retry-all-errors --retry-delay 1 --retry-max-time 30 \
@@ -54,6 +54,10 @@ run-app:
 		docker compose down && docker compose up --build
 
 
-.PHONY: run-app-in-background
-run-app-in-background:
+.PHONY: run-app-bg
+run-app-bg:
 	docker compose up --build --wait --detach
+
+.PHONY: stop-app-bg
+stop-app-bg:
+	docker compose down

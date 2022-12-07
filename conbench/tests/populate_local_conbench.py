@@ -1,11 +1,16 @@
-# Setting a GitHub API token in the GITHUB_API_TOKEN env var will let this population script find history + get commit details too
+# Setting a GitHub API token in the GITHUB_API_TOKEN env var will let this
+# population script find history + get commit details too
 
 import datetime
+import os
 import uuid
 
 import requests
 
 base_url = "http://127.0.0.1:5000/api"
+if os.environ.get("CONBENCH_BASE_URL"):
+    base_url = f"{os.environ.get('CONBENCH_BASE_URL')}/api"
+
 session = requests.Session()
 
 
@@ -179,8 +184,14 @@ def generate_benchmarks_data_with_iteration_missing(
 
 def register():
     url = f"{base_url}/register/"
-    data = {"email": "e@e.com", "password": "test", "name": "e", "secret": "conbench"}
-    print(session.post(url, json=data))
+    data = {
+        "email": "e@e.com",
+        "password": "test",
+        "name": "e",
+        "secret": "innocent-registration-key",
+    }
+    r = session.post(url, json=data)
+    assert str(r.status_code).startswith("2"), f"register failed:\n{r.text}"
 
 
 def login():

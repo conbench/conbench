@@ -35,7 +35,7 @@ services:
       FLASK_APP: "conbench"
       FLASK_ENV: "development"
       FLASK_DEBUG: "true"
-      REGISTRATION_KEY: "code"
+      REGISTRATION_KEY: "innocent-registration-key"
       SECRET_KEY: "Person, woman, man, camera, TV"
       # Default log level is INFO, change to DEBUG as needed.
       # CONBENCH_LOG_LEVEL_STDERR: DEBUG
