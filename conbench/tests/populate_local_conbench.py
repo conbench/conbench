@@ -8,8 +8,8 @@ import uuid
 import requests
 
 base_url = "http://127.0.0.1:5000/api"
-if os.env.get("CONBENCH_INTENDED_BASE_URL"):
-    base_url = f"{os.env.get('CONBENCH_INTENDED_BASE_URL')}/api"
+if os.environ.get("CONBENCH_BASE_URL"):
+    base_url = f"{os.environ.get('CONBENCH_BASE_URL')}/api"
 
 session = requests.Session()
 
