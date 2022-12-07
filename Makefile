@@ -9,7 +9,7 @@
 # developers to run this command locally, too.
 .PHONY: tests
 tests:
-	docker compose down && \
+	docker compose down --remove-orphans && \
 	docker compose build app && \
 	docker compose run \
 	-e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage \
