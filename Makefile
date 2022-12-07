@@ -12,11 +12,10 @@ tests:
 	docker compose down --remove-orphans && \
 	docker compose build app && \
 	docker compose run \
-	-e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage \
-	-e CI=true \
-	app \
-	coverage run --source conbench \
-		-m pytest -vv -s --durations=20 conbench/tests/
+		-e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage \
+		app \
+		coverage run --source conbench \
+			-m pytest -vv -s --durations=20 conbench/tests/
 
 
 # For developers, these commands may and should modify local files if possible.
@@ -57,6 +56,7 @@ run-app:
 .PHONY: run-app-bg
 run-app-bg:
 	docker compose up --build --wait --detach
+
 
 .PHONY: stop-app-bg
 stop-app-bg:
