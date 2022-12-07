@@ -70,4 +70,9 @@ jobs:
       - name: Test dev commands
         run: |
           make rebuild-expected-api-docs
+          make run-app-bg && \
+            export CONBENCH_BASE_URL=http://$(docker-compose port app 5000) && \
+            python -m conbench.tests.populate_local_conbench
+          make stop-app-bg
+
 
