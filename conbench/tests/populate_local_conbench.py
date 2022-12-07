@@ -179,8 +179,14 @@ def generate_benchmarks_data_with_iteration_missing(
 
 def register():
     url = f"{base_url}/register/"
-    data = {"email": "e@e.com", "password": "test", "name": "e", "secret": "conbench"}
-    print(session.post(url, json=data))
+    data = {
+        "email": "e@e.com",
+        "password": "test",
+        "name": "e",
+        "secret": "innocent-registration-key",
+    }
+    r = session.post(url, json=data)
+    assert str(r.status_code).startswith("2"), f"register failed:\n{r.text}"
 
 
 def login():
