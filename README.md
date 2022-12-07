@@ -62,94 +62,69 @@ repository, and the results are hosted on the
 ## Contributing
 
 
-### Create workspace
-    $ cd
-    $ mkdir -p envs
-    $ mkdir -p workspace
+### Developer environment
 
+Common developer workflows are simplified using `make` and `docker compose`.
+These need to be set up in your environment.
 
-### Create virualenv
-    $ cd ~/envs
-    $ python3 -m venv conbench
-    $ source conbench/bin/activate
+The following `make` commands assume to be run in the root folder of a local repository clone.
+
+#### Start application
+
+`make run-app` is a simple way to start and experiment with Conbench locally.
+It runs the stack in a containerized fashion.
+It rebuilds container images from the current checkout, spawns
+multiple containers (including one for PostgreSQL), and then exposes Conbench's
+HTTP server on the host at http://127.0.0.1:5000.
+`make run-app` will stay in the foreground of your terminal, showing log output of all containers.
+Use `Ctrl+C` to tear down the containerized stack.
+
+You can confirm that Conbench's HTTP server is reachable via
+
+```bash
+curl http://127.0.0.1:5000/api/ping/
+```
+
+#### View API documentation
+
+Point your browser to http://127.0.0.1:5000/api/docs/.
+
+#### Run test suite
+
+`make tests` is the nobrainer command to run the entire test suite just like CI does.
+For more fine-grained control see further below.
+
+#### Lint codebase
+
+`make lint` performs invasive code linting in your local checkout (it may modify files), analogue to what CI requires.
+It requires for some commands to be available (`flake8`, `black`, `isort`).
+
+#### Python environment on the host
+
+CI and common developer commands use containerized workflows where dependencies are defined and easy to reason about via `Dockerfile`s.
+
+Some developer tasks however involve running Conbench tooling straight on the host.
+
+Here is how to install Python dependencies:
+
+```bash
+pip install conbench[dev]
+```
 
 Note that the CPython version that Conbench is tested with in CI and that it is recommended to be deployed with is currently the latest 3.10.x release, as also defined in `Dockerfile` at the root of this repository.
 
-
-### Clone repository
-    (conbench) $ cd ~/workspace/
-    (conbench) $ git clone https://github.com/conbench/conbench.git
-
-
-### Install dependencies
-
-Install options:
+Other install options:
 
 * `pip install conbench`: installs CLI dependencies
 * `pip install conbench[server]`: installs CLI and server dependencies
 * `pip install conbench[dev]`: ` installs CLI, server, and testing/CI dependencies
 
-    (conbench) $ cd ~/workspace/conbench/
-    (conbench) $ pip install -e .[dev]
+#### Fine-grained test invocation
 
+If `make test` is too coarse-grained, then this is how to take control of the containerized `pytest` test runner:
 
-### Start postgres
-
-Mac
-
-    $ brew services start postgresql
-
-Linux
-
-    $ sudo service postgresql start
-
-
-### Create databases
-    $ psql
-    # CREATE DATABASE conbench_test;
-    # CREATE DATABASE conbench_prod;
-
-
-### Launch app
-    (conbench) $ flask run
-     * Serving Flask app "api.py" (lazy loading)
-     * Environment: development
-     * Debug mode: on
-     * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
-
-If you get an authentication error, set the password for your user.
-
-    $ psql
-    # ALTER USER <username> PASSWORD '<password>';
-
-Then, set an environmental variable `DB_PASSWORD` to reflect the chosen password.
-
-    $ export DB_PASSWORD=<password>
-
-Alternatively, if you don't want to set the `DB_PASSWORD` you can change the
-password in postgres to `postgres`.
-
-    $ psql
-    # ALTER USER <username> PASSWORD 'postgres';
-
-
-### Test app
-    $ curl http://127.0.0.1:5000/api/ping/
-    {
-      "date": "Fri, 23 Oct 2020 03:09:58 UTC"
-    }
-
-
-### View API docs
-    http://localhost:5000/api/docs/
-
-
-### Run tests
-
-The canonical test invocation method for now is via `docker-compose` (manages test dependencies automatically, and is also used in CI):
-
-```
-$ docker-compose down && docker-compose build app && \
+```bash
+docker-compose down && docker-compose build app && \
     docker-compose run app \
     pytest -vv conbench/tests
 ```
@@ -163,51 +138,32 @@ Useful command line arguments for local development (can be combined as desired)
 * `... pytest -s`: do not swallow log output during run
 * `... run -e CONBENCH_LOG_LEVEL_STDERR=DEBUG app ...`
 
+#### Legacy commands
 
-### Format code
-    (conbench) $ cd ~/workspace/conbench/
-    (conbench) $ black .
-        reformatted foo.py
-    (conbench) $ git add foo.py
+The following commands are not guaranteed to work as documented, but provide valuable inspiration:
 
+##### Generate coverage report
 
-### Sort imports
-    (conbench) $ cd ~/workspace/conbench/
-    (conbench) $ isort .
-        Fixing foo.py
-    (conbench) $ git add foo.py
-
-
-### Lint code
-    (qa) $ cd ~/workspace/conbench/
-    (qa) $ flake8
-    ./foo/bar/__init__.py:1:1: F401 'FooBar' imported but unused
-
-
-### Generate coverage report
-    (conbench) $ cd ~/workspace/conbench/
     (conbench) $ coverage run --source conbench -m pytest conbench/tests/
     (conbench) $ coverage report -m
 
+##### Test migrations with the database running using brew
 
-### Test migrations with the database running using brew
-    (conbench) $ cd ~/workspace/conbench/
     (conbench) $ brew services start postgres
     (conbench) $ dropdb conbench_prod
     (conbench) $ createdb conbench_prod
     (conbench) $ alembic upgrade head
 
+##### Test migrations with the database running as a docker container
 
-### Test migrations with the database running as a docker container
-    (conbench) $ cd ~/workspace/conbench/
     (conbench) $ brew services stop postgres
     (conbench) $ docker-compose down
     (conbench) $ docker-compose build
     (conbench) $ docker-compose run migration
 
 
-### To autogenerate a migration
-    (conbench) $ cd ~/workspace/conbench/
+##### To autogenerate a migration
+
     (conbench) $ brew services start postgres
     (conbench) $ dropdb conbench_prod
     (conbench) $ createdb conbench_prod
@@ -217,7 +173,8 @@ Useful command line arguments for local development (can be combined as desired)
     (conbench) $ alembic revision --autogenerate -m "new"
 
 
-### To populate local conbench with sample runs and benchmarks
+##### To populate local conbench with sample runs and benchmarks
+
 1. Start conbench app in Terminal window 1:
 
         (conbench) $ dropdb conbench_prod && createdb conbench_prod && alembic upgrade head && flask run
@@ -228,6 +185,7 @@ Useful command line arguments for local development (can be combined as desired)
 
 
 ### To upload new version of conbench package to PyPI
+
 1. Update version in [setup.py](setup.py)
 2. Commit your change into `main` branch
 
