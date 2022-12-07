@@ -34,8 +34,9 @@ class BatchPlot(AppEndpoint, ContextMixin):
         )
 
     def get(self, batch_id):
-        if self.public_data_off():
-            return self.redirect("app.login")
+        resp = self.authorize_or_terminate()
+        if resp is not None:
+            return resp
 
         benchmarks, response = self._get_benchmarks(batch_id)
         if response.status_code != 200:
