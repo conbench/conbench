@@ -2,8 +2,8 @@
 # population script find history + get commit details too
 
 import datetime
-import uuid
 import os
+import uuid
 
 import requests
 
