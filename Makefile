@@ -9,9 +9,9 @@
 # developers to run this command locally, too.
 .PHONY: tests
 tests:
-	docker-compose down && \
-	docker-compose build app && \
-	docker-compose run \
+	docker compose down --remove-orphans && \
+	docker compose build app && \
+	docker compose run \
 	-e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage \
 	-e CI=true \
 	app \
@@ -37,10 +37,10 @@ lint-ci:
 
 .PHONY: rebuild-expected-api-docs
 rebuild-expected-api-docs: run-app-bg
-	echo "using $(shell docker-compose port app 5000) to reach app"
+	echo "using $(shell docker compose port app 5000) to reach app"
 	curl --silent --show-error --fail --retry 10 \
 		--retry-all-errors --retry-delay 1 --retry-max-time 30 \
-			http://$(shell docker-compose port app 5000)/api/docs.json > _new_api_docs.json
+			http://$(shell docker compose port app 5000)/api/docs.json > _new_api_docs.json
 	docker compose down
 	python -c "import json; print(str(json.loads(open('_new_api_docs.json').read())))" > _new_api_docs.py
 	black _new_api_docs.py

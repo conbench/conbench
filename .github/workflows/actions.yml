@@ -24,11 +24,11 @@ jobs:
       - name: Lint
         run: make lint-ci
       - name: Start PostgreSQL DB
-        run: docker-compose run --detach db
-      # Run `alembic upgrade head` via docker-compose so that it is within
+        run: docker compose run --detach db
+      # Run `alembic upgrade head` via docker compose so that it is within
       # the network that the DB is also in, reachable via DNS name `db`
       - name: Test database migrations
-        run: docker-compose run -e CREATE_ALL_TABLES app alembic upgrade head
+        run: docker compose run -e CREATE_ALL_TABLES app alembic upgrade head
         env:
           CREATE_ALL_TABLES: false
       - name: Run tests, generate coverage data
@@ -37,7 +37,7 @@ jobs:
         run: make tests
       - name: Convert coverage data to LCOV
         run: |
-          docker-compose run -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage app \
+          docker compose run -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage app \
             coverage lcov -o /etc/conbench-coverage-dir/coverage.lcov
       - name: Publish coverage
         uses: coverallsapp/github-action@master
@@ -71,7 +71,7 @@ jobs:
         run: |
           make rebuild-expected-api-docs
           make run-app-bg && \
-            export CONBENCH_BASE_URL=http://$(docker-compose port app 5000) && \
+            export CONBENCH_BASE_URL=http://$(docker compose port app 5000) && \
             python -m conbench.tests.populate_local_conbench
           make stop-app-bg
 

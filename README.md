@@ -124,8 +124,8 @@ Other install options:
 If `make test` is too coarse-grained, then this is how to take control of the containerized `pytest` test runner:
 
 ```bash
-docker-compose down && docker-compose build app && \
-    docker-compose run app \
+docker compose down && docker compose build app && \
+    docker compose run app \
     pytest -vv conbench/tests
 ```
 
@@ -157,9 +157,9 @@ The following commands are not guaranteed to work as documented, but provide val
 ##### Test migrations with the database running as a docker container
 
     (conbench) $ brew services stop postgres
-    (conbench) $ docker-compose down
-    (conbench) $ docker-compose build
-    (conbench) $ docker-compose run migration
+    (conbench) $ docker compose down
+    (conbench) $ docker compose build
+    (conbench) $ docker compose run migration
 
 
 ##### To autogenerate a migration
