@@ -55,7 +55,36 @@ class Commit(Base, EntityMixin):
     def ancestor_commit_query(self) -> Query:
         """Return a query that returns the IDs and timestamps of all Commits in the
         direct ancestry of this commit, ordered starting with this commit, backwards in
-        lineage.
+        lineage (like the default behavior of `git log`).
+
+        For example, consider the following git graph, where more recent commits are
+        near the top:
+
+        G      (main)
+        |  E2  (rebased branch)
+        |  C2
+        | /
+        |/
+        F
+        |  E   (branch)
+        D  |
+        |  C
+        | /
+        |/
+        B
+        A
+
+        The following commits would return the following ordered ancestors:
+
+        A  :  A
+        B  :  B, A
+        C  :  C, B, A
+        D  :  D, B, A
+        E  :  E, C, B, A
+        F  :  F, D, B, A
+        C2 :  C2, F, B, D, A
+        E2 :  E2, C2, F, D, B, A
+        G  :  G, F, D, B, A
 
         Might raise CantFindAncestorCommitsError.
         """
