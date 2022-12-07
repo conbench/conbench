@@ -50,7 +50,8 @@ rebuild-expected-api-docs: run-app-in-background
 
 .PHONY: run-app
 run-app:
-	docker compose down && docker compose up --build
+	export DCOMP_CONBENCH_HOST_PORT=127.0.0.1:5000 && \
+		docker compose down && docker compose up --build
 
 
 .PHONY: run-app-in-background
