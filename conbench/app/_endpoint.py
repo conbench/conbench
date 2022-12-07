@@ -1,14 +1,11 @@
 import logging
 import os
+from typing import Optional
 
 import flask as f
 import flask.views
 import flask_login
-
 from flask import Response
-
-
-from typing import Optional
 
 log = logging.getLogger(__name__)
 

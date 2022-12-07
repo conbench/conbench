@@ -1,6 +1,5 @@
 import logging
 import re
-
 import urllib.parse
 
 from ...tests.api import _fixtures
