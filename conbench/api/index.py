@@ -73,6 +73,11 @@ class PingAPI(ApiEndpoint):
         now = datetime.datetime.now(datetime.timezone.utc)
         query = text("SELECT version_num FROM alembic_version")
         try:
+            # In local deployment the PostgreSQL server logs: `ERROR:  relation
+            # "alembic_version" does not exist at character 25`. That is
+            # probably because not schema migration has yet been performed?
+            # Should we make it so that this table exists also for those
+            # dev/from-scratch deployments?
             version = list(Session.execute(query))[0]["version_num"]
         except:
             version = "unknown"
