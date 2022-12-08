@@ -23,7 +23,7 @@ tests:
 lint:
 	flake8
 	isort .
-	black --diff .
+	black .
 
 
 # Run by CI, these commands should not modify files, but only check compliance.

@@ -76,14 +76,12 @@ It runs the stack in a containerized fashion.
 It rebuilds container images from the current checkout, spawns
 multiple containers (including one for PostgreSQL), and then exposes Conbench's
 HTTP server on the host at http://127.0.0.1:5000.
+
 `make run-app` will stay in the foreground of your terminal, showing log output of all containers.
+
+Once you see access log lines like `GET /api/ping/ HTTP/1.1" 200` in the log output you can point your browser to http://127.0.0.1:5000.
+
 Use `Ctrl+C` to tear down the containerized stack.
-
-You can confirm that Conbench's HTTP server is reachable via
-
-```bash
-curl http://127.0.0.1:5000/api/ping/
-```
 
 #### View API documentation
 
