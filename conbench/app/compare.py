@@ -138,8 +138,9 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         return plot
 
     def get(self, compare_ids):
-        if self.public_data_off():
-            return self.redirect("app.login")
+        resp = self.authorize_or_terminate()
+        if resp is not None:
+            return resp
 
         threshold = f.request.args.get("threshold")
         threshold_z = f.request.args.get("threshold_z")

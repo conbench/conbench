@@ -147,8 +147,9 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         )
 
     def get(self, benchmark_id):
-        if self.public_data_off():
-            return self.redirect("app.login")
+        resp = self.authorize_or_terminate()
+        if resp is not None:
+            return resp
 
         benchmark, run = self._get_benchmark_and_run(benchmark_id)
         return self.page(benchmark, run, DeleteForm())
@@ -204,8 +205,9 @@ class BenchmarkList(AppEndpoint, ContextMixin):
         )
 
     def get(self):
-        if self.public_data_off():
-            return self.redirect("app.login")
+        resp = self.authorize_or_terminate()
+        if resp is not None:
+            return resp
 
         benchmarks, response = self._get_benchmarks()
         if response.status_code != 200:

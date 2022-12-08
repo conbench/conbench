@@ -1,7 +1,11 @@
+import logging
 import re
+import urllib.parse
 
 from ...tests.api import _fixtures
 from ...tests.helpers import _create_fixture_user, create_random_user
+
+log = logging.getLogger(__name__)
 
 
 class AppEndpointTest:
@@ -142,11 +146,56 @@ class GetEnforcer(Enforcer):
         new_id = self._create(client)
         entity_url = self.url.format(new_id)
 
+        # expect this to be a relative url with a trailing slash, example:
+        # /batches/7b2fdd9f929d47b9960152090d47f8e6/
+        log.debug("entity url: %s", entity_url)
+
         monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "off")
         self.logout(client)
-        response = client.get(entity_url, follow_redirects=True)
-        assert new_id.encode() not in response.data
-        assert b"Sign In - conbench-for-pytest" in response.data, response.data
+
+        r = client.get(entity_url, follow_redirects=False)
+
+        # Confirm this to be a redirect response.
+        assert r.status_code == 302, f"unexpected resp: {r.text}"
+
+        # Inspect the URL that we redirect the user agent to.
+        loc_url = r.headers.get("location")
+        log.debug("response Location header: %s", loc_url)
+        res = urllib.parse.urlparse(loc_url)
+        log.debug("loc url components: %s", res)
+
+        # Confirm that there is a query part, and that it roughly looks like
+        # desired.
+        assert res.query.startswith("target=")
+
+        # Now inspect the exact structure of the URL query string.
+        qargs = res = urllib.parse.parse_qs(res.query)
+        log.info("loc url query decoded: %s", qargs)
+        assert "target" in qargs
+        assert len(qargs["target"]) == 1
+        target_url = qargs["target"][0]
+        assert target_url.startswith(entity_url)
+
+        # I have seen the authorizer logic to append `?` to the target URL.
+        # That is an empty query section, i.e. a noop, i.e. it's fine. Right?
+        assert target_url in [entity_url, entity_url + "?"]
+
+        # There might be more redirects here, e.g. from / to /login/
+        r2 = client.get(r.headers.get("location"), follow_redirects=True)
+
+        # Note(JP): I have disabled this assertion. It was confirming that the
+        # entitity ID (as in for example
+        # /batches/7b2fdd9f929d47b9960152090d47f8e6) would not appear in the
+        # response body in the final response after all redirects after access
+        # control. This started to fail with enabled SSO because this ID is
+        # then part of the non-sensitive target URL and therefore appears in
+        # the `href` of the button/link for SSO flow initiation. If the goal of
+        # this assertion was to make sure that no entity details _other than_
+        # the entity ID end up showing up on the login page, then this needs to
+        # be reworked.
+        # assert new_id.encode() not in r2.data
+
+        assert b"Sign In - conbench-for-pytest" in r2.data, r2.data
 
     def test_unknown(self, client):
         self.authenticate(client)

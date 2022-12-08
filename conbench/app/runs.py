@@ -43,8 +43,9 @@ class Run(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
         )
 
     def get(self, run_id):
-        if self.public_data_off():
-            return self.redirect("app.login")
+        resp = self.authorize_or_terminate()
+        if resp is not None:
+            return resp
 
         contender_run, baseline_run = self.get_display_run(run_id), None
         if contender_run:
