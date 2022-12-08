@@ -5,7 +5,7 @@ import bokeh
 import flask as f
 
 from ..app import rule
-from ..app._endpoint import AppEndpoint
+from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin, simple_bar_plot
 from ..app._util import augment
 from ..app.benchmarks import BenchmarkMixin, RunMixin
@@ -137,10 +137,8 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         )
         return plot
 
+    @authorize_or_terminate
     def get(self, compare_ids):
-        resp = self.authorize_or_terminate()
-        if resp is not None:
-            return resp
 
         threshold = f.request.args.get("threshold")
         threshold_z = f.request.args.get("threshold_z")

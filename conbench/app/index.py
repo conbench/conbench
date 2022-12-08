@@ -2,7 +2,7 @@ import flask as f
 
 from .. import __version__
 from ..app import rule
-from ..app._endpoint import AppEndpoint
+from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app.benchmarks import RunMixin
 from ..config import Config
 
@@ -18,10 +18,8 @@ class Index(AppEndpoint, RunMixin):
             search_value=f.request.args.get("search"),
         )
 
+    @authorize_or_terminate
     def get(self):
-        resp = self.authorize_or_terminate()
-        if resp is not None:
-            return resp
 
         runs = self.get_display_runs()
         return self.page(runs)
