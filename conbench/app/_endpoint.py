@@ -49,11 +49,11 @@ def _authz_or_generate_termination_response() -> Optional[Response]:
         # go (after successful login). Flask's `full_path` on the request
         # object is documented as "requested path, including the query string."
 
-        # There may be a noop trailing question mark in request.full_path, see
-        # discussion in https://github.com/conbench/conbench/issues/525 Do not
-        # trigger the target_url mechanism when the target URL is just `/?`.
-        # So, do not remove any trailing question mark, but only when full_path
-        # ends with precisely `/?`.
+        # There may be a noop trailing question mark in `f.request.full_path`,
+        # see discussion in https://github.com/conbench/conbench/issues/525. Do
+        # not trigger the target_url mechanism when the target URL is just
+        # `/?`. So, do not remove any trailing question mark, but only when
+        # full_path ends with precisely `/?`.
         frf = f.request.full_path
         if frf.endswith("/?"):
             frf = frf[:-1]
