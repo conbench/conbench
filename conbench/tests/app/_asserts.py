@@ -176,9 +176,9 @@ class GetEnforcer(Enforcer):
         target_url = qargs["target"][0]
         assert target_url.startswith(entity_url)
 
-        # I have seen the authorizer logic to append `?` to the target URL.
-        # That is an empty query section, i.e. a noop, i.e. it's fine. Right?
-        assert target_url in [entity_url, entity_url + "?"]
+        # A bit of tuning was required to get here, see
+        # https://github.com/conbench/conbench/issues/525
+        assert target_url == entity_url
 
         # There might be more redirects here, e.g. from / to /login/
         r2 = client.get(r.headers.get("location"), follow_redirects=True)
