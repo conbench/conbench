@@ -48,9 +48,19 @@ def _authz_or_generate_termination_response() -> Optional[Response]:
         # machinery to redirect the user back to where they actually wanted to
         # go (after successful login). Flask's `full_path` on the request
         # object is documented as "requested path, including the query string."
-        if f.request.full_path != "/":
-            log.debug("authorizer for url: %s", f.request.full_path)
-            return f.redirect(f.url_for("app.login", target=f.request.full_path))
+
+        # There may be a noop trailing question mark in `f.request.full_path`,
+        # see discussion in https://github.com/conbench/conbench/issues/525. Do
+        # not trigger the target_url mechanism when the target URL is just
+        # `/?`. So, do not remove any trailing question mark, but only when
+        # full_path ends with precisely `/?`.
+        frf = f.request.full_path
+        if frf.endswith("/?"):
+            frf = frf[:-1]
+
+        if frf != "/":
+            log.info("authorizer for url: %s", frf)
+            return f.redirect(f.url_for("app.login", target=frf))
         else:
             return f.redirect(f.url_for("app.login"))
 
