@@ -359,9 +359,9 @@ class Conbench(Connection, MixinPython, MixinR):
                 # iteration to avoid doubling memory
                 del output
 
-            iteration_start = time.time()
+            iteration_start = time.monotonic()
             output = f()
-            times.append(time.time() - iteration_start)
+            times.append(time.monotonic() - iteration_start)
 
             gc.enable()
 

@@ -141,9 +141,9 @@ class Iteration(abc.ABC):
         error = None
         try:
             self.before_each(case=case)
-            start_time = time.time()
+            start_time = time.monotonic()
             self.run(case=case)
-            end_time = time.time()
+            end_time = time.monotonic()
             self.after_each(case=case)
             elapsed_time = end_time - start_time
         except Exception as e:
