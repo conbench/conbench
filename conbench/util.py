@@ -42,9 +42,9 @@ class Connection:
             if not self.session:
                 self.session = requests.Session()
                 self.session.mount("https://", adapter)
-            start = time.time()
+            start = time.monotonic()
             response = self.session.post(url, json=data)
-            print("Time to POST", url, time.time() - start)
+            print("Time to POST", url, time.monotonic() - start)
             if response.status_code != expected:
                 self._unexpected_response("POST", response, url)
         except requests.exceptions.ConnectionError:
