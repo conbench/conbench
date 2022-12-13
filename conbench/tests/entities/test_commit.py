@@ -73,7 +73,7 @@ def test_ancestor_commit_query():
         ("abcde", ["abcde"]),
         # the other fake commits don't have enough information to find ancestors
     ]:
-        query_result = commits[commit_sha].ancestor_commit_query.all()
+        query_result = commits[commit_sha].commit_ancestry_query.all()
         actual_ancestor_ids = [row[0] for row in query_result]
         expected_ancestor_ids = [
             commits[name].id for name in expected_ancestor_commit_shas
@@ -87,27 +87,27 @@ def test_ancestor_commit_query_bad_input():
 
     commit = Commit.create({"sha": "1", **kwargs})
     with pytest.raises(CantFindAncestorCommitsError, match="branch"):
-        commit.ancestor_commit_query
+        commit.commit_ancestry_query
 
     kwargs["branch"] = "b"
     commit = Commit.create({"sha": "2", **kwargs})
     with pytest.raises(CantFindAncestorCommitsError, match="timestamp"):
-        commit.ancestor_commit_query
+        commit.commit_ancestry_query
 
     kwargs["timestamp"] = datetime.datetime(2022, 1, 1)
     commit = Commit.create({"sha": "3", **kwargs})
     with pytest.raises(CantFindAncestorCommitsError, match="fork_point_sha"):
-        commit.ancestor_commit_query
+        commit.commit_ancestry_query
 
     kwargs["fork_point_sha"] = "0"
     commit = Commit.create({"sha": "4", **kwargs})
     with pytest.raises(CantFindAncestorCommitsError, match="isn't in the db"):
-        commit.ancestor_commit_query
+        commit.commit_ancestry_query
 
     fp_kwargs = default_kwargs.copy()
     Commit.create({"sha": "0", **fp_kwargs})
     with pytest.raises(CantFindAncestorCommitsError, match="fork_point_commit branch"):
-        commit.ancestor_commit_query
+        commit.commit_ancestry_query
 
     fp_kwargs["branch"] = "b"
     Commit.create({"sha": "00", **fp_kwargs})
@@ -116,7 +116,7 @@ def test_ancestor_commit_query_bad_input():
     with pytest.raises(
         CantFindAncestorCommitsError, match="fork_point_commit timestamp"
     ):
-        commit.ancestor_commit_query
+        commit.commit_ancestry_query
 
 
 def test_repository_to_name():

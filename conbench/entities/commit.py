@@ -52,10 +52,11 @@ class Commit(Base, EntityMixin):
             return Commit.first(sha=self.fork_point_sha, repository=self.repository)
 
     @property
-    def ancestor_commit_query(self) -> Query:
+    def commit_ancestry_query(self) -> Query:
         """Return a query that returns the IDs and timestamps of all Commits in the
         direct ancestry of this commit, ordered starting with this commit, backwards in
-        lineage (like the default behavior of `git log`).
+        lineage (like the default behavior of `git log`). This has no limit, so it will
+        match Commits in the database all the way back to the initial commit.
 
         For example, consider the following git graph, where more recent commits are
         near the top:

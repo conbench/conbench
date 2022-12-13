@@ -121,7 +121,7 @@ class Run(Base, EntityMixin):
 
         commit: Commit = self.commit
         try:
-            ancestor_commits = commit.ancestor_commit_query.subquery()
+            ancestor_commits = commit.commit_ancestry_query.subquery()
         except CantFindAncestorCommitsError as e:
             log.debug(f"Couldn't find closest ancestor because {e}")
             return None
@@ -161,7 +161,7 @@ class Run(Base, EntityMixin):
             .order_by(
                 # Prefer this Run's run_reason
                 s.desc(Run.reason == self.reason),
-                # see Commit.ancestor_commit_query() comments for why we order the
+                # see Commit.commit_ancestry_query() comments for why we order the
                 # commits this way
                 ancestor_commits.c.branch_order,
                 ancestor_commits.c.ancestor_timestamp.desc(),

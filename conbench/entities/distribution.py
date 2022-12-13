@@ -73,7 +73,7 @@ def _distribution_query(
     from ..entities.benchmark_result import BenchmarkResult
 
     commit: Commit = benchmark_result.run.commit
-    ancestor_commits = commit.ancestor_commit_query.limit(commit_limit).subquery()
+    ancestor_commits = commit.commit_ancestry_query.limit(commit_limit).subquery()
 
     return (
         Session.query(
@@ -163,7 +163,7 @@ def get_closest_ancestor(
 
     commit: Commit = benchmark_result.run.commit
     try:
-        ancestor_commits = commit.ancestor_commit_query.subquery()
+        ancestor_commits = commit.commit_ancestry_query.subquery()
     except CantFindAncestorCommitsError as e:
         log.debug(f"Couldn't find closest ancestor because {e}")
         return None
@@ -183,7 +183,7 @@ def get_closest_ancestor(
     if branch:
         query = query.filter(ancestor_commits.c.ancestor_branch == branch)
 
-    # see Commit.ancestor_commit_query() comments for why we order this way
+    # see Commit.commit_ancestry_query() comments for why we order this way
     closest_benchmark_result = query.order_by(
         "branch_order", ancestor_commits.c.ancestor_timestamp.desc()
     ).first()
