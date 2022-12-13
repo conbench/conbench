@@ -2,14 +2,12 @@ import json
 import logging
 import math
 
-
 import click
 import sigfig
 
 from . import __version__
 from .runner import LIST, REGISTRY
 from .util import register_benchmarks
-
 
 log = logging.getLogger(__name__)
 
