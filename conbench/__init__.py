@@ -142,7 +142,13 @@ def dict_or_objattrs_to_nonsensitive_string(obj):
     """
 
     # Fragments are matched w/o considering case.
-    sensitive_key_fragments = ["SECRET", "REGISTRATION_KEY", "PASSWORD", "TOKEN"]
+    sensitive_key_fragments = [
+        "SECRET",
+        "REGISTRATION_KEY",
+        "PASSWORD",
+        "TOKEN",
+        "SQLALCHEMY_DATABASE_URI",
+    ]
 
     if isinstance(obj, dict):
         keys = list(obj.keys())
