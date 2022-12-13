@@ -1,10 +1,17 @@
 import json
+import logging
+import math
+
 
 import click
+import sigfig
 
 from . import __version__
 from .runner import LIST, REGISTRY
 from .util import register_benchmarks
+
+
+log = logging.getLogger(__name__)
 
 register_benchmarks()
 BENCHMARKS = {}
@@ -81,6 +88,61 @@ def _to_cli_name(name):
     return f"--{name.replace('_', '-')}"
 
 
+def log_timing_report_across_results(results):
+    # Find tags that are common among all results. That makes sense only when
+    # there is more than one result.
+    if len(results) == 1:
+        common_tag_keys = []
+    else:
+        common_tags = set.intersection(*tuple(set(r["tags"].items()) for r in results))
+        common_tag_keys = [t[0] for t in common_tags]
+        log.info("common tag keys across results: %s", common_tag_keys)
+
+    # For each result, assemble a human-readable string which represents the
+    # case/scenario from the tags. Also assemble a human-readable string that
+    # reports the timing info for this scenario.
+    tagstrings = []
+    timestrings = []
+
+    for r in results:
+        tags = r["tags"]
+
+        # That represents the case/senario. Note that `tags` has been enriched
+        # with key/value pairs beyond the case -- filter these out again.
+        tagstring = ", ".join(
+            f"{k}: {tags[k]}" for k in sorted(tags.keys()) if k not in common_tag_keys
+        )
+
+        # Assume that stdev=0 for now means there is only one sample.
+        if r["stats"]["stdev"] == 0:
+            timestring = f"{sigfig.round(r['stats']['data'][0], 2)} s"
+        else:
+            # Assume that there are at least three samples. Standard deviation
+            # is known, calc standard error of the mean:
+            mean = r["stats"]["mean"]
+            stdev = r["stats"]["stdev"]
+            min = r["stats"]["min"]
+            stdem = float(stdev) / math.sqrt(len(r["stats"]["data"]))
+            minstr = f"min: {sigfig.round(min, 3)} s"
+
+            # This generates a string like '3.1 ± 0.7'
+            mean_unc_str = sigfig.round(mean, uncertainty=stdem)
+            timestring = f"{minstr.ljust(15)} mean±SE: ({mean_unc_str}) s"
+
+        tagstrings.append(tagstring)
+        timestrings.append(timestring)
+
+        # TODO: do not do this when distribution is multimodal. But now that
+        # we're also printing the min value a human can quickly detect some
+        # situations where the min appears far off the mean.
+
+    msg = ""
+    for tagstring, timestring in zip(tagstrings, timestrings):
+        msg += f"{tagstring}\n    --> {timestring}\n"
+
+    log.info("result timing overview:\n\n%s", msg)
+
+
 for name, benchmark in BENCHMARKS.items():
     params = []
 
@@ -146,7 +208,11 @@ for name, benchmark in BENCHMARKS.items():
         benchmark=benchmark,
         **kwargs,
     ):
+        results = []
+
         for result, output in benchmark().run(**kwargs):
+
+            results.append(result)
             if show_output:
                 click.echo()
                 click.echo(click.style("Benchmark output:", fg="yellow"))
@@ -160,6 +226,8 @@ for name, benchmark in BENCHMARKS.items():
                 else:
                     click.echo(click.style(json_result, fg="green"))
             del output
+
+        log_timing_report_across_results(results)
 
     conbench.add_command(
         click.Command(
