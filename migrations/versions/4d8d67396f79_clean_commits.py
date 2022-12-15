@@ -77,8 +77,8 @@ def upgrade():
                 {
                     "parent": commit_details.get("parent"),
                     "timestamp": commit_details.get("date"),
-                    "message": commit_details.get("message"),
-                    "author_name": commit_details.get("author_name"),
+                    "message": commit_details.get("message") or "",
+                    "author_name": commit_details.get("author_name") or "",
                     "author_login": commit_details.get("author_login"),
                     "author_avatar": commit_details.get("author_avatar"),
                     "fork_point_sha": fork_point_sha,
