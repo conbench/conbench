@@ -29,3 +29,8 @@ class TestAPI(_asserts.ApiEndpointTest):
         assert set(data) == {"date", "conbench_version", "alembic_version"}
         assert str(datetime.datetime.today().year) in data["date"]
         assert data["conbench_version"] == __version__
+
+    def test_wipe(self, client):
+        # This endpoint is here for convenience in local development/testing.
+        response = client.get("/api/wipe-db")
+        assert response.status_code == 200
