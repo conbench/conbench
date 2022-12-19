@@ -64,6 +64,8 @@ run-app-bg:
 	docker compose up --build --wait --detach
 
 
-.PHONY: stop-app-bg
-stop-app-bg:
-	docker compose down
+# This removes state by removing containers. That means that the next `make
+# run-app` invocation will start with fresh container state.
+.PHONY: teardown-app
+teardown-app:
+	docker compose down --remove-orphans
