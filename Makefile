@@ -5,6 +5,28 @@
 # -- those targets can change at will, often and brutally (their names, their
 # meaning, and their implementation)
 
+# The use case that this target mainly has in mind: starting the application
+# locally to play around with this. This is not primarily meant for
+# _development_.
+.PHONY: run-app
+run-app:
+	export DCOMP_CONBENCH_HOST_PORT=127.0.0.1:5000 && \
+		docker compose down && docker compose up --build
+
+
+# This removes state by removing containers. That means that the next `make
+# run-app` invocation will start with fresh container state.
+.PHONY: teardown-app
+teardown-app:
+	docker compose down --remove-orphans
+
+
+# This requries dependencies to be set up in host env
+.PHONY: db-populate
+db-populate:
+	python -m conbench.tests.populate_local_conbench
+
+
 # This is used by CI for running the test suite. Documentation should encourage
 # developers to run this command locally, too.
 .PHONY: tests
@@ -18,7 +40,19 @@ tests:
 			-m pytest -vv -s --durations=20 conbench/tests/
 
 
+# Similar to `make run-app`, but with the `docker-compose.dev.yml` extension
+# That mounts the local checkout into the Conbench container.
+.PHONY: run-app-dev
+run-app-dev:
+	export DCOMP_CONBENCH_HOST_PORT=127.0.0.1:5000 && \
+		docker compose down && \
+			docker compose -f docker-compose.yml -f docker-compose.dev.yml \
+				up --build
+
+
 # For developers, these commands may and should modify local files if possible.
+# This requires the dependencies to be available on the host, in the terminal
+# that this target is executed in.
 .PHONY: lint
 lint:
 	flake8
@@ -47,25 +81,19 @@ rebuild-expected-api-docs: run-app-bg
 	git diff ./conbench/tests/api/_expected_docs.py
 
 
-# This requries dependencies to be set up in host env
-.PHONY: db-populate
-db-populate:
-	python -m conbench.tests.populate_local_conbench
-
-
-.PHONY: run-app
-run-app:
-	export DCOMP_CONBENCH_HOST_PORT=127.0.0.1:5000 && \
-		docker compose down && docker compose up --build
-
-
 .PHONY: run-app-bg
 run-app-bg:
 	docker compose up --build --wait --detach
 
 
-# This removes state by removing containers. That means that the next `make
-# run-app` invocation will start with fresh container state.
-.PHONY: teardown-app
-teardown-app:
-	docker compose down --remove-orphans
+# This is here for the purpose of testing most of `run-app-dev` in CI. A copy
+# of `run-app-dev` but not requiring a specific port on the host, and using
+# --wait and --detach. That means that `docker compose up...` will return with
+# exit code 0 once the app appears to be healthy. At this point we can run
+# the teardown which is also expected to return with code 0.
+.PHONY: test-run-app-dev
+test-run-app-dev:
+	docker compose down
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml \
+		up --build --wait --detach
+	docker compose down
