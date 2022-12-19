@@ -95,4 +95,19 @@ def register_api(view, endpoint, url):
 
 register_api(PingAPI, "ping", "/ping/")
 register_api(IndexAPI, "index", "/")
+
+
+# Register this API endpoint only in testing mode.
+if Config.TESTING:
+
+    @api.route("/wipe-db", methods=("GET",))
+    def wipe_db():
+        """
+        For local development / developer productivity.
+        """
+        log.info("clear DB tables")
+        empty_db_tables()
+        return "200 OK", 200
+
+
 spec.components.schema("Ping", schema=PingSchema)
