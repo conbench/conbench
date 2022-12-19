@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import flask as f
 import flask_login
@@ -9,7 +10,10 @@ from .. import __version__
 from ..api import api, rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint
-from ..db import Session
+from ..config import Config
+from ..db import Session, empty_db_tables
+
+log = logging.getLogger(__name__)
 
 
 @api.route("/docs.json")
