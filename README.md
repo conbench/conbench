@@ -69,6 +69,8 @@ These need to be set up in your environment.
 
 The following `make` commands assume to be run in the root folder of a local repository clone.
 
+Before using these commands, set up a GitHub API token using [GitHub's instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). It's recommended to only give the token read-only permissions to public repositories (which is the default for fine-grained personal access tokens). Set the `GITHUB_API_TOKEN` environment variable to that token value. If you do not have the token set, certain behaviors may not function correctly.
+
 #### Start application
 
 `make run-app` is a simple way to start and experiment with Conbench locally.

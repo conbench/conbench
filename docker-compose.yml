@@ -46,6 +46,7 @@ services:
       GOOGLE_CLIENT_SECRET: AnotherStaticSecret
       CONBENCH_OIDC_ISSUER_URL: http://dex:5556/dex-for-conbench
       CONBENCH_INTENDED_BASE_URL: http://127.0.0.1:5000/
+      GITHUB_API_TOKEN: $GITHUB_API_TOKEN
     healthcheck:
       test: "curl -sfS http://0.0.0.0:5000/api/ping/"
       interval: 5s
