@@ -161,10 +161,7 @@ class Run(Base, EntityMixin):
             .order_by(
                 # Prefer this Run's run_reason
                 s.desc(Run.reason == self.reason),
-                # see Commit.commit_ancestry_query() comments for why we order the
-                # commits this way
-                ancestor_commits.c.branch_order,
-                ancestor_commits.c.ancestor_timestamp.desc(),
+                ancestor_commits.c.commit_order.desc(),
             )
             .first()
         )

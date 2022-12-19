@@ -54,9 +54,15 @@ class Commit(Base, EntityMixin):
     @property
     def commit_ancestry_query(self) -> Query:
         """Return a query that returns the IDs and timestamps of all Commits in the
-        direct ancestry of this commit, ordered starting with this commit, backwards in
-        lineage (like the default behavior of `git log`). This has no limit, so it will
-        match Commits in the database all the way back to the initial commit.
+        direct ancestry of this commit, all the way back to the initial commit.
+
+        This is mostly used as an unordered subquery; e.g.
+        ``subquery = commit.commit_ancestry_query.subquery()``. You may take advantage
+        of this subquery's ``commit_order`` column to order by lineage. For example,
+        to order from this commit backwards in lineage to the inital commit (like the
+        default behavior of ``git log``), you may use
+        ``.order_by(subquery.c.commit_order.desc())`` or
+        ``.order_by(sqlalchemy.desc("commit_order"))``.
 
         For example, consider the following git graph, where more recent commits are
         near the top:
@@ -75,7 +81,8 @@ class Commit(Base, EntityMixin):
         B
         A
 
-        The following commits would return the following ordered ancestors:
+        Ordering by commit_order.desc(), the following commits would return the
+        following ordered ancestors:
 
         A  :  A
         B  :  B, A
@@ -99,25 +106,17 @@ class Commit(Base, EntityMixin):
         fork_point_commit = self.get_fork_point_commit()
         if not fork_point_commit:
             raise CantFindAncestorCommitsError("the fork point commit isn't in the db")
-        if not fork_point_commit.branch:
-            raise CantFindAncestorCommitsError("fork_point_commit branch is null")
         if not fork_point_commit.timestamp:
             raise CantFindAncestorCommitsError("fork_point_commit timestamp is null")
-
-        # Note on "branch_order" in the following code: we can't rely on timestamp
-        # alone to successfully order the commits, because after a rebase, the
-        # timestamps might be mixed up among the default and non-default branch commits.
-        # So we have to manually order non-default commits before default commits.
 
         # Get default branch commits before/including the fork point
         query = Session.query(
             Commit.id.label("ancestor_id"),
             Commit.timestamp.label("ancestor_timestamp"),
-            Commit.branch.label("ancestor_branch"),
-            s.sql.expression.literal_column("2").label("branch_order"),
+            s.func.concat("1_", Commit.timestamp).label("commit_order"),
         ).filter(
             Commit.repository == self.repository,
-            Commit.branch == fork_point_commit.branch,
+            Commit.sha == Commit.fork_point_sha,  # aka: on default branch
             Commit.timestamp <= fork_point_commit.timestamp,
         )
 
@@ -126,8 +125,7 @@ class Commit(Base, EntityMixin):
             branch_query = Session.query(
                 Commit.id.label("ancestor_id"),
                 Commit.timestamp.label("ancestor_timestamp"),
-                Commit.branch.label("ancestor_branch"),
-                s.sql.expression.literal_column("1").label("branch_order"),
+                s.func.concat("2_", Commit.timestamp).label("commit_order"),
             ).filter(
                 Commit.repository == self.repository,
                 Commit.branch == self.branch,
@@ -136,7 +134,7 @@ class Commit(Base, EntityMixin):
             )
             query = query.union(branch_query)
 
-        return query.order_by("branch_order", Commit.timestamp.desc())
+        return query
 
     @staticmethod
     def create_no_context():

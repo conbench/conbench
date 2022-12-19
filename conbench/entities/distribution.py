@@ -73,7 +73,11 @@ def _distribution_query(
     from ..entities.benchmark_result import BenchmarkResult
 
     commit: Commit = benchmark_result.run.commit
-    ancestor_commits = commit.commit_ancestry_query.limit(commit_limit).subquery()
+    ancestor_commits = (
+        commit.commit_ancestry_query.order_by(s.desc("commit_order"))
+        .limit(commit_limit)
+        .subquery()
+    )
 
     return (
         Session.query(
@@ -181,11 +185,11 @@ def get_closest_ancestor(
         )
     )
     if branch:
-        query = query.filter(ancestor_commits.c.ancestor_branch == branch)
+        # TODO: hack for now, will replace this function later
+        query = query.filter(ancestor_commits.c.commit_order.like("1_%"))
 
-    # see Commit.commit_ancestry_query() comments for why we order this way
     closest_benchmark_result = query.order_by(
-        "branch_order", ancestor_commits.c.ancestor_timestamp.desc()
+        ancestor_commits.c.commit_order.desc()
     ).first()
 
     if not closest_benchmark_result:

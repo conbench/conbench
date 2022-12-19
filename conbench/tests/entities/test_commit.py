@@ -5,6 +5,7 @@ import os
 
 import dateutil
 import pytest
+import sqlalchemy as s
 
 from ...entities.commit import (
     CantFindAncestorCommitsError,
@@ -73,7 +74,11 @@ def test_ancestor_commit_query():
         ("abcde", ["abcde"]),
         # the other fake commits don't have enough information to find ancestors
     ]:
-        query_result = commits[commit_sha].commit_ancestry_query.all()
+        query_result = (
+            commits[commit_sha]
+            .commit_ancestry_query.order_by(s.desc("commit_order"))
+            .all()
+        )
         actual_ancestor_ids = [row[0] for row in query_result]
         expected_ancestor_ids = [
             commits[name].id for name in expected_ancestor_commit_shas
@@ -106,12 +111,6 @@ def test_ancestor_commit_query_bad_input():
 
     fp_kwargs = default_kwargs.copy()
     Commit.create({"sha": "0", **fp_kwargs})
-    with pytest.raises(CantFindAncestorCommitsError, match="fork_point_commit branch"):
-        commit.commit_ancestry_query
-
-    fp_kwargs["branch"] = "b"
-    Commit.create({"sha": "00", **fp_kwargs})
-    kwargs["fork_point_sha"] = "00"
     commit = Commit.create({"sha": "5", **kwargs})
     with pytest.raises(
         CantFindAncestorCommitsError, match="fork_point_commit timestamp"
