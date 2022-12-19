@@ -3,11 +3,7 @@ from copy import deepcopy
 
 import pytest
 
-from ...entities.distribution import (
-    get_closest_ancestor,
-    set_z_scores,
-    update_distribution,
-)
+from ...entities.distribution import set_z_scores, update_distribution
 from ...tests.api import _fixtures
 
 # --- expected data for test_update_distribution() ---
@@ -142,69 +138,6 @@ def test_update_distribution(commit_limit, expected_stats):
             assert actual_values["limit"] == commit_limit
             for key, expected_value in some_expected_stats.items():
                 assert actual_values[key] == expected_value
-
-
-@pytest.mark.parametrize(
-    ["branch_filter", "expected_shas"],
-    [
-        (
-            None,
-            [
-                None,
-                "11111",
-                "22222",
-                "aaaaa",
-                "22222",
-                "22222",
-                "44444",
-                "fffff",
-                "44444",
-                "44444",
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                "44444",
-            ],
-        ),
-        (
-            "default",
-            [
-                None,
-                "11111",
-                "22222",
-                "22222",
-                "22222",
-                "22222",
-                "44444",
-                "44444",
-                "44444",
-                "44444",
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                "44444",
-            ],
-        ),
-    ],
-)
-def test_get_closest_ancestor(branch_filter, expected_shas):
-    _, benchmark_results = _fixtures.gen_fake_data()
-    assert len(benchmark_results) == len(
-        expected_shas
-    ), "you should test all benchmark_results"
-
-    for benchmark_result, expected_sha in zip(benchmark_results, expected_shas):
-        actual_commit = get_closest_ancestor(benchmark_result, branch=branch_filter)
-        if expected_sha is None:
-            assert actual_commit is None
-        else:
-            assert expected_sha == actual_commit.sha
 
 
 def test_set_z_scores():

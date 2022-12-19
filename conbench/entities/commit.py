@@ -54,7 +54,8 @@ class Commit(Base, EntityMixin):
     @property
     def commit_ancestry_query(self) -> Query:
         """Return a query that returns the IDs and timestamps of all Commits in the
-        direct ancestry of this commit, all the way back to the initial commit.
+        direct ancestry of this commit, all the way back to the initial commit. Also
+        returns whether the commit is on the default branch, and an ordering column.
 
         This is mostly used as an unordered subquery; e.g.
         ``subquery = commit.commit_ancestry_query.subquery()``. You may take advantage
@@ -113,6 +114,7 @@ class Commit(Base, EntityMixin):
         query = Session.query(
             Commit.id.label("ancestor_id"),
             Commit.timestamp.label("ancestor_timestamp"),
+            s.sql.expression.literal(True).label("on_default_branch"),
             s.func.concat("1_", Commit.timestamp).label("commit_order"),
         ).filter(
             Commit.repository == self.repository,
@@ -125,6 +127,7 @@ class Commit(Base, EntityMixin):
             branch_query = Session.query(
                 Commit.id.label("ancestor_id"),
                 Commit.timestamp.label("ancestor_timestamp"),
+                s.sql.expression.literal(False).label("on_default_branch"),
                 s.func.concat("2_", Commit.timestamp).label("commit_order"),
             ).filter(
                 Commit.repository == self.repository,
