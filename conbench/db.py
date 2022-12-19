@@ -72,6 +72,9 @@ def empty_db_tables():
         Session.execute(table.delete())
         log.debug("deleted table: %s", table)
 
+    Session.commit()
+    log.debug("all deletions committed: %s", table)
+
 
 def log_after_retry_attempt(retry_state: tenacity.RetryCallState):
     log.info(
