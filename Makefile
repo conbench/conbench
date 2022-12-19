@@ -92,7 +92,7 @@ run-app-bg:
 # exit code 0 once the app appears to be healthy. At this point we can run
 # the teardown which is also expected to return with code 0.
 .PHONY: test-run-app-dev
-test-run-app-bg:
+test-run-app-dev:
 	docker compose down
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml \
 		up --build --wait --detach
