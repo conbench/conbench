@@ -3,6 +3,8 @@ services:
   app:
     build:
       context: .
+      # Note that currently this Dockerfile defines the image that' used for
+      # Conbench production environments.
       dockerfile: Dockerfile
     command: ["gunicorn", "-b", "0.0.0.0:5000", "-w", "5", "conbench:application", "--access-logfile=-", "--error-logfile=-", "--preload"]
     ports:
