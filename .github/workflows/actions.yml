@@ -74,6 +74,6 @@ jobs:
           make run-app-bg && \
             export CONBENCH_BASE_URL=http://$(docker compose port app 5000) && \
             make db-populate && make db-populate
-          make stop-app-bg
+          make teardown-app
 
 
