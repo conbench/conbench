@@ -1,4 +1,7 @@
 steps:
+  # TODO: use GitHub API to find if this commit had all CI checks passing.
+  # Abort deployment if that is not the case. Also see
+  # https://github.com/conbench/conbench/issues/319
   - label: "Build & Push"
     key: "build-and-push"
     concurrency: 1

@@ -1,11 +1,20 @@
-
-version: '3.5'
+version: "3.9"
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
     command: ["gunicorn", "-b", "0.0.0.0:5000", "-w", "5", "conbench:application", "--access-logfile=-", "--error-logfile=-", "--preload"]
+    ports:
+      # When using the default value `127.0.0.1::5000` (two colons) then the
+      # container-internal port 5000 will be dynamically mapped to a free port
+      # on the host, on the interface represented by 127.0.0.1. In that case,
+      # the command `docker-compose port app 5000` will return the port on the
+      # host. If a definite port on the host is required (which may of course
+      # fail if it's already in use), set the environment variable
+      # DCOMP_CONBENCH_HOST_PORT to e.g. 127.0.0.1:5000 (that tries to bind to
+      # port 5000 on the host).
+      - ${DCOMP_CONBENCH_HOST_PORT:-127.0.0.1:}:5000
     volumes:
       - ${PWD}/_conbench-coverage-dir:/etc/conbench-coverage-dir
     depends_on:
@@ -26,7 +35,7 @@ services:
       FLASK_APP: "conbench"
       FLASK_ENV: "development"
       FLASK_DEBUG: "true"
-      REGISTRATION_KEY: "code"
+      REGISTRATION_KEY: "innocent-registration-key"
       SECRET_KEY: "Person, woman, man, camera, TV"
       # Default log level is INFO, change to DEBUG as needed.
       # CONBENCH_LOG_LEVEL_STDERR: DEBUG
@@ -35,6 +44,11 @@ services:
       GOOGLE_CLIENT_SECRET: AnotherStaticSecret
       CONBENCH_OIDC_ISSUER_URL: http://dex:5556/dex-for-conbench
       CONBENCH_INTENDED_BASE_URL: http://127.0.0.1:5000/
+    healthcheck:
+      test: "curl -sfS http://0.0.0.0:5000/api/ping/"
+      interval: 5s
+      timeout: 20s
+      retries: 5
 
   dex:
     image: dexidp/dex:v2.35.3
@@ -51,28 +65,8 @@ services:
       POSTGRES_PASSWORD: "postgres"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
+      interval: 2s
       timeout: 5s
       retries: 5
-
-  migration:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: ["alembic", "upgrade", "head"]
-    environment:
-      APPLICATION_NAME: "conbench-for-pytest"
-      CREATE_ALL_TABLES: "false"
-      DB_USERNAME: "postgres"
-      DB_HOST: "db"
-      DB_PASSWORD: "postgres"
-      DB_NAME: "postgres"
-      DB_PORT: "5432"
-      FLASK_APP: "conbench"
-      FLASK_ENV: "development"
-      REGISTRATION_KEY: "code"
-      SECRET_KEY: "Person, woman, man, camera, TV"
-      CONBENCH_INTENDED_BASE_URL: http://127.0.0.1:5000/
-    depends_on:
-      db:
-        condition: service_healthy
+    ports:
+      - "5432:5432"

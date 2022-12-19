@@ -5,7 +5,7 @@ import flask_wtf
 import wtforms as w
 
 from ..app import rule
-from ..app._endpoint import AppEndpoint
+from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin
 from ..app._util import augment, display_message, display_time
 from ..config import Config
@@ -146,9 +146,8 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
             plot_history=self.get_history_plot(benchmark, run),
         )
 
+    @authorize_or_terminate
     def get(self, benchmark_id):
-        if self.public_data_off():
-            return self.redirect("app.login")
 
         benchmark, run = self._get_benchmark_and_run(benchmark_id)
         return self.page(benchmark, run, DeleteForm())
@@ -203,9 +202,8 @@ class BenchmarkList(AppEndpoint, ContextMixin):
             search_value=f.request.args.get("search"),
         )
 
+    @authorize_or_terminate
     def get(self):
-        if self.public_data_off():
-            return self.redirect("app.login")
 
         benchmarks, response = self._get_benchmarks()
         if response.status_code != 200:

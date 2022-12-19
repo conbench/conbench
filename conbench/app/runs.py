@@ -5,7 +5,7 @@ import flask_wtf
 import wtforms as w
 
 from ..app import rule
-from ..app._endpoint import AppEndpoint
+from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin
 from ..app._util import augment
 from ..app.benchmarks import ContextMixin, RunMixin
@@ -42,9 +42,8 @@ class Run(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             search_value=f.request.args.get("search"),
         )
 
+    @authorize_or_terminate
     def get(self, run_id):
-        if self.public_data_off():
-            return self.redirect("app.login")
 
         contender_run, baseline_run = self.get_display_run(run_id), None
         if contender_run:

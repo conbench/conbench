@@ -5,7 +5,7 @@ import bokeh
 import flask as f
 
 from ..app import rule
-from ..app._endpoint import AppEndpoint
+from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import simple_bar_plot
 from ..app._util import augment
 from ..app.benchmarks import ContextMixin
@@ -33,9 +33,8 @@ class BatchPlot(AppEndpoint, ContextMixin):
             search_value=f.request.args.get("search"),
         )
 
+    @authorize_or_terminate
     def get(self, batch_id):
-        if self.public_data_off():
-            return self.redirect("app.login")
 
         benchmarks, response = self._get_benchmarks(batch_id)
         if response.status_code != 200:

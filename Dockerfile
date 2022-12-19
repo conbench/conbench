@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.10
 
 COPY requirements-build.txt /tmp/
 COPY requirements-test.txt /tmp/
