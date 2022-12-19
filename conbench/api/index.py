@@ -18,6 +18,13 @@ log = logging.getLogger(__name__)
 
 @api.route("/docs.json")
 def docs():
+    d = spec.to_dict()
+
+    # In TESTING mode there is a special endpoint that we do not want to mess
+    # with test_docs.
+    if "/api/wipe-db" in d["paths"]:
+        del d["/api/wipe-db"]
+
     return f.jsonify(spec.to_dict())
 
 
