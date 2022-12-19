@@ -81,7 +81,12 @@ HTTP server on the host at http://127.0.0.1:5000.
 
 Once you see access log lines like `GET /api/ping/ HTTP/1.1" 200` in the log output you can point your browser to http://127.0.0.1:5000.
 
-Use `Ctrl+C` to tear down the containerized stack.
+You can use `Ctrl+C` to terminate the containerized stack.
+Note that this only stops containers, and the next invocation of `make run-app` will use previous database state.
+
+Invoke `make teardown-app` to stop and remove containers.
+
+If you wish to clear all database tables during local development you can hit http://127.0.0.1:5000/api/wipe-db with the browser or with e.g. curl.
 
 #### View API documentation
 
