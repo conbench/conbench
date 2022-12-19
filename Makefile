@@ -47,6 +47,12 @@ rebuild-expected-api-docs: run-app-bg
 	git diff ./conbench/tests/api/_expected_docs.py
 
 
+# This requries dependencies to be set up in host env
+.PHONY: db-populate
+db-populate:
+	python -m conbench.tests.populate_local_conbench
+
+
 .PHONY: run-app
 run-app:
 	export DCOMP_CONBENCH_HOST_PORT=127.0.0.1:5000 && \
