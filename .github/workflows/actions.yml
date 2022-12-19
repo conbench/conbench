@@ -8,6 +8,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.8"
+  GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   build:
@@ -76,4 +77,3 @@ jobs:
             make db-populate && make db-populate
           make teardown-app
           make test-run-app-dev
-

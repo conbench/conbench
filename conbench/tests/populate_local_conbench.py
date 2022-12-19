@@ -1,6 +1,3 @@
-# Setting a GitHub API token in the GITHUB_API_TOKEN env var will let this
-# population script find history + get commit details too
-
 import datetime
 import os
 import uuid
