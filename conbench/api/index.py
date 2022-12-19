@@ -23,7 +23,7 @@ def docs():
     # In TESTING mode there is a special endpoint that we do not want to mess
     # with test_docs.
     if "/api/wipe-db" in d["paths"]:
-        del d["/api/wipe-db"]
+        del d["paths"]["/api/wipe-db"]
 
     return f.jsonify(spec.to_dict())
 
