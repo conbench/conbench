@@ -21,6 +21,7 @@ import argparse
 import base64
 import json
 import logging
+import os
 import time
 
 from selenium import webdriver
@@ -50,8 +51,13 @@ def main():
     )
 
     parser.add_argument(
-        "outpath_prefix",
-        metavar="OUTPUT_PATH_PREFIX",
+        "outdir_path",
+        metavar="OUTPUT_DIR_PATH",
+    )
+
+    parser.add_argument(
+        "filename_prefix",
+        metavar="FILENAME_PREFIX",
     )
 
     args = parser.parse_args()
@@ -59,8 +65,8 @@ def main():
     url_to_open = args.url
 
     log.info("provided URL to open in browser: %s", url_to_open)
-    png_path = args.outpath_prefix + ".png"
-    pdf_path = args.outpath_prefix + ".pdf"
+    png_path = os.path.join(args.outdir_path, args.filename_prefix + ".png")
+    pdf_path = os.path.join(args.outdir_path, args.filename_prefix + ".pdf")
 
     screenshot(url_to_open, png_path)
 
