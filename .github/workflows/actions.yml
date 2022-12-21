@@ -89,7 +89,7 @@ jobs:
       - name: screenshot
         run: |
             cd ci
-            docker build . -t conbench-ci -f ci.Dockerfile
+            docker build . -t conbench-ci -f ci.Dockerfile && \
             export CONBENCH_BASE_URL=http://$(docker compose port app 5000)
             docker run --net=host -v /tmp:/tmp -it conbench-ci python screenshot.py http://127.0.0.1:5000 /tmp/outpath
       - name: test `make teardown-app`
