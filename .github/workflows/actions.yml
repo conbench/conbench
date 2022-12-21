@@ -64,6 +64,7 @@ jobs:
       # Run `db-populate` twice to see that this can be repeated w/o failing.
       - name: test `make db-populate`, twice
         run: |
+            pip install requests # the nonly non-stdlib dependency as of now
             export CONBENCH_BASE_URL=http://$(docker compose port app 5000) && \
             make db-populate && make db-populate
       - name: test `make teardown-app`
