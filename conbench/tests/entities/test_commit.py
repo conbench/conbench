@@ -1,3 +1,5 @@
+import logging
+
 import datetime
 import json
 import os
@@ -16,6 +18,9 @@ from ...entities.commit import (
 from ...tests.api import _fixtures
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
+
+
+log = logging.getLogger(__name__)
 
 
 def test_upsert_do_nothing():
@@ -103,7 +108,15 @@ def test_get_github_commit_and_fork_point_sha(branch):
         # this is the master branch, so the fork point sha == the commit sha
         "fork_point_sha": sha,
     }
-    assert get_github_commit(repo, branch=branch, sha=sha, pr_number=None) == expected
+    try:
+        result = get_github_commit(repo, branch=branch, sha=sha, pr_number=None)
+    except Exception as exc:
+        log.info("exc during get_github_commit(): %s", exc)
+        if "API rate limit" in str(exc):
+            pytest.skip("GitHub API rate limit seen, skip test")
+        raise
+
+    assert result == expected
 
 
 @pytest.mark.parametrize(
@@ -135,9 +148,15 @@ def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
         "branch": "dianaclarke:ARROW-13266",
         "fork_point_sha": "780e95c512d63bbea1e040af0eb44a0bf63c4d72",
     }
-    assert (
-        get_github_commit(repo, branch=branch, sha=sha, pr_number=pr_number) == expected
-    )
+    try:
+        result = get_github_commit(repo, branch=branch, sha=sha, pr_number=None)
+    except Exception as exc:
+        log.info("exc during get_github_commit(): %s", exc)
+        if "API rate limit" in str(exc):
+            pytest.skip("GitHub API rate limit seen, skip test")
+        raise
+
+    assert result == expected
 
 
 def test_backfill_default_branch_commits():
