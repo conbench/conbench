@@ -237,7 +237,7 @@ def login():
 
 def post_benchmarks(data):
     url = f"{base_url}/benchmarks/"
-    for i in range(3):
+    for i in range(1, 4):
         t0 = time.monotonic()
         log.info("POST to url: %s", url)
         try:
@@ -256,7 +256,7 @@ def post_benchmarks(data):
         f"Posted a benchmark with run_id '{data.get('run_id')}' "
         f"and commit {data.get('github', {}).get('commit')}. "
         f"Received status code {res.status_code}. "
-        f"It took {time.monotonic() - t0 :.5f} s."
+        f"Took {attempt} attempt(s). Last attempt took {time.monotonic() - t0 :.5f} s."
     )
 
 
