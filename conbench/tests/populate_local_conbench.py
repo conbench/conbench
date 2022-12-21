@@ -9,6 +9,11 @@ if os.environ.get("CONBENCH_BASE_URL"):
     base_url = f"{os.environ.get('CONBENCH_BASE_URL')}/api"
 
 session = requests.Session()
+# Open a new TCP connection for each HTTP request. The dev stack doesn't have
+# proper keeplive settings, and w/o this some requests in here might fail with
+#   requests.exceptions.ConnectionError: ('Connection aborted.',
+#   RemoteDisconnected('Remote end closed connection without response'))
+session.keep_alive = False
 
 
 def generate_benchmarks_data(
