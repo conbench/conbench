@@ -27,7 +27,7 @@ def backfill_default_branch_commits_ign_rate_limit(*args, **kwargs):
         return backfill_default_branch_commits(*args, **kwargs)
     except Exception as exc:
         log.info("exc during backfill_default_branch_commits(): %s", exc)
-        if "API rate limit" in str(exc):
+        if "403 Client Error" in str(exc):
             pytest.skip("GitHub API rate limit seen, skip test")
         else:
             raise
@@ -122,7 +122,7 @@ def test_get_github_commit_and_fork_point_sha(branch):
         result = get_github_commit(repo, branch=branch, sha=sha, pr_number=None)
     except Exception as exc:
         log.info("exc during get_github_commit(): %s", exc)
-        if "API rate limit" in str(exc):
+        if "403 Client Error" in str(exc):
             pytest.skip("GitHub API rate limit seen, skip test")
         else:
             raise
@@ -163,7 +163,7 @@ def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
         result = get_github_commit(repo, branch=branch, sha=sha, pr_number=pr_number)
     except Exception as exc:
         log.info("exc during get_github_commit(): %s", exc)
-        if "API rate limit" in str(exc):
+        if "403 Client Error" in str(exc):
             pytest.skip("GitHub API rate limit seen, skip test")
         else:
             raise
