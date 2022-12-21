@@ -185,10 +185,6 @@ def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) ->
     # GitHub HTTP API failed, e.g. with a 4xx rate limiting response.
     commit = github.get_commit(name, sha)
 
-    # Note(JP): I think with current err handling this cannot happen anymore.
-    if commit is None:
-        return {}
-
     if branch:
         commit["branch"] = branch
     elif pr_number:
