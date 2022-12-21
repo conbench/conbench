@@ -109,3 +109,10 @@ table.dataTable td {
   white-space: nowrap;
   overflow: hidden;
 }
+
+.table-entry {
+  width: -moz-fit-content;
+  width: fit-content;
+  padding: 3px;
+  margin-bottom: 1em;
+}
