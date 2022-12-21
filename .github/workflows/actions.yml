@@ -43,21 +43,30 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: _conbench-coverage-dir/coverage.lcov
 
+  # This is to confirm that commonly used developer commands still work.
   dev-cmds:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      # This is to confirm that commonly used developer commands still work.
-      # Run `db-populate` twice to see that this can be repeated w/o failing.
-      - name: Test dev commands
+      - name: rebuild-expected-api-docs
         run: |
+          pip install black
           make rebuild-expected-api-docs
-          make run-app-bg && \
+      # Launch application as containerized stack. This terminates after
+      # health checks confirm that stack is running.
+      - name: run-app-bg
+        run: make run-app-bg
+      # Run `db-populate` twice to see that this can be repeated w/o failing.
+      - name: test `make db-populate`, twice
+        run: |
             export CONBENCH_BASE_URL=http://$(docker compose port app 5000) && \
             make db-populate && make db-populate
-          make teardown-app
-          make test-run-app-dev
+      - name: test `make teardown-app`
+        run: make teardown-app
+      # The goal of this is to largely test `make run-app-dev`.
+      - name: test-run-app-dev
+        run: make test-run-app-dev
 
   db-migrations:
     runs-on: ubuntu-latest
