@@ -1,4 +1,5 @@
 import functools
+import logging
 import json
 import os
 from datetime import datetime
@@ -17,6 +18,9 @@ from ..entities._entity import (
     Nullable,
     generate_uuid,
 )
+
+
+log = logging.getLogger(__name__)
 
 
 class Commit(Base, EntityMixin):
@@ -157,12 +161,32 @@ def repository_to_url(repository):
 
 
 def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) -> dict:
+    """
+    This function interacts with the GitHub HTTP API. Exceptions related to API
+    interaction errors are not handled here (and should be expected and handled
+    in the caller). Expected error sources are among the following :
+
+    - transient issues on DNS or TCP level
+    - transient HTTP errors such as 5xx
+    - transient but permanent-ish HTTP errors such as rate limiting
+    - HTTP authentication/authorization errors
+    - permanent error responses
+
+    If this is free of bugs then all expected exceptions should derive from
+    requests.exceptions.RequestException.
+
+    """
     if not repository or not sha:
         return {}
 
     github = GitHub()
     name = repository_to_name(repository)
+
+    # `github.get_commit()` below may raise an exception if the GitHub
+    # GitHub HTTP API failed, e.g. with a 4xx rate limiting response.
     commit = github.get_commit(name, sha)
+
+    # Note(JP): I think with current err handling this cannot happen anymore.
     if commit is None:
         return {}
 
@@ -287,7 +311,12 @@ class GitHub:
             response = self.test_commit(sha)
         else:
             url = f"{GITHUB}/repos/{name}/commits/{sha}"
+            # _get_response() may raise an exception, for example if the GH
+            # HTTP API returned a non-2xx HTTP response (e.g. in case of rate
+            # limiting).
             response = self._get_response(url)
+
+        # Note(JP): I think now `response` can never be just `None`.
         return self._parse_commit(response) if response else None
 
     def get_commits_to_branch(
@@ -413,9 +442,27 @@ class GitHub:
             "author_avatar": author["avatar_url"] if author else None,
         }
 
-    def _get_response(self, url):
+    def _get_response(self, url) -> dict:
+        """
+        Return deserialized JSON-structure or raise an exception.
+        """
+        # This can raise exceptions corresponding to transient issues related
+        # to DNS, TCP, HTTP during sending request, while waiting for response,
+        # or while receiving the response.
         response = self.session.get(url) if self.session else requests.get(url)
+
+        # An HTTP response was received.
         if response.status_code != 200:
-            print(response.json())
-            return None
+            # This is here to log details an make debugging easier.
+            log.info(
+                "got unexpected HTTP response with code %s: %s",
+                response.status_code,
+                response.text,
+            )
+
+        # Raise an exception for all known HTTP error response types.
+        response.raise_for_status()
+
+        # This may raise an exception if JSON-deserialization fails. If JSON
+        # deser succeeds then this is known to be a dict at the outest level.
         return response.json()
