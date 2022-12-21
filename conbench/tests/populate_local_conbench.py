@@ -237,13 +237,26 @@ def login():
 
 def post_benchmarks(data):
     url = f"{base_url}/benchmarks/"
-    t0 = time.monotonic()
-    res = session.post(url, json=data)
+    for i in range(3):
+        t0 = time.monotonic()
+        log.info("POST to url: %s", url)
+        try:
+            # Often seeing RemoteDisconnected when the processing
+            # takes too long. Also see
+            # https://github.com/conbench/conbench/issues/555
+            res = session.post(url, json=data)
+            break
+        except requests.exceptions.RequestException as exc:
+            log.info(
+                "attempt %s failed with %s after %.5f", i, exc, time.monotonic() - t0
+            )
+            time.sleep(5 * i)
+
     print(
         f"Posted a benchmark with run_id '{data.get('run_id')}' "
         f"and commit {data.get('github', {}).get('commit')}. "
         f"Received status code {res.status_code}. "
-        f"It took {int(time.monotonic() - t0 * 1000)} ms."
+        f"It took {time.monotonic() - t0 :.5f} s."
     )
 
 
