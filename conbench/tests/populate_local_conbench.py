@@ -1,11 +1,10 @@
 import datetime
-import os
 import logging
+import os
 import time
 import uuid
 
 import requests
-
 
 log = logging.getLogger()
 logging.basicConfig(
