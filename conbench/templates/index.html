@@ -22,7 +22,7 @@
 </div>
 
 
-<a class="row">
+<div class="row">
     <div class="col-md-12">
         <table id="runs" class="table table-striped table-bordered table-hover">
           <caption>Runs</div>
@@ -32,11 +32,10 @@
                     <th scope="col">Run</th>
                     <th scope="col">Author</th>
                     <th scope="col">Repository</th>
-                    <th scope="col">Commit</th>
                     <th scope="col">Hardware</th>
                     <th scope="col">Commit hash</th>
+                    <th scope="col">Commit</th>
                     <th scope="col">Reason</th>
-                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -61,34 +60,35 @@
                        {{ run.commit.author_name }}
                      </td>
 
-                     <td><a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a></td>
+                    <td>
+                         <div class="ellipsis-175">
+                             <a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a>
+                         </div>
+                    </td>
 
-                     <td>
-                     {% if run.commit.display_message %}
+                    <td>
+                         <div class="ellipsis-175">{{ run.hardware.name }}</div>
+                    </td>
 
-                       <td>{{ run.commit.display_message }}</td>
+                    <td>
+                         <div class="ellipsis-175"><a href="{{ run.commit.url }}">{{ run.commit.sha[:7] }}</a></div>
+                    </td>
 
-                     {% else %}
-                       <td>{{ run.commit.sha }}</td>
-                     {% endif %}
-                     </td>
+                    <td>
+                         {% if run.commit.display_message %}
+                            <div class="ellipsis-175">{{ run.commit.display_message }}</div>
+                         {% else %}
+                            <div class="ellipsis-175">{{ run.commit.sha }}</div>
+                         {% endif %}
+                    </td>
 
-                     {% if run.commit.hardware %}
-                     <td><div class="ellipsis-175">{{ run.hardware.name }}</div></td>
-                     {% endif %}
-
-                     {% if run.commit.sha %}
-                     <td><a href="{{ run.commit.url }}">{{ run.commit.sha[:7] }}</a></td>
-                     {% else %}}
-                     <td><div>"No commit hash found"</div></td>
-                     {% endif %}
-
-
-                     {% if run.reason %}
-                       <td><div class="ellipsis-175">{{ run.reason }}</div></td>
-                     {% else %}
-                       <td></td>
-                     {% endif %}
+                    <td>
+                         {% if run.reason %}
+                           <div class="ellipsis-175">{{ run.reason }}</div>
+                         {% else %}
+                           <div></div>
+                         {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -116,7 +116,7 @@
       "order": [[0, 'desc']],
       "columnDefs": [
           {
-              "targets": [5],
+              "targets": [7],
               "visible": false,
               "searchable": true,
           },
