@@ -237,7 +237,7 @@ def login():
 
 def post_benchmarks(data):
     url = f"{base_url}/benchmarks/"
-    for i in range(1, 4):
+    for attempt in range(1, 4):
         t0 = time.monotonic()
         log.info("POST to url: %s", url)
         try:
@@ -248,7 +248,10 @@ def post_benchmarks(data):
             break
         except requests.exceptions.RequestException as exc:
             log.info(
-                "attempt %s failed with %s after %.5f", i, exc, time.monotonic() - t0
+                "attempt %s failed with %s after %.5f",
+                attempt,
+                exc,
+                time.monotonic() - t0,
             )
             time.sleep(5 * i)
 
