@@ -1,14 +1,34 @@
 import datetime
+import logging
 import os
+import time
 import uuid
 
 import requests
+
+log = logging.getLogger()
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
+    datefmt="%y%m%d-%H:%M:%S",
+)
+
 
 base_url = "http://127.0.0.1:5000/api"
 if os.environ.get("CONBENCH_BASE_URL"):
     base_url = f"{os.environ.get('CONBENCH_BASE_URL')}/api"
 
+
 session = requests.Session()
+
+
+def main():
+    register()
+    login()
+    print("start create_benchmarks_data()")
+    create_benchmarks_data()
+    print("start create_benchmarks_with_history()")
+    create_benchmarks_with_history()
 
 
 def generate_benchmarks_data(
@@ -180,7 +200,10 @@ def generate_benchmarks_data_with_iteration_missing(
 
 
 def register():
+
     url = f"{base_url}/register/"
+    log.info("register via: %s", url)
+
     data = {
         "email": "e@e.com",
         "password": "test",
@@ -196,21 +219,39 @@ def register():
 
 def login():
     url = f"{base_url}/login/"
+    log.info("login via: %s", url)
+
     data = {"email": "e@e.com", "password": "test", "remember_me": True}
     r = session.post(url, json=data)
     assert str(r.status_code).startswith("2"), f"login failed:\n{r.text}"
+    log.info("login succeeded")
 
 
 def post_benchmarks(data):
     url = f"{base_url}/benchmarks/"
-    time = datetime.datetime.now()
-    res = session.post(url, json=data)
-    delta = datetime.datetime.now() - time
+    for attempt in range(1, 4):
+        t0 = time.monotonic()
+        log.info("POST to url: %s", url)
+        try:
+            # Often seeing RemoteDisconnected when the processing
+            # takes too long. Also see
+            # https://github.com/conbench/conbench/issues/555
+            res = session.post(url, json=data)
+            break
+        except requests.exceptions.RequestException as exc:
+            log.info(
+                "attempt %s failed with %s after %.5f",
+                attempt,
+                exc,
+                time.monotonic() - t0,
+            )
+            time.sleep(5 * attempt)
+
     print(
         f"Posted a benchmark with run_id '{data.get('run_id')}' "
         f"and commit {data.get('github', {}).get('commit')}. "
         f"Received status code {res.status_code}. "
-        f"It took {int(delta.total_seconds() * 1000)} ms."
+        f"Took {attempt} attempt(s). Last attempt took {time.monotonic() - t0 :.5f} s."
     )
 
 
@@ -355,9 +396,5 @@ def create_benchmarks_with_history():
                 runs.append((run_id, timestamp))
 
 
-register()
-login()
-print("start create_benchmarks_data()")
-create_benchmarks_data()
-print("start create_benchmarks_with_history()")
-create_benchmarks_with_history()
+if __name__ == "__main__":
+    main()
