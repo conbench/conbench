@@ -1,3 +1,5 @@
+import logging
+
 import flask as f
 import marshmallow
 import sqlalchemy as s
@@ -21,6 +23,9 @@ from ..entities.hardware import (
     Machine,
     MachineSchema,
 )
+
+
+log = logging.getLogger(__name__)
 
 
 class Run(Base, EntityMixin):
@@ -59,12 +64,24 @@ class Run(Base, EntityMixin):
 
         # create if not exists
         commit = Commit.first(sha=sha, repository=repository)
+
         if not commit:
-            github = get_github_commit(
-                repository=repository, pr_number=pr_number, branch=branch, sha=sha
-            )
-            if github:
-                commit = Commit.create_github_context(sha, repository, github)
+
+            # Try to fetch data via GitHub HTTP API
+            gh_commit_dict = None
+            try:
+                # get_github_commit() may raise all those exceptions that can
+                # happen during an HTTP request cycle.
+                gh_commit_dict = get_github_commit(
+                    repository=repository, pr_number=pr_number, branch=branch, sha=sha
+                )
+            except Exception as exc:
+                log.info(
+                    "treat as unknown commit: error during get_github_commit(): %s", exc
+                )
+
+            if gh_commit_dict:
+                commit = Commit.create_github_context(sha, repository, gh_commit_dict)
                 try:
                     backfill_default_branch_commits(repository, commit)
                 except Exception as e:
