@@ -26,7 +26,8 @@ session = requests.Session()
 #   RemoteDisconnected('Remote end closed connection without response'))
 # Also see https://github.com/psf/requests/issues/4664
 session.keep_alive = False
-# session.headers.update({"User-Agent": "custom_agent"})
+
+session.headers.update({"User-Agent": "custom_agent"})
 
 
 def main():
