@@ -253,7 +253,7 @@ def post_benchmarks(data):
                 exc,
                 time.monotonic() - t0,
             )
-            time.sleep(5 * i)
+            time.sleep(5 * attempt)
 
     print(
         f"Posted a benchmark with run_id '{data.get('run_id')}' "
