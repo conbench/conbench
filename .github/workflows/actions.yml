@@ -93,12 +93,13 @@ jobs:
             export CONBENCH_BASE_URL=http://$(docker compose port app 5000)
             mkdir ci-artifacts
             docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
-              python screenshot.py ${CONBENCH_BASE_URL} /artifacts frontpage
+                python screenshot.py ${CONBENCH_BASE_URL} /artifacts frontpage
+            /bin/ls -ahltr ci-artifacts/
       - name: upload-artifacts
         uses: actions/upload-artifact@v3
         with:
           name: screenshots
-          path: ci-artifacts
+          path: ci/ci-artifacts/
       - name: test `make teardown-app`
         run: make teardown-app
 
