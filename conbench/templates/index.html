@@ -111,20 +111,14 @@
 {% block scripts %}
 {{super()}}
 <script type="text/javascript">
-  var table = $('#runs').dataTable( {
-      "responsive": true,
+  var table = $('#runs').DataTable( {
+      // "responsive": true,
       "order": [[0, 'desc']],
-      "columnDefs": [
-          {
-              "targets": [7],
-              "visible": false,
-              "searchable": true,
-          },
-      ],
       "language": {
           "searchPlaceholder": "commit hash works too",
       }
-  } );
+});
+
 
 enable_search_query_string('#runs');
 
