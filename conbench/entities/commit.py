@@ -209,6 +209,9 @@ def backfill_default_branch_commits(
 
     Won't backfill any commits before the last tracked commit. But if there are no
     commits in the database, will backfill them all.
+
+    This may raise exceptions as of HTTP request/response cycle errors during
+    GitHub HTTP API interaction.
     """
     github = GitHub()
     name = repository_to_name(repository)
@@ -234,6 +237,7 @@ def backfill_default_branch_commits(
     else:
         since = datetime(1970, 1, 1)
 
+    # This may raise exceptions as of HTTP request/response cycle errors.
     commits = github.get_commits_to_branch(
         name=name,
         branch=default_branch,
@@ -242,7 +246,7 @@ def backfill_default_branch_commits(
     )
     commits_to_try = commits[1:-1]  # since/until are inclusive; we want exclusive
 
-    print(f"Backfilling {len(commits_to_try)} commit(s)")
+    log.info(f"Backfilling {len(commits_to_try)} commit(s)")
     if commits_to_try:
         Commit.upsert_do_nothing(
             [
@@ -341,11 +345,10 @@ class GitHub:
         commits = []
         page = 1
 
+        # This may raise exceptions as of HTTP request/response cycle errors.
         this_page = self._get_response(url + f"&page={page}")
-        if this_page is None:
-            print("API request failed")
-            return []
-        elif len(this_page) == 0:
+
+        if len(this_page) == 0:
             print("API returned no commits")
             return []
 

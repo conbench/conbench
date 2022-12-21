@@ -22,6 +22,16 @@ this_dir = os.path.abspath(os.path.dirname(__file__))
 log = logging.getLogger(__name__)
 
 
+def backfill_default_branch_commits_ign_rate_limit(*args, **kwargs):
+    try:
+        return backfill_default_branch_commits(*args, **kwargs)
+    except Exception as exc:
+        log.info("exc during backfill_default_branch_commits(): %s", exc)
+        if "API rate limit" in str(exc):
+            pytest.skip("GitHub API rate limit seen, skip test")
+        raise
+
+
 def test_upsert_do_nothing():
     """Upserting should work correctly."""
     data = [
@@ -193,7 +203,7 @@ def test_backfill_default_branch_commits():
     )
 
     # this should backfill all 335 default-branch commits before that one
-    backfill_default_branch_commits(repository, commit_1)
+    backfill_default_branch_commits_ign_rate_limit(repository, commit_1)
     commits = Commit.all(branch=default_branch, repository=repository)
     assert len(commits) == 336
     # make sure the direct parent is in there, fully fleshed out
@@ -213,7 +223,7 @@ def test_backfill_default_branch_commits():
         )
     )
 
-    backfill_default_branch_commits(repository, commit_2)
+    backfill_default_branch_commits_ign_rate_limit(repository, commit_2)
     commits = Commit.all(
         branch=default_branch, repository=repository, order_by=Commit.timestamp.desc()
     )
@@ -233,7 +243,7 @@ def test_backfill_default_branch_commits():
         )
     )
 
-    backfill_default_branch_commits(repository, commit_3)
+    backfill_default_branch_commits_ign_rate_limit(repository, commit_3)
     commits = Commit.all(branch=default_branch, repository=repository)
     assert len(commits) == 339
 
@@ -249,7 +259,7 @@ def test_backfill_default_branch_commits():
             timestamp=datetime.datetime(2022, 10, 29, tzinfo=tz),
         )
     )
-    backfill_default_branch_commits(repository, commit_4)
+    backfill_default_branch_commits_ign_rate_limit(repository, commit_4)
     commits = Commit.all(branch=default_branch, repository=repository)
     assert len(commits) == 339
 
