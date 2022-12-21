@@ -89,10 +89,16 @@ jobs:
       - name: screenshot
         run: |
             cd ci
-            docker build . -t conbench-screenshot -f screenshot.Dockerfile && \
+            docker build . -t conbench-screenshot -f screenshot.Dockerfile
             export CONBENCH_BASE_URL=http://$(docker compose port app 5000)
-            docker run --net=host -v /tmp:/tmp conbench-screenshot \
-              python screenshot.py ${CONBENCH_BASE_URL} /tmp/outpath
+            mkdir ci-artifacts
+            docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
+              python screenshot.py ${CONBENCH_BASE_URL} /artifacts frontpage
+      - name: upload-artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: screenshots
+          path: ci-artifacts
       - name: test `make teardown-app`
         run: make teardown-app
 
