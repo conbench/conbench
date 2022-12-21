@@ -72,6 +72,9 @@ def empty_db_tables():
         Session.execute(table.delete())
         log.debug("deleted table: %s", table)
 
+    Session.commit()
+    log.debug("all deletions committed: %s", table)
+
 
 def log_after_retry_attempt(retry_state: tenacity.RetryCallState):
     log.info(
@@ -97,7 +100,21 @@ def log_after_retry_attempt(retry_state: tenacity.RetryCallState):
 def create_all():
     from .entities._entity import Base
 
-    Base.metadata.create_all(engine)
+    # Gunicorn without --preload runs create_all() in potentially multiple
+    # runners. That's fine, and only one of them can 'win' the DB creation
+    # prize.
+    try:
+        Base.metadata.create_all(engine)
+    except sqlalchemy.exc.IntegrityError as exc:
+        if "already exists" in str(exc):
+            log.info(
+                "db.create_all(): ignore sqlalchemy.exc.IntegrityError. "
+                "Probably concurrent create_all() execution. Err: %s",
+                str(exc),
+            )
+        else:
+            raise
+
     engine.dispose()
 
 

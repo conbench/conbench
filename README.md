@@ -69,6 +69,8 @@ These need to be set up in your environment.
 
 The following `make` commands assume to be run in the root folder of a local repository clone.
 
+Before using these commands, set up a GitHub API token using [GitHub's instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). It's recommended to only give the token read-only permissions to public repositories (which is the default for fine-grained personal access tokens). Set the `GITHUB_API_TOKEN` environment variable to that token value. If you do not have the token set, certain behaviors may not function correctly.
+
 #### Start application
 
 `make run-app` is a simple way to start and experiment with Conbench locally.
@@ -81,7 +83,12 @@ HTTP server on the host at http://127.0.0.1:5000.
 
 Once you see access log lines like `GET /api/ping/ HTTP/1.1" 200` in the log output you can point your browser to http://127.0.0.1:5000.
 
-Use `Ctrl+C` to tear down the containerized stack.
+You can use `Ctrl+C` to terminate the containerized stack.
+Note that this only stops containers, and the next invocation of `make run-app` will use previous database state.
+
+Invoke `make teardown-app` to stop and remove containers.
+
+If you wish to clear all database tables during local development you can hit http://127.0.0.1:5000/api/wipe-db with the browser or with e.g. curl.
 
 #### View API documentation
 

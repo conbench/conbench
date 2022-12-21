@@ -1,6 +1,3 @@
-# Setting a GitHub API token in the GITHUB_API_TOKEN env var will let this
-# population script find history + get commit details too
-
 import datetime
 import os
 import uuid
@@ -191,13 +188,17 @@ def register():
         "secret": "innocent-registration-key",
     }
     r = session.post(url, json=data)
+    if r.text and "Email address already in use":
+        return
+
     assert str(r.status_code).startswith("2"), f"register failed:\n{r.text}"
 
 
 def login():
     url = f"{base_url}/login/"
     data = {"email": "e@e.com", "password": "test", "remember_me": True}
-    print(session.post(url, json=data))
+    r = session.post(url, json=data)
+    assert str(r.status_code).startswith("2"), f"login failed:\n{r.text}"
 
 
 def post_benchmarks(data):

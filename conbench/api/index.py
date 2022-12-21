@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import flask as f
 import flask_login
@@ -9,11 +10,21 @@ from .. import __version__
 from ..api import api, rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint
-from ..db import Session
+from ..config import Config
+from ..db import Session, empty_db_tables
+
+log = logging.getLogger(__name__)
 
 
 @api.route("/docs.json")
 def docs():
+    d = spec.to_dict()
+
+    # In TESTING mode there is a special endpoint that we do not want to mess
+    # with test_docs.
+    if "/api/wipe-db" in d["paths"]:
+        del d["paths"]["/api/wipe-db"]
+
     return f.jsonify(spec.to_dict())
 
 
@@ -95,4 +106,19 @@ def register_api(view, endpoint, url):
 
 register_api(PingAPI, "ping", "/ping/")
 register_api(IndexAPI, "index", "/")
+
+
+# Register this API endpoint only in testing mode.
+if Config.TESTING:
+
+    @api.route("/wipe-db", methods=("GET",))
+    def wipe_db():
+        """
+        For local development / developer productivity.
+        """
+        log.info("clear DB tables")
+        empty_db_tables()
+        return "200 OK", 200
+
+
 spec.components.schema("Ping", schema=PingSchema)

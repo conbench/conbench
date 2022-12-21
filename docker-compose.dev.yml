@@ -1,0 +1,20 @@
+# Extends the docker-compose.yml.
+# Use this via e.g.
+#     docker compose -f docker-compose.yml -f docker-compose.dev.yml
+services:
+  app:
+    # Add --reload to command, to reload on file change. Remove --preload
+    # to make this more robust
+    command: [
+      "gunicorn",
+      "-b", "0.0.0.0:5000",
+      "-w", "2",
+      "conbench:application",
+      "--access-logfile=-",
+      "--error-logfile=-",
+      "--reload"
+      ]
+    volumes:
+      # Left-hand path: relative to this compose file. Mount the directory
+      # that this compose file resided in as `/app` into the container.
+      - .:/app
