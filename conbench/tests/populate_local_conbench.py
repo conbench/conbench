@@ -1,19 +1,42 @@
 import datetime
 import os
+import logging
+import time
 import uuid
 
 import requests
 
+
+log = logging.getLogger()
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
+    datefmt="%y%m%d-%H:%M:%S",
+)
+
+
 base_url = "http://127.0.0.1:5000/api"
 if os.environ.get("CONBENCH_BASE_URL"):
     base_url = f"{os.environ.get('CONBENCH_BASE_URL')}/api"
+
 
 session = requests.Session()
 # Open a new TCP connection for each HTTP request. The dev stack doesn't have
 # proper keeplive settings, and w/o this some requests in here might fail with
 #   requests.exceptions.ConnectionError: ('Connection aborted.',
 #   RemoteDisconnected('Remote end closed connection without response'))
+# Also see https://github.com/psf/requests/issues/4664
 session.keep_alive = False
+# session.headers.update({"User-Agent": "custom_agent"})
+
+
+def main():
+    register()
+    login()
+    print("start create_benchmarks_data()")
+    create_benchmarks_data()
+    print("start create_benchmarks_with_history()")
+    create_benchmarks_with_history()
 
 
 def generate_benchmarks_data(
@@ -185,7 +208,10 @@ def generate_benchmarks_data_with_iteration_missing(
 
 
 def register():
+
     url = f"{base_url}/register/"
+    log.info("register via: %s", url)
+
     data = {
         "email": "e@e.com",
         "password": "test",
@@ -201,21 +227,23 @@ def register():
 
 def login():
     url = f"{base_url}/login/"
+    log.info("login via: %s", url)
+
     data = {"email": "e@e.com", "password": "test", "remember_me": True}
     r = session.post(url, json=data)
     assert str(r.status_code).startswith("2"), f"login failed:\n{r.text}"
+    log.info("login succeeded")
 
 
 def post_benchmarks(data):
     url = f"{base_url}/benchmarks/"
-    time = datetime.datetime.now()
+    t0 = time.monotonic()
     res = session.post(url, json=data)
-    delta = datetime.datetime.now() - time
     print(
         f"Posted a benchmark with run_id '{data.get('run_id')}' "
         f"and commit {data.get('github', {}).get('commit')}. "
         f"Received status code {res.status_code}. "
-        f"It took {int(delta.total_seconds() * 1000)} ms."
+        f"It took {int(time.monotonic() - t0 * 1000)} ms."
     )
 
 
@@ -360,9 +388,5 @@ def create_benchmarks_with_history():
                 runs.append((run_id, timestamp))
 
 
-register()
-login()
-print("start create_benchmarks_data()")
-create_benchmarks_data()
-print("start create_benchmarks_with_history()")
-create_benchmarks_with_history()
+if __name__ == "__main__":
+    main()
