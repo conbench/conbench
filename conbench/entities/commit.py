@@ -1,6 +1,6 @@
 import functools
-import logging
 import json
+import logging
 import os
 from datetime import datetime
 from typing import List
@@ -18,7 +18,6 @@ from ..entities._entity import (
     Nullable,
     generate_uuid,
 )
-
 
 log = logging.getLogger(__name__)
 

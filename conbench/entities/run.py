@@ -24,7 +24,6 @@ from ..entities.hardware import (
     MachineSchema,
 )
 
-
 log = logging.getLogger(__name__)
 
 
