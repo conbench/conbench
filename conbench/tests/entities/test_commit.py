@@ -148,7 +148,7 @@ def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
         "fork_point_sha": "780e95c512d63bbea1e040af0eb44a0bf63c4d72",
     }
     try:
-        result = get_github_commit(repo, branch=branch, sha=sha, pr_number=None)
+        result = get_github_commit(repo, branch=branch, sha=sha, pr_number=pr_number)
     except Exception as exc:
         log.info("exc during get_github_commit(): %s", exc)
         if "API rate limit" in str(exc):
