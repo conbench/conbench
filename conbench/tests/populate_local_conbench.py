@@ -20,14 +20,6 @@ if os.environ.get("CONBENCH_BASE_URL"):
 
 
 session = requests.Session()
-# Open a new TCP connection for each HTTP request. The dev stack doesn't have
-# proper keeplive settings, and w/o this some requests in here might fail with
-#   requests.exceptions.ConnectionError: ('Connection aborted.',
-#   RemoteDisconnected('Remote end closed connection without response'))
-# Also see https://github.com/psf/requests/issues/4664
-session.keep_alive = False
-
-session.headers.update({"User-Agent": "custom_agent"})
 
 
 def main():
