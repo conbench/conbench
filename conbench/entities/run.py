@@ -105,69 +105,71 @@ class Run(Base, EntityMixin):
 
     def get_baseline_run(
         self,
+        commit_limit: int = 20,
         on_default_branch: bool = False,
         case_id: str = None,
         context_id: str = None,
     ) -> Optional["Run"]:
-        """Return the closest ancestor of this Run that:
+        """Return the closest ancestor of this Run, where the ancestor run:
 
-        - is in this Run's commit ancestry
-        - is on the default branch if on_default_branch is True (else on any branch)
+        - is in the last ``commit_limit`` commits of this Run's commit ancestry
+        - is on the default branch, if on_default_branch is True (else on any branch)
         - shares this Run's hardware
         - has a BenchmarkResult with the given case_id/context_id, if those are given
         - if they aren't given, has a BenchmarkResult with the case_id/context_id of
           *any* of this Run's BenchmarkResults
 
-        Returns None if there are no matches.
+        Returns None if there are no matches. This could be a false negative if
+        ``commit_limit`` is too low (though note that the query takes longer with a
+        higher ``commit_limit``).
 
         If there are multiple matches, prefer a Run with the same reason as this Run,
-        and then tiebreak by latest Run.timestamp.
+        and then find the latest commit, finally tiebreaking by latest Run.timestamp.
         """
         from ..entities.benchmark_result import BenchmarkResult
 
         this_commit: Commit = self.commit
         try:
-            ancestor_commits = this_commit.commit_ancestry_query.subquery()
+            ancestor_commits = (
+                this_commit.commit_ancestry_query
+                # don't count this run's commit
+                .filter(Commit.id != this_commit.id)
+                .order_by(s.desc("commit_order"))
+                .limit(commit_limit)
+                .subquery()
+            )
         except CantFindAncestorCommitsError as e:
-            log.debug(f"Couldn't find closest ancestor because {e}")
+            log.debug(f"Couldn't get_baseline_run() because {e}")
             return None
 
-        closest_benchmark_result_query = (
-            Session.query(BenchmarkResult)
+        closest_run_id_query = (
+            Session.query(BenchmarkResult.run_id)
             .join(Run)
             .join(Hardware)
-            .join(
-                ancestor_commits,
-                ancestor_commits.c.ancestor_id == Run.commit_id,
-            )
-            .filter(
-                ancestor_commits.c.ancestor_id != this_commit.id,
-                Hardware.id == self.hardware_id,
-            )
+            .join(ancestor_commits, ancestor_commits.c.ancestor_id == Run.commit_id)
+            .filter(Hardware.id == self.hardware_id)
         )
 
         if on_default_branch:
-            closest_benchmark_result_query = closest_benchmark_result_query.filter(
+            closest_run_id_query = closest_run_id_query.filter(
                 ancestor_commits.c.on_default_branch.is_(True)
             )
 
+        # Filter to the correct case(s)/context(s)
         if case_id and context_id:
-            closest_benchmark_result_query = closest_benchmark_result_query.filter(
+            # filter to the given case/context
+            closest_run_id_query = closest_run_id_query.filter(
                 BenchmarkResult.case_id == case_id,
                 BenchmarkResult.context_id == context_id,
             )
         else:
             # filter to *any* case/context attached to this Run
             these_benchmark_results = (
-                Session.query(
-                    BenchmarkResult.case_id.label("case_id"),
-                    BenchmarkResult.context_id.label("context_id"),
-                )
+                Session.query(BenchmarkResult.case_id, BenchmarkResult.context_id)
                 .filter(BenchmarkResult.run_id == self.id)
                 .subquery()
             )
-
-            closest_benchmark_result_query = closest_benchmark_result_query.join(
+            closest_run_id_query = closest_run_id_query.join(
                 these_benchmark_results,
                 s.and_(
                     these_benchmark_results.c.case_id == BenchmarkResult.case_id,
@@ -175,19 +177,19 @@ class Run(Base, EntityMixin):
                 ),
             )
 
-        closest_benchmark_result = closest_benchmark_result_query.order_by(
-            s.desc(Run.reason == self.reason),  # Prefer this Run's run_reason
-            ancestor_commits.c.commit_order.desc(),
-            Run.timestamp.desc(),
+        closest_run_id = closest_run_id_query.order_by(
+            s.desc(Run.reason == self.reason),  # Prefer this Run's run_reason,
+            ancestor_commits.c.commit_order.desc(),  # then latest commit,
+            Run.timestamp.desc(),  # then latest Run timestamp
         ).first()
 
-        if not closest_benchmark_result:
+        if not closest_run_id:
             log.debug(
                 "Could not find a matching benchmark_result in this Run's ancestry"
             )
             return None
 
-        return closest_benchmark_result.run
+        return Run.get(closest_run_id)
 
     def get_baseline_id(self):
         run = self.get_baseline_run()
