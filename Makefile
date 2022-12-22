@@ -24,7 +24,7 @@ teardown-app:
 # This requries dependencies to be set up in host env
 .PHONY: db-populate
 db-populate:
-	python -m conbench.tests.populate_local_conbench
+	python conbench/tests/populate_local_conbench.py
 
 
 # This is used by CI for running the test suite. Documentation should encourage

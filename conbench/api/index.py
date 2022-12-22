@@ -20,12 +20,15 @@ log = logging.getLogger(__name__)
 def docs():
     d = spec.to_dict()
 
-    # In TESTING mode there is a special endpoint that we do not want to mess
-    # with test_docs.
+    # In TESTING mode there is a special endpoint that gets
+    # automatically added to the spec. Cleanly remove it
+    # here (never emit it as part of the API spec) so that
+    # we do not need to bother with complicating approaches
+    # in test_docs.
     if "/api/wipe-db" in d["paths"]:
         del d["paths"]["/api/wipe-db"]
 
-    return f.jsonify(spec.to_dict())
+    return f.jsonify(d)
 
 
 class IndexSerializer:
