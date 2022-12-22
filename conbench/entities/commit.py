@@ -306,17 +306,16 @@ class GitHub:
         return f"{org}:{branch}"
 
     def get_commit(self, name, sha):
+        # Pragmatic method for testing.
         if sha in self.test_commits:
-            response = self.test_commit(sha)
-        else:
-            url = f"{GITHUB}/repos/{name}/commits/{sha}"
-            # _get_response() may raise an exception, for example if the GH
-            # HTTP API returned a non-2xx HTTP response (e.g. in case of rate
-            # limiting).
-            response = self._get_response(url)
+            return self._parse_commit(self._mocked_get_response(sha))
 
-        # Note(JP): I think now `response` can never be just `None`.
-        return self._parse_commit(response) if response else None
+        url = f"{GITHUB}/repos/{name}/commits/{sha}"
+
+        # _get_response() may raise an exception, for example if the GH
+        # HTTP API returned a non-2xx HTTP response (e.g. in case of rate
+        # limiting).
+        return self._parse_commit(self._get_response(url))
 
     def get_commits_to_branch(
         self, name: str, branch: str, since: datetime, until: datetime
@@ -415,13 +414,22 @@ class GitHub:
             session.headers = {"Authorization": f"Bearer {token}"}
         return session
 
-    def test_commit(self, sha):
+    def _mocked_get_response(self, sha) -> dict:
+        """
+        Note(JP): this function performed magic before and I am trying to write
+        a docstring now. Maybe: load commit information from disk, if
+        available. Otherwise, if the commit hash `sha` contains the magic words
+        'unknown' or 'testing' then pretend as if fetching these from the
+        GitHub HTTP API failed, and raise an exception simimar to _get_response
+        would do.
+        """
+
         if "unknown" in sha or "testing" in sha:
-            return None
-        fixture = f"../tests/entities/{self.test_shas[sha]}"
-        path = os.path.join(this_dir, fixture)
-        with open(path) as fixture:
-            return json.load(fixture)
+            raise Exception("_mocked_get_response(): simulate _get_response() error")
+
+        path = os.path.join(this_dir, f"../tests/entities/{self.test_shas[sha]}")
+        with open(path) as f:
+            return json.load(f)
 
     @staticmethod
     def _parse_commits(commits):
@@ -429,11 +437,17 @@ class GitHub:
 
     @staticmethod
     def _parse_commit(commit):
+
         author = commit.get("author")
         commit_author = commit["commit"]["author"]
+
         return {
             "parent": commit["parents"][0]["sha"] if commit["parents"] else None,
+            # Note(JP): this might need attention with respect to time zones.
+            # Also see https://github.com/PyGithub/PyGithub/issues/512#issuecomment-1362654366
             "date": dateutil.parser.isoparse(commit_author["date"]),
+            # Note(JP): don't we want to indicate if the msg was truncated,
+            # with e.g. an ellipsis?
             "message": commit["commit"]["message"].split("\n")[0][:240],
             "author_name": commit_author["name"],
             "author_login": author["login"] if author else None,
