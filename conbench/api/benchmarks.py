@@ -105,6 +105,10 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
                 filters=[Case.name == name_arg],
                 joins=[Case],
             )
+            # Since there's no limit on the number of BenchmarkResults, we could take
+            # forever calculating z-scores with no caching advantage. So don't do that.
+            for benchmark_result in benchmark_results:
+                benchmark_result.z_score = 0
         elif batch_id_arg := f.request.args.get("batch_id"):
             batch_ids = batch_id_arg.split(",")
             benchmark_results = BenchmarkResult.search(
@@ -120,7 +124,8 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
                 order_by=BenchmarkResult.timestamp.desc(), limit=500
             )
 
-        set_z_scores(benchmark_results)
+        if not name_arg:
+            set_z_scores(benchmark_results)
         return self.serializer.many.dump(benchmark_results)
 
     @flask_login.login_required
