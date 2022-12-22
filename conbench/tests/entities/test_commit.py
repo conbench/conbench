@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import os
 
 import dateutil
@@ -16,6 +17,20 @@ from ...entities.commit import (
 from ...tests.api import _fixtures
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
+
+
+log = logging.getLogger(__name__)
+
+
+def backfill_default_branch_commits_ign_rate_limit(*args, **kwargs):
+    try:
+        return backfill_default_branch_commits(*args, **kwargs)
+    except Exception as exc:
+        log.info("exc during backfill_default_branch_commits(): %s", exc)
+        if "403 Client Error" in str(exc):
+            pytest.skip("GitHub API rate limit seen, skip test")
+        else:
+            raise
 
 
 def test_upsert_do_nothing():
@@ -103,7 +118,16 @@ def test_get_github_commit_and_fork_point_sha(branch):
         # this is the master branch, so the fork point sha == the commit sha
         "fork_point_sha": sha,
     }
-    assert get_github_commit(repo, branch=branch, sha=sha, pr_number=None) == expected
+    try:
+        result = get_github_commit(repo, branch=branch, sha=sha, pr_number=None)
+    except Exception as exc:
+        log.info("exc during get_github_commit(): %s", exc)
+        if "403 Client Error" in str(exc):
+            pytest.skip("GitHub API rate limit seen, skip test")
+        else:
+            raise
+
+    assert result == expected
 
 
 @pytest.mark.parametrize(
@@ -135,9 +159,16 @@ def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
         "branch": "dianaclarke:ARROW-13266",
         "fork_point_sha": "780e95c512d63bbea1e040af0eb44a0bf63c4d72",
     }
-    assert (
-        get_github_commit(repo, branch=branch, sha=sha, pr_number=pr_number) == expected
-    )
+    try:
+        result = get_github_commit(repo, branch=branch, sha=sha, pr_number=pr_number)
+    except Exception as exc:
+        log.info("exc during get_github_commit(): %s", exc)
+        if "403 Client Error" in str(exc):
+            pytest.skip("GitHub API rate limit seen, skip test")
+        else:
+            raise
+
+    assert result == expected
 
 
 def test_backfill_default_branch_commits():
@@ -175,7 +206,7 @@ def test_backfill_default_branch_commits():
     )
 
     # this should backfill all 335 default-branch commits before that one
-    backfill_default_branch_commits(repository, commit_1)
+    backfill_default_branch_commits_ign_rate_limit(repository, commit_1)
     commits = Commit.all(branch=default_branch, repository=repository)
     assert len(commits) == 336
     # make sure the direct parent is in there, fully fleshed out
@@ -195,7 +226,7 @@ def test_backfill_default_branch_commits():
         )
     )
 
-    backfill_default_branch_commits(repository, commit_2)
+    backfill_default_branch_commits_ign_rate_limit(repository, commit_2)
     commits = Commit.all(
         branch=default_branch, repository=repository, order_by=Commit.timestamp.desc()
     )
@@ -215,7 +246,7 @@ def test_backfill_default_branch_commits():
         )
     )
 
-    backfill_default_branch_commits(repository, commit_3)
+    backfill_default_branch_commits_ign_rate_limit(repository, commit_3)
     commits = Commit.all(branch=default_branch, repository=repository)
     assert len(commits) == 339
 
@@ -231,7 +262,7 @@ def test_backfill_default_branch_commits():
             timestamp=datetime.datetime(2022, 10, 29, tzinfo=tz),
         )
     )
-    backfill_default_branch_commits(repository, commit_4)
+    backfill_default_branch_commits_ign_rate_limit(repository, commit_4)
     commits = Commit.all(branch=default_branch, repository=repository)
     assert len(commits) == 339
 
