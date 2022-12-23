@@ -25,16 +25,16 @@
 <div class="row">
     <div class="col-md-12">
         <table id="runs" class="table table-striped table-bordered table-hover">
-          <caption>Runs</div>
+          <caption>Runs
           </caption>
             <thead>
                 <tr>
                     <th scope="col">Run</th>
                     <th scope="col">Author</th>
                     <th scope="col">Repository</th>
-                    <th scope="col">Commit</th>
-                    <th scope="col">Hash</th>
                     <th scope="col">Hardware</th>
+                    <th scope="col">Commit</th>
+                    <th scope="col">Commit message</th>
                     <th scope="col">Reason</th>
                 </tr>
             </thead>
@@ -54,28 +54,43 @@
                      </td>
 
                      <td>
+                         <div class="table-entry">
                        {% if run.commit.author_avatar %}
-                         <image src="{{ run.commit.author_avatar }}" height="30" style="border-radius: 50%;">&nbsp;
+                         <img src="{{ run.commit.author_avatar }}" height="30" style="border-radius: 50%;">&nbsp;
                        {% endif %}
                        {{ run.commit.author_name }}
+                         </div>
                      </td>
 
-                     <td><a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a></td>
+                    <td>
+                         <div class="table-entry">
+                             <a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a>
+                         </div>
+                    </td>
 
-                     {% if run.commit.display_message %}
-                       <td><a href="{{ run.commit.url }}">{{ run.commit.sha[:7] }} {{ run.commit.display_message }}</a></td>
-                     {% else %}
-                       <td><a href="{{ run.commit.url }}">{{ run.commit.sha }}</a></td>
-                     {% endif %}
+                    <td>
+                         <div class="table-entry">{{ run.hardware.name }}</div>
+                    </td>
 
-                     <td>{{ run.commit.sha }}</td>
-                     <td><div class="ellipsis-175">{{ run.hardware.name }}</div></td>
+                    <td>
+                         <div class="table-entry"><a href="{{ run.commit.url }}">{{ run.commit.sha[:7] }}</a></div>
+                    </td>
 
-                     {% if run.reason %}
-                       <td><div class="ellipsis-175">{{ run.reason }}</div></td>
-                     {% else %}
-                       <td></td>
-                     {% endif %}
+                    <td>
+                         {% if run.commit.display_message %}
+                            <div class="table-entry">{{ run.commit.display_message }}</div>
+                         {% else %}
+                            <div class="table-entry"></div>
+                         {% endif %}
+                    </td>
+
+                    <td>
+                         {% if run.reason %}
+                           <div class="table-entry">{{ run.reason }}</div>
+                         {% else %}
+                           <div class="table-entry"></div>
+                         {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -98,20 +113,12 @@
 {% block scripts %}
 {{super()}}
 <script type="text/javascript">
-  var table = $('#runs').dataTable( {
-      "responsive": true,
+  var table = $('#runs').DataTable( {
       "order": [[0, 'desc']],
-      "columnDefs": [
-          {
-              "targets": [4],
-              "visible": false,
-              "searchable": true,
-          },
-      ],
       "language": {
           "searchPlaceholder": "commit hash works too",
       }
-  } );
+});
 
 enable_search_query_string('#runs');
 
