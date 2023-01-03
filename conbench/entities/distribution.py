@@ -201,18 +201,18 @@ def set_z_scores(benchmark_results: List["BenchmarkResult"]):
             log.debug("No baseline run; setting benchmark_result.z_score = None")
             continue
 
-        commit = baseline_run.commit_id
-        hardware = baseline_run.hardware.hash
+        baseline_commit = baseline_run.commit_id
+        baseline_hardware = baseline_run.hardware.hash
 
-        if (commit, hardware) in cached_distributions:
-            distributions = cached_distributions[(commit, hardware)]
+        if (baseline_commit, baseline_hardware) in cached_distributions:
+            distributions = cached_distributions[(baseline_commit, baseline_hardware)]
         else:
             distributions = (
                 Session.query(Distribution)
-                .filter_by(commit_id=commit, hardware_hash=hardware)
+                .filter_by(commit_id=baseline_commit, hardware_hash=baseline_hardware)
                 .all()
             )
-            cached_distributions[(commit, hardware)] = distributions
+            cached_distributions[(baseline_commit, baseline_hardware)] = distributions
 
         # based on the unique index, this list should either have length 0 or 1
         matching_distributions = [
@@ -226,7 +226,8 @@ def set_z_scores(benchmark_results: List["BenchmarkResult"]):
             benchmark_result.mean is not None
             and matching_distributions
             and matching_distributions[0].mean_mean is not None
-            and matching_distributions[0].mean_sd  # is positive
+            and matching_distributions[0].mean_sd is not None
+            and matching_distributions[0].mean_sd != 0
         ):
             benchmark_result.z_score = (
                 benchmark_result.mean - matching_distributions[0].mean_mean

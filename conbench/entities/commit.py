@@ -91,7 +91,7 @@ class Commit(Base, EntityMixin):
         D  :  D, B, A
         E  :  E, C, B, A
         F  :  F, D, B, A
-        C2 :  C2, F, B, D, A
+        C2 :  C2, F, D, B, A
         E2 :  E2, C2, F, D, B, A
         G  :  G, F, D, B, A
 
