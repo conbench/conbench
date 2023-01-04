@@ -60,7 +60,9 @@ class TestRunGet(_asserts.GetEnforcer):
         response = client.get(f"/api/runs/{run.id}/")
         self.assert_200_ok(response, _expected_entity(run, baseline.id))
 
-    def test_get_run_should_omit_test_runs(self, client):
+    def test_get_run_should_not_prefer_test_runs_as_baseline(self, client):
+        """Test runs shouldn't be preferred, but if they are the only runs that exist,
+        we'll pick them up"""
         # change anything about the context so we get only one baseline
         language, name = _uuid(), _uuid()
 
@@ -70,7 +72,7 @@ class TestRunGet(_asserts.GetEnforcer):
         baseline.reason = "test"
         baseline.save()
         response = client.get(f"/api/runs/{run.id}/")
-        self.assert_200_ok(response, _expected_entity(run, None))
+        self.assert_200_ok(response, _expected_entity(run, baseline.id))
 
     def test_get_run_find_correct_baseline_many_matching_contexts(self, client):
         # same context for different benchmark runs, but different benchmarks
@@ -178,7 +180,11 @@ class TestRunGet(_asserts.GetEnforcer):
         response = client.get(f"/api/runs/{contender_run.id}/")
         self.assert_200_ok(response, _expected_entity(contender_run, baseline_run.id))
 
-    def test_closest_commit_different_machines_should_omit_test_runs(self, client):
+    def test_closest_commit_different_machines_should_not_prefer_test_runs_as_baseline(
+        self, client
+    ):
+        """Test runs shouldn't be preferred, but if they are the only runs that exist,
+        we'll pick them up"""
         # same benchmarks, different machines, skip test run
         name, machine_1, machine_2 = _uuid(), _uuid(), _uuid()
 

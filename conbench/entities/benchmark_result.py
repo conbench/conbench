@@ -180,7 +180,7 @@ class BenchmarkResult(Base, EntityMixin):
         if "error" in data or not complete_iterations:
             return benchmark_result
 
-        update_distribution(benchmark_result, limit=Config.DISTRIBUTION_COMMITS)
+        update_distribution(benchmark_result, commit_limit=Config.DISTRIBUTION_COMMITS)
 
         return benchmark_result
 

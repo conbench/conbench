@@ -105,8 +105,8 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
                 filters=[Case.name == name_arg],
                 joins=[Case],
             )
-            # TODO: cannot currently compute z_score on an arbitrary
-            # list of benchmark_results - assumes same machine/sha/repository.
+            # Since there's no limit on the number of BenchmarkResults, we could take
+            # forever calculating z-scores with no caching advantage. So don't do that.
             for benchmark_result in benchmark_results:
                 benchmark_result.z_score = 0
         elif batch_id_arg := f.request.args.get("batch_id"):
@@ -114,21 +114,18 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             benchmark_results = BenchmarkResult.search(
                 filters=[BenchmarkResult.batch_id.in_(batch_ids)]
             )
-            set_z_scores(benchmark_results)
         elif run_id_arg := f.request.args.get("run_id"):
             run_ids = run_id_arg.split(",")
             benchmark_results = BenchmarkResult.search(
                 filters=[BenchmarkResult.run_id.in_(run_ids)]
             )
-            set_z_scores(benchmark_results)
         else:
             benchmark_results = BenchmarkResult.all(
                 order_by=BenchmarkResult.timestamp.desc(), limit=500
             )
-            # TODO: cannot currently compute z_score on an arbitrary
-            # list of benchmark_results - assumes same machine/sha/repository.
-            for benchmark_result in benchmark_results:
-                benchmark_result.z_score = 0
+
+        if not name_arg:
+            set_z_scores(benchmark_results)
         return self.serializer.many.dump(benchmark_results)
 
     @flask_login.login_required

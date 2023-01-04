@@ -3,13 +3,15 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 import dateutil.parser
 import flask as f
 import requests
 import sqlalchemy as s
+from sqlalchemy.orm import Query
 
+from ..db import Session
 from ..entities._entity import (
     Base,
     EntityMixin,
@@ -20,6 +22,10 @@ from ..entities._entity import (
 )
 
 log = logging.getLogger(__name__)
+
+
+class CantFindAncestorCommitsError(Exception):
+    pass
 
 
 class Commit(Base, EntityMixin):
@@ -38,6 +44,100 @@ class Commit(Base, EntityMixin):
 
     def get_parent_commit(self):
         return Commit.first(sha=self.parent, repository=self.repository)
+
+    def get_fork_point_commit(self) -> Optional["Commit"]:
+        if self.sha == self.fork_point_sha:
+            return self
+        else:
+            return Commit.first(sha=self.fork_point_sha, repository=self.repository)
+
+    @property
+    def commit_ancestry_query(self) -> Query:
+        """Return a query that returns the IDs and timestamps of all Commits in the
+        direct ancestry of this commit, all the way back to the initial commit. Also
+        returns whether the commit is on the default branch, and an ordering column.
+
+        This is mostly used as an unordered subquery; e.g.
+        ``subquery = commit.commit_ancestry_query.subquery()``. You may take advantage
+        of this subquery's ``commit_order`` column to order by lineage. For example,
+        to order from this commit backwards in lineage to the inital commit (like the
+        default behavior of ``git log``), you may use
+        ``.order_by(subquery.c.commit_order.desc())`` or
+        ``.order_by(sqlalchemy.desc("commit_order"))``.
+
+        For example, consider the following git graph, where more recent commits are
+        near the top:
+
+        G      (main)
+        |  E2  (rebased branch)
+        |  C2
+        | /
+        |/
+        F
+        |  E   (branch)
+        D  |
+        |  C
+        | /
+        |/
+        B
+        A
+
+        Ordering by commit_order.desc(), the following commits would return the
+        following ordered ancestors:
+
+        A  :  A
+        B  :  B, A
+        C  :  C, B, A
+        D  :  D, B, A
+        E  :  E, C, B, A
+        F  :  F, D, B, A
+        C2 :  C2, F, D, B, A
+        E2 :  E2, C2, F, D, B, A
+        G  :  G, F, D, B, A
+
+        Might raise CantFindAncestorCommitsError.
+        """
+        if not self.branch:
+            raise CantFindAncestorCommitsError("commit branch is null")
+        if not self.timestamp:
+            raise CantFindAncestorCommitsError("commit timestamp is null")
+        if not self.fork_point_sha:
+            raise CantFindAncestorCommitsError("commit fork_point_sha is null")
+
+        fork_point_commit = self.get_fork_point_commit()
+        if not fork_point_commit:
+            raise CantFindAncestorCommitsError("the fork point commit isn't in the db")
+        if not fork_point_commit.timestamp:
+            raise CantFindAncestorCommitsError("fork_point_commit timestamp is null")
+
+        # Get default branch commits before/including the fork point
+        query = Session.query(
+            Commit.id.label("ancestor_id"),
+            Commit.timestamp.label("ancestor_timestamp"),
+            s.sql.expression.literal(True).label("on_default_branch"),
+            s.func.concat("1_", Commit.timestamp).label("commit_order"),
+        ).filter(
+            Commit.repository == self.repository,
+            Commit.sha == Commit.fork_point_sha,  # aka: on default branch
+            Commit.timestamp <= fork_point_commit.timestamp,
+        )
+
+        # If this commit is on a non-default branch, add all commits since the fork point
+        if self != fork_point_commit:
+            branch_query = Session.query(
+                Commit.id.label("ancestor_id"),
+                Commit.timestamp.label("ancestor_timestamp"),
+                s.sql.expression.literal(False).label("on_default_branch"),
+                s.func.concat("2_", Commit.timestamp).label("commit_order"),
+            ).filter(
+                Commit.repository == self.repository,
+                Commit.branch == self.branch,
+                Commit.fork_point_sha == self.fork_point_sha,
+                Commit.timestamp <= self.timestamp,
+            )
+            query = query.union(branch_query)
+
+        return query
 
     @staticmethod
     def create_no_context():
@@ -376,7 +476,8 @@ class GitHub:
         returns the fork point sha, called the "merge base" in git-speak.
         """
         if sha in self.test_commits:
-            return "some_fork_point_sha"
+            # they're on the default branch, so sha==fork_point_sha
+            return sha
 
         if not name or not sha:
             return None

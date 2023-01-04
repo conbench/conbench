@@ -17,6 +17,7 @@ class HistoryEntityAPI(ApiEndpoint):
             benchmark_result.case_id,
             benchmark_result.context_id,
             benchmark_result.run.hardware.hash,
+            benchmark_result.run.commit.repository,
         )
 
     @maybe_login_required
