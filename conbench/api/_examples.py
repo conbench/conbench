@@ -361,6 +361,7 @@ def _api_history_entity(benchmark_id, case_id, context_id, run_name):
         "hardware_hash": "diana-2-2-4-17179869184",
         "unit": "s",
         "mean": 0.036369,
+        "is_step_change": False,
         "distribution_mean": 0.036369,
         "distribution_stdev": 0.000000,
         "repository": "https://github.com/org/repo",

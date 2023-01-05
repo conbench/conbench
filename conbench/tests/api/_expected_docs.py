@@ -615,6 +615,7 @@
                                 "distribution_mean": 0.036369,
                                 "distribution_stdev": 0.0,
                                 "hardware_hash": "diana-2-2-4-17179869184",
+                                "is_step_change": False,
                                 "mean": 0.036369,
                                 "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
                                 "repository": "https://github.com/org/repo",
