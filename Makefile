@@ -78,6 +78,7 @@ rebuild-expected-api-docs: run-app-bg
 	python -c "import json; print(str(json.loads(open('_new_api_docs.json').read())))" > _new_api_docs.py
 	black _new_api_docs.py
 	mv -f _new_api_docs.py ./conbench/tests/api/_expected_docs.py
+	rm _new_api_docs.json
 	git diff ./conbench/tests/api/_expected_docs.py
 
 
