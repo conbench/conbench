@@ -39,6 +39,8 @@ jobs:
             coverage lcov -o /etc/conbench-coverage-dir/coverage.lcov
       - name: Publish coverage
         uses: coverallsapp/github-action@master
+        # sometimes the coveralls API fails transiently, and we don't want that to affect this build
+        continue-on-error: true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: _conbench-coverage-dir/coverage.lcov
