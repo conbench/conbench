@@ -50,6 +50,7 @@
                             "batch_id": "some-batch-uuid-1",
                             "error": None,
                             "id": "some-benchmark-uuid-1",
+                            "is_step_change": False,
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "info": "http://localhost/api/info/some-info-uuid-1/",
@@ -122,6 +123,7 @@
                             "batch_id": "some-batch-uuid-1",
                             "error": None,
                             "id": "some-benchmark-uuid-1",
+                            "is_step_change": False,
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "info": "http://localhost/api/info/some-info-uuid-1/",
@@ -195,6 +197,7 @@
                                 "batch_id": "some-batch-uuid-1",
                                 "error": None,
                                 "id": "some-benchmark-uuid-1",
+                                "is_step_change": False,
                                 "links": {
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                     "info": "http://localhost/api/info/some-info-uuid-1/",
@@ -1065,6 +1068,15 @@
                 "required": ["data", "iterations", "time_unit", "times", "unit"],
                 "type": "object",
             },
+            "BenchmarkUpdate": {
+                "properties": {
+                    "is_step_change": {
+                        "description": "Is this result sufficiently different from the previous commit (for the same hardware/case/context)?",
+                        "type": "boolean",
+                    }
+                },
+                "type": "object",
+            },
             "ClusterCreate": {
                 "properties": {
                     "info": {
@@ -1347,6 +1359,30 @@
                         "schema": {"type": "string"},
                     }
                 ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/BenchmarkEntity"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Benchmarks"],
+            },
+            "put": {
+                "description": "Edit a benchmark.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "benchmark_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/BenchmarkUpdate"}
+                        }
+                    }
+                },
                 "responses": {
                     "200": {"$ref": "#/components/responses/BenchmarkEntity"},
                     "401": {"$ref": "#/components/responses/401"},

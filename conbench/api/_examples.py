@@ -123,6 +123,7 @@ def _api_benchmark_entity(
         "error": error,
         "validation": validation,
         "optional_benchmark_info": optional_benchmark_info,
+        "is_step_change": False,
         "tags": {
             "id": case_id,
             "compression": "snappy",

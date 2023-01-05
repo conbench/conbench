@@ -56,9 +56,12 @@ class BenchmarkResult(Base, EntityMixin):
     iqr = Nullable(s.Numeric, check("iqr>=0"))
     error = Nullable(postgresql.JSONB)
     validation = Nullable(postgresql.JSONB)
+    is_step_change = NotNull(s.Boolean, default=False)
 
     @staticmethod
     def create(data):
+        # note: is_step_change is ignored for BenchmarkResult.create();
+        # it should only be set via BenchmarkResult.update()
         tags = data["tags"]
         has_error = "error" in data
         has_stats = "stats" in data
@@ -310,6 +313,7 @@ class _Serializer(EntitySerializer):
                 "z_improvement": z_improvement(benchmark_result.z_score),
             },
             "error": benchmark_result.error,
+            "is_step_change": benchmark_result.is_step_change,
             "links": {
                 "list": f.url_for("api.benchmarks", _external=True),
                 "self": f.url_for(
@@ -415,5 +419,16 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
             raise marshmallow.ValidationError("Either stats or error field is required")
 
 
+class _BenchmarkFacadeSchemaUpdate(marshmallow.Schema):
+    is_step_change = marshmallow.fields.Boolean(
+        required=False,
+        metadata={
+            "description": "Is this result sufficiently different from the previous "
+            "commit (for the same hardware/case/context)?"
+        },
+    )
+
+
 class BenchmarkFacadeSchema:
     create = _BenchmarkFacadeSchemaCreate()
+    update = _BenchmarkFacadeSchemaUpdate()

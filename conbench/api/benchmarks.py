@@ -21,6 +21,7 @@ class BenchmarkValidationMixin:
 
 class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
     serializer = BenchmarkResultSerializer()
+    schema = BenchmarkFacadeSchema()
 
     def _get(self, benchmark_id):
         try:
@@ -47,6 +48,33 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
           - Benchmarks
         """
         benchmark_result = self._get(benchmark_id)
+        set_z_scores([benchmark_result])
+        return self.serializer.one.dump(benchmark_result)
+
+    @flask_login.login_required
+    def put(self, benchmark_id):
+        """
+        ---
+        description: Edit a benchmark.
+        responses:
+            "200": "BenchmarkEntity"
+            "401": "401"
+            "404": "404"
+        parameters:
+          - name: benchmark_id
+            in: path
+            schema:
+                type: string
+        requestBody:
+            content:
+                application/json:
+                    schema: BenchmarkUpdate
+        tags:
+          - Benchmarks
+        """
+        benchmark_result = self._get(benchmark_id)
+        data = self.validate_benchmark(self.schema.update)
+        benchmark_result.update(data)
         set_z_scores([benchmark_result])
         return self.serializer.one.dump(benchmark_result)
 
@@ -161,6 +189,7 @@ rule(
 rule(
     "/benchmarks/<benchmark_id>/",
     view_func=benchmark_entity_view,
-    methods=["GET", "DELETE"],
+    methods=["GET", "DELETE", "PUT"],
 )
 spec.components.schema("BenchmarkCreate", schema=BenchmarkFacadeSchema.create)
+spec.components.schema("BenchmarkUpdate", schema=BenchmarkFacadeSchema.update)

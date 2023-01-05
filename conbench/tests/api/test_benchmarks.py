@@ -236,6 +236,31 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
         self.assert_200_ok(response, expected)
 
 
+class TestBenchmarkUpdate(_asserts.PutEnforcer):
+    url = "/api/benchmarks/{}/"
+    valid_payload = {"is_step_change": True}
+
+    def _create_entity_to_update(self):
+        return _fixtures.benchmark_result()
+
+    def test_update_step_change(self, client):
+        self.authenticate(client)
+        benchmark_result = self._create_entity_to_update()
+        assert not benchmark_result.is_step_change
+
+        expected = _expected_entity(benchmark_result)
+        expected["is_step_change"] = True
+
+        response = client.put(
+            self.url.format(benchmark_result.id), json={"is_step_change": True}
+        )
+        self.assert_200_ok(response, expected)
+
+        # ensure GET now returns the updated step change
+        response = client.get(self.url.format(benchmark_result.id))
+        self.assert_200_ok(response, expected)
+
+
 class TestBenchmarkDelete(_asserts.DeleteEnforcer):
     url = "/api/benchmarks/{}/"
 
