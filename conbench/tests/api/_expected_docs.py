@@ -967,6 +967,10 @@
                         "description": "Additional information about the context the benchmark was run in that is not expected to have an impact on benchmark performance (e.g. benchmark language version, compiler version). This information is expected to be the same across a number of benchmarks. (free-form JSON)",
                         "type": "object",
                     },
+                    "is_step_change": {
+                        "description": "Is this result the first result of a sufficiently 'different' distribution than the result on the previous commit (for the same hardware/case/context)? That is, when evaluating whether future results are regressions or improvements, should we treat data from before this result as incomparable?",
+                        "type": "boolean",
+                    },
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
                     "optional_benchmark_info": {
                         "description": "Optional information about Benchmark results (e.g., telemetry links, logs links). These are unique to each benchmark that is run, but are information that aren't reasonably expected to impact benchmark performance. Helpful for adding debugging or additional links and context for a benchmark (free-form JSON)",
@@ -1072,7 +1076,7 @@
             "BenchmarkUpdate": {
                 "properties": {
                     "is_step_change": {
-                        "description": "Is this result sufficiently different from the previous commit (for the same hardware/case/context)?",
+                        "description": "Is this result the first result of a sufficiently 'different' distribution than the result on the previous commit (for the same hardware/case/context)? That is, when evaluating whether future results are regressions or improvements, should we treat data from before this result as incomparable?",
                         "type": "boolean",
                     }
                 },
