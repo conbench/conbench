@@ -56,6 +56,7 @@ class BenchmarkResult(Base, EntityMixin):
     iqr = Nullable(s.Numeric, check("iqr>=0"))
     error = Nullable(postgresql.JSONB)
     validation = Nullable(postgresql.JSONB)
+    is_step_change = NotNull(s.Boolean, default=False)
 
     @staticmethod
     def create(data):
@@ -174,6 +175,7 @@ class BenchmarkResult(Base, EntityMixin):
         )
         benchmark_result_data["info_id"] = info.id
         benchmark_result_data["context_id"] = context.id
+        benchmark_result_data["is_step_change"] = data.get("is_step_change", False)
         benchmark_result = BenchmarkResult(**benchmark_result_data)
         benchmark_result.save()
 
@@ -310,6 +312,7 @@ class _Serializer(EntitySerializer):
                 "z_improvement": z_improvement(benchmark_result.z_score),
             },
             "error": benchmark_result.error,
+            "is_step_change": benchmark_result.is_step_change,
             "links": {
                 "list": f.url_for("api.benchmarks", _external=True),
                 "self": f.url_for(
@@ -333,6 +336,14 @@ class _Serializer(EntitySerializer):
 class BenchmarkResultSerializer:
     one = _Serializer()
     many = _Serializer(many=True)
+
+
+IS_STEP_CHANGE_DESC = (
+    "Is this result the first result of a sufficiently 'different' distribution than "
+    "the result on the previous commit (for the same hardware/case/context)? That is, "
+    "when evaluating whether future results are regressions or improvements, should we "
+    "treat data from before this result as incomparable?"
+)
 
 
 class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
@@ -396,6 +407,10 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
         },
     )
     github = marshmallow.fields.Nested(GitHubCreate(), required=False)
+    is_step_change = marshmallow.fields.Boolean(
+        required=False,
+        metadata={"description": IS_STEP_CHANGE_DESC},
+    )
 
     @marshmallow.validates_schema
     def validate_hardware_info_fields(self, data, **kwargs):
@@ -415,5 +430,13 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
             raise marshmallow.ValidationError("Either stats or error field is required")
 
 
+class _BenchmarkFacadeSchemaUpdate(marshmallow.Schema):
+    is_step_change = marshmallow.fields.Boolean(
+        required=False,
+        metadata={"description": IS_STEP_CHANGE_DESC},
+    )
+
+
 class BenchmarkFacadeSchema:
     create = _BenchmarkFacadeSchemaCreate()
+    update = _BenchmarkFacadeSchemaUpdate()

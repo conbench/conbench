@@ -50,6 +50,7 @@
                             "batch_id": "some-batch-uuid-1",
                             "error": None,
                             "id": "some-benchmark-uuid-1",
+                            "is_step_change": False,
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "info": "http://localhost/api/info/some-info-uuid-1/",
@@ -122,6 +123,7 @@
                             "batch_id": "some-batch-uuid-1",
                             "error": None,
                             "id": "some-benchmark-uuid-1",
+                            "is_step_change": False,
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "info": "http://localhost/api/info/some-info-uuid-1/",
@@ -195,6 +197,7 @@
                                 "batch_id": "some-batch-uuid-1",
                                 "error": None,
                                 "id": "some-benchmark-uuid-1",
+                                "is_step_change": False,
                                 "links": {
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                     "info": "http://localhost/api/info/some-info-uuid-1/",
@@ -612,6 +615,7 @@
                                 "distribution_mean": 0.036369,
                                 "distribution_stdev": 0.0,
                                 "hardware_hash": "diana-2-2-4-17179869184",
+                                "is_step_change": False,
                                 "mean": 0.036369,
                                 "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
                                 "repository": "https://github.com/org/repo",
@@ -963,6 +967,10 @@
                         "description": "Additional information about the context the benchmark was run in that is not expected to have an impact on benchmark performance (e.g. benchmark language version, compiler version). This information is expected to be the same across a number of benchmarks. (free-form JSON)",
                         "type": "object",
                     },
+                    "is_step_change": {
+                        "description": "Is this result the first result of a sufficiently 'different' distribution than the result on the previous commit (for the same hardware/case/context)? That is, when evaluating whether future results are regressions or improvements, should we treat data from before this result as incomparable?",
+                        "type": "boolean",
+                    },
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
                     "optional_benchmark_info": {
                         "description": "Optional information about Benchmark results (e.g., telemetry links, logs links). These are unique to each benchmark that is run, but are information that aren't reasonably expected to impact benchmark performance. Helpful for adding debugging or additional links and context for a benchmark (free-form JSON)",
@@ -1063,6 +1071,15 @@
                     },
                 },
                 "required": ["data", "iterations", "time_unit", "times", "unit"],
+                "type": "object",
+            },
+            "BenchmarkUpdate": {
+                "properties": {
+                    "is_step_change": {
+                        "description": "Is this result the first result of a sufficiently 'different' distribution than the result on the previous commit (for the same hardware/case/context)? That is, when evaluating whether future results are regressions or improvements, should we treat data from before this result as incomparable?",
+                        "type": "boolean",
+                    }
+                },
                 "type": "object",
             },
             "ClusterCreate": {
@@ -1347,6 +1364,30 @@
                         "schema": {"type": "string"},
                     }
                 ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/BenchmarkEntity"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["Benchmarks"],
+            },
+            "put": {
+                "description": "Edit a benchmark.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "benchmark_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/BenchmarkUpdate"}
+                        }
+                    }
+                },
                 "responses": {
                     "200": {"$ref": "#/components/responses/BenchmarkEntity"},
                     "401": {"$ref": "#/components/responses/401"},
