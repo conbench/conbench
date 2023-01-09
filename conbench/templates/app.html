@@ -139,12 +139,12 @@ function enable_search_query_string(data_table) {
 
 }
 
-// requires two input to enable search: the table id and the column index
+// requires two input to enable search: table_id and the column_index
 function specific_column_search(data_table, column_index){
     $(document).ready(function() {
         var table =  $(data_table).DataTable();
         table
-		.columns([column_index])
+		.columns(column_index)
 		.unique()
 		.each(function (colID) {
 			var mySelectList = $("<select />")
