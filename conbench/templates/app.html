@@ -121,7 +121,7 @@ $(document).ready(function() {
 });
 
 function enable_search_query_string(data_table) {
-    $(data_table).on( 'search.dt', function () {
+    $(data_table).on('search.dt', function () {
         var current_search_value = $('.dataTables_filter input').val();
         var new_url = window.location.protocol + "//" + window.location.host + window.location.pathname
         if (current_search_value) {
@@ -130,32 +130,34 @@ function enable_search_query_string(data_table) {
         window.history.replaceState(null, document.title, new_url)
     });
 
-    // $(document).ready(function() {
-    //     var table =  $(data_table).DataTable();
-    //     {% if search_value %}
-    //         table.search("{{ search_value }}").draw();
-    //     {% endif %}
-    // });
+    $(document).ready(function() {
+        var table =  $(data_table).DataTable();
+        {% if search_value %}
+            table.search("{{ search_value }}").draw();
+        {% endif %}
+    });
 
+}
 
+// requires two input to enable search: the table id and the column index
+function specific_column_search(data_table, column_index){
     $(document).ready(function() {
         var table =  $(data_table).DataTable();
         table
-		.columns()
-		.flatten()
+		.columns([column_index])
+		.unique()
 		.each(function (colID) {
 			var mySelectList = $("<select />")
 			.appendTo(table.column(colID).header())
 			.on("change", function () {
 				table.column(colID).search($(this).val());
-
-				// update the changes using draw() method
-				table.column(colID).draw();
+                table.column(colID).draw();
 			});
             
 			table
 			.column(colID)
 			.cache("search")
+            .unique()
 			.sort()
 			.each(function (param) {
 				mySelectList.append(
