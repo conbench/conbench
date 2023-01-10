@@ -194,11 +194,9 @@ gbench_json = {
 class TestGbenchAdapter:
     @pytest.fixture
     def gbench_adapter(self, monkeypatch):
-        monkeypatch.setenv(
-            "BENCHMARKABLE_REPOSITORY", "git@github.com:conchair/conchair"
-        )
-        monkeypatch.setenv("BENCHMARKABLE_PR_NUMBER", "47")
-        monkeypatch.setenv("BENCHMARKABLE_COMMIT", "2z8c9c49a5dc4a179243268e4bb6daa5")
+        monkeypatch.setenv("CONBENCH_REPOSITORY", "git@github.com:conchair/conchair")
+        monkeypatch.setenv("CONBENCH_PR_NUMBER", "47")
+        monkeypatch.setenv("CONBENCH_COMMIT", "2z8c9c49a5dc4a179243268e4bb6daa5")
 
         result_file = tempfile.mktemp(suffix=".json")
         gbench_adapter = GoogleBenchmarkAdapter(

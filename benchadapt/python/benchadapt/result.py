@@ -69,8 +69,8 @@ class BenchmarkResult:
         If it's a non-default-branch & non-PR commit, you may supply the branch name to
         the optional ``branch`` key in the format ``org:branch``.
 
-        By default, metadata will be obtained from ``BENCHMARKABLE_REPOSITORY``,
-        ``BENCHMARKABLE_COMMIT``, and ``BENCHMARKABLE_PR_NUMBER`` environment variables.
+        By default, metadata will be obtained from ``CONBENCH_REPOSITORY``,
+        ``CONBENCH_COMMIT``, and ``CONBENCH_PR_NUMBER`` environment variables.
         If any are unset, a warning will be raised.
 
         Advanced: if you have a locally cloned repo, you may explicitly supply ``None``

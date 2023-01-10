@@ -75,16 +75,16 @@ class TestBenchmarkResult:
             ).to_publishable_dict()
 
     def test_github_detection(self, monkeypatch):
-        monkeypatch.setenv("BENCHMARKABLE_REPOSITORY", res_json["github"]["repository"])
-        monkeypatch.setenv("BENCHMARKABLE_PR_NUMBER", res_json["github"]["pr_number"])
-        monkeypatch.setenv("BENCHMARKABLE_COMMIT", res_json["github"]["commit"])
+        monkeypatch.setenv("CONBENCH_REPOSITORY", res_json["github"]["repository"])
+        monkeypatch.setenv("CONBENCH_PR_NUMBER", res_json["github"]["pr_number"])
+        monkeypatch.setenv("CONBENCH_COMMIT", res_json["github"]["commit"])
         assert BenchmarkResult().github == res_json["github"]
 
-        monkeypatch.delenv("BENCHMARKABLE_REPOSITORY")
-        monkeypatch.delenv("BENCHMARKABLE_PR_NUMBER")
-        monkeypatch.delenv("BENCHMARKABLE_COMMIT")
+        monkeypatch.delenv("CONBENCH_REPOSITORY")
+        monkeypatch.delenv("CONBENCH_PR_NUMBER")
+        monkeypatch.delenv("CONBENCH_COMMIT")
         with pytest.warns(
             UserWarning,
-            match="All of BENCHMARKABLE_REPOSITORY, BENCHMARKABLE_PR_NUMBER, and BENCHMARKABLE_COMMIT must be set if `github` is not specified.",
+            match="All of CONBENCH_REPOSITORY, CONBENCH_PR_NUMBER, and CONBENCH_COMMIT must be set if `github` is not specified.",
         ):
             BenchmarkResult()

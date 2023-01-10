@@ -28,11 +28,11 @@ metadata:
 server is private.
 - `CONBENCH_PASSWORD`: The password to use for Conbench login. Only required
 if the server is private.
-- `BENCHMARKABLE_REPOSITORY`: The URL of the repo being benchmarked. Defaults
+- `CONBENCH_REPOSITORY`: The URL of the repo being benchmarked. Defaults
 to `"https://github.com/apache/arrow"` if unset.
-- `BENCHMARKABLE_PR_NUMBER`: Integer of pull request number associated with
+- `CONBENCH_PR_NUMBER`: Integer of pull request number associated with
 the run being benchmarked.
-- `BENCHMARKABLE_COMMIT`: Hash of commit being benchmarked. If missing, will
+- `CONBENCH_COMMIT`: Hash of commit being benchmarked. If missing, will
 attempt to obtain it from `arrow::arrow_info()$build_info$git_id`, though
 this may not be populated depending on how Arrow was built.
 - `CONBENCH_HOST_NAME`: By default, the running machine host name will be

@@ -78,9 +78,11 @@ class GitParseWarning(RuntimeWarning):
 
 def github_info():
     """Get github metadata from environment variables"""
-    repo = os.environ.get("BENCHMARKABLE_REPOSITORY")
-    pr_number = os.environ.get("BENCHMARKABLE_PR_NUMBER")
-    commit = os.environ.get("BENCHMARKABLE_COMMIT")
+    repo = os.environ.get("CONBENCH_REPOSITORY")
+    pr_number = os.environ.get("CONBENCH_PR_NUMBER") or os.environ.get(
+        "BENCHMARKABLE_PR_NUMBER"
+    )
+    commit = os.environ.get("CONBENCH_COMMIT")
 
     gh_info = {
         "commit": commit,
@@ -92,8 +94,8 @@ def github_info():
     if not (repo and pr_number and commit):
         warnings.warn(
             (
-                "All of BENCHMARKABLE_REPOSITORY, BENCHMARKABLE_PR_NUMBER, and "
-                "BENCHMARKABLE_COMMIT must be set if `github` is not specified. "
+                "All of CONBENCH_REPOSITORY, CONBENCH_PR_NUMBER, and "
+                "CONBENCH_COMMIT must be set if `github` is not specified. "
                 f"\nValues: `{gh_info}`"
             ),
         )
