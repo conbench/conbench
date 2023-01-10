@@ -5,6 +5,8 @@ import subprocess
 import warnings
 from typing import Optional
 
+from benchclients.logging import fatal_and_log
+
 
 def _sysctl(stat):
     return ["sysctl", "-n", stat]
@@ -77,6 +79,32 @@ class GitParseWarning(RuntimeWarning):
 
 
 def github_info():
+    """Get github metadata from environment variables"""
+    repo = os.environ.get("BENCHMARKABLE_REPOSITORY")
+    pr_number = os.environ.get("BENCHMARKABLE_PR_NUMBER")
+    commit = os.environ.get("BENCHMARKABLE_COMMIT")
+
+    gh_info = {
+        "commit": commit,
+        "repository": repo,
+        # "branch": None,
+        "pr_number": pr_number,
+    }
+
+    if repo and pr_number and commit:
+        return gh_info
+    else:
+        fatal_and_log(
+            (
+                "All of BENCHMARKABLE_REPOSITORY, BENCHMARKABLE_PR_NUMBER, and "
+                "BENCHMARKABLE_COMMIT must be set if `github` is not specified. "
+                f"Values: {gh_info}"
+            ),
+            etype=ValueError,
+        )
+
+
+def detect_github_info():
     """Attempts to inspect a locally cloned repository for git information that can be
     posted to the "github" key when creating a run.
 
@@ -130,8 +158,8 @@ def github_info():
 def machine_info(host_name: Optional[str]):
     os_name, os_version = platform.platform(terse=True).split("-", maxsplit=1)
 
-    if not host_name:
-        host_name = platform.node()
+    host_name = host_name or os.environ.get("CONBENCH_HOST_NAME")
+    host_name = host_name or platform.node()
 
     info = {
         "name": host_name,

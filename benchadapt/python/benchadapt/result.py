@@ -1,10 +1,11 @@
 import datetime
+import os
 import uuid
 import warnings
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Optional
 
-from .machine_info import github_info, machine_info
+from .machine_info import detect_github_info, github_info, machine_info
 
 
 @dataclass
@@ -54,7 +55,10 @@ class BenchmarkResult:
         or additional links and context for a benchmark (free-form JSON)
     machine_info : Dict[str, Any]
         For benchmarks run on a single node, information about the machine, e.g. OS,
-        architecture, etc. Auto-populated if ``cluster_info`` not set.
+        architecture, etc. Auto-populated if ``cluster_info`` not set. If host name
+        should not be detected with ``platform.node()`` (e.g. because a consistent
+        name is needed for CI or cloud runners), it can be overridden with the
+        ``CONBENCH_HOST_NAME`` environment variable.
     cluster_info : Dict[str, Any]
         For benchmarks run on a cluster, information about the cluster
     context : Dict[str, Any]
@@ -64,6 +68,10 @@ class BenchmarkResult:
         If this is a benchmark on the default branch, you may leave out ``pr_number``.
         If it's a non-default-branch & non-PR commit, you may supply the branch name to
         the optional ``branch`` key in the format ``org:branch``.
+
+        By default, metadata will be obtained from ``BENCHMARKABLE_REPOSITORY``,
+        ``BENCHMARKABLE_COMMIT``, and ``BENCHMARKABLE_PR_NUMBER`` environment variables.
+        If any are unset, an error will be raised.
 
         Advanced: if you have a locally cloned repo, you may explicitly supply ``None``
         to this argument and its information will be scraped from the cloned repo.
@@ -88,7 +96,6 @@ class BenchmarkResult:
     - ``info``
     - ``optional_benchmark_info``
     - ``context``
-    - ``github``
 
     Fields with defaults you may want to override on instantiation:
 
@@ -96,6 +103,7 @@ class BenchmarkResult:
     - ``timestamp`` if run time is inaccurate
     - ``machine_info`` if not run on the current machine
     - ``cluster_info`` if run on a cluster
+    - ``github``
 
     If a result with a new ``run_id`` is posted, a new record for the run will be
     created. If a run record with that ID already exists, either because of a
@@ -123,11 +131,13 @@ class BenchmarkResult:
     info: Dict[str, Any] = field(default_factory=dict)
     optional_benchmark_info: Dict[str, Any] = None
     machine_info: Dict[str, Any] = field(
-        default_factory=lambda: machine_info(host_name=None)
+        default_factory=lambda: machine_info(
+            host_name=os.environ.get("CONBENCH_HOST_NAME")
+        )
     )
     cluster_info: Dict[str, Any] = None
     context: Dict[str, Any] = field(default_factory=dict)
-    github: Dict[str, Any] = field(default_factory=dict)
+    github: Dict[str, Any] = field(default_factory=github_info)
 
     def __post_init__(self) -> None:
         if not self.run_name and self.github.get("commit"):
@@ -140,7 +150,7 @@ class BenchmarkResult:
     @_github_property.setter
     def _github_property(self, value: Optional[dict]):
         if value is None:
-            value = github_info()
+            value = detect_github_info()
         self._github_cache = value
 
     @property

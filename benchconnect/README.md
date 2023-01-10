@@ -18,6 +18,28 @@ With [pipx](https://pypa.github.io/pipx/):
 pipx install benchconnect@git+https://github.com/conbench/conbench.git@main#subdirectory=benchconnect
 ```
 
+## Environment variables
+
+benchconnect relies on a number of environment variables to obtain various
+metadata:
+
+- `CONBENCH_URL`: The URL of the Conbench server. Required.
+- `CONBENCH_EMAIL`: The email to use for Conbench login. Only required if the
+server is private.
+- `CONBENCH_PASSWORD`: The password to use for Conbench login. Only required
+if the server is private.
+- `BENCHMARKABLE_REPOSITORY`: The URL of the repo being benchmarked. Defaults
+to `"https://github.com/apache/arrow"` if unset.
+- `BENCHMARKABLE_PR_NUMBER`: Integer of pull request number associated with
+the run being benchmarked.
+- `BENCHMARKABLE_COMMIT`: Hash of commit being benchmarked. If missing, will
+attempt to obtain it from `arrow::arrow_info()$build_info$git_id`, though
+this may not be populated depending on how Arrow was built.
+- `CONBENCH_HOST_NAME`: By default, the running machine host name will be
+obtained with `platform.node()`, but in circumstances where consistency is
+needed (e.g. running in CI or on cloud runners), a value for host name can
+be specified via this environment variable instead.
+
 ## Usage
 
 ### Benchmark run workflow

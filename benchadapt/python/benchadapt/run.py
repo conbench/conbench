@@ -1,9 +1,10 @@
+import os
 import uuid
 import warnings
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Optional
 
-from .machine_info import github_info, machine_info
+from .machine_info import detect_github_info, github_info, machine_info
 
 
 @dataclass
@@ -27,7 +28,10 @@ class BenchmarkRun:
         A schema-less dict of metadata about the run
     machine_info : Dict[str, Any]
         For benchmarks run on a single node, information about the machine, e.g. OS,
-        architecture, etc. Auto-populated if ``cluster_info`` not set.
+        architecture, etc. Auto-populated if ``cluster_info`` not set. If host name
+        should not be detected with ``platform.node()`` (e.g. because a consistent
+        name is needed for CI or cloud runners), it can be overridden with the
+        ``CONBENCH_HOST_NAME`` environment variable.
     cluster_info : Dict[str, Any]
         For benchmarks run on a cluster, information about the cluster
     github : Dict[str, Any]
@@ -35,6 +39,10 @@ class BenchmarkRun:
         If this is a benchmark on the default branch, you may leave out ``pr_number``.
         If it's a non-default-branch & non-PR commit, you may supply the branch name to
         the optional ``branch`` key in the format ``org:branch``.
+
+        By default, metadata will be obtained from ``BENCHMARKABLE_REPOSITORY``,
+        ``BENCHMARKABLE_COMMIT``, and ``BENCHMARKABLE_PR_NUMBER`` environment variables.
+        If any are unset, an error will be raised.
 
         Advanced: if you have a locally cloned repo, you may explicitly supply ``None``
         to this argument and its information will be scraped from the cloned repo.
@@ -56,7 +64,6 @@ class BenchmarkRun:
     Fields without comprehensive defaults which should be specified directly:
 
     - ``reason``
-    - ``github``
 
     Fields with defaults you may want to override on instantiation:
 
@@ -65,6 +72,7 @@ class BenchmarkRun:
     - ``info``
     - ``machine_info`` if not run on the current machine
     - ``cluster_info`` if run on a cluster
+    - ``github``
     - ``finished_timestamp`` if run is now complete
     - ``error_type`` (if applicable)
     - ``error_info`` (if applicable)
@@ -75,10 +83,12 @@ class BenchmarkRun:
     reason: str = None
     info: Dict[str, Any] = field(default_factory=dict)
     machine_info: Dict[str, Any] = field(
-        default_factory=lambda: machine_info(host_name=None)
+        default_factory=lambda: machine_info(
+            host_name=os.environ.get("CONBENCH_HOST_NAME")
+        )
     )
     cluster_info: Dict[str, Any] = None
-    github: Dict[str, Any] = field(default_factory=dict)
+    github: Dict[str, Any] = field(default_factory=github_info)
     finished_timestamp: str = None
     error_type: str = None
     error_info: Dict[str, Any] = None
@@ -94,7 +104,7 @@ class BenchmarkRun:
     @_github_property.setter
     def _github_property(self, value: Optional[dict]):
         if value is None:
-            value = github_info()
+            value = detect_github_info()
         self._github_cache = value
 
     @property
