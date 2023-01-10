@@ -60,8 +60,14 @@ class TestFollyAdapter:
         *folly_jsons["velox_benchmark_basic_selectivity_vector.json"],
     ]
 
-    @pytest.fixture(scope="class")
-    def folly_adapter(self):
+    @pytest.fixture
+    def folly_adapter(self, monkeypatch):
+        monkeypatch.setenv(
+            "BENCHMARKABLE_REPOSITORY", "git@github.com:conchair/conchair"
+        )
+        monkeypatch.setenv("BENCHMARKABLE_PR_NUMBER", "47")
+        monkeypatch.setenv("BENCHMARKABLE_COMMIT", "2z8c9c49a5dc4a179243268e4bb6daa5")
+
         tempdir = Path(tempfile.mkdtemp())
 
         folly_adapter = FollyAdapter(

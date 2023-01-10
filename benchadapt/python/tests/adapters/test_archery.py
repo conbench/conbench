@@ -58,8 +58,14 @@ archery_json = {
 
 
 class TestArcheryAdapter:
-    @pytest.fixture(scope="class")
-    def archery_adapter(self):
+    @pytest.fixture
+    def archery_adapter(self, monkeypatch):
+        monkeypatch.setenv(
+            "BENCHMARKABLE_REPOSITORY", "git@github.com:conchair/conchair"
+        )
+        monkeypatch.setenv("BENCHMARKABLE_PR_NUMBER", "47")
+        monkeypatch.setenv("BENCHMARKABLE_COMMIT", "2z8c9c49a5dc4a179243268e4bb6daa5")
+
         archery_adapter = ArcheryAdapter()
         archery_adapter.command = ["echo", "'Hello, world!'"]
 

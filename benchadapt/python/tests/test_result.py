@@ -46,6 +46,7 @@ res_json = {
     "github": {
         "commit": "2z8c9c49a5dc4a179243268e4bb6daa5",
         "repository": "git@github.com:conchair/conchair",
+        "pr_number": "47",
     },
 }
 
@@ -57,14 +58,33 @@ class TestBenchmarkResult:
 
     def test_warns_stats_error(self):
         with pytest.warns(UserWarning, match="Result not publishable!"):
-            BenchmarkResult(stats={}, error={}).to_publishable_dict()
+            BenchmarkResult(stats={}, error={}, github={}).to_publishable_dict()
 
         with pytest.warns(UserWarning, match="Result not publishable!"):
-            BenchmarkResult(stats=None, error=None).to_publishable_dict()
+            BenchmarkResult(stats=None, error=None, github={}).to_publishable_dict()
 
     def test_warns_machine_cluster(self):
         with pytest.warns(UserWarning, match="Result not publishable!"):
-            BenchmarkResult(machine_info={}, cluster_info={}).to_publishable_dict()
+            BenchmarkResult(
+                machine_info={}, cluster_info={}, github={}
+            ).to_publishable_dict()
 
         with pytest.warns(UserWarning, match="Result not publishable!"):
-            BenchmarkResult(machine_info=None, cluster_info=None).to_publishable_dict()
+            BenchmarkResult(
+                machine_info=None, cluster_info=None, github={}
+            ).to_publishable_dict()
+
+    def test_github_detection(self, monkeypatch):
+        monkeypatch.setenv("BENCHMARKABLE_REPOSITORY", res_json["github"]["repository"])
+        monkeypatch.setenv("BENCHMARKABLE_PR_NUMBER", res_json["github"]["pr_number"])
+        monkeypatch.setenv("BENCHMARKABLE_COMMIT", res_json["github"]["commit"])
+        assert BenchmarkResult().github == res_json["github"]
+
+        monkeypatch.delenv("BENCHMARKABLE_REPOSITORY")
+        monkeypatch.delenv("BENCHMARKABLE_PR_NUMBER")
+        monkeypatch.delenv("BENCHMARKABLE_COMMIT")
+        with pytest.warns(
+            UserWarning,
+            match="All of BENCHMARKABLE_REPOSITORY, BENCHMARKABLE_PR_NUMBER, and BENCHMARKABLE_COMMIT must be set if `github` is not specified.",
+        ):
+            BenchmarkResult()

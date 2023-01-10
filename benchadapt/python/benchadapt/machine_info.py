@@ -5,8 +5,6 @@ import subprocess
 import warnings
 from typing import Optional
 
-from benchclients.logging import fatal_and_log
-
 
 def _sysctl(stat):
     return ["sysctl", "-n", stat]
@@ -94,14 +92,14 @@ def github_info():
     if repo and pr_number and commit:
         return gh_info
     else:
-        fatal_and_log(
+        warnings.warn(
             (
                 "All of BENCHMARKABLE_REPOSITORY, BENCHMARKABLE_PR_NUMBER, and "
                 "BENCHMARKABLE_COMMIT must be set if `github` is not specified. "
-                f"Values: {gh_info}"
+                f"\nValues: `{gh_info}`"
             ),
-            etype=ValueError,
         )
+        return gh_info
 
 
 def detect_github_info():
