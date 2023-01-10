@@ -89,9 +89,7 @@ def github_info():
         "pr_number": pr_number,
     }
 
-    if repo and pr_number and commit:
-        return gh_info
-    else:
+    if not (repo and pr_number and commit):
         warnings.warn(
             (
                 "All of BENCHMARKABLE_REPOSITORY, BENCHMARKABLE_PR_NUMBER, and "
@@ -99,7 +97,8 @@ def github_info():
                 f"\nValues: `{gh_info}`"
             ),
         )
-        return gh_info
+
+    return gh_info
 
 
 def detect_github_info():
