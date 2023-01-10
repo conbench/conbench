@@ -238,25 +238,49 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
 
 class TestBenchmarkUpdate(_asserts.PutEnforcer):
     url = "/api/benchmarks/{}/"
-    valid_payload = {"is_step_change": True}
+    valid_payload = {"change_annotations": {"a": True, "b": None}}
 
     def _create_entity_to_update(self):
         return _fixtures.benchmark_result()
 
-    def test_update_step_change(self, client):
+    def test_update_change_annotations(self, client):
         self.authenticate(client)
         benchmark_result = self._create_entity_to_update()
-        assert not benchmark_result.is_step_change
+        assert benchmark_result.change_annotations == {}
 
         expected = _expected_entity(benchmark_result)
-        expected["is_step_change"] = True
+        expected["change_annotations"]["a"] = True
+        expected["change_annotations"]["b"] = "testing"
 
         response = client.put(
-            self.url.format(benchmark_result.id), json={"is_step_change": True}
+            self.url.format(benchmark_result.id),
+            json={"change_annotations": {"a": True, "b": "testing"}},
         )
         self.assert_200_ok(response, expected)
 
-        # ensure GET now returns the updated step change
+        # ensure GET now returns the updated change_annotations
+        response = client.get(self.url.format(benchmark_result.id))
+        self.assert_200_ok(response, expected)
+
+        # delete a key and add a different key
+        del expected["change_annotations"]["b"]
+        expected["change_annotations"]["c"] = 4
+
+        response = client.put(
+            self.url.format(benchmark_result.id),
+            json={"change_annotations": {"b": None, "c": 4}},
+        )
+        self.assert_200_ok(response, expected)
+
+        # ensure GET now returns the updated change_annotations
+        response = client.get(self.url.format(benchmark_result.id))
+        self.assert_200_ok(response, expected)
+
+        # ensure that PUTting {} will leave them all unchanged
+        response = client.put(
+            self.url.format(benchmark_result.id), json={"change_annotations": {}}
+        )
+        self.assert_200_ok(response, expected)
         response = client.get(self.url.format(benchmark_result.id))
         self.assert_200_ok(response, expected)
 

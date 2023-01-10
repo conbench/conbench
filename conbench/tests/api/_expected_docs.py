@@ -48,9 +48,9 @@
                     "application/json": {
                         "example": {
                             "batch_id": "some-batch-uuid-1",
+                            "change_annotations": {},
                             "error": None,
                             "id": "some-benchmark-uuid-1",
-                            "is_step_change": False,
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "info": "http://localhost/api/info/some-info-uuid-1/",
@@ -121,9 +121,9 @@
                     "application/json": {
                         "example": {
                             "batch_id": "some-batch-uuid-1",
+                            "change_annotations": {},
                             "error": None,
                             "id": "some-benchmark-uuid-1",
-                            "is_step_change": False,
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "info": "http://localhost/api/info/some-info-uuid-1/",
@@ -195,9 +195,9 @@
                         "example": [
                             {
                                 "batch_id": "some-batch-uuid-1",
+                                "change_annotations": {},
                                 "error": None,
                                 "id": "some-benchmark-uuid-1",
-                                "is_step_change": False,
                                 "links": {
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                     "info": "http://localhost/api/info/some-info-uuid-1/",
@@ -611,6 +611,7 @@
                             {
                                 "benchmark_id": "some-benchmark-uuid-1",
                                 "case_id": "some-case-uuid-1",
+                                "change_annotations": {},
                                 "context_id": "some-context-uuid-1",
                                 "data": [
                                     0.099094,
@@ -627,7 +628,6 @@
                                 "distribution_mean": 0.036369,
                                 "distribution_stdev": 0.0,
                                 "hardware_hash": "diana-2-2-4-17179869184",
-                                "is_step_change": False,
                                 "mean": 0.036369,
                                 "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
                                 "repository": "https://github.com/org/repo",
@@ -977,6 +977,10 @@
             "BenchmarkCreate": {
                 "properties": {
                     "batch_id": {"type": "string"},
+                    "change_annotations": {
+                        "description": "Post-analysis annotations about this BenchmarkResult that\ngive details about whether it represents a change, outlier, etc. in the overall\ndistribution of BenchmarkResults.\n",
+                        "type": "object",
+                    },
                     "cluster_info": {"$ref": "#/components/schemas/ClusterCreate"},
                     "context": {
                         "description": "Information about the context the benchmark was run in (e.g. compiler flags, benchmark langauge) that are reasonably expected to have an impact on benchmark performance. This information is expected to be the same across a number of benchmarks. (free-form JSON)",
@@ -990,10 +994,6 @@
                     "info": {
                         "description": "Additional information about the context the benchmark was run in that is not expected to have an impact on benchmark performance (e.g. benchmark language version, compiler version). This information is expected to be the same across a number of benchmarks. (free-form JSON)",
                         "type": "object",
-                    },
-                    "is_step_change": {
-                        "description": "Is this result the first result of a sufficiently 'different' distribution than the result on the previous commit (for the same hardware/case/context)? That is, when evaluating whether future results are regressions or improvements, should we treat data from before this result as incomparable?",
-                        "type": "boolean",
                     },
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
                     "optional_benchmark_info": {
@@ -1099,9 +1099,9 @@
             },
             "BenchmarkUpdate": {
                 "properties": {
-                    "is_step_change": {
-                        "description": "Is this result the first result of a sufficiently 'different' distribution than the result on the previous commit (for the same hardware/case/context)? That is, when evaluating whether future results are regressions or improvements, should we treat data from before this result as incomparable?",
-                        "type": "boolean",
+                    "change_annotations": {
+                        "description": "Post-analysis annotations about this BenchmarkResult that\ngive details about whether it represents a change, outlier, etc. in the overall\ndistribution of BenchmarkResults.\n\n\nThis endpoint will only update the user-specified keys, and leave the rest alone. To\ndelete an existing key, set the value to null.\n",
+                        "type": "object",
                     }
                 },
                 "type": "object",

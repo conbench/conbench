@@ -56,7 +56,7 @@ class BenchmarkResult(Base, EntityMixin):
     iqr = Nullable(s.Numeric, check("iqr>=0"))
     error = Nullable(postgresql.JSONB)
     validation = Nullable(postgresql.JSONB)
-    is_step_change = NotNull(s.Boolean, default=False)
+    change_annotations = Nullable(postgresql.JSONB)
 
     @staticmethod
     def create(data):
@@ -169,13 +169,17 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_result_data["batch_id"] = data["batch_id"]
         benchmark_result_data["timestamp"] = data["timestamp"]
         benchmark_result_data["validation"] = data.get("validation")
+        benchmark_result_data["change_annotations"] = {
+            key: value
+            for key, value in data.get("change_annotations", {}).items()
+            if value is not None
+        }
         benchmark_result_data["case_id"] = case.id
         benchmark_result_data["optional_benchmark_info"] = data.get(
             "optional_benchmark_info"
         )
         benchmark_result_data["info_id"] = info.id
         benchmark_result_data["context_id"] = context.id
-        benchmark_result_data["is_step_change"] = data.get("is_step_change", False)
         benchmark_result = BenchmarkResult(**benchmark_result_data)
         benchmark_result.save()
 
@@ -185,6 +189,23 @@ class BenchmarkResult(Base, EntityMixin):
         update_distribution(benchmark_result, commit_limit=Config.DISTRIBUTION_COMMITS)
 
         return benchmark_result
+
+    def update(self, data):
+        old_change_annotations = self.change_annotations or {}
+
+        # prefer newly-given change_annotations over old change_annotations
+        new_change_annotations = {
+            **old_change_annotations,
+            **data.pop("change_annotations", {}),
+        }
+        # delete any new keys where value is None
+        data["change_annotations"] = {
+            key: value
+            for key, value in new_change_annotations.items()
+            if value is not None
+        }
+
+        super().update(data)
 
 
 s.Index("benchmark_result_run_id_index", BenchmarkResult.run_id)
@@ -293,6 +314,7 @@ class _Serializer(EntitySerializer):
             "tags": tags,
             "optional_benchmark_info": benchmark_result.optional_benchmark_info,
             "validation": benchmark_result.validation,
+            "change_annotations": benchmark_result.change_annotations or {},
             "stats": {
                 "data": [to_float(x) for x in benchmark_result.data],
                 "times": [to_float(x) for x in benchmark_result.times],
@@ -312,7 +334,6 @@ class _Serializer(EntitySerializer):
                 "z_improvement": z_improvement(benchmark_result.z_score),
             },
             "error": benchmark_result.error,
-            "is_step_change": benchmark_result.is_step_change,
             "links": {
                 "list": f.url_for("api.benchmarks", _external=True),
                 "self": f.url_for(
@@ -338,12 +359,10 @@ class BenchmarkResultSerializer:
     many = _Serializer(many=True)
 
 
-IS_STEP_CHANGE_DESC = (
-    "Is this result the first result of a sufficiently 'different' distribution than "
-    "the result on the previous commit (for the same hardware/case/context)? That is, "
-    "when evaluating whether future results are regressions or improvements, should we "
-    "treat data from before this result as incomparable?"
-)
+CHANGE_ANNOTATIONS_DESC = """Post-analysis annotations about this BenchmarkResult that
+give details about whether it represents a change, outlier, etc. in the overall
+distribution of BenchmarkResults.
+"""
 
 
 class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
@@ -407,9 +426,8 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
         },
     )
     github = marshmallow.fields.Nested(GitHubCreate(), required=False)
-    is_step_change = marshmallow.fields.Boolean(
-        required=False,
-        metadata={"description": IS_STEP_CHANGE_DESC},
+    change_annotations = marshmallow.fields.Dict(
+        required=False, metadata={"description": CHANGE_ANNOTATIONS_DESC}
     )
 
     @marshmallow.validates_schema
@@ -431,9 +449,16 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
 
 
 class _BenchmarkFacadeSchemaUpdate(marshmallow.Schema):
-    is_step_change = marshmallow.fields.Boolean(
+    change_annotations = marshmallow.fields.Dict(
         required=False,
-        metadata={"description": IS_STEP_CHANGE_DESC},
+        metadata={
+            "description": CHANGE_ANNOTATIONS_DESC
+            + """
+
+This endpoint will only update the user-specified keys, and leave the rest alone. To
+delete an existing key, set the value to null.
+"""
+        },
     )
 
 
