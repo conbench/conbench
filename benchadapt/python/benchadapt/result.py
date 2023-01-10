@@ -71,7 +71,7 @@ class BenchmarkResult:
 
         By default, metadata will be obtained from ``BENCHMARKABLE_REPOSITORY``,
         ``BENCHMARKABLE_COMMIT``, and ``BENCHMARKABLE_PR_NUMBER`` environment variables.
-        If any are unset, an error will be raised.
+        If any are unset, a warning will be raised.
 
         Advanced: if you have a locally cloned repo, you may explicitly supply ``None``
         to this argument and its information will be scraped from the cloned repo.
