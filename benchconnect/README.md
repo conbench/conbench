@@ -23,22 +23,22 @@ pipx install benchconnect@git+https://github.com/conbench/conbench.git@main#subd
 benchconnect relies on a number of environment variables to obtain various
 metadata:
 
-- `CONBENCH_URL`: The URL of the Conbench server. Required.
+- `CONBENCH_URL`: Required. The URL of the Conbench server without a trailing
+slash, e.g. `https://conbench.example.com`
 - `CONBENCH_EMAIL`: The email to use for Conbench login. Only required if the
 server is private.
 - `CONBENCH_PASSWORD`: The password to use for Conbench login. Only required
 if the server is private.
-- `CONBENCH_REPOSITORY`: The URL of the repo being benchmarked. Defaults
-to `"https://github.com/apache/arrow"` if unset.
-- `CONBENCH_PR_NUMBER`: Integer of pull request number associated with
-the run being benchmarked.
-- `CONBENCH_COMMIT`: Hash of commit being benchmarked. If missing, will
-attempt to obtain it from `arrow::arrow_info()$build_info$git_id`, though
-this may not be populated depending on how Arrow was built.
-- `CONBENCH_HOST_NAME`: By default, the running machine host name will be
-obtained with `platform.node()`, but in circumstances where consistency is
-needed (e.g. running in CI or on cloud runners), a value for host name can
-be specified via this environment variable instead.
+- `CONBENCH_REPOSITORY`: The repository name (in the format `org/repo`) or the
+URL (in the format `https://github.com/org/repo`)
+- `CONBENCH_PR_NUMBER`: [recommended] The number of the GitHub pull request that
+is running this benchmark, or ``None`` if for a run on the default branch
+- `CONBENCH_COMMIT`: The 40-character commit SHA of the repo being benchmarked
+- `CONBENCH_HOST_NAME`: By default, the running machine host name (sent in
+`machine_info.name` when posting runs and benchmarks) will be obtained with
+`platform.node()`, but in circumstances where consistency is needed (e.g.
+running in CI or on cloud runners), a value for host name can be specified via
+this environment variable instead.
 
 ## Usage
 
