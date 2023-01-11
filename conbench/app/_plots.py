@@ -235,12 +235,23 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     source_alert_min = _source(with_dist, unit, formatted=formatted, alert_min=True)
     source_alert_max = _source(with_dist, unit, formatted=formatted, alert_max=True)
 
+    t_start = source_mean_over_time.data["x"][0]
+    t_end = source_mean_over_time.data["x"][-1]
+
+    t_range: datetime.timedelta = t_end - t_start
+
+    # Add padding/buffer to left and right so that newest data point does not
+    # disappear under right plot boundary, and so that the oldest data point
+    # has space from legend.
+    t_start = t_start - (0.4 * t_range)
+    t_end = t_end + (0.07 * t_range)
+
     p = bokeh.plotting.figure(
         x_axis_type="datetime",
         height=height,
         width=width,
         tools=["pan", "zoom_in", "zoom_out", "reset"],
-        x_range=(source.data["x"][0], source.data["x"][-1]),
+        x_range=(t_start, t_end),
     )
     p.toolbar.logo = None
 
