@@ -360,6 +360,8 @@ def _api_history_entity(benchmark_id, case_id, context_id, run_name):
         "context_id": context_id,
         "hardware_hash": "diana-2-2-4-17179869184",
         "unit": "s",
+        "data": BENCHMARK_ENTITY["stats"]["data"],
+        "times": BENCHMARK_ENTITY["stats"]["times"],
         "mean": 0.036369,
         "is_step_change": False,
         "distribution_mean": 0.036369,
