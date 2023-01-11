@@ -316,6 +316,8 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         )
         spacer.outline_line_color = None
         spacers.append(spacer)
-        print(f"Ignore any MISSING_RENDERERS warning for id={spacer.id}")
+        # Note(JP): I cannot make sense of this warning. I think the printed
+        # text is not acted on by anyone. Outcommeting for now.
+        # print(f"Ignore any MISSING_RENDERERS warning for id={spacer.id}")
 
     return bokeh.layouts.column(p, spacers[0], select, spacers[1])
