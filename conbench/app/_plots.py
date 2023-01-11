@@ -322,8 +322,9 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     )
 
     p.legend.title_text_color = "darkgray"
-    p.legend.title = f"{len(history)} observations"
-    p.legend.location = "bottom_left"
+    p.legend.title = f"benchmark results: {len(history)}"
+    p.legend.location = "top_left"
+
     # Change the number of expected/desired date x ticks. There is otherwise
     # only very few of them (like 4). Also see
     # https://github.com/bokeh/bokeh/issues/665 and
