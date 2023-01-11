@@ -209,7 +209,8 @@ def _source(
     return bokeh.models.ColumnDataSource(data=source_data)
 
 
-def time_series_plot(history, benchmark, run, height=250, width=1000):
+def time_series_plot(history, benchmark, run, height=380, width=1100):
+
     unit = history[0]["unit"]
     current = [
         {
