@@ -286,14 +286,22 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         size=4,
         color="#ccc",
     )
-    p.line(source=source_mean, color="#ffa600", legend_label="Mean")
-    p.line(source=source_alert_min, color="Silver", legend_label="+/- 5 σ")
+
     # line_min_over_time =
     p.line(
         source=source_min_over_time,
         legend_label="individual benchmark (min)",
         name="min-over-time",
         color="#222",
+    )
+
+    p.line(source=source_mean, color="#ffa600", legend_label="rolling window mean")
+    p.line(
+        source=source_alert_min,
+        color="Silver",
+        legend_label="rolling window mean +/- 5 σ",
+        line_join="round",
+        width=1,
     )
     p.line(source=source_alert_max, color="Silver")
 
