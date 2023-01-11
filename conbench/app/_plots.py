@@ -293,11 +293,17 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         color="#ccc",
     )
 
-    # line_min_over_time =
     p.line(
         source=source_min_over_time,
         legend_label="individual benchmark (min)",
         name="min-over-time",
+        color="#222",
+    )
+    p.circle(
+        source=source_min_over_time,
+        legend_label="individual benchmark (min)",
+        name="min-over-time",
+        size=2,
         color="#222",
     )
 
