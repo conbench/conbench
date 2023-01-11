@@ -168,8 +168,16 @@ def _source(
     alert_min=False,
     alert_max=False,
 ):
+    # Note(JP): important magic: if not specified otherwise, this extracts
+    # the mean-over-time.
     key = "distribution_mean" if distribution_mean else "mean"
+
     unit_fmt = formatter_for_unit(unit)
+
+    # TODO: These commit message prefixes end up in the on-hover tooltip.
+    # Change this to use short commit hashes. The long commit message prefix
+    # does not unambiguously specify the commit. Ideally link to the commit, in
+    # the tooltip?
     commits = [x["message"] for x in data]
     dates = [dateutil.parser.isoparse(x["timestamp"]) for x in data]
 
@@ -186,9 +194,15 @@ def _source(
             means.append(unit_fmt(points[-1], unit))
     else:
         points = [x[key] for x in data]
+        # Note(JP): If `means` is just string-formatted `points` then this is
+        # kind of acknowledging that `points` is always a collection of mean
+        # values. It seems that this is a string value field that is only
+        # ever used for tooltip generation?
         means = [unit_fmt(float(x[key]), unit) for x in data if x[key]]
 
     if formatted:
+        # Note(JP): why would we want to calculate the raw numeric data from
+        # the tooltip string labels?
         points = [x.split(" ")[0] for x in means]
 
     source_data = dict(x=dates, y=points, commits=commits, means=means)
