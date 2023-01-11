@@ -285,6 +285,11 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     p.legend.title_text_color = "darkgray"
     p.legend.title = f"{len(history)} observations"
     p.legend.location = "bottom_left"
+    # Change the number of expected/desired date x ticks. There is otherwise
+    # only very few of them (like 4). Also see
+    # https://github.com/bokeh/bokeh/issues/665 and
+    # https://github.com/bokeh/bokeh/pull/2186
+    p.xaxis.ticker.desired_num_ticks = 9
 
     range_tool = bokeh.models.RangeTool(x_range=p.x_range)
     range_tool.overlay.fill_color = "gainsboro"
