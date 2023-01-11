@@ -263,22 +263,28 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     p.line(source=source_mean, color="#ffa600", legend_label="Mean")
     p.line(source=source_alert_min, color="Silver", legend_label="+/- 5 σ")
     p.line(source=source_alert_max, color="Silver")
-    bench_circle = p.circle(
-        source=source_x,
+
+    cur_bench_mean_circle = p.circle(
+        source=source_current_bm_mean,
         size=8,
         color="#ff6361",
-        legend_label="Benchmark",
+        legend_label="current benchmark (mean)",
         name="benchmark",
     )
     p.add_tools(
         bokeh.models.HoverTool(
             tooltips=[
                 ("date", "$x{%F}"),
+                # Note(JP): this is where the `means` name becomes special,
+                # I think.
                 ("mean", "@means"),
                 ("commit", "@commits"),
             ],
             formatters={"$x": "datetime"},
-            renderers=[hist_line, bench_circle],
+            renderers=[
+                scatter_mean_over_time,
+                cur_bench_mean_circle,
+            ],
         )
     )
 
@@ -306,7 +312,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         toolbar_location=None,
     )
 
-    select.line("x", "y", source=source)
+    select.line("x", "y", source=source_mean_over_time)
     select.ygrid.grid_line_color = None
     select.add_tools(range_tool)
     select.toolbar.active_multi = range_tool
