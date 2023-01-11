@@ -12,16 +12,36 @@ from ..entities.run import Run
 class _Serializer(EntitySerializer):
     def _dump(self, history):
         standard_deviation = history.mean_sd if history.mean_sd else 0
+
+        # Note(JP): expose `times` or `data` or flatten them or expose both?
+        # Unclear. `times` is specified as "A list of benchmark durations. If
+        # data is a duration measure, this should be a duplicate of that
+        # object." `data` is specified with "A list of benchmark results (e.g.
+        # durations, throughput). This will be used as the main + only metric
+        # for regression and improvement. The values should be ordered in the
+        # order the iterations were executed (the first element is the first
+        # iteration, the second element is the second iteration, etc.). If an
+        # iteration did not complete but others did and you want to send
+        # partial data, mark each iteration that didn't complete as null."
+        # Expose both for now.
+        #
+        # In practice, I have only seen `data` being used so far and even when
+        # `data` was representing durations then this vector was not duplicated
+        # as `times`.
+
         return {
             "benchmark_id": history.id,
             "case_id": history.case_id,
             "context_id": history.context_id,
             "mean": float(history.mean),
+            "data": [float(d) if d is not None else None for d in history.data],
+            "times": [float(t) if t is not None else None for t in history.times],
             "unit": history.unit,
             "is_step_change": history.is_step_change,
             "hardware_hash": history.hash,
             "sha": history.sha,
             "repository": history.repository,
+            # Note(JP): this is the commit message
             "message": history.message,
             "timestamp": history.timestamp.isoformat(),
             "run_name": history.name,
@@ -50,6 +70,8 @@ def get_history(case_id, context_id, hardware_hash, repo) -> List[tuple]:
             BenchmarkResult.context_id,
             BenchmarkResult.mean,
             BenchmarkResult.unit,
+            BenchmarkResult.data,
+            BenchmarkResult.times,
             BenchmarkResult.is_step_change,
             Hardware.hash,
             Commit.sha,
