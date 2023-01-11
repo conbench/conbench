@@ -1,11 +1,15 @@
 import collections
+import datetime
 import json
+import logging
 
 import bokeh.plotting
 import dateutil
 
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
+
+log = logging.getLogger(__name__)
 
 
 class TimeSeriesPlotMixin:
@@ -211,6 +215,8 @@ def _source(
 
 def time_series_plot(history, benchmark, run, height=380, width=1100):
 
+    # log.info("Time series plot for:\n%s", json.dumps(history, indent=2))
+
     unit = history[0]["unit"]
     with_dist = [h for h in history if h["distribution_mean"]]
     formatted, axis_unit = _should_format(history, unit)
@@ -312,6 +318,15 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         legend_label="current benchmark (mean)",
         name="benchmark",
     )
+
+    cur_bench_min_circle = p.circle(
+        source=source_current_bm_min,
+        size=8,
+        color="#000",
+        legend_label="current benchmark (min)",
+        name="benchmark",
+    )
+
     p.add_tools(
         bokeh.models.HoverTool(
             tooltips=[
@@ -325,6 +340,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
             renderers=[
                 scatter_mean_over_time,
                 cur_bench_mean_circle,
+                cur_bench_min_circle,
             ],
         )
     )
