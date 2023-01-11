@@ -1,6 +1,8 @@
 import datetime
 import logging
 import os
+import random
+import statistics
 import time
 import uuid
 
@@ -25,10 +27,10 @@ session = requests.Session()
 def main():
     register()
     login()
+    log.info("start generate_synthetic_benchmark_history()")
+    generate_synthetic_benchmark_history()
     log.info("start create_benchmarks_data()")
     create_benchmarks_data()
-    log.info("start create_benchmarks_with_history()")
-    create_benchmarks_with_history()
 
 
 def generate_benchmarks_data(
@@ -254,6 +256,9 @@ def post_benchmarks(data):
         f"Received status code {res.status_code}. "
         f"Took {attempt} attempt(s). Last attempt took {time.monotonic() - t0 :.5f} s."
     )
+
+    if str(res.status_code).startswith("4"):
+        log.info("4xx response body: %s", res.text)
     return benchmark_id
 
 
@@ -339,7 +344,7 @@ def create_benchmarks_data():
     update_run_with_info(run_id, timestamp)
 
 
-def create_benchmarks_with_history():
+def create_be():
     # 7 commits in a row in apache/arrow, the commented one is missing
     commits = [
         "17d6fdc0e9c00534e4de7bfb193c33c86cab7e15",
@@ -405,6 +410,144 @@ def create_benchmarks_with_history():
     log.info("now, emit a benchmark ID on stdout")
     # That benchmark ID is consumed and used by CI.
     print(benchmark_ids[0])
+
+
+def generate_synthetic_benchmark_history():
+
+    commits = [c.strip() for c in reversed(ARROW_COMMIT_HASH_LINES_50.splitlines())]
+    benchmark_name = "dummy-bench"
+
+    distr_mean = 20.0
+    # This is to simulate the real-world effect of there being a theoretical
+    # optimum: the fastest benchmark duration time with all sources of noise
+    # being silenced.
+    lower_bound = 17.5
+    slowdown_offset = distr_mean * 0.1
+    slowdown_lin = distr_mean * 0.1
+    distribution = statistics.NormalDist(mu=20.0, sigma=2)
+
+    def sample_slowdown(s):
+        return s + slowdown_offset + slowdown_lin * random.random()
+
+    for idx, commit_hash in enumerate(commits, 1):
+
+        # Get current time as tzaware datetime object in UTC timezone, and
+        # then subtract
+        run_start = datetime.datetime.utcnow().replace(
+            tzinfo=datetime.timezone.utc
+        ) - datetime.timedelta(hours=10 * idx)
+        run_start_timestring_iso8601 = run_start.isoformat()
+
+        bdata = generate_benchmarks_data(
+            run_id=str(uuid.uuid4())[9:],
+            commit=commit_hash,
+            branch=None,
+            benchmark_name=benchmark_name,
+            benchmark_language="Dumython",
+            timestamp=run_start_timestring_iso8601,
+            hardware_type="dummymachine",
+            reason="commit",
+            mean=None,
+        )
+
+        # Overwrite duration / stats property. Generate with statistical
+        # properties.
+        bdata["stats"] = None
+
+        # Implement lower bound. Better: choose a different distribution, not
+        # a normal distribution.
+        samples = []
+        while len(samples) < 6:
+            s = distribution.samples(n=1)[0]
+            if s < lower_bound:
+                continue
+            samples.append(s)
+
+        # Simulate for this complete set of iterations to have been affected by
+        # a slowdown.
+        if random.random() < 0.1:
+            # Shift all samples a little higher (not by the same amount)
+            samples = [sample_slowdown(s) for s in samples]
+
+        # Simulate for any sample to have been affected by some blip-slowdown
+        if random.random() < 0.02:
+            # Shift a specific, random sample a little higher
+            rndidx = random.randint(0, len(samples) - 1)
+            samples[rndidx] = sample_slowdown(samples[rndidx])
+
+        bdata["stats"] = {
+            "data": [str(s) for s in samples],
+            "iterations": len(samples),
+            "unit": "s",
+            "time_unit": "s",
+            "times": [],
+        }
+
+        post_benchmarks(bdata)
+        # runs.append((run_id, timestamp))
+
+
+"""
+Every 20th commit in the apache/arrow repository, walking the commit tree
+backwards by 1000 commits, starting at commit 85b167c05. Done with the
+following command:
+
+git log --pretty=%P -n 1000 85b167c05c2f93a95b23e8ac4fd4da576ea5b899 | awk 'NR%20<1'
+"""
+ARROW_COMMIT_HASH_LINES_50 = """
+    6bd847b2aefdb0f10eaf83a3bfe2dc8ee269e8e4
+    63b91cc1f7131356537ab9cbb84ed108d6f9102e
+    d00f016315408d653b2a46d3fd8922616264ced4
+    5a9805807456fa1b50671afded557044ab6cc8e6
+    4e9158d373df105f01ba9d6052cfb9ab7ecdcbeb
+    676c804de55bae97e5060e16e650565de163a8fe
+    b21bf749f291367f85ad61751205e7deeee92bc7
+    53c659ae4de8d6b9194cd9f410c078c136a274d2
+    26a426f325256e260a15521d5097efffd2f1ceb1
+    8a8999e94038aa9a60d3ac15741cf9c7abad0433
+    fde7b937c84eaad842ab0457d2490c6c8c244697
+    fb29effbb689014ea50f8bf3814539d5cc8f7021
+    57b81cac8a5d9dfa56c8a224cb2bc9b9046fb807
+    e0e7ba824f56460cdb7dd9ffa6779de93b62d121
+    dab5d3a29394f59045ac6b66f9b697507d6cd1b7
+    3da803db456536782e6ad1cd6cb4f5d08d6a5d6a
+    619b034bd3e14937fa5d12f8e86fa83e7444b886
+    b41bd80187d88f5187a3dc7c42444fbbcca6f7a8
+    4e7d91cd7ad42c10195ef465f5b6f1daf7b72f05
+    7f6c5aeb5388936709642e48aed6419d1e2144a6
+    2f627c213fc328ca7cd058d4455581fc246837da
+    ebda85fcb7bc422427a85ff50fa39551cbd6a41f
+    aeba61663fdd82719e6cc0945aba216958ad6970
+    6bf9a546f296cdeebfe5cc543e1d1351cf251509
+    20626f833be5c1241161054665ccc3906f3da1c3
+    49a53d2fe01145ade49e4af68092af1b73570f9c
+    13ede7bb17992e5afe65daf38006b891c47d918a
+    776626e56b07a3ba69f73b9f75bbc9d4f7fa72b7
+    949e99af5f62ec68b41ce43ec079b1b49c6533e7
+    7a568468119a1a530a8a45d5e66b72c8be807b0f
+    b2871bb4d80695723f8a5ef54c864d9545e6b175
+    58be6a317ff09eefb53c3f0122e4d4eedd166977
+    529f653dfa58887522af06028e5c32e8dd1a14ea
+    b48d2287bef95ed195f6e3721dd34f97fd1735c2
+    29225accecb74b4974920a8acaca55578a44254e
+    9d6598108c4fd93be89f8f5becaa7cb66f929fe7
+    df121b7feec92464a4e97fe535a864537a16be1b
+    fea7cc3a5992622731fd86989b6d87998a79eb6e
+    93b63e8f3b4880927ccbd5522c967df79e926cda
+    04d240318555f5b0207b4deee233f3d36ad4c6fe
+    5f84335fbb1e1467eed07563be00e9338a06ff03
+    f0688d01c465417e6f3515f9344154ad6f47ba22
+    bc1a16cd0eceeffe67893a7e8000d2dd28dcf3f1
+    838687178fda7f82e31668f502e2f94071ce8077
+    6d575b621d14c4b48558da0d366ba007793b2d0c
+    8cac69c809e2ae9d4ba9c10c7b22869c1fd11323
+    036fdf2d03c3a6986109f053d94fc237d2c2f82d
+    545b4313d6db2dfcc4ea0aa4ac23785d64450e1d
+    ee2e9448c8565820ba38a2df9e44ab6055e5df1d
+    9c422a2011404ee0c5c01eeb2a6a1d5333816cad
+
+    82ba27906c88ef5e5b1b684938f10cbb817edceb
+    """
 
 
 if __name__ == "__main__":
