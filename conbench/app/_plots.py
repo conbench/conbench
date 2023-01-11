@@ -212,20 +212,25 @@ def _source(
 def time_series_plot(history, benchmark, run, height=380, width=1100):
 
     unit = history[0]["unit"]
-    current = [
-        {
-            "mean": benchmark["stats"]["mean"],
-            "message": run["commit"]["message"],
-            "timestamp": run["commit"]["timestamp"],
-        }
-    ]
     with_dist = [h for h in history if h["distribution_mean"]]
     formatted, axis_unit = _should_format(history, unit)
 
     # Note(JP): `history` is an ordered list of dicts, each dict has a `mean`
     # key which is extracted here by default.
     source_mean_over_time = _source(history, unit, formatted=formatted)
-    source_x = _source(current, unit, formatted=formatted)
+
+    source_current_bm_mean = _source(
+        [
+            {
+                "mean": benchmark["stats"]["mean"],
+                "message": run["commit"]["message"],
+                "timestamp": run["commit"]["timestamp"],
+            }
+        ],
+        unit,
+        formatted=formatted,
+    )
+
     source_mean = _source(with_dist, unit, formatted=formatted, distribution_mean=True)
     source_alert_min = _source(with_dist, unit, formatted=formatted, alert_min=True)
     source_alert_max = _source(with_dist, unit, formatted=formatted, alert_max=True)
