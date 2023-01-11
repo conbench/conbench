@@ -259,7 +259,13 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     p.xaxis.major_label_orientation = 1
     p.yaxis.axis_label = axis_unit
 
-    hist_line = p.line(source=source, legend_label="History", name="history")
+    scatter_mean_over_time = p.circle(
+        source=source_mean_over_time,
+        legend_label="individual benchmark (mean)",
+        name="history",
+        size=4,
+        color="#ccc",
+    )
     p.line(source=source_mean, color="#ffa600", legend_label="Mean")
     p.line(source=source_alert_min, color="Silver", legend_label="+/- 5 σ")
     p.line(source=source_alert_max, color="Silver")
