@@ -218,11 +218,31 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     # Note(JP): `history` is an ordered list of dicts, each dict has a `mean`
     # key which is extracted here by default.
     source_mean_over_time = _source(history, unit, formatted=formatted)
+    source_min_over_time = bokeh.models.ColumnDataSource(
+        data=dict(
+            x=[dateutil.parser.isoparse(x["timestamp"]) for x in history],
+            y=[min(x["data"]) for x in history],
+            # commits=commits,
+            # means=means,
+        )
+    )
 
     source_current_bm_mean = _source(
         [
             {
                 "mean": benchmark["stats"]["mean"],
+                "message": run["commit"]["message"],
+                "timestamp": run["commit"]["timestamp"],
+            }
+        ],
+        unit,
+        formatted=formatted,
+    )
+
+    source_current_bm_min = _source(
+        [
+            {
+                "mean": benchmark["stats"]["min"],
                 "message": run["commit"]["message"],
                 "timestamp": run["commit"]["timestamp"],
             }
@@ -268,6 +288,13 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     )
     p.line(source=source_mean, color="#ffa600", legend_label="Mean")
     p.line(source=source_alert_min, color="Silver", legend_label="+/- 5 σ")
+    # line_min_over_time =
+    p.line(
+        source=source_min_over_time,
+        legend_label="individual benchmark (min)",
+        name="min-over-time",
+        color="#222",
+    )
     p.line(source=source_alert_max, color="Silver")
 
     cur_bench_mean_circle = p.circle(
