@@ -57,7 +57,7 @@ class BenchmarkResult:
         architecture, etc. Auto-populated if ``cluster_info`` not set. If host name
         should not be detected with ``platform.node()`` (e.g. because a consistent
         name is needed for CI or cloud runners), it can be overridden with the
-        ``CONBENCH_HOST_NAME`` environment variable.
+        ``CONBENCH_MACHINE_INFO_NAME`` environment variable.
     cluster_info : Dict[str, Any]
         For benchmarks run on a cluster, information about the cluster
     context : Dict[str, Any]
@@ -68,8 +68,8 @@ class BenchmarkResult:
         If it's a non-default-branch & non-PR commit, you may supply the branch name to
         the optional ``branch`` key in the format ``org:branch``.
 
-        By default, metadata will be obtained from ``CONBENCH_REPOSITORY``,
-        ``CONBENCH_COMMIT``, and ``CONBENCH_PR_NUMBER`` environment variables.
+        By default, metadata will be obtained from ``CONBENCH_PROJECT_REPOSITORY``,
+        ``CONBENCH_PROJECT_COMMIT``, and ``CONBENCH_PROJECT_PR_NUMBER`` environment variables.
         If any are unset, a warning will be raised.
 
         Advanced: if you have a locally cloned repo, you may explicitly supply ``None``
@@ -176,7 +176,10 @@ class BenchmarkResult:
             res_dict["github"].get("repository") and res_dict["github"].get("commit")
         ):
             raise ValueError(
-                "Result not publishable! `github.repository` and `github.commit` must be populated"
+                "Result not publishable! `github.repository` and `github.commit` must be populated. "
+                "You may pass github metadata via CONBENCH_PROJECT_REPOSITORY, CONBENCH_PROJECT_COMMIT, "
+                "and CONBENCH_PR_NUMBER environment variables. "
+                f"\ngithub: {res_dict['github']}"
             )
 
         for attr in [
