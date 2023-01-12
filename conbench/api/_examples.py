@@ -123,7 +123,7 @@ def _api_benchmark_entity(
         "error": error,
         "validation": validation,
         "optional_benchmark_info": optional_benchmark_info,
-        "is_step_change": False,
+        "change_annotations": {},
         "tags": {
             "id": case_id,
             "compression": "snappy",
@@ -363,7 +363,7 @@ def _api_history_entity(benchmark_id, case_id, context_id, run_name):
         "data": BENCHMARK_ENTITY["stats"]["data"],
         "times": BENCHMARK_ENTITY["stats"]["times"],
         "mean": 0.036369,
-        "is_step_change": False,
+        "change_annotations": {},
         "distribution_mean": 0.036369,
         "distribution_stdev": 0.000000,
         "repository": "https://github.com/org/repo",
