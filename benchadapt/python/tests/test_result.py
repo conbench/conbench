@@ -79,18 +79,22 @@ class TestBenchmarkResult:
             ).to_publishable_dict()
 
     def test_github_detection(self, monkeypatch):
-        monkeypatch.setenv("CONBENCH_REPOSITORY", res_json["github"]["repository"])
-        monkeypatch.setenv("CONBENCH_PR_NUMBER", res_json["github"]["pr_number"])
-        monkeypatch.setenv("CONBENCH_COMMIT", res_json["github"]["commit"])
+        monkeypatch.setenv(
+            "CONBENCH_PROJECT_REPOSITORY", res_json["github"]["repository"]
+        )
+        monkeypatch.setenv(
+            "CONBENCH_PROJECT_PR_NUMBER", res_json["github"]["pr_number"]
+        )
+        monkeypatch.setenv("CONBENCH_PROJECT_COMMIT", res_json["github"]["commit"])
         assert BenchmarkResult().github == res_json["github"]
 
-        monkeypatch.delenv("CONBENCH_REPOSITORY")
-        monkeypatch.delenv("CONBENCH_PR_NUMBER")
-        monkeypatch.delenv("CONBENCH_COMMIT")
+        monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY")
+        monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER")
+        monkeypatch.delenv("CONBENCH_PROJECT_COMMIT")
 
         with pytest.warns(
             UserWarning,
-            match="Both CONBENCH_REPOSITORY and CONBENCH_COMMIT must be set if `github` is not specified",
+            match="Both CONBENCH_PROJECT_REPOSITORY and CONBENCH_PROJECT_COMMIT must be set if `github` is not specified",
         ):
             BenchmarkResult()
 
@@ -102,7 +106,7 @@ class TestBenchmarkResult:
 
     def test_host_detection(self, monkeypatch):
         machine_info_name = "fake-computer-name"
-        monkeypatch.setenv("CONBENCH_HOST_NAME", machine_info_name)
+        monkeypatch.setenv("CONBENCH_MACHINE_INFO_NAME", machine_info_name)
 
         result = BenchmarkResult(github=res_json["github"])
 

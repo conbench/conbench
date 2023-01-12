@@ -29,12 +29,12 @@ slash, e.g. `https://conbench.example.com`
 server is private.
 - `CONBENCH_PASSWORD`: The password to use for Conbench login. Only required
 if the server is private.
-- `CONBENCH_REPOSITORY`: The repository name (in the format `org/repo`) or the
+- `CONBENCH_PROJECT_REPOSITORY`: The repository name (in the format `org/repo`) or the
 URL (in the format `https://github.com/org/repo`)
-- `CONBENCH_PR_NUMBER`: [recommended] The number of the GitHub pull request that
+- `CONBENCH_PROJECT_PR_NUMBER`: [recommended] The number of the GitHub pull request that
 is running this benchmark, or ``None`` if for a run on the default branch
-- `CONBENCH_COMMIT`: The 40-character commit SHA of the repo being benchmarked
-- `CONBENCH_HOST_NAME`: By default, the running machine host name (sent in
+- `CONBENCH_PROJECT_COMMIT`: The 40-character commit SHA of the repo being benchmarked
+- `CONBENCH_MACHINE_INFO_NAME`: By default, the running machine host name (sent in
 `machine_info.name` when posting runs and benchmarks) will be obtained with
 `platform.node()`, but in circumstances where consistency is needed (e.g.
 running in CI or on cloud runners), a value for host name can be specified via

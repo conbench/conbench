@@ -15,8 +15,8 @@ minimal_run = {}
 
 @pytest.fixture
 def mock_github_env_vars(monkeypatch):
-    monkeypatch.setenv("CONBENCH_REPOSITORY", "conchair/conchair")
-    monkeypatch.setenv("CONBENCH_COMMIT", "fake-commit-hash")
+    monkeypatch.setenv("CONBENCH_PROJECT_REPOSITORY", "conchair/conchair")
+    monkeypatch.setenv("CONBENCH_PROJECT_COMMIT", "fake-commit-hash")
 
 
 @pytest.mark.parametrize(
