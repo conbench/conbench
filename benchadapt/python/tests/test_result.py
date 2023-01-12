@@ -58,20 +58,24 @@ class TestBenchmarkResult:
 
     def test_warns_stats_error(self):
         with pytest.warns(UserWarning, match="Result not publishable!"):
-            BenchmarkResult(stats={}, error={}, github={}).to_publishable_dict()
-
-        with pytest.warns(UserWarning, match="Result not publishable!"):
-            BenchmarkResult(stats=None, error=None, github={}).to_publishable_dict()
-
-    def test_warns_machine_cluster(self):
-        with pytest.warns(UserWarning, match="Result not publishable!"):
             BenchmarkResult(
-                machine_info={}, cluster_info={}, github={}
+                stats={}, error={}, github=res_json["github"]
             ).to_publishable_dict()
 
         with pytest.warns(UserWarning, match="Result not publishable!"):
             BenchmarkResult(
-                machine_info=None, cluster_info=None, github={}
+                stats=None, error=None, github=res_json["github"]
+            ).to_publishable_dict()
+
+    def test_warns_machine_cluster(self):
+        with pytest.warns(UserWarning, match="Result not publishable!"):
+            BenchmarkResult(
+                machine_info={}, cluster_info={}, github=res_json["github"]
+            ).to_publishable_dict()
+
+        with pytest.warns(UserWarning, match="Result not publishable!"):
+            BenchmarkResult(
+                machine_info=None, cluster_info=None, github=res_json["github"]
             ).to_publishable_dict()
 
     def test_github_detection(self, monkeypatch):
@@ -83,8 +87,24 @@ class TestBenchmarkResult:
         monkeypatch.delenv("CONBENCH_REPOSITORY")
         monkeypatch.delenv("CONBENCH_PR_NUMBER")
         monkeypatch.delenv("CONBENCH_COMMIT")
+
         with pytest.warns(
             UserWarning,
-            match="All of CONBENCH_REPOSITORY, CONBENCH_PR_NUMBER, and CONBENCH_COMMIT must be set if `github` is not specified.",
+            match="Both CONBENCH_REPOSITORY and CONBENCH_COMMIT must be set if `github` is not specified",
         ):
             BenchmarkResult()
+
+            with pytest.raises(
+                ValueError,
+                match="Result not publishable! `github.repository` and `github.commit` must be populated",
+            ):
+                BenchmarkResult().to_publishable_dict()
+
+    def test_host_detection(self, monkeypatch):
+        machine_info_name = "fake-computer-name"
+        monkeypatch.setenv("CONBENCH_HOST_NAME", machine_info_name)
+
+        result = BenchmarkResult(github=res_json["github"])
+
+        assert result.machine_info["name"] == machine_info_name
+        assert result.machine_info["name"] != res_json["machine_info"]["name"]

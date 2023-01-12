@@ -91,11 +91,12 @@ def github_info():
         "pr_number": pr_number,
     }
 
-    if not (repo and pr_number and commit):
+    if not (repo and commit):
         warnings.warn(
             (
-                "All of CONBENCH_REPOSITORY, CONBENCH_PR_NUMBER, and "
-                "CONBENCH_COMMIT must be set if `github` is not specified. "
+                "Both CONBENCH_REPOSITORY and CONBENCH_COMMIT must be set if `github` "
+                "is not specified. CONBENCH_PR_NUMBER should be null for builds on the "
+                "default branch."
                 f"\nValues: `{gh_info}`"
             ),
         )
@@ -154,7 +155,7 @@ def detect_github_info():
     }
 
 
-def machine_info(host_name: Optional[str]):
+def machine_info(host_name: Optional[str] = None):
     os_name, os_version = platform.platform(terse=True).split("-", maxsplit=1)
 
     host_name = host_name or os.environ.get("CONBENCH_HOST_NAME")

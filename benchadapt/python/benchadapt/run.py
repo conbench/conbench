@@ -1,10 +1,9 @@
-import os
 import uuid
 import warnings
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Optional
 
-from .machine_info import detect_github_info, github_info, machine_info
+from . import _machine_info
 
 
 @dataclass
@@ -82,13 +81,9 @@ class BenchmarkRun:
     id: str = field(default_factory=lambda: uuid.uuid4().hex)
     reason: str = None
     info: Dict[str, Any] = field(default_factory=dict)
-    machine_info: Dict[str, Any] = field(
-        default_factory=lambda: machine_info(
-            host_name=os.environ.get("CONBENCH_HOST_NAME")
-        )
-    )
+    machine_info: Dict[str, Any] = field(default_factory=_machine_info.machine_info)
     cluster_info: Dict[str, Any] = None
-    github: Dict[str, Any] = field(default_factory=github_info)
+    github: Dict[str, Any] = field(default_factory=_machine_info.github_info)
     finished_timestamp: str = None
     error_type: str = None
     error_info: Dict[str, Any] = None
@@ -104,7 +99,7 @@ class BenchmarkRun:
     @_github_property.setter
     def _github_property(self, value: Optional[dict]):
         if value is None:
-            value = detect_github_info()
+            value = _machine_info.detect_github_info()
         self._github_cache = value
 
     @property
@@ -123,7 +118,14 @@ class BenchmarkRun:
 
         if bool(res_dict.get("machine_info")) != bool(not res_dict["cluster_info"]):
             warnings.warn(
-                "Result not publishable! `machine_info` xor `cluster_info` must be specified"
+                "Run not publishable! `machine_info` xor `cluster_info` must be specified"
+            )
+
+        if not (
+            res_dict["github"].get("repository") and res_dict["github"].get("commit")
+        ):
+            raise ValueError(
+                "Run not publishable! `github.repository` and `github.commit` must be populated"
             )
 
         for attr in [

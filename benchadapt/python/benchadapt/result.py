@@ -1,11 +1,10 @@
 import datetime
-import os
 import uuid
 import warnings
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Optional
 
-from .machine_info import detect_github_info, github_info, machine_info
+from . import _machine_info
 
 
 @dataclass
@@ -130,14 +129,10 @@ class BenchmarkResult:
     tags: Dict[str, Any] = field(default_factory=dict)
     info: Dict[str, Any] = field(default_factory=dict)
     optional_benchmark_info: Dict[str, Any] = None
-    machine_info: Dict[str, Any] = field(
-        default_factory=lambda: machine_info(
-            host_name=os.environ.get("CONBENCH_HOST_NAME")
-        )
-    )
+    machine_info: Dict[str, Any] = field(default_factory=_machine_info.machine_info)
     cluster_info: Dict[str, Any] = None
     context: Dict[str, Any] = field(default_factory=dict)
-    github: Dict[str, Any] = field(default_factory=github_info)
+    github: Dict[str, Any] = field(default_factory=_machine_info.github_info)
 
     def __post_init__(self) -> None:
         if not self.run_name and self.github.get("commit"):
@@ -150,7 +145,7 @@ class BenchmarkResult:
     @_github_property.setter
     def _github_property(self, value: Optional[dict]):
         if value is None:
-            value = detect_github_info()
+            value = _machine_info.detect_github_info()
         self._github_cache = value
 
     @property
@@ -175,6 +170,13 @@ class BenchmarkResult:
         if not res_dict["stats"] and not res_dict["error"]:
             warnings.warn(
                 "Result not publishable! `stats` and/or `error` must be be specified"
+            )
+
+        if not (
+            res_dict["github"].get("repository") and res_dict["github"].get("commit")
+        ):
+            raise ValueError(
+                "Result not publishable! `github.repository` and `github.commit` must be populated"
             )
 
         for attr in [

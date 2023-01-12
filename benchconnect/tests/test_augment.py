@@ -13,11 +13,17 @@ minimal_result = {"stats": {"data": [1, 2], "unit": "s"}}
 minimal_run = {}
 
 
+@pytest.fixture
+def mock_github_env_vars(monkeypatch):
+    monkeypatch.setenv("CONBENCH_REPOSITORY", "conchair/conchair")
+    monkeypatch.setenv("CONBENCH_COMMIT", "fake-commit-hash")
+
+
 @pytest.mark.parametrize(
     ("raw_blob", "cls"),
     [(minimal_result, BenchmarkResult), (minimal_run, BenchmarkRun)],
 )
-def test_augment_blob(raw_blob: dict, cls):
+def test_augment_blob(raw_blob: dict, cls, mock_github_env_vars):
     augmented_blob = augment_blob(raw_blob, cls=cls)
     assert augmented_blob.keys() > raw_blob.keys()
 
@@ -34,7 +40,7 @@ class TestCliAugment:
     @pytest.mark.parametrize(
         ("command", "raw_blob"), [(result, minimal_result), (run, minimal_run)]
     )
-    def test_json(self, command: click.Command, raw_blob: dict):
+    def test_json(self, command: click.Command, raw_blob: dict, mock_github_env_vars):
         res = self.runner.invoke(command, args=["--json", json.dumps(raw_blob)])
         assert res.exit_code == 0
         augmented_blob = json.loads(res.output)
@@ -43,7 +49,9 @@ class TestCliAugment:
     @pytest.mark.parametrize(
         ("command", "raw_blob"), [(result, minimal_result), (run, minimal_run)]
     )
-    def test_path(self, command: click.Command, raw_blob: dict, tmpdir):
+    def test_path(
+        self, command: click.Command, raw_blob: dict, tmpdir, mock_github_env_vars
+    ):
         tempjson1 = tmpdir / "file1.json"
         tempjson2 = tmpdir / "file2.json"
 
