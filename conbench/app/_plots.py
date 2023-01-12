@@ -4,8 +4,8 @@ import json
 import logging
 
 import bokeh.plotting
-from bokeh.models import Spacer
 import dateutil
+from bokeh.models import Spacer
 
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
