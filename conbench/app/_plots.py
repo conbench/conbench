@@ -257,9 +257,19 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         formatted=formatted,
     )
 
-    source_mean = _source(with_dist, unit, formatted=formatted, distribution_mean=True)
-    source_alert_min = _source(with_dist, unit, formatted=formatted, alert_min=True)
-    source_alert_max = _source(with_dist, unit, formatted=formatted, alert_max=True)
+    # Note(JP). The `source_rolling_*` data is based on the "distribution"
+    # analysis in conbench which I believe is a rolling window analysis where
+    # the time width of the window is variable, as of a fixed commit-count
+    # width.
+    source_rolling_mean_over_time = _source(
+        with_dist, unit, formatted=formatted, distribution_mean=True
+    )
+    source_rolling_alert_min_over_time = _source(
+        with_dist, unit, formatted=formatted, alert_min=True
+    )
+    source_rolling_alert_max_over_time = _source(
+        with_dist, unit, formatted=formatted, alert_max=True
+    )
 
     t_start = source_mean_over_time.data["x"][0]
     t_end = source_mean_over_time.data["x"][-1]
@@ -307,15 +317,19 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         color="#222",
     )
 
-    p.line(source=source_mean, color="#ffa600", legend_label="rolling window mean")
     p.line(
-        source=source_alert_min,
+        source=source_rolling_mean_over_time,
+        color="#ffa600",
+        legend_label="rolling window mean",
+    )
+    p.line(
+        source=source_rolling_alert_min_over_time,
         color="Silver",
         legend_label="rolling window mean +/- 5 σ",
         line_join="round",
         width=1,
     )
-    p.line(source=source_alert_max, color="Silver")
+    p.line(source=source_rolling_alert_max_over_time, color="Silver")
 
     cur_bench_mean_circle = p.circle(
         source=source_current_bm_mean,
