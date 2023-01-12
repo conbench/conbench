@@ -362,6 +362,13 @@ class BenchmarkResultSerializer:
 CHANGE_ANNOTATIONS_DESC = """Post-analysis annotations about this BenchmarkResult that
 give details about whether it represents a change, outlier, etc. in the overall
 distribution of BenchmarkResults.
+
+Currently-recognized keys that change Conbench behavior:
+
+- `begins_distribution_change` (bool) - Is this result the first result of a sufficiently
+"different" distribution than the result on the previous commit (for the same
+hardware/case/context)? That is, when evaluating whether future results are regressions
+or improvements, should we treat data from before this result as incomparable?
 """
 
 
