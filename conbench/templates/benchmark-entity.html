@@ -24,6 +24,13 @@
 <br />
 
 <div class="row">
+  <div class="col-md-8">
+    {{ wtf.quick_form(update_form, id="update-form", button_map={'toggle_distribution_change': update_button_color}) }}
+  </div>
+</div>
+<br>
+
+<div class="row">
   <div class="col-md-6">
     <ul class="list-group">
       <li class="list-group-item active">Benchmark</li>
@@ -213,7 +220,7 @@
 
 <div class="row">
   <div class="col-md-8">
-    {{ wtf.quick_form(form, id="benchmark-form", button_map={'delete': 'primary'}) }}
+    {{ wtf.quick_form(delete_form, id="delete-form", button_map={'delete': 'danger'}) }}
   </div>
 </div>
 
@@ -227,12 +234,12 @@
 
 <script type="text/javascript">
   $(document).ready(function ($) {
-    $("#benchmark-form").find("#delete").attr("type", "button");
-    $("#benchmark-form").find("#delete").attr("data-toggle", "modal");
-    $("#benchmark-form").find("#delete").attr("data-target", "#confirm-delete");
-    $("#benchmark-form").find("#delete").attr("data-form-id", "#benchmark-form");
-    $("#benchmark-form").find("#delete").attr("data-href", "{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}");
-    $("#benchmark-form").find("#delete").attr("data-message", "<ul><li>Delete benchmark: <strong>{{ benchmark.id }}</strong></li></ul>");
+    $("#delete-form").find("#delete").attr("type", "button");
+    $("#delete-form").find("#delete").attr("data-toggle", "modal");
+    $("#delete-form").find("#delete").attr("data-target", "#confirm-delete");
+    $("#delete-form").find("#delete").attr("data-form-id", "#delete-form");
+    $("#delete-form").find("#delete").attr("data-href", "{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}");
+    $("#delete-form").find("#delete").attr("data-message", "<ul><li>Delete benchmark: <strong>{{ benchmark.id }}</strong></li></ul>");
   });
 
   {% if plot_history %}

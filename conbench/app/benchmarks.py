@@ -11,6 +11,16 @@ from ..app._util import augment, display_message, display_time
 from ..config import Config
 
 
+class UpdateForm(flask_wtf.FlaskForm):
+    toggle_distribution_change = w.SubmitField(
+        render_kw={
+            "title": 'A distribution change means a sufficiently "different" '
+            "distribution began, such that data from before shouldn't be statistically "
+            "compared to data after."
+        }
+    )
+
+
 class DeleteForm(flask_wtf.FlaskForm):
     delete = w.SubmitField("Delete")
 
@@ -128,12 +138,24 @@ class RunMixin:
 
 
 class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
-    def page(self, benchmark, run, form):
-        if not flask_login.current_user.is_authenticated:
-            delattr(form, "delete")
-
+    def page(self, benchmark, run, delete_form, update_form):
         if benchmark is None:
             return self.redirect("app.index")
+
+        update_button_color = "default"
+        if flask_login.current_user.is_authenticated:
+            if benchmark["change_annotations"].get("begins_distribution_change", False):
+                update_form.toggle_distribution_change.label.text = (
+                    "Unmark this as the first result of a distribution change"
+                )
+                update_button_color = "info"
+            else:
+                update_form.toggle_distribution_change.label.text = (
+                    "Mark this as the first result of a distribution change"
+                )
+        else:
+            delattr(delete_form, "delete")
+            delattr(update_form, "toggle_distribution_change")
 
         return self.render_template(
             "benchmark-entity.html",
@@ -141,43 +163,68 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
             title="Benchmark",
             benchmark=benchmark,
             run=run,
-            form=form,
+            delete_form=delete_form,
+            update_form=update_form,
             resources=bokeh.resources.CDN.render(),
             plot_history=self.get_history_plot(benchmark, run),
+            update_button_color=update_button_color,
         )
 
     @authorize_or_terminate
     def get(self, benchmark_id):
-
         benchmark, run = self._get_benchmark_and_run(benchmark_id)
-        return self.page(benchmark, run, DeleteForm())
+        return self.page(benchmark, run, DeleteForm(), UpdateForm())
 
     def post(self, benchmark_id):
         if not flask_login.current_user.is_authenticated:
             return self.redirect("app.login")
 
-        form, response = DeleteForm(), None
+        delete_form, delete_response = DeleteForm(), None
+        update_form, update_response = UpdateForm(), None
 
-        if form.delete.data:
+        if delete_form.delete.data:
             # delete button pressed
-            if form.validate_on_submit():
-                response = self.api_delete(
-                    "api.benchmark",
-                    benchmark_id=benchmark_id,
+            if delete_form.validate_on_submit():
+                delete_response = self.api_delete(
+                    "api.benchmark", benchmark_id=benchmark_id
                 )
-                if response.status_code == 204:
+                if delete_response.status_code == 204:
                     self.flash("Benchmark deleted.")
                     return self.redirect("app.benchmarks")
 
-        if response and not form.errors:
-            self.flash(response.json["name"])
+        elif update_form.validate_on_submit():
+            # toggle_distribution_change button pressed
+            benchmark, _ = self._get_benchmark(benchmark_id)
+            update_form.toggle_distribution_change.data = benchmark[
+                "change_annotations"
+            ].get("begins_distribution_change", False)
+
+            update_response = self.api_put(
+                "api.benchmark", update_form, benchmark_id=benchmark_id
+            )
+            if update_response.status_code == 200:
+                self.flash("Benchmark updated.")
+                return self.get(benchmark_id=benchmark_id)
+
+        # If the above API call didn't result in a 2XX, flash possible errors
+        if delete_response and not delete_form.errors:
+            self.flash(delete_response.json["name"])
+        if update_response and not update_form.errors:
+            self.flash(update_response.json["name"])
 
         csrf = {"csrf_token": ["The CSRF token is missing."]}
-        if form.errors == csrf:
+        if delete_form.errors == csrf or update_form.errors == csrf:
             self.flash("The CSRF token is missing.")
 
         benchmark, run = self._get_benchmark_and_run(benchmark_id)
-        return self.page(benchmark, run, form)
+        return self.page(benchmark, run, delete_form, update_form)
+
+    def data(self, form: UpdateForm):
+        """Construct the data to PUT when calling self.api_put()."""
+        if form.toggle_distribution_change.data:
+            return {"change_annotations": {"begins_distribution_change": False}}
+        else:
+            return {"change_annotations": {"begins_distribution_change": True}}
 
     def _get_benchmark_and_run(self, benchmark_id):
         benchmark = self.get_display_benchmark(benchmark_id)

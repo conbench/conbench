@@ -978,7 +978,7 @@
                 "properties": {
                     "batch_id": {"type": "string"},
                     "change_annotations": {
-                        "description": "Post-analysis annotations about this BenchmarkResult that\ngive details about whether it represents a change, outlier, etc. in the overall\ndistribution of BenchmarkResults.\n",
+                        "description": 'Post-analysis annotations about this BenchmarkResult that\ngive details about whether it represents a change, outlier, etc. in the overall\ndistribution of BenchmarkResults.\n\nCurrently-recognized keys that change Conbench behavior:\n\n- `begins_distribution_change` (bool) - Is this result the first result of a sufficiently\n"different" distribution than the result on the previous commit (for the same\nhardware/case/context)? That is, when evaluating whether future results are regressions\nor improvements, should we treat data from before this result as incomparable?\n',
                         "type": "object",
                     },
                     "cluster_info": {"$ref": "#/components/schemas/ClusterCreate"},
@@ -1100,7 +1100,7 @@
             "BenchmarkUpdate": {
                 "properties": {
                     "change_annotations": {
-                        "description": "Post-analysis annotations about this BenchmarkResult that\ngive details about whether it represents a change, outlier, etc. in the overall\ndistribution of BenchmarkResults.\n\n\nThis endpoint will only update the user-specified keys, and leave the rest alone. To\ndelete an existing key, set the value to null.\n",
+                        "description": 'Post-analysis annotations about this BenchmarkResult that\ngive details about whether it represents a change, outlier, etc. in the overall\ndistribution of BenchmarkResults.\n\nCurrently-recognized keys that change Conbench behavior:\n\n- `begins_distribution_change` (bool) - Is this result the first result of a sufficiently\n"different" distribution than the result on the previous commit (for the same\nhardware/case/context)? That is, when evaluating whether future results are regressions\nor improvements, should we treat data from before this result as incomparable?\n\n\nThis endpoint will only update the user-specified keys, and leave the rest alone. To\ndelete an existing key, set the value to null.\n',
                         "type": "object",
                     }
                 },

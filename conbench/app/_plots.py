@@ -6,7 +6,7 @@ from typing import Optional
 
 import bokeh.plotting
 import dateutil
-from bokeh.models import Spacer
+from bokeh.models import Spacer, Span
 
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
@@ -401,6 +401,32 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
             legend_label="current benchmark (min)",
             name="benchmark",
         )
+
+    # visually separate out distribution changes
+    dist_change_in_legend = False
+    for result in history:
+        if result["change_annotations"].get("begins_distribution_change", False):
+            p.add_layout(
+                Span(
+                    location=dateutil.parser.isoparse(result["timestamp"]),
+                    dimension="height",
+                    line_color="purple",
+                    line_dash="dashed",
+                    line_alpha=0.5,
+                )
+            )
+
+            if not dist_change_in_legend:
+                # hack: add a dummy line so it appears on the legend
+                p.line(
+                    [dateutil.parser.isoparse(result["timestamp"])] * 2,
+                    [result["mean"]] * 2,
+                    legend_label="distribution change",
+                    line_color="purple",
+                    line_dash="dashed",
+                    line_alpha=0.5,
+                )
+                dist_change_in_legend = True
 
     hover_renderers = [
         scatter_mean_over_time,
