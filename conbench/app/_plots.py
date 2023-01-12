@@ -220,26 +220,28 @@ def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
     `items`: list of benchmark results as encoded by the history variant of the
     `_Serializer(EntitySerializer)`.
 
-
+    Detect and handle special case where each data point (benchmark) comes with
+    at most one data point (only one benchmark iteration's result). If all
+    benchmarks report exactly one sample, or only zero samples, or a mixture of
+    either one sample or zero samples: then this is not multisample in the
+    sense of "(usually) more than one sample per benchmark".
     """
 
     # Get number of samples for each benchmark.
     samplecounts = [len(i["data"]) for i in items]
-    scset = set(samplecounts)
 
-    # Detect and handle special case where each data point (benchmark) comes
-    # with at most one data point (only one benchmark iteration's result).
     multisample = True
     multisample_count = None
-
-    # If all benchmarks report exactly one sample, or only zero samples, or a
-    # mixture of either one sample or zero samples: then this is not
-    # multisample in the sense of "more than one sample per benchmark".
+    scset = set(samplecounts)
     if scset in (set((0, 1)), set((1,))):
         multisample = False
 
     # For the special case where each benchmark in `items` reports exactly N
-    # samples: extract the number N.
+    # samples with N>1: extract the number N. There are ambiguous cases where
+    # there (usually) are more than one sample per benchmark, but the exact
+    # number of samples is not the same for each benchmark. Do not return a
+    # simple/single (wrong) number in that case, but let return
+    # `multisample_count` as `None`, meaning: ambiguous
     if len(scset) == 1:
         count = scset.pop()
         if count > 1:
