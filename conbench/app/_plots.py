@@ -298,7 +298,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
 
     scatter_mean_over_time = p.circle(
         source=source_mean_over_time,
-        legend_label="individual benchmark (mean)",
+        legend_label="benchmark (mean)",
         name="history",
         size=4,
         color="#ccc",
@@ -306,13 +306,13 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
 
     p.line(
         source=source_min_over_time,
-        legend_label="individual benchmark (min)",
+        legend_label="benchmark (min)",
         name="min-over-time",
         color="#222",
     )
     p.circle(
         source=source_min_over_time,
-        legend_label="individual benchmark (min)",
+        legend_label="benchmark (min)",
         name="min-over-time",
         size=2,
         color="#222",
@@ -332,17 +332,18 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     )
     p.line(source=source_rolling_alert_max_over_time, color="Silver")
 
-    cur_bench_mean_circle = p.circle(
+    cur_bench_mean_circle = p.x(
         source=source_current_bm_mean,
-        size=8,
-        color="#ff6361",
+        size=10,
+        line_width=2,
+        color="#000",
         legend_label="current benchmark (mean)",
         name="benchmark",
     )
 
     cur_bench_min_circle = p.circle(
         source=source_current_bm_min,
-        size=8,
+        size=6,
         color="#000",
         legend_label="current benchmark (min)",
         name="benchmark",
