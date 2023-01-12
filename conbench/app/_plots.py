@@ -4,6 +4,7 @@ import json
 import logging
 
 import bokeh.plotting
+from bokeh.models import Spacer
 import dateutil
 
 from ..hacks import sorted_data
@@ -397,16 +398,4 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     select.axis.visible = False
     select.title.text_font_style = "italic"
 
-    spacers = []
-    for _ in range(2):
-        spacer = bokeh.plotting.figure(
-            toolbar_location=None,
-            height=20,
-        )
-        spacer.outline_line_color = None
-        spacers.append(spacer)
-        # Note(JP): I cannot make sense of this warning. I think the printed
-        # text is not acted on by anyone. Outcommeting for now.
-        # print(f"Ignore any MISSING_RENDERERS warning for id={spacer.id}")
-
-    return bokeh.layouts.column(p, spacers[0], select, spacers[1])
+    return bokeh.layouts.column(p, Spacer(height=20), select, Spacer(height=20))
