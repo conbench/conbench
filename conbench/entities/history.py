@@ -29,13 +29,24 @@ class _Serializer(EntitySerializer):
         # `data` was representing durations then this vector was not duplicated
         # as `times`.
 
+        # For both, history.data and history.times expect either None or a list
+        # Make it so that in the output object they are always a list,
+        # potentially empty.
+        data = []
+        if history.data is not None:
+            data = [float(d) if d is not None else None for d in history.data]
+
+        times = []
+        if history.times is not None:
+            times = [float(t) if t is not None else None for t in history.times]
+
         return {
             "benchmark_id": history.id,
             "case_id": history.case_id,
             "context_id": history.context_id,
             "mean": float(history.mean),
-            "data": [float(d) if d is not None else None for d in history.data],
-            "times": [float(t) if t is not None else None for t in history.times],
+            "data": data,
+            "times": times,
             "unit": history.unit,
             "is_step_change": history.is_step_change,
             "hardware_hash": history.hash,
