@@ -2,12 +2,12 @@ import collections
 import datetime
 import json
 import logging
+from typing import Optional
 
 import bokeh.plotting
 import dateutil
 from bokeh.models import Spacer
 
-from typing import Optional
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
 
