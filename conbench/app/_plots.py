@@ -7,6 +7,7 @@ import bokeh.plotting
 import dateutil
 from bokeh.models import Spacer
 
+from typing import Optional
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
 
@@ -214,6 +215,39 @@ def _source(
     return bokeh.models.ColumnDataSource(data=source_data)
 
 
+def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
+    """
+    `items`: list of benchmark results as encoded by the history variant of the
+    `_Serializer(EntitySerializer)`.
+
+
+    """
+
+    # Get number of samples for each benchmark.
+    samplecounts = [len(i["data"]) for i in items]
+    scset = set(samplecounts)
+
+    # Detect and handle special case where each data point (benchmark) comes
+    # with at most one data point (only one benchmark iteration's result).
+    multisample = True
+    multisample_count = None
+
+    # If all benchmarks report exactly one sample, or only zero samples, or a
+    # mixture of either one sample or zero samples: then this is not
+    # multisample in the sense of "more than one sample per benchmark".
+    if scset in (set((0, 1)), set((1,))):
+        multisample = False
+
+    # For the special case where each benchmark in `items` reports exactly N
+    # samples: extract the number N.
+    if len(scset) == 1:
+        count = scset.pop()
+        if count > 1:
+            multisample_count = count
+
+    return multisample, multisample_count
+
+
 def time_series_plot(history, benchmark, run, height=380, width=1100):
 
     # log.info("Time series plot for:\n%s", json.dumps(history, indent=2))
@@ -228,9 +262,9 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     source_min_over_time = bokeh.models.ColumnDataSource(
         data=dict(
             x=[dateutil.parser.isoparse(x["timestamp"]) for x in history],
+            # TODO: best-case is not always min, e.g. when data has a unit like
+            # bandwidth.
             y=[min(x["data"]) for x in history],
-            # commits=commits,
-            # means=means,
         )
     )
 
@@ -296,27 +330,42 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     p.xaxis.major_label_orientation = 1
     p.yaxis.axis_label = axis_unit
 
+    multisample, multisample_count = _inspect_for_multisample(history)
+    label = "benchmark (n=1)"
+    if multisample:
+        label = "benchmark mean"
+        if multisample_count:
+            label += f" (n={multisample_count})"
+
     scatter_mean_over_time = p.circle(
         source=source_mean_over_time,
-        legend_label="benchmark (mean)",
+        legend_label=label,
         name="history",
         size=4,
         color="#ccc",
     )
 
-    p.line(
-        source=source_min_over_time,
-        legend_label="benchmark (min)",
-        name="min-over-time",
-        color="#222",
-    )
-    p.circle(
-        source=source_min_over_time,
-        legend_label="benchmark (min)",
-        name="min-over-time",
-        size=2,
-        color="#222",
-    )
+    if multisample:
+        # Do not show min-over-time when each benchmark reports at most one
+        # sample, i.e. when mean and min are the same.
+
+        label = "benchmark min"
+        if multisample_count:
+            label += f" (n={multisample_count})"
+
+        p.line(
+            source=source_min_over_time,
+            legend_label=label,
+            name="min-over-time",
+            color="#222",
+        )
+        p.circle(
+            source=source_min_over_time,
+            legend_label=label,
+            name="min-over-time",
+            size=2,
+            color="#222",
+        )
 
     p.line(
         source=source_rolling_mean_over_time,
@@ -334,20 +383,30 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
 
     cur_bench_mean_circle = p.x(
         source=source_current_bm_mean,
-        size=10,
-        line_width=2,
-        color="#000",
-        legend_label="current benchmark (mean)",
+        size=18,
+        line_width=2.5,
+        color="#A65DE7",
+        legend_label="current benchmark (mean)" if multisample else "current benchmark",
         name="benchmark",
     )
 
-    cur_bench_min_circle = p.circle(
-        source=source_current_bm_min,
-        size=6,
-        color="#000",
-        legend_label="current benchmark (min)",
-        name="benchmark",
-    )
+    if multisample:
+        # do not show this for n=1 (then min equals to mean).
+        cur_bench_min_circle = p.circle(
+            source=source_current_bm_min,
+            size=6,
+            color="#000",
+            legend_label="current benchmark (min)",
+            name="benchmark",
+        )
+
+    renderers = [
+        scatter_mean_over_time,
+        cur_bench_mean_circle,
+    ]
+
+    if multisample:
+        renderers.append(cur_bench_min_circle)
 
     p.add_tools(
         bokeh.models.HoverTool(
@@ -359,11 +418,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 ("commit", "@commits"),
             ],
             formatters={"$x": "datetime"},
-            renderers=[
-                scatter_mean_over_time,
-                cur_bench_mean_circle,
-                cur_bench_min_circle,
-            ],
+            renderers=renderers,
         )
     )
 
