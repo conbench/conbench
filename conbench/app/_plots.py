@@ -402,13 +402,13 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
             name="benchmark",
         )
 
-    renderers = [
+    hover_renderers = [
         scatter_mean_over_time,
         cur_bench_mean_circle,
     ]
 
     if multisample:
-        renderers.append(cur_bench_min_circle)
+        hover_renderers.append(cur_bench_min_circle)
 
     p.add_tools(
         bokeh.models.HoverTool(
@@ -420,7 +420,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 ("commit", "@commits"),
             ],
             formatters={"$x": "datetime"},
-            renderers=renderers,
+            renderers=hover_renderers,
         )
     )
 
