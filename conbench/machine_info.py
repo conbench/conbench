@@ -138,8 +138,8 @@ def github_info():
 def machine_info(host_name):
     os_name, os_version = platform.platform(terse=True).split("-", maxsplit=1)
 
-    if not host_name:
-        host_name = platform.node()
+    host_name = host_name or os.environ.get("CONBENCH_MACHINE_INFO_NAME")
+    host_name = host_name or platform.node()
 
     info = {
         "name": host_name,

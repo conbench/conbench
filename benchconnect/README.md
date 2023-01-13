@@ -18,6 +18,28 @@ With [pipx](https://pypa.github.io/pipx/):
 pipx install benchconnect@git+https://github.com/conbench/conbench.git@main#subdirectory=benchconnect
 ```
 
+## Environment variables
+
+benchconnect relies on a number of environment variables to obtain various
+metadata:
+
+- `CONBENCH_URL`: Required. The URL of the Conbench server without a trailing
+slash, e.g. `https://conbench.example.com`
+- `CONBENCH_EMAIL`: The email to use for Conbench login. Only required if the
+server is private.
+- `CONBENCH_PASSWORD`: The password to use for Conbench login. Only required
+if the server is private.
+- `CONBENCH_PROJECT_REPOSITORY`: The repository name (in the format `org/repo`) or the
+URL (in the format `https://github.com/org/repo`)
+- `CONBENCH_PROJECT_PR_NUMBER`: [recommended] The number of the GitHub pull request that
+is running this benchmark. Do not supply this for a runs on the default branch.
+- `CONBENCH_PROJECT_COMMIT`: The 40-character commit SHA of the repo being benchmarked
+- `CONBENCH_MACHINE_INFO_NAME`: By default, the running machine host name (sent in
+`machine_info.name` when posting runs and benchmarks) will be obtained with
+`platform.node()`, but in circumstances where consistency is needed (e.g.
+running in CI or on cloud runners), a value for host name can be specified via
+this environment variable instead.
+
 ## Usage
 
 ### Benchmark run workflow

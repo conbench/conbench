@@ -77,6 +77,34 @@ class GitParseWarning(RuntimeWarning):
 
 
 def github_info():
+    """Get github metadata from environment variables"""
+    repo = os.environ.get("CONBENCH_PROJECT_REPOSITORY")
+    pr_number = os.environ.get("CONBENCH_PROJECT_PR_NUMBER") or os.environ.get(
+        "BENCHMARKABLE_PR_NUMBER"
+    )
+    commit = os.environ.get("CONBENCH_PROJECT_COMMIT")
+
+    gh_info = {
+        "commit": commit,
+        "repository": repo,
+        # "branch": None,
+        "pr_number": pr_number,
+    }
+
+    if not (repo and commit):
+        warnings.warn(
+            (
+                "Both CONBENCH_PROJECT_REPOSITORY and CONBENCH_PROJECT_COMMIT must be "
+                "set if `github` is not specified. CONBENCH_PROJECT_PR_NUMBER should be "
+                "not be set for builds on the default branch."
+                f"\nValues: `{gh_info}`"
+            ),
+        )
+
+    return gh_info
+
+
+def detect_github_info():
     """Attempts to inspect a locally cloned repository for git information that can be
     posted to the "github" key when creating a run.
 
@@ -127,11 +155,11 @@ def github_info():
     }
 
 
-def machine_info(host_name: Optional[str]):
+def machine_info(host_name: Optional[str] = None):
     os_name, os_version = platform.platform(terse=True).split("-", maxsplit=1)
 
-    if not host_name:
-        host_name = platform.node()
+    host_name = host_name or os.environ.get("CONBENCH_MACHINE_INFO_NAME")
+    host_name = host_name or platform.node()
 
     info = {
         "name": host_name,

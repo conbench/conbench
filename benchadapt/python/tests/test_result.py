@@ -46,6 +46,7 @@ res_json = {
     "github": {
         "commit": "2z8c9c49a5dc4a179243268e4bb6daa5",
         "repository": "git@github.com:conchair/conchair",
+        "pr_number": "47",
     },
 }
 
@@ -57,14 +58,57 @@ class TestBenchmarkResult:
 
     def test_warns_stats_error(self):
         with pytest.warns(UserWarning, match="Result not publishable!"):
-            BenchmarkResult(stats={}, error={}).to_publishable_dict()
+            BenchmarkResult(
+                stats={}, error={}, github=res_json["github"]
+            ).to_publishable_dict()
 
         with pytest.warns(UserWarning, match="Result not publishable!"):
-            BenchmarkResult(stats=None, error=None).to_publishable_dict()
+            BenchmarkResult(
+                stats=None, error=None, github=res_json["github"]
+            ).to_publishable_dict()
 
     def test_warns_machine_cluster(self):
         with pytest.warns(UserWarning, match="Result not publishable!"):
-            BenchmarkResult(machine_info={}, cluster_info={}).to_publishable_dict()
+            BenchmarkResult(
+                machine_info={}, cluster_info={}, github=res_json["github"]
+            ).to_publishable_dict()
 
         with pytest.warns(UserWarning, match="Result not publishable!"):
-            BenchmarkResult(machine_info=None, cluster_info=None).to_publishable_dict()
+            BenchmarkResult(
+                machine_info=None, cluster_info=None, github=res_json["github"]
+            ).to_publishable_dict()
+
+    def test_github_detection(self, monkeypatch):
+        monkeypatch.setenv(
+            "CONBENCH_PROJECT_REPOSITORY", res_json["github"]["repository"]
+        )
+        monkeypatch.setenv(
+            "CONBENCH_PROJECT_PR_NUMBER", res_json["github"]["pr_number"]
+        )
+        monkeypatch.setenv("CONBENCH_PROJECT_COMMIT", res_json["github"]["commit"])
+        assert BenchmarkResult().github == res_json["github"]
+
+        monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY")
+        monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER")
+        monkeypatch.delenv("CONBENCH_PROJECT_COMMIT")
+
+        with pytest.warns(
+            UserWarning,
+            match="Both CONBENCH_PROJECT_REPOSITORY and CONBENCH_PROJECT_COMMIT must be set if `github` is not specified",
+        ):
+            BenchmarkResult()
+
+            with pytest.warns(
+                UserWarning,
+                match="Result not publishable! `github.repository` and `github.commit` must be populated",
+            ):
+                BenchmarkResult().to_publishable_dict()
+
+    def test_host_detection(self, monkeypatch):
+        machine_info_name = "fake-computer-name"
+        monkeypatch.setenv("CONBENCH_MACHINE_INFO_NAME", machine_info_name)
+
+        result = BenchmarkResult(github=res_json["github"])
+
+        assert result.machine_info["name"] == machine_info_name
+        assert result.machine_info["name"] != res_json["machine_info"]["name"]

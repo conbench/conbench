@@ -139,6 +139,17 @@ class TestBenchmark:
     benchmark_single_process = Benchmark(
         iteration=iteration, case_list=case_list, subprocess=False
     )
+    github = {
+        "commit": "2z8c9c49a5dc4a179243268e4bb6daa5",
+        "repository": "git@github.com:conchair/conchair",
+        "pr_number": "47",
+    }
+
+    @pytest.fixture
+    def mock_github_env_vars(self, monkeypatch):
+        monkeypatch.setenv("CONBENCH_PROJECT_REPOSITORY", self.github["repository"])
+        monkeypatch.setenv("CONBENCH_PROJECT_PR_NUMBER", self.github["pr_number"])
+        monkeypatch.setenv("CONBENCH_PROJECT_COMMIT", self.github["commit"])
 
     def test_init(self) -> None:
         assert self.benchmark.iteration == self.iteration
@@ -155,7 +166,9 @@ class TestBenchmark:
 
     @pytest.mark.parametrize("benchmark", [benchmark, benchmark_single_process])
     @pytest.mark.parametrize("case", case_list.case_list)
-    def test_run_case(self, case: dict, benchmark: Benchmark) -> None:
+    def test_run_case(
+        self, case: dict, benchmark: Benchmark, mock_github_env_vars
+    ) -> None:
         result = benchmark.run_case(
             case=case,
             iterations=2,
@@ -164,11 +177,15 @@ class TestBenchmark:
             run_id="test-run-case-run-id",
             batch_id="test-run-case-batch-id",
         )
+
         assert isinstance(result, BenchmarkResult)
         assert result.run_reason == "test"
         assert result.run_name == "test-run-case-name"
         assert result.run_id == "test-run-case-run-id"
         assert result.batch_id == "test-run-case-batch-id"
+        assert result.github["repository"] == self.github["repository"]
+        assert result.github["commit"] == self.github["commit"]
+        assert result.github["pr_number"] == self.github["pr_number"]
         assert result.stats["iterations"] == 2
         assert len(result.stats["data"]) == 2
         for time in result.stats["data"]:
@@ -179,7 +196,7 @@ class TestBenchmark:
         assert result.context == {"benchmark_language": "Python"}
 
     @pytest.mark.parametrize("benchmark", [benchmark, benchmark_single_process])
-    def test_run(self, benchmark: Benchmark) -> None:
+    def test_run(self, benchmark: Benchmark, mock_github_env_vars) -> None:
         result_list = benchmark.run(
             run_reason="test",
             run_name="test-run-name",
