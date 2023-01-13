@@ -96,7 +96,7 @@ def github_info():
             (
                 "Both CONBENCH_PROJECT_REPOSITORY and CONBENCH_PROJECT_COMMIT must be "
                 "set if `github` is not specified. CONBENCH_PROJECT_PR_NUMBER should be "
-                "null for builds on the default branch."
+                "not be set for builds on the default branch."
                 f"\nValues: `{gh_info}`"
             ),
         )
