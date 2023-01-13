@@ -32,7 +32,7 @@ if the server is private.
 - `CONBENCH_PROJECT_REPOSITORY`: The repository name (in the format `org/repo`) or the
 URL (in the format `https://github.com/org/repo`)
 - `CONBENCH_PROJECT_PR_NUMBER`: [recommended] The number of the GitHub pull request that
-is running this benchmark, or ``None`` if for a run on the default branch
+is running this benchmark. Do not supply this for a runs on the default branch.
 - `CONBENCH_PROJECT_COMMIT`: The 40-character commit SHA of the repo being benchmarked
 - `CONBENCH_MACHINE_INFO_NAME`: By default, the running machine host name (sent in
 `machine_info.name` when posting runs and benchmarks) will be obtained with

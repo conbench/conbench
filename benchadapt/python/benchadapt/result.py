@@ -175,7 +175,7 @@ class BenchmarkResult:
         if not (
             res_dict["github"].get("repository") and res_dict["github"].get("commit")
         ):
-            raise ValueError(
+            warnings.warn(
                 "Result not publishable! `github.repository` and `github.commit` must be populated. "
                 "You may pass github metadata via CONBENCH_PROJECT_REPOSITORY, CONBENCH_PROJECT_COMMIT, "
                 "and CONBENCH_PR_NUMBER environment variables. "
