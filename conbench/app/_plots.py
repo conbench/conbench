@@ -211,8 +211,23 @@ def _source(
         # the tooltip string labels?
         points = [x.split(" ")[0] for x in means]
 
-    source_data = dict(x=dates, y=points, commits=commits, means=means)
-    return bokeh.models.ColumnDataSource(data=source_data)
+    commit_hashes_short = []
+    for d in data:
+        try:
+            commit_hashes_short.append("#" + d["sha"][:7])
+        except KeyError:
+            # https://github.com/conbench/conbench/issues/589
+            commit_hashes_short.append("not-set")
+
+    return bokeh.models.ColumnDataSource(
+        data={
+            "x": dates,
+            "y": points,
+            "commits": commits,
+            "commit_hashes_short": commit_hashes_short,
+            "means": means,
+        }
+    )
 
 
 def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
@@ -443,7 +458,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 # Note(JP): this is where the `means` name becomes special,
                 # I think.
                 ("mean", "@means"),
-                ("commit", "@commits"),
+                ("commit", "@commit_hashes_short"),
             ],
             formatters={"$x": "datetime"},
             renderers=hover_renderers,
