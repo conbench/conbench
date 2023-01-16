@@ -184,7 +184,7 @@ def _source(
     # Change this to use short commit hashes. The long commit message prefix
     # does not unambiguously specify the commit. Ideally link to the commit, in
     # the tooltip?
-    commits = [d["message"] for d in data]
+    commit_messages = [d["message"] for d in data]
 
     dates = [dateutil.parser.isoparse(x["timestamp"]) for x in data]
 
@@ -216,7 +216,7 @@ def _source(
         data={
             "x": dates,
             "y": points,
-            "commits": commits,
+            "commit_messages": commit_messages,
             "commit_hashes_short": ["#" + d["sha"][:7] for d in data],
             "means": means,
         }
@@ -454,6 +454,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 # I think.
                 ("mean", "@means"),
                 ("commit", "@commit_hashes_short"),
+                ("commit msg", "@commit_messages"),
             ],
             formatters={"$x": "datetime"},
             renderers=hover_renderers,
