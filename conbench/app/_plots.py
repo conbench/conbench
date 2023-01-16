@@ -184,7 +184,8 @@ def _source(
     # Change this to use short commit hashes. The long commit message prefix
     # does not unambiguously specify the commit. Ideally link to the commit, in
     # the tooltip?
-    commits = [x["message"] for x in data]
+    commit_messages = [d["message"] for d in data]
+
     dates = [dateutil.parser.isoparse(x["timestamp"]) for x in data]
 
     points, means = [], []
@@ -211,8 +212,15 @@ def _source(
         # the tooltip string labels?
         points = [x.split(" ")[0] for x in means]
 
-    source_data = dict(x=dates, y=points, commits=commits, means=means)
-    return bokeh.models.ColumnDataSource(data=source_data)
+    return bokeh.models.ColumnDataSource(
+        data={
+            "x": dates,
+            "y": points,
+            "commit_messages": commit_messages,
+            "commit_hashes_short": ["#" + d["sha"][:7] for d in data],
+            "means": means,
+        }
+    )
 
 
 def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
@@ -276,6 +284,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 "mean": benchmark["stats"]["mean"],
                 "message": run["commit"]["message"],
                 "timestamp": run["commit"]["timestamp"],
+                "sha": run["commit"]["sha"],
             }
         ],
         unit,
@@ -288,6 +297,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 "mean": benchmark["stats"]["min"],
                 "message": run["commit"]["message"],
                 "timestamp": run["commit"]["timestamp"],
+                "sha": run["commit"]["sha"],
             }
         ],
         unit,
@@ -443,7 +453,8 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 # Note(JP): this is where the `means` name becomes special,
                 # I think.
                 ("mean", "@means"),
-                ("commit", "@commits"),
+                ("commit", "@commit_hashes_short"),
+                ("commit msg", "@commit_messages"),
             ],
             formatters={"$x": "datetime"},
             renderers=hover_renderers,

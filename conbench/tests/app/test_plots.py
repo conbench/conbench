@@ -178,7 +178,7 @@ def test__source():
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS
     assert source.data["means"] == MEANS
-    assert source.data["commits"] == COMMITS
+    assert source.data["commit_messages"] == COMMITS
 
 
 def test_source_formatted():
@@ -186,7 +186,7 @@ def test_source_formatted():
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS_FORMATTED
     assert source.data["means"] == MEANS
-    assert source.data["commits"] == COMMITS
+    assert source.data["commit_messages"] == COMMITS
 
 
 def test_source_formatted_items_per_second():
@@ -194,7 +194,7 @@ def test_source_formatted_items_per_second():
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS_FORMATTED_ITEMS
     assert source.data["means"] == MEANS_ITEMS
-    assert source.data["commits"] == COMMITS
+    assert source.data["commit_messages"] == COMMITS
 
 
 def test_source_alert_min():
@@ -202,7 +202,7 @@ def test_source_alert_min():
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS_MIN
     assert source.data["means"] == MEANS_MIN
-    assert source.data["commits"] == COMMITS
+    assert source.data["commit_messages"] == COMMITS
 
 
 def test_source_alert_min_formatted():
@@ -210,7 +210,7 @@ def test_source_alert_min_formatted():
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS_MIN_FORMATTED
     assert source.data["means"] == MEANS_MIN
-    assert source.data["commits"] == COMMITS
+    assert source.data["commit_messages"] == COMMITS
 
 
 def test_source_alert_max():
@@ -218,7 +218,7 @@ def test_source_alert_max():
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS_MAX
     assert source.data["means"] == MEANS_MAX
-    assert source.data["commits"] == COMMITS
+    assert source.data["commit_messages"] == COMMITS
 
 
 def test_source_alert_max_formatted():
@@ -226,7 +226,7 @@ def test_source_alert_max_formatted():
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS_MAX_FORMATTED
     assert source.data["means"] == MEANS_MAX
-    assert source.data["commits"] == COMMITS
+    assert source.data["commit_messages"] == COMMITS
 
 
 def test_should_format():
