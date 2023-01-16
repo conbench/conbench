@@ -184,7 +184,8 @@ def _source(
     # Change this to use short commit hashes. The long commit message prefix
     # does not unambiguously specify the commit. Ideally link to the commit, in
     # the tooltip?
-    commits = [x["message"] for x in data]
+    commits = [d["message"] for d in data]
+
     dates = [dateutil.parser.isoparse(x["timestamp"]) for x in data]
 
     points, means = [], []
@@ -211,20 +212,12 @@ def _source(
         # the tooltip string labels?
         points = [x.split(" ")[0] for x in means]
 
-    commit_hashes_short = []
-    for d in data:
-        try:
-            commit_hashes_short.append("#" + d["sha"][:7])
-        except KeyError:
-            # https://github.com/conbench/conbench/issues/589
-            commit_hashes_short.append("not-set")
-
     return bokeh.models.ColumnDataSource(
         data={
             "x": dates,
             "y": points,
             "commits": commits,
-            "commit_hashes_short": commit_hashes_short,
+            "commit_hashes_short": ["#" + d["sha"][:7] for d in data],
             "means": means,
         }
     )
@@ -291,6 +284,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 "mean": benchmark["stats"]["mean"],
                 "message": run["commit"]["message"],
                 "timestamp": run["commit"]["timestamp"],
+                "sha": run["commit"]["sha"],
             }
         ],
         unit,
@@ -303,6 +297,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 "mean": benchmark["stats"]["min"],
                 "message": run["commit"]["message"],
                 "timestamp": run["commit"]["timestamp"],
+                "sha": run["commit"]["sha"],
             }
         ],
         unit,
