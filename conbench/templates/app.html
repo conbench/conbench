@@ -155,17 +155,28 @@ function specific_column_search(data_table_id, column_indexes) {
         var table = $(data_table_id).DataTable();
         table.columns(column_indexes).every(function() {
             var that = this;
+            var reset = ""
             var mySelectList = $("<select></select>")
                 .appendTo(this.header())
                 .on("change", function() {
                     that.search($(this).val()).draw();
                 });
-
+            mySelectList.append(
+                        $(`<option value="${reset}">${reset}</option>`)
+                    );
             this.cache("search").unique().sort().each(function(param) {
-                mySelectList.append(
-                    $(`<option value="${param}">${param}</option>`)
-                );
+                if (param!==""){
+                    mySelectList.append(
+                        $(`<option value="${param}">${param}</option>`)
+                    );
+                }
+                else{
+                    mySelectList.append(
+                        $(`<option value="${param}">null</option>`)
+                    );
+                }
             });
+
         });
     });
 }
