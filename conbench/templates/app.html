@@ -138,25 +138,28 @@ function enable_search_query_string(data_table) {
     });
 
 }
+/*
+INFO:
+    Adds search ability for specific columns in the DataTable,
+    Creates a *table* instance and update the header with the dropdown menu
+    List of unique values based on the column data fields are added
+    Output is yield based on the selected option from the dropdown menu
 
-// requires two inputs: table_id & column_indexes
-function specific_column_search(data_table, column_indexes){
+INPUTS:
+ string: data_table_id
+ array: column_indexes
+ */
+function specific_column_search(data_table_id, column_indexes){
     $(document).ready(function() {
-        var table =  $(data_table).DataTable();
-        table.columns(column_indexes)
-		.every(function () {
+        var table =  $(data_table_id).DataTable();
+        table.columns(column_indexes).every(function () {
             var that = this;
 			var mySelectList = $("<select></select>")
 			.appendTo(this.header())
-			.on("change", function () {
-				that.search($(this).val()).draw();
+			.on("change", function () {that.search($(this).val()).draw();
 			});
 
-        this
-			.cache("search")
-            .unique()
-			.sort()
-			.each(function (param) {
+        this.cache("search").unique().sort().each(function (param) {
 				mySelectList.append(
 				$(`<option value="${param}">${param}</option>`)
 				);
