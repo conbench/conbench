@@ -59,7 +59,7 @@ class Run(Base, EntityMixin):
 
         if github_data := data.pop("github", None):
             repository = repository_to_url(github_data["repository"])
-            pr_number = github_data.get("pr_number")
+            pr_number = github_data.get("pr_number") or None
             branch = github_data.get("branch")
             sha = github_data["commit"]
 
