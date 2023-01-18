@@ -780,6 +780,9 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         data = copy.deepcopy(self.valid_payload)
         data["run_id"] = _uuid()
         data["github"]["pr_number"] = pr_number
+        # viable `github` submissions without `pr_number`:
+        # - just `repository` and `commit` (assumed to be on default branch)
+        # - submit `branch` directly instead (mostly discouraged, but possible)
         if pr_number == "<absent>":
             data["github"].pop("pr_number")
 
