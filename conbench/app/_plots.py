@@ -6,7 +6,8 @@ from typing import Optional
 
 import bokeh.plotting
 import dateutil
-from bokeh.models import Spacer, Span
+import bokeh.events
+from bokeh.models import Spacer, Span, OpenURL, TapTool, CustomJS
 
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
@@ -186,7 +187,13 @@ def _source(
     # the tooltip?
     commit_messages = [d["message"] for d in data]
 
-    dates = [dateutil.parser.isoparse(x["timestamp"]) for x in data]
+    # Note(JP): isoparse() returns a `datetime.datetime` object. And I think
+    # that the `timestamp` property corresponds to the invocation (or finish)
+    # time of the corresponding benchmark case run (the `timestamp` property on
+    # the `BenchmarkCreate` schema in the Conbench API). Are these tz-aware or
+    # tz-naive but in UTC?
+    datetimes = [dateutil.parser.isoparse(x["timestamp"]) for x in data]
+    date_strings = [d.strftime("%Y-%m-%d %H-%M %Z") for d in datetimes]
 
     points, means = [], []
     if alert_min:
@@ -214,10 +221,14 @@ def _source(
 
     return bokeh.models.ColumnDataSource(
         data={
-            "x": dates,
+            "x": datetimes,
             "y": points,
+            "date_strings": date_strings,
             "commit_messages": commit_messages,
             "commit_hashes_short": ["#" + d["sha"][:7] for d in data],
+            "relative_benchmark_urls": [
+                f'/benchmarks/{d["benchmark_id"]}' for d in data
+            ],
             "means": means,
         }
     )
@@ -269,6 +280,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     # Note(JP): `history` is an ordered list of dicts, each dict has a `mean`
     # key which is extracted here by default.
     source_mean_over_time = _source(history, unit, formatted=formatted)
+
     source_min_over_time = bokeh.models.ColumnDataSource(
         data=dict(
             x=[dateutil.parser.isoparse(x["timestamp"]) for x in history],
@@ -278,6 +290,82 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         )
     )
 
+    # source_mean_over_time.callback = CustomJS(
+    #     args=dict(src=source_mean_over_time),
+    #     code="""
+
+    #     var rundiv = querySelectorAll('div.conbench-histplot-rundetails');
+    #     rundiv.innerHTMK = "YES I GOT YA!"
+
+    #     console.log(cb_obj)
+    # """,
+    # )
+
+    # source_mean_over_time.selected.js_on_change(
+    #     "indices",
+    #     CustomJS(
+    #         args=dict(src=source_mean_over_time),
+    #         code="""
+
+    #     console.log(cb_obj)
+
+    #     // `cb_obj.indices` contains indices of selected data points in
+    #     // source object.
+
+    #     // make sure just one is selected?
+
+    #     console.log(src.data[indices[0]])
+
+    #     var rundiv = querySelectorAll('div.conbench-histplot-rundetails');
+    #     rundiv.innerHTMK = "YES I GOT YA!"
+
+    #     // console.log(cb_obj)
+    # """,
+    #     ),
+    # )
+
+    click_on_glyph_callback_show_run_details = CustomJS(
+        code="""
+        // did not work: document.querySelectorAll();
+        const rundiv = document.getElementsByClassName("conbench-histplot-rundetails")[0];
+
+        const i = cb_data.source.selected.indices[0];
+        const selected_glyph_run_relurl = cb_data.source.data['relative_benchmark_urls'][i];
+        const selected_glyph_run_date = cb_data.source.data['date_strings'][i];
+
+        rundiv.innerHTML = "Selected benchmark: <br />" +
+
+            '<ul><li>Report: <a href="' + selected_glyph_run_relurl + '">here</a></li>' +
+            "<li>Time when benchmark was run: " + selected_glyph_run_date + "</li></ul><br />"
+    """,
+    )
+
+    tap_callback_detect_unselect = CustomJS(
+        # Note(JP): When not using `args`, I thought, one can use
+        # `cb_data.source.selected.indices` to detect the situation where
+        # nothing was selected. However, for such events `cb_data` is an empty
+        # object. When using `args={"s1": source_mean_over_time}` then
+        # `s1.selected.indices` seems to always be available no matter where
+        # one clicks, and in case no glyph was licked the array is zero length.
+        args={"s1": source_mean_over_time},
+        code="""
+        // console.log("cb_data:", cb_data);
+        // console.log("cb_obj:", cb_obj);
+        console.log("s1.selected.indices: ", s1.selected.indices);
+
+        // if (cb_data && cb_data == {}
+        // if (Object.keys(cb_data).length === 0) {
+        //    console.log('cb_data is empty, assume nothing was clicked');
+        // }
+
+        if (s1.selected.indices.length == 0){
+            console.log("nothing selected, remove detail");
+            const rundiv = document.getElementsByClassName("conbench-histplot-rundetails")[0];
+            rundiv.innerHTML = "";
+        }
+    """,
+    )
+
     source_current_bm_mean = _source(
         [
             {
@@ -285,6 +373,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 "message": run["commit"]["message"],
                 "timestamp": run["commit"]["timestamp"],
                 "sha": run["commit"]["sha"],
+                "benchmark_id": benchmark["id"],
             }
         ],
         unit,
@@ -298,6 +387,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 "message": run["commit"]["message"],
                 "timestamp": run["commit"]["timestamp"],
                 "sha": run["commit"]["sha"],
+                "benchmark_id": benchmark["id"],
             }
         ],
         unit,
@@ -329,14 +419,34 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     t_start = t_start - (0.4 * t_range)
     t_end = t_end + (0.07 * t_range)
 
+    # taptool = TapTool(callback=display_run_callback)
+
+    # url = "http://rofl.com/@run-id"
+    # taptool = scatter_mean_over_time.select(type=TapTool)
+    # taptool = p.select(type=TapTool)
+    # taptool.callback = OpenURL(url=url)
+
     p = bokeh.plotting.figure(
         x_axis_type="datetime",
         height=height,
         width=width,
-        tools=["pan", "zoom_in", "zoom_out", "reset"],
+        tools=["pan", "zoom_in", "zoom_out", "reset", "tap"],
         x_range=(t_start, t_end),
     )
     p.toolbar.logo = None
+
+    taptool = p.select(type=TapTool)
+    taptool.callback = click_on_glyph_callback_show_run_details
+    p.js_on_event("tap", tap_callback_detect_unselect)
+
+    # p.js_on_event(
+    #     # Not publicly document but seemingly established: 'tap' is not
+    #     # just any click event in the plot, but only triggers when clicking
+    #     # a glyph:
+    #     # https://discourse.bokeh.org/t/how-to-trigger-callbacks-on-mouse-click-for-tap-tool/1630
+    #     bokeh.events.Tap,
+    #     display_run_callback,
+    # )
 
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
