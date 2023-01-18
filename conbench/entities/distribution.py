@@ -207,31 +207,35 @@ def set_z_scores(benchmark_results: List["BenchmarkResult"]):
         if (baseline_commit, baseline_hardware) in cached_distributions:
             distributions = cached_distributions[(baseline_commit, baseline_hardware)]
         else:
-            distributions = (
-                Session.query(Distribution)
+            query_result = (
+                Session.query(
+                    Distribution.case_id,
+                    Distribution.context_id,
+                    Distribution.mean_mean,
+                    Distribution.mean_sd,
+                )
                 .filter_by(commit_id=baseline_commit, hardware_hash=baseline_hardware)
                 .all()
             )
+            # Due to the unique index on Distribution, each row in the query result is
+            # guaranteed to have a different case/context. Make a fast lookup dict.
+            distributions = {
+                (row.case_id, row.context_id): (row.mean_mean, row.mean_sd)
+                for row in query_result
+            }
             cached_distributions[(baseline_commit, baseline_hardware)] = distributions
 
-        # based on the unique index, this list should either have length 0 or 1
-        matching_distributions = [
-            distribution
-            for distribution in distributions
-            if distribution.case_id == benchmark_result.case_id
-            and distribution.context_id == benchmark_result.context_id
-        ]
+        dist_mean, dist_sd = distributions.get(
+            (benchmark_result.case_id, benchmark_result.context_id), (None, None)
+        )
 
         if (
             benchmark_result.mean is not None
-            and matching_distributions
-            and matching_distributions[0].mean_mean is not None
-            and matching_distributions[0].mean_sd is not None
-            and matching_distributions[0].mean_sd != 0
+            and dist_mean is not None
+            and dist_sd is not None
+            and dist_sd != 0
         ):
-            benchmark_result.z_score = (
-                benchmark_result.mean - matching_distributions[0].mean_mean
-            ) / matching_distributions[0].mean_sd
+            benchmark_result.z_score = (benchmark_result.mean - dist_mean) / dist_sd
 
         if _less_is_better(benchmark_result.unit) and benchmark_result.z_score:
             benchmark_result.z_score = benchmark_result.z_score * -1
