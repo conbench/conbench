@@ -193,45 +193,61 @@ def _source(
     # the `BenchmarkCreate` schema in the Conbench API). Are these tz-aware or
     # tz-naive but in UTC?
     datetimes = [dateutil.parser.isoparse(x["timestamp"]) for x in data]
-    date_strings = [d.strftime("%Y-%m-%d %H-%M %Z") for d in datetimes]
+    date_strings = [d.strftime("%Y-%m-%d %H:%M %Z") for d in datetimes]
 
-    points, means = [], []
+    points, values_with_unit = [], []
     if alert_min:
         for x in data:
             alert = 5 * float(x["distribution_stdev"])
             points.append(float(x["distribution_mean"]) - alert)
-            means.append(unit_fmt(points[-1], unit))
+            values_with_unit.append(unit_fmt(points[-1], unit))
     elif alert_max:
         for x in data:
             alert = 5 * float(x["distribution_stdev"])
             points.append(float(x["distribution_mean"]) + alert)
-            means.append(unit_fmt(points[-1], unit))
+            values_with_unit.append(unit_fmt(points[-1], unit))
     else:
         points = [x[key] for x in data]
         # Note(JP): If `means` is just string-formatted `points` then this is
         # kind of acknowledging that `points` is always a collection of mean
         # values. It seems that this is a string value field that is only
         # ever used for tooltip generation?
-        means = [unit_fmt(float(x[key]), unit) for x in data if x[key]]
+        values_with_unit = [unit_fmt(float(x[key]), unit) for x in data if x[key]]
 
     if formatted:
         # Note(JP): why would we want to calculate the raw numeric data from
         # the tooltip string labels?
-        points = [x.split(" ")[0] for x in means]
+        points = [x.split(" ")[0] for x in values_with_unit]
 
-    return bokeh.models.ColumnDataSource(
-        data={
-            "x": datetimes,
-            "y": points,
-            "date_strings": date_strings,
-            "commit_messages": commit_messages,
-            "commit_hashes_short": ["#" + d["sha"][:7] for d in data],
-            "relative_benchmark_urls": [
-                f'/benchmarks/{d["benchmark_id"]}' for d in data
-            ],
-            "means": means,
-        }
-    )
+    dsdict = {
+        "x": datetimes,
+        # Note(JP): maybe rename `points` into `y_values_for_plotting`
+        "y": points,
+        # List of human-readable date strings, corresponding to
+        # the `datetimes` objects for the time axis
+        "date_strings": date_strings,
+        # List of (truncated) commit messages.
+        "commit_messages": commit_messages,
+        # List of short commit hashes with hashtag prefix
+        "commit_hashes_short": ["#" + d["sha"][:8] for d in data],
+        "relative_benchmark_urls": [f'/benchmarks/{d["benchmark_id"]}' for d in data],
+        # Stringified values (truncated, with unit)
+        "values_with_unit": values_with_unit,
+    }
+
+    multisample, multisample_count = _inspect_for_multisample(data)
+    if multisample:
+        # Add a column to the ColumnarDataSource: stringified individual
+        # samples (with units).
+        strings = []
+        for d in data:
+            samples = d["data"]
+            log.info("samples: %s", samples)
+            strings.append(", ".join(unit_fmt(s, unit) for s in samples))
+
+        dsdict["multisample_strings_with_unit"] = strings
+
+    return bokeh.models.ColumnDataSource(data=dsdict)
 
 
 def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
@@ -247,7 +263,14 @@ def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
     """
 
     # Get number of samples for each benchmark.
-    samplecounts = [len(i["data"]) for i in items]
+    try:
+        samplecounts = [len(i["data"]) for i in items]
+    except KeyError:
+        # Likely, the provided `items` for testing here are not strictly of the
+        # required shape. It's a programming bug, but do not crash in this
+        # case. Return an answer: not multisample (at least not in the way as
+        # expected).
+        return False, None
 
     multisample = True
     multisample_count = None
@@ -324,19 +347,62 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     #     ),
     # )
 
+    # Assume that the repository is constant across all data points in
+    # this plot. Is that a good assumption
+    repo_string = run["commit"]["repository"]
+
     click_on_glyph_callback_show_run_details = CustomJS(
-        code="""
+        code=f"""
         // did not work: document.querySelectorAll();
-        const rundiv = document.getElementsByClassName("conbench-histplot-rundetails")[0];
 
         const i = cb_data.source.selected.indices[0];
-        const selected_glyph_run_relurl = cb_data.source.data['relative_benchmark_urls'][i];
-        const selected_glyph_run_date = cb_data.source.data['date_strings'][i];
+        const run_report_relurl = cb_data.source.data['relative_benchmark_urls'][i];
+        const run_date_string = cb_data.source.data['date_strings'][i];
+        // Remove first character, the hashtag
+        const run_commit_hash_short = cb_data.source.data['commit_hashes_short'][i].substring(1);
+        const run_commit_msg_pfx = cb_data.source.data['commit_messages'][i];
+        // This is a stringified version of the value that determines the y
+        // plot position of this glyph.
+        const run_result_value_with_unit = cb_data.source.data['values_with_unit'][i];
 
-        rundiv.innerHTML = "Selected benchmark: <br />" +
+        var run_samples_with_units = undefined;
 
-            '<ul><li>Report: <a href="' + selected_glyph_run_relurl + '">here</a></li>' +
-            "<li>Time when benchmark was run: " + selected_glyph_run_date + "</li></ul><br />"
+        if (cb_data.source.data['multisample_strings_with_unit'] !== undefined) {{
+            run_samples_with_units = cb_data.source.data['multisample_strings_with_unit'][i];
+        }}
+
+        // JavaScript code generated in a Python f string -- templating hell, yeah! :)
+        // I don't know if repo string is always a URL, if it's always
+        // pointing to GitHub. But if it does, we can do some UX sugar.
+
+        var commit_repo_string =  run_commit_hash_short + ' in {repo_string}';
+
+        const repo = '{repo_string}';
+        if (repo.startsWith('https://github.com/')) {{
+            // for github at least this is known to work with a truncated hash
+            const url_to_commit = repo + '/commit/' + run_commit_hash_short;
+            commit_repo_string = '<a href="' + url_to_commit + '">' + url_to_commit + '</a>';
+        }}
+
+
+        var newHtml = \
+            '<li>Report: <a href="' + run_report_relurl + '">' + run_report_relurl + '</a></li>' +
+            '<li>Commit: ' + commit_repo_string + '</li>' +
+            '<li>Commit message (truncated): ' + run_commit_msg_pfx + '</li>' +
+            "<li>Result timestamp: " + run_date_string + "</li>" +
+            "<li>Result value: " + run_result_value_with_unit + "</li>";
+
+
+        if (run_samples_with_units) {{
+            newHtml += "<li>Result samples: " + run_samples_with_units + "</li>";
+        }}
+
+        const ul = document.getElementsByClassName("ul-histplot-run-details")[0];
+        ul.innerHTML = newHtml;
+
+        // Make the panel visible.
+        const e = document.getElementsByClassName("conbench-histplot-run-details")[0];
+        e.style.display = 'block'
     """,
     )
 
@@ -360,8 +426,11 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
 
         if (s1.selected.indices.length == 0){
             console.log("nothing selected, remove detail");
-            const rundiv = document.getElementsByClassName("conbench-histplot-rundetails")[0];
-            rundiv.innerHTML = "";
+            //const rundiv = document.getElementsByClassName("conbench-histplot-run-details")[0];
+            //rundiv.innerHTML = "";
+            // Make the panel invisible.
+            const e = document.getElementsByClassName("conbench-histplot-run-details")[0];
+            e.style.display = 'none'
         }
     """,
     )
@@ -374,6 +443,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 "timestamp": run["commit"]["timestamp"],
                 "sha": run["commit"]["sha"],
                 "benchmark_id": benchmark["id"],
+                "repository": run["commit"]["repository"],
             }
         ],
         unit,
@@ -388,6 +458,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 "timestamp": run["commit"]["timestamp"],
                 "sha": run["commit"]["sha"],
                 "benchmark_id": benchmark["id"],
+                "repository": run["commit"]["repository"],
             }
         ],
         unit,
@@ -463,8 +534,15 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         source=source_mean_over_time,
         legend_label=label,
         name="history",
-        size=4,
+        size=6,
         color="#ccc",
+        line_width=1,
+        selection_color="#76bf5a",  # like bootstrap panel dff0d8, but darker
+        selection_line_color="#5da540",  # same green, again darker
+        # Cannot change the size upon selection
+        # selection_size=10,
+        nonselection_fill_alpha=1.0,
+        nonselection_line_alpha=1.0,
     )
 
     if multisample:
@@ -560,11 +638,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         bokeh.models.HoverTool(
             tooltips=[
                 ("date", "$x{%F}"),
-                # Note(JP): this is where the `means` name becomes special,
-                # I think.
-                ("mean", "@means"),
-                ("commit", "@commit_hashes_short"),
-                ("commit msg", "@commit_messages"),
+                ("value", "@values_with_unit"),
             ],
             formatters={"$x": "datetime"},
             renderers=hover_renderers,
