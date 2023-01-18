@@ -278,6 +278,13 @@ def commit_hardware_run_map():
 
 
 class GitHubCreate(marshmallow.Schema):
+    @marshmallow.pre_load
+    def change_pr_number_empty_string_to_none(self, data, **kwargs):
+        if "pr_number" in data:
+            data["pr_number"] = data["pr_number"] or None
+
+        return data
+
     commit = marshmallow.fields.String(
         required=True,
         metadata={

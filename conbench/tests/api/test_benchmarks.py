@@ -774,6 +774,25 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
+    @pytest.mark.parametrize("pr_number", [12345678, "12345678", None, "", "<absent>"])
+    def test_create_allow_pr_number_variations(self, pr_number, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["run_id"] = _uuid()
+        data["github"]["pr_number"] = pr_number
+        # `<absent>` is a sentinel for `pr_number` not being specified.
+        # viable `github` submissions without `pr_number`:
+        # - just `repository` and `commit` (assumed to be on default branch)
+        # - submit `branch` directly instead (mostly discouraged, but possible)
+        if pr_number == "<absent>":
+            data["github"].pop("pr_number")
+
+        response = client.post("/api/benchmarks/", json=data)
+        new_id = response.json["id"]
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
+
     def test_create_benchmark_distribution(self, client):
         for payload in [self.valid_payload, self.valid_payload_for_cluster]:
             self.authenticate(client)
