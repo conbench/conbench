@@ -780,6 +780,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         data = copy.deepcopy(self.valid_payload)
         data["run_id"] = _uuid()
         data["github"]["pr_number"] = pr_number
+        # `<absent>` is a sentinel for `pr_number` not being specified.
         # viable `github` submissions without `pr_number`:
         # - just `repository` and `commit` (assumed to be on default branch)
         # - submit `branch` directly instead (mostly discouraged, but possible)
