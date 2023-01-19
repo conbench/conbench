@@ -177,7 +177,7 @@ def test__source():
     source = _source(HISTORY, "B/s")
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS
-    assert source.data["means"] == MEANS
+    assert source.data["values_with_unit"] == MEANS
     assert source.data["commit_messages"] == COMMITS
 
 
@@ -185,7 +185,7 @@ def test_source_formatted():
     source = _source(HISTORY, "B/s", formatted=True)
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS_FORMATTED
-    assert source.data["means"] == MEANS
+    assert source.data["values_with_unit"] == MEANS
     assert source.data["commit_messages"] == COMMITS
 
 
@@ -193,7 +193,7 @@ def test_source_formatted_items_per_second():
     source = _source(HISTORY, "i/s", formatted=True)
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS_FORMATTED_ITEMS
-    assert source.data["means"] == MEANS_ITEMS
+    assert source.data["values_with_unit"] == MEANS_ITEMS
     assert source.data["commit_messages"] == COMMITS
 
 
@@ -201,7 +201,7 @@ def test_source_alert_min():
     source = _source(HISTORY, "B/s", alert_min=True)
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS_MIN
-    assert source.data["means"] == MEANS_MIN
+    assert source.data["values_with_unit"] == MEANS_MIN
     assert source.data["commit_messages"] == COMMITS
 
 
@@ -209,7 +209,7 @@ def test_source_alert_min_formatted():
     source = _source(HISTORY, "B/s", alert_min=True, formatted=True)
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS_MIN_FORMATTED
-    assert source.data["means"] == MEANS_MIN
+    assert source.data["values_with_unit"] == MEANS_MIN
     assert source.data["commit_messages"] == COMMITS
 
 
@@ -217,7 +217,7 @@ def test_source_alert_max():
     source = _source(HISTORY, "B/s", alert_max=True)
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS_MAX
-    assert source.data["means"] == MEANS_MAX
+    assert source.data["values_with_unit"] == MEANS_MAX
     assert source.data["commit_messages"] == COMMITS
 
 
@@ -225,7 +225,7 @@ def test_source_alert_max_formatted():
     source = _source(HISTORY, "B/s", alert_max=True, formatted=True)
     assert source.data["x"] == DATES
     assert source.data["y"] == POINTS_MAX_FORMATTED
-    assert source.data["means"] == MEANS_MAX
+    assert source.data["values_with_unit"] == MEANS_MAX
     assert source.data["commit_messages"] == COMMITS
 
 
