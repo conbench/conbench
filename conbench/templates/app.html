@@ -138,6 +138,32 @@ function enable_search_query_string(data_table) {
     });
 }
 
+/*
+INFO:
+    Adds free text search ability for specific columns in the DataTable
+INPUTS:
+ data_table_id: string
+ column_indexes: array
+ */
+function free_text_column_search(data_table_id, column_indexes) {
+    $(document).ready(function() {
+        var table = $(data_table_id).DataTable();
+        table.columns(column_indexes).every(function() {
+            var title = $(this).text();
+            $(this).html('<input type="text" placeholder="Search ' + title + '" />');
+        });
+
+        table.columns(column_indexes).every(function (){
+            var that= this;
+            $('input', this.headers()).on('keyup change', function (){
+                if (that.search()!== this.value){
+                    that.search(this.value).draw();
+                }
+            })
+        })
+    })
+}
+
 $("#confirm-delete").on("show.bs.modal", function(e) {
     $(this).find("#confirm-delete-message").html($(e.relatedTarget).data("message"));
     $(this).find("#delete-form-id").attr("value", $(e.relatedTarget).data("form-id"));
