@@ -4,10 +4,10 @@ import json
 import logging
 from typing import Optional
 
-import bokeh.plotting
-import dateutil
 import bokeh.events
 import bokeh.models
+import bokeh.plotting
+import dateutil
 
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
