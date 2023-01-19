@@ -188,10 +188,10 @@ def _source(
     commit_messages = [d["message"] for d in data]
 
     # Note(JP): isoparse() returns a `datetime.datetime` object. And I think
-    # that the `timestamp` property corresponds to the invocation (or finish)
-    # time of the corresponding benchmark case run (the `timestamp` property on
-    # the `BenchmarkCreate` schema in the Conbench API). Are these tz-aware or
-    # tz-naive but in UTC?
+    # that the `timestamp` property corresponds to the utc-local invocation (or
+    # finish) time of the corresponding benchmark case run (the `timestamp`
+    # property on the `BenchmarkCreate` schema in the Conbench API). Are these
+    # tz-aware or tz-naive but in UTC?
     datetimes = [dateutil.parser.isoparse(x["timestamp"]) for x in data]
     date_strings = [d.strftime("%Y-%m-%d %H:%M %Z") for d in datetimes]
 
@@ -270,6 +270,7 @@ def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
         # required shape. It's a programming bug, but do not crash in this
         # case. Return an answer: not multisample (at least not in the way as
         # expected).
+        log.warning("_inspect_for_multisampl: unexpected argument: %s", items)
         return False, None
 
     multisample = True
