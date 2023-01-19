@@ -31,7 +31,8 @@ class _Serializer(EntitySerializer):
 
         # For both, history.data and history.times expect either None or a list
         # Make it so that in the output object they are always a list,
-        # potentially empty.
+        # potentially empty. `data` contains more than one value if this was
+        # a multi-sample benchmark.
         data = []
         if history.data is not None:
             data = [float(d) if d is not None else None for d in history.data]

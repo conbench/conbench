@@ -7,7 +7,7 @@ from typing import Optional
 import bokeh.plotting
 import dateutil
 import bokeh.events
-from bokeh.models import Spacer, Span, OpenURL, TapTool, CustomJS
+import bokeh.models
 
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
@@ -292,68 +292,48 @@ def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
     return multisample, multisample_count
 
 
-def time_series_plot(history, benchmark, run, height=380, width=1100):
+def gen_js_callback_tap_detect_unselect(source: bokeh.models.ColumnDataSource):
+    """
+    Dynamically manipulate Bootstrap panel conbench-histplot-run-details`.
 
-    # log.info("Time series plot for:\n%s", json.dumps(history, indent=2))
+    Hide if empty space in plot was clicked.
 
-    unit = history[0]["unit"]
-    with_dist = [h for h in history if h["distribution_mean"]]
-    formatted, axis_unit = _should_format(history, unit)
+    Warning: requires manual testing, not covered by tests/CI.
+    """
+    return bokeh.models.CustomJS(
+        # Note(JP): When not using `args`, I thought, one can use
+        # `cb_data.source.selected.indices` to detect the situation where
+        # nothing was selected. However, for such events `cb_data` is an empty
+        # object. When using `args={"s1": source_mean_over_time}` then
+        # `s1.selected.indices` seems to always be available no matter where
+        # one clicks, and in case no glyph was clicked the array is zero
+        # length.
+        args={"s1": source},
+        code="""
+        // console.log("cb_data:", cb_data);
+        // console.log("cb_obj:", cb_obj);
+        // console.log("s1.selected.indices: ", s1.selected.indices);
 
-    # Note(JP): `history` is an ordered list of dicts, each dict has a `mean`
-    # key which is extracted here by default.
-    source_mean_over_time = _source(history, unit, formatted=formatted)
-
-    source_min_over_time = bokeh.models.ColumnDataSource(
-        data=dict(
-            x=[dateutil.parser.isoparse(x["timestamp"]) for x in history],
-            # TODO: best-case is not always min, e.g. when data has a unit like
-            # bandwidth.
-            y=[min(x["data"]) for x in history],
-        )
+        if (s1.selected.indices.length == 0){
+            console.log("nothing selected, remove detail");
+            // Make the panel invisible.
+            const e = document.getElementsByClassName("conbench-histplot-run-details")[0];
+            e.style.display = 'none'
+        }
+    """,
     )
 
-    # source_mean_over_time.callback = CustomJS(
-    #     args=dict(src=source_mean_over_time),
-    #     code="""
 
-    #     var rundiv = querySelectorAll('div.conbench-histplot-rundetails');
-    #     rundiv.innerHTMK = "YES I GOT YA!"
+def gen_js_callback_click_on_glyph_show_run_details(repo_string):
+    """
+    Dynamically manipulate Bootstrap panel conbench-histplot-run-details`.
 
-    #     console.log(cb_obj)
-    # """,
-    # )
+    Show run details if a corresponding glyph was clicked in the plot.
 
-    # source_mean_over_time.selected.js_on_change(
-    #     "indices",
-    #     CustomJS(
-    #         args=dict(src=source_mean_over_time),
-    #         code="""
-
-    #     console.log(cb_obj)
-
-    #     // `cb_obj.indices` contains indices of selected data points in
-    #     // source object.
-
-    #     // make sure just one is selected?
-
-    #     console.log(src.data[indices[0]])
-
-    #     var rundiv = querySelectorAll('div.conbench-histplot-rundetails');
-    #     rundiv.innerHTMK = "YES I GOT YA!"
-
-    #     // console.log(cb_obj)
-    # """,
-    #     ),
-    # )
-
-    # Assume that the repository is constant across all data points in
-    # this plot. Is that a good assumption
-    repo_string = run["commit"]["repository"]
-
-    click_on_glyph_callback_show_run_details = CustomJS(
+    Warning: requires manual testing, not covered by tests/CI.
+    """
+    return bokeh.models.CustomJS(
         code=f"""
-        // did not work: document.querySelectorAll();
 
         const i = cb_data.source.selected.indices[0];
         const run_report_relurl = cb_data.source.data['relative_benchmark_urls'][i];
@@ -406,33 +386,25 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     """,
     )
 
-    tap_callback_detect_unselect = CustomJS(
-        # Note(JP): When not using `args`, I thought, one can use
-        # `cb_data.source.selected.indices` to detect the situation where
-        # nothing was selected. However, for such events `cb_data` is an empty
-        # object. When using `args={"s1": source_mean_over_time}` then
-        # `s1.selected.indices` seems to always be available no matter where
-        # one clicks, and in case no glyph was licked the array is zero length.
-        args={"s1": source_mean_over_time},
-        code="""
-        // console.log("cb_data:", cb_data);
-        // console.log("cb_obj:", cb_obj);
-        console.log("s1.selected.indices: ", s1.selected.indices);
 
-        // if (cb_data && cb_data == {}
-        // if (Object.keys(cb_data).length === 0) {
-        //    console.log('cb_data is empty, assume nothing was clicked');
-        // }
+def time_series_plot(history, benchmark, run, height=380, width=1100):
+    # log.info("Time series plot for:\n%s", json.dumps(history, indent=2))
 
-        if (s1.selected.indices.length == 0){
-            console.log("nothing selected, remove detail");
-            //const rundiv = document.getElementsByClassName("conbench-histplot-run-details")[0];
-            //rundiv.innerHTML = "";
-            // Make the panel invisible.
-            const e = document.getElementsByClassName("conbench-histplot-run-details")[0];
-            e.style.display = 'none'
-        }
-    """,
+    unit = history[0]["unit"]
+    with_dist = [h for h in history if h["distribution_mean"]]
+    formatted, axis_unit = _should_format(history, unit)
+
+    # Note(JP): `history` is an ordered list of dicts, each dict has a `mean`
+    # key which is extracted here by default.
+    source_mean_over_time = _source(history, unit, formatted=formatted)
+
+    source_min_over_time = bokeh.models.ColumnDataSource(
+        data=dict(
+            x=[dateutil.parser.isoparse(x["timestamp"]) for x in history],
+            # TODO: best-case is not always min, e.g. when data has a unit like
+            # bandwidth.
+            y=[min(x["data"]) for x in history],
+        )
     )
 
     source_current_bm_mean = _source(
@@ -490,13 +462,6 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     t_start = t_start - (0.4 * t_range)
     t_end = t_end + (0.07 * t_range)
 
-    # taptool = TapTool(callback=display_run_callback)
-
-    # url = "http://rofl.com/@run-id"
-    # taptool = scatter_mean_over_time.select(type=TapTool)
-    # taptool = p.select(type=TapTool)
-    # taptool.callback = OpenURL(url=url)
-
     p = bokeh.plotting.figure(
         x_axis_type="datetime",
         height=height,
@@ -506,18 +471,21 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     )
     p.toolbar.logo = None
 
-    taptool = p.select(type=TapTool)
-    taptool.callback = click_on_glyph_callback_show_run_details
-    p.js_on_event("tap", tap_callback_detect_unselect)
+    # TapTool is not responding to each click event, but but only triggers when
+    # clicking a glyph:
+    # https://discourse.bokeh.org/t/how-to-trigger-callbacks-on-mouse-click-for-tap-tool/1630
+    taptool = p.select(type=bokeh.models.TapTool)
+    taptool.callback = gen_js_callback_click_on_glyph_show_run_details(
+        # Assume that the repository is constant across all data points in
+        # this plot. Is that a good assumption
+        repo_string=run["commit"]["repository"]
+    )
 
-    # p.js_on_event(
-    #     # Not publicly document but seemingly established: 'tap' is not
-    #     # just any click event in the plot, but only triggers when clicking
-    #     # a glyph:
-    #     # https://discourse.bokeh.org/t/how-to-trigger-callbacks-on-mouse-click-for-tap-tool/1630
-    #     bokeh.events.Tap,
-    #     display_run_callback,
-    # )
+    # `tap` event triggers for each click. Whether or not this was on a glyph
+    # of a specific data source this can be decided in the callback when
+    # passing a data source to the callback and then inspecting
+    # `s1.selected.indices`.
+    p.js_on_event("tap", gen_js_callback_tap_detect_unselect(source_mean_over_time))
 
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
@@ -605,7 +573,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     for result in history:
         if result["change_annotations"].get("begins_distribution_change", False):
             p.add_layout(
-                Span(
+                bokeh.models.Span(
                     location=dateutil.parser.isoparse(result["timestamp"]),
                     dimension="height",
                     line_color="purple",
@@ -677,4 +645,6 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     select.axis.visible = False
     select.title.text_font_style = "italic"
 
-    return bokeh.layouts.column(p, Spacer(height=20), select, Spacer(height=20))
+    return bokeh.layouts.column(
+        p, bokeh.models.Spacer(height=20), select, bokeh.models.Spacer(height=20)
+    )
