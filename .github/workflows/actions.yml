@@ -92,7 +92,6 @@ jobs:
             echo "a valid benchmark ID: $SOME_BENCHMARK_ID"
             cd ci
             docker build . -t conbench-screenshot -f screenshot.Dockerfile
-            export CONBENCH_BASE_URL=http://$(docker compose port app 5000)
             mkdir ci-artifacts
             docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
                 python screenshot.py ${CONBENCH_BASE_URL} /artifacts frontpage

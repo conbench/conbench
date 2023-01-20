@@ -41,8 +41,9 @@ logging.basicConfig(
 )
 
 
-# We bumped this to capture Bokeh plot renderings which sometimes take a little
-# while. It would however be better to dynamically respond to a render event.
+# TODO We bumped this to capture Bokeh plot renderings which sometimes take a
+# little while. It would however be better to dynamically respond to a render
+# event (see module-level docstring).
 SLEEP_BEFORE_SCREENSHOT_SECONDS = 3.0
 
 

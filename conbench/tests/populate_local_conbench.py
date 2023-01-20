@@ -403,6 +403,7 @@ def create_benchmarks_with_history():
                 runs.append((run_id, timestamp))
 
     log.info("now, emit a benchmark ID on stdout")
+    # That benchmark ID is consumed and used by CI.
     print(benchmark_ids[0])
 
 
