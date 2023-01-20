@@ -316,11 +316,11 @@ def gen_js_callback_tap_detect_unselect(source: bokeh.models.ColumnDataSource):
         // console.log("cb_obj:", cb_obj);
         // console.log("s1.selected.indices: ", s1.selected.indices);
 
-        if (s1.selected.indices.length == 0){
+        if (s1.selected.indices.length == 0) {
             console.log("nothing selected, remove detail");
             // Make the panel invisible.
             const e = document.getElementsByClassName("conbench-histplot-run-details")[0];
-            e.style.display = 'none'
+            e.style.display = 'none';
         }
     """,
     )
