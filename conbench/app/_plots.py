@@ -266,6 +266,7 @@ def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
     try:
         samplecounts = [len(i["data"]) for i in items]
     except KeyError:
+        # TODO: clean up once type checking is tight enough.
         # Likely, the provided `items` for testing here are not strictly of the
         # required shape. It's a programming bug, but do not crash in this
         # case. Return an answer: not multisample (at least not in the way as

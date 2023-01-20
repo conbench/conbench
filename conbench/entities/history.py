@@ -55,6 +55,7 @@ class _Serializer(EntitySerializer):
             "repository": history.repository,
             # Note(JP): this is the commit message
             "message": history.message,
+            # This is the Commit timestamp. Expose Result timestamp, too?
             "timestamp": history.timestamp.isoformat(),
             "run_name": history.name,
             "distribution_mean": float(history.mean_mean),
