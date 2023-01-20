@@ -486,8 +486,9 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     # https://discourse.bokeh.org/t/how-to-trigger-callbacks-on-mouse-click-for-tap-tool/1630
     taptool = p.select(type=bokeh.models.TapTool)
     taptool.callback = gen_js_callback_click_on_glyph_show_run_details(
-        # Assume that the repository is constant across all data points in
-        # this plot. Is that a good assumption
+        # The repository is constant across all data points in this plot. The
+        # underlying database query filters by exactly that (Commit.repository
+        # == repo).
         repo_string=run["commit"]["repository"]
     )
 
