@@ -1,13 +1,14 @@
 import collections
-import datetime
 import json
 import logging
+from datetime import timedelta
 from typing import Optional
 
 import bokeh.events
 import bokeh.models
 import bokeh.plotting
-import dateutil
+
+from conbench import util
 
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
@@ -187,16 +188,11 @@ def _source(
     # the tooltip?
     commit_messages = [d["message"] for d in data]
 
-    # TODO: use stdlib
-    # datetime.fromisoformat(date_string) instead of datetutil.parser.
-    # Note(JP): dateutil.parser.isoparse returns a tz-naive `datetime.datetime`
-    # object: the `timestamp` property corresponds to the utc-local commit time
-    # (example value: 2022-03-03T19:48:06 -- that is, ISO 8601 w/o timezone
-    # information)
-    datetimes = [dateutil.parser.isoparse(x["timestamp"]) for x in data]
-
-    # Now attach timezone information.
-    datetimes = [d.replace(tzinfo=datetime.timezone.utc) for d in datetimes]
+    # The `timestamp` property corresponds to the UTC-local commit time
+    # (example value: 2022-03-03T19:48:06). That is, each string is ISO 8601
+    # notation w/o timezone information. Transform those into tz-aware datetime
+    # objects.
+    datetimes = util.tznaive_iso8601_to_tzaware_dt([x["timestamp"] for x in data])
 
     # Get stringified versions of those datetimes for UI display purposes.
     # Include timezone information. This shows UTC for the %Z.
@@ -410,7 +406,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
 
     source_min_over_time = bokeh.models.ColumnDataSource(
         data=dict(
-            x=[dateutil.parser.isoparse(x["timestamp"]) for x in history],
+            x=util.tznaive_iso8601_to_tzaware_dt([x["timestamp"] for x in history]),
             # TODO: best-case is not always min, e.g. when data has a unit like
             # bandwidth.
             y=[min(x["data"]) for x in history],
@@ -464,7 +460,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     t_start = source_mean_over_time.data["x"][0]
     t_end = source_mean_over_time.data["x"][-1]
 
-    t_range: datetime.timedelta = t_end - t_start
+    t_range: timedelta = t_end - t_start
 
     # Add padding/buffer to left and right so that newest data point does not
     # disappear under right plot boundary, and so that the oldest data point
@@ -585,7 +581,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         if result["change_annotations"].get("begins_distribution_change", False):
             p.add_layout(
                 bokeh.models.Span(
-                    location=dateutil.parser.isoparse(result["timestamp"]),
+                    location=util.tznaive_iso8601_to_tzaware_dt(result["timestamp"]),
                     dimension="height",
                     line_color="purple",
                     line_dash="dashed",
@@ -596,7 +592,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
             if not dist_change_in_legend:
                 # hack: add a dummy line so it appears on the legend
                 p.line(
-                    [dateutil.parser.isoparse(result["timestamp"])] * 2,
+                    [util.tznaive_iso8601_to_tzaware_dt(result["timestamp"])] * 2,
                     [result["mean"]] * 2,
                     legend_label="distribution change",
                     line_color="purple",

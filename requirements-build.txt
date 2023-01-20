@@ -3,7 +3,6 @@ apispec
 apispec-webframeworks
 bokeh
 click
-python-dateutil
 email-validator
 Flask
 Flask-Bootstrap

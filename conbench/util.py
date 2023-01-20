@@ -1,7 +1,10 @@
 import json
+import logging
 import os
 import time
 import urllib.parse
+from datetime import datetime, timezone
+from typing import Union
 
 import click
 import requests
@@ -17,6 +20,51 @@ retry_strategy = Retry(
     backoff_factor=4,  # will retry in 2, 4, 8, 16, 32 seconds
 )
 adapter = HTTPAdapter(max_retries=retry_strategy)
+
+
+log = logging.getLogger()
+
+
+def tznaive_iso8601_to_tzaware_dt(
+    input: Union[str, list[str]]
+) -> Union[datetime, list[datetime]]:
+    """
+    Convert time strings into datetime objects.
+
+    If a list of strings is provided return a list of datetime objects.
+
+    If a single string is provided return a single datetime object.
+
+    Assume that each provided string is in ISO 8601 notation without timezone
+    information, but that the time is actually meant to be interpreted in the
+    UTC timezone.
+
+    Note: this was built with and tested for a value like 2022-03-03T19:48:06
+    which in this example represents a commit timestamp (in UTC, additional
+    knowledge).
+    """
+
+    def _convert(s: str):
+        # Do some sanity-checking. If unexpected input is seen, only emit the
+        # warning but then still hard-set UTC timezone.
+        if "Z" in s:
+            # Input seems to be tz-aware but the timezone it specifies matches
+            # the one we want to set anyway.
+            log.warning("expected tz-naive timestring, but saw UTC: %s", s)
+
+        if "+" in s and "00:00" not in s:
+            # Input seems to be tz-aware but the timezone it specifies does
+            # not match UTC.
+            log.warning("expected tz-naive timestring, but saw non-UTC: %s", s)
+
+        return datetime.fromisoformat(s).replace(tzinfo=timezone.utc)
+
+    # Handle case where input is a single string.
+    if isinstance(input, str):
+        return _convert(input)
+
+    # Handle case where input is a list of strings.
+    return [_convert(s) for s in input]
 
 
 class Connection:
