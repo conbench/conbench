@@ -41,6 +41,11 @@ logging.basicConfig(
 )
 
 
+# We bumped this to capture Bokeh plot renderings which sometimes take a little
+# while. It would however be better to dynamically respond to a render event.
+SLEEP_BEFORE_SCREENSHOT_SECONDS = 3.0
+
+
 def main():
 
     parser = argparse.ArgumentParser()
@@ -86,7 +91,7 @@ def screenshot(url, pngpath):
         driver.set_window_size(1700, 1900)
         driver.get(url)
 
-        time.sleep(0.5)
+        time.sleep(SLEEP_BEFORE_SCREENSHOT_SECONDS)
         driver.get_screenshot_as_file(pngpath)
         log.info("Wrote file: %s", pngpath)
 
@@ -98,7 +103,7 @@ def print_to_pdf(url):
         driver.set_window_size(1700, 1900)
         driver.get(url)
 
-        time.sleep(0.5)
+        time.sleep(SLEEP_BEFORE_SCREENSHOT_SECONDS)
 
         b64_text = send_print_request(driver)
         log.info("decode b64 doc (length: %s chars) into bytes", len(b64_text))
