@@ -16,27 +16,18 @@
 </nav>
 
 
-<br>
+<br />
 {% if plot_history %}
 <div align="center">{{ benchmark.display_batch }}, {{ benchmark.display_name }}</div>
 {% endif %}
 <div id="plot-history-0" align="center"></div>
-<br />
-
 <div class="row">
-  <div class="col-md-8">
-    {{ wtf.quick_form(update_form, id="update-form", button_map={'toggle_distribution_change': update_button_color}) }}
-  </div>
-</div>
-<br>
-
-<div class="row">
-  <div class="col-md-12">
-    Click on a grey point (benchmark mean) in the plot to see corresponding benchmark run details.
+  <div class="col-md-12" style="padding-top: 10px;">
+    Click on a benchmark result (grey point) in the plot to see a corresponding benchmark result summary.
     <div class="conbench-histplot-run-details" style="display: none;">
       <br />
       <div class="panel panel-success">
-        <div class="panel-heading">Details for selected benchmark (green data point in plot)</div>
+        <div class="panel-heading">Summary for selected benchmark (green data point in plot)</div>
         <div class="panel-body">
           <ul class="ul-histplot-run-details"></ul>
         </div>
@@ -44,7 +35,15 @@
     </div>
   </div>
 </div>
-<br>
+<br />
+
+<div class="row">
+  <div class="col-md-8">
+    {{ wtf.quick_form(update_form, id="update-form", button_map={'toggle_distribution_change': update_button_color}) }}
+  </div>
+</div>
+<br />
+
 
 <div class="row">
   <div class="col-md-6">
