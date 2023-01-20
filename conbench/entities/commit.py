@@ -5,12 +5,13 @@ import os
 from datetime import datetime
 from typing import List, Optional
 
-import dateutil.parser
+
 import flask as f
 import requests
 import sqlalchemy as s
 from sqlalchemy.orm import Query
 
+from conbench import util
 from ..db import Session
 from ..entities._entity import (
     Base,
@@ -546,7 +547,7 @@ class GitHub:
             "parent": commit["parents"][0]["sha"] if commit["parents"] else None,
             # Note(JP): this might need attention with respect to time zones.
             # Also see https://github.com/PyGithub/PyGithub/issues/512#issuecomment-1362654366
-            "date": dateutil.parser.isoparse(commit_author["date"]),
+            "date": util.tznaive_iso8601_to_tzaware_dt(commit_author["date"]),
             # Note(JP): don't we want to indicate if the msg was truncated,
             # with e.g. an ellipsis?
             "message": commit["commit"]["message"].split("\n")[0][:240],
