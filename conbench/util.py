@@ -45,10 +45,17 @@ def tznaive_iso8601_to_tzaware_dt(
     """
 
     def _convert(s: str):
-        # Do some sanity-checking. If this happens, only emit the warning
-        # but then still hard-set UTC timezone.
-        if "Z" in s or "+" in s:
-            log.warning("expected tz-naive timestring, but saw: %s", s)
+        # Do some sanity-checking. If unexpected input is seen, only emit the
+        # warning but then still hard-set UTC timezone.
+        if "Z" in s:
+            # Input seems to be tz-aware but the timezone it specifies matches
+            # the one we want to set anyway.
+            log.warning("expected tz-naive timestring, but saw UTC: %s", s)
+
+        if "+" in s and "00:00" not in s:
+            # Input seems to be tz-aware but the timezone it specifies does
+            # not match UTC.
+            log.warning("expected tz-naive timestring, but saw non-UTC: %s", s)
 
         return datetime.fromisoformat(s).replace(tzinfo=timezone.utc)
 
