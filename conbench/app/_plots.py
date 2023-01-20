@@ -249,7 +249,6 @@ def _source(
         strings = []
         for d in data:
             samples = d["data"]
-            log.info("samples: %s", samples)
             strings.append(", ".join(unit_fmt(s, unit) for s in samples))
 
         dsdict["multisample_strings_with_unit"] = strings
@@ -278,7 +277,7 @@ def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
         # required shape. It's a programming bug, but do not crash in this
         # case. Return an answer: not multisample (at least not in the way as
         # expected).
-        log.warning("_inspect_for_multisampl: unexpected argument: %s", items)
+        log.warning("_inspect_for_multisample: unexpected argument: %s", items)
         return False, None
 
     multisample = True
@@ -363,6 +362,8 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
         // JavaScript code generated in a Python f string -- templating hell, yeah! :)
         // I don't know if repo string is always a URL, if it's always
         // pointing to GitHub. But if it does, we can do some UX sugar.
+        // Austin says that repo string should as of today be either None or
+        // a URL to the GitHub repo. We will see what future needs will bring.
 
         var commit_repo_string =  run_commit_hash_short + ' in {repo_string}';
 
@@ -373,7 +374,7 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
             commit_repo_string = '<a href="' + url_to_commit + '">' + url_to_commit + '</a>';
         }}
 
-
+        // TODO? show run timestamp, not only commit timestamp.
         var newHtml = \
             '<li>Report: <a href="' + run_report_relurl + '">' + run_report_relurl + '</a></li>' +
             '<li>Commit: ' + commit_repo_string + '</li>' +
