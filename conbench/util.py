@@ -39,20 +39,30 @@ def tznaive_iso8601_to_tzaware_dt(
     information, but that the time is actually meant to be interpreted in the
     UTC timezone.
 
+    If an input string is tz-aware and encodes Zulu (UTC) time then this
+    timezone is retained.
+
+    If an input string is tz-aware and encodes a different time zone then the
+    timezone is rewritten to UTC, i.e there is information loss/transformation,
+    but a warning is also emitted.
+
     Note: this was built with and tested for a value like 2022-03-03T19:48:06
     which in this example represents a commit timestamp (in UTC, additional
     knowledge).
     """
 
     def _convert(s: str):
-        # Do some sanity-checking. If unexpected input is seen, only emit the
-        # warning but then still hard-set UTC timezone.
-        if "Z" in s:
-            # Input seems to be tz-aware but the timezone it specifies matches
-            # the one we want to set anyway.
-            log.warning("expected tz-naive timestring, but saw UTC: %s", s)
 
-        if "+" in s and "00:00" not in s:
+        dt = datetime.fromisoformat(s)
+
+        if dt.tzinfo == timezone.utc:
+            return dt
+
+        elif dt.tzinfo is None:
+            # Attach UTC timezone.
+            return dt.replace(tzinfo=timezone.utc)
+
+        else:
             # Input seems to be tz-aware but the timezone it specifies does
             # not match UTC.
             log.warning("expected tz-naive timestring, but saw non-UTC: %s", s)

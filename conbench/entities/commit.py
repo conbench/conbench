@@ -545,8 +545,9 @@ class GitHub:
 
         return {
             "parent": commit["parents"][0]["sha"] if commit["parents"] else None,
-            # Note(JP): this might need attention with respect to time zones.
-            # Also see https://github.com/PyGithub/PyGithub/issues/512#issuecomment-1362654366
+            # Note: `commit_author["date"]` here is expected to be an ISO 8601
+            # timestring as returned by the GitHub HTTP API and that is
+            # tz-aware (Zulu time, UTC).
             "date": util.tznaive_iso8601_to_tzaware_dt(commit_author["date"]),
             # Note(JP): don't we want to indicate if the msg was truncated,
             # with e.g. an ellipsis?
