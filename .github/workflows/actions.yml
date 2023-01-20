@@ -88,6 +88,8 @@ jobs:
             pip install requests # the nonly non-stdlib dependency as of now
             export CONBENCH_BASE_URL=http://$(docker compose port app 5000)
             export SOME_BENCHMARK_ID="$(make db-populate)"
+            export "conbench base URL: $CONBENCH_BASE_URL"
+            echo "a valid benchmark ID: $SOME_BENCHMARK_ID"
             cd ci
             docker build . -t conbench-screenshot -f screenshot.Dockerfile
             export CONBENCH_BASE_URL=http://$(docker compose port app 5000)
@@ -95,7 +97,7 @@ jobs:
             docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
                 python screenshot.py ${CONBENCH_BASE_URL} /artifacts frontpage
             docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
-                python screenshot.py ${CONBENCH_BASE_URL}/benchmarks/${SOME_BENCHMARK_ID}/ /artifacts benchmark-result-view
+                python screenshot.py "${CONBENCH_BASE_URL}/benchmarks/${SOME_BENCHMARK_ID}/" /artifacts benchmark-result-view
             /bin/ls -ahltr ci-artifacts/
       - name: upload-artifacts
         uses: actions/upload-artifact@v3
