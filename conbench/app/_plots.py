@@ -187,12 +187,19 @@ def _source(
     # the tooltip?
     commit_messages = [d["message"] for d in data]
 
-    # Note(JP): isoparse() returns a `datetime.datetime` object. And I think
-    # that the `timestamp` property corresponds to the utc-local invocation (or
-    # finish) time of the corresponding benchmark case run (the `timestamp`
-    # property on the `BenchmarkCreate` schema in the Conbench API). Are these
-    # tz-aware or tz-naive but in UTC?
+    # TODO: use stdlib
+    # datetime.fromisoformat(date_string) instead of datetutil.parser.
+    # Note(JP): dateutil.parser.isoparse returns a tz-naive `datetime.datetime`
+    # object: the `timestamp` property corresponds to the utc-local commit time
+    # (example value: 2022-03-03T19:48:06 -- that is, ISO 8601 w/o timezone
+    # information)
     datetimes = [dateutil.parser.isoparse(x["timestamp"]) for x in data]
+
+    # Now attach timezone information.
+    datetimes = [d.replace(tzinfo=datetime.timezone.utc) for d in datetimes]
+
+    # Get stringified versions of those datetimes for UI display purposes.
+    # Include timezone information. This shows UTC for the %Z.
     date_strings = [d.strftime("%Y-%m-%d %H:%M %Z") for d in datetimes]
 
     points, values_with_unit = [], []
@@ -371,7 +378,7 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
             '<li>Report: <a href="' + run_report_relurl + '">' + run_report_relurl + '</a></li>' +
             '<li>Commit: ' + commit_repo_string + '</li>' +
             '<li>Commit message (truncated): ' + run_commit_msg_pfx + '</li>' +
-            "<li>Result timestamp: " + run_date_string + "</li>" +
+            "<li>Commit timestamp: " + run_date_string + "</li>" +
             "<li>Result value: " + run_result_value_with_unit + "</li>";
 
 
