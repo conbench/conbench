@@ -4,9 +4,10 @@ import json
 import logging
 from typing import Optional
 
+import bokeh.events
+import bokeh.models
 import bokeh.plotting
 import dateutil
-from bokeh.models import Spacer, Span
 
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
@@ -186,41 +187,73 @@ def _source(
     # the tooltip?
     commit_messages = [d["message"] for d in data]
 
-    dates = [dateutil.parser.isoparse(x["timestamp"]) for x in data]
+    # TODO: use stdlib
+    # datetime.fromisoformat(date_string) instead of datetutil.parser.
+    # Note(JP): dateutil.parser.isoparse returns a tz-naive `datetime.datetime`
+    # object: the `timestamp` property corresponds to the utc-local commit time
+    # (example value: 2022-03-03T19:48:06 -- that is, ISO 8601 w/o timezone
+    # information)
+    datetimes = [dateutil.parser.isoparse(x["timestamp"]) for x in data]
 
-    points, means = [], []
+    # Now attach timezone information.
+    datetimes = [d.replace(tzinfo=datetime.timezone.utc) for d in datetimes]
+
+    # Get stringified versions of those datetimes for UI display purposes.
+    # Include timezone information. This shows UTC for the %Z.
+    date_strings = [d.strftime("%Y-%m-%d %H:%M %Z") for d in datetimes]
+
+    points, values_with_unit = [], []
     if alert_min:
         for x in data:
             alert = 5 * float(x["distribution_stdev"])
             points.append(float(x["distribution_mean"]) - alert)
-            means.append(unit_fmt(points[-1], unit))
+            values_with_unit.append(unit_fmt(points[-1], unit))
     elif alert_max:
         for x in data:
             alert = 5 * float(x["distribution_stdev"])
             points.append(float(x["distribution_mean"]) + alert)
-            means.append(unit_fmt(points[-1], unit))
+            values_with_unit.append(unit_fmt(points[-1], unit))
     else:
         points = [x[key] for x in data]
         # Note(JP): If `means` is just string-formatted `points` then this is
         # kind of acknowledging that `points` is always a collection of mean
         # values. It seems that this is a string value field that is only
         # ever used for tooltip generation?
-        means = [unit_fmt(float(x[key]), unit) for x in data if x[key]]
+        values_with_unit = [unit_fmt(float(x[key]), unit) for x in data if x[key]]
 
     if formatted:
         # Note(JP): why would we want to calculate the raw numeric data from
         # the tooltip string labels?
-        points = [x.split(" ")[0] for x in means]
+        points = [x.split(" ")[0] for x in values_with_unit]
 
-    return bokeh.models.ColumnDataSource(
-        data={
-            "x": dates,
-            "y": points,
-            "commit_messages": commit_messages,
-            "commit_hashes_short": ["#" + d["sha"][:7] for d in data],
-            "means": means,
-        }
-    )
+    dsdict = {
+        "x": datetimes,
+        # Note(JP): maybe rename `points` into `y_values_for_plotting`
+        "y": points,
+        # List of human-readable date strings, corresponding to
+        # the `datetimes` objects for the time axis
+        "date_strings": date_strings,
+        # List of (truncated) commit messages.
+        "commit_messages": commit_messages,
+        # List of short commit hashes with hashtag prefix
+        "commit_hashes_short": ["#" + d["sha"][:8] for d in data],
+        "relative_benchmark_urls": [f'/benchmarks/{d["benchmark_id"]}' for d in data],
+        # Stringified values (truncated, with unit)
+        "values_with_unit": values_with_unit,
+    }
+
+    multisample, multisample_count = _inspect_for_multisample(data)
+    if multisample:
+        # Add a column to the ColumnarDataSource: stringified individual
+        # samples (with units).
+        strings = []
+        for d in data:
+            samples = d["data"]
+            strings.append(", ".join(unit_fmt(s, unit) for s in samples))
+
+        dsdict["multisample_strings_with_unit"] = strings
+
+    return bokeh.models.ColumnDataSource(data=dsdict)
 
 
 def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
@@ -236,7 +269,16 @@ def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
     """
 
     # Get number of samples for each benchmark.
-    samplecounts = [len(i["data"]) for i in items]
+    try:
+        samplecounts = [len(i["data"]) for i in items]
+    except KeyError:
+        # TODO: clean up once type checking is tight enough.
+        # Likely, the provided `items` for testing here are not strictly of the
+        # required shape. It's a programming bug, but do not crash in this
+        # case. Return an answer: not multisample (at least not in the way as
+        # expected).
+        log.warning("_inspect_for_multisample: unexpected argument: %s", items)
+        return False, None
 
     multisample = True
     multisample_count = None
@@ -258,8 +300,104 @@ def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
     return multisample, multisample_count
 
 
-def time_series_plot(history, benchmark, run, height=380, width=1100):
+def gen_js_callback_tap_detect_unselect(source: bokeh.models.ColumnDataSource):
+    """
+    Dynamically manipulate Bootstrap panel conbench-histplot-run-details`.
 
+    Hide if empty space in plot was clicked.
+
+    Warning: requires manual testing, not covered by tests/CI.
+    """
+    return bokeh.models.CustomJS(
+        # Note(JP): When not using `args`, I thought, one can use
+        # `cb_data.source.selected.indices` to detect the situation where
+        # nothing was selected. However, for such events `cb_data` is an empty
+        # object. When using `args={"s1": source_mean_over_time}` then
+        # `s1.selected.indices` seems to always be available no matter where
+        # one clicks, and in case no glyph was clicked the array is zero
+        # length.
+        args={"s1": source},
+        code="""
+        // console.log("cb_data:", cb_data);
+        // console.log("cb_obj:", cb_obj);
+        // console.log("s1.selected.indices: ", s1.selected.indices);
+
+        if (s1.selected.indices.length == 0) {
+            console.log("nothing selected, remove detail");
+            // Make the panel invisible.
+            const e = document.getElementsByClassName("conbench-histplot-run-details")[0];
+            e.style.display = 'none';
+        }
+    """,
+    )
+
+
+def gen_js_callback_click_on_glyph_show_run_details(repo_string):
+    """
+    Dynamically manipulate Bootstrap panel conbench-histplot-run-details`.
+
+    Show run details if a corresponding glyph was clicked in the plot.
+
+    Warning: requires manual testing, not covered by tests/CI.
+    """
+    return bokeh.models.CustomJS(
+        code=f"""
+
+        const i = cb_data.source.selected.indices[0];
+        const run_report_relurl = cb_data.source.data['relative_benchmark_urls'][i];
+        const run_date_string = cb_data.source.data['date_strings'][i];
+        // Remove first character, the hashtag
+        const run_commit_hash_short = cb_data.source.data['commit_hashes_short'][i].substring(1);
+        const run_commit_msg_pfx = cb_data.source.data['commit_messages'][i];
+        // This is a stringified version of the value that determines the y
+        // plot position of this glyph.
+        const run_result_value_with_unit = cb_data.source.data['values_with_unit'][i];
+
+        var run_samples_with_units = undefined;
+
+        if (cb_data.source.data['multisample_strings_with_unit'] !== undefined) {{
+            run_samples_with_units = cb_data.source.data['multisample_strings_with_unit'][i];
+        }}
+
+        // JavaScript code generated in a Python f string -- templating hell, yeah! :)
+        // I don't know if repo string is always a URL, if it's always
+        // pointing to GitHub. But if it does, we can do some UX sugar.
+        // Austin says that repo string should as of today be either None or
+        // a URL to the GitHub repo. We will see what future needs will bring.
+
+        var commit_repo_string =  run_commit_hash_short + ' in {repo_string}';
+
+        const repo = '{repo_string}';
+        if (repo.startsWith('https://github.com/')) {{
+            // for github at least this is known to work with a truncated hash
+            const url_to_commit = repo + '/commit/' + run_commit_hash_short;
+            commit_repo_string = '<a href="' + url_to_commit + '">' + url_to_commit + '</a>';
+        }}
+
+        // TODO? show run timestamp, not only commit timestamp.
+        var newHtml = \
+            '<li>Report: <a href="' + run_report_relurl + '">' + run_report_relurl + '</a></li>' +
+            '<li>Commit: ' + commit_repo_string + '</li>' +
+            '<li>Commit message (truncated): ' + run_commit_msg_pfx + '</li>' +
+            "<li>Commit timestamp: " + run_date_string + "</li>" +
+            "<li>Result value: " + run_result_value_with_unit + "</li>";
+
+
+        if (run_samples_with_units) {{
+            newHtml += "<li>Result samples: " + run_samples_with_units + "</li>";
+        }}
+
+        const ul = document.getElementsByClassName("ul-histplot-run-details")[0];
+        ul.innerHTML = newHtml;
+
+        // Make the panel visible.
+        const e = document.getElementsByClassName("conbench-histplot-run-details")[0];
+        e.style.display = 'block'
+    """,
+    )
+
+
+def time_series_plot(history, benchmark, run, height=380, width=1100):
     # log.info("Time series plot for:\n%s", json.dumps(history, indent=2))
 
     unit = history[0]["unit"]
@@ -269,6 +407,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     # Note(JP): `history` is an ordered list of dicts, each dict has a `mean`
     # key which is extracted here by default.
     source_mean_over_time = _source(history, unit, formatted=formatted)
+
     source_min_over_time = bokeh.models.ColumnDataSource(
         data=dict(
             x=[dateutil.parser.isoparse(x["timestamp"]) for x in history],
@@ -285,6 +424,8 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 "message": run["commit"]["message"],
                 "timestamp": run["commit"]["timestamp"],
                 "sha": run["commit"]["sha"],
+                "benchmark_id": benchmark["id"],
+                "repository": run["commit"]["repository"],
             }
         ],
         unit,
@@ -298,6 +439,8 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
                 "message": run["commit"]["message"],
                 "timestamp": run["commit"]["timestamp"],
                 "sha": run["commit"]["sha"],
+                "benchmark_id": benchmark["id"],
+                "repository": run["commit"]["repository"],
             }
         ],
         unit,
@@ -333,10 +476,27 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         x_axis_type="datetime",
         height=height,
         width=width,
-        tools=["pan", "zoom_in", "zoom_out", "reset"],
+        tools=["pan", "zoom_in", "zoom_out", "reset", "tap"],
         x_range=(t_start, t_end),
     )
     p.toolbar.logo = None
+
+    # TapTool is not responding to each click event, but but only triggers when
+    # clicking a glyph:
+    # https://discourse.bokeh.org/t/how-to-trigger-callbacks-on-mouse-click-for-tap-tool/1630
+    taptool = p.select(type=bokeh.models.TapTool)
+    taptool.callback = gen_js_callback_click_on_glyph_show_run_details(
+        # The repository is constant across all data points in this plot. The
+        # underlying database query filters by exactly that (Commit.repository
+        # == repo).
+        repo_string=run["commit"]["repository"]
+    )
+
+    # `tap` event triggers for each click. Whether or not this was on a glyph
+    # of a specific data source this can be decided in the callback when
+    # passing a data source to the callback and then inspecting
+    # `s1.selected.indices`.
+    p.js_on_event("tap", gen_js_callback_tap_detect_unselect(source_mean_over_time))
 
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
@@ -353,8 +513,15 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         source=source_mean_over_time,
         legend_label=label,
         name="history",
-        size=4,
+        size=6,
         color="#ccc",
+        line_width=1,
+        selection_color="#76bf5a",  # like bootstrap panel dff0d8, but darker
+        selection_line_color="#5da540",  # same green, again darker
+        # Cannot change the size upon selection
+        # selection_size=10,
+        nonselection_fill_alpha=1.0,
+        nonselection_line_alpha=1.0,
     )
 
     if multisample:
@@ -417,7 +584,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     for result in history:
         if result["change_annotations"].get("begins_distribution_change", False):
             p.add_layout(
-                Span(
+                bokeh.models.Span(
                     location=dateutil.parser.isoparse(result["timestamp"]),
                     dimension="height",
                     line_color="purple",
@@ -450,11 +617,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         bokeh.models.HoverTool(
             tooltips=[
                 ("date", "$x{%F}"),
-                # Note(JP): this is where the `means` name becomes special,
-                # I think.
-                ("mean", "@means"),
-                ("commit", "@commit_hashes_short"),
-                ("commit msg", "@commit_messages"),
+                ("value", "@values_with_unit"),
             ],
             formatters={"$x": "datetime"},
             renderers=hover_renderers,
@@ -493,4 +656,6 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     select.axis.visible = False
     select.title.text_font_style = "italic"
 
-    return bokeh.layouts.column(p, Spacer(height=20), select, Spacer(height=20))
+    return bokeh.layouts.column(
+        p, bokeh.models.Spacer(height=20), select, bokeh.models.Spacer(height=20)
+    )
