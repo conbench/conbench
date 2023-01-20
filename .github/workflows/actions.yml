@@ -83,19 +83,19 @@ jobs:
         uses: actions/checkout@v3
       - name: run-app-bg
         run: make run-app-bg
-      - name: populate DB
+      - name: populate DB & take screenshots
         run: |
             pip install requests # the nonly non-stdlib dependency as of now
-            export CONBENCH_BASE_URL=http://$(docker compose port app 5000) && \
-            make db-populate
-      - name: screenshot
-        run: |
+            export CONBENCH_BASE_URL=http://$(docker compose port app 5000)
+            export SOME_BENCHMARK_ID="$(make db-populate)"
             cd ci
             docker build . -t conbench-screenshot -f screenshot.Dockerfile
             export CONBENCH_BASE_URL=http://$(docker compose port app 5000)
             mkdir ci-artifacts
             docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
                 python screenshot.py ${CONBENCH_BASE_URL} /artifacts frontpage
+            docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
+                python screenshot.py ${CONBENCH_BASE_URL}/benchmarks/${SOME_BENCHMARK_ID}/ /artifacts benchmark-result-view
             /bin/ls -ahltr ci-artifacts/
       - name: upload-artifacts
         uses: actions/upload-artifact@v3
