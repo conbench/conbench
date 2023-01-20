@@ -5,13 +5,13 @@ import os
 from datetime import datetime
 from typing import List, Optional
 
-
 import flask as f
 import requests
 import sqlalchemy as s
 from sqlalchemy.orm import Query
 
 from conbench import util
+
 from ..db import Session
 from ..entities._entity import (
     Base,

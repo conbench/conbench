@@ -286,7 +286,7 @@ def test_backfill_default_branch_commits():
             fork_point_sha=test_shas[3],
             message="Store branch information on Commits (#417)",
             author_name=author,
-            timestamp=datetime.datetime(2022, 11, 4, 17, 18, 19, tzinfo=tz),
+            timestamp=datetime.datetime(2022, 11, 4, 17, 18, 19, tzinfo=timezone.utc),
         )
     )
 
@@ -306,7 +306,7 @@ def test_backfill_default_branch_commits():
             fork_point_sha=test_shas[4],
             message="Fixed up test warnings (#424)",
             author_name=author,
-            timestamp=datetime.datetime(2022, 11, 4, 19, 13, 41, tzinfo=tz),
+            timestamp=datetime.datetime(2022, 11, 4, 19, 13, 41, tzinfo=timezone.utc),
         )
     )
 
@@ -323,7 +323,7 @@ def test_backfill_default_branch_commits():
             fork_point_sha=test_shas[0],
             message="did nothing",
             author_name=author,
-            timestamp=datetime.datetime(2022, 10, 29, tzinfo=tz),
+            timestamp=datetime.datetime(2022, 10, 29, tzinfo=timezone.utc),
         )
     )
     backfill_default_branch_commits_ign_rate_limit(repository, commit_4)

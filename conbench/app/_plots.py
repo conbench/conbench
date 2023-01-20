@@ -4,15 +4,14 @@ import logging
 from datetime import timedelta
 from typing import Optional
 
-
 import bokeh.events
 import bokeh.models
 import bokeh.plotting
 
+from conbench import util
+
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
-
-from conbench import util
 
 log = logging.getLogger(__name__)
 
