@@ -81,11 +81,11 @@ HISTORY = [
 ]
 
 DATES = [
-    datetime.datetime(2021, 8, 4, 10, 26, 7),
-    datetime.datetime(2021, 8, 4, 10, 28, 54),
-    datetime.datetime(2021, 8, 4, 10, 30, 10),
-    datetime.datetime(2021, 8, 4, 10, 31, 35),
-    datetime.datetime(2021, 8, 4, 10, 36, 39),
+    datetime.datetime(2021, 8, 4, 10, 26, 7, tzinfo=datetime.timezone.utc),
+    datetime.datetime(2021, 8, 4, 10, 28, 54, tzinfo=datetime.timezone.utc),
+    datetime.datetime(2021, 8, 4, 10, 30, 10, tzinfo=datetime.timezone.utc),
+    datetime.datetime(2021, 8, 4, 10, 31, 35, tzinfo=datetime.timezone.utc),
+    datetime.datetime(2021, 8, 4, 10, 36, 39, tzinfo=datetime.timezone.utc),
 ]
 COMMITS = [
     "ARROW-13429: [C++][Gandiva] Fix Gandiva codegen for if-else expression with binary type",
