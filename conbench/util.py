@@ -36,15 +36,17 @@ def tznaive_iso8601_to_tzaware_dt(
     If a single string is provided return a single datetime object.
 
     Assume that each provided string is in ISO 8601 notation without timezone
-    information, but that the time is actually meant to be interpreted in the
-    UTC timezone.
+    information, but that the time is meant to be interpreted in the UTC
+    timezone.
 
-    If an input string is tz-aware and encodes Zulu (UTC) time then this
+    If an input string is tz-aware and encodes UTC (Zulu) time then this
     timezone is retained.
 
-    If an input string is tz-aware and encodes a different time zone then the
-    timezone is rewritten to UTC, i.e there is information loss/transformation,
-    but a warning is also emitted.
+    An input string that is tz-aware and that encodes a timezone other than UTC
+    is unexpected input, as of e.g. a programming error or unexpected legacy
+    database state. We decided to log a warning message instead of crashing in
+    that case (also, the indicated time gets interpreted in UTC, i.e. the
+    original timezone information is ignored).
 
     Note: this was built with and tested for a value like 2022-03-03T19:48:06
     which in this example represents a commit timestamp (in UTC, additional
