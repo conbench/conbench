@@ -23,7 +23,9 @@ def _expected_entity(run, baseline_id=None, include_baseline=True):
         baseline_id,
         include_baseline,
         has_errors,
-        run.finished_timestamp.isoformat() if run.finished_timestamp else None,
+        tznaive_dt_to_aware_iso8601_for_api(run.finished_timestamp)
+        if run.finished_timestamp
+        else None,
         run.info,
         run.error_info,
         run.error_type,
@@ -297,7 +299,7 @@ class TestRunDelete(_asserts.DeleteEnforcer):
 class TestRunPut(_asserts.PutEnforcer):
     url = "/api/runs/{}/"
     valid_payload = {
-        "finished_timestamp": "2022-11-25 21:02:42.706806",
+        "finished_timestamp": "2022-11-25 21:02:45Z",
         "info": {"setup": "passed"},
         "error_info": {"error": "error", "stack_trace": "stack_trace", "fatal": True},
         "error_type": "fatal",

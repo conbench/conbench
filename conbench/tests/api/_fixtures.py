@@ -55,7 +55,7 @@ VALID_PAYLOAD = {
     "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
     "run_reason": "commit",
     "batch_id": "7b2fdd9f929d47b9960152090d47f8e6",
-    "timestamp": "2020-11-25T21:02:42.706806+00:00",
+    "timestamp": "2020-11-25T21:02:42.706806",
     "context": {
         "arrow_compiler_flags": "-fPIC -arch x86_64 -arch x86_64 -std=c++11 -Qunused-arguments -fcolor-diagnostics -O3 -DNDEBUG",
         "benchmark_language": "Python",
@@ -185,7 +185,7 @@ VALID_RUN_PAYLOAD = {
     "id": _uuid(),
     "name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
     "reason": "commit",
-    "finished_timestamp": "2020-11-25T21:02:42.706806+00:00",
+    "finished_timestamp": "2020-11-25T21:02:42Z",
     "info": {
         "setup": "passed",
     },
