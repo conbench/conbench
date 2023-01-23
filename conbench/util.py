@@ -58,16 +58,13 @@ def tznaive_iso8601_to_tzaware_dt(
         if dt.tzinfo == timezone.utc:
             return dt
 
-        elif dt.tzinfo is None:
-            # Attach UTC timezone.
-            return dt.replace(tzinfo=timezone.utc)
+        elif dt.tzinfo is not None:
+            # Input seems to be tz-aware but the timezone it specifies does not
+            # match UTC.
+            log.warning("unexpected tz-aware timestring, overwrite as UTC: %s", s)
 
-        else:
-            # Input seems to be tz-aware but the timezone it specifies does
-            # not match UTC.
-            log.warning("expected tz-naive timestring, but saw non-UTC: %s", s)
-
-        return datetime.fromisoformat(s).replace(tzinfo=timezone.utc)
+        # Attach UTC timezone.
+        return dt.replace(tzinfo=timezone.utc)
 
     # Handle case where input is a single string.
     if isinstance(input, str):
