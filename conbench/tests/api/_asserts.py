@@ -144,7 +144,7 @@ class PostEnforcer(Enforcer):
         data = copy.deepcopy(self.valid_payload)
         data["id"] = "some id"
         response = client.post(self.url, json=data)
-        message = {"id": ["Read-only field."]}
+        message = {"id": ["Unknown field."]}
         self.assert_400_bad_request(response, message)
 
     def test_required_fields(self, client):
@@ -227,7 +227,7 @@ class PutEnforcer(Enforcer):
         entity = self._create_entity_to_update()
         data = {"id": "some id"}
         response = client.put(self.url.format(entity.id), json=data)
-        message = {"id": ["Read-only field."]}
+        message = {"id": ["Unknown field."]}
         self.assert_400_bad_request(response, message)
 
     def test_empty_fields(self, client):
