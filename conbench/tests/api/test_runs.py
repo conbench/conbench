@@ -301,7 +301,7 @@ class TestRunDelete(_asserts.DeleteEnforcer):
 class TestRunPut(_asserts.PutEnforcer):
     url = "/api/runs/{}/"
     valid_payload = {
-        "finished_timestamp": "2022-11-25 21:02:45Z",
+        "finished_timestamp": "2022-11-25T21:02:45Z",
         "info": {"setup": "passed"},
         "error_info": {"error": "error", "stack_trace": "stack_trace", "fatal": True},
         "error_type": "fatal",
@@ -331,7 +331,7 @@ class TestRunPut(_asserts.PutEnforcer):
 
         for key, value in self.valid_payload.items():
             if key == "finished_timestamp":
-                assert str(getattr(after, key)) == value
+                assert tznaive_dt_to_aware_iso8601_for_api(getattr(after, key)) == value
             else:
                 assert getattr(after, key) == value
 
