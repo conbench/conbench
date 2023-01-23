@@ -25,6 +25,24 @@ adapter = HTTPAdapter(max_retries=retry_strategy)
 log = logging.getLogger()
 
 
+def tznaive_dt_to_aware_iso8601_for_api(dt: datetime) -> str:
+    """We store datetime objects in the database in columns that are configured
+    to not track timezone information. By convention, each of those tz-naive
+    datetime objects in the database is to be interpreted in UTC. Before
+    emitting a stringified variant of such timestamp to an API user, serialize
+    to a tz-aware ISO 8601 timestring, indicating UTC (Zulu) time, via adding
+    the 'Z'.
+
+    Example output: 2022-11-25T16:02:00Z
+    """
+    if dt.tzinfo is not None:
+        # Programming error, but don't crash.
+        log.warning(
+            "tznaive_dt_to_aware_iso8601_for_api() got tz-aware datetime obj: %s", dt
+        )
+    return dt.isoformat(sep="T", timespec="seconds") + "Z"
+
+
 def tznaive_iso8601_to_tzaware_dt(
     input: Union[str, List[str]]
 ) -> Union[datetime, List[datetime]]:
