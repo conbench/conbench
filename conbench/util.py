@@ -4,7 +4,7 @@ import os
 import time
 import urllib.parse
 from datetime import datetime, timezone
-from typing import Union
+from typing import List, Union
 
 import click
 import requests
@@ -26,8 +26,8 @@ log = logging.getLogger()
 
 
 def tznaive_iso8601_to_tzaware_dt(
-    input: Union[str, list[str]]
-) -> Union[datetime, list[datetime]]:
+    input: Union[str, List[str]]
+) -> Union[datetime, List[datetime]]:
     """
     Convert time strings into datetime objects.
 
