@@ -193,15 +193,13 @@ class PostEnforcer(Enforcer):
 
     def test_not_application_json(self, client):
         self.authenticate(client)
-        response = client.post(self.url, data=self.valid_payload)
-        message = {
-            "_errors": ["Empty request body."],
-            "_schema": [
-                "Invalid input type.",
-                "Did you specify Content-type: application/json?",
-            ],
+        resp = client.post(self.url, data=self.valid_payload)
+        assert resp.json == {
+            "code": 400,
+            "name": "Bad Request",
+            "description": "Did not attempt to load JSON data because the "
+            "request Content-Type was not 'application/json'.",
         }
-        self.assert_400_bad_request(response, message)
 
 
 class PutEnforcer(Enforcer):
@@ -270,12 +268,10 @@ class PutEnforcer(Enforcer):
     def test_not_application_json(self, client):
         self.authenticate(client)
         entity = self._create_entity_to_update()
-        response = client.put(self.url.format(entity.id), data=self.valid_payload)
-        message = {
-            "_errors": ["Empty request body."],
-            "_schema": [
-                "Invalid input type.",
-                "Did you specify Content-type: application/json?",
-            ],
+        resp = client.put(self.url.format(entity.id), data=self.valid_payload)
+        assert resp.json == {
+            "code": 400,
+            "name": "Bad Request",
+            "description": "Did not attempt to load JSON data because the "
+            "request Content-Type was not 'application/json'.",
         }
-        self.assert_400_bad_request(response, message)
