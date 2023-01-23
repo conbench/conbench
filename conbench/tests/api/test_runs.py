@@ -308,6 +308,7 @@ class TestRunPut(_asserts.PutEnforcer):
 
     def _create_entity_to_update(self):
         _fixtures.benchmark_result(sha=_fixtures.PARENT)
+        # This writes to the database.
         benchmark_result = _fixtures.benchmark_result()
         return benchmark_result.run
 

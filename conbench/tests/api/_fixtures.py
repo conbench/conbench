@@ -232,6 +232,8 @@ def benchmark_result(
     empty_results=False,
     reason=None,
 ):
+    """Create BenchmarkResult and write to database."""
+
     data = copy.deepcopy(VALID_PAYLOAD)
     data["run_name"] = f"commit: {_uuid()}"
     data["run_reason"] = reason if reason else "commit"
