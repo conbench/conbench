@@ -52,7 +52,7 @@ class ApiEndpointTest:
             "code": 400,
             "name": "Bad Request",
             "description": message,
-        }, r.json
+        }
         # TODO: https://github.com/marshmallow-code/marshmallow/issues/120
         # errors = BadRequestSchema().validate(r.json)
         # assert errors == {}, errors
