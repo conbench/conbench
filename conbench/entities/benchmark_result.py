@@ -60,6 +60,7 @@ class BenchmarkResult(Base, EntityMixin):
 
     @staticmethod
     def create(data):
+        """Create BenchmarkResult and write to database."""
         tags = data["tags"]
         has_error = "error" in data
         has_stats = "stats" in data
