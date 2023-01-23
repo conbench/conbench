@@ -1,9 +1,13 @@
 import functools
+import logging
 import os
 
 import flask as f
 import flask.views
 import flask_login
+import marshmallow
+
+log = logging.getLogger(__name__)
 
 
 def as_bool(x):
@@ -23,30 +27,34 @@ def maybe_login_required(func):
 
 class ApiEndpoint(flask.views.MethodView):
     def validate(self, schema):
-        data = f.request.get_json(silent=True)
+        # Emits a 400 response if req does not have expected Content-Type set.
+        data = f.request.get_json()
 
+        # Note(JP): replace first-level zero-length string values with
+        # None? So that users can pass "" instead of null | non-exist?
         munged = data.copy() if data else data
-        if data:
-            for field, value in data.items():
-                if isinstance(value, str) and not value.strip():
-                    munged[field] = None
+        for field, value in data.items():
+            if isinstance(value, str) and not value.strip():
+                munged[field] = None
 
-        errors = schema.validate(munged)
+        try:
+            # `schema.load()` (instead of only `schema.validate()`) implies
+            # calling post_load hooks if defined.
+            result = schema.load(munged)
+        except marshmallow.ValidationError as exc:
+            # `exc.messages` is equivalent to `errors = schema.validate(data)`
+            self.abort_400_bad_request(exc.messages)
 
-        if errors:
-            hint = "Did you specify Content-type: application/json?"
-            if "Invalid input type." in errors.get("_schema", []):
-                errors["_schema"].append(hint)
-
+        # Note(JP): validation succeeded, but no data was provided. That
+        # indicates that there is no required field in the schema that the
+        # input data was validated against. Technically, this is a valid
+        # noop-update. But it's nicer to tell users that nothing was in fact
+        # updated, and return a 4xx response. That specific error message is
+        # legacy behavior.
         if not data:
-            errors["_errors"] = ["Empty request body."]
+            self.abort_400_bad_request({"_errors": ["Empty request body."]})
 
-        if errors:
-            if "id" in errors and errors["id"] == ["Unknown field."]:
-                errors["id"] = ["Read-only field."]
-            self.abort_400_bad_request(errors)
-
-        return data
+        return result
 
     def redirect(self, endpoint, **kwargs):
         return f.redirect(f.url_for(endpoint, **kwargs))
