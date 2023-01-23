@@ -13,7 +13,8 @@ class ApiEndpointTest:
 
     def login(self, client, email, password):
         data = {"email": email, "password": password}
-        client.post("/api/login/", json=data)
+        resp = client.post("/api/login/", json=data)
+        assert resp.status_code == 204, resp.text
 
     def create_random_user(self):
         return create_random_user()
