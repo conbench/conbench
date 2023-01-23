@@ -154,13 +154,11 @@ function free_text_column_search(data_table_id, column_indexes) {
             var title = this.header().textContent;
             $('<input type="text" placeholder="Search ' + title + '" />')
                 .appendTo(this.header())
-                .on('keydown', function(key_opt) {
-                    if (key_opt.keyCode == 13) { //only on enter keypress (code 13)
-                        that
+                .on('keyup change clear', function() { //column search/sorting triggered on every input
+                            that
                             .search(this.value)
                             .draw();
-                    }
-                });
+            });
         });
     })
 }
