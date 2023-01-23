@@ -358,11 +358,9 @@ class TestRunPut(_asserts.PutEnforcer):
                 "finished_timestamp": timestring[0],
             },
         )
-        # print(resp.text)
         assert resp.status_code == 200
 
         resp = client.get(f"/api/runs/{before.id}/")
-        print(resp.json["finished_timestamp"])
         assert resp.json["finished_timestamp"] == timestring[1]
 
 
