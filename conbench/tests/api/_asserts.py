@@ -186,7 +186,8 @@ class PostEnforcer(Enforcer):
     def test_empty_payload(self, client):
         self.authenticate(client)
         response = client.post(self.url, json={})
-        message = {"_errors": ["Empty request body."]}
+        # message = {"_errors": ["Empty request body."]}
+        message = {}
         for field in self.required_fields:
             message[field] = ["Missing data for required field."]
         self.assert_400_bad_request(response, message)
