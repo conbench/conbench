@@ -109,7 +109,7 @@
                                 "input_type": "arrow",
                                 "name": "file-write",
                             },
-                            "timestamp": "2020-11-25T21:02:42.706806",
+                            "timestamp": "2020-11-25T21:02:44Z",
                             "validation": None,
                         }
                     }
@@ -182,7 +182,7 @@
                                 "input_type": "arrow",
                                 "name": "file-write",
                             },
-                            "timestamp": "2020-11-25T21:02:42.706806",
+                            "timestamp": "2020-11-25T21:02:44Z",
                             "validation": None,
                         }
                     }
@@ -256,7 +256,7 @@
                                     "input_type": "arrow",
                                     "name": "file-write",
                                 },
-                                "timestamp": "2020-11-25T21:02:42.706806",
+                                "timestamp": "2020-11-25T21:02:44Z",
                                 "validation": None,
                             }
                         ]
@@ -1018,7 +1018,7 @@
                         "type": "object",
                     },
                     "timestamp": {
-                        "description": "Timestamp the benchmark ran",
+                        "description": "A datetime string indicating the time at which the benchmark was started. Expected to be in ISO 8601 notation. Timezone-aware notation recommended. Timezone-naive strings are interpreted in UTC. Fractions of seconds can be provided but are not returned by the API. Example value: 2022-11-25T22:02:42Z.",
                         "format": "date-time",
                         "type": "string",
                     },
