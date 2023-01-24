@@ -127,4 +127,5 @@ table.dataTable td {
    width: 100%;
    min-width: 80px;
    padding-right: initial;
+   padding-left: initial;
 }
