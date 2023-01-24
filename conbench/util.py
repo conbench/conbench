@@ -34,12 +34,24 @@ def tznaive_dt_to_aware_iso8601_for_api(dt: datetime) -> str:
     the 'Z'.
 
     Example output: 2022-11-25T16:02:00Z
+
+    Note(JP) on time resolution: ISO 8601 allows for fractions of seconds in
+    various formats (3-9 digits). Timestamps in Conbench are not used for
+    uniquely identifying entities. When we return ISO 8601 timestamps to HTTP
+    API users we have to have an opinion about the fraction of the second to
+    encode in the string. I think it's valuable to have a predictable
+    fixed-width format with non-dynamic time precision. As far as I understand
+    the value and use of timestamps returned by the API, I think we do not need
+    to emit fractions of seconds. Therefore the `timespec="seconds"` below.
+    This is currently documented and also tested, but can of course be changed.
     """
     if dt.tzinfo is not None:
         # Programming error, but don't crash.
         log.warning(
             "tznaive_dt_to_aware_iso8601_for_api() got tz-aware datetime obj: %s", dt
         )
+        return dt.isoformat(sep="T", timespec="seconds")
+
     return dt.isoformat(sep="T", timespec="seconds") + "Z"
 
 
