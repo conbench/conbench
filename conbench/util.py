@@ -50,6 +50,9 @@ def tznaive_dt_to_aware_iso8601_for_api(dt: datetime) -> str:
         log.warning(
             "tznaive_dt_to_aware_iso8601_for_api() got tz-aware datetime obj: %s", dt
         )
+        if dt.tzinfo == timezone.utc:
+            return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
         return dt.isoformat(sep="T", timespec="seconds")
 
     return dt.isoformat(sep="T", timespec="seconds") + "Z"
