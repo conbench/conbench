@@ -404,8 +404,8 @@ class TestRunPost(_asserts.PostEnforcer):
             run_id = payload["id"]
             assert not Run.first(id=run_id)
             response = client.post(self.url, json=payload)
-            print(response)
-            print(response.json)
+            # print(response)
+            # print(response.json)
             run = Run.one(id=run_id)
             location = f"http://localhost/api/runs/{run_id}/"
             self.assert_201_created(response, _expected_entity(run), location)

@@ -134,7 +134,7 @@ class Connection:
                 self.session.mount("https://", adapter)
             start = time.monotonic()
             response = self.session.post(url, json=data)
-            print("Time to POST", url, time.monotonic() - start)
+            log.info("Time to POST", url, time.monotonic() - start)
             if response.status_code != expected:
                 self._unexpected_response("POST", response, url)
         except requests.exceptions.ConnectionError:
