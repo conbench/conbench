@@ -329,7 +329,7 @@ def backfill_default_branch_commits(
     if last_tracked_commit:
         since = last_tracked_commit[0].timestamp
     elif os.getenv("DB_HOST") == "localhost":
-        print(
+        log.info(
             "Your DB_HOST is localhost, so assuming you're running "
             "conbench/tests/populate_local_conbench.py. Backfilling the DB only from "
             "2022-01-01 in order to save time."
@@ -434,7 +434,7 @@ class GitHub:
         since = since.replace(tzinfo=None).isoformat() + "Z"
         until = until.replace(tzinfo=None).isoformat() + "Z"
 
-        print(
+        log.info(
             f"Finding all commits to the {branch} branch of {name} between {since} and "
             f"{until}"
         )
@@ -449,7 +449,7 @@ class GitHub:
         this_page = self._get_response(url + f"&page={page}")
 
         if len(this_page) == 0:
-            print("API returned no commits")
+            log.info("API returned no commits")
             return []
 
         commits += this_page
