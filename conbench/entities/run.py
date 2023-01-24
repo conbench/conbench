@@ -8,7 +8,7 @@ import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship
 
-from conbench.util import tznaive_dt_to_aware_iso8601_for_api
+import conbench.util
 
 from ..db import Session
 from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
@@ -213,7 +213,7 @@ class _Serializer(EntitySerializer):
             "reason": run.reason,
             # TODO: also use tznaive_dt_to_aware_iso8601_for_api
             "timestamp": run.timestamp.isoformat(),
-            "finished_timestamp": tznaive_dt_to_aware_iso8601_for_api(
+            "finished_timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
                 run.finished_timestamp
             )
             if run.finished_timestamp
@@ -365,7 +365,13 @@ class _RunFacadeSchemaCreate(marshmallow.Schema):
 
     @marshmallow.post_load
     def recalc_finished_time(self, data, **kwargs):
-        return _recalc_finished_time(data)
+        curdt = data.get("finished_timestamp")
+
+        if curdt is None:
+            return data
+
+        data["finished_timestamp"] = conbench.util.dt_shift_to_utc(curdt)
+        return data
 
     @marshmallow.validates_schema
     def validate_hardware_info_fields(self, data, **kwargs):
@@ -403,19 +409,15 @@ class _RunFacadeSchemaUpdate(marshmallow.Schema):
 
     @marshmallow.post_load
     def recalc_finished_time(self, data, **kwargs):
-        return _recalc_finished_time(data)
+        curdt = data.get("finished_timestamp")
+
+        if curdt is None:
+            return data
+
+        data["finished_timestamp"] = conbench.util.dt_shift_to_utc(curdt)
+        return data
 
 
 class RunFacadeSchema:
     create = _RunFacadeSchemaCreate()
     update = _RunFacadeSchemaUpdate()
-
-
-def _recalc_finished_time(data):
-    ft = data.get("finished_timestamp")
-
-    if ft and ft.tzinfo and ft.tzinfo != timezone.utc:
-        ft_utc = ft.astimezone(timezone.utc)
-        data["finished_timestamp"] = ft_utc
-
-    return data

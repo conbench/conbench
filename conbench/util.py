@@ -120,6 +120,24 @@ def dedent_rejoin(s: str):
     return " ".join(textwrap.dedent(s).strip().splitlines())
 
 
+def dt_shift_to_utc(dt: Union[datetime, None]) -> Union[datetime, None]:
+    """
+    If the provided datetime object has a non-UTC `tzinfo` set then transform
+    the time to UTC.
+
+    This is expected to be called by the application only for tz-aware datetime
+    objects, but it does not crash for tz-naive objects.
+
+    tz-naive objects are returned unmodified.
+    """
+    if dt is not None and dt.tzinfo and dt.tzinfo != timezone.utc:
+        # Change timezone to UTC, and also chang the numerical values so that
+        # the same point in time is retained (change coordinate system).
+        dt = dt.astimezone(timezone.utc)
+
+    return dt
+
+
 class Connection:
     def __init__(self):
         self.config = Config(get_config())
