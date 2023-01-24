@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import textwrap
 import time
 import urllib.parse
 from datetime import datetime, timezone
@@ -107,6 +108,16 @@ def tznaive_iso8601_to_tzaware_dt(
 
     # Handle case where input is a list of strings.
     return [_convert(s) for s in input]
+
+
+def dedent_rejoin(s: str):
+    """
+    Remove common leading whitespace, replace newlines by spaces.
+
+    Useful for being able to write marshmallow property docstrings with
+    indented block paragraphs.
+    """
+    return " ".join(textwrap.dedent(s).strip().splitlines())
 
 
 class Connection:
