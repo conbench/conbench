@@ -113,8 +113,9 @@
 {% block scripts %}
 {{super()}}
 <script type="text/javascript">
-  var table = $('#runs').DataTable( {
+  var table = $('#runs').DataTable({
       "order": [[0, 'desc']],
+      "aaSorting": [],
       "language": {
           "searchPlaceholder": "commit hash works too",
       }
