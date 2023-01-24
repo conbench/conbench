@@ -25,6 +25,36 @@ adapter = HTTPAdapter(max_retries=retry_strategy)
 log = logging.getLogger()
 
 
+def tznaive_dt_to_aware_iso8601_for_api(dt: datetime) -> str:
+    """We store datetime objects in the database in columns that are configured
+    to not track timezone information. By convention, each of those tz-naive
+    datetime objects in the database is to be interpreted in UTC. Before
+    emitting a stringified variant of such timestamp to an API user, serialize
+    to a tz-aware ISO 8601 timestring, indicating UTC (Zulu) time, via adding
+    the 'Z'.
+
+    Example output: 2022-11-25T16:02:00Z
+
+    Note(JP) on time resolution: ISO 8601 allows for fractions of seconds in
+    various formats (3-9 digits). Timestamps in Conbench are not used for
+    uniquely identifying entities. When we return ISO 8601 timestamps to HTTP
+    API users we have to have an opinion about the fraction of the second to
+    encode in the string. I think it's valuable to have a predictable
+    fixed-width format with non-dynamic time precision. As far as I understand
+    the value and use of timestamps returned by the API, I think we do not need
+    to emit fractions of seconds. Therefore the `timespec="seconds"` below.
+    This is currently documented and also tested, but can of course be changed.
+    """
+    if dt.tzinfo is not None:
+        # Programming error, but don't crash.
+        log.warning(
+            "tznaive_dt_to_aware_iso8601_for_api() got tz-aware datetime obj: %s", dt
+        )
+        return dt.isoformat(sep="T", timespec="seconds")
+
+    return dt.isoformat(sep="T", timespec="seconds") + "Z"
+
+
 def tznaive_iso8601_to_tzaware_dt(
     input: Union[str, List[str]]
 ) -> Union[datetime, List[datetime]]:
@@ -36,15 +66,17 @@ def tznaive_iso8601_to_tzaware_dt(
     If a single string is provided return a single datetime object.
 
     Assume that each provided string is in ISO 8601 notation without timezone
-    information, but that the time is actually meant to be interpreted in the
-    UTC timezone.
+    information, but that the time is meant to be interpreted in the UTC
+    timezone.
 
-    If an input string is tz-aware and encodes Zulu (UTC) time then this
+    If an input string is tz-aware and encodes UTC (Zulu) time then this
     timezone is retained.
 
-    If an input string is tz-aware and encodes a different time zone then the
-    timezone is rewritten to UTC, i.e there is information loss/transformation,
-    but a warning is also emitted.
+    An input string that is tz-aware and that encodes a timezone other than UTC
+    is unexpected input, as of e.g. a programming error or unexpected legacy
+    database state. We decided to log a warning message instead of crashing in
+    that case (also, the indicated time gets interpreted in UTC, i.e. the
+    original timezone information is ignored).
 
     Note: this was built with and tested for a value like 2022-03-03T19:48:06
     which in this example represents a commit timestamp (in UTC, additional

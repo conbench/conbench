@@ -1264,7 +1264,7 @@
                         "type": "string",
                     },
                     "finished_timestamp": {
-                        "description": "The datetime the run finished",
+                        "description": "A datetime string indicating the time at which the run finished. Expected to be in ISO 8601 notation. Timezone-aware notation recommended. Timezone-naive strings are interpreted in UTC. Fractions of seconds can be provided but are not returned by the API. Example value: 2022-11-25T22:02:42Z",
                         "format": "date-time",
                         "type": "string",
                     },
@@ -1289,7 +1289,7 @@
                         "type": "string",
                     },
                     "finished_timestamp": {
-                        "description": "The datetime the run finished",
+                        "description": "A datetime string indicating the time at which the run finished. Expected to be in ISO 8601 notation. Timezone-aware notation recommended. Timezone-naive strings are interpreted in UTC. Fractions of seconds can be provided but are not returned by the API. Example value: 2022-11-25T22:02:42Z",
                         "format": "date-time",
                         "type": "string",
                     },

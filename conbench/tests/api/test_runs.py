@@ -1,5 +1,7 @@
 import pytest
 
+from conbench.util import tznaive_dt_to_aware_iso8601_for_api
+
 from ...api._examples import _api_run_entity
 from ...entities._entity import NotFound
 from ...entities.run import Run
@@ -23,7 +25,9 @@ def _expected_entity(run, baseline_id=None, include_baseline=True):
         baseline_id,
         include_baseline,
         has_errors,
-        run.finished_timestamp.isoformat() if run.finished_timestamp else None,
+        tznaive_dt_to_aware_iso8601_for_api(run.finished_timestamp)
+        if run.finished_timestamp
+        else None,
         run.info,
         run.error_info,
         run.error_type,
@@ -297,7 +301,7 @@ class TestRunDelete(_asserts.DeleteEnforcer):
 class TestRunPut(_asserts.PutEnforcer):
     url = "/api/runs/{}/"
     valid_payload = {
-        "finished_timestamp": "2022-11-25 21:02:42.706806",
+        "finished_timestamp": "2022-11-25T21:02:45Z",
         "info": {"setup": "passed"},
         "error_info": {"error": "error", "stack_trace": "stack_trace", "fatal": True},
         "error_type": "fatal",
@@ -308,6 +312,7 @@ class TestRunPut(_asserts.PutEnforcer):
 
     def _create_entity_to_update(self):
         _fixtures.benchmark_result(sha=_fixtures.PARENT)
+        # This writes to the database.
         benchmark_result = _fixtures.benchmark_result()
         return benchmark_result.run
 
@@ -323,11 +328,60 @@ class TestRunPut(_asserts.PutEnforcer):
         response = client.put(f"/api/runs/{before.id}/", json=self.valid_payload)
         after = Run.one(id=before.id)
         self.assert_200_ok(response, _expected_entity(after))
+
         for key, value in self.valid_payload.items():
             if key == "finished_timestamp":
-                assert str(getattr(after, key)) == value
+                assert tznaive_dt_to_aware_iso8601_for_api(getattr(after, key)) == value
             else:
                 assert getattr(after, key) == value
+
+    @pytest.mark.parametrize(
+        "timestring",
+        # These are input/output pairs.
+        [
+            ("2022-11-25 21:02:41", "2022-11-25T21:02:41Z"),
+            ("2022-11-25 22:02:42Z", "2022-11-25T22:02:42Z"),
+            ("2022-11-25T22:02:42Z", "2022-11-25T22:02:42Z"),
+            # That next pair confirms timezone conversion.
+            ("2022-11-25 23:02:00+07:00", "2022-11-25T16:02:00Z"),
+            # Confirm that fractions of seconds can be provided, but are not
+            # returned (we can dispute that of course).
+            ("2022-11-25T22:02:42.123456Z", "2022-11-25T22:02:42Z"),
+        ],
+    )
+    def test_finished_timestamp_tz(self, client, timestring):
+        self.authenticate(client)
+        before = self._create_entity_to_update()
+        resp = client.put(
+            f"/api/runs/{before.id}/",
+            json={
+                "finished_timestamp": timestring[0],
+            },
+        )
+        assert resp.status_code == 200, resp.text
+
+        resp = client.get(f"/api/runs/{before.id}/")
+        assert resp.json["finished_timestamp"] == timestring[1]
+
+    @pytest.mark.parametrize(
+        "timestring",
+        # first item: bad input, second item: expected err msg
+        [
+            ("2022-11-2521:02:41x", "Not a valid datetime"),
+            ("foobar", "Not a valid datetime"),
+        ],
+    )
+    def test_finished_timestamp_invalid(self, client, timestring):
+        self.authenticate(client)
+        run = self._create_entity_to_update()
+        resp = client.put(
+            f"/api/runs/{run.id}/",
+            json={
+                "finished_timestamp": timestring[0],
+            },
+        )
+        assert resp.status_code == 400, resp.text
+        assert timestring[1] in resp.text
 
 
 class TestRunPost(_asserts.PostEnforcer):
