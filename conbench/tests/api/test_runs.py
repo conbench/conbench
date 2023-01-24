@@ -358,10 +358,30 @@ class TestRunPut(_asserts.PutEnforcer):
                 "finished_timestamp": timestring[0],
             },
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 200, resp.text
 
         resp = client.get(f"/api/runs/{before.id}/")
         assert resp.json["finished_timestamp"] == timestring[1]
+
+    @pytest.mark.parametrize(
+        "timestring",
+        # first item: bad input, second item: expected err msg
+        [
+            ("2022-11-2521:02:41x", "Not a valid datetime"),
+            ("foobar", "Not a valid datetime"),
+        ],
+    )
+    def test_finished_timestamp_invalid(self, client, timestring):
+        self.authenticate(client)
+        run = self._create_entity_to_update()
+        resp = client.put(
+            f"/api/runs/{run.id}/",
+            json={
+                "finished_timestamp": timestring[0],
+            },
+        )
+        assert resp.status_code == 400, resp.text
+        assert timestring[1] in resp.text
 
 
 class TestRunPost(_asserts.PostEnforcer):
