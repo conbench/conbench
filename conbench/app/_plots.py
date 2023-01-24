@@ -2,11 +2,12 @@ import collections
 import json
 import logging
 from datetime import timedelta
-from typing import Optional
+from typing import List, Optional
 
 import bokeh.events
 import bokeh.models
 import bokeh.plotting
+import numpy as np
 
 from conbench import util
 
@@ -168,6 +169,13 @@ def _should_format(data, unit):
     return should, axis_unit
 
 
+def _insert_nans(some_list: list, indexes: List[int]):
+    """Insert np.NaNs into a list before the given indexes."""
+    for ix in sorted(indexes, reverse=True):
+        some_list.insert(ix, np.NaN)
+    return some_list
+
+
 def _source(
     data,
     unit,
@@ -175,6 +183,7 @@ def _source(
     distribution_mean=False,
     alert_min=False,
     alert_max=False,
+    break_line_ixs: Optional[List[int]] = None,
 ):
     # Note(JP): important magic: if not specified otherwise, this extracts
     # the mean-over-time.
@@ -248,6 +257,13 @@ def _source(
             strings.append(", ".join(unit_fmt(s, unit) for s in samples))
 
         dsdict["multisample_strings_with_unit"] = strings
+
+    if break_line_ixs:
+        # This source will be used for a line, and we want to "break" the line between
+        # the given indexes and the immediately previous data points. Do this by
+        # inserting np.NaNs.
+        for key in dsdict:
+            dsdict[key] = _insert_nans(dsdict[key], break_line_ixs)
 
     return bokeh.models.ColumnDataSource(data=dsdict)
 
@@ -399,6 +415,11 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     unit = history[0]["unit"]
     with_dist = [h for h in history if h["distribution_mean"]]
     formatted, axis_unit = _should_format(history, unit)
+    dist_change_ixs = [
+        ix
+        for ix, result in enumerate(history)
+        if result["change_annotations"].get("begins_distribution_change", False)
+    ]
 
     # Note(JP): `history` is an ordered list of dicts, each dict has a `mean`
     # key which is extracted here by default.
@@ -406,10 +427,14 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
 
     source_min_over_time = bokeh.models.ColumnDataSource(
         data=dict(
-            x=util.tznaive_iso8601_to_tzaware_dt([x["timestamp"] for x in history]),
+            # Insert NaNs to break the line at distribution changes
+            x=_insert_nans(
+                util.tznaive_iso8601_to_tzaware_dt([x["timestamp"] for x in history]),
+                dist_change_ixs,
+            ),
             # TODO: best-case is not always min, e.g. when data has a unit like
             # bandwidth.
-            y=[min(x["data"]) for x in history],
+            y=_insert_nans([min(x["data"]) for x in history], dist_change_ixs),
         )
     )
 
@@ -448,13 +473,25 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     # the time width of the window is variable, as of a fixed commit-count
     # width.
     source_rolling_mean_over_time = _source(
-        with_dist, unit, formatted=formatted, distribution_mean=True
+        with_dist,
+        unit,
+        formatted=formatted,
+        distribution_mean=True,
+        break_line_ixs=dist_change_ixs,
     )
     source_rolling_alert_min_over_time = _source(
-        with_dist, unit, formatted=formatted, alert_min=True
+        with_dist,
+        unit,
+        formatted=formatted,
+        alert_min=True,
+        break_line_ixs=dist_change_ixs,
     )
     source_rolling_alert_max_over_time = _source(
-        with_dist, unit, formatted=formatted, alert_max=True
+        with_dist,
+        unit,
+        formatted=formatted,
+        alert_max=True,
+        break_line_ixs=dist_change_ixs,
     )
 
     t_start = source_mean_over_time.data["x"][0]
@@ -575,31 +612,30 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
             name="benchmark",
         )
 
-    # visually separate out distribution changes
+    # further visually separate out distribution changes with a vertical line
     dist_change_in_legend = False
-    for result in history:
-        if result["change_annotations"].get("begins_distribution_change", False):
-            p.add_layout(
-                bokeh.models.Span(
-                    location=util.tznaive_iso8601_to_tzaware_dt(result["timestamp"]),
-                    dimension="height",
-                    line_color="purple",
-                    line_dash="dashed",
-                    line_alpha=0.5,
-                )
+    for ix in dist_change_ixs:
+        p.add_layout(
+            bokeh.models.Span(
+                location=util.tznaive_iso8601_to_tzaware_dt(history[ix]["timestamp"]),
+                dimension="height",
+                line_color="purple",
+                line_dash="dashed",
+                line_alpha=0.5,
             )
+        )
 
-            if not dist_change_in_legend:
-                # hack: add a dummy line so it appears on the legend
-                p.line(
-                    [util.tznaive_iso8601_to_tzaware_dt(result["timestamp"])] * 2,
-                    [result["mean"]] * 2,
-                    legend_label="distribution change",
-                    line_color="purple",
-                    line_dash="dashed",
-                    line_alpha=0.5,
-                )
-                dist_change_in_legend = True
+        if not dist_change_in_legend:
+            # hack: add a dummy line so it appears on the legend
+            p.line(
+                [util.tznaive_iso8601_to_tzaware_dt(history[ix]["timestamp"])] * 2,
+                [history[ix]["mean"]] * 2,
+                legend_label="distribution change",
+                line_color="purple",
+                line_dash="dashed",
+                line_alpha=0.5,
+            )
+            dist_change_in_legend = True
 
     hover_renderers = [
         scatter_mean_over_time,
