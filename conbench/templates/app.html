@@ -153,7 +153,7 @@ function free_text_column_search(data_table_id, column_indexes) {
         table.columns(column_indexes).every(function() {
             var that = this;
             var title = this.header().textContent;
-            $('<input type="text" placeholder="Search ' + title + '" />')
+            $('<input class="custom-input-text custom-search-box" type="text" placeholder="🔍 ' + title + '" />')
                 .appendTo(this.header())
                 .on('keyup change clear', function() { //column search/sorting triggered on every input
                             that
