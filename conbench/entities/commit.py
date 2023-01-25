@@ -433,16 +433,17 @@ class GitHub:
         if ":" in branch:
             branch = branch.split(":")[1]
 
-        since_iso = since.replace(tzinfo=None).isoformat() + "Z"
-        until_iso = until.replace(tzinfo=None).isoformat() + "Z"
+        since_iso_for_url = since.replace(tzinfo=None).isoformat() + "Z"
+        until_iso_for_url = until.replace(tzinfo=None).isoformat() + "Z"
+        del since, until
 
         log.info(
-            f"Finding all commits to the {branch} branch of {name} between {since_iso} and "
-            f"{until_iso}"
+            f"Finding all commits to the {branch} branch of {name} between "
+            f" {since_iso_for_url} and {until_iso_for_url}"
         )
         url = (
             f"{GITHUB}/repos/{name}/commits?per_page=100&sha={branch}"
-            f"&since={since}&until={until}"
+            f"&since={since_iso_for_url}&until={until_iso_for_url}"
         )
         commits: List[Dict] = []
         page = 1
