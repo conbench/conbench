@@ -336,8 +336,7 @@ class TestRunPut(_asserts.PutEnforcer):
                 assert getattr(after, key) == value
 
     @pytest.mark.parametrize(
-        "timestring",
-        # These are input/output pairs.
+        "timeinput, timeoutput",
         [
             ("2022-11-25 21:02:41", "2022-11-25T21:02:41Z"),
             ("2022-11-25 22:02:42Z", "2022-11-25T22:02:42Z"),
@@ -349,39 +348,41 @@ class TestRunPut(_asserts.PutEnforcer):
             ("2022-11-25T22:02:42.123456Z", "2022-11-25T22:02:42Z"),
         ],
     )
-    def test_finished_timestamp_tz(self, client, timestring):
+    def test_finished_timestamp_tz(self, client, timeinput, timeoutput):
         self.authenticate(client)
         before = self._create_entity_to_update()
         resp = client.put(
             f"/api/runs/{before.id}/",
             json={
-                "finished_timestamp": timestring[0],
+                "finished_timestamp": timeinput,
             },
         )
         assert resp.status_code == 200, resp.text
 
         resp = client.get(f"/api/runs/{before.id}/")
-        assert resp.json["finished_timestamp"] == timestring[1]
+        assert resp.json["finished_timestamp"] == timeoutput
 
     @pytest.mark.parametrize(
-        "timestring",
+        "timeinput, expected_err",
         # first item: bad input, second item: expected err msg
         [
             ("2022-11-2521:02:41x", "Not a valid datetime"),
             ("foobar", "Not a valid datetime"),
         ],
     )
-    def test_finished_timestamp_invalid(self, client, timestring):
+    def test_finished_timestamp_invalid(
+        self, client, timeinput: str, expected_err: str
+    ):
         self.authenticate(client)
         run = self._create_entity_to_update()
         resp = client.put(
             f"/api/runs/{run.id}/",
             json={
-                "finished_timestamp": timestring[0],
+                "finished_timestamp": timeinput,
             },
         )
         assert resp.status_code == 400, resp.text
-        assert timestring[1] in resp.text
+        assert expected_err in resp.text
 
 
 class TestRunPost(_asserts.PostEnforcer):

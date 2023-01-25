@@ -960,8 +960,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         assert context_id in resp.text
 
     @pytest.mark.parametrize(
-        "timestring",
-        # These are input/output pairs.
+        "timeinput, timeoutput",
         [
             ("2023-11-25 21:02:41", "2023-11-25T21:02:41Z"),
             ("2023-11-25 22:02:36Z", "2023-11-25T22:02:36Z"),
@@ -973,11 +972,11 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             ("2023-11-25T22:02:36.123456Z", "2023-11-25T22:02:36Z"),
         ],
     )
-    def test_create_benchmark_timestamp_timezone(self, client, timestring):
+    def test_create_benchmark_timestamp_timezone(self, client, timeinput, timeoutput):
         self.authenticate(client)
 
         d = self.valid_payload.copy()
-        d["timestamp"] = timestring[0]
+        d["timestamp"] = timeinput
         resp = client.post("/api/benchmarks/", json=d)
         assert resp.status_code == 201, resp.text
         bid = resp.json["id"]
@@ -985,4 +984,4 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         resp = client.get(f"/api/benchmarks/{bid}/")
         assert resp.status_code == 200, resp.text
 
-        assert resp.json["timestamp"] == timestring[1]
+        assert resp.json["timestamp"] == timeoutput
