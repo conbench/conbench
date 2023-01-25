@@ -419,9 +419,10 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
                 interpreted in UTC. Fractions of seconds can be provided but
                 are not returned by the API. Example value:
                 2022-11-25T22:02:42Z. This timestamp defines the default
-                sorting order when viewing runs via the UI or when enumerating
-                runs via the /api/runs/ HTTP endpoint.
-            """
+                sorting order when viewing a list of benchmarks via the UI or
+                when enumerating benchmarks via the /api/benchmarks/ HTTP
+                endpoint.
+                """
             )
         },
     )
