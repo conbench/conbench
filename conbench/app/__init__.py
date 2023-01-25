@@ -1,7 +1,9 @@
 import flask as f
 
+from typing import Callable
+
 app = f.Blueprint("app", __name__)
-rule = app.add_url_rule
+rule: Callable = app.add_url_rule
 
 
 from .auth import *  # noqa
