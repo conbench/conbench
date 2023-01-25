@@ -6,7 +6,7 @@ flake8
 isort
 lxml
 pytest>=7.0.0
-
+mypy
 types-beautifulsoup4
 types-psutil
 types-PyYAML
