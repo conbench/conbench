@@ -2,7 +2,8 @@ import collections
 import json
 import logging
 from datetime import timedelta
-from typing import List, Optional
+from typing import List, Optional, no_type_check
+
 
 import bokeh.events
 import bokeh.models
@@ -175,6 +176,7 @@ def _insert_nans(some_list: list, indexes: List[int]):
     return some_list
 
 
+@no_type_check
 def _source(
     data,
     unit,
@@ -207,18 +209,22 @@ def _source(
     date_strings = [d.strftime("%Y-%m-%d %H:%M %Z") for d in datetimes]
 
     points, values_with_unit = [], []
+
     if alert_min:
         for x in data:
             alert = 5 * float(x["distribution_stdev"])
             points.append(float(x["distribution_mean"]) - alert)
             values_with_unit.append(unit_fmt(points[-1], unit))
+
     elif alert_max:
         for x in data:
             alert = 5 * float(x["distribution_stdev"])
             points.append(float(x["distribution_mean"]) + alert)
             values_with_unit.append(unit_fmt(points[-1], unit))
+
     else:
         points = [x[key] for x in data]
+
         # Note(JP): If `means` is just string-formatted `points` then this is
         # kind of acknowledging that `points` is always a collection of mean
         # values. It seems that this is a string value field that is only
@@ -497,7 +503,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     t_start = source_mean_over_time.data["x"][0]
     t_end = source_mean_over_time.data["x"][-1]
 
-    t_range: timedelta = t_end - t_start
+    t_range = t_end - t_start
 
     # Add padding/buffer to left and right so that newest data point does not
     # disappear under right plot boundary, and so that the oldest data point
