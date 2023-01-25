@@ -1,6 +1,6 @@
-import flask as f
-
 from typing import Callable
+
+import flask as f
 
 # Adding the type annotations here removes a whole lot of 'Cannot
 # determine type of "rule"'. These are as of a cyclic definition (/import). See

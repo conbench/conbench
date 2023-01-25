@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 import flask as f
 import requests

@@ -6,7 +6,6 @@ from typing import Optional
 import flask as f
 import flask.views
 import flask_login
-
 import werkzeug
 
 log = logging.getLogger(__name__)

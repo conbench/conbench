@@ -1,6 +1,6 @@
-import flask as f
-
 from typing import Callable
+
+import flask as f
 
 app = f.Blueprint("app", __name__)
 rule: Callable = app.add_url_rule

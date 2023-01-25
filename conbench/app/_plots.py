@@ -1,9 +1,7 @@
 import collections
 import json
 import logging
-from datetime import timedelta
 from typing import List, Optional, no_type_check
-
 
 import bokeh.events
 import bokeh.models
