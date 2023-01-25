@@ -1018,7 +1018,7 @@
                         "type": "object",
                     },
                     "timestamp": {
-                        "description": "A datetime string indicating the time at which the benchmark was started. Expected to be in ISO 8601 notation. Timezone-aware notation recommended. Timezone-naive strings are interpreted in UTC. Fractions of seconds can be provided but are not returned by the API. Example value: 2022-11-25T22:02:42Z. This timestamp defines the default sorting order when viewing runs via the UI or when enumerating runs via the /api/runs/ HTTP endpoint.",
+                        "description": "A datetime string indicating the time at which the benchmark was started. Expected to be in ISO 8601 notation. Timezone-aware notation recommended. Timezone-naive strings are interpreted in UTC. Fractions of seconds can be provided but are not returned by the API. Example value: 2022-11-25T22:02:42Z. This timestamp defines the default sorting order when viewing a list of benchmarks via the UI or when enumerating benchmarks via the /api/benchmarks/ HTTP endpoint.",
                         "format": "date-time",
                         "type": "string",
                     },
