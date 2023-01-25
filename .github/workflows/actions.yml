@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install linting dependencies
-        run: pip install flake8 isort black mypy
+        run: pip install -r requirements-dev.txt
       - name: lint
         run: make lint-ci
 
