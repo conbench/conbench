@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Dict, Optional
 
 import flask as f
 import requests
@@ -300,9 +300,7 @@ def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) ->
     return commit
 
 
-def backfill_default_branch_commits(
-    repository: str, new_commit: Commit
-) -> List[Commit]:
+def backfill_default_branch_commits(repository: str, new_commit: Commit) -> None:
     """Catches up the default-branch commits in the database.
 
     Will search GitHub for any untracked commits, between the given new_commit back in
@@ -431,18 +429,19 @@ class GitHub:
 
         if ":" in branch:
             branch = branch.split(":")[1]
-        since = since.replace(tzinfo=None).isoformat() + "Z"
-        until = until.replace(tzinfo=None).isoformat() + "Z"
+
+        since_iso = since.replace(tzinfo=None).isoformat() + "Z"
+        until_iso = until.replace(tzinfo=None).isoformat() + "Z"
 
         log.info(
-            f"Finding all commits to the {branch} branch of {name} between {since} and "
-            f"{until}"
+            f"Finding all commits to the {branch} branch of {name} between {since_iso} and "
+            f"{until_iso}"
         )
         url = (
             f"{GITHUB}/repos/{name}/commits?per_page=100&sha={branch}"
             f"&since={since}&until={until}"
         )
-        commits = []
+        commits: List[Dict] = []
         page = 1
 
         # This may raise exceptions as of HTTP request/response cycle errors.
@@ -468,7 +467,7 @@ class GitHub:
             for commit in commits
         ]
 
-    def get_fork_point_sha(self, name: str, sha: str) -> str:
+    def get_fork_point_sha(self, name: str, sha: str) -> Optional[str]:
         """
         Get the most common ancestor commit between an arbitrary SHA and the default
         branch.
@@ -492,7 +491,7 @@ class GitHub:
         fork_point_sha = response["merge_base_commit"]["sha"]
         return fork_point_sha
 
-    def get_branch_from_pr_number(self, name: str, pr_number: str) -> str:
+    def get_branch_from_pr_number(self, name: str, pr_number: str) -> Optional[str]:
         if pr_number == 12345678:
             # test case
             return "some_user_or_org:some_branch"
