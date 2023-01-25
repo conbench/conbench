@@ -17,7 +17,7 @@ def parse_requirements(path: str):
 
 
 requirements_cli = parse_requirements(path="requirements-cli.txt")
-requirements_webapp = parse_requirements(path="requirements-build.txt")
+requirements_webapp = parse_requirements(path="requirements-webapp.txt")
 requirements_dev = parse_requirements(path="requirements-dev.txt")
 
 setuptools.setup(
