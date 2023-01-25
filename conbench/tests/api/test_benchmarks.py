@@ -958,3 +958,31 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         # the future it might be reasonable to not show the context ID, but
         # maybe only a helpful placeholder such as "empty context".
         assert context_id in resp.text
+
+    @pytest.mark.parametrize(
+        "timestring",
+        # These are input/output pairs.
+        [
+            ("2023-11-25 21:02:41", "2023-11-25T21:02:41Z"),
+            ("2023-11-25 22:02:36Z", "2023-11-25T22:02:36Z"),
+            ("2023-11-25T22:02:36Z", "2023-11-25T22:02:36Z"),
+            # That next pair confirms timezone conversion.
+            ("2023-11-25 23:02:00+07:00", "2023-11-25T16:02:00Z"),
+            # Confirm that fractions of seconds can be provided, but are not
+            # returned (we can dispute that of course).
+            ("2023-11-25T22:02:36.123456Z", "2023-11-25T22:02:36Z"),
+        ],
+    )
+    def test_create_benchmark_timestamp_timezone(self, client, timestring):
+        self.authenticate(client)
+
+        d = self.valid_payload.copy()
+        d["timestamp"] = timestring[0]
+        resp = client.post("/api/benchmarks/", json=d)
+        assert resp.status_code == 201, resp.text
+        bid = resp.json["id"]
+
+        resp = client.get(f"/api/benchmarks/{bid}/")
+        assert resp.status_code == 200, resp.text
+
+        assert resp.json["timestamp"] == timestring[1]

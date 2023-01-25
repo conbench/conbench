@@ -118,7 +118,7 @@ def _api_benchmark_entity(
         "id": benchmark_result_id,
         "run_id": run_id,
         "batch_id": batch_id,
-        "timestamp": "2020-11-25T21:02:42.706806",
+        "timestamp": "2020-11-25T21:02:44Z",
         "stats": stats,
         "error": error,
         "validation": validation,

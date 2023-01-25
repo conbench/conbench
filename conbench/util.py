@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import textwrap
 import time
 import urllib.parse
 from datetime import datetime, timezone
@@ -107,6 +108,34 @@ def tznaive_iso8601_to_tzaware_dt(
 
     # Handle case where input is a list of strings.
     return [_convert(s) for s in input]
+
+
+def dedent_rejoin(s: str):
+    """
+    Remove common leading whitespace, replace newlines by spaces.
+
+    Useful for being able to write marshmallow property docstrings with
+    indented block paragraphs.
+    """
+    return " ".join(textwrap.dedent(s).strip().splitlines())
+
+
+def dt_shift_to_utc(dt: Union[datetime, None]) -> Union[datetime, None]:
+    """
+    If the provided datetime object has a non-UTC `tzinfo` set then transform
+    the time to UTC.
+
+    This is expected to be called by the application only for tz-aware datetime
+    objects, but it does not crash for tz-naive objects.
+
+    tz-naive objects are returned unmodified.
+    """
+    if dt is not None and dt.tzinfo and dt.tzinfo != timezone.utc:
+        # Change timezone to UTC, and also chang the numerical values so that
+        # the same point in time is retained (change coordinate system).
+        dt = dt.astimezone(timezone.utc)
+
+    return dt
 
 
 class Connection:

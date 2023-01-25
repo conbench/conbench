@@ -1,3 +1,5 @@
+from datetime import timezone
+
 import flask as f
 import marshmallow
 import numpy as np
@@ -5,6 +7,8 @@ import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship
+
+import conbench.util
 
 from ..config import Config
 from ..entities._comparator import z_improvement, z_regression
@@ -44,6 +48,9 @@ class BenchmarkResult(Base, EntityMixin):
     unit = Nullable(s.Text)
     time_unit = Nullable(s.Text)
     batch_id = Nullable(s.Text)
+    # Do not store timezone information in the DB. Instead, follow timezone
+    # convention: the application code must make sure that what we store is the
+    # user-given time in UTC.
     timestamp = NotNull(s.DateTime(timezone=False))
     iterations = Nullable(s.Integer)
     min = Nullable(s.Numeric, check("min>=0"))
@@ -168,6 +175,9 @@ class BenchmarkResult(Base, EntityMixin):
 
         benchmark_result_data["run_id"] = data["run_id"]
         benchmark_result_data["batch_id"] = data["batch_id"]
+
+        # At this point `data["timestamp"]` is expected to be a tz-aware
+        # datetime object in UTC.
         benchmark_result_data["timestamp"] = data["timestamp"]
         benchmark_result_data["validation"] = data.get("validation")
         benchmark_result_data["change_annotations"] = {
@@ -311,7 +321,9 @@ class _Serializer(EntitySerializer):
             "id": benchmark_result.id,
             "run_id": benchmark_result.run_id,
             "batch_id": benchmark_result.batch_id,
-            "timestamp": benchmark_result.timestamp.isoformat(),
+            "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
+                benchmark_result.timestamp
+            ),
             "tags": tags,
             "optional_benchmark_info": benchmark_result.optional_benchmark_info,
             "validation": benchmark_result.validation,
@@ -391,8 +403,28 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
         },
     )
     batch_id = marshmallow.fields.String(required=True)
-    timestamp = marshmallow.fields.DateTime(
-        required=True, metadata={"description": "Timestamp the benchmark ran"}
+
+    # `AwareDateTime` with `default_timezone` set to UTC: naive datetimes are
+    # set this timezone.
+    timestamp = marshmallow.fields.AwareDateTime(
+        required=True,
+        format="iso",
+        default_timezone=timezone.utc,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                A datetime string indicating the time at which the benchmark
+                was started. Expected to be in ISO 8601 notation.
+                Timezone-aware notation recommended. Timezone-naive strings are
+                interpreted in UTC. Fractions of seconds can be provided but
+                are not returned by the API. Example value:
+                2022-11-25T22:02:42Z. This timestamp defines the default
+                sorting order when viewing a list of benchmarks via the UI or
+                when enumerating benchmarks via the /api/benchmarks/ HTTP
+                endpoint.
+                """
+            )
+        },
     )
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
     cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
@@ -454,6 +486,16 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     def validate_stats_or_error_field_is_present(self, data, **kwargs):
         if "stats" not in data and "error" not in data:
             raise marshmallow.ValidationError("Either stats or error field is required")
+
+    @marshmallow.post_load
+    def recalc_timestamp(self, data, **kwargs):
+        curdt = data.get("timestamp")
+
+        if curdt is None:
+            return data
+
+        data["timestamp"] = conbench.util.dt_shift_to_utc(curdt)
+        return data
 
 
 class _BenchmarkFacadeSchemaUpdate(marshmallow.Schema):
