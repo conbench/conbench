@@ -422,6 +422,9 @@ class GitHub:
         """Get information about each commit on a given branch.
 
         since and until are inclusive.
+
+        Expect tz-naive datetime objects, or expect tz-aware objects with UTC
+        timezone.
         """
         if name == "org/repo":
             # test case
