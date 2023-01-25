@@ -58,6 +58,7 @@ lint:
 	flake8
 	isort .
 	black .
+	mypy conbench
 
 
 # Run by CI, these commands should not modify files, but only check compliance.
@@ -66,6 +67,7 @@ lint-ci:
 	flake8
 	isort --check .
 	black --check --diff .
+	mypy conbench
 
 
 .PHONY: rebuild-expected-api-docs

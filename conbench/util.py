@@ -5,7 +5,7 @@ import textwrap
 import time
 import urllib.parse
 from datetime import datetime, timezone
-from typing import List, Union
+from typing import List, Union, overload
 
 import click
 import requests
@@ -59,9 +59,17 @@ def tznaive_dt_to_aware_iso8601_for_api(dt: datetime) -> str:
     return dt.isoformat(sep="T", timespec="seconds") + "Z"
 
 
-def tznaive_iso8601_to_tzaware_dt(
-    input: Union[str, List[str]]
-) -> Union[datetime, List[datetime]]:
+@overload
+def tznaive_iso8601_to_tzaware_dt(input: str) -> datetime:
+    ...
+
+
+@overload
+def tznaive_iso8601_to_tzaware_dt(input: List[str]) -> List[datetime]:
+    ...
+
+
+def tznaive_iso8601_to_tzaware_dt(input):
     """
     Convert time strings into datetime objects.
 

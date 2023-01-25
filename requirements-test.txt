@@ -1,8 +1,0 @@
-black
-bs4
-coverage
-coveralls
-flake8
-isort
-lxml
-pytest>=7.0.0

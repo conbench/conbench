@@ -112,8 +112,8 @@ class Run(Base, EntityMixin):
         self,
         commit_limit: int = 20,
         on_default_branch: bool = False,
-        case_id: str = None,
-        context_id: str = None,
+        case_id: Optional[str] = None,
+        context_id: Optional[str] = None,
     ) -> Optional["Run"]:
         """Return the closest ancestor of this Run, where the ancestor run:
 

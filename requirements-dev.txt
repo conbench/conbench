@@ -1,0 +1,15 @@
+black
+bs4
+coverage
+coveralls
+flake8
+isort
+lxml
+pytest>=7.0.0
+mypy
+types-beautifulsoup4
+types-psutil
+types-PyYAML
+types-requests
+types-oauthlib
+types-Flask

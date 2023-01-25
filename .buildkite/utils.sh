@@ -95,7 +95,7 @@ upload_conbench_to_pypi() {
   eval "$(command '/opt/conda/condabin/conda' 'shell.bash' 'hook' 2> /dev/null)"
   conda create -y -n conbench --force -c conda-forge python=3.8
   conda activate conbench
-  pip install -r requirements-test.txt -r requirements-build.txt -r requirements-cli.txt
+  pip install -r requirements-dev.txt -r requirements-webapp.txt -r requirements-cli.txt
   pip install -e .
   python -m pip install --upgrade build
   python -m pip install --upgrade twine

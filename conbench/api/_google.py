@@ -1,6 +1,7 @@
 import base64
 import logging
 import time
+from typing import Optional
 
 import flask as f
 import requests
@@ -76,7 +77,7 @@ def gen_oidc_authz_req_url(user_came_from_url: str) -> str:
     log.debug("Initiate OIDC SSO flow. redirect_uri: %s", OIDC_CALLBACK_URL)
     log.debug("user_came_from_url: %s", user_came_from_url)
 
-    state = encode_target_url(user_came_from_url)
+    state: Optional[str] = encode_target_url(user_came_from_url)
     if not state:
         # In case `encode_target_url()` returned a zero-length string pass
         # state=None into `prepare_request_uri()` below, resulting in oauthlib

@@ -447,7 +447,10 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
             "description": "Optional information about Benchmark results (e.g., telemetry links, logs links). These are unique to each benchmark that is run, but are information that aren't reasonably expected to impact benchmark performance. Helpful for adding debugging or additional links and context for a benchmark (free-form JSON)"
         },
     )
-    context = marshmallow.fields.Dict(
+    # Note, this mypy error is interesting: Incompatible types in assignment
+    # (expression has type "marshmallow.fields.Dict", base class "Schema"
+    # defined the type as "Dict[Any, Any]")
+    context = marshmallow.fields.Dict(  # type: ignore[assignment]
         required=True,
         metadata={
             "description": "Information about the context the benchmark was run in (e.g. compiler flags, benchmark langauge) that are reasonably expected to have an impact on benchmark performance. This information is expected to be the same across a number of benchmarks. (free-form JSON)"

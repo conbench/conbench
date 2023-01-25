@@ -6,7 +6,7 @@ from typing import Optional
 import flask as f
 import flask.views
 import flask_login
-from flask import Response
+import werkzeug
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ def authorize_or_terminate(func):
     return wrapper
 
 
-def _authz_or_generate_termination_response() -> Optional[Response]:
+def _authz_or_generate_termination_response() -> Optional[werkzeug.Response]:
     """
     Inspect request and application config. Make an access control decision. If
     access is denied then this function generates a `Response` object which

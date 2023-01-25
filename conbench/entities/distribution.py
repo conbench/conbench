@@ -172,14 +172,14 @@ def set_z_scores(benchmark_results: List["BenchmarkResult"]):
     """
     # Cache Distribution query results by commit/hardware, in case multiple input
     # benchmark_results (e.g. from the same Run) share those attributes
-    cached_distributions = {}
+    cached_distributions = {}  # type: ignore[var-annotated]
     # Also cache respective baseline runs by each Run's ID. Note that two
     # benchmark_results from the same Run might not have the exact same baseline run,
     # because one baseline run might be missing the case/context of the other
     # benchmark_result. In those cases, we might fail to populate the z-score of the
     # second benchmark result. But that's too rare and small-impact to justify not
     # caching for performance reasons.
-    cached_baseline_runs = {}
+    cached_baseline_runs = {}  # type: ignore[var-annotated]
 
     for benchmark_result in benchmark_results:
         benchmark_result.z_score = None

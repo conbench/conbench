@@ -17,8 +17,8 @@ def parse_requirements(path: str):
 
 
 requirements_cli = parse_requirements(path="requirements-cli.txt")
-requirements_server = parse_requirements(path="requirements-build.txt")
-requirements_test = parse_requirements(path="requirements-test.txt")
+requirements_webapp = parse_requirements(path="requirements-webapp.txt")
+requirements_dev = parse_requirements(path="requirements-dev.txt")
 
 setuptools.setup(
     name="conbench",
@@ -42,7 +42,7 @@ setuptools.setup(
     url="https://github.com/conbench/conbench",
     install_requires=requirements_cli,
     extras_require={
-        "server": requirements_server,
-        "dev": requirements_server + requirements_test,
+        "server": requirements_webapp,
+        "dev": requirements_webapp + requirements_dev,
     },
 )
