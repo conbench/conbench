@@ -462,15 +462,6 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         self.authenticate(client)
 
         machine_info_A = _fixtures.MACHINE_INFO.copy()
-
-        # Create a copy of the above's machine_info example object with a
-        # different CPU model name. This is set in
-        # BenchmarkResultCreate.machine_info.cpu_model_name and will be
-        # silently dropped
-        lost_cpu_model_name = "qubit1337"
-        machine_info_B = _fixtures.MACHINE_INFO.copy()
-        machine_info_B["cpu_model_name"] = lost_cpu_model_name
-
         run_payload = _fixtures.VALID_RUN_PAYLOAD.copy()
         run_payload["machine_info"] = machine_info_A
         resp = client.post("/api/runs/", json=run_payload)
@@ -484,6 +475,14 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         # Confirm that the above's Run submission created a Hardware entity
         # representing the details in `machine_info_A`.
         assert_machine_info_equals_hardware(run_asindb["hardware"], machine_info_A)
+
+        # Create a copy of the above's machine_info example object with a
+        # different CPU model name. This is set in
+        # BenchmarkResultCreate.machine_info.cpu_model_name and will be
+        # silently dropped
+        lost_cpu_model_name = "qubit1337"
+        machine_info_B = _fixtures.MACHINE_INFO.copy()
+        machine_info_B["cpu_model_name"] = lost_cpu_model_name
 
         # Submit BenchmarkResultCreate structure, refer to the previously
         # submitted Run entity (via ID), but provide _different_ machine_info.
@@ -508,8 +507,6 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         run_asindb2 = resp.json
         # Confirm that machine_info_A took precedence.
         assert_machine_info_equals_hardware(run_asindb2["hardware"], machine_info_A)
-
-        # print("run as in db 2", json.dumps(run_asindb, indent=2))
 
     def test_create_benchmark_with_error(self, client):
         self.authenticate(client)
