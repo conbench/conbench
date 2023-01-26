@@ -152,7 +152,13 @@ class BenchmarkResult(Base, EntityMixin):
         if not info:
             info = Info.create({"tags": data["info"]})
 
-        # create if not exists
+        # Create a corresponding `run` entity in the database if it doesn't
+        # exist yet. Use the user-given `id` (string) as primary key. If the
+        # Run is already known in the database then only update the
+        # `has_errors` property, if necessary. All other run-specific
+        # properties provided as part of this BenchmarkCreate structure (like
+        # `machine_info` and `run_name`) get silently ignored. already known in
+        # the database.
         run = Run.first(id=data["run_id"])
         if run:
             if has_error:
@@ -388,18 +394,39 @@ or improvements, should we treat data from before this result as incomparable?
 class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     run_id = marshmallow.fields.String(
         required=True,
-        metadata={"description": "Unique identifier for a run of benchmarks."},
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                Identifier for a Run (group of benchmarks. This can be the ID
+                of a known Run (as returned by /api/runs) or a new ID in which
+                case a new Run entity is created in the database.
+                """
+            )
+        },
     )
     run_name = marshmallow.fields.String(
         required=False,
         metadata={
-            "description": "Name for the run. When run in CI, this should be of the style '{run reason}: {commit sha}'."
+            "description": conbench.util.dedent_rejoin(
+                """
+                Name for the run. When run in CI, this should be of the style
+                '{run reason}: {commit sha}'. Ignored when run was previously
+                created.
+                """
+            )
         },
     )
     run_reason = marshmallow.fields.String(
         required=False,
         metadata={
-            "description": "Reason for run (commit, pull request, manual, etc). This should be low cardinality. 'commit' is a special run_reason for commits on the default branch which are used for history"
+            "description": conbench.util.dedent_rejoin(
+                """
+                Reason for run (commit, pull request, manual, etc). This should
+                be low cardinality. 'commit' is a special run_reason for
+                commits on the default branch which are used for history.
+                Ignored when run was previously created.
+                """
+            )
         },
     )
     batch_id = marshmallow.fields.String(required=True)
@@ -426,8 +453,32 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
             )
         },
     )
-    machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
-    cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
+    machine_info = marshmallow.fields.Nested(
+        MachineSchema().create,
+        required=False,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                Precisely one of `machine_info` and `cluster_info` must be
+                provided. The data is however ignored when the Run (referred to
+                by `run_id`) was previously created.
+                """
+            )
+        },
+    )
+    cluster_info = marshmallow.fields.Nested(
+        ClusterSchema().create,
+        required=False,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                Precisely one of `machine_info` and `cluster_info` must be
+                provided. The data is however ignored when the Run (referred to
+                by `run_id`) was previously created.
+                """
+            )
+        },
+    )
     stats = marshmallow.fields.Nested(BenchmarkResultSchema().create, required=False)
     error = marshmallow.fields.Dict(
         required=False,
