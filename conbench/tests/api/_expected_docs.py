@@ -1007,7 +1007,7 @@
                         "type": "object",
                     },
                     "run_id": {
-                        "description": "Identifier for a Run (group of benchmarks. This can be the ID of a known Run (as returned by /api/runs) or a new ID in which case a new Run entity is created in the database.",
+                        "description": "Identifier for a Run. This can be the ID of a known Run (as returned by /api/runs) or a new ID in which case a new Run entity is created in the database.",
                         "type": "string",
                     },
                     "run_name": {

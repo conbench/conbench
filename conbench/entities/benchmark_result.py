@@ -397,9 +397,9 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Identifier for a Run (group of benchmarks. This can be the ID
-                of a known Run (as returned by /api/runs) or a new ID in which
-                case a new Run entity is created in the database.
+                Identifier for a Run. This can be the ID of a known Run (as
+                returned by /api/runs) or a new ID in which case a new Run
+                entity is created in the database.
                 """
             )
         },
