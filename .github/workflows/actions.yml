@@ -98,6 +98,10 @@ jobs:
             docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
                 python screenshot.py "${CONBENCH_BASE_URL}/benchmarks/${SOME_BENCHMARK_ID}/" /artifacts benchmark-result-view
             /bin/ls -ahltr ci-artifacts/
+            # If the browser-initiated GET requests led to e.g an Internal Server Error
+            # then we see that in the screenshot(s). For debugging that, however,
+            # it's crucial to get web application logs.
+            docker compose logs
       - name: upload-artifacts
         uses: actions/upload-artifact@v3
         with:
