@@ -423,14 +423,23 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
                 ) == int(value)
 
     def test_create_benchmark_after_run_different_machine_info(self, client):
-        """This test confirms behavior that I was initially only suspecting
-        and then wanted to confirm with code.
+        """
+        This test documents current behavior that I was initially only
+        suspecting and then wanted to confirm with code.
 
-        I am not sure that the below is desired behavior.
+        We can of course re-think the specification (expected behavior).
 
         This is a special case in the API surface, but because it's API
         behavior it's important that we think about specification first
         (desired behavior), and then judge about the implementation.
+
+        I think this is an artifact of us allowing for potentially many
+        concurrent executors to submit results within a specific run without
+        requiring special coordination between those executors. That is, it is
+        expected that the submitted run metadata (like name and machine info)
+        are equivalent across all BenchmarkResult entities, and the fastest
+        submitter wins the price of DB insertion, while the other racers get
+        their info silently dropped.
         """
 
         def assert_machine_info_equals_hardware(hwdict, midict):
