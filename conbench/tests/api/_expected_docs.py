@@ -981,7 +981,10 @@
                         "description": 'Post-analysis annotations about this BenchmarkResult that\ngive details about whether it represents a change, outlier, etc. in the overall\ndistribution of BenchmarkResults.\n\nCurrently-recognized keys that change Conbench behavior:\n\n- `begins_distribution_change` (bool) - Is this result the first result of a sufficiently\n"different" distribution than the result on the previous commit (for the same\nhardware/case/context)? That is, when evaluating whether future results are regressions\nor improvements, should we treat data from before this result as incomparable?\n',
                         "type": "object",
                     },
-                    "cluster_info": {"$ref": "#/components/schemas/ClusterCreate"},
+                    "cluster_info": {
+                        "allOf": [{"$ref": "#/components/schemas/ClusterCreate"}],
+                        "description": "Precisely one of `machine_info` and `cluster_info` must be provided. The data is however ignored when the Run (referred to by `run_id`) was previously created.",
+                    },
                     "context": {
                         "description": "Information about the context the benchmark was run in (e.g. compiler flags, benchmark langauge) that are reasonably expected to have an impact on benchmark performance. This information is expected to be the same across a number of benchmarks. (free-form JSON)",
                         "type": "object",
@@ -995,21 +998,24 @@
                         "description": "Additional information about the context the benchmark was run in that is not expected to have an impact on benchmark performance (e.g. benchmark language version, compiler version). This information is expected to be the same across a number of benchmarks. (free-form JSON)",
                         "type": "object",
                     },
-                    "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
+                    "machine_info": {
+                        "allOf": [{"$ref": "#/components/schemas/MachineCreate"}],
+                        "description": "Precisely one of `machine_info` and `cluster_info` must be provided. The data is however ignored when the Run (referred to by `run_id`) was previously created.",
+                    },
                     "optional_benchmark_info": {
                         "description": "Optional information about Benchmark results (e.g., telemetry links, logs links). These are unique to each benchmark that is run, but are information that aren't reasonably expected to impact benchmark performance. Helpful for adding debugging or additional links and context for a benchmark (free-form JSON)",
                         "type": "object",
                     },
                     "run_id": {
-                        "description": "Unique identifier for a run of benchmarks.",
+                        "description": "Identifier for a Run (group of benchmarks. This can be the ID of a known Run (as returned by /api/runs) or a new ID in which case a new Run entity is created in the database.",
                         "type": "string",
                     },
                     "run_name": {
-                        "description": "Name for the run. When run in CI, this should be of the style '{run reason}: {commit sha}'.",
+                        "description": "Name for the run. When run in CI, this should be of the style '{run reason}: {commit sha}'. Ignored when run was previously created.",
                         "type": "string",
                     },
                     "run_reason": {
-                        "description": "Reason for run (commit, pull request, manual, etc). This should be low cardinality. 'commit' is a special run_reason for commits on the default branch which are used for history",
+                        "description": "Reason for run (commit, pull request, manual, etc). This should be low cardinality. 'commit' is a special run_reason for commits on the default branch which are used for history. Ignored when run was previously created.",
                         "type": "string",
                     },
                     "stats": {"$ref": "#/components/schemas/BenchmarkResultCreate"},
@@ -1117,7 +1123,7 @@
                         "type": "string",
                     },
                     "optional_info": {
-                        "description": "Additional optional information about the cluster, which is not likely to impact the benchmark performance (e.g. region, settings like logging type, etc).",
+                        "description": "Additional optional information about the cluster, which is not likely to impact the benchmark performance (e.g. region, settings like logging type, etc). Despite the name, this field is required. An empty dictionary can be passed.",
                         "type": "object",
                     },
                 },
@@ -1344,7 +1350,7 @@
                 "tags": ["Benchmarks"],
             },
             "post": {
-                "description": "Create a benchmark.",
+                "description": "Submit a BenchmarkResult within a specific Run (as defined by its Run ID). If the Run is not known yet in the database it gets implicitly created, using details provided in this request. If the Run is already known then Run-specific info in this request is silently ignored.",
                 "requestBody": {
                     "content": {
                         "application/json": {
