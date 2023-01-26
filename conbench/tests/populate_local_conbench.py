@@ -31,6 +31,8 @@ def main():
     generate_synthetic_benchmark_history()
     log.info("start create_benchmarks_data()")
     create_benchmarks_data()
+    log.info("start create_benchmarks_data()")
+    create_benchmars_data_with_history()
 
 
 def generate_benchmarks_data(
@@ -44,6 +46,9 @@ def generate_benchmarks_data(
     reason,
     mean=16.670462,
 ):
+    """
+    Generate a dictionary that complies with the BenchmarkCreate schema.
+    """
     run_name = f"{reason}: {commit}" if reason else commit
     data = {
         "batch_id": uuid.uuid4().hex,
@@ -229,8 +234,16 @@ def login():
     log.info("login succeeded")
 
 
-def post_benchmarks(data):
+def post_benchmark_result(data):
+    """
+    Expect `data` to be a single BenchmarkCreate structure.
+
+    Return benchmark ID (as returned by API) or raise an exception
+    (the code below may fail with wild exceptions such as AttributeError)
+    """
+
     url = f"{base_url}/benchmarks/"
+
     for attempt in range(1, 4):
         t0 = time.monotonic()
         log.info("POST to url: %s", url)
@@ -259,6 +272,7 @@ def post_benchmarks(data):
 
     if str(res.status_code).startswith("4"):
         log.info("4xx response body: %s", res.text)
+
     return benchmark_id
 
 
@@ -337,14 +351,14 @@ def create_benchmarks_data():
 
                     # Is this actually posting _one_ benchmark result or
                     # more than one? The function name suggests plural.
-                    post_benchmarks(benchmark_data)
+                    post_benchmark_result(benchmark_data)
                     runs.append((run_id, timestamp))
 
     run_id, timestamp = runs[-1]
     update_run_with_info(run_id, timestamp)
 
 
-def create_be():
+def create_benchmars_data_with_history():
     # 7 commits in a row in apache/arrow, the commented one is missing
     commits = [
         "17d6fdc0e9c00534e4de7bfb193c33c86cab7e15",
@@ -403,13 +417,9 @@ def create_be():
                         mean=mean,
                     )
 
-                benchmark_id = post_benchmarks(benchmark_data)
+                benchmark_id = post_benchmark_result(benchmark_data)
                 benchmark_ids.append(benchmark_id)
                 runs.append((run_id, timestamp))
-
-    log.info("now, emit a benchmark ID on stdout")
-    # That benchmark ID is consumed and used by CI.
-    print(benchmark_ids[0])
 
 
 def generate_synthetic_benchmark_history():
@@ -426,6 +436,8 @@ def generate_synthetic_benchmark_history():
     slowdown_lin = distr_mean * 0.1
     distribution = statistics.NormalDist(mu=20.0, sigma=2)
 
+    benchmark_ids = []
+
     def sample_slowdown(s):
         return s + slowdown_offset + slowdown_lin * random.random()
 
@@ -438,6 +450,8 @@ def generate_synthetic_benchmark_history():
         ) - datetime.timedelta(hours=10 * idx)
         run_start_timestring_iso8601 = run_start.isoformat()
 
+        # Submit a BenchmarkCreate structure. Use a random run_id so that
+        # each benchmark created in this loop refers to a different run.
         bdata = generate_benchmarks_data(
             run_id=str(uuid.uuid4())[9:],
             commit=commit_hash,
@@ -483,8 +497,11 @@ def generate_synthetic_benchmark_history():
             "times": [],
         }
 
-        post_benchmarks(bdata)
-        # runs.append((run_id, timestamp))
+        benchmark_ids.append(post_benchmark_result(bdata))
+
+    log.info("now, emit a benchmark ID on stdout")
+    # That benchmark ID is consumed and used by CI.
+    print(benchmark_ids[0])
 
 
 """
