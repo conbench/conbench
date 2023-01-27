@@ -3,13 +3,14 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-import dateutil.parser
 import flask as f
 import requests
 import sqlalchemy as s
 from sqlalchemy.orm import Query
+
+from conbench import util
 
 from ..db import Session
 from ..entities._entity import (
@@ -299,9 +300,7 @@ def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) ->
     return commit
 
 
-def backfill_default_branch_commits(
-    repository: str, new_commit: Commit
-) -> List[Commit]:
+def backfill_default_branch_commits(repository: str, new_commit: Commit) -> None:
     """Catches up the default-branch commits in the database.
 
     Will search GitHub for any untracked commits, between the given new_commit back in
@@ -328,7 +327,7 @@ def backfill_default_branch_commits(
     if last_tracked_commit:
         since = last_tracked_commit[0].timestamp
     elif os.getenv("DB_HOST") == "localhost":
-        print(
+        log.info(
             "Your DB_HOST is localhost, so assuming you're running "
             "conbench/tests/populate_local_conbench.py. Backfilling the DB only from "
             "2022-01-01 in order to save time."
@@ -423,6 +422,9 @@ class GitHub:
         """Get information about each commit on a given branch.
 
         since and until are inclusive.
+
+        Expect tz-naive datetime objects, or expect tz-aware objects with UTC
+        timezone.
         """
         if name == "org/repo":
             # test case
@@ -430,25 +432,27 @@ class GitHub:
 
         if ":" in branch:
             branch = branch.split(":")[1]
-        since = since.replace(tzinfo=None).isoformat() + "Z"
-        until = until.replace(tzinfo=None).isoformat() + "Z"
 
-        print(
-            f"Finding all commits to the {branch} branch of {name} between {since} and "
-            f"{until}"
+        since_iso_for_url = since.replace(tzinfo=None).isoformat() + "Z"
+        until_iso_for_url = until.replace(tzinfo=None).isoformat() + "Z"
+        del since, until
+
+        log.info(
+            f"Finding all commits to the {branch} branch of {name} between "
+            f" {since_iso_for_url} and {until_iso_for_url}"
         )
         url = (
             f"{GITHUB}/repos/{name}/commits?per_page=100&sha={branch}"
-            f"&since={since}&until={until}"
+            f"&since={since_iso_for_url}&until={until_iso_for_url}"
         )
-        commits = []
+        commits: List[Dict] = []
         page = 1
 
         # This may raise exceptions as of HTTP request/response cycle errors.
         this_page = self._get_response(url + f"&page={page}")
 
         if len(this_page) == 0:
-            print("API returned no commits")
+            log.info("API returned no commits")
             return []
 
         commits += this_page
@@ -467,7 +471,7 @@ class GitHub:
             for commit in commits
         ]
 
-    def get_fork_point_sha(self, name: str, sha: str) -> str:
+    def get_fork_point_sha(self, name: str, sha: str) -> Optional[str]:
         """
         Get the most common ancestor commit between an arbitrary SHA and the default
         branch.
@@ -491,7 +495,7 @@ class GitHub:
         fork_point_sha = response["merge_base_commit"]["sha"]
         return fork_point_sha
 
-    def get_branch_from_pr_number(self, name: str, pr_number: str) -> str:
+    def get_branch_from_pr_number(self, name: str, pr_number: str) -> Optional[str]:
         if pr_number == 12345678:
             # test case
             return "some_user_or_org:some_branch"
@@ -544,9 +548,10 @@ class GitHub:
 
         return {
             "parent": commit["parents"][0]["sha"] if commit["parents"] else None,
-            # Note(JP): this might need attention with respect to time zones.
-            # Also see https://github.com/PyGithub/PyGithub/issues/512#issuecomment-1362654366
-            "date": dateutil.parser.isoparse(commit_author["date"]),
+            # Note: `commit_author["date"]` here is expected to be an ISO 8601
+            # timestring as returned by the GitHub HTTP API and that is
+            # tz-aware (Zulu time, UTC).
+            "date": util.tznaive_iso8601_to_tzaware_dt(commit_author["date"]),
             # Note(JP): don't we want to indicate if the msg was truncated,
             # with e.g. an ellipsis?
             "message": commit["commit"]["message"].split("\n")[0][:240],

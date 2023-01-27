@@ -160,7 +160,14 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
     def post(self):
         """
         ---
-        description: Create a benchmark.
+        description:
+            Submit a BenchmarkResult within a specific Run.
+
+            If the Run (as defined by its Run ID) is not known yet in the
+            database it gets implicitly created, using details provided in this
+            request. If the Run ID matches an existing run, then the rest of
+            the fields describing the Run (such as name, hardware info, ...}
+            are silently ignored.
         responses:
             "201": "BenchmarkCreated"
             "400": "400"

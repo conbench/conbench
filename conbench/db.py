@@ -81,7 +81,7 @@ def log_after_retry_attempt(retry_state: tenacity.RetryCallState):
         "result after attempt %s for %s: %s",
         retry_state.attempt_number,
         str(retry_state.fn),
-        str(retry_state.outcome.exception()),
+        str(retry_state.outcome.exception()),  # type: ignore[union-attr]
     )
 
 

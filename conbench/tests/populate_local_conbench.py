@@ -25,9 +25,9 @@ session = requests.Session()
 def main():
     register()
     login()
-    print("start create_benchmarks_data()")
+    log.info("start create_benchmarks_data()")
     create_benchmarks_data()
-    print("start create_benchmarks_with_history()")
+    log.info("start create_benchmarks_with_history()")
     create_benchmarks_with_history()
 
 
@@ -237,6 +237,7 @@ def post_benchmarks(data):
             # takes too long. Also see
             # https://github.com/conbench/conbench/issues/555
             res = session.post(url, json=data)
+            benchmark_id = res.json()["id"]
             break
         except requests.exceptions.RequestException as exc:
             log.info(
@@ -247,17 +248,18 @@ def post_benchmarks(data):
             )
             time.sleep(5 * attempt)
 
-    print(
+    log.info(
         f"Posted a benchmark with run_id '{data.get('run_id')}' "
         f"and commit {data.get('github', {}).get('commit')}. "
         f"Received status code {res.status_code}. "
         f"Took {attempt} attempt(s). Last attempt took {time.monotonic() - t0 :.5f} s."
     )
+    return benchmark_id
 
 
 def update_run(run_id, data):
     url = f"{base_url}/runs/{run_id}/"
-    print(session.put(url, json=data))
+    log.info(session.put(url, json=data))
 
 
 def update_run_with_info(run_id, timestamp):
@@ -328,6 +330,8 @@ def create_benchmarks_data():
                             mean,
                         )
 
+                    # Is this actually posting _one_ benchmark result or
+                    # more than one? The function name suggests plural.
                     post_benchmarks(benchmark_data)
                     runs.append((run_id, timestamp))
 
@@ -354,6 +358,8 @@ def create_benchmarks_with_history():
     partial_successes = [False, True]
 
     runs = []
+
+    benchmark_ids = []
 
     i = 0
     n = 0
@@ -392,8 +398,13 @@ def create_benchmarks_with_history():
                         mean=mean,
                     )
 
-                post_benchmarks(benchmark_data)
+                benchmark_id = post_benchmarks(benchmark_data)
+                benchmark_ids.append(benchmark_id)
                 runs.append((run_id, timestamp))
+
+    log.info("now, emit a benchmark ID on stdout")
+    # That benchmark ID is consumed and used by CI.
+    print(benchmark_ids[0])
 
 
 if __name__ == "__main__":

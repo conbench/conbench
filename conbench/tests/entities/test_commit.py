@@ -2,8 +2,8 @@ import datetime
 import json
 import logging
 import os
+from datetime import timezone
 
-import dateutil
 import pytest
 import sqlalchemy as s
 
@@ -171,10 +171,10 @@ def test_get_github_commit_and_fork_point_sha(branch):
 
     repo = "https://github.com/apache/arrow"
     sha = "3decc46119d583df56c7c66c77cf2803441c4458"
-    tz = dateutil.tz.tzutc()
+
     expected = {
         "parent": "fcaa422c84796bcf7dbe328ee3612f434cd4d356",
-        "date": datetime.datetime(2021, 3, 17, 16, 27, 37, tzinfo=tz),
+        "date": datetime.datetime(2021, 3, 17, 16, 27, 37, tzinfo=timezone.utc),
         "message": "ARROW-11997: [Python] concat_tables crashes python interpreter",
         "author_name": "Diana Clarke",
         "author_login": "dianaclarke",
@@ -213,10 +213,10 @@ def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
 
     repo = "https://github.com/apache/arrow"
     sha = "982023150ccbb06a6f581f6797c017492485b58c"
-    tz = dateutil.tz.tzutc()
+
     expected = {
         "parent": "c8668f85a465ea05b2724ec47ff72c4db4d7dfe6",
-        "date": datetime.datetime(2021, 7, 6, 21, 51, 48, tzinfo=tz),
+        "date": datetime.datetime(2021, 7, 6, 21, 51, 48, tzinfo=timezone.utc),
         "message": "ARROW-13266: [JS] Improve benchmark names",
         "author_name": "Diana Clarke",
         "author_login": "dianaclarke",
@@ -244,7 +244,6 @@ def test_backfill_default_branch_commits():
     repository = "https://github.com/conbench/conbench"
     default_branch = "conbench:main"
     author = "Austin Dickey"
-    tz = dateutil.tz.tzutc()
 
     # 5 commits in a row on conbench:main, starting with the 335th commit to the repo
     test_shas = [
@@ -266,7 +265,7 @@ def test_backfill_default_branch_commits():
             fork_point_sha=test_shas[1],
             message="Fix what bokeh 3.0.0 broke (#420)",
             author_name=author,
-            timestamp=datetime.datetime(2022, 10, 31, 18, 5, 14, tzinfo=tz),
+            timestamp=datetime.datetime(2022, 10, 31, 18, 5, 14, tzinfo=timezone.utc),
         )
     )
 
@@ -287,7 +286,7 @@ def test_backfill_default_branch_commits():
             fork_point_sha=test_shas[3],
             message="Store branch information on Commits (#417)",
             author_name=author,
-            timestamp=datetime.datetime(2022, 11, 4, 17, 18, 19, tzinfo=tz),
+            timestamp=datetime.datetime(2022, 11, 4, 17, 18, 19, tzinfo=timezone.utc),
         )
     )
 
@@ -307,7 +306,7 @@ def test_backfill_default_branch_commits():
             fork_point_sha=test_shas[4],
             message="Fixed up test warnings (#424)",
             author_name=author,
-            timestamp=datetime.datetime(2022, 11, 4, 19, 13, 41, tzinfo=tz),
+            timestamp=datetime.datetime(2022, 11, 4, 19, 13, 41, tzinfo=timezone.utc),
         )
     )
 
@@ -324,7 +323,7 @@ def test_backfill_default_branch_commits():
             fork_point_sha=test_shas[0],
             message="did nothing",
             author_name=author,
-            timestamp=datetime.datetime(2022, 10, 29, tzinfo=tz),
+            timestamp=datetime.datetime(2022, 10, 29, tzinfo=timezone.utc),
         )
     )
     backfill_default_branch_commits_ign_rate_limit(repository, commit_4)
@@ -375,12 +374,12 @@ def test_parse_commit():
     path = os.path.join(this_dir, "github_child.json")
     with open(path) as f:
         commit = json.load(f)
-    tz = dateutil.tz.tzutc()
+
     message = "Move benchmark tests (so CI runs them)"
     expected = {
         "parent": _fixtures.PARENT,
         "message": f"ARROW-11771: [Developer][Archery] {message}",
-        "date": datetime.datetime(2021, 2, 25, 1, 2, 51, tzinfo=tz),
+        "date": datetime.datetime(2021, 2, 25, 1, 2, 51, tzinfo=timezone.utc),
         "author_name": "Diana Clarke",
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
@@ -397,12 +396,12 @@ def test_parse_commit_no_author():
     path = os.path.join(this_dir, "github_commit_no_author.json")
     with open(path) as f:
         commit = json.load(f)
-    tz = dateutil.tz.tzutc()
+
     message = "Move benchmark tests (so CI runs them)"
     expected = {
         "parent": _fixtures.PARENT,
         "message": f"ARROW-11771: [Developer][Archery] {message}",
-        "date": datetime.datetime(2021, 2, 25, 1, 2, 51, tzinfo=tz),
+        "date": datetime.datetime(2021, 2, 25, 1, 2, 51, tzinfo=timezone.utc),
         "author_name": "Diana Clarke",
         "author_login": None,
         "author_avatar": None,
@@ -414,12 +413,12 @@ def test_parse_pull_request_commit():
     path = os.path.join(this_dir, "github_pull_request_commit.json")
     with open(path) as f:
         commit = json.load(f)
-    tz = dateutil.tz.tzutc()
+
     message = "Move benchmark tests (so CI runs them)"
     expected = {
         "parent": "81e9417eb68171e03a304097ae86e1fd83307130",
         "message": f"ARROW-11771: [Developer][Archery] {message}",
-        "date": datetime.datetime(2021, 2, 24, 20, 59, 4, tzinfo=tz),
+        "date": datetime.datetime(2021, 2, 24, 20, 59, 4, tzinfo=timezone.utc),
         "author_name": "Diana Clarke",
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",

@@ -1,7 +1,14 @@
+from typing import Callable
+
 import flask as f
 
-api = f.Blueprint("api", __name__)
-rule = api.add_url_rule
+# Adding the type annotations here removes a whole lot of 'Cannot
+# determine type of "rule"'. These are as of a cyclic definition (/import). See
+# `[has-type]` err code in
+# https://mypy.readthedocs.io/en/stable/error_code_list.html Related:
+# https://github.com/python/mypy/issues/6356
+api: f.Blueprint = f.Blueprint("api", __name__)
+rule: Callable = api.add_url_rule
 
 
 from ._errors import *  # noqa

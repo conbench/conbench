@@ -202,11 +202,14 @@ class ClusterCreate(marshmallow.Schema):
             "benchmark runs performed on different sets of hardware"
         },
     )
+    # Note(JP): `optional` in the name conflicts with `required=True`.
+    # This is confusing for API users.
     optional_info = marshmallow.fields.Dict(
         required=True,
         metadata={
             "description": "Additional optional information about the cluster, which is not likely to impact the "
-            "benchmark performance (e.g. region, settings like logging type, etc)."
+            "benchmark performance (e.g. region, settings like logging type, etc). "
+            "Despite the name, this field is required. An empty dictionary can be passed."
         },
     )
 

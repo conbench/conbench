@@ -1,9 +1,9 @@
-FROM python:3.10
+FROM python:3.11
 
-COPY requirements-build.txt /tmp/
-COPY requirements-test.txt /tmp/
-RUN pip install -r /tmp/requirements-build.txt
-RUN pip install -r /tmp/requirements-test.txt
+COPY requirements-webapp.txt /tmp/
+COPY requirements-dev.txt /tmp/
+RUN pip install -r /tmp/requirements-webapp.txt
+RUN pip install -r /tmp/requirements-dev.txt
 
 # This Dockerfile currently defines the image used for production environments.
 # It also contains all test dependencies and most CI dependencies because it's

@@ -79,7 +79,7 @@ def test_runner_simple_benchmark_that_fails():
 
     result = benchmark.conbench.published_benchmark
     assert not BenchmarkFacadeSchema.create.validate(result)
-    print(result)
+    # print(result)
     assert_keys_equal(result, EXAMPLE_WITH_ERROR)
     for key in ["info", "context", "github", "machine_info"]:
         assert_keys_equal(result[key], EXAMPLE_WITH_ERROR[key])

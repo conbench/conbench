@@ -1,4 +1,5 @@
 import logging
+from datetime import timezone
 from typing import Optional
 
 import flask as f
@@ -6,6 +7,8 @@ import marshmallow
 import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship
+
+import conbench.util
 
 from ..db import Session
 from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
@@ -34,7 +37,9 @@ class Run(Base, EntityMixin):
     id = NotNull(s.String(50), primary_key=True)
     name = Nullable(s.String(250))
     reason = Nullable(s.String(250))
+    # tz-naive timestamp expected to refer to UTC time.
     timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
+    # tz-naive timestamp expected to refer to UTC time.
     finished_timestamp = Nullable(s.DateTime(timezone=False))
     info = Nullable(postgresql.JSONB)
     error_info = Nullable(postgresql.JSONB)
@@ -107,8 +112,8 @@ class Run(Base, EntityMixin):
         self,
         commit_limit: int = 20,
         on_default_branch: bool = False,
-        case_id: str = None,
-        context_id: str = None,
+        case_id: Optional[str] = None,
+        context_id: Optional[str] = None,
     ) -> Optional["Run"]:
         """Return the closest ancestor of this Run, where the ancestor run:
 
@@ -206,8 +211,11 @@ class _Serializer(EntitySerializer):
             "id": run.id,
             "name": run.name,
             "reason": run.reason,
+            # TODO: also use tznaive_dt_to_aware_iso8601_for_api
             "timestamp": run.timestamp.isoformat(),
-            "finished_timestamp": run.finished_timestamp.isoformat()
+            "finished_timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
+                run.finished_timestamp
+            )
             if run.finished_timestamp
             else None,
             "info": run.info,
@@ -318,7 +326,13 @@ class GitHubCreate(marshmallow.Schema):
 
 
 field_descriptions = {
-    "finished_timestamp": "The datetime the run finished",
+    "finished_timestamp": (
+        "A datetime string indicating the time at which the run finished. "
+        "Expected to be in ISO 8601 notation. Timezone-aware notation "
+        "recommended. Timezone-naive strings are interpreted in UTC. "
+        "Fractions of seconds can be provided but are not returned by the "
+        "API. Example value: 2022-11-25T22:02:42Z"
+    ),
     "info": "Run's metadata",
     "error_info": "Metadata for run's error that prevented all or some benchmarks from running",
     "error_type": """Run's error type. Possible values: none, catastrophic, partial.
@@ -349,6 +363,16 @@ class _RunFacadeSchemaCreate(marshmallow.Schema):
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
     cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
 
+    @marshmallow.post_load
+    def recalc_finished_time(self, data, **kwargs):
+        curdt = data.get("finished_timestamp")
+
+        if curdt is None:
+            return data
+
+        data["finished_timestamp"] = conbench.util.dt_shift_to_utc(curdt)
+        return data
+
     @marshmallow.validates_schema
     def validate_hardware_info_fields(self, data, **kwargs):
         if "machine_info" not in data and "cluster_info" not in data:
@@ -362,10 +386,17 @@ class _RunFacadeSchemaCreate(marshmallow.Schema):
 
 
 class _RunFacadeSchemaUpdate(marshmallow.Schema):
-    finished_timestamp = marshmallow.fields.DateTime(
+    # `AwareDateTime` with `default_timezone` set to UTC: naive datetimes are
+    # set this timezone.
+    finished_timestamp = marshmallow.fields.AwareDateTime(
         required=False,
-        metadata={"description": field_descriptions["finished_timestamp"]},
+        format="iso",
+        default_timezone=timezone.utc,
+        metadata={
+            "description": field_descriptions["finished_timestamp"],
+        },
     )
+
     info = marshmallow.fields.Dict(
         required=False, metadata={"description": field_descriptions["info"]}
     )
@@ -375,6 +406,16 @@ class _RunFacadeSchemaUpdate(marshmallow.Schema):
     error_type = marshmallow.fields.String(
         required=False, metadata={"description": field_descriptions["error_type"]}
     )
+
+    @marshmallow.post_load
+    def recalc_finished_time(self, data, **kwargs):
+        curdt = data.get("finished_timestamp")
+
+        if curdt is None:
+            return data
+
+        data["finished_timestamp"] = conbench.util.dt_shift_to_utc(curdt)
+        return data
 
 
 class RunFacadeSchema:

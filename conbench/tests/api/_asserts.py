@@ -13,7 +13,8 @@ class ApiEndpointTest:
 
     def login(self, client, email, password):
         data = {"email": email, "password": password}
-        client.post("/api/login/", json=data)
+        resp = client.post("/api/login/", json=data)
+        assert resp.status_code == 204, resp.text
 
     def create_random_user(self):
         return create_random_user()
@@ -51,7 +52,7 @@ class ApiEndpointTest:
             "code": 400,
             "name": "Bad Request",
             "description": message,
-        }, r.json
+        }
         # TODO: https://github.com/marshmallow-code/marshmallow/issues/120
         # errors = BadRequestSchema().validate(r.json)
         # assert errors == {}, errors
@@ -143,7 +144,7 @@ class PostEnforcer(Enforcer):
         data = copy.deepcopy(self.valid_payload)
         data["id"] = "some id"
         response = client.post(self.url, json=data)
-        message = {"id": ["Read-only field."]}
+        message = {"id": ["Unknown field."]}
         self.assert_400_bad_request(response, message)
 
     def test_required_fields(self, client):
@@ -185,22 +186,21 @@ class PostEnforcer(Enforcer):
     def test_empty_payload(self, client):
         self.authenticate(client)
         response = client.post(self.url, json={})
-        message = {"_errors": ["Empty request body."]}
+        # message = {"_errors": ["Empty request body."]}
+        message = {}
         for field in self.required_fields:
             message[field] = ["Missing data for required field."]
         self.assert_400_bad_request(response, message)
 
     def test_not_application_json(self, client):
         self.authenticate(client)
-        response = client.post(self.url, data=self.valid_payload)
-        message = {
-            "_errors": ["Empty request body."],
-            "_schema": [
-                "Invalid input type.",
-                "Did you specify Content-type: application/json?",
-            ],
+        resp = client.post(self.url, data=self.valid_payload)
+        assert resp.json == {
+            "code": 400,
+            "name": "Bad Request",
+            "description": "Did not attempt to load JSON data because the "
+            "request Content-Type was not 'application/json'.",
         }
-        self.assert_400_bad_request(response, message)
 
 
 class PutEnforcer(Enforcer):
@@ -226,7 +226,7 @@ class PutEnforcer(Enforcer):
         entity = self._create_entity_to_update()
         data = {"id": "some id"}
         response = client.put(self.url.format(entity.id), json=data)
-        message = {"id": ["Read-only field."]}
+        message = {"id": ["Unknown field."]}
         self.assert_400_bad_request(response, message)
 
     def test_empty_fields(self, client):
@@ -269,12 +269,10 @@ class PutEnforcer(Enforcer):
     def test_not_application_json(self, client):
         self.authenticate(client)
         entity = self._create_entity_to_update()
-        response = client.put(self.url.format(entity.id), data=self.valid_payload)
-        message = {
-            "_errors": ["Empty request body."],
-            "_schema": [
-                "Invalid input type.",
-                "Did you specify Content-type: application/json?",
-            ],
+        resp = client.put(self.url.format(entity.id), data=self.valid_payload)
+        assert resp.json == {
+            "code": 400,
+            "name": "Bad Request",
+            "description": "Did not attempt to load JSON data because the "
+            "request Content-Type was not 'application/json'.",
         }
-        self.assert_400_bad_request(response, message)

@@ -422,6 +422,92 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
                     benchmark_result.run.hardware, attr
                 ) == int(value)
 
+    def test_create_benchmark_after_run_different_machine_info(self, client):
+        """
+        This test documents current behavior that I was initially only
+        suspecting and then wanted to confirm with code.
+
+        We can of course re-think the specification (expected behavior).
+
+        This is a special case in the API surface, but because it's API
+        behavior it's important that we think about specification first
+        (desired behavior), and then judge about the implementation.
+
+        I think this is an artifact of us allowing for potentially many
+        concurrent executors to submit results within a specific run without
+        requiring special coordination between those executors. That is, it is
+        expected that the submitted run metadata (like name and machine info)
+        are equivalent across all BenchmarkResult entities, and the fastest
+        submitter wins the price of DB insertion, while the other racers get
+        their info silently dropped.
+        """
+
+        def assert_machine_info_equals_hardware(hwdict, midict):
+            # Add 'type' key to machine_info dict, and intify all values
+            # that allow for doing so.
+            cmp = {"type": "machine"}
+            for k, v in midict.items():
+                try:
+                    cmp[k] = int(v)
+                except (TypeError, ValueError):
+                    cmp[k] = v
+
+            # Remove id from hardware dict.
+            ref = hwdict.copy()
+            del ref["id"]
+
+            # Compare (processed) machine info to reference
+            assert ref == cmp
+
+        self.authenticate(client)
+
+        machine_info_A = _fixtures.MACHINE_INFO.copy()
+        run_payload = _fixtures.VALID_RUN_PAYLOAD.copy()
+        run_payload["machine_info"] = machine_info_A
+        resp = client.post("/api/runs/", json=run_payload)
+        assert resp.status_code == 201, resp.text
+
+        # Read back Run details from API.
+        resp = client.get(f"/api/runs/{run_payload['id']}/")
+        assert resp.status_code == 200, resp.text
+        run_asindb = resp.json
+
+        # Confirm that the above's Run submission created a Hardware entity
+        # representing the details in `machine_info_A`.
+        assert_machine_info_equals_hardware(run_asindb["hardware"], machine_info_A)
+
+        # Create a copy of the above's machine_info example object with a
+        # different CPU model name. This is set in
+        # BenchmarkResultCreate.machine_info.cpu_model_name and will be
+        # silently dropped
+        lost_cpu_model_name = "qubit1337"
+        machine_info_B = _fixtures.MACHINE_INFO.copy()
+        machine_info_B["cpu_model_name"] = lost_cpu_model_name
+
+        # Submit BenchmarkResultCreate structure, refer to the previously
+        # submitted Run entity (via ID), but provide _different_ machine_info.
+        bmresult_payload = self.valid_payload.copy()
+        bmresult_payload["run_id"] = run_payload["id"]
+        bmresult_payload["machine_info"] = machine_info_B
+        resp = client.post("/api/benchmarks/", json=bmresult_payload)
+        assert resp.status_code == 201, resp.text
+        bid = resp.json["id"]
+
+        # Read back BenchmarkResult details from API.
+        resp = client.get(f"/api/benchmarks/{bid}/")
+        assert resp.status_code == 200, resp.text
+        bm_asindb = resp.json
+        # Confirm that this benchmark result is associated with the above's run
+        # entity.
+        assert bm_asindb["run_id"] == run_asindb["id"]
+
+        # Read back Run details again from API.
+        resp = client.get(f"/api/runs/{run_payload['id']}/")
+        assert resp.status_code == 200, resp.text
+        run_asindb2 = resp.json
+        # Confirm that machine_info_A took precedence.
+        assert_machine_info_equals_hardware(run_asindb2["hardware"], machine_info_A)
+
     def test_create_benchmark_with_error(self, client):
         self.authenticate(client)
         response = client.post("/api/benchmarks/", json=self.valid_payload_with_error)
@@ -958,3 +1044,30 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         # the future it might be reasonable to not show the context ID, but
         # maybe only a helpful placeholder such as "empty context".
         assert context_id in resp.text
+
+    @pytest.mark.parametrize(
+        "timeinput, timeoutput",
+        [
+            ("2023-11-25 21:02:41", "2023-11-25T21:02:41Z"),
+            ("2023-11-25 22:02:36Z", "2023-11-25T22:02:36Z"),
+            ("2023-11-25T22:02:36Z", "2023-11-25T22:02:36Z"),
+            # That next pair confirms timezone conversion.
+            ("2023-11-25 23:02:00+07:00", "2023-11-25T16:02:00Z"),
+            # Confirm that fractions of seconds can be provided, but are not
+            # returned (we can dispute that of course).
+            ("2023-11-25T22:02:36.123456Z", "2023-11-25T22:02:36Z"),
+        ],
+    )
+    def test_create_benchmark_timestamp_timezone(self, client, timeinput, timeoutput):
+        self.authenticate(client)
+
+        d = self.valid_payload.copy()
+        d["timestamp"] = timeinput
+        resp = client.post("/api/benchmarks/", json=d)
+        assert resp.status_code == 201, resp.text
+        bid = resp.json["id"]
+
+        resp = client.get(f"/api/benchmarks/{bid}/")
+        assert resp.status_code == 200, resp.text
+
+        assert resp.json["timestamp"] == timeoutput

@@ -116,6 +116,10 @@ table.dataTable td {
   padding: 3px;
 }
 
+.hide-text{
+   display: none;
+}
+
 .custom-input-text {
   font-weight: normal;
   font-size: 12px;

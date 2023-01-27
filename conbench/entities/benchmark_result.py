@@ -1,3 +1,5 @@
+from datetime import timezone
+
 import flask as f
 import marshmallow
 import numpy as np
@@ -5,6 +7,8 @@ import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship
+
+import conbench.util
 
 from ..config import Config
 from ..entities._comparator import z_improvement, z_regression
@@ -44,6 +48,9 @@ class BenchmarkResult(Base, EntityMixin):
     unit = Nullable(s.Text)
     time_unit = Nullable(s.Text)
     batch_id = Nullable(s.Text)
+    # Do not store timezone information in the DB. Instead, follow timezone
+    # convention: the application code must make sure that what we store is the
+    # user-given time in UTC.
     timestamp = NotNull(s.DateTime(timezone=False))
     iterations = Nullable(s.Integer)
     min = Nullable(s.Numeric, check("min>=0"))
@@ -60,6 +67,7 @@ class BenchmarkResult(Base, EntityMixin):
 
     @staticmethod
     def create(data):
+        """Create BenchmarkResult and write to database."""
         tags = data["tags"]
         has_error = "error" in data
         has_stats = "stats" in data
@@ -144,7 +152,12 @@ class BenchmarkResult(Base, EntityMixin):
         if not info:
             info = Info.create({"tags": data["info"]})
 
-        # create if not exists
+        # Create a corresponding `run` entity in the database if it doesn't
+        # exist yet. Use the user-given `id` (string) as primary key. If the
+        # Run is already known in the database then only update the
+        # `has_errors` property, if necessary. All other run-specific
+        # properties provided as part of this BenchmarkCreate structure (like
+        # `machine_info` and `run_name`) get silently ignored.
         run = Run.first(id=data["run_id"])
         if run:
             if has_error:
@@ -167,6 +180,9 @@ class BenchmarkResult(Base, EntityMixin):
 
         benchmark_result_data["run_id"] = data["run_id"]
         benchmark_result_data["batch_id"] = data["batch_id"]
+
+        # At this point `data["timestamp"]` is expected to be a tz-aware
+        # datetime object in UTC.
         benchmark_result_data["timestamp"] = data["timestamp"]
         benchmark_result_data["validation"] = data.get("validation")
         benchmark_result_data["change_annotations"] = {
@@ -310,7 +326,9 @@ class _Serializer(EntitySerializer):
             "id": benchmark_result.id,
             "run_id": benchmark_result.run_id,
             "batch_id": benchmark_result.batch_id,
-            "timestamp": benchmark_result.timestamp.isoformat(),
+            "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
+                benchmark_result.timestamp
+            ),
             "tags": tags,
             "optional_benchmark_info": benchmark_result.optional_benchmark_info,
             "validation": benchmark_result.validation,
@@ -375,26 +393,90 @@ or improvements, should we treat data from before this result as incomparable?
 class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     run_id = marshmallow.fields.String(
         required=True,
-        metadata={"description": "Unique identifier for a run of benchmarks."},
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                Identifier for a Run (required). This can be the ID of a known
+                Run (as returned by /api/runs) or a new ID in which case a new
+                Run entity is created in the database.
+                """
+            )
+        },
     )
     run_name = marshmallow.fields.String(
         required=False,
         metadata={
-            "description": "Name for the run. When run in CI, this should be of the style '{run reason}: {commit sha}'."
+            "description": conbench.util.dedent_rejoin(
+                """
+                Name for the Run (optional, does not need to be unique). Can be
+                useful for implementing a custom naming convention. For
+                organizing your benchmarks, and for enhanced search &
+                discoverability. Ignored when Run was previously created.
+                """
+            )
         },
     )
     run_reason = marshmallow.fields.String(
         required=False,
         metadata={
-            "description": "Reason for run (commit, pull request, manual, etc). This should be low cardinality. 'commit' is a special run_reason for commits on the default branch which are used for history"
+            "description": conbench.util.dedent_rejoin(
+                """
+                Reason for the Run (optional, does not need to be unique).
+                Ignored when Run was previously created.
+                """
+            )
         },
     )
     batch_id = marshmallow.fields.String(required=True)
-    timestamp = marshmallow.fields.DateTime(
-        required=True, metadata={"description": "Timestamp the benchmark ran"}
+
+    # `AwareDateTime` with `default_timezone` set to UTC: naive datetimes are
+    # set this timezone.
+    timestamp = marshmallow.fields.AwareDateTime(
+        required=True,
+        format="iso",
+        default_timezone=timezone.utc,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                A datetime string indicating the time at which the benchmark
+                was started. Expected to be in ISO 8601 notation.
+                Timezone-aware notation recommended. Timezone-naive strings are
+                interpreted in UTC. Fractions of seconds can be provided but
+                are not returned by the API. Example value:
+                2022-11-25T22:02:42Z. This timestamp defines the default
+                sorting order when viewing a list of benchmarks via the UI or
+                when enumerating benchmarks via the /api/benchmarks/ HTTP
+                endpoint.
+                """
+            )
+        },
     )
-    machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
-    cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
+    machine_info = marshmallow.fields.Nested(
+        MachineSchema().create,
+        required=False,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                Precisely one of `machine_info` and `cluster_info` must be
+                provided. The data is however ignored when the Run (referred to
+                by `run_id`) was previously created.
+                """
+            )
+        },
+    )
+    cluster_info = marshmallow.fields.Nested(
+        ClusterSchema().create,
+        required=False,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                Precisely one of `machine_info` and `cluster_info` must be
+                provided. The data is however ignored when the Run (referred to
+                by `run_id`) was previously created.
+                """
+            )
+        },
+    )
     stats = marshmallow.fields.Nested(BenchmarkResultSchema().create, required=False)
     error = marshmallow.fields.Dict(
         required=False,
@@ -414,7 +496,10 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
             "description": "Optional information about Benchmark results (e.g., telemetry links, logs links). These are unique to each benchmark that is run, but are information that aren't reasonably expected to impact benchmark performance. Helpful for adding debugging or additional links and context for a benchmark (free-form JSON)"
         },
     )
-    context = marshmallow.fields.Dict(
+    # Note, this mypy error is interesting: Incompatible types in assignment
+    # (expression has type "marshmallow.fields.Dict", base class "Schema"
+    # defined the type as "Dict[Any, Any]")
+    context = marshmallow.fields.Dict(  # type: ignore[assignment]
         required=True,
         metadata={
             "description": "Information about the context the benchmark was run in (e.g. compiler flags, benchmark langauge) that are reasonably expected to have an impact on benchmark performance. This information is expected to be the same across a number of benchmarks. (free-form JSON)"
@@ -453,6 +538,16 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
     def validate_stats_or_error_field_is_present(self, data, **kwargs):
         if "stats" not in data and "error" not in data:
             raise marshmallow.ValidationError("Either stats or error field is required")
+
+    @marshmallow.post_load
+    def recalc_timestamp(self, data, **kwargs):
+        curdt = data.get("timestamp")
+
+        if curdt is None:
+            return data
+
+        data["timestamp"] = conbench.util.dt_shift_to_utc(curdt)
+        return data
 
 
 class _BenchmarkFacadeSchemaUpdate(marshmallow.Schema):
