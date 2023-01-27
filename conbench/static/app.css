@@ -115,3 +115,7 @@ table.dataTable td {
   width: fit-content;
   padding: 3px;
 }
+
+.hide-text{
+   display: none;
+}

@@ -71,9 +71,13 @@
                     <td>
                          <div class="table-entry">{{ run.hardware.name }}</div>
                     </td>
-
                     <td>
-                         <div class="table-entry"><a href="{{ run.commit.url }}">{{ run.commit.sha[:7] }}</a></div>
+                         <div class="table-entry">
+                             <!--NOTE: enables full commit SHA search while maintaining partial SHA display for UI -->
+                             <a href="{{ run.commit.url }}"> {{ run.commit.sha[:7] }}
+                             <p class="hide-text">{{ run.commit.sha }}</p>
+                         </a>
+                         </div>
                     </td>
 
                     <td>
