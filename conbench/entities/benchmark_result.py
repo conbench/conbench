@@ -157,8 +157,7 @@ class BenchmarkResult(Base, EntityMixin):
         # Run is already known in the database then only update the
         # `has_errors` property, if necessary. All other run-specific
         # properties provided as part of this BenchmarkCreate structure (like
-        # `machine_info` and `run_name`) get silently ignored. already known in
-        # the database.
+        # `machine_info` and `run_name`) get silently ignored.
         run = Run.first(id=data["run_id"])
         if run:
             if has_error:
@@ -397,9 +396,9 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Identifier for a Run. This can be the ID of a known Run (as
-                returned by /api/runs) or a new ID in which case a new Run
-                entity is created in the database.
+                Identifier for a Run (required). This can be the ID of a known
+                Run (as returned by /api/runs) or a new ID in which case a new
+                Run entity is created in the database.
                 """
             )
         },
@@ -409,9 +408,10 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Name for the run. When run in CI, this should be of the style
-                '{run reason}: {commit sha}'. Ignored when run was previously
-                created.
+                Name for the Run (optional, does not need to be unique). Can be
+                useful for implementing a custom naming convention. For
+                organizing your benchmarks, and for enhanced search &
+                discoverability. Ignored when Run was previously created.
                 """
             )
         },
@@ -421,10 +421,8 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Reason for run (commit, pull request, manual, etc). This should
-                be low cardinality. 'commit' is a special run_reason for
-                commits on the default branch which are used for history.
-                Ignored when run was previously created.
+                Reason for the Run (optional, does not need to be unique).
+                Ignored when Run was previously created.
                 """
             )
         },

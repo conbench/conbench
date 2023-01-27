@@ -1007,15 +1007,15 @@
                         "type": "object",
                     },
                     "run_id": {
-                        "description": "Identifier for a Run. This can be the ID of a known Run (as returned by /api/runs) or a new ID in which case a new Run entity is created in the database.",
+                        "description": "Identifier for a Run (required). This can be the ID of a known Run (as returned by /api/runs) or a new ID in which case a new Run entity is created in the database.",
                         "type": "string",
                     },
                     "run_name": {
-                        "description": "Name for the run. When run in CI, this should be of the style '{run reason}: {commit sha}'. Ignored when run was previously created.",
+                        "description": "Name for the Run (optional, does not need to be unique). Can be useful for implementing a custom naming convention. For organizing your benchmarks, and for enhanced search & discoverability. Ignored when Run was previously created.",
                         "type": "string",
                     },
                     "run_reason": {
-                        "description": "Reason for run (commit, pull request, manual, etc). This should be low cardinality. 'commit' is a special run_reason for commits on the default branch which are used for history. Ignored when run was previously created.",
+                        "description": "Reason for the Run (optional, does not need to be unique). Ignored when Run was previously created.",
                         "type": "string",
                     },
                     "stats": {"$ref": "#/components/schemas/BenchmarkResultCreate"},
@@ -1350,7 +1350,7 @@
                 "tags": ["Benchmarks"],
             },
             "post": {
-                "description": "Submit a BenchmarkResult within a specific Run (as defined by its Run ID). If the Run is not known yet in the database it gets implicitly created, using details provided in this request. If the Run is already known then Run-specific info in this request is silently ignored.",
+                "description": "Submit a BenchmarkResult within a specific Run.\nIf the Run (as defined by its Run ID) is not known yet in the database it gets implicitly created, using details provided in this request. If the Run ID matches an existing run, then the rest of the fields describing the Run (such as name, hardware info, ...} are silently ignored.",
                 "requestBody": {
                     "content": {
                         "application/json": {
