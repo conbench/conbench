@@ -153,9 +153,10 @@ function free_text_column_search(data_table_id, column_indexes) {
         table.columns(column_indexes).every(function() {
             var that = this;
             var title = this.header().textContent;
-            $('<input class="custom-input-text custom-search-box" type="text" placeholder="🔍 ' + title + '" />')
+            $(`<input class="custom-input-text custom-search-box" type="text" placeholder="🔍 ${title}"
+                onClick="if(event.stopPropagation!==undefined){event.preventDefault(); event.stopPropagation();}event.cancelBubble=true;"/>`)
                 .appendTo(this.header())
-                .on('keyup change clear', function() { //column search/sorting triggered on every input
+                .on('keyup change clear', function() { //column search/sorting triggered on keypress
                             that
                             .search(this.value)
                             .draw();
@@ -163,6 +164,7 @@ function free_text_column_search(data_table_id, column_indexes) {
         });
     })
 }
+
 
 $("#confirm-delete").on("show.bs.modal", function(e) {
     $(this).find("#confirm-delete-message").html($(e.relatedTarget).data("message"));
