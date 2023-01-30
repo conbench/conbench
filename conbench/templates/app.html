@@ -156,22 +156,22 @@ function specific_column_search(data_table_id, column_indexes) {
         table.columns(column_indexes).every(function() {
             var that = this;
             var reset = ""
-            var mySelectList = $("<select></select>")
+            var mySelectList = $("<select class='custom-search-box'></select>")
                 .appendTo(this.header())
                 .on("change", function() {
                     that.search($(this).val()).draw();
                 });
             mySelectList.append(
-                $(`<option class="custom-search-box" value="${reset}">${reset}</option>`)
+                $(`<option value="${reset}">${reset}</option>`)
             );
             this.cache("search").unique().sort().each(function(param) {
                 if (param !== "") {
                     mySelectList.append(
-                        $(`<option class="custom-search-box" value="${param}">${param}</option>`)
+                        $(`<option value="${param}">${param}</option>`)
                     );
                 } else {
                     mySelectList.append(
-                        $(`<option class="custom-search-box" value="${param}">null</option>`)
+                        $(`<option value="${param}">null</option>`)
                     );
                 }           
             });
@@ -227,7 +227,7 @@ function column_search_implementation(data_table_id) {
                 free_text_column_search(data_table_id, index)
             }
             else if (item == 1) {
-                $(`<p class="message-header"> 👀 only one/null value found</p>`).appendTo(
+                $(`<p class="message-header"> 👀 only one/no value found</p>`).appendTo(
                     table.columns([index]).header())
             }
             else{

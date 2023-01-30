@@ -128,7 +128,7 @@ table.dataTable td {
 
 .custom-search-box{
    box-sizing: content-box;
-   width: 100%;
+   width: 70%;
    min-width: 80px;
    padding-right: initial;
    padding-left: initial;
