@@ -12,6 +12,7 @@ from sqlalchemy.orm import Query
 
 from conbench import util
 
+from ..config import Config
 from ..db import Session
 from ..entities._entity import (
     Base,
@@ -326,13 +327,12 @@ def backfill_default_branch_commits(repository: str, new_commit: Commit) -> None
 
     if last_tracked_commit:
         since = last_tracked_commit[0].timestamp
-    elif os.getenv("DB_HOST") == "localhost":
+    elif Config.TESTING:
         log.info(
-            "Your DB_HOST is localhost, so assuming you're running "
-            "conbench/tests/populate_local_conbench.py. Backfilling the DB only from "
-            "2022-01-01 in order to save time."
+            "Config.TESTING is true Backfilling the DB only from "
+            "2022-05-01 in order to save time."
         )
-        since = datetime(2022, 1, 1)
+        since = datetime(2022, 8, 1)
     else:
         since = datetime(1970, 1, 1)
 
