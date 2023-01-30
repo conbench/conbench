@@ -133,3 +133,11 @@ table.dataTable td {
    padding-right: initial;
    padding-left: initial;
 }
+
+.message-header{
+  font-weight: normal;
+  font-size: 10px;
+  padding: 3px;
+  border-style: dotted;
+  border-width: thin;
+}
