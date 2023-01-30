@@ -227,7 +227,7 @@ function column_search_implementation(data_table_id) {
                 free_text_column_search(data_table_id, index)
             }
             else if (item == 1) {
-                $(`<p class="message-header"> 👀 only one value found</p>`).appendTo(
+                $(`<p class="message-header"> 👀 only one/null value found</p>`).appendTo(
                     table.columns([index]).header())
             }
             else{
