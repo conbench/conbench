@@ -123,8 +123,14 @@
           "searchPlaceholder": "commit hash works too",
       },
 });
-
 enable_search_query_string('#runs');
+
+/* specify the HTML table id (string) and the indexes of the columns for
+ which search functionality should be enabled in an array format
+*/
+specific_column_search('#runs', [6]);
 free_text_column_search('#runs', [1,3,4,5]);
+
+
 </script>
 {% endblock %}
