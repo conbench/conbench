@@ -230,6 +230,9 @@ function column_search_implementation(data_table_id) {
                 $(`<p class="message-header"> 👀 only one value found</p>`).appendTo(
                     table.columns([index]).header())
             }
+            else{
+                console.log("Unidentified value encountered")
+            }
         });
     })
 }
