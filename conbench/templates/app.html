@@ -162,16 +162,16 @@ function specific_column_search(data_table_id, column_indexes) {
                     that.search($(this).val()).draw();
                 });
             mySelectList.append(
-                $(`<option value="${reset}">${reset}</option>`)
+                $(`<option class="custom-search-box" value="${reset}">${reset}</option>`)
             );
             this.cache("search").unique().sort().each(function(param) {
                 if (param !== "") {
                     mySelectList.append(
-                        $(`<option value="${param}">${param}</option>`)
+                        $(`<option class="custom-search-box" value="${param}">${param}</option>`)
                     );
                 } else {
                     mySelectList.append(
-                        $(`<option value="${param}">null</option>`)
+                        $(`<option class="custom-search-box" value="${param}">null</option>`)
                     );
                 }           
             });
@@ -206,6 +206,33 @@ function free_text_column_search(data_table_id, column_indexes) {
     })
 }
 
+/*
+INFO:
+    Function to check unique value count and set the required search type
+ */
+function column_search_implementation(data_table_id) {
+    $(document).ready(function() {
+        var table = $(data_table_id).DataTable();
+        var unique_count = [];
+        table.columns().every( function () {
+            var current = this;
+            //array of unique count for data points within each column
+            unique_count.push(current.data().unique().count())
+        });
+        unique_count.forEach(function (item, index) {
+            if (item < 10 && item > 1) {
+                specific_column_search(data_table_id, index)
+            }
+            else if (item > 10){
+                free_text_column_search(data_table_id, index)
+            }
+            else if (item == 1) {
+                $(`<p class="message-header"> 👀 only one value found</p>`).appendTo(
+                    table.columns([index]).header())
+            }
+        });
+    })
+}
 
 $("#confirm-delete").on("show.bs.modal", function(e) {
     $(this).find("#confirm-delete-message").html($(e.relatedTarget).data("message"));
