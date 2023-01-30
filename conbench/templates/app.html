@@ -150,7 +150,7 @@ INPUTS:
  data_table_id: string
  column_indexes: array
  */
-function specific_column_search(data_table_id, column_indexes) {
+function dropdown_column_search(data_table_id, column_indexes) {
     $(document).ready(function() {
         var table = $(data_table_id).DataTable();
         table.columns(column_indexes).every(function() {
@@ -208,7 +208,12 @@ function free_text_column_search(data_table_id, column_indexes) {
 
 /*
 INFO:
-    Function to check unique value count and set the required search type
+    Function to check unique value count and set the required search type.
+        - Unique values <10 & >1 [specific_column_search]: drop-down based search is implemented
+        - Unique values >10 [free_text_column_search]: free text search is implemented
+        - If there is no data OR only single data point: a message is displayed ("only one/no value found")
+INPUT:
+    data_table_id: string
  */
 function column_search_implementation(data_table_id) {
     $(document).ready(function() {
@@ -221,7 +226,7 @@ function column_search_implementation(data_table_id) {
         });
         unique_count.forEach(function (item, index) {
             if (item < 10 && item > 1) {
-                specific_column_search(data_table_id, index)
+                dropdown_column_search(data_table_id, index)
             }
             else if (item > 10){
                 free_text_column_search(data_table_id, index)
