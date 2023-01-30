@@ -2,7 +2,7 @@ import functools
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 import flask as f
@@ -330,9 +330,9 @@ def backfill_default_branch_commits(repository: str, new_commit: Commit) -> None
     elif Config.TESTING:
         log.info(
             "Config.TESTING is true Backfilling the DB only from "
-            "2022-05-01 in order to save time."
+            "the last 60 days in order to save time."
         )
-        since = datetime(2022, 8, 1)
+        since = datetime.today() - timedelta(days=60)
     else:
         since = datetime(1970, 1, 1)
 
