@@ -32,7 +32,7 @@ def main():
     log.info("start create_benchmarks_data()")
     create_benchmarks_data()
     log.info("start create_benchmarks_data()")
-    create_benchmars_data_with_history()
+    create_benchmarks_data_with_history()
 
 
 def generate_benchmarks_data(
@@ -358,7 +358,7 @@ def create_benchmarks_data():
     update_run_with_info(run_id, timestamp)
 
 
-def create_benchmars_data_with_history():
+def create_benchmarks_data_with_history():
     # 7 commits in a row in apache/arrow, the commented one is missing
     commits = [
         "17d6fdc0e9c00534e4de7bfb193c33c86cab7e15",
@@ -424,21 +424,30 @@ def create_benchmars_data_with_history():
 
 def generate_synthetic_benchmark_history():
 
-    commits = [c.strip() for c in reversed(ARROW_COMMIT_HASH_LINES_50.splitlines())]
+    commits = [
+        c.strip()
+        for c in reversed(ARROW_COMMIT_HASH_LINES_50.splitlines())
+        if c.strip()
+    ]
     benchmark_name = "dummy-bench"
 
     distr_mean = 20.0
-    # This is to simulate the real-world effect of there being a theoretical
-    # optimum: the fastest benchmark duration time with all sources of noise
-    # being silenced.
+    # `lower_bound` is to simulate the real-world effect of there being a
+    # theoretical optimum: the fastest benchmark duration time with all sources
+    # of noise being silenced.
     lower_bound = 17.5
     slowdown_offset = distr_mean * 0.1
     slowdown_lin = distr_mean * 0.1
     distribution = statistics.NormalDist(mu=20.0, sigma=2)
 
+    # Collect benchmark IDs as returned by the Conbench API after submission.
     benchmark_ids = []
 
     def sample_slowdown(s):
+        # "slowdown" refers to the idea that the individual number has a time
+        # unit (measuring a duration) and that a certain benchmark result was
+        # affected by a more or less significant slowdown effect, increasing
+        # this sample's duration.
         return s + slowdown_offset + slowdown_lin * random.random()
 
     for idx, commit_hash in enumerate(commits, 1):
@@ -464,7 +473,7 @@ def generate_synthetic_benchmark_history():
             mean=None,
         )
 
-        # Overwrite duration / stats property. Generate with statistical
+        # Set (overwrite) duration / stats property. Generate with statistical
         # properties.
         bdata["stats"] = None
 
@@ -505,65 +514,71 @@ def generate_synthetic_benchmark_history():
 
 
 """
-Every 20th commit in the apache/arrow repository, walking the commit tree
-backwards by 1000 commits, starting at commit 85b167c05. Done with the
-following command:
+50 commits of apache/arrow walking backwards from 85b167c0. Obtained with
+this command:
 
-git log --pretty=%P -n 1000 85b167c05c2f93a95b23e8ac4fd4da576ea5b899 | awk 'NR%20<1'
+git log --pretty=%P -n 50 85b167c05c2f93a95b23e8ac4fd4da576ea5b899
+
+If in the future we want to do e.g. every 20th commit in the apache/arrow
+repository, one could do:
+
+git log --pretty=%P -n 1000 85b167c05c2f93a95b23e8ac4fd4da576ea5b899 | awk
+'NR%20<1'
+
+Not done right now to easen CI's usage of the GitHub HTTP API and to keep the
+time-to-comletion of `make db-populate` lowish.
 """
 ARROW_COMMIT_HASH_LINES_50 = """
+    33d677c480ab8aa841e4dc8dbffeb4cd40a00731
+    7e02fde6527720f5e859b3c27036661f8e5ad03d
+    92895c9b54dce55637191e15f83de34a60c9e5ab
+    154de48f0b6c16ae5acc384ed8383704253afd96
+    5f3df1255e6e0b7d2d4e197afec447769335f087
+    0121ae73f4852ee3c5a6870ed5583916662a35be
+    11d286eafb72b630baf897e619c84ecdfc6b723f
+    4d31b1ef70be330356ed9119f63931f8fd90e6d1
+    878d5cac09073cee72de000a7e8418ce8a3a31b8
+    211925c92ecb0cd5d69b518481bcd6f60075864f
+    37f5a3584aa44a919d3a620c7f2b4ad7e56c97c7
+    2acc51a7d5304c3fc6a432f1c09946547ca91d74
+    686610374ca52b39354df668a66e5fd4103b86d7
+    c32b45e3b7b8dd2fdec8fa2bdf65b36eff7016b9
+    385331185ac96b5a20a81b2c5de82158a2641af8
+    3f31b327cd04e79e673b37ee684d438a72367483
+    21d6374d2579c07d75832c5baf06479898e82fd5
+    14ec80f182532b960cd4b5d1e72bcad04ba651da
+    a580f2711750ef507cc57ce48cb431dd700a6166
     6bd847b2aefdb0f10eaf83a3bfe2dc8ee269e8e4
+    d2481a610f7653e1b965366461dd6be0c22c1fda
+    1e4a9914c191eeb0f2415a3bd0b92022647ce93d
+    9fcaa38250d0d7bd59b5fc369a7757e357cf26ca
+    5fce7618b81b6e42fc1331ab49b8fdf6b73de22f
+    d4a0c9e8be8f2730dd80be9934e27aa6bd4a0850
+    040310fe853ca7675e67ba47533087070a6e7ed3
+    25b50932cdf7e8b9b259608b27884ff3d7b90444
+    773b5d815c8dd68a4ff1e3b90f7838ab770a9d27
+    2410d36773d04ebe1b13a54748a947eed6fb304e
+    e5ec942075b079964955729761095547f5ff2a70
+    c6eb4aad30280e1df269f526de057a479c5bc68a
+    c45ce8102eaafb09a02b8638028f62bd01f6a150
+    53d73f8f97516443cdcf98f71c0cbc527dae7dc4
+    ec9a8a322b9486584e51c174b63774fd496783b0
+    4dd5cedb21d7b58d837bdb3c0d35a5cd80fd9f4b
+    44bd06d84c10a4ca8c2c9c8fb044ab7620b9de47
+    8ed4513cecc066148ac782cc5bb94738e51318ad
+    ceec7950e8c6e9a63f48d27c284c56938df3598d
+    793e5f6251255cfe812f4f187f2924224fefad8b
     63b91cc1f7131356537ab9cbb84ed108d6f9102e
-    d00f016315408d653b2a46d3fd8922616264ced4
-    5a9805807456fa1b50671afded557044ab6cc8e6
-    4e9158d373df105f01ba9d6052cfb9ab7ecdcbeb
-    676c804de55bae97e5060e16e650565de163a8fe
-    b21bf749f291367f85ad61751205e7deeee92bc7
-    53c659ae4de8d6b9194cd9f410c078c136a274d2
-    26a426f325256e260a15521d5097efffd2f1ceb1
-    8a8999e94038aa9a60d3ac15741cf9c7abad0433
-    fde7b937c84eaad842ab0457d2490c6c8c244697
-    fb29effbb689014ea50f8bf3814539d5cc8f7021
-    57b81cac8a5d9dfa56c8a224cb2bc9b9046fb807
-    e0e7ba824f56460cdb7dd9ffa6779de93b62d121
-    dab5d3a29394f59045ac6b66f9b697507d6cd1b7
-    3da803db456536782e6ad1cd6cb4f5d08d6a5d6a
-    619b034bd3e14937fa5d12f8e86fa83e7444b886
-    b41bd80187d88f5187a3dc7c42444fbbcca6f7a8
-    4e7d91cd7ad42c10195ef465f5b6f1daf7b72f05
-    7f6c5aeb5388936709642e48aed6419d1e2144a6
-    2f627c213fc328ca7cd058d4455581fc246837da
-    ebda85fcb7bc422427a85ff50fa39551cbd6a41f
-    aeba61663fdd82719e6cc0945aba216958ad6970
-    6bf9a546f296cdeebfe5cc543e1d1351cf251509
-    20626f833be5c1241161054665ccc3906f3da1c3
-    49a53d2fe01145ade49e4af68092af1b73570f9c
-    13ede7bb17992e5afe65daf38006b891c47d918a
-    776626e56b07a3ba69f73b9f75bbc9d4f7fa72b7
-    949e99af5f62ec68b41ce43ec079b1b49c6533e7
-    7a568468119a1a530a8a45d5e66b72c8be807b0f
-    b2871bb4d80695723f8a5ef54c864d9545e6b175
-    58be6a317ff09eefb53c3f0122e4d4eedd166977
-    529f653dfa58887522af06028e5c32e8dd1a14ea
-    b48d2287bef95ed195f6e3721dd34f97fd1735c2
-    29225accecb74b4974920a8acaca55578a44254e
-    9d6598108c4fd93be89f8f5becaa7cb66f929fe7
-    df121b7feec92464a4e97fe535a864537a16be1b
-    fea7cc3a5992622731fd86989b6d87998a79eb6e
-    93b63e8f3b4880927ccbd5522c967df79e926cda
-    04d240318555f5b0207b4deee233f3d36ad4c6fe
-    5f84335fbb1e1467eed07563be00e9338a06ff03
-    f0688d01c465417e6f3515f9344154ad6f47ba22
-    bc1a16cd0eceeffe67893a7e8000d2dd28dcf3f1
-    838687178fda7f82e31668f502e2f94071ce8077
-    6d575b621d14c4b48558da0d366ba007793b2d0c
-    8cac69c809e2ae9d4ba9c10c7b22869c1fd11323
-    036fdf2d03c3a6986109f053d94fc237d2c2f82d
-    545b4313d6db2dfcc4ea0aa4ac23785d64450e1d
-    ee2e9448c8565820ba38a2df9e44ab6055e5df1d
-    9c422a2011404ee0c5c01eeb2a6a1d5333816cad
-
-    82ba27906c88ef5e5b1b684938f10cbb817edceb
+    139a13e320b9a47161ff506c90c5facaec8b773c
+    f4ed8185ebc1804092de46e58078414910587958
+    240ebb75b57bb05551c9103ec3dee11c23fd0aca
+    4a40a8294ed39c48dc9fb7f99f05de2e8d1ecd2e
+    5bbcf40bbc47608b5a09fc71ec16d23368af1ab1
+    31237a6c661e0077d3873ec7437af4828b25f485
+    b1a48c78a318402daab1d0f974825373ef41b293
+    1aa8f3554781de81630f3a334e146a73177a2fa3
+    91e1a98c7f2751deb1ff76a1a3e1a87b094c5684
+    1e8ca94fc3682eb97bcf243545dcb282c1aaa0b4
     """
 
 
