@@ -236,6 +236,9 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
 
 class BenchmarkList(AppEndpoint, ContextMixin):
     def page(self, benchmarks):
+        # Note(JP): What type is benchmarks? As of `response =
+        # self.api_get("api.benchmarks")` down below it's seemingly the result
+        # of JSON-decoding, i.e. not the DB model type.
         contexts = self.get_contexts(benchmarks)
         for benchmark in benchmarks:
             augment(benchmark, contexts)
