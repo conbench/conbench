@@ -316,8 +316,10 @@ def backfill_default_branch_commits(repourl: str, new_commit: Commit) -> None:
 
     github = GitHub()
 
-    # `repo_spec` is expected to be a string specifying a GitHub repository
-    # using the canonical org/repo notation.
+    # `repourl` is expected to be a URL pointing to a GitHub repositopry. It
+    # must be of the shape "https://github.com/org/repo". `repospec` then is
+    # unambiguously specifying the same GitHub repository using the canonical
+    # "org/repo" notation.
     repospec = repository_to_name(repourl)
 
     # This triggers one HTTP request.
