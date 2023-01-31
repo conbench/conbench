@@ -41,7 +41,7 @@ import selenium.common.exceptions
 log = logging.getLogger()
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
+    format="%(asctime)s.%(msecs)03d %(name)s %(levelname)s: %(message)s",
     datefmt="%y%m%d-%H:%M:%S",
 )
 
@@ -106,7 +106,7 @@ def screenshot(url, pngpath):
     with _get_driver() as driver:
 
         driver.set_window_size(1700, 1900)
-        log.info("get URL: %s", url)
+        log.info("driver.get(): %s", url)
         driver.get(url)
         _wait(driver)
 
@@ -119,7 +119,7 @@ def print_to_pdf(url):
     with _get_driver() as driver:
 
         driver.set_window_size(1700, 1900)
-        log.info("get URL: %s", url)
+        log.info("driver.get(): %s", url)
         driver.get(url)
         _wait(driver)
 
