@@ -109,6 +109,9 @@ class RunMixin:
 
     def _augment(self, run):
         self._display_time(run, "timestamp")
+
+        # Note(JP): `run["commit"]["timestamp"]` can be `None`, see
+        # https://github.com/conbench/conbench/pull/651
         self._display_time(run["commit"], "timestamp")
         repository = run["commit"]["repository"]
         repository_name = repository
@@ -122,7 +125,14 @@ class RunMixin:
         run["commit"]["display_message"] = commit_message
 
     def _display_time(self, obj, field):
-        obj[f"display_{field}"] = display_time(obj[field])
+        timestring = obj[field]
+
+        # Seemingly this can be `None`.
+        if isinstance(timestring, str):
+            obj[f"display_{field}"] = display_time(timestring)
+
+        else:
+            obj[f"display_{field}"] = ""
 
     def _get_run(self, run_id):
         response = self.api_get("api.run", run_id=run_id)
