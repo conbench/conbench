@@ -1,6 +1,6 @@
-import pytest
-
 from datetime import datetime, timedelta, timezone
+
+import pytest
 
 from conbench.util import tznaive_dt_to_aware_iso8601_for_api
 
