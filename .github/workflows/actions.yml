@@ -96,7 +96,8 @@ jobs:
             docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
                 python screenshot.py ${CONBENCH_BASE_URL} /artifacts frontpage
             docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
-                python screenshot.py "${CONBENCH_BASE_URL}/benchmarks/${SOME_BENCHMARK_ID}/" /artifacts benchmark-result-view
+                python screenshot.py "${CONBENCH_BASE_URL}/benchmarks/${SOME_BENCHMARK_ID}/" \
+                  /artifacts benchmark-result-view --wait-for-canvas
             /bin/ls -ahltr ci-artifacts/
             # If the browser-initiated GET requests led to e.g an Internal Server Error
             # then we see that in the screenshot(s). For debugging that, however,
