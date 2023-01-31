@@ -107,10 +107,15 @@ jobs:
             docker compose logs --since 30m
       - name: upload-artifacts
         uses: actions/upload-artifact@v3
+        # Upload screenshots _especially_ when result was unexpected.
+        if: always()
         with:
           name: screenshots
           path: ci/ci-artifacts/
       - name: test `make teardown-app`
+        # Run teardown especially when previous step(s) failed, because here
+        # we get some good log output for debuggability.
+        if: always()
         run: make teardown-app
 
   db-migrations:
