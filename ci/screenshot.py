@@ -24,14 +24,14 @@ import base64
 import json
 import logging
 import os
-import time
 import sys
+import time
 
+import selenium.common.exceptions
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
-import selenium.common.exceptions
 
 # from selenium.webdriver.support.ui import WebDriverWait
 # from selenium.webdriver.common.by import By
