@@ -54,6 +54,8 @@ SLEEP_BEFORE_SCREENSHOT_SECONDS = 10.0
 
 CLI_ARGS = None
 
+EXIT_CODE = 0
+
 
 def main():
     global CLI_ARGS
@@ -98,7 +100,8 @@ def main():
     with open(pdf_path, "wb") as f:
         f.write(pdf_bytes)
 
-    log.info("done")
+    log.info("done, exit with code %s", EXIT_CODE)
+    sys.exit(EXIT_CODE)
 
 
 def screenshot(url, pngpath):
@@ -174,8 +177,10 @@ def _wait(driver):
     try:
         _wait_for_bokeh_canvas(driver)
     except selenium.common.exceptions.NoSuchElementException as exc:
+        # log error and store non-zero exit code, but continue so that
+        # we actually take the screenshot of the bad state.
         log.error("NoSuchElementException during _wait(): %s", exc)
-        sys.exit(1)
+        _set_exit_code(1)
 
 
 def _wait_for_bokeh_canvas(driver):
@@ -247,6 +252,11 @@ def _get_driver():
 
     log.info("webdriver is set up")
     return driver
+
+
+def _set_exit_code(code: int):
+    global EXIT_CODE
+    EXIT_CODE = code
 
 
 if __name__ == "__main__":
