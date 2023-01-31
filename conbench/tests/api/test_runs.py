@@ -21,7 +21,7 @@ def _expected_entity(run, baseline_id=None, include_baseline=True):
         run.hardware_id,
         run.hardware.name,
         run.hardware.type,
-        run.timestamp.isoformat(),
+        tznaive_dt_to_aware_iso8601_for_api(run.timestamp),
         baseline_id,
         include_baseline,
         has_errors,

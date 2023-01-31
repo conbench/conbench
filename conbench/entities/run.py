@@ -220,8 +220,9 @@ class _Serializer(EntitySerializer):
             "id": run.id,
             "name": run.name,
             "reason": run.reason,
-            # TODO: also use tznaive_dt_to_aware_iso8601_for_api
-            "timestamp": run.timestamp.isoformat(),
+            "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
+                run.timestamp
+            ),
             "finished_timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
                 run.finished_timestamp
             )
