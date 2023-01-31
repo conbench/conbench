@@ -99,12 +99,6 @@ jobs:
                 python screenshot.py "${CONBENCH_BASE_URL}/benchmarks/${SOME_BENCHMARK_ID}/" \
                   /artifacts benchmark-result-view --wait-for-canvas
             /bin/ls -ahltr ci-artifacts/
-            # If the browser-initiated GET requests led to e.g an Internal Server Error
-            # then we see that in the screenshot(s). For debugging that, however,
-            # it's crucial to get web application logs. Note that this shows
-            # container logs interleaved, but prefixed so that it's after all
-            # unambiguous which line came from which container.
-            docker compose logs --since 30m
       - name: upload-artifacts
         uses: actions/upload-artifact@v3
         # Upload screenshots _especially_ when result was unexpected.
@@ -112,6 +106,14 @@ jobs:
         with:
           name: screenshots
           path: ci/ci-artifacts/
+      - name: get container logs
+        if: always()
+        # If the browser-initiated GET requests led to e.g an Internal Server Error
+        # then we see that in the screenshot(s). For debugging that, however,
+        # it's crucial to get web application logs. Note that this shows
+        # container logs interleaved, but prefixed so that it's after all
+        # unambiguous which line came from which container.
+        run: docker compose logs --since 30m
       - name: test `make teardown-app`
         # Run teardown especially when previous step(s) failed, because here
         # we get some good log output for debuggability.
