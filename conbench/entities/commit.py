@@ -301,7 +301,7 @@ def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) ->
     return commit
 
 
-def backfill_default_branch_commits(repository: str, new_commit: Commit) -> None:
+def backfill_default_branch_commits(repourl: str, new_commit: Commit) -> None:
     """Catches up the default-branch commits in the database.
 
     Will search GitHub for any untracked commits, between the given new_commit back in
@@ -313,32 +313,44 @@ def backfill_default_branch_commits(repository: str, new_commit: Commit) -> None
     This may raise exceptions as of HTTP request/response cycle errors during
     GitHub HTTP API interaction.
     """
+
     github = GitHub()
-    name = repository_to_name(repository)
-    default_branch = github.get_default_branch(name)
+
+    # `repo_spec` is expected to be a string specifying a GitHub repository
+    # using the canonical org/repo notation.
+    repospec = repository_to_name(repourl)
+
+    # This triggers one HTTP request.
+    default_branch = github.get_default_branch(repospec)
 
     last_tracked_commit = Commit.all(
         filter_args=[Commit.sha != new_commit.sha, Commit.timestamp.isnot(None)],
         branch=default_branch,
-        repository=repository,
+        repository=repourl,
         order_by=Commit.timestamp.desc(),
         limit=1,
     )
 
     if last_tracked_commit:
         since = last_tracked_commit[0].timestamp
-    elif Config.TESTING:
+
+    elif Config.TESTING and "apache/arrow" in repourl:
+        # Also see https://github.com/conbench/conbench/issues/637.
         log.info(
-            "Config.TESTING is true Backfilling the DB only from "
-            "the last 60 days in order to save time."
+            "backfill_default_branch_commits(): apache/arrow and "
+            "Config.TESTING. Backfill commits only from the last 60 days "
+            "in order to reduce duration & API quota usage."
         )
         since = datetime.today() - timedelta(days=60)
+
     else:
+        # Fetch commits since beginning of time
         since = datetime(1970, 1, 1)
 
-    # This may raise exceptions as of HTTP request/response cycle errors.
+    # This triggers potentially many HTTP requests to the GitHub HTTP API.
+    # May raise exceptions as of HTTP request/response cycle errors.
     commits = github.get_commits_to_branch(
-        name=name,
+        name=repospec,
         branch=default_branch,
         since=since,
         until=new_commit.timestamp,
@@ -423,9 +435,13 @@ class GitHub:
 
         since and until are inclusive.
 
+        `name` is the GitHub repository specifier in org/repo notation.
+
         Expect tz-naive datetime objects, or expect tz-aware objects with UTC
         timezone.
         """
+        assert "/" in name
+
         if name == "org/repo":
             # test case
             return []
