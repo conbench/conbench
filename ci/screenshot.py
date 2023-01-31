@@ -25,11 +25,13 @@ import json
 import logging
 import os
 import time
+import sys
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+import selenium.common.exceptions
 
 # from selenium.webdriver.support.ui import WebDriverWait
 # from selenium.webdriver.common.by import By
@@ -169,29 +171,43 @@ def _wait(driver):
         time.sleep(SLEEP_BEFORE_SCREENSHOT_SECONDS)
         return
 
-    log.info("wait for Bokeh Canvas element in DOM (timeout: 30 s)")
+    try:
+        _wait_for_bokeh_canvas(driver)
+    except selenium.common.exceptions.NoSuchElementException as exc:
+        log.error("NoSuchElementException during _wait(): %s", exc)
+        sys.exit(1)
 
-    # Wait for Bokeh to add <canvas> elements to DOM.
-    # Use CSS selector syntax
-    # https://selenium-python.readthedocs.io/locating-elements.html#locating-elements-by-css-selectors
 
-    # Note(JP): Bokeh uses multiple levels of so-called shadow roots. These can
-    # be thought of as virtual, independent DOM trees. That is, one cannot
-    # build a CSS selector path starting from the root of the outest DOM tree.
-    # It took a while to find a technique that allows for identifying shadow
-    # root objects, and then do sub-waits within those.
+def _wait_for_bokeh_canvas(driver):
+    """
+    May raise selenium.common.exceptions.NoSuchElementException upon timeout.
 
-    # First, set Selenium driver to the implicit wait mode which makes it so
-    # that `find_elements()` will wait until the given timeout.
+    Wait for Bokeh to add <canvas> elements to DOM. Use CSS selector syntax
+    https://selenium-python.readthedocs.io/locating-elements.html#locating-elements-by-css-selectors
+    https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors
+
+    Note: Bokeh uses multiple levels of so-called shadow roots. These can be
+    thought of as virtual, independent DOM trees. That is, one cannot build a
+    CSS selector path starting from the root of the outest DOM tree. It took a
+    while to find a technique that allows for identifying shadow root objects,
+    and then do sub-waits within those.
+    """
+
+    # First, set Selenium driver to the implicit wait mode which makes it so that
+    # the `find_elements()` will wait until the given timeout.
     # https://selenium-python.readthedocs.io/waits.html#implicit-waits
     driver.implicitly_wait(10)
 
+    # A div with CSS ID plot-history-0 is expected in the static HTML source.
+    plotdiv = driver.find_element(By.CSS_SELECTOR, "div#plot-history-0")
+
+    log.info("Found div#plot-history-0. Wait for Bokeh-generated div.bk-Column")
     # The actual DOM tree is expected to not have a div.bk-Column from the
     # start, i.e. right after loading the static HTML source that is not there.
     # When this pops up it means that the Bokeh Javascript has started
     # modifying the DOM. Once that elements pops up, it is expected to be the
     # so-called host of a shadow tree.
-    shadow_host = driver.find_element(By.CSS_SELECTOR, "div.bk-Column")
+    shadow_host = plotdiv.find_element(By.CSS_SELECTOR, "div.bk-Column")
 
     # Extract the shadow tree object. This `shadow_root` attribute technique
     # only works from Chromium 96 onwards.
