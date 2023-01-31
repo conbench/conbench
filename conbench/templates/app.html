@@ -165,7 +165,8 @@ function dropdown_column_search(data_table_id, column_indexes) {
                 $(`<option value="${reset}">${reset}</option>`)
             );
             this.cache("search").unique().sort().each(function(param) {
-                if (param !== "") {
+                // check for multiple whitespaces and empty string
+                if (/^\s*$/.test(param) == false) {
                     mySelectList.append(
                         $(`<option value="${param}">${param}</option>`)
                     );
@@ -173,8 +174,9 @@ function dropdown_column_search(data_table_id, column_indexes) {
                     mySelectList.append(
                         $(`<option value="${param}">null</option>`)
                     );
-                }           
+                }
             });
+            // console.log(mySelectList)
         });
     });
 }
@@ -211,7 +213,8 @@ INFO:
     Function to check unique value count and set the required search type.
         - Unique values <10 & >1 [specific_column_search]: drop-down based search is implemented
         - Unique values >10 [free_text_column_search]: free text search is implemented
-        - If there is no data OR only single data point: a message is displayed ("only one/no value found")
+        - Search is not enabled with single OR null data points and a message is logged on console
+        - If any unidentified value (beyond assumed definitions) is encountered, a message is logged on console
 INPUT:
     data_table_id: string
  */
@@ -224,6 +227,7 @@ function column_search_implementation(data_table_id) {
             //array of unique count for data points within each column
             unique_count.push(current.data().unique().count())
         });
+        console.log(unique_count)
         unique_count.forEach(function (item, index) {
             if (item < 10 && item > 1) {
                 dropdown_column_search(data_table_id, index)
@@ -232,7 +236,9 @@ function column_search_implementation(data_table_id) {
                 free_text_column_search(data_table_id, index)
             }
             else if (item == 1) {
-                $(`<p class="message-header"> 👀 only one/no value found</p>`).appendTo(
+                console.log("Search isn't enabled with one/null data point")
+                // keeping this placeholder for future addition of a message/note
+                $(`<p></p>`).appendTo(
                     table.columns([index]).header())
             }
             else{
