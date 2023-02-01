@@ -28,7 +28,6 @@ class TestBenchmarkList:
         monkeypatch.setenv("CONBENCH_PROJECT_COMMIT", self.github["commit"])
 
     def test_init(self) -> None:
-
         assert len(self.benchmark_list.benchmarks) == 2
         assert self.benchmark_list.benchmarks[0] == self.benchmark
 

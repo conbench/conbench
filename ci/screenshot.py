@@ -105,9 +105,7 @@ def main():
 
 
 def screenshot(url, pngpath):
-
     with _get_driver() as driver:
-
         driver.set_window_size(1700, 1900)
         log.info("driver.get(): %s", url)
         driver.get(url)
@@ -118,9 +116,7 @@ def screenshot(url, pngpath):
 
 
 def print_to_pdf(url):
-
     with _get_driver() as driver:
-
         driver.set_window_size(1700, 1900)
         log.info("driver.get(): %s", url)
         driver.get(url)

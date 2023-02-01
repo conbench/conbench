@@ -161,7 +161,6 @@ def dict_or_objattrs_to_nonsensitive_string(obj):
 
     # Iterate over all object and class attributes,
     for k, v in zip(keys, values):
-
         if not isinstance(k, str):
             # We may get here when `obj` is a dictionary with non-string keys.
             # Ignore those keys in textual output.

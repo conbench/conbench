@@ -264,7 +264,6 @@ class BenchmarkList(AppEndpoint, ContextMixin):
 
     @authorize_or_terminate
     def get(self):
-
         benchmarks, response = self._get_benchmarks()
         if response.status_code != 200:
             self.flash("Error getting benchmarks.")

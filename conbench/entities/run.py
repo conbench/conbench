@@ -81,7 +81,6 @@ class Run(Base, EntityMixin):
         commit = Commit.first(sha=sha, repository=repository)
 
         if not commit:
-
             # Try to fetch data via GitHub HTTP API
             gh_commit_dict = None
             try:
