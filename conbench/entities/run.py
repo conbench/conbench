@@ -37,7 +37,16 @@ class Run(Base, EntityMixin):
     id = NotNull(s.String(50), primary_key=True)
     name = Nullable(s.String(250))
     reason = Nullable(s.String(250))
-    # tz-naive timestamp expected to refer to UTC time.
+    # `timestamp`  is never set by API clients, i.e. the
+    # `server_default=s.sql.func.now()` is always taking effect. That also
+    # means that this property reflects the point in time of DB insertion (that
+    # should be documented in the API schema for Run objects). A more explicit
+    # way to code that would be in the create() method. The point in time by
+    # convention is stored in UTC _without_ timezone information. Is a wrong
+    # point in time stored when `s.sql.func.now()` returns a non-UTC tz-aware
+    # timestamp on a DB server that does not have its system time in UTC? That
+    # should not happen, as is hopefully confirmed by the test
+    # `test_auto_generated_run_timestamp_value()`.
     timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
     # tz-naive timestamp expected to refer to UTC time.
     finished_timestamp = Nullable(s.DateTime(timezone=False))
@@ -211,8 +220,9 @@ class _Serializer(EntitySerializer):
             "id": run.id,
             "name": run.name,
             "reason": run.reason,
-            # TODO: also use tznaive_dt_to_aware_iso8601_for_api
-            "timestamp": run.timestamp.isoformat(),
+            "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
+                run.timestamp
+            ),
             "finished_timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
                 run.finished_timestamp
             )

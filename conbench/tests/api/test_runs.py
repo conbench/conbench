@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 
 from conbench.util import tznaive_dt_to_aware_iso8601_for_api
@@ -21,7 +23,7 @@ def _expected_entity(run, baseline_id=None, include_baseline=True):
         run.hardware_id,
         run.hardware.name,
         run.hardware.type,
-        run.timestamp.isoformat(),
+        tznaive_dt_to_aware_iso8601_for_api(run.timestamp),
         baseline_id,
         include_baseline,
         has_errors,
@@ -425,3 +427,45 @@ class TestRunPost(_asserts.PostEnforcer):
         run = Run.one(id=run_id)
         location = f"http://localhost/api/runs/{run_id}/"
         self.assert_201_created(response, _expected_entity(run), location)
+
+    def test_create_run_timestamp_not_allowed(self, client):
+        self.authenticate(client)
+        payload = self.valid_payload.copy()
+
+        # Confirm that setting the timestamp is not possible as an API client,
+        # i.e. that the resulting `timestamp` property when fetching the run
+        # details via API later on reflects the point in time of inserting this
+        # run into the DB.
+        payload["timestamp"] = "2022-12-13T13:37:00Z"
+        resp = client.post(self.url, json=payload)
+        assert resp.status_code == 400, resp.text
+        assert '{"timestamp": ["Unknown field."]}' in resp.text
+
+    def test_auto_generated_run_timestamp_value(self, client):
+        self.authenticate(client)
+        payload = self.valid_payload.copy()
+        resp = client.post(self.url, json=payload)
+        assert resp.status_code == 201, resp.text
+        run_id = payload["id"]
+
+        resp = client.get(f"http://localhost/api/runs/{run_id}/")
+        assert resp.status_code == 200, resp.text
+        assert "timestamp" in resp.json
+
+        # Get current point in time from test runner's perspective (tz-aware
+        # datetime object).
+        now_testrunner = datetime.now(timezone.utc)
+
+        # Get Run entity DB insertion time (set by the DB). This is also a
+        # tz-aware object because `resp.json["timestamp"]` is expected to be an
+        # ISO 8601 timestring _with_ timezone information.
+        run_time_created_in_db = datetime.fromisoformat(resp.json["timestamp"])
+
+        # Build timedelta between those two tz-aware datetime objects (that are
+        # not necessarily in the same timezone).
+        delta: timedelta = run_time_created_in_db - now_testrunner
+
+        # Convert the timedelta object to a float (number of seconds). Check
+        # for tolerance interval but use abs(), i.e. don't expect a certain
+        # order between test runner clock and db clock.
+        assert abs(delta.total_seconds()) < 5.0

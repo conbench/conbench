@@ -4,7 +4,9 @@ Inspired by pdf.py in https://github.com/jgehrcke/github-repo-stats
 If we ever need to wait for specific rendering aspects to happen, here is an
 example for how to do that:
 
-# Wait for Vega to add <svg> elemtn(s) to DOM.
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.common.by import By
+# from selenium.webdriver.support.expected_conditions import presence_of_element_located
 #
 # waiter = WebDriverWait(driver, 10)
 # first_svg = waiter.until(
@@ -22,10 +24,13 @@ import base64
 import json
 import logging
 import os
+import sys
 import time
 
+import selenium.common.exceptions
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 # from selenium.webdriver.support.ui import WebDriverWait
@@ -36,7 +41,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 log = logging.getLogger()
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
+    format="%(asctime)s.%(msecs)03d %(name)s %(levelname)s: %(message)s",
     datefmt="%y%m%d-%H:%M:%S",
 )
 
@@ -44,10 +49,14 @@ logging.basicConfig(
 # TODO We bumped this to capture Bokeh plot renderings which sometimes take a
 # little while. It would however be better to dynamically respond to a render
 # event (see module-level docstring).
-SLEEP_BEFORE_SCREENSHOT_SECONDS = 3.0
+SLEEP_BEFORE_SCREENSHOT_SECONDS = 10.0
+
+
+CLI_ARGS = None
 
 
 def main():
+    global CLI_ARGS
 
     parser = argparse.ArgumentParser()
 
@@ -66,7 +75,14 @@ def main():
         metavar="FILENAME_PREFIX",
     )
 
+    parser.add_argument(
+        "--wait-for-canvas",
+        action="store_true",
+        help="Wait for <canvas> elem to pop up in DOM before taking screenshot",
+    )
+
     args = parser.parse_args()
+    CLI_ARGS = args
 
     url_to_open = args.url
 
@@ -90,9 +106,10 @@ def screenshot(url, pngpath):
     with _get_driver() as driver:
 
         driver.set_window_size(1700, 1900)
+        log.info("driver.get(): %s", url)
         driver.get(url)
+        _wait(driver)
 
-        time.sleep(SLEEP_BEFORE_SCREENSHOT_SECONDS)
         driver.get_screenshot_as_file(pngpath)
         log.info("Wrote file: %s", pngpath)
 
@@ -102,9 +119,9 @@ def print_to_pdf(url):
     with _get_driver() as driver:
 
         driver.set_window_size(1700, 1900)
+        log.info("driver.get(): %s", url)
         driver.get(url)
-
-        time.sleep(SLEEP_BEFORE_SCREENSHOT_SECONDS)
+        _wait(driver)
 
         b64_text = send_print_request(driver)
         log.info("decode b64 doc (length: %s chars) into bytes", len(b64_text))
@@ -148,6 +165,71 @@ def send_print_request(driver):
     raise Exception("unexpected webdriver response")
 
 
+def _wait(driver):
+    if not CLI_ARGS.wait_for_canvas:
+        log.info("no waiter configured, default sleep")
+        time.sleep(SLEEP_BEFORE_SCREENSHOT_SECONDS)
+        return
+
+    try:
+        _wait_for_bokeh_canvas(driver)
+    except selenium.common.exceptions.NoSuchElementException as exc:
+        log.error("NoSuchElementException during _wait(): %s", exc)
+        sys.exit(1)
+
+
+def _wait_for_bokeh_canvas(driver):
+    """
+    May raise selenium.common.exceptions.NoSuchElementException upon timeout.
+
+    Wait for Bokeh to add <canvas> elements to DOM. Use CSS selector syntax
+    https://selenium-python.readthedocs.io/locating-elements.html#locating-elements-by-css-selectors
+    https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors
+
+    Note: Bokeh uses multiple levels of so-called shadow roots. These can be
+    thought of as virtual, independent DOM trees. That is, one cannot build a
+    CSS selector path starting from the root of the outest DOM tree. It took a
+    while to find a technique that allows for identifying shadow root objects,
+    and then do sub-waits within those.
+    """
+
+    # First, set Selenium driver to the implicit wait mode which makes it so that
+    # the `find_elements()` will wait until the given timeout.
+    # https://selenium-python.readthedocs.io/waits.html#implicit-waits
+    driver.implicitly_wait(10)
+
+    # A div with CSS ID plot-history-0 is expected in the static HTML source.
+    plotdiv = driver.find_element(By.CSS_SELECTOR, "div#plot-history-0")
+
+    log.info("Found div#plot-history-0. Wait for Bokeh-generated div.bk-Column")
+    # The actual DOM tree is expected to not have a div.bk-Column from the
+    # start, i.e. right after loading the static HTML source that is not there.
+    # When this pops up it means that the Bokeh Javascript has started
+    # modifying the DOM. Once that elements pops up, it is expected to be the
+    # so-called host of a shadow tree.
+    shadow_host = plotdiv.find_element(By.CSS_SELECTOR, "div.bk-Column")
+
+    # Extract the shadow tree object. This `shadow_root` attribute technique
+    # only works from Chromium 96 onwards.
+    shadow_root0 = shadow_host.shadow_root
+    log.info("found shadow root below div.bk-Column")
+
+    # In the highest-level shadow root we expect a div.bk-Figure to dynamically
+    # pop up. Wait for that.
+    div_figure = shadow_root0.find_element(By.CSS_SELECTOR, "div.bk-Figure")
+    log.info("div.bk-Figure below shadow root 0 detected: %s", div_figure)
+
+    # Another shadow root is expected, with div_figure being the host.
+    shadow_root1 = div_figure.shadow_root
+    div_canvas = shadow_root1.find_element(By.CSS_SELECTOR, "div.bk-Canvas")
+    log.info("div.bk-Canvas below shadow root 1 detected: %s", div_canvas)
+
+    # Another shadow root is expected, with div_canvas being the host.
+    shadow_root2 = div_canvas.shadow_root
+    canvas = shadow_root2.find_element(By.CSS_SELECTOR, "canvas.bk-layer")
+    log.info("canvas.bk-layer below shadow root 2 detected: %s", canvas)
+
+
 def _get_driver():
     wd_options = Options()
     wd_options.add_argument("--headless")
@@ -157,10 +239,14 @@ def _get_driver():
 
     log.info("set up chromedriver with capabilities %s", wd_options.to_capabilities())
 
-    d = webdriver.Chrome(ChromeDriverManager().install(), options=wd_options)
+    driver = webdriver.Chrome(ChromeDriverManager().install(), options=wd_options)
+    # The waiter is only optionally used later.
+    # waiter = WebDriverWait(driver, 30)
+    # Piggy-back waiter object on driver object, use a somewhat unique name
+    # driver._waiter_bob = waiter
 
     log.info("webdriver is set up")
-    return d
+    return driver
 
 
 if __name__ == "__main__":
