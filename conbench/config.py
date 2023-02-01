@@ -5,7 +5,6 @@ from typing import Optional
 
 
 class ConfigClass:
-
     APPLICATION_NAME = os.environ.get("APPLICATION_NAME", "Conbench")
     DB_HOST = os.environ.get("DB_HOST", "localhost")
     DB_NAME = os.environ.get("DB_NAME", f"{APPLICATION_NAME.lower()}_prod")

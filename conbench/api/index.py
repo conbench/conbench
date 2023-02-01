@@ -89,7 +89,6 @@ class PingAPI(ApiEndpoint):
         if Config.TESTING:
             alembic_version = "not-set-in-testing"
         else:
-
             query = text("SELECT version_num FROM alembic_version")
             try:
                 # In local deployment the PostgreSQL server logs: `ERROR:  relation

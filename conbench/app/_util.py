@@ -20,8 +20,16 @@ def dataset_name(name):
     return name.replace("_", " ")
 
 
-def display_time(t):
-    return t.split(".")[0].replace("T", "  ").rsplit(":", 1)[0] if t else ""
+def display_time(t: str):
+    """
+    Expect `t` to be an ISO 8601 compliant string
+    - that encodes the UTC timezone with a Z suffix
+    - that does not contain fractions of seconds
+
+    Input example:  "2023-01-31Z05:36:45Z"
+    Output example: "2023-01-31 05:36:45 UTC"
+    """
+    return t.replace("T", " ").replace("Z", " UTC")
 
 
 def set_display_language(benchmark, contexts):

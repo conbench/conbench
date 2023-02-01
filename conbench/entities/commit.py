@@ -560,7 +560,6 @@ class GitHub:
 
     @staticmethod
     def _parse_commit(commit):
-
         author = commit.get("author")
         commit_author = commit["commit"]["author"]
 

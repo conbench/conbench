@@ -71,7 +71,6 @@ class Login(AppEndpoint):
         }
 
     def get(self):
-
         # Read query parameter `target`. Assume that the value is the URL that
         # the user actually wanted to visit before they were redirected to the
         # login page. `f.request.args` holds parsed (i.e. URL-decoded) URL

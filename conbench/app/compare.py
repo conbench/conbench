@@ -25,7 +25,6 @@ def all_keys(dict1, dict2, attr):
 
 class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, comparisons, regressions, improvements, baseline_id, contender_id):
-
         unknown = "unknown...unknown"
         compare_runs_url = f.url_for("app.compare-runs", compare_ids=unknown)
         compare_batches_url = f.url_for("app.compare-batches", compare_ids=unknown)
@@ -139,7 +138,6 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
 
     @authorize_or_terminate
     def get(self, compare_ids):
-
         threshold = f.request.args.get("threshold")
         threshold_z = f.request.args.get("threshold_z")
         params = {"compare_ids": compare_ids}
