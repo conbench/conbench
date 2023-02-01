@@ -587,6 +587,8 @@ class GitHub:
         Gunicorn has a worker timeout behavior (as of the time of writing: 30
         seconds) and the retrying method below must come to a conclusion before
         that.
+
+        Return deserialized JSON-structure or raise an exception.
         """
         timeout_seconds = 20
 
