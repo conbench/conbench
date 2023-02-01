@@ -534,7 +534,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         active_drag="pan",
         active_scroll="wheel_zoom",
         active_tap="tap",
-        active_inspect=None,
+        active_inspect="auto",  # this enables hover by default (tool added below)
         toolbar_location="right",
         x_range=(t_start, t_end),
     )
