@@ -2,6 +2,7 @@ import functools
 import json
 import logging
 import os
+import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
@@ -578,26 +579,111 @@ class GitHub:
         }
 
     def _get_response(self, url) -> dict:
-        """
+        """Attempt to get HTTP response with retrying behavior towards a
+        best-effort approach in view of typical retryable errors.
+
+        Do not try for too long because there is an HTTP client waiting for
+        _us_ to generate an HTTP response in a more or less timely fashion.
+        Gunicorn has a worker timeout behavior (as of the time of writing: 30
+        seconds) and the retrying method below must come to a conclusion before
+        that.
+
         Return deserialized JSON-structure or raise an exception.
         """
-        # This can raise exceptions corresponding to transient issues related
-        # to DNS, TCP, HTTP during sending request, while waiting for response,
-        # or while receiving the response.
-        response = self.session.get(url) if self.session else requests.get(url)
+        timeout_seconds = 20
 
-        # An HTTP response was received.
-        if response.status_code != 200:
-            # This is here to log details an make debugging easier.
+        t0 = time.monotonic()
+        deadline = t0 + timeout_seconds
+        attempt: int = 0
+
+        while time.monotonic() < deadline:
+            attempt += 1
+
+            result = self._get_response_retrycore(url)
+
+            if result is not None:
+                return result
+
+            # The first retry attempt comes quick, then there is slow exp
+            # growth, and a max: 0.66, 1.33, 2.66, 5.33, 5.5, 5.5, ...
+            wait_seconds = min((2**attempt) / 3.0, 5.5)
+            log.info(f"attempt {attempt} failed, wait for {wait_seconds:.3f} s")
+
+            # Would the next wait exceed the deadline? This is an optimization.
+            if (time.monotonic() + wait_seconds) > deadline:
+                break
+
+            # Note that this blocks the current executor (gunicorn process, at
+            # the time of writing) from processing other incoming HTTP
+            # requests.
+            time.sleep(wait_seconds)
+
+        raise Exception(
+            f"_get_response(): deadline exceeded, giving up after {time.monotonic()-t0:.3f} s"
+        )
+
+    def _get_response_retrycore(self, url) -> Optional[dict]:
+        """
+        Return deserialized JSON-structure or raise an exception or return
+        `None` which indicates a retryable error.
+        """
+
+        try:
+            # This next line can raise exceptions corresponding to transient
+            # issues related to DNS, TCP, HTTP during sending request, while
+            # waiting for response, or while receiving the response. `requests`
+            # has a little bit of retrying built-in by default for some of
+            # these errors, but it's not trying too hard. Add more retrying
+            # on top of that.
+            resp = self.session.get(url) if self.session else requests.get(url)
+        except requests.exceptions.RequestException as exc:
             log.info(
-                "got unexpected HTTP response with code %s: %s",
-                response.status_code,
-                response.text,
+                "error during HTTP request/response cycle: %s --  "
+                "assume that it's retryable, retry soon.",
+                exc,
+            )
+            return None
+
+        # In the code block below `resp` reflects an actual HTTP response.
+        if resp.status_code == 200:
+            # This may raise an exception if JSON-deserialization fails. If
+            # JSON deser succeeds then this is known to be a dict at the outest
+            # level.
+            return resp.json()
+
+        # Log code and body prefix: important for debuggability.
+        log.info(
+            "got unexpected HTTP response with code %s: %s",
+            resp.status_code,
+            resp.text[:1000],
+        )
+
+        if resp.status_code == 403:
+            log.info(
+                "x-ratelimit headers: %s",
+                ", ".join(
+                    f"{k}: {v}"
+                    for k, v in resp.headers.items()
+                    if "x-ratelimit" in k.lower()
+                ),
             )
 
-        # Raise an exception for all known HTTP error response types.
-        response.raise_for_status()
+            if int(resp.headers.get("x-ratelimit-remaining", 0)) > 100:
+                log.info("quota not exhausted, try to retry soon")
+                # Add additional wait time, because this seems to be a legit
+                # HTTP request rate limiting error -- we have to seriously back
+                # off if we want to have success. The wait time in the
+                # _get_response() loop is too short.
+                time.sleep(2)
+                return None
 
-        # This may raise an exception if JSON-deserialization fails. If JSON
-        # deser succeeds then this is known to be a dict at the outest level.
-        return response.json()
+            raise Exception("Hourly GitHub HTTP API quota exhausted")
+
+        # For the rare occasion where the GitHub HTTP API returns a 5xx
+        # response we certainly want to retry immediately.
+        if str(resp.status_code).startswith("5"):
+            return None
+
+        raise Exception(
+            f"Unexpected GitHub HTTP API response: {resp}",
+        )
