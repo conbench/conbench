@@ -513,7 +513,29 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         x_axis_type="datetime",
         height=height,
         width=width,
-        tools=["pan", "zoom_in", "zoom_out", "reset", "tap"],
+        tools=[
+            # Allows for dragging the field of view, default drag action.
+            "pan",
+            # Allow for resetting the plot to original view.
+            "reset",
+            # This allows for benchmark-details-on-datapoint-click
+            "tap",
+            # Zoom in and out with mouse wheel, default wheel action
+            "wheel_zoom",
+            # Allow for drawing a box for zooming, not enabled by default,
+            # because the "pan" tool is enabled by default. Can be activated by
+            # clicking the icon on the toolbar (one can toggle manually between
+            # pan and box-zoom).
+            "box_zoom",
+        ],
+        # Bokeh toolbars can have at most one active tool from each kind of
+        # gesture (drag, scroll, tap).
+        # https://docs.bokeh.org/en/2.4.0/docs/user_guide/tools.html#setting-the-active-tools
+        active_drag="pan",
+        active_scroll="wheel_zoom",
+        active_tap="tap",
+        active_inspect=None,
+        toolbar_location="right",
         x_range=(t_start, t_end),
     )
     p.toolbar.logo = None
