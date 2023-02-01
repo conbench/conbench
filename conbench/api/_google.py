@@ -23,7 +23,6 @@ def get_oidc_config():
 
 
 def get_oidc_client():
-
     discovery_url, client_id, _ = get_oidc_config()
 
     # Pragmatic healing for transient errors. Better: cache OP config across

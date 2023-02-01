@@ -207,7 +207,6 @@ def generate_benchmarks_data_with_iteration_missing(
 
 
 def register():
-
     url = f"{base_url}/register/"
     log.info("register via: %s", url)
 
@@ -423,7 +422,6 @@ def create_benchmarks_data_with_history():
 
 
 def generate_synthetic_benchmark_history():
-
     commits = [
         c.strip()
         for c in reversed(ARROW_COMMIT_HASH_LINES_50.splitlines())
@@ -451,7 +449,6 @@ def generate_synthetic_benchmark_history():
         return s + slowdown_offset + slowdown_lin * random.random()
 
     for idx, commit_hash in enumerate(commits, 1):
-
         # Get current time as tzaware datetime object in UTC timezone, and
         # then subtract
         run_start = datetime.datetime.utcnow().replace(

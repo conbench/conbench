@@ -35,7 +35,6 @@ class BatchPlot(AppEndpoint, ContextMixin):
 
     @authorize_or_terminate
     def get(self, batch_id):
-
         benchmarks, response = self._get_benchmarks(batch_id)
         if response.status_code != 200:
             self.flash("Error getting benchmarks.")

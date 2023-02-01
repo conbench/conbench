@@ -135,7 +135,11 @@ class TestRunGet(_asserts.GetEnforcer):
         )
 
     def test_get_run_without_baseline_run_with_matching_benchmarks(self, client):
-        language_1, language_2, name, = (
+        (
+            language_1,
+            language_2,
+            name,
+        ) = (
             _uuid(),
             _uuid(),
             _uuid(),

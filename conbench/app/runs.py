@@ -44,7 +44,6 @@ class Run(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
 
     @authorize_or_terminate
     def get(self, run_id):
-
         contender_run, baseline_run = self.get_display_run(run_id), None
         if contender_run:
             baseline_url = contender_run["links"].get("baseline")

@@ -20,7 +20,6 @@ class Index(AppEndpoint, RunMixin):
 
     @authorize_or_terminate
     def get(self):
-
         runs = self.get_display_runs()
         return self.page(runs)
 
