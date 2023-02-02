@@ -11,6 +11,8 @@ set -o xtrace
 # assume that minikube cluster is running. show config.
 minikube config view
 
+minikube status
+
 # for https://github.com/prometheus-operator/kube-prometheus
 minikube addons disable metrics-server
 
