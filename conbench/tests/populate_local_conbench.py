@@ -27,12 +27,12 @@ session = requests.Session()
 def main():
     register()
     login()
-    log.info("start generate_synthetic_benchmark_history()")
-    generate_synthetic_benchmark_history()
     log.info("start create_benchmarks_data()")
     create_benchmarks_data()
     log.info("start create_benchmarks_data()")
     create_benchmarks_data_with_history()
+    log.info("start generate_synthetic_benchmark_history()")
+    generate_synthetic_benchmark_history()
 
 
 def generate_benchmarks_data(
