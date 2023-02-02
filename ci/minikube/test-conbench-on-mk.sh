@@ -11,6 +11,9 @@ set -o xtrace
 # assume that minikube cluster is running. show config.
 minikube config view
 
+# for https://github.com/prometheus-operator/kube-prometheus
+minikube addons disable metrics-server
+
 # This project vastly simplifies setting up PostgreSQL in minikube for us:
 # https://postgres-operator.readthedocs.io
 #
@@ -34,7 +37,7 @@ git checkout 30b612489a2a20d968262791857d1db1a85e0b36
 # file, delete line 256 and 256. That is safe, because a specific commit of
 # this file was checked out.
 cat ./run_operator_locally.sh | tail -n 15
-sed -i '256d;257d' file
+sed -i '256d;257d' run_operator_locally.sh
 cat ./run_operator_locally.sh | tail -n 15
 bash ./run_operator_locally.sh
 popd
@@ -91,6 +94,27 @@ kubectl logs deployment/conbench-deployment --all-containers
 sleep 10
 kubectl get pods -A
 sleep 5
+
+
+
+
+git clone https://github.com/prometheus-operator/kube-prometheus
+pushd kube-prometheus
+# 0.12.0 release from 2023-01-27
+git checkout v0.12.0
+kubectl apply --server-side -f manifests/setup
+kubectl wait \
+	--for condition=Established \
+	--all CustomResourceDefinition \
+	--namespace=monitoring
+kubectl apply -f manifests/
+popd
+
+
+
+
+
+
 
 export CONBENCH_BASE_URL=$(minikube service conbench-service --url) && echo $CONBENCH_BASE_URL
 
