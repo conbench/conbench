@@ -13,7 +13,7 @@ services:
       "conbench:application",
       "--access-logfile=-",
       "--error-logfile=-",
-      "--preload"
+      "--reload"
       ]
     volumes:
       # Left-hand path: relative to this compose file. Mount the directory

@@ -26,8 +26,7 @@ spec:
           "-w", "5",
           "conbench:application",
           "--access-logfile=-",
-          "--error-logfile=-",
-          "--preload",
+          "--error-logfile=-"
           "-c", "conbench/gunicorn-conf.py"
           ]
         # for minikube local docker images

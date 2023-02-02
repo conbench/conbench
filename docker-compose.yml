@@ -13,8 +13,7 @@ services:
           "-w", "5",
           "conbench:application",
           "--access-logfile=-",
-          "--error-logfile=-",
-          "--preload"
+          "--error-logfile=-"
           ]
     ports:
       # When using the default value `127.0.0.1::5000` (two colons) then the
