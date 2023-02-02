@@ -17,14 +17,15 @@ set -o xtrace
 
 
 git clone https://github.com/zalando/postgres-operator
-cd postgres-operator
+
+pushd postgres-operator
 # 1.9.0 release from 2023-01-30
 git checkout 30b612489a2a20d968262791857d1db1a85e0b36
-
 # This should tear down the current minikube, and re-spawn another
 # one, bootstrapping the postgres operator using
 # https://github.com/zalando/postgres-operator/blob/v1.9.0/manifests/minimal-postgres-manifest.yaml
 bash ./run_operator_locally.sh
+popd
 
 # Show what's running now.
 kubectl get pods -A
