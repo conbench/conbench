@@ -129,7 +129,6 @@ build-conbench-container-image:
 
 .PHONY: deploy-on-minikube
 deploy-on-minikube: build-conbench-container-image
-	minikube addons enable ingress
 	minikube status
 	mkdir -p _build
 	cat ci/minikube/deploy-conbench.template.yml > _build/deploy-conbench.yml
@@ -137,4 +136,3 @@ deploy-on-minikube: build-conbench-container-image
 	rm _build/deploy-conbench.yml.bak
 	minikube image load ${CONTAINER_IMAGE_SPEC}
 	minikube kubectl -- apply -f  _build/deploy-conbench.yml
-
