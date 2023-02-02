@@ -37,7 +37,11 @@ RUN pwd && /bin/ls -1 .
 # importlib.metadata.PackageNotFoundError: No package metadata was found for conbench
 RUN pip install .
 
+# Make it so that this directory exists in the container file system
+# that's the value of the PROMETHEUS_MULTIPROC_DIR env var.
+RUN mkdir -p /tmp/_conbench-promcl-coord-dir
+
+
 # Re-active this to get ideas for how the image size can be further reduced.
 #RUN echo "biggest dirs"
 #RUN cd / && du -ha . | sort -r -h | head -n 50 || true
-
