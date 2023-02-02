@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conbench-config
+  labels:
+    app: conbench
+data:
+  CONBENCH_INTENDED_BASE_URL: "http://localhost"
+  APPLICATION_NAME: "conbench-for-minikube"
+  BENCHMARKS_DATA_PUBLIC: "true"
+  # This corresponds to postgres-operator
+  # https://github.com/zalando/postgres-operator/blob/v1.9.0/manifests/minimal-postgres-manifest.yaml
+  DB_NAME: "foo"
+  # DNS name as of k8s service object created by postgres-operator
+  DB_HOST: "acid-minimal-cluster"
+  DB_PORT: "5432"
+  DISTRIBUTION_COMMITS: "100"
+  # value does not seem to matter, hard-coded in gunicorn cmd
+  FLASK_APP: foobarrofl
