@@ -99,7 +99,13 @@ class PingAPI(ApiEndpoint):
                 # do not query in TESTING mode.
                 alembic_version = list(Session.execute(query))[0]["version_num"]
             except Exception as exc:
-                log.info("cannot determine alembic schema version: %s", exc)
+                # Reduce noise: do not log full error, and also only on debug
+                # level.
+                if "psycopg2.errors.UndefinedTable" in str(exc):
+                    log.debug("cannot determine alembic schema version: UndefinedTable")
+                else:
+                    log.info("cannot determine alembic schema version: %s", exc)
+
                 alembic_version = "err"
 
         return {
