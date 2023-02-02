@@ -522,16 +522,17 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
             "tap",
             # Zoom in and out with mouse wheel, default wheel action
             "wheel_zoom",
-            # Allow for drawing a box for zooming, not enabled by default,
-            # because the "pan" tool is enabled by default. Can be activated by
-            # clicking the icon on the toolbar (one can toggle manually between
-            # pan and box-zoom).
+            # Allow for drawing a box for zooming.
             "box_zoom",
         ],
         # Bokeh toolbars can have at most one active tool from each kind of
         # gesture (drag, scroll, tap).
         # https://docs.bokeh.org/en/2.4.0/docs/user_guide/tools.html#setting-the-active-tools
-        active_drag="pan",
+        # Enable box zoom by default, disable the "pan" tool by default. Via
+        # clicking icons on the toolbar one can toggle manually between pan and
+        # box-zoom. As of today we believe that box_zoom&wheel_zoom is a good
+        # default combo to have.
+        active_drag="box_zoom",
         active_scroll="wheel_zoom",
         active_tap="tap",
         active_inspect="auto",  # this enables hover by default (tool added below)
