@@ -17,10 +17,12 @@ jobs:
   cb-on-minikube:
     runs-on: ubuntu-latest
     steps:
+      - name: checkout
+        uses: actions/checkout@v3
       - name: start minikube
         id: minikube
         uses: medyagh/setup-minikube@latest
-      - name: set up postgres-operator
+      - name: ci/minikube/test-conbench-on-mk.sh
         run: bash ci/minikube/test-conbench-on-mk.sh
 
 
