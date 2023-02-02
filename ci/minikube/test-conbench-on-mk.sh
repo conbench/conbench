@@ -8,13 +8,25 @@ set -o pipefail
 set -o xtrace
 
 
-# assume that minikube cluster is running. show config.
+# assume that minikube cluster is running.
+# show debug info
 minikube config view
-
 minikube status
 
 # for https://github.com/prometheus-operator/kube-prometheus
 minikube addons disable metrics-server
+
+# Set up
+git clone https://github.com/prometheus-operator/kube-prometheus
+pushd kube-prometheus
+    git checkout v0.12.0  # release from 2023-01-27
+    kubectl apply --server-side -f manifests/setup
+    kubectl wait \
+        --for condition=Established \
+        --all CustomResourceDefinition \
+        --namespace=monitoring
+    kubectl apply -f manifests/
+popd
 
 # This project vastly simplifies setting up PostgreSQL in minikube for us:
 # https://postgres-operator.readthedocs.io
@@ -23,25 +35,19 @@ minikube addons disable metrics-server
 #
 # Use this manifest by running ./run_operator_locally.sh
 # https://github.com/zalando/postgres-operator/blob/v1.9.0/manifests/minimal-postgres-manifest.yaml
-
-
 git clone https://github.com/zalando/postgres-operator
 pushd postgres-operator
-# 1.9.0 release from 2023-01-30
-git checkout 30b612489a2a20d968262791857d1db1a85e0b36
-# This should tear down the current minikube, and re-spawn another
-# one, bootstrapping the postgres operator using
-# https://github.com/zalando/postgres-operator/blob/v1.9.0/manifests/minimal-postgres-manifest.yaml
-
-# alchemy: the minikube cluster is already up and running as of a previous step
-# in github actions. Remove 'clean_up' and 'start_minikube' from
-# `run_operator_locally.sh`. Do this via line number deletion. In the original
-# file, delete line 256 and 256. That is safe, because a specific commit of
-# this file was checked out.
-cat ./run_operator_locally.sh | tail -n 15
-sed -i '256d;257d' run_operator_locally.sh
-cat ./run_operator_locally.sh | tail -n 15
-bash ./run_operator_locally.sh
+    git checkout v1.9.0 # release from 2023-01-30
+    # Set up  https://github.com/zalando/postgres-operator/blob/v1.9.0/manifests/minimal-postgres-manifest.yaml
+    # alchemy: the minikube cluster is already up and running as of a previous step
+    # in github actions. Remove 'clean_up' and 'start_minikube' from
+    # `run_operator_locally.sh`. Do this via line number deletion. In the original
+    # file, delete line 256 and 256. That is safe, because a specific commit of
+    # this file was checked out.
+    cat ./run_operator_locally.sh | tail -n 15
+    sed -i '256d;257d' run_operator_locally.sh
+    cat ./run_operator_locally.sh | tail -n 15
+    bash ./run_operator_locally.sh
 popd
 
 # Show what's running now.
@@ -56,6 +62,7 @@ echo "password: ${POSTGRES_CONBENCH_USER_PASSWORD}"
 # Set static non-sensitive configuration.
 kubectl apply -f ci/minikube/conbench-config-for-minikube.yml
 
+# env var GITHUB_TOKEN is set in the context of a github action run.
 # Build dynamic sensitive configuration
 cat << EOF > conbench-secrets-for-minikube.yml
 apiVersion: v1
@@ -67,17 +74,16 @@ type: Opaque
 stringData:
   DB_PASSWORD: "${POSTGRES_CONBENCH_USER_PASSWORD}"
   DB_USERNAME: "zalando"
-  GITHUB_API_TOKEN: "noo"
+  GITHUB_API_TOKEN: "${GITHUB_TOKEN}"
   REGISTRATION_KEY: "innocent-registration-key"
   SECRET_KEY: "not-actually-secret"
 EOF
 
-# show contents.
+# show contents, inject into k8s
 cat conbench-secrets-for-minikube.yml
-
-# inject into k8s
 kubectl apply -f conbench-secrets-for-minikube.yml
 
+# build container image and deploy Conbench into the k8s cluster.
 make deploy-on-minikube
 
 # Show what's running now.
@@ -85,7 +91,6 @@ kubectl get pods -A
 
 sleep 60
 kubectl logs deployment/conbench-deployment --all-containers
-
 
 sleep 30
 kubectl get pods -A
@@ -97,28 +102,14 @@ sleep 10
 kubectl get pods -A
 sleep 5
 
-
-
-
-git clone https://github.com/prometheus-operator/kube-prometheus
-pushd kube-prometheus
-# 0.12.0 release from 2023-01-27
-git checkout v0.12.0
-kubectl apply --server-side -f manifests/setup
-kubectl wait \
-	--for condition=Established \
-	--all CustomResourceDefinition \
-	--namespace=monitoring
-kubectl apply -f manifests/
-popd
-
-
-
-
-
-
-
 export CONBENCH_BASE_URL=$(minikube service conbench-service --url) && echo $CONBENCH_BASE_URL
 
-
 make db-populate
+
+sleep 10
+kubectl logs deployment/conbench-deployment --all-containers
+
+# Be sure that prometheus-operator entities are done with their setup.
+kubectl wait --for=condition=Ready pods -l  \
+    app.kubernetes.io/name=prometheus-operator -n default
+

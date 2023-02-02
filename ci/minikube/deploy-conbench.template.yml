@@ -26,7 +26,8 @@ spec:
         imagePullPolicy: Never
         #imagePullPolicy: "Always"
         ports:
-          - containerPort: 5000
+          - name: gunicorn
+            containerPort: 5000
         envFrom:
           - configMapRef:
               name: conbench-config
@@ -48,12 +49,29 @@ spec:
           timeoutSeconds: 20
       terminationGracePeriodSeconds: 60
 ---
+apiVersion: monitoring.coreos.com/v1
+# This is a CRD defined by the prometheus-operator/kube-prometheus project
+kind: ServiceMonitor
+metadata:
+  name: conbench-service-monitor
+spec:
+  selector:
+    matchLabels:
+      app: conbench
+  endpoints:
+    - path: /metrics
+      port: gunicorn
+      scheme: http
+      interval: 60s
+---
 apiVersion: v1
 kind: Service
 metadata:
   annotations:
     alb.ingress.kubernetes.io/target-type: ip
   name: "conbench-service"
+  labels:
+    app: conbench
 spec:
   ports:
   - port: 80
