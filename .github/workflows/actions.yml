@@ -14,7 +14,6 @@ env:
   GITHUB_API_TOKEN: ${{ secrets.PERSONAL_GITHUB_API_TOKEN }}
 
 jobs:
-
   cb-on-minikube:
     runs-on: ubuntu-latest
     steps:
@@ -24,7 +23,7 @@ jobs:
       - name: kubectl
         run: kubectl get pods -A
       - name: postgres-operator
-        run:
+        run: |
           git clone https://github.com/zalando/postgres-operator
           cd postgres-operator
           # 1.9.0 release from 2023-01-30
