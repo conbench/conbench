@@ -59,3 +59,16 @@ cat conbench-secrets-for-minikube.yml
 
 # inject into k8s
 kubectl apply -f conbench-secrets-for-minikube.yml
+
+make deploy-on-minikube
+
+# Show what's running now.
+kubectl get pods -A
+
+sleep 60
+
+kubectl logs deployment/conbench-deployment --all-containers
+
+export CONBENCH_BASE_URL=$(minikube service conbench-service --url) && echo $CONBENCH_BASE_URL
+
+make db-populate
