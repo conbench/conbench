@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: conbench
-  replicas: 2
+  replicas: 1
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -43,8 +43,8 @@ spec:
               name: conbench-secret
         resources:
           requests:
-            memory: '2Gi'
-            cpu: 0.5
+            memory: '1Gi'
+            cpu: 0.1
         readinessProbe:
           failureThreshold: 1
           httpGet:

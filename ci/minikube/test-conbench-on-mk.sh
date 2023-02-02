@@ -32,6 +32,11 @@ pushd postgres-operator
     # `run_operator_locally.sh`. Do this via line number deletion. In the original
     # file, delete line 256 and 256. That is safe, because a specific commit of
     # this file was checked out.
+
+    sed -i 's|numberOfInstances: 2|numberOfInstances: 1|g' manifests/minimal-postgres-manifest.yaml
+
+    cat manifests/minimal-postgres-manifest.yaml | grep numberOfInstances
+
     cat ./run_operator_locally.sh | tail -n 15
     sed -i '256d;257d' run_operator_locally.sh
     cat ./run_operator_locally.sh | tail -n 15
