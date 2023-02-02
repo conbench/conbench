@@ -43,8 +43,10 @@ spec:
               name: conbench-secret
         resources:
           requests:
-            memory: '1Gi'
-            cpu: 0.1
+            # A request of zero CPU and memory effectively means "infinitely
+            # small" for the scheduler deciding on which node to place the pod.
+            memory: 0
+            cpu: 0
         readinessProbe:
           failureThreshold: 1
           httpGet:
