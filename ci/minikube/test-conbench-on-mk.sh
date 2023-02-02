@@ -99,9 +99,12 @@ kubectl get pods -A
 
 
 sleep 3
+
+kubectl describe pods/prometheus-k8s-0 --namespace monitoring
+
 # Be sure that prometheus-operator entities are done with their setup.
 kubectl wait --for=condition=Ready pods -l  \
-    app.kubernetes.io/name=prometheus-operator -n default
+    app.kubernetes.io/name=prometheus-operator -n monitoring
 
 
 sleep 5
