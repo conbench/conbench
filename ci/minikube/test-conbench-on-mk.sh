@@ -7,6 +7,10 @@ set -o pipefail
 # show commands
 set -o xtrace
 
+
+# assume that minikube cluster is running. show config.
+minikube config view
+
 # This project vastly simplifies setting up PostgreSQL in minikube for us:
 # https://postgres-operator.readthedocs.io
 #
@@ -17,7 +21,6 @@ set -o xtrace
 
 
 git clone https://github.com/zalando/postgres-operator
-
 pushd postgres-operator
 # 1.9.0 release from 2023-01-30
 git checkout 30b612489a2a20d968262791857d1db1a85e0b36
@@ -76,9 +79,20 @@ make deploy-on-minikube
 kubectl get pods -A
 
 sleep 60
-
 kubectl logs deployment/conbench-deployment --all-containers
 
+
+sleep 30
+kubectl get pods -A
+
+sleep 5
+kubectl logs deployment/conbench-deployment --all-containers
+
+sleep 10
+kubectl get pods -A
+sleep 5
+
 export CONBENCH_BASE_URL=$(minikube service conbench-service --url) && echo $CONBENCH_BASE_URL
+
 
 make db-populate
