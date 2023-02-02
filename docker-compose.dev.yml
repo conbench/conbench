@@ -7,14 +7,17 @@ services:
     # to make this more robust
     command: [
       "gunicorn",
+      "-c", "conbench/gunicorn-conf.py",
       "-b", "0.0.0.0:5000",
       "-w", "2",
       "conbench:application",
       "--access-logfile=-",
       "--error-logfile=-",
-      "--reload"
+      "--preload"
       ]
     volumes:
       # Left-hand path: relative to this compose file. Mount the directory
       # that this compose file resided in as `/app` into the container.
       - .:/app
+      # mount in /tmp for debuggability
+      - /tmp:/tmp

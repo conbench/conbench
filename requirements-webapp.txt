@@ -15,6 +15,7 @@ marshmallow
 numpy
 oauthlib
 openapi-spec-validator
+prometheus-flask-exporter
 psutil
 psycopg2-binary
 py-cpuinfo

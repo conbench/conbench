@@ -74,7 +74,7 @@ type: Opaque
 stringData:
   DB_PASSWORD: "${POSTGRES_CONBENCH_USER_PASSWORD}"
   DB_USERNAME: "zalando"
-  GITHUB_API_TOKEN: "${GITHUB_TOKEN}"
+  GITHUB_API_TOKEN: "${GITHUB_API_TOKEN:=notset}"
   REGISTRATION_KEY: "innocent-registration-key"
   SECRET_KEY: "not-actually-secret"
 EOF

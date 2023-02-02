@@ -132,7 +132,7 @@ deploy-on-minikube: build-conbench-container-image
 	minikube addons enable ingress
 	minikube status
 	mkdir -p _build
-	cat ci/minikube/deploy-conbench.yml.template > _build/deploy-conbench.yml
+	cat ci/minikube/deploy-conbench.template.yml > _build/deploy-conbench.yml
 	sed -i.bak "s|<CONBENCH_CONTAINER_IMAGE_SPEC>|${CONTAINER_IMAGE_SPEC}|g" _build/deploy-conbench.yml
 	rm _build/deploy-conbench.yml.bak
 	minikube image load ${CONTAINER_IMAGE_SPEC}

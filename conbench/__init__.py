@@ -3,6 +3,11 @@ import json
 import logging
 import os
 
+from prometheus_flask_exporter.multiprocess import (
+    GunicornPrometheusMetrics,
+    GunicornInternalPrometheusMetrics,
+)
+
 import conbench.logger
 
 try:
@@ -18,7 +23,13 @@ conbench.logger.setup(level_stderr="DEBUG", level_file=None, level_sqlalchemy="W
 log = logging.getLogger(__name__)
 
 
+print(f'value of PROMETHEUS_MULTIPROC_DIR: {os.environ["PROMETHEUS_MULTIPROC_DIR"]}')
+
+metrics = None
+
+
 def create_application(config):
+    global metrics
     import flask as f
 
     app = f.Flask(__name__)
@@ -55,6 +66,19 @@ def create_application(config):
         log.debug(log_cfg_msg)
     else:
         log.info(log_cfg_msg)
+
+    # m = GunicornPrometheusMetrics(app)
+    m = GunicornInternalPrometheusMetrics(app)
+    m.info("app_info", "Application info", version="1.0.3")
+    metrics = m
+
+    metrics.register_default(
+        metrics.counter(
+            "by_path_counter",
+            "Request count by request paths",
+            labels={"path": lambda: f.request.path},
+        )
+    )
 
     return app
 
