@@ -101,3 +101,40 @@ test-run-app-dev:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml \
 		up --build --wait --detach || (docker compose logs --since 30m; exit 1)
 	docker compose down
+
+# The version string representing the current checkout / working directory.
+# This for example defines the Docker image tags. The default `dev` suffix
+# represents a local dev environment. Override CHECKOUT_VERSION_STRING with a
+# different suffix (e.g. `ci`) in the CI environment so that the version string
+# attached to build artifacts reveals the environment that the build artifact
+# was created in.
+export CHECKOUT_VERSION_STRING ?= $(shell git rev-parse --short=9 HEAD)-dev
+# Set a different repo organization for pushing images to
+DOCKER_REPO ?= conbench
+
+CONTAINER_IMAGE_SPEC=$(DOCKER_REPO)/conbench:$(CHECKOUT_VERSION_STRING)
+
+$(info --------------------------------------------------------------)
+$(info CONTAINER_IMAGE_SPEC is $(CONTAINER_IMAGE_SPEC))
+$(info --------------------------------------------------------------)
+
+
+.PHONY: build-conbench-container-image
+build-conbench-container-image:
+	docker build . -f Dockerfile -t ${CONTAINER_IMAGE_SPEC}
+	echo "Size of docker image:"
+	docker images --format "{{.Size}}" ${CONTAINER_IMAGE_SPEC}
+	# docker push ${CONTAINER_IMAGE_SPEC}
+
+
+.PHONY: deploy-on-minikube
+deploy-on-minikube: build-conbench-container-image
+	minikube addons enable ingress
+	minikube status
+	mkdir -p _build
+	cat ci/minikube/deploy-conbench.yml.template > _build/deploy-conbench.yml
+	sed -i.bak "s|<CONBENCH_CONTAINER_IMAGE_SPEC>|${CONTAINER_IMAGE_SPEC}|g" _build/deploy-conbench.yml
+	rm _build/deploy-conbench.yml.bak
+	minikube image load ${CONTAINER_IMAGE_SPEC}
+	minikube kubectl -- apply -f  _build/deploy-conbench.yml
+
