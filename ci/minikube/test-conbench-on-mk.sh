@@ -24,6 +24,15 @@ git checkout 30b612489a2a20d968262791857d1db1a85e0b36
 # This should tear down the current minikube, and re-spawn another
 # one, bootstrapping the postgres operator using
 # https://github.com/zalando/postgres-operator/blob/v1.9.0/manifests/minimal-postgres-manifest.yaml
+
+# alchemy: the minikube cluster is already up and running as of a previous step
+# in github actions. Remove 'clean_up' and 'start_minikube' from
+# `run_operator_locally.sh`. Do this via line number deletion. In the original
+# file, delete line 256 and 256. That is safe, because a specific commit of
+# this file was checked out.
+cat ./run_operator_locally.sh | tail -n 15
+sed -i '256d;257d' file
+cat ./run_operator_locally.sh | tail -n 15
 bash ./run_operator_locally.sh
 popd
 
