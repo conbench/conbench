@@ -80,10 +80,6 @@ pushd kube-prometheus
     kubectl apply -f manifests/
 popd
 
-# Be sure that prometheus-operator entities are done with their setup.
-kubectl wait --for=condition=Ready pods -l  \
-    app.kubernetes.io/name=prometheus-operator -n default
-
 
 # show contents, inject into k8s
 cat conbench-secrets-for-minikube.yml
@@ -100,6 +96,13 @@ kubectl logs deployment/conbench-deployment --all-containers
 
 sleep 30
 kubectl get pods -A
+
+
+sleep 3
+# Be sure that prometheus-operator entities are done with their setup.
+kubectl wait --for=condition=Ready pods -l  \
+    app.kubernetes.io/name=prometheus-operator -n default
+
 
 sleep 5
 kubectl logs deployment/conbench-deployment --all-containers
