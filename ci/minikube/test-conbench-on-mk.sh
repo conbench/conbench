@@ -16,18 +16,6 @@ minikube status
 # for https://github.com/prometheus-operator/kube-prometheus
 minikube addons disable metrics-server
 
-# Set up
-git clone https://github.com/prometheus-operator/kube-prometheus
-pushd kube-prometheus
-    git checkout v0.12.0  # release from 2023-01-27
-    kubectl apply --server-side -f manifests/setup
-    kubectl wait \
-        --for condition=Established \
-        --all CustomResourceDefinition \
-        --namespace=monitoring
-    kubectl apply -f manifests/
-popd
-
 # This project vastly simplifies setting up PostgreSQL in minikube for us:
 # https://postgres-operator.readthedocs.io
 #
@@ -79,6 +67,24 @@ stringData:
   SECRET_KEY: "not-actually-secret"
 EOF
 
+
+# Set up kube-prometheus
+git clone https://github.com/prometheus-operator/kube-prometheus
+pushd kube-prometheus
+    git checkout v0.12.0  # release from 2023-01-27
+    kubectl apply --server-side -f manifests/setup
+    kubectl wait \
+        --for condition=Established \
+        --all CustomResourceDefinition \
+        --namespace=monitoring
+    kubectl apply -f manifests/
+popd
+
+# Be sure that prometheus-operator entities are done with their setup.
+kubectl wait --for=condition=Ready pods -l  \
+    app.kubernetes.io/name=prometheus-operator -n default
+
+
 # show contents, inject into k8s
 cat conbench-secrets-for-minikube.yml
 kubectl apply -f conbench-secrets-for-minikube.yml
@@ -109,7 +115,5 @@ make db-populate
 sleep 10
 kubectl logs deployment/conbench-deployment --all-containers
 
-# Be sure that prometheus-operator entities are done with their setup.
-kubectl wait --for=condition=Ready pods -l  \
-    app.kubernetes.io/name=prometheus-operator -n default
+
 
