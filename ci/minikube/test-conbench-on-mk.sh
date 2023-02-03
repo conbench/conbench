@@ -106,14 +106,18 @@ kubectl get pods -A
 
 # At this point it's expected that the postgres stack still needs a tiny bit
 # of time before it's operational.
-sleep 15
-kubectl logs deployment/conbench-deployment --all-containers
+# One could do
+#   kubectl wait --timeout=90s --for=condition=Ready pods acid-minimal-cluster-0
+# but Conbench has internal retrying upon DB connect error
+
+#sleep 20
+#kubectl logs deployment/conbench-deployment --all-containers
 
 sleep 5
 kubectl get pods -A
 
 sleep 3
-kubectl describe pods/prometheus-k8s-0 --namespace monitoring
+# kubectl describe pods/prometheus-k8s-0 --namespace monitoring
 
 # Be sure that prometheus-operator entities are done with their setup.
 kubectl wait --timeout=90s --for=condition=Ready \
@@ -127,13 +131,14 @@ sleep 5
 kubectl get pods -A
 sleep 5
 
+# Wait for the readiness check to succeed, which implies responsiveness to
+# /api/ping.
+kubectl wait --timeout=90s --for=condition=Ready pods -l app=conbench
+
+
 export CONBENCH_BASE_URL=$(minikube service conbench-service --url) && echo $CONBENCH_BASE_URL
-
 (cd "${CONBENCH_REPO_ROOT_DIR}" && make db-populate)
-
 
 sleep 10
 kubectl logs deployment/conbench-deployment --all-containers
-
-
 
