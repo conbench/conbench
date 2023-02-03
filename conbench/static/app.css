@@ -119,3 +119,25 @@ table.dataTable td {
 .hide-text{
    display: none;
 }
+
+.custom-input-text {
+  font-weight: normal;
+  font-size: 12px;
+  padding: 3px;
+}
+
+.custom-search-box{
+   box-sizing: content-box;
+   width: 70%;
+   min-width: 80px;
+   padding-right: initial;
+   padding-left: initial;
+}
+
+.message-header{
+  font-weight: normal;
+  font-size: 10px;
+  padding: 3px;
+  border-style: dotted;
+  border-width: thin;
+}

@@ -117,18 +117,18 @@
 {% block scripts %}
 {{super()}}
 <script type="text/javascript">
-  var table = $('#runs').DataTable( {
+  var table = $('#runs').DataTable({
       "order": [[0, 'desc']],
       "language": {
           "searchPlaceholder": "commit hash works too",
-      }
+      },
 });
 enable_search_query_string('#runs');
 
-/* specify the HTML table id (string) and the indexes of the columns for
- which search functionality should be enabled in an array format
+/* specify the HTML table id (string) for
+ which search functionality should be enabled
 */
-specific_column_search('#runs', [6]);
+column_search_implementation('#runs');
 
 </script>
 {% endblock %}

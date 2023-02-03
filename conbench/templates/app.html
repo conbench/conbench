@@ -150,13 +150,13 @@ INPUTS:
  data_table_id: string
  column_indexes: array
  */
-function specific_column_search(data_table_id, column_indexes) {
+function dropdown_column_search(data_table_id, column_indexes) {
     $(document).ready(function() {
         var table = $(data_table_id).DataTable();
         table.columns(column_indexes).every(function() {
             var that = this;
             var reset = ""
-            var mySelectList = $("<select></select>")
+            var mySelectList = $("<select class='custom-search-box'></select>")
                 .appendTo(this.header())
                 .on("change", function() {
                     that.search($(this).val()).draw();
@@ -165,7 +165,8 @@ function specific_column_search(data_table_id, column_indexes) {
                 $(`<option value="${reset}">${reset}</option>`)
             );
             this.cache("search").unique().sort().each(function(param) {
-                if (param !== "") {
+                // check for multiple whitespaces and empty string
+                if (/^\s*$/.test(param) == false) {
                     mySelectList.append(
                         $(`<option value="${param}">${param}</option>`)
                     );
@@ -173,10 +174,78 @@ function specific_column_search(data_table_id, column_indexes) {
                     mySelectList.append(
                         $(`<option value="${param}">null</option>`)
                     );
-                }           
+                }
             });
+            // console.log(mySelectList)
         });
     });
+}
+
+/*
+INFO:
+    Adds free text search ability for specific columns, based on selected column indexes.
+    Based on the indexes of the columns, input boxes are created. The search is triggered on
+    key press.
+INPUTS:
+ data_table_id: string
+ column_indexes: array
+ */
+function free_text_column_search(data_table_id, column_indexes) {
+    $(document).ready(function() {
+        var table = $(data_table_id).DataTable();
+        table.columns(column_indexes).every(function() {
+            var that = this;
+            var title = this.header().textContent;
+            $(`<input class="custom-input-text custom-search-box" type="text" placeholder="🔍 ${title}"
+                onClick="if(event.stopPropagation!==undefined){event.preventDefault(); event.stopPropagation();}event.cancelBubble=true;"/>`)
+                .appendTo(this.header())
+                .on('keyup change clear', function() { //column search/sorting triggered on keypress
+                            that
+                            .search(this.value)
+                            .draw();
+            });
+        });
+    })
+}
+
+/*
+INFO:
+    Function to check unique value count and set the required search type.
+        - Unique values <10 & >1 [specific_column_search]: drop-down based search is implemented
+        - Unique values >10 [free_text_column_search]: free text search is implemented
+        - Search is not enabled with single OR null data points and a message is logged on console
+        - If any unidentified value (beyond assumed definitions) is encountered, a message is logged on console
+INPUT:
+    data_table_id: string
+ */
+function column_search_implementation(data_table_id) {
+    $(document).ready(function() {
+        var table = $(data_table_id).DataTable();
+        var unique_count = [];
+        table.columns().every( function () {
+            var current = this;
+            //array of unique count for data points within each column
+            unique_count.push(current.data().unique().count())
+        });
+        console.log(unique_count)
+        unique_count.forEach(function (item, index) {
+            if (item < 10 && item > 1) {
+                dropdown_column_search(data_table_id, index)
+            }
+            else if (item > 10){
+                free_text_column_search(data_table_id, index)
+            }
+            else if (item == 1) {
+                console.log("Search isn't enabled with one/null data point")
+                // keeping this placeholder for future addition of a message/note
+                $(`<p></p>`).appendTo(
+                    table.columns([index]).header())
+            }
+            else{
+                console.log("Unidentified value encountered")
+            }
+        });
+    })
 }
 
 $("#confirm-delete").on("show.bs.modal", function(e) {
