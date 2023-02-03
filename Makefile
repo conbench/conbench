@@ -127,6 +127,21 @@ build-conbench-container-image:
 	docker images --format "{{.Size}}" ${CONTAINER_IMAGE_SPEC}
 	# docker push ${CONTAINER_IMAGE_SPEC}
 
+# Some of the cmdline flags are taken from
+# https://github.com/prometheus-operator/kube-prometheus#minikube
+# https://minikube.sigs.k8s.io/docs/commands/start/
+.PHONY: start-minikube
+start-minikube:
+	minikube delete
+	minikube start --cpus=4 --memory=6g \
+		--disable-metrics \
+		--kubernetes-version=v1.24.0 \
+		--bootstrapper=kubeadm \
+		--extra-config=kubelet.authentication-token-webhook=true \
+		--extra-config=kubelet.authorization-mode=Webhook \
+		--extra-config=scheduler.bind-address=0.0.0.0 \
+		--extra-config=controller-manager.bind-address=0.0.0.0
+
 
 # The `minikube image load` technique is rather new and allows for using local
 # Docker images in k8s deployments (as long as they specify `imagePullPolicy:
@@ -143,4 +158,9 @@ deploy-on-minikube:
 	rm _build/deploy-conbench.yml.bak
 	time minikube image load ${CONTAINER_IMAGE_SPEC}
 	minikube kubectl -- apply -f  _build/deploy-conbench.yml
+
+.PHONY: minikube-bigflow
+minikube-bigflow: build-conbench-container-image start-minikube
+	rm -rf _build && mkdir -p _build && cd _build && bash ../ci/minikube/test-conbench-on-mk.sh
+
 
