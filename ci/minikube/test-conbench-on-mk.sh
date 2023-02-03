@@ -143,7 +143,10 @@ kubectl wait --timeout=90s --for=condition=Ready \
 # am not sure which of both is scraping Conbench. Just wait for the both of
 # them.
 kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-0 -n monitoring
-kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-1 -n monitoring
+
+# looks like prometheus-k8s-1 is precisely what does not start up on GHA
+# because of a resource shortage.
+# kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-1 -n monitoring
 
 sleep 5
 # kubectl logs deployment/conbench-deployment --all-containers
@@ -156,10 +159,8 @@ sleep 5
 # /api/ping.
 kubectl wait --timeout=90s --for=condition=Ready pods -l app=conbench
 
-
 export CONBENCH_BASE_URL=$(minikube service conbench-service --url) && echo $CONBENCH_BASE_URL
 (cd "${CONBENCH_REPO_ROOT_DIR}" && make db-populate)
 
 sleep 10
 kubectl logs deployment/conbench-deployment --all-containers
-
