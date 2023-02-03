@@ -19,7 +19,7 @@ WORKDIR /app
 # Only copy in the files that are required (instead of the entire repo root),
 # to make most use of Docker container image layer caching.
 COPY conbench /app/conbench
-COPY setup.py README.md requirements-cli.txt requirements-webapp.txt requirements-dev.txt /app/
+COPY setup.py README.md requirements-cli.txt requirements-webapp.txt requirements-dev.txt alembic.ini /app/
 
 # Inspect contents of /app
 RUN pwd && /bin/ls -1 .
