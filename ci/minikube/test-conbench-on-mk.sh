@@ -109,7 +109,11 @@ kubectl apply -f conbench-secrets-for-minikube.yml
 # makefile target, i.e. the repo's root dir needs to be the current working
 # directory. Regardless in which current working directory we are right now; go
 # to that directory in a sub shell.
-(cd "${CONBENCH_REPO_ROOT_DIR}" && make deploy-on-minikube)
+(
+    cd "${CONBENCH_REPO_ROOT_DIR}" && \
+        make build-conbench-container-image && \
+        make deploy-on-minikube
+)
 
 # Show what's running now.
 kubectl get pods -A
