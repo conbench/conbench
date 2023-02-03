@@ -104,7 +104,9 @@ kubectl apply -f conbench-secrets-for-minikube.yml
 # Show what's running now.
 kubectl get pods -A
 
-sleep 5
+# At this point it's expected that the postgres stack still needs a tiny bit
+# of time before it's operational.
+sleep 15
 kubectl logs deployment/conbench-deployment --all-containers
 
 sleep 5
@@ -127,7 +129,8 @@ sleep 5
 
 export CONBENCH_BASE_URL=$(minikube service conbench-service --url) && echo $CONBENCH_BASE_URL
 
-make db-populate
+(cd "${CONBENCH_REPO_ROOT_DIR}" && make db-populate)
+
 
 sleep 10
 kubectl logs deployment/conbench-deployment --all-containers
