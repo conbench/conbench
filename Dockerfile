@@ -1,7 +1,8 @@
 FROM python:3.11-slim
 
 # Curl is needed for docker-compose health checks.
-RUN apk add --update curl &&  rm -rf /var/cache/apk/*
+RUN apt-get update && apt-get install -y -q --no-install-recommends \
+    curl && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements-webapp.txt /tmp/
 COPY requirements-dev.txt /tmp/
