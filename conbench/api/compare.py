@@ -9,7 +9,7 @@ from ..entities._entity import NotFound
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
 from ..entities.compare import CompareBenchmarkResultSerializer
-from ..entities.distribution import set_z_scores
+from ..entities.history import set_z_scores
 from ..hacks import set_display_batch, set_display_name
 
 
@@ -133,6 +133,7 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
 
         baseline_benchmark_result = self._get(baseline_id)
         contender_benchmark_result = self._get(contender_id)
+        set_z_scores([baseline_benchmark_result, contender_benchmark_result])
         set_display_name(baseline_benchmark_result)
         set_display_name(contender_benchmark_result)
         set_display_batch(baseline_benchmark_result)
@@ -186,6 +187,7 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
 
         baselines = self._get(baseline_id)
         contenders = self._get(contender_id)
+        set_z_scores(baselines + contenders)
 
         baseline_items, contender_items = [], []
         for benchmark_result in baselines:
@@ -214,7 +216,6 @@ class CompareBenchmarksAPI(CompareEntityEndpoint):
             benchmark_result = BenchmarkResult.one(id=benchmark_id)
         except NotFound:
             self.abort_404_not_found()
-        set_z_scores([benchmark_result])
         return benchmark_result
 
 
@@ -223,7 +224,6 @@ class CompareBatchesAPI(CompareListEndpoint):
         benchmark_results = BenchmarkResult.all(batch_id=batch_id)
         if not benchmark_results:
             self.abort_404_not_found()
-        set_z_scores(benchmark_results)
         return benchmark_results
 
 
@@ -232,7 +232,6 @@ class CompareRunsAPI(CompareListEndpoint):
         benchmark_results = BenchmarkResult.all(run_id=run_id)
         if not benchmark_results:
             self.abort_404_not_found()
-        set_z_scores(benchmark_results)
         return benchmark_results
 
 

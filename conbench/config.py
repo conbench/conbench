@@ -22,12 +22,11 @@ class ConfigClass:
     # does not error out when it finds that the database tables already exist.
     CREATE_ALL_TABLES = os.environ.get("CREATE_ALL_TABLES", "true") == "true"
 
-    # An integer number of commits to use when calculating
-    # statistics. The default is 100; larger numbers will lead to more false negatives,
-    # especially after large changes. We recommend leaving it as the default. Previously
-    # recorded values will not be recalculated if this value is changed. If you would
-    # like to change previous values, you would need to write a migration of the data
-    # to recalculate history.
+    # An integer number of commits representing the max size of the rolling windows used
+    # when calculating statistics like distribution mean and standard deviation. The
+    # default is 100. Larger numbers will lead to more false negatives when alerting on
+    # regressions, especially after large changes. We recommend leaving it as the
+    # default.
     DISTRIBUTION_COMMITS = int(os.environ.get("DISTRIBUTION_COMMITS", 100))
 
     LOG_LEVEL_STDERR = os.environ.get("CONBENCH_LOG_LEVEL_STDERR", "INFO")

@@ -199,15 +199,7 @@ New version of conbench package will be uploaded into PyPI by a new build for [c
 ## Configuring the server
 
 The conbench server can be configured with various environment variables as
-defined in [config.py](https://github.com/conbench/conbench/blob/main/conbench/config.py).
-Most are self-descriptive, e.g. `DB_PORT`. Exceptions:
-
-* `DISTRIBUTION_COMMITS`: An integer number of commits to use when calculating
-statistics. The default is 100; larger numbers will lead to more false negatives,
-especially after large changes. We recommend leaving it as the default. Previously
-recorded values will not be recalculated if this value is changed. If you would
-like to change previous values, you would need to write a migration of the data
-to recalculate history.
+defined in [config.py](./conbench/config.py). Instructions are in that file.
 
 ## Creating accounts
 
