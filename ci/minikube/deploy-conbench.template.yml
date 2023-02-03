@@ -34,7 +34,7 @@ spec:
         imagePullPolicy: Never
         #imagePullPolicy: "Always"
         ports:
-          - name: gunicorn
+          - name: gunicorn-port
             containerPort: 5000
         envFrom:
           - configMapRef:
@@ -69,9 +69,10 @@ spec:
     matchLabels:
       app: conbench
   endpoints:
-    - path: /metrics
-      # could maybe also do this by name? `gunicorn`
-      port: 5000
+    # It's important that ServiceMonitor i) refers to a Service port  and ii)
+    # refers to it via its name.
+    - port: conbench-service-port
+      path: /metrics
       scheme: http
       interval: 60s
 ---
@@ -85,8 +86,9 @@ metadata:
     app: conbench
 spec:
   ports:
-  - port: 80
-    targetPort: 5000
+  - name: conbench-service-port
+    port: 80
+    targetPort: gunicorn-port
     protocol: TCP
   type: NodePort
   selector:
