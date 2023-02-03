@@ -60,8 +60,9 @@ echo "password: ${POSTGRES_CONBENCH_USER_PASSWORD}"
 # Set static non-sensitive configuration.
 kubectl apply -f ${CONBENCH_REPO_ROOT_DIR}/ci/minikube/conbench-config-for-minikube.yml
 
-# env var GITHUB_TOKEN is set in the context of a github action run.
-# Build dynamic sensitive configuration
+# env var GITHUB_API_TOKEN is set in the context of a github action run.
+# Build dynamic sensitive configuration. If GITHUB_API_TOKEN is nto set then
+# default to an empty string.
 cat << EOF > conbench-secrets-for-minikube.yml
 apiVersion: v1
 kind: Secret
@@ -72,7 +73,7 @@ type: Opaque
 stringData:
   DB_PASSWORD: "${POSTGRES_CONBENCH_USER_PASSWORD}"
   DB_USERNAME: "zalando"
-  GITHUB_API_TOKEN: "${GITHUB_API_TOKEN:=notset}"
+  GITHUB_API_TOKEN: "${GITHUB_API_TOKEN:=}"
   REGISTRATION_KEY: "innocent-registration-key"
   SECRET_KEY: "not-actually-secret"
 EOF
@@ -90,6 +91,15 @@ pushd kube-prometheus
     kubectl apply -f manifests/
 popd
 
+# It seems like on minikube with cpus=2 and memory=2000 (which is the github
+# actions resource footprint, by default) it's not possible to run all of
+# (conbench, kube-prometheus, postgres-operator, ...) at the same time, at
+# least using meaningfull resource requests. We have the resource requests
+# under control for conbench. We can also patch some resource requests before
+# trying to apply manifest files. I thought we could also patch resource
+# requests for already applied objects by going in with precision, but
+# that's seemingly a very new concept in the k8s ecosystem:
+# https://github.com/kubernetes/kubernetes/issues/104737
 
 # show contents, inject into k8s
 cat conbench-secrets-for-minikube.yml
