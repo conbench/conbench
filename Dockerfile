@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+# Curl is needed for docker-compose health checks.
+RUN apk add --update curl &&  rm -rf /var/cache/apk/*
+
 COPY requirements-webapp.txt /tmp/
 COPY requirements-dev.txt /tmp/
 
