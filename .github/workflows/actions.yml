@@ -14,6 +14,162 @@ env:
   GITHUB_API_TOKEN: ${{ secrets.PERSONAL_GITHUB_API_TOKEN }}
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install linting dependencies
+        run: pip install -r requirements-dev.txt
+      - name: lint
+        run: make lint-ci
+
+  testsuite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Run tests, generate coverage data
+        # This is expected to create /etc/conbench-coverage-dir/.coverage
+        # in the `app` service container.
+        run: make tests
+      - name: Convert coverage data to LCOV
+        run: |
+          docker compose run -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage app \
+            coverage lcov -o /etc/conbench-coverage-dir/coverage.lcov
+      - name: Publish coverage
+        uses: coverallsapp/github-action@master
+        # sometimes the coveralls API fails transiently, and we don't want that to affect this build
+        continue-on-error: true
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: _conbench-coverage-dir/coverage.lcov
+
+  # This is to confirm that commonly used developer commands still work.
+  dev-cmds:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: rebuild-expected-api-docs
+        run: |
+          pip install black
+          make rebuild-expected-api-docs
+      # Launch application as containerized stack. This terminates after
+      # health checks confirm that stack is running.
+      - name: run-app-bg
+        run: make run-app-bg
+      # Run `db-populate` twice to see that this can be repeated w/o failing.
+      - name: test `make db-populate`, twice
+        run: |
+            pip install requests # the nonly non-stdlib dependency as of now
+            export CONBENCH_BASE_URL=http://$(docker compose port app 5000) && \
+            make db-populate && make db-populate
+            docker-compose logs # view logs to see why transient errs happen
+      - name: test `make teardown-app`
+        run: make teardown-app
+      # The goal of this is to largely test `make run-app-dev`.
+      - name: test-run-app-dev
+        run: make test-run-app-dev
+
+  ui-screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: run-app-bg
+        run: make run-app-bg
+      - name: populate DB & take screenshots
+        run: |
+            pip install requests # the nonly non-stdlib dependency as of now
+            export CONBENCH_BASE_URL=http://$(docker compose port app 5000)
+            export SOME_BENCHMARK_ID="$(make -s db-populate)"
+            echo "conbench base URL: $CONBENCH_BASE_URL"
+            echo "a valid benchmark ID: $SOME_BENCHMARK_ID"
+            cd ci
+            docker build . -t conbench-screenshot -f screenshot.Dockerfile
+            mkdir ci-artifacts
+            docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
+                python screenshot.py ${CONBENCH_BASE_URL} /artifacts frontpage
+            docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
+                python screenshot.py "${CONBENCH_BASE_URL}/benchmarks/${SOME_BENCHMARK_ID}/" \
+                  /artifacts benchmark-result-view --wait-for-canvas
+            /bin/ls -ahltr ci-artifacts/
+      - name: upload-artifacts
+        uses: actions/upload-artifact@v3
+        # Upload screenshots _especially_ when result was unexpected.
+        if: always()
+        with:
+          name: screenshots
+          path: ci/ci-artifacts/
+      - name: get container logs
+        if: always()
+        # If the browser-initiated GET requests led to e.g an Internal Server Error
+        # then we see that in the screenshot(s). For debugging that, however,
+        # it's crucial to get web application logs. Note that this shows
+        # container logs interleaved, but prefixed so that it's after all
+        # unambiguous which line came from which container.
+        run: docker compose logs --since 30m
+      - name: test `make teardown-app`
+        # Run teardown especially when previous step(s) failed, because here
+        # we get some good log output for debuggability.
+        if: always()
+        run: make teardown-app
+
+  db-migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Start PostgreSQL DB
+        run: docker compose run --detach db
+      # Run `alembic upgrade head` via docker compose so that it is within
+      # the network that the DB is also in, reachable via DNS name `db`
+      - name: Test database migrations
+        run: docker compose run -e CREATE_ALL_TABLES app alembic upgrade head
+        env:
+          CREATE_ALL_TABLES: false
+
+  clis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          pip install --no-deps \
+            -e benchadapt/python \
+            -e benchrun/python \
+            -e benchconnect && \
+          pip install \
+            -U --upgrade-strategy eager \
+            -e .[dev] \
+            -e benchclients/python
+      - name: Test benchclients
+        run: |
+          pytest -vv benchclients/python/tests
+      - name: Test benchadapt
+        run: |
+          pytest -vv benchadapt/python/tests
+      - name: Test benchrun
+        run: |
+          pytest -vv benchrun/python/tests
+      - name: Test benchconnect
+        run: |
+          pytest -vv benchconnect
+
   cb-on-minikube:
     runs-on: ubuntu-latest
     steps:
@@ -29,160 +185,3 @@ jobs:
           memory: max
       - name: ci/minikube/test-conbench-on-mk.sh
         run: export CONBENCH_REPO_ROOT_DIR=$(pwd) && bash ci/minikube/test-conbench-on-mk.sh
-
-
-  # lint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v3
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: "3.11"
-  #     - name: Install linting dependencies
-  #       run: pip install -r requirements-dev.txt
-  #     - name: lint
-  #       run: make lint-ci
-
-  # testsuite:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v3
-  #     - name: Run tests, generate coverage data
-  #       # This is expected to create /etc/conbench-coverage-dir/.coverage
-  #       # in the `app` service container.
-  #       run: make tests
-  #     - name: Convert coverage data to LCOV
-  #       run: |
-  #         docker compose run -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage app \
-  #           coverage lcov -o /etc/conbench-coverage-dir/coverage.lcov
-  #     - name: Publish coverage
-  #       uses: coverallsapp/github-action@master
-  #       # sometimes the coveralls API fails transiently, and we don't want that to affect this build
-  #       continue-on-error: true
-  #       with:
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
-  #         path-to-lcov: _conbench-coverage-dir/coverage.lcov
-
-  # # This is to confirm that commonly used developer commands still work.
-  # dev-cmds:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v3
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: "3.10"
-  #     - name: rebuild-expected-api-docs
-  #       run: |
-  #         pip install black
-  #         make rebuild-expected-api-docs
-  #     # Launch application as containerized stack. This terminates after
-  #     # health checks confirm that stack is running.
-  #     - name: run-app-bg
-  #       run: make run-app-bg
-  #     # Run `db-populate` twice to see that this can be repeated w/o failing.
-  #     - name: test `make db-populate`, twice
-  #       run: |
-  #           pip install requests # the nonly non-stdlib dependency as of now
-  #           export CONBENCH_BASE_URL=http://$(docker compose port app 5000) && \
-  #           make db-populate && make db-populate
-  #           docker-compose logs # view logs to see why transient errs happen
-  #     - name: test `make teardown-app`
-  #       run: make teardown-app
-  #     # The goal of this is to largely test `make run-app-dev`.
-  #     - name: test-run-app-dev
-  #       run: make test-run-app-dev
-
-  # ui-screenshots:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v3
-  #     - name: run-app-bg
-  #       run: make run-app-bg
-  #     - name: populate DB & take screenshots
-  #       run: |
-  #           pip install requests # the nonly non-stdlib dependency as of now
-  #           export CONBENCH_BASE_URL=http://$(docker compose port app 5000)
-  #           export SOME_BENCHMARK_ID="$(make -s db-populate)"
-  #           echo "conbench base URL: $CONBENCH_BASE_URL"
-  #           echo "a valid benchmark ID: $SOME_BENCHMARK_ID"
-  #           cd ci
-  #           docker build . -t conbench-screenshot -f screenshot.Dockerfile
-  #           mkdir ci-artifacts
-  #           docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
-  #               python screenshot.py ${CONBENCH_BASE_URL} /artifacts frontpage
-  #           docker run --net=host -v $(pwd)/ci-artifacts:/artifacts conbench-screenshot \
-  #               python screenshot.py "${CONBENCH_BASE_URL}/benchmarks/${SOME_BENCHMARK_ID}/" \
-  #                 /artifacts benchmark-result-view --wait-for-canvas
-  #           /bin/ls -ahltr ci-artifacts/
-  #     - name: upload-artifacts
-  #       uses: actions/upload-artifact@v3
-  #       # Upload screenshots _especially_ when result was unexpected.
-  #       if: always()
-  #       with:
-  #         name: screenshots
-  #         path: ci/ci-artifacts/
-  #     - name: get container logs
-  #       if: always()
-  #       # If the browser-initiated GET requests led to e.g an Internal Server Error
-  #       # then we see that in the screenshot(s). For debugging that, however,
-  #       # it's crucial to get web application logs. Note that this shows
-  #       # container logs interleaved, but prefixed so that it's after all
-  #       # unambiguous which line came from which container.
-  #       run: docker compose logs --since 30m
-  #     - name: test `make teardown-app`
-  #       # Run teardown especially when previous step(s) failed, because here
-  #       # we get some good log output for debuggability.
-  #       if: always()
-  #       run: make teardown-app
-
-  # db-migrations:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v3
-  #     - name: Start PostgreSQL DB
-  #       run: docker compose run --detach db
-  #     # Run `alembic upgrade head` via docker compose so that it is within
-  #     # the network that the DB is also in, reachable via DNS name `db`
-  #     - name: Test database migrations
-  #       run: docker compose run -e CREATE_ALL_TABLES app alembic upgrade head
-  #       env:
-  #         CREATE_ALL_TABLES: false
-
-  # clis:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v3
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: "3.10"
-  #     - name: Install dependencies
-  #       run: |
-  #         pip install --no-deps \
-  #           -e benchadapt/python \
-  #           -e benchrun/python \
-  #           -e benchconnect && \
-  #         pip install \
-  #           -U --upgrade-strategy eager \
-  #           -e .[dev] \
-  #           -e benchclients/python
-  #     - name: Test benchclients
-  #       run: |
-  #         pytest -vv benchclients/python/tests
-  #     - name: Test benchadapt
-  #       run: |
-  #         pytest -vv benchadapt/python/tests
-  #     - name: Test benchrun
-  #       run: |
-  #         pytest -vv benchrun/python/tests
-  #     - name: Test benchconnect
-  #       run: |
-  #         pytest -vv benchconnect
