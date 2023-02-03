@@ -22,9 +22,7 @@ del importlib_metadata
 conbench.logger.setup(level_stderr="DEBUG", level_file=None, level_sqlalchemy="WARNING")
 log = logging.getLogger(__name__)
 
-
-print(f'value of PROMETHEUS_MULTIPROC_DIR: {os.environ["PROMETHEUS_MULTIPROC_DIR"]}')
-
+# This is going to be an application-global singleton
 metrics = None
 
 
@@ -211,6 +209,9 @@ def dict_or_objattrs_to_nonsensitive_string(obj):
     return json.dumps(sanitized, sort_keys=True, default=str, indent=2)
 
 
+# Note(JP): when FLASK_APP is set then this here is not executed, but instead
+# gunicorn loads into the app using a stringified import instruction such as
+# `conbench:application` (codified in the gunicorn cmd line args).
 # see .flaskenv used by `$ flask run`
 if os.environ.get("FLASK_APP", None):
     from .config import Config
