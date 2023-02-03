@@ -133,13 +133,20 @@ kubectl get pods -A
 sleep 3
 # kubectl describe pods/prometheus-k8s-0 --namespace monitoring
 
-# Be sure that prometheus-operator entities are done with their setup.
+# Be sure that prometheus-operator pods are done with their setup.
 kubectl wait --timeout=90s --for=condition=Ready \
     pods -l app.kubernetes.io/name=prometheus-operator -n monitoring
 
 
+# Be sure that the Prometheus instances managed by the prometheus operator are
+# ready (ready to scrape!). There are two instances. At the time of writing I
+# am not sure which of both is scraping Conbench. Just wait for the both of
+# them.
+kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-0 -n monitoring
+kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-1 -n monitoring
+
 sleep 5
-kubectl logs deployment/conbench-deployment --all-containers
+# kubectl logs deployment/conbench-deployment --all-containers
 
 sleep 5
 kubectl get pods -A
