@@ -451,13 +451,18 @@ def _add_rolling_stats_columns_to_history_query(
 
 
 def _calculate_z_score(
-    data_point: float,
+    data_point: Optional[float],
     unit: str,
     dist_mean: Optional[float],
     dist_stddev: Optional[float],
 ) -> Optional[float]:
     """Calculate the z-score of a data point compared to a distribution."""
-    if dist_mean is not None and dist_stddev is not None and dist_stddev != 0:
+    if (
+        data_point is not None
+        and dist_mean is not None
+        and dist_stddev is not None
+        and dist_stddev != 0
+    ):
         z_score = (data_point - dist_mean) / dist_stddev
     else:
         z_score = None
