@@ -74,7 +74,8 @@ spec:
     - port: conbench-service-port
       path: /metrics
       scheme: http
-      interval: 60s
+      # This defines the time resolution.
+      interval: 30s
 ---
 apiVersion: v1
 kind: Service
