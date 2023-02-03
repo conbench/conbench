@@ -1,8 +1,9 @@
 FROM python:3.11-slim
 
 # Curl is needed for docker-compose health checks.
+# and `git` is seemingly needed by some unit tests
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
-    curl && apt-get clean && rm -rf /var/lib/apt/lists/*
+    curl git && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements-webapp.txt /tmp/
 COPY requirements-dev.txt /tmp/
