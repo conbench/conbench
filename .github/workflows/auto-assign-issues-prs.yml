@@ -1,0 +1,43 @@
+name: Auto assign pull requests and issues
+on:
+  pull_request:
+    types: [opened, reopened, edited]
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  assign-issue-and-pr-author:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: toshimaru/auto-author-assign@v1.6.2
+      - uses: octokit/graphql-action@v2.x
+        id: get_linked_issue
+        with:
+          query: |
+            query($repo: String!, $owner: String!, $pr_number: Int!) {
+              repository(owner: $owner, name: $repo) {
+                pullRequest(number: $pr_number) {
+                  id
+                  closingIssuesReferences (first: 50) {
+                    edges {
+                      node {
+                        id
+                        body
+                        number
+                        title
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          pr_number: ${{ github.event.pull_request.number }}
+      - run: "echo 'Issue output: ${{ steps.get_linked_issue.outputs.data }}'"
+      - run: |
+          echo '${{ steps.get_linked_issue.outputs.data }}' | \
+          jq -c '.. | objects | select(has("edges")) | .edges | .[].node.number' | \
+          xargs -I{} gh api repos/voltrondata/perfengtools/issues/{}/assignees -f assignees="${{ github.event.pull_request.user.login }}"
+
