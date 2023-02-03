@@ -25,6 +25,9 @@ WORKDIR /app
 # to make most use of Docker container image layer caching.
 COPY conbench /app/conbench
 COPY migrations /app/migrations
+# TODO: make it so that .git is not needed
+# see https://github.com/conbench/conbench/pull/667
+COPY .git /app/.git
 COPY setup.py README.md requirements-cli.txt requirements-webapp.txt requirements-dev.txt alembic.ini /app/
 
 # Inspect contents of /app
