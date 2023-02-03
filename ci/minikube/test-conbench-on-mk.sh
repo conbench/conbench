@@ -8,6 +8,10 @@ set -o pipefail
 set -o xtrace
 
 
+# Default to one directory up.
+CONBENCH_REPO_ROOT_DIR="${CONBENCH_REPO_ROOT_DIR:=..}"
+echo "CONBENCH_REPO_ROOT_DIR: $CONBENCH_REPO_ROOT_DIR"
+
 # assume that minikube cluster is running.
 # show debug info
 minikube config view
@@ -27,10 +31,11 @@ git clone https://github.com/zalando/postgres-operator
 pushd postgres-operator
     git checkout v1.9.0 # release from 2023-01-30
     # Set up  https://github.com/zalando/postgres-operator/blob/v1.9.0/manifests/minimal-postgres-manifest.yaml
+
     # alchemy: the minikube cluster is already up and running as of a previous step
     # in github actions. Remove 'clean_up' and 'start_minikube' from
     # `run_operator_locally.sh`. Do this via line number deletion. In the original
-    # file, delete line 256 and 256. That is safe, because a specific commit of
+    # file, delete line 256 and 257. That is safe, because a specific commit of
     # this file was checked out.
 
     sed -i 's|numberOfInstances: 2|numberOfInstances: 1|g' manifests/minimal-postgres-manifest.yaml
@@ -53,7 +58,7 @@ export POSTGRES_CONBENCH_USER_PASSWORD="$(kubectl get secret zalando.acid-minima
 echo "password: ${POSTGRES_CONBENCH_USER_PASSWORD}"
 
 # Set static non-sensitive configuration.
-kubectl apply -f ci/minikube/conbench-config-for-minikube.yml
+kubectl apply -f ${CONBENCH_REPO_ROOT_DIR}/ci/minikube/conbench-config-for-minikube.yml
 
 # env var GITHUB_TOKEN is set in the context of a github action run.
 # Build dynamic sensitive configuration
@@ -90,32 +95,33 @@ popd
 cat conbench-secrets-for-minikube.yml
 kubectl apply -f conbench-secrets-for-minikube.yml
 
-# build container image and deploy Conbench into the k8s cluster.
-make deploy-on-minikube
+# Build container image and deploy Conbench into the k8s cluster. This uses a
+# makefile target, i.e. the repo's root dir needs to be the current working
+# directory. Regardless in which current working directory we are right now; go
+# to that directory in a sub shell.
+(cd "${CONBENCH_REPO_ROOT_DIR}" && make deploy-on-minikube)
 
 # Show what's running now.
 kubectl get pods -A
 
-sleep 60
+sleep 5
 kubectl logs deployment/conbench-deployment --all-containers
 
-sleep 30
+sleep 5
 kubectl get pods -A
 
-
 sleep 3
-
 kubectl describe pods/prometheus-k8s-0 --namespace monitoring
 
 # Be sure that prometheus-operator entities are done with their setup.
-kubectl wait --for=condition=Ready pods -l  \
-    app.kubernetes.io/name=prometheus-operator -n monitoring
+kubectl wait --timeout=90s --for=condition=Ready \
+    pods -l app.kubernetes.io/name=prometheus-operator -n monitoring
 
 
 sleep 5
 kubectl logs deployment/conbench-deployment --all-containers
 
-sleep 10
+sleep 5
 kubectl get pods -A
 sleep 5
 

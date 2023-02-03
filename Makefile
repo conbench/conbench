@@ -44,6 +44,7 @@ tests:
 # That mounts the local checkout into the Conbench container.
 .PHONY: run-app-dev
 run-app-dev:
+	export DCOMP_CONBENCH_METRICS_HOST_PORT=127.0.0.1:8000 && \
 	export DCOMP_CONBENCH_HOST_PORT=127.0.0.1:5000 && \
 		docker compose down && \
 			docker compose -f docker-compose.yml -f docker-compose.dev.yml \
@@ -127,12 +128,17 @@ build-conbench-container-image:
 	# docker push ${CONTAINER_IMAGE_SPEC}
 
 
+# The `minikube image load` technique is rather new and allows for using local
+# Docker images in k8s deployments (as long as they specify `imagePullPolicy:
+# Never`). That command however takes a while for bigger images (about 1 min
+# per GB, on my machine).
 .PHONY: deploy-on-minikube
-deploy-on-minikube: build-conbench-container-image
+deploy-on-minikube:
 	minikube status
 	mkdir -p _build
 	cat ci/minikube/deploy-conbench.template.yml > _build/deploy-conbench.yml
 	sed -i.bak "s|<CONBENCH_CONTAINER_IMAGE_SPEC>|${CONTAINER_IMAGE_SPEC}|g" _build/deploy-conbench.yml
 	rm _build/deploy-conbench.yml.bak
-	minikube image load ${CONTAINER_IMAGE_SPEC}
+	time minikube image load ${CONTAINER_IMAGE_SPEC}
 	minikube kubectl -- apply -f  _build/deploy-conbench.yml
+
