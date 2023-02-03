@@ -22,12 +22,12 @@ spec:
         image: "<CONBENCH_CONTAINER_IMAGE_SPEC>"
         command: [
           "gunicorn",
+          "-c", "conbench/gunicorn-conf.py",
           "-b", "0.0.0.0:5000",
           "-w", "5",
           "conbench:application",
           "--access-logfile=-",
-          "--error-logfile=-",
-          "-c", "conbench/gunicorn-conf.py"
+          "--error-logfile=-"
           ]
         # for minikube local docker images
         # added via minikube image load <IMAGE_NAME>
@@ -70,7 +70,8 @@ spec:
       app: conbench
   endpoints:
     - path: /metrics
-      port: gunicorn
+      # could maybe also do this by name? `gunicorn`
+      port: 5000
       scheme: http
       interval: 60s
 ---
