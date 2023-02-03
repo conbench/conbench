@@ -3,45 +3,41 @@ set -o errexit
 set -o errtrace
 set -o nounset
 set -o pipefail
-
-# show commands
 set -o xtrace
 
 
-# Default to one directory up.
+# Default to one directory up, for local workflows. CI sets
+# CONBENCH_REPO_ROOT_DIR for tighter control.
 CONBENCH_REPO_ROOT_DIR="${CONBENCH_REPO_ROOT_DIR:=..}"
 echo "CONBENCH_REPO_ROOT_DIR: $CONBENCH_REPO_ROOT_DIR"
 
-# assume that minikube cluster is running.
-# show debug info
+# Design choice for this script here: assume that minikube cluster is running.
+# Show debug info.
 minikube config view
 minikube status
 
-# for https://github.com/prometheus-operator/kube-prometheus
+# A small cleanup, for https://github.com/prometheus-operator/kube-prometheus
 minikube addons disable metrics-server
 
-# This project vastly simplifies setting up PostgreSQL in minikube for us:
+# postgres-operator vastly simplifies setting up PostgreSQL in minikube for us:
 # https://postgres-operator.readthedocs.io
-#
 # Great docs: https://postgres-operator.readthedocs.io/en/latest/user/
-#
-# Use this manifest by running ./run_operator_locally.sh
+# Running ./run_operator_locally.sh effectively means installing this manifest:
 # https://github.com/zalando/postgres-operator/blob/v1.9.0/manifests/minimal-postgres-manifest.yaml
 git clone https://github.com/zalando/postgres-operator
 pushd postgres-operator
     git checkout v1.9.0 # release from 2023-01-30
-    # Set up  https://github.com/zalando/postgres-operator/blob/v1.9.0/manifests/minimal-postgres-manifest.yaml
 
-    # alchemy: the minikube cluster is already up and running as of a previous step
-    # in github actions. Remove 'clean_up' and 'start_minikube' from
-    # `run_operator_locally.sh`. Do this via line number deletion. In the original
-    # file, delete line 256 and 257. That is safe, because a specific commit of
-    # this file was checked out.
-
+    # Set number of Postgres instances to 1. Need to be conservative with k8s
+    # cluster resources, because GHA offers limited resources.
     sed -i 's|numberOfInstances: 2|numberOfInstances: 1|g' manifests/minimal-postgres-manifest.yaml
-
     cat manifests/minimal-postgres-manifest.yaml | grep numberOfInstances
 
+    # alchemy: Remove 'clean_up' and 'start_minikube' from
+    # `run_operator_locally.sh` (the minikube cluster is already up and running
+    # at this poing). Do this via line number deletion. In the original file,
+    # delete line 256 and 257. That is safe, because a specific commit of this
+    # file was checked out.
     cat ./run_operator_locally.sh | tail -n 15
     sed -i '256d;257d' run_operator_locally.sh
     cat ./run_operator_locally.sh | tail -n 15
@@ -159,6 +155,7 @@ sleep 5
 # /api/ping.
 kubectl wait --timeout=90s --for=condition=Ready pods -l app=conbench
 
+#
 export CONBENCH_BASE_URL=$(minikube service conbench-service --url) && echo $CONBENCH_BASE_URL
 (cd "${CONBENCH_REPO_ROOT_DIR}" && make db-populate)
 
