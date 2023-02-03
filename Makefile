@@ -132,6 +132,8 @@ build-conbench-container-image:
 # Docker images in k8s deployments (as long as they specify `imagePullPolicy:
 # Never`). That command however takes a while for bigger images (about 1 min
 # per GB, on my machine).
+# https://minikube.sigs.k8s.io/docs/handbook/pushing/
+# https://stackoverflow.com/a/62303945
 .PHONY: deploy-on-minikube
 deploy-on-minikube:
 	minikube status
