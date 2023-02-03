@@ -10,7 +10,6 @@ from conbench.entities._entity import Base
 from conbench.entities import (  # noqa  # isort:skip
     case,
     commit,
-    distribution,
     context as _,
     info,
     hardware,

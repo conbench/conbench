@@ -420,9 +420,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     with_dist = [h for h in history if h["distribution_mean"]]
     formatted, axis_unit = _should_format(history, unit)
     dist_change_indexes = [
-        ix
-        for ix, result in enumerate(history)
-        if result["change_annotations"].get("begins_distribution_change")
+        ix for ix, result in enumerate(history) if result["begins_distribution_change"]
     ]
 
     # Note(JP): `history` is an ordered list of dicts, each dict has a `mean`

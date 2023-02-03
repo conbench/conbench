@@ -609,9 +609,9 @@
                     "application/json": {
                         "example": [
                             {
+                                "begins_distribution_change": False,
                                 "benchmark_id": "some-benchmark-uuid-1",
                                 "case_id": "some-case-uuid-1",
-                                "change_annotations": {},
                                 "context_id": "some-context-uuid-1",
                                 "data": [
                                     0.099094,

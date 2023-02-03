@@ -10,7 +10,6 @@ from sqlalchemy.orm import relationship
 
 import conbench.util
 
-from ..config import Config
 from ..entities._comparator import z_improvement, z_regression
 from ..entities._entity import (
     Base,
@@ -23,7 +22,6 @@ from ..entities._entity import (
 )
 from ..entities.case import Case
 from ..entities.context import Context
-from ..entities.distribution import update_distribution
 from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info
 from ..entities.run import GitHubCreate, Run
@@ -201,8 +199,6 @@ class BenchmarkResult(Base, EntityMixin):
 
         if "error" in data or not complete_iterations:
             return benchmark_result
-
-        update_distribution(benchmark_result, commit_limit=Config.DISTRIBUTION_COMMITS)
 
         return benchmark_result
 

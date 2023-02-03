@@ -363,7 +363,7 @@ def _api_history_entity(benchmark_id, case_id, context_id, run_name):
         "data": BENCHMARK_ENTITY["stats"]["data"],
         "times": BENCHMARK_ENTITY["stats"]["times"],
         "mean": 0.036369,
-        "change_annotations": {},
+        "begins_distribution_change": False,
         "distribution_mean": 0.036369,
         "distribution_stdev": 0.000000,
         "repository": "https://github.com/org/repo",

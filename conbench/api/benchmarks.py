@@ -11,7 +11,7 @@ from ..entities.benchmark_result import (
     BenchmarkResultSerializer,
 )
 from ..entities.case import Case
-from ..entities.distribution import set_z_scores
+from ..entities.history import set_z_scores
 
 
 class BenchmarkValidationMixin:
@@ -136,24 +136,27 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             # Since there's no limit on the number of BenchmarkResults, we could take
             # forever calculating z-scores with no caching advantage. So don't do that.
             for benchmark_result in benchmark_results:
-                benchmark_result.z_score = 0
+                benchmark_result.z_score = None
         elif batch_id_arg := f.request.args.get("batch_id"):
             batch_ids = batch_id_arg.split(",")
             benchmark_results = BenchmarkResult.search(
                 filters=[BenchmarkResult.batch_id.in_(batch_ids)]
             )
+            set_z_scores(benchmark_results)
         elif run_id_arg := f.request.args.get("run_id"):
             run_ids = run_id_arg.split(",")
             benchmark_results = BenchmarkResult.search(
                 filters=[BenchmarkResult.run_id.in_(run_ids)]
             )
+            set_z_scores(benchmark_results)
         else:
             benchmark_results = BenchmarkResult.all(
                 order_by=BenchmarkResult.timestamp.desc(), limit=500
             )
+            # Setting z-scores takes too long for this one too.
+            for benchmark_result in benchmark_results:
+                benchmark_result.z_score = None
 
-        if not name_arg:
-            set_z_scores(benchmark_results)
         return self.serializer.many.dump(benchmark_results)
 
     @flask_login.login_required
