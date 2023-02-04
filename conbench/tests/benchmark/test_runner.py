@@ -1,4 +1,5 @@
 import copy
+import os
 
 import pytest
 
@@ -11,6 +12,13 @@ from ._example_benchmarks import (
     SimpleBenchmark,
     SimpleBenchmarkThatFails,
     SimpleBenchmarkWithClusterInfo,
+)
+
+# this makes an implicit dependency become an explicit one, to save time
+# debugging test failures.
+assert os.path.exists(".git"), (
+    "expecting .git in current working directory, see "
+    "https://github.com/conbench/conbench/issues/668"
 )
 
 pytestmark = pytest.mark.filterwarnings("ignore::conbench.machine_info.GitParseWarning")
