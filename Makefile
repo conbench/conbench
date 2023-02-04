@@ -98,7 +98,7 @@ run-app-bg:
 # fails then emit container logs before fast-failing the makefile target.
 .PHONY: test-run-app-dev
 test-run-app-dev:
-	docker compose down
+	docker compose down --remove-orphans
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml \
 		up --build --wait --detach || (docker compose logs --since 30m; exit 1)
 	docker compose down
