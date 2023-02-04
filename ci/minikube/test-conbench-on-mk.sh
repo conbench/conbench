@@ -166,10 +166,10 @@ export CONBENCH_BASE_URL=$(minikube service conbench-service --url) && echo $CON
 (cd "${CONBENCH_REPO_ROOT_DIR}" && make db-populate)
 
 sleep 5
-
 kubectl logs deployment/conbench-deployment --all-containers > conbench_container_output.log
 # show in logs
 cat conbench_container_output.log
 
 # Require access log line confirming that the /metrics endpoint was hit.
+sleep 2
 grep '"GET /metrics HTTP/1.1" 200' conbench_container_output.log
