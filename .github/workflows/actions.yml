@@ -184,5 +184,4 @@ jobs:
           cpus: max
           memory: max
       - name: ci/minikube/test-conbench-on-mk.sh
-        run: export CONBENCH_REPO_ROOT_DIR=$(pwd) && \
-          bash ci/minikube/test-conbench-on-mk.sh
+        run: export CONBENCH_REPO_ROOT_DIR=$(pwd) && bash ci/minikube/test-conbench-on-mk.sh
