@@ -105,10 +105,12 @@ def create_all():
     # prize.
     try:
         Base.metadata.create_all(engine)
-    except sqlalchemy.exc.IntegrityError as exc:
+    except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError) as exc:
+        # Seen in the wild:
+        # sqlalchemy.exc.ProgrammingError: (psycopg2.errors.DuplicateTable) relation "user" already exists
         if "already exists" in str(exc):
             log.info(
-                "db.create_all(): ignore sqlalchemy.exc.IntegrityError. "
+                "db.create_all(): ignore exception with 'already exists' in msg. "
                 "Probably concurrent create_all() execution. Err: %s",
                 str(exc),
             )
