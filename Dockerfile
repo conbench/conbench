@@ -37,8 +37,13 @@ RUN pwd && /bin/ls -1 .
 # importlib.metadata.PackageNotFoundError: No package metadata was found for conbench
 RUN pip install .
 
-# Make it so that this directory exists in the container file system
-# that's the value of the PROMETHEUS_MULTIPROC_DIR env var.
+# Make it so that this directory exists in the container file system. That's
+# the value of the PROMETHEUS_MULTIPROC_DIR env var. The prometheus-client
+# Python library needs this to be set to a path pointing to a directory. I have
+# tried setting this up within the CPython process (early during import) but
+# that wasn't early enough. Note that when mounting the host's /tmp to the
+# container's /tmp the host is expected to have /tmp/_conbench-promcl-coord-dir
+# in its file system.
 RUN mkdir -p /tmp/_conbench-promcl-coord-dir
 
 
