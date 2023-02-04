@@ -4,10 +4,10 @@ Relevant docs:
 - https://github.com/rycus86/prometheus_flask_exporter#wsgi
 - https://github.com/prometheus/client_python#multiprocess-mode-eg-gunicorn
 
-Note(JP): prometheus_flask_exporter provides a useful quickstart, exposing
-relevant metrics around HTTP request handlers. It is however potentially a
-little too opionated. I have not yet looked into adding custom metrics (like a
-custom gauge, or counter).
+prometheus_flask_exporter provides a useful quickstart, exposing relevant
+metrics around HTTP request handlers. It is however potentially a little too
+opinionated. I have not yet looked into adding custom metrics (like a custom
+gauge, or counter).
 
 I'd also like to add that the 'multiprocess complication' is not great to have
 in the system. I think that generally these limitations are fine:
@@ -21,8 +21,8 @@ complication' there is a choice to make: expose the /metrics HTTP endpoint in
 the same HTTP server that handles regular HTTP requests, or spawn a separate
 HTTP server for that? The latter has the advantage of separation of concerns
 (metrics can still be obtained in case of a dead-locked main HTTP server).
-Maybe the access log is a relevant criterion, too. I'd love to see an
-access log showing the requests to the /metrics endpoint.
+Maybe the access log is a relevant criterion, too. I'd love to see an access
+log showing the requests to the /metrics endpoint.
 """
 
 # What's outcommented is a method that can be used when running a separate
