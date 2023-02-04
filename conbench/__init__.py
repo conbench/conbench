@@ -64,9 +64,29 @@ def create_application(config):
 
     # Use `GunicornPrometheusMetrics` when spawning a separate HTTP server for
     # the metrics scrape endpoing. Note that this sets the global singleton.
+    # This needs PROMETHEUS_MULTIPROC_DIR to be set to a path to a directory.
+    #
+    _inspect_prom_multiproc_dir()
     metrics = GunicornInternalPrometheusMetrics(app)
 
     return app
+
+
+def _inspect_prom_multiproc_dir():
+    """
+    Log information about the environment variable PROMETHEUS_MULTIPROC_DIR
+    and about the path it points to. This is helpful for debugging bad state.
+    """
+    path = os.environ.get("PROMETHEUS_MULTIPROC_DIR")
+    log.info("env PROMETHEUS_MULTIPROC_DIR: `%s`", path)
+
+    if not path:
+        return
+
+    try:
+        log.info("os.path.isdir('%s'): %s", path, os.path.isdir(path))
+    except OSError as exc:
+        log.info("os.path.isdir('%s') failed: %s", path, exc)
 
 
 def _init_application(application):
