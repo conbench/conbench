@@ -92,11 +92,12 @@ run-app-bg:
 # This is here for the purpose of testing most of `run-app-dev` in CI. A copy
 # of `run-app-dev` but not requiring a specific port on the host, and using
 # --wait and --detach. That means that `docker compose up...` will return with
-# exit code 0 once the app appears to be healthy. At this point we can run
-# the teardown which is also expected to return with code 0.
+# exit code 0 once the app appears to be healthy. At this point we can run the
+# teardown which is also expected to return with code 0. If the `up` command
+# fails then emit container logs before fast-failing the makefile target.
 .PHONY: test-run-app-dev
 test-run-app-dev:
 	docker compose down
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml \
-		up --build --wait --detach
+		up --build --wait --detach || (docker compose logs --since 30m; exit 1)
 	docker compose down
