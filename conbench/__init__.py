@@ -3,10 +3,7 @@ import json
 import logging
 import os
 
-from prometheus_flask_exporter.multiprocess import (
-    GunicornPrometheusMetrics,
-    GunicornInternalPrometheusMetrics,
-)
+from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
 
 import conbench.logger
 
@@ -65,18 +62,9 @@ def create_application(config):
     else:
         log.info(log_cfg_msg)
 
-    # m = GunicornPrometheusMetrics(app)
-    m = GunicornInternalPrometheusMetrics(app)
-    m.info("app_info", "Application info", version="1.0.3")
-    metrics = m
-
-    metrics.register_default(
-        metrics.counter(
-            "by_path_counter",
-            "Request count by request paths",
-            labels={"path": lambda: f.request.path},
-        )
-    )
+    # Use `GunicornPrometheusMetrics` when spawning a separate HTTP server for
+    # the metrics scrape endpoing. Note that this sets the global singleton.
+    metrics = GunicornInternalPrometheusMetrics(app)
 
     return app
 
