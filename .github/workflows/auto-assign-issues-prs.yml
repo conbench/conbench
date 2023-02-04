@@ -4,11 +4,9 @@ on:
     types: [opened, reopened, edited]
 
 env:
-  # secrets.GITHUB_TOKEN is provided by GitHub Actions and not
-  # bound to a personal user account. It allows for 1000
-  # GitHub HTTP API requests per hour. A personal token
-  # allows for 5000 of those.
-  GITHUB_API_TOKEN: ${{ secrets.PERSONAL_GITHUB_API_TOKEN }}
+  # secrets.GITHUB_TOKEN is provided by GitHub Actions.
+  # It allows for 1000 GitHub HTTP API requests per hour.
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   assign-issue-and-pr-author:
