@@ -16,7 +16,8 @@ echo "CONBENCH_REPO_ROOT_DIR: $CONBENCH_REPO_ROOT_DIR"
 minikube config view
 minikube status
 
-# A small cleanup for https://github.com/prometheus-operator/kube-prometheus
+# A small cleanup recommended by
+# https://github.com/prometheus-operator/kube-prometheus
 # Unclear if actually required.
 minikube addons disable metrics-server
 
@@ -27,7 +28,7 @@ minikube addons disable metrics-server
 # https://github.com/zalando/postgres-operator/blob/v1.9.0/manifests/minimal-postgres-manifest.yaml
 git clone https://github.com/zalando/postgres-operator
 pushd postgres-operator
-    git checkout v1.9.0 # release from 2023-01-30
+    git checkout v1.9.0  # release from 2023-01-30
 
     # Set number of Postgres instances to 1. Need to be conservative with k8s
     # cluster resources, because GHA offers limited resources.
@@ -49,16 +50,17 @@ popd
 kubectl get pods -A
 
 # In the PostgreSQL cluster the user 'zalando' has superuser privileges. We can
-# of course rename that user if we'd like to, by modifying
-# minimal-postgres-manifest.yaml. Get password:
+# rename that user if we'd like to by modifying minimal-postgres-manifest.yaml.
+# Get password for this user (was dynamically generated during bootstrap):
 export POSTGRES_CONBENCH_USER_PASSWORD="$(kubectl get secret zalando.acid-minimal-cluster.credentials.postgresql.acid.zalan.do -o 'jsonpath={.data.password}' | base64 -d)"
 echo "db password: ${POSTGRES_CONBENCH_USER_PASSWORD}"
 
 # Set static non-sensitive configuration.
 kubectl apply -f ${CONBENCH_REPO_ROOT_DIR}/ci/minikube/conbench-config-for-minikube.yml
 
-# env var GITHUB_API_TOKEN is set in the context of a github action run.
-# Build dynamic sensitive configuration. If GITHUB_API_TOKEN is not set then
+# Build dynamic sensitive configuration. This was built assuming that
+# GITHUB_API_TOKEN is set in the context of a GitHub Action run. If
+# GITHUB_API_TOKEN is not (e.g. during local dev) then do not error out but
 # default to an empty string.
 cat << EOF > conbench-secrets-for-minikube.yml
 apiVersion: v1
@@ -76,7 +78,8 @@ stringData:
 EOF
 
 
-# Set up kube-prometheus
+# Set up the kube-prometheus stack. This follows the quickstart instructions
+# here: https://github.com/prometheus-operator/kube-prometheus#quickstart
 git clone https://github.com/prometheus-operator/kube-prometheus
 pushd kube-prometheus
     git checkout v0.12.0  # release from 2023-01-27
@@ -88,17 +91,21 @@ pushd kube-prometheus
     kubectl apply -f manifests/
 popd
 
-# It seems like on minikube with cpus=2 and memory=2000 (which is the github
-# actions resource footprint, by default) it's not possible to run all of
-# (conbench, kube-prometheus, postgres-operator, ...) at the same time, at
-# least using meaningfull resource requests. We have the resource requests
-# under control for conbench. We can also patch some resource requests before
-# trying to apply manifest files. I thought we could also patch resource
-# requests for already applied objects by going in with precision, but
-# that's seemingly a very new concept in the k8s ecosystem:
+
+# On minikube with cpus=2 and memory=2000 (which is the github actions resource
+# footprint by default) it's certainly possible to run everything we need for
+# this test here (conbench, grafana, prometheus, postgres-operator, ...) at the
+# same time, even if we're oversubscribing the hardware a bit. However,
+# meaningful/realistic k8s resource requests add up to more than the available
+# memory/cpu. That is, we need to work around that. We have the resource
+# requests under control for conbench and claim that it uses 0 of everything.
+# If that is not enough e can also patch some resource requests before trying
+# to apply manifest files for kube-prometheus and postgres-operator. I thought
+# we could also patch resource requests for already applied objects by going in
+# with precision, but that's seemingly a very new concept in the k8s ecosystem:
 # https://github.com/kubernetes/kubernetes/issues/104737
 
-# show contents (do not show api token), inject into k8s
+# Show contents (do not show api token), inject into k8s
 cat conbench-secrets-for-minikube.yml | grep -v TOKEN
 kubectl apply -f conbench-secrets-for-minikube.yml
 
