@@ -69,7 +69,7 @@ services:
     volumes:
       - ${PWD}/conbench/tests/containers/dex/config.yml:/etc/dex/config.docker.yaml
     ports:
-      - "5556:5556"
+      - "127.0.0.1::5556"
 
   db:
     image: library/postgres:12.4
@@ -83,4 +83,4 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - "5432:5432"
+      - "127.0.0.1::5432"
