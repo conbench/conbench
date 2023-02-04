@@ -105,12 +105,11 @@ test-run-app-dev:
 	docker compose down
 
 
-# The version string representing the current checkout / working directory.
-# This for example defines the Docker image tags. The default `dev` suffix
-# represents a local dev environment. Override CHECKOUT_VERSION_STRING with a
-# different suffix (e.g. `ci`) in the CI environment so that the version string
-# attached to build artifacts reveals the environment that the build artifact
-# was created in.
+# The version string representing the current checkout / working directory. The
+# default `dev` suffix represents a local dev environment. Override
+# CHECKOUT_VERSION_STRING with a different suffix (e.g. `ci`) in the CI
+# environment so that the version string attached to build artifacts reveals
+# the environment that the build artifact was created in.
 export CHECKOUT_VERSION_STRING ?= $(shell git rev-parse --short=9 HEAD)-dev
 # Set a different repo organization for pushing images to
 DOCKER_REPO_ORG ?= conbench
@@ -120,6 +119,7 @@ CONTAINER_IMAGE_SPEC=$(DOCKER_REPO_ORG)/conbench:$(CHECKOUT_VERSION_STRING)
 .PHONY: print-container-image-spec
 print-container-image-spec:
 	@echo $(CONTAINER_IMAGE_SPEC)
+
 
 .PHONY: build-conbench-container-image
 build-conbench-container-image:
@@ -145,22 +145,20 @@ start-minikube:
 		--extra-config=controller-manager.bind-address=0.0.0.0
 
 
-# This target is used by ci/minikube/test-conbench-on-mk.sh.
-# The `minikube image load` technique is rather new and allows for using local
-# Docker images in k8s deployments (as long as they specify `imagePullPolicy:
-# Never`). That command however takes a while for bigger images (about 1 min
-# per GB, on my machine).
+# This target is used by ci/minikube/test-conbench-on-mk.sh. The `minikube
+# image load` technique allows for using local Docker images in k8s deployments
+# (as long as they specify `imagePullPolicy: Never`). That command however
+# takes a while for bigger images (about 1 min per GB, on my machine).
 # https://minikube.sigs.k8s.io/docs/handbook/pushing/
 # https://stackoverflow.com/a/62303945
 .PHONY: deploy-on-minikube
 deploy-on-minikube:
 	minikube status
 	mkdir -p _build
-	cat ci/minikube/deploy-conbench.template.yml > _build/deploy-conbench.yml
+	cp ci/minikube/deploy-conbench.template.yml _build/deploy-conbench.yml
 	sed -i.bak "s|<CONBENCH_CONTAINER_IMAGE_SPEC>|${CONTAINER_IMAGE_SPEC}|g" _build/deploy-conbench.yml
-	rm _build/deploy-conbench.yml.bak
 	time minikube image load ${CONTAINER_IMAGE_SPEC}
-	minikube kubectl -- apply -f  _build/deploy-conbench.yml
+	minikube kubectl -- apply -f _build/deploy-conbench.yml
 
 .PHONY: minikube-bigflow
 minikube-bigflow: build-conbench-container-image start-minikube
