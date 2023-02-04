@@ -115,10 +115,10 @@ export CHECKOUT_VERSION_STRING ?= $(shell git rev-parse --short=9 HEAD)-dev
 DOCKER_REPO_ORG ?= conbench
 CONTAINER_IMAGE_SPEC=$(DOCKER_REPO_ORG)/conbench:$(CHECKOUT_VERSION_STRING)
 
-$(info --------------------------------------------------------------)
-$(info CONTAINER_IMAGE_SPEC is $(CONTAINER_IMAGE_SPEC))
-$(info --------------------------------------------------------------)
 
+.PHONY: print-container-image-spec
+print-container-image-spec:
+	@echo $(CONTAINER_IMAGE_SPEC)
 
 .PHONY: build-conbench-container-image
 build-conbench-container-image:
