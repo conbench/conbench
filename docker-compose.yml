@@ -25,7 +25,8 @@ services:
       # DCOMP_CONBENCH_HOST_PORT to e.g. 127.0.0.1:5000 (that tries to bind to
       # port 5000 on the host).
       - ${DCOMP_CONBENCH_HOST_PORT:-127.0.0.1:}:5000
-      - ${DCOMP_CONBENCH_METRICS_HOST_PORT:-127.0.0.1:}:8000
+      # Do this when introducing separate HTTP server for serving metrics.
+      # - ${DCOMP_CONBENCH_METRICS_HOST_PORT:-127.0.0.1:}:8000
     volumes:
       - ${PWD}/_conbench-coverage-dir:/etc/conbench-coverage-dir
     depends_on:

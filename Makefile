@@ -103,6 +103,7 @@ test-run-app-dev:
 		up --build --wait --detach || (docker compose logs --since 30m; exit 1)
 	docker compose down
 
+
 # The version string representing the current checkout / working directory.
 # This for example defines the Docker image tags. The default `dev` suffix
 # represents a local dev environment. Override CHECKOUT_VERSION_STRING with a
@@ -111,9 +112,8 @@ test-run-app-dev:
 # was created in.
 export CHECKOUT_VERSION_STRING ?= $(shell git rev-parse --short=9 HEAD)-dev
 # Set a different repo organization for pushing images to
-DOCKER_REPO ?= conbench
-
-CONTAINER_IMAGE_SPEC=$(DOCKER_REPO)/conbench:$(CHECKOUT_VERSION_STRING)
+DOCKER_REPO_ORG ?= conbench
+CONTAINER_IMAGE_SPEC=$(DOCKER_REPO_ORG)/conbench:$(CHECKOUT_VERSION_STRING)
 
 $(info --------------------------------------------------------------)
 $(info CONTAINER_IMAGE_SPEC is $(CONTAINER_IMAGE_SPEC))
@@ -126,6 +126,7 @@ build-conbench-container-image:
 	echo "Size of docker image:"
 	docker images --format "{{.Size}}" ${CONTAINER_IMAGE_SPEC}
 	# docker push ${CONTAINER_IMAGE_SPEC}
+
 
 # Some of the cmdline flags are taken from
 # https://github.com/prometheus-operator/kube-prometheus#minikube
@@ -143,6 +144,7 @@ start-minikube:
 		--extra-config=controller-manager.bind-address=0.0.0.0
 
 
+# This target is used by ci/minikube/test-conbench-on-mk.sh.
 # The `minikube image load` technique is rather new and allows for using local
 # Docker images in k8s deployments (as long as they specify `imagePullPolicy:
 # Never`). That command however takes a while for bigger images (about 1 min
@@ -162,5 +164,4 @@ deploy-on-minikube:
 .PHONY: minikube-bigflow
 minikube-bigflow: build-conbench-container-image start-minikube
 	rm -rf _build && mkdir -p _build && cd _build && bash ../ci/minikube/test-conbench-on-mk.sh
-
 
