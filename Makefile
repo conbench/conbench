@@ -44,7 +44,6 @@ tests:
 # That mounts the local checkout into the Conbench container.
 .PHONY: run-app-dev
 run-app-dev:
-	export DCOMP_CONBENCH_METRICS_HOST_PORT=127.0.0.1:8000 && \
 	export DCOMP_CONBENCH_HOST_PORT=127.0.0.1:5000 && \
 		docker compose down && \
 			docker compose -f docker-compose.yml -f docker-compose.dev.yml \
