@@ -111,14 +111,8 @@ test-run-app-dev:
 # environment so that the version string attached to build artifacts reveals
 # the environment that the build artifact was created in.
 export CHECKOUT_VERSION_STRING ?= $(shell git rev-parse --short=9 HEAD)-dev
-# Set a different repo organization for pushing images to
 DOCKER_REPO_ORG ?= conbench
 CONTAINER_IMAGE_SPEC=$(DOCKER_REPO_ORG)/conbench:$(CHECKOUT_VERSION_STRING)
-
-
-.PHONY: print-container-image-spec
-print-container-image-spec:
-	@echo $(CONTAINER_IMAGE_SPEC)
 
 
 .PHONY: build-conbench-container-image
@@ -127,22 +121,6 @@ build-conbench-container-image:
 	echo "Size of docker image:"
 	docker images --format "{{.Size}}" ${CONTAINER_IMAGE_SPEC}
 	# docker push ${CONTAINER_IMAGE_SPEC}
-
-
-# Some of the cmdline flags are taken from
-# https://github.com/prometheus-operator/kube-prometheus#minikube
-# https://minikube.sigs.k8s.io/docs/commands/start/
-.PHONY: start-minikube
-start-minikube:
-	minikube delete
-	minikube start --cpus=4 --memory=6g \
-		--disable-metrics \
-		--kubernetes-version=v1.24.0 \
-		--bootstrapper=kubeadm \
-		--extra-config=kubelet.authentication-token-webhook=true \
-		--extra-config=kubelet.authorization-mode=Webhook \
-		--extra-config=scheduler.bind-address=0.0.0.0 \
-		--extra-config=controller-manager.bind-address=0.0.0.0
 
 
 # This target is used by ci/minikube/test-conbench-on-mk.sh. The `minikube
@@ -159,8 +137,3 @@ deploy-on-minikube:
 	sed -i.bak "s|<CONBENCH_CONTAINER_IMAGE_SPEC>|${CONTAINER_IMAGE_SPEC}|g" _build/deploy-conbench.yml
 	time minikube image load ${CONTAINER_IMAGE_SPEC}
 	minikube kubectl -- apply -f _build/deploy-conbench.yml
-
-.PHONY: minikube-bigflow
-minikube-bigflow: build-conbench-container-image start-minikube
-	rm -rf _build && mkdir -p _build && cd _build && bash ../ci/minikube/test-conbench-on-mk.sh
-
