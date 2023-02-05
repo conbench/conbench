@@ -37,7 +37,7 @@ pushd postgres-operator
 
     # alchemy: Remove 'clean_up' and 'start_minikube' from
     # `run_operator_locally.sh` (the minikube cluster is already up and running
-    # at this poing). Do this via line number deletion. In the original file,
+    # at this point). Do this via line number deletion. In the original file,
     # delete line 256 and 257. That is safe, because a specific commit of this
     # file was checked out.
     cat ./run_operator_locally.sh | tail -n 15
@@ -130,7 +130,7 @@ kubectl get pods -A
 # of time before it's operational.
 # One could do
 #   kubectl wait --timeout=90s --for=condition=Ready pods acid-minimal-cluster-0
-# but for now it seems this just works because Conbench has rather persistent]
+# but for now it seems this just works because Conbench has rather persistent
 # internal retrying upon DB connect error.
 
 # sleep 20
@@ -147,16 +147,15 @@ kubectl wait --timeout=90s --for=condition=Ready \
     pods -l app.kubernetes.io/name=prometheus-operator -n monitoring
 
 # Be sure that the Prometheus instances managed by the prometheus operator are
-# ready (ready to scrape!). There are two instances. At the time of writing I
-# am not sure which of both is scraping Conbench. Just wait for the both of
-# them.
+# ready (ready to scrape!). There are two instances. At the time of writing it
+# appears as if prometheus-k8s-0 is reproducibly scraping Conbench. Looks like
+# prometheus-k8s-1 does not always start up on GHA because of a resource
+# shortage. Explicitly wait for prometheus-k8s-0, to do care about -1 for now.
 sleep 1
 kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-0 -n monitoring
 
-# looks like prometheus-k8s-1 is precisely what does not start up on GHA
-# because of a resource shortage.
-# kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-1 -n monitoring
 
+# kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-1 -n monitoring
 # sleep 1
 # kubectl logs deployment/conbench-deployment --all-containers
 

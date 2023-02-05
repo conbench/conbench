@@ -45,6 +45,7 @@ spec:
           requests:
             # A request of zero CPU and memory effectively means "infinitely
             # small" for the scheduler deciding on which node to place the pod.
+            # Use this technique to get things running on small GHA runners.
             memory: 0
             cpu: 0
         readinessProbe:
