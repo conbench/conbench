@@ -1,8 +1,3 @@
-import os
-import logging
-import json
-
-
 import flask as f
 
 from .. import __version__
@@ -12,13 +7,13 @@ from ..app.benchmarks import RunMixin
 from ..config import Config
 from ..buildinfo import BUILD_INFO
 
-log = logging.getLogger(__name__)
-
 
 # Default to importlib_metadata version string.
 VERSION_STRING_FOOTER = __version__
 
 
+# Enrich with short commit hash, if available.
+# Also see https://github.com/conbench/conbench/issues/461
 if BUILD_INFO is not None:
     VERSION_STRING_FOOTER = f"{__version__}-{BUILD_INFO.commit[:9]}"
 
