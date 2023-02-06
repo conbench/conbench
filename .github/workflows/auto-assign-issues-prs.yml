@@ -40,11 +40,13 @@ jobs:
           repo: ${{ github.event.repository.name }}
           pr_number: ${{ github.event.pull_request.number }}
       - name: Show the linked issue output
-        run: "echo 'Issue output: ${{ fromJSON(steps.get_linked_issue.outputs.data) }}'"
+        env: 
+          RETRIEVED_ISSUE: ${{ steps.get_linked_issue.outputs.data }}
+        run: "echo 'Issue output: $RETRIEVED_ISSUE'"
         continue-on-error: true
       - name: Assign the PR author to the issue
         env: 
-          RETRIEVED_ISSUE: ${{ fromJson(steps.get_linked_issue.outputs.data) }}
+          RETRIEVED_ISSUE: ${{ steps.get_linked_issue.outputs.data }}
         run: |
           echo "$RETRIEVED_ISSUE" | \
           jq -c '.. | objects | select(has("edges")) | .edges | .[].node.number' | \
