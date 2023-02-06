@@ -127,11 +127,28 @@ table.dataTable td {
 }
 
 .custom-search-box{
-   box-sizing: content-box;
-   width: 80%;
-   min-width: 80px;
-   padding-right: initial;
-   padding-left: initial;
+  /*
+  Note(JP): the `box-sizing: border-box` is so that padding of the outer
+  container is respected when calculating the actual width of the input field.
+  Also see https://github.com/twbs/bootstrap/issues/1058#issuecomment-5110547
+
+  I think it makes most sense to set a column-specific width for these search
+  boxes. Setting this to 90 % by default works around a per-browser absolute
+  default (about ~150 px on Chrome, different on other browsers).
+
+  For setting a column-specific width see below, e.g. va `th.commit-col
+  input.custom-search-box { ... }`.
+  */
+  box-sizing: border-box;
+  width: 90%;
+}
+
+th.commit-col input.custom-search-box {
+  width: 64px;
+}
+
+th.reason-col select.custom-search-box {
+  width: 70px;
 }
 
 .message-header{

@@ -30,12 +30,12 @@
             <thead>
                 <tr>
                     <th scope="col">Run creation time</th>
-                    <th scope="col">Commit author</th>
+                    <th scope="col" class="author-col" style="width: 195px">Commit author</th>
                     <th scope="col">Repository</th>
                     <th scope="col">Hardware</th>
-                    <th scope="col">Commit</th>
-                    <th scope="col">Commit message</th>
-                    <th scope="col">Reason</th>
+                    <th scope="col" class="commit-col" style="width: 65px">Commit</th>
+                    <th scope="col" style="width: 150px">Commit message</th>
+                    <th scope="col" class="reason-col" style="width: 80px">Reason</th>
                 </tr>
             </thead>
             <tbody>
@@ -129,6 +129,8 @@
           "searchPlaceholder": "commit hash works too",
       },
 });
+
+
 enable_search_query_string('#runs');
 
 /* specify the HTML table id (string) for
