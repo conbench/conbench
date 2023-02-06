@@ -64,7 +64,7 @@ repository, and the results are hosted on the
 ### Dependencies
 
 - [`make`](https://www.gnu.org/software/make/), [`docker compose`](https://docs.docker.com/compose/install/): common developer tasks depend on these tools. They need to be set up on your system.
-- `GITHUB_API_TOKEN` environment variable: set up a GitHub API token using [GitHub's instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). It's recommended to only give the token read-only permissions to public repositories (which is the default for fine-grained personal access tokens). Run `export GITHUB_API_TOKEN="token"` in your current shell.
+- `GITHUB_API_TOKEN` environment variable: set up a GitHub API token using [GitHub's instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). It's recommended to only give the token read-only permissions to public repositories (which is the default for fine-grained personal access tokens). Run `export GITHUB_API_TOKEN="{token}"` in your current shell.
 
 ### Makefile targets
 
