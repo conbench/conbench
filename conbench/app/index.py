@@ -1,3 +1,8 @@
+import os
+import logging
+import json
+
+
 import flask as f
 
 from .. import __version__
@@ -5,6 +10,17 @@ from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app.benchmarks import RunMixin
 from ..config import Config
+from ..buildinfo import BUILD_INFO
+
+log = logging.getLogger(__name__)
+
+
+# Default to importlib_metadata version string.
+VERSION_STRING_FOOTER = __version__
+
+
+if BUILD_INFO is not None:
+    VERSION_STRING_FOOTER = f"{__version__}-{BUILD_INFO.commit[:9]}"
 
 
 class Index(AppEndpoint, RunMixin):
@@ -13,7 +29,7 @@ class Index(AppEndpoint, RunMixin):
             "index.html",
             application=Config.APPLICATION_NAME,
             title="Home",
-            version=__version__,
+            version_string_footer=VERSION_STRING_FOOTER,
             runs=runs,
             search_value=f.request.args.get("search"),
         )
