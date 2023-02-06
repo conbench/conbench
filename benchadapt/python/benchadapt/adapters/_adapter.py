@@ -26,13 +26,14 @@ class BenchmarkAdapter(abc.ABC):
     result_fields_override : Dict[str, Any]
         A dict of values to override on each instance of `BenchmarkResult`. Useful
         for specifying metadata only available at runtime, e.g. ``run_reason`` and
-        build info. Applied before ``results_field_append``.
+        build info. Applied before ``results_field_append``. Useful for both dicts
+        (will replace the full dict) and other types.
     results_fields_append : Dict[str, Any]
         A dict of values to be appended to `BenchmarkResult` values after
         instantiation. Useful for appending extra tags or other metadata in addition
-        to that gathered elsewhere. Only applicable for dict attributes. For each
-        element, will override any keys that already exist, i.e. it does not append
-        recursively.
+        to that gathered elsewhere already in a dict field. Only applicable for dict
+        attributes. For each element, will override any keys that already exist, i.e.
+        it does not append recursively.
     results : List[BenchmarkResult]
         Once `run()` has been called, results from that run
     """
