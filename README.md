@@ -49,7 +49,7 @@ repository, and the results are hosted on the
 
 ## Index
 
-* [Contributing](https://github.com/conbench/conbench#contributing)
+* [Developer environment](https://github.com/conbench/conbench#developer-environment)
 * [Configuring the server](https://github.com/conbench/conbench#configuring-the-server)
 * [Creating accounts](https://github.com/conbench/conbench#creating-accounts)
 * [Authoring benchmarks](https://github.com/conbench/conbench#authoring-benchmarks)
@@ -59,7 +59,7 @@ repository, and the results are hosted on the
   * [R benchmarks](https://github.com/conbench/conbench#example-r-benchmarks)
 
 
-## Contributing
+## Developer environment
 
 
 ### Developer environment
