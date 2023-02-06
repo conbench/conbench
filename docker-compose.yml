@@ -6,7 +6,7 @@ services:
       # Note that currently this Dockerfile defines the image that' used for
       # Conbench production environments.
       dockerfile: Dockerfile
-    command: ["gunicorn", "-b", "0.0.0.0:5000", "-w", "5", "conbench:application", "--access-logfile=-", "--error-logfile=-", "--preload"]
+    command: ["gunicorn", "-b", "0.0.0.0:5000", "-w", "5", "-t", "120", "conbench:application", "--access-logfile=-", "--error-logfile=-", "--preload"]
     ports:
       # When using the default value `127.0.0.1::5000` (two colons) then the
       # container-internal port 5000 will be dynamically mapped to a free port
