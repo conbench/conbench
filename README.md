@@ -66,42 +66,27 @@ repository, and the results are hosted on the
 - [`make`](https://www.gnu.org/software/make/), [`docker compose`](https://docs.docker.com/compose/install/): common developer tasks depend on these tools. They need to be set up on your system.
 - `GITHUB_API_TOKEN` environment variable: set up a GitHub API token using [GitHub's instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). It's recommended to only give the token read-only permissions to public repositories (which is the default for fine-grained personal access tokens). Run `export GITHUB_API_TOKEN="token"` in your current shell.
 
-### `make` targets
+### Makefile targets
 
-The following Makefile targets assume to be run in the root folder of a local repository clone.
+The following Makefile targets implement common developer tasks. They assume to be run in the root folder of the repository.
 
-#### `make run-app`
-
-This command lets you experiment with Conbench locally.
+* `make run-app`: This command lets you experiment with Conbench locally.
 It runs the stack in a containerized fashion.
 It rebuilds container images from the current checkout, spawns
-multiple containers (including one for PostgreSQL), and then exposes Conbench's
+multiple containers (including one for the database), and then exposes Conbench's
 HTTP server on the host at http://127.0.0.1:5000.
-
-`make run-app` will stay in the foreground of your terminal, showing log output of all containers.
-
-Once you see access log lines like `GET /api/ping/ HTTP/1.1" 200` in the log output you can point your browser to http://127.0.0.1:5000.
-
-You can use `Ctrl+C` to terminate the containerized stack.
-Note that this only stops containers, and the next invocation of `make run-app` will use previous database state.
-
-Invoke `make teardown-app` to stop and remove containers.
-
+The command will stay in the foreground of your terminal, showing log output of all containers.
+Once you see access log lines like `GET /api/ping/ HTTP/1.1" 200` you can point your browser to http://127.0.0.1:5000.
+You can use `Ctrl+C` to terminate the containerized stack (this only stops containers, and the next invocation of `make run-app` will use previous database state -- invoke `make teardown-app` to stop and remove containers).
 If you wish to clear all database tables during local development you can hit http://127.0.0.1:5000/api/wipe-db with the browser or with e.g. curl.
 
-#### `make run-app-dev`
-
-Similar to `make run-app`, but also mounts the repository's root directory into the container.
+* `make run-app-dev`: Similar to `make run-app`, but also mounts the repository's root directory into the container.
 Code changes are (should be) detected automatically and result in automatic code reload.
 
-#### `make tests`
-
-The nobrainer command to run the test suite just like CI does.
+* `make tests`:The nobrainer command to run the test suite just like CI does.
 For more fine-grained control see further below.
 
-#### `make lint`
-
-Performs invasive code linting in your local checkout.
+* `make lint`: Performs invasive code linting in your local checkout.
 May modify files. Analogue to what CI requires.
 It requires for some commands to be available in your current shell.
 Dependencies can be installed with `pip install -r requirements-dev.txt`.
