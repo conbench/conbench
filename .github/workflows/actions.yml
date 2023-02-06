@@ -131,10 +131,15 @@ jobs:
         uses: actions/checkout@v3
       - name: Start PostgreSQL DB
         run: docker compose run --detach db
-      # Run `alembic upgrade head` via docker compose so that it is within
-      # the network that the DB is also in, reachable via DNS name `db`
+      # Run `alembic upgrade head` via docker compose. This runs in the web
+      # application container image. Running this via docker compose makes it
+      # so that it is within the virtual network that the DB is also in,
+      # reachable via DNS name `db`. Set CREATE_ALL_TABLES=false to defuse some
+      # webapp bootstrap code (not needed here, because these Python modules
+      # run in the context of alembic, not in the context of the actual web
+      # application bootstrapping itself).
       - name: Test database migrations
-        run: docker compose run -e CREATE_ALL_TABLES app alembic upgrade head
+        run: make set-build-info && docker compose run -e CREATE_ALL_TABLES app alembic upgrade head
         env:
           CREATE_ALL_TABLES: false
 
