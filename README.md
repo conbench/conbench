@@ -154,31 +154,11 @@ Useful command line arguments for local development (can be combined as desired)
 * `... pytest -s`: do not swallow log output during run
 * `... run -e CONBENCH_LOG_LEVEL_STDERR=DEBUG app ...`
 
-#### Legacy commands
+### Legacy commands
 
 The following commands are not guaranteed to work as documented, but provide valuable inspiration:
 
-##### Generate coverage report
-
-    (conbench) $ coverage run --source conbench -m pytest conbench/tests/
-    (conbench) $ coverage report -m
-
-##### Test migrations with the database running using brew
-
-    (conbench) $ brew services start postgres
-    (conbench) $ dropdb conbench_prod
-    (conbench) $ createdb conbench_prod
-    (conbench) $ alembic upgrade head
-
-##### Test migrations with the database running as a docker container
-
-    (conbench) $ brew services stop postgres
-    (conbench) $ docker compose down
-    (conbench) $ docker compose build
-    (conbench) $ docker compose run migration
-
-
-##### To autogenerate a migration
+#### To autogenerate a migration
 
     (conbench) $ brew services start postgres
     (conbench) $ dropdb conbench_prod
@@ -189,7 +169,7 @@ The following commands are not guaranteed to work as documented, but provide val
     (conbench) $ alembic revision --autogenerate -m "new"
 
 
-##### To populate local conbench with sample runs and benchmarks
+#### To populate local conbench with sample runs and benchmarks
 
 1. Start conbench app in Terminal window 1:
 
