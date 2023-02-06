@@ -66,16 +66,13 @@ repository, and the results are hosted on the
 - [`make`](https://www.gnu.org/software/make/), [`docker compose`](https://docs.docker.com/compose/install/): common developer tasks depend on these tools. They need to be set up on your system.
 - `GITHUB_API_TOKEN` environment variable: set up a GitHub API token using [GitHub's instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). It's recommended to only give the token read-only permissions to public repositories (which is the default for fine-grained personal access tokens). Run `export GITHUB_API_TOKEN="token"` in your current shell.
 
-Common developer workflows are simplified using `make` and `docker compose`.
-These need to be set up in your environment.
+### `make` targets
 
-The following `make` commands assume to be run in the root folder of a local repository clone.
+The following Makefile targets assume to be run in the root folder of a local repository clone.
 
-Before using these commands, set up a GitHub API token using [GitHub's instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). It's recommended to only give the token read-only permissions to public repositories (which is the default for fine-grained personal access tokens). Set the `GITHUB_API_TOKEN` environment variable to that token value. If you do not have the token set, certain behaviors may not function correctly.
+#### `make run-app`
 
-#### Start application
-
-`make run-app` is a simple way to start and experiment with Conbench locally.
+This command lets you experiment with Conbench locally.
 It runs the stack in a containerized fashion.
 It rebuilds container images from the current checkout, spawns
 multiple containers (including one for PostgreSQL), and then exposes Conbench's
@@ -92,21 +89,28 @@ Invoke `make teardown-app` to stop and remove containers.
 
 If you wish to clear all database tables during local development you can hit http://127.0.0.1:5000/api/wipe-db with the browser or with e.g. curl.
 
-#### View API documentation
+#### `make run-app-dev`
+
+Similar to `make run-app`, but also mounts the repository's root directory into the container.
+Code changes are (should be) detected automatically and result in automatic code reload.
+
+#### `make tests`
+
+The nobrainer command to run the test suite just like CI does.
+For more fine-grained control see further below.
+
+#### `make lint`
+
+Performs invasive code linting in your local checkout.
+May modify files. Analogue to what CI requires.
+It requires for some commands to be available in your current shell.
+Dependencies can be installed with `pip install -r requirements-dev.txt`.
+
+### View API documentation
 
 Point your browser to http://127.0.0.1:5000/api/docs/.
 
-#### Run test suite
-
-`make tests` is the nobrainer command to run the entire test suite just like CI does.
-For more fine-grained control see further below.
-
-#### Lint codebase
-
-`make lint` performs invasive code linting in your local checkout (it may modify files), analogue to what CI requires.
-It requires for some commands to be available (`flake8`, `black`, `isort`).
-
-#### Python environment on the host
+### Python environment on the host
 
 CI and common developer commands use containerized workflows where dependencies are defined and easy to reason about via `Dockerfile`s.
 
