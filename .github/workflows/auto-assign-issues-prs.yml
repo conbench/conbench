@@ -44,7 +44,7 @@ jobs:
       - name: Show the linked issue output
         env: 
           RETRIEVED_ISSUE: ${{ steps.get_linked_issue.outputs.data }}
-        run: "echo 'Issue output: $RETRIEVED_ISSUE'"
+        run: echo "Issue output: $RETRIEVED_ISSUE"
         continue-on-error: true
       - name: Assign the PR author to the issue
         env: 
