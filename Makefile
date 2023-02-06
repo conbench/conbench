@@ -30,7 +30,7 @@ db-populate:
 # This is used by CI for running the test suite. Documentation should encourage
 # developers to run this command locally, too.
 .PHONY: tests
-tests:
+tests: require-env-ghtoken
 	docker compose down --remove-orphans && \
 	docker compose build app && \
 	docker compose run \
@@ -86,6 +86,11 @@ lint-ci:
 	black --check --diff .
 	mypy conbench
 
+
+require-env-ghtoken:
+ifndef GITHUB_API_TOKEN
+	$(error the environment variable GITHUB_API_TOKEN must be set)
+endif
 
 
 .PHONY: run-app-bg
