@@ -33,21 +33,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: Run tests, generate coverage data
-        # This is expected to create /etc/conbench-coverage-dir/.coverage
-        # in the `app` service container.
+      - name: Run `make tests`
         run: make tests
-      - name: Convert coverage data to LCOV
-        run: |
-          docker compose run -e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage app \
-            coverage lcov -o /etc/conbench-coverage-dir/coverage.lcov
-      - name: Publish coverage
-        uses: coverallsapp/github-action@master
-        # sometimes the coveralls API fails transiently, and we don't want that to affect this build
-        continue-on-error: true
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: _conbench-coverage-dir/coverage.lcov
 
   # This is to confirm that commonly used developer commands still work.
   dev-cmds:
