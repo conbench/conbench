@@ -6,6 +6,8 @@ on:
 env:
   # secrets.GITHUB_TOKEN is provided by GitHub Actions.
   # It allows for 1000 GitHub HTTP API requests per hour.
+  # Currently (as of 2023-02) graphql queries must use a GitHub PAT
+  # and cannot use a fine-grained token.
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
