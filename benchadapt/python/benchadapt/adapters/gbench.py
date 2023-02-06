@@ -166,7 +166,6 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
         # all results share a batch id
         batch_id = uuid.uuid4().hex
         gbench_context, benchmark_groups = self._parse_gbench_json(results)
-        extra_tags["gbench_context"] = gbench_context
 
         parsed_results = []
         for benchmark in benchmark_groups:
@@ -175,6 +174,7 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
                 batch_id=batch_id,
                 extra_tags=extra_tags,
             )
+            result_parsed.optional_benchmark_info = {"gbench_context": gbench_context}
             parsed_results.append(result_parsed)
 
         return parsed_results
