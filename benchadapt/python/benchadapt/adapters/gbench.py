@@ -181,7 +181,17 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
 
     @staticmethod
     def _parse_gbench_json(raw_json: dict) -> Tuple[dict, list]:
-        """Parse gbench result json into a context dict and a list of grouped benchmarks"""
+        """
+        Parse gbench result json into a context dict and a list of grouped benchmarks
+
+        See https://github.com/google/benchmark/blob/main/docs/user_guide.md#output-formats
+        for a (very minimal!) example of gbench output json. This method splits out
+        the `context` attribute, which "contains information about the run in general,
+        including information about the CPU and the date" from the `benchmarks` one, which
+        contains a dict for all benchmarks in the run.
+
+        Aggregate benchmarks are excluded, as they are duplicative of the raw benchmarks.
+        """
         gbench_context = raw_json.get("context")
 
         # Follow archery approach in ignoring aggregate results
