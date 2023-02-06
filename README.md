@@ -196,9 +196,9 @@ The following commands are not guaranteed to work as documented, but provide val
 
 New version of conbench package will be uploaded into PyPI by a new build for [conbench-deploy](.buildkite/conbench-deploy/pipeline.yml) Buildkite pipeline
 
-## Configuring the server
+## Configuring the web application
 
-The conbench server can be configured with various environment variables as
+The conbench web application can be configured with various environment variables as
 defined in [config.py](./conbench/config.py). Instructions are in that file.
 
 ## Creating accounts
