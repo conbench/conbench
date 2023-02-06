@@ -114,23 +114,28 @@ Point your browser to http://127.0.0.1:5000/api/docs/.
 
 CI and common developer commands use containerized workflows where dependencies are defined and easy to reason about via `Dockerfile`s.
 
-Some developer tasks however involve running Conbench tooling straight on the host.
+Note that the CPython version that Conbench is tested with in CI and that it is recommended to be deployed with is currently the latest 3.11.x release, as also defined in `Dockerfile` at the root of this repository.
 
-Here is how to install Python dependencies:
+Some developer tasks may involve running Conbench tooling straight on the host.
+Here is how to install the Python dependencies for the Conbench web application:
 
 ```bash
-pip install conbench[dev]
+pip install -r requirements-webapp.txt
 ```
 
-Note that the CPython version that Conbench is tested with in CI and that it is recommended to be deployed with is currently the latest 3.10.x release, as also defined in `Dockerfile` at the root of this repository.
+Dependencies for running code analysis and tests straight on the host can be installed with
 
-Other install options:
+```bash
+pip install -r requirements-dev.txt
+```
 
-* `pip install conbench`: installs CLI dependencies
-* `pip install conbench[server]`: installs CLI and server dependencies
-* `pip install conbench[dev]`: ` installs CLI, server, and testing/CI dependencies
+Dependencies for the (legacy) `conbench` CLI can be installed with
 
-#### Fine-grained test invocation
+```bash
+pip install -r requirements-cli.txt
+```
+
+### Fine-grained test invocation
 
 If `make test` is too coarse-grained, then this is how to take control of the containerized `pytest` test runner:
 
