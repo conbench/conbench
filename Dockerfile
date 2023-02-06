@@ -37,6 +37,11 @@ RUN pwd && /bin/ls -1 .
 # importlib.metadata.PackageNotFoundError: No package metadata was found for conbench
 RUN pip install .
 
+# Bake build information into container image. This invalidates the layer
+# cache for every commit and therefore it is important to do this as late as
+# possible in this Dockerfile.
+COPY ./buildinfo.json /buildinfo.json
+
 # Re-active this to get ideas for how the image size can be further reduced.
 #RUN echo "biggest dirs"
 #RUN cd / && du -ha . | sort -r -h | head -n 50 || true
