@@ -23,11 +23,11 @@ on a cluster instead, you will need to populate `cluster_info` yourself, and
 There is light validation, but [for now] the server is the ultimate validator; it is
 possible to make payloads that will be rejected.
 
-If you are managing everything yourself, to actually send the results to a Conbench
-server, use
-[benchclients.ConbenchClient](https://github.com/conbench/conbench/blob/main/benchclients/python/benchclients/conbench.py).
-As benchclients is a dependency of benchadapt, you should not need to install anything
-new, and it is nicely set up to handle auth and such for you.
+If you need to interact directly with a Conbench server's API instead of letting adapters
+(see below) or another tool manage sending results for you, you can use
+[benchclients.ConbenchClient](https://github.com/conbench/conbench/blob/main/benchclients/python/benchclients/conbench.py)
+to make requests. As benchclients is a dependency of benchadapt, you should not need to
+install anything new, and it is nicely set up to handle auth and such for you.
 
 ### Adapters
 
@@ -84,7 +84,8 @@ adapter = GoogleBenchmarkAdapter(
         "run_reason": os.getenv("CONBENCH_RUN_REASON")
     },
     result_fields_append={
-        "info": {"build_version": os.getenv("MY_BUILD_VERSION")}
+        "info": {"build_version": os.getenv("MY_BUILD_VERSION")},
+        "context": {"compiler_flags": os.getenv("MY_COMPILER_FLAGS")}
     }
 )
 adapter()
@@ -95,9 +96,11 @@ Of note:
 - `result_fields_override` will replace the whole attribute with a new value. This works
 with all types (strings, dicts, etc.), so here `run_reason` will be set for all results.
 - `result_fields_append` will append the new values to dicts which may already have data.
-Here, `build_version` will be appended to the `info` dict. (In this case it is empty
-anyway, so this is equivalent to
-`result_fields_override={"info": {"build_version": os.getenv("MY_BUILD_VERSION")}})`.)
+Here, `build_version` will be appended to the `info` dict. In this case it is an empty
+dict anyway, so this is equivalent to
+`result_fields_override={"info": {"build_version": os.getenv("MY_BUILD_VERSION")}})`.
+But the `context` dict will already contain a `"benchmark_language"` key; this will be
+retained, and `compiler_flags` will be appended.
 - For this to work, a lot of environment variables have to be set! This includes ones
 with information about the Conbench server and the current git metadata. See the
 "Environment Variables" section below for a full list.
