@@ -4,9 +4,8 @@ from .. import __version__
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app.benchmarks import RunMixin
-from ..config import Config
 from ..buildinfo import BUILD_INFO
-
+from ..config import Config
 
 # Default to importlib_metadata version string.
 VERSION_STRING_FOOTER = __version__

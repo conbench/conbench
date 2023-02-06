@@ -1,11 +1,9 @@
-import logging
 import json
-
+import logging
+from dataclasses import dataclass
 from typing import Optional
 
-from dataclasses import dataclass
 import dacite
-
 
 log = logging.getLogger(__name__)
 
