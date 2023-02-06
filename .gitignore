@@ -1,3 +1,8 @@
+# conbench-specific things
+.buildinfo.json
+_build
+_new_api_docs_json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
