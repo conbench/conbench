@@ -141,7 +141,12 @@ table.dataTable td {
   */
   box-sizing: border-box;
   width: 90%;
+  height: 25px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 5px;
 }
+
 
 th.commit-col input.custom-search-box {
   width: 64px;
@@ -150,6 +155,16 @@ th.commit-col input.custom-search-box {
 th.reason-col select.custom-search-box {
   width: 70px;
 }
+
+.table>thead>tr>th {
+  vertical-align: top;
+}
+
+select.custom-search-box {
+  background: #eee;
+}
+
+
 
 .message-header{
   font-weight: normal;
