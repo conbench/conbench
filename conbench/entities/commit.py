@@ -584,7 +584,7 @@ class GitHub:
 
         Do not try for too long because there is an HTTP client waiting for
         _us_ to generate an HTTP response in a more or less timely fashion.
-        Gunicorn has a worker timeout behavior (as of the time of writing: 30
+        Gunicorn has a worker timeout behavior (as of the time of writing: 120
         seconds) and the retrying method below must come to a conclusion before
         that.
 

@@ -72,7 +72,8 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
                 augment(benchmark)
             outliers, outlier_ids, outlier_names = self.get_outliers(benchmarks)
             outlier_urls = [
-                comparisons_by_id[x]["compare_benchmarks_url"] for x in outlier_ids
+                comparisons_by_id.get(x, {}).get("compare_benchmarks_url", "")
+                for x in outlier_ids
             ]
             plot_history = [
                 self.get_history_plot(b, contender_run, i)
