@@ -30,12 +30,12 @@
             <thead>
                 <tr>
                     <th scope="col">Run creation time</th>
-                    <th scope="col">Author</th>
+                    <th scope="col" style="width: 195px">Commit author</th>
                     <th scope="col">Repository</th>
                     <th scope="col">Hardware</th>
-                    <th scope="col">Commit</th>
-                    <th scope="col">Commit message</th>
-                    <th scope="col">Reason</th>
+                    <th scope="col" class="commit-col" style="width: 65px">Commit</th>
+                    <th scope="col" style="width: 150px">Commit message</th>
+                    <th scope="col" class="reason-col" style="width: 80px">Reason</th>
                 </tr>
             </thead>
             <tbody>
@@ -106,7 +106,7 @@
   <div class="col-md-12">
     <br>
     <div align="right" style="display:inline-block; float: right; color: #C0C0C0;">
-       Conbench {{ version }}
+       Conbench {{ version_string_footer }}
     </div>
   </div>
 </div>
@@ -119,10 +119,18 @@
 <script type="text/javascript">
   var table = $('#runs').DataTable({
       "order": [[0, 'desc']],
+      // Make "Commit" (commit hash) column (4) more narrow, hide 'sorting'
+      // toggle. Sorting by commit hash is not needed, in particular because
+      // one can filter by commit hash via input field. Do the same for the
+      // "Commit author" column (1), and the "Commit message" columnn (5).
+      // First column has index 0.
+      "columnDefs": [{ "orderable": false, "targets": [1, 4, 5] }],
       "language": {
           "searchPlaceholder": "commit hash works too",
       },
 });
+
+
 enable_search_query_string('#runs');
 
 /* specify the HTML table id (string) for

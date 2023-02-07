@@ -166,7 +166,6 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
         # all results share a batch id
         batch_id = uuid.uuid4().hex
         gbench_context, benchmark_groups = self._parse_gbench_json(results)
-        extra_tags["gbench_context"] = gbench_context
 
         parsed_results = []
         for benchmark in benchmark_groups:
@@ -175,13 +174,24 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
                 batch_id=batch_id,
                 extra_tags=extra_tags,
             )
+            result_parsed.optional_benchmark_info = {"gbench_context": gbench_context}
             parsed_results.append(result_parsed)
 
         return parsed_results
 
     @staticmethod
     def _parse_gbench_json(raw_json: dict) -> Tuple[dict, list]:
-        """Parse gbench result json into a context dict and a list of grouped benchmarks"""
+        """
+        Parse gbench result json into a context dict and a list of grouped benchmarks
+
+        See https://github.com/google/benchmark/blob/main/docs/user_guide.md#output-formats
+        for a (very minimal!) example of gbench output json. This method splits out
+        the `context` attribute, which "contains information about the run in general,
+        including information about the CPU and the date" from the `benchmarks` one, which
+        contains a dict for all benchmarks in the run.
+
+        Aggregate benchmarks are excluded, as they are duplicative of the raw benchmarks.
+        """
         gbench_context = raw_json.get("context")
 
         # Follow archery approach in ignoring aggregate results

@@ -223,6 +223,7 @@ class TestGbenchAdapter:
             assert "params" in result.tags
             assert result.machine_info is not None
             assert result.stats["iterations"] == 3
+            assert "gbench_context" in result.optional_benchmark_info
 
     def test_run(self, gbench_adapter) -> None:
         results = gbench_adapter.run()

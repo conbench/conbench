@@ -37,6 +37,7 @@ RUN pwd && /bin/ls -1 .
 # importlib.metadata.PackageNotFoundError: No package metadata was found for conbench
 RUN pip install .
 
+
 # Make it so that this directory exists in the container file system. That's
 # the value of the PROMETHEUS_MULTIPROC_DIR env var. The prometheus-client
 # Python library needs this to be set to a path pointing to a directory. I have
@@ -46,6 +47,11 @@ RUN pip install .
 # in its file system.
 RUN mkdir -p /tmp/_conbench-promcl-coord-dir
 
+
+# Bake build information into container image. This invalidates the layer
+# cache for every commit and therefore it is important to do this as late as
+# possible in this Dockerfile.
+COPY ./buildinfo.json /buildinfo.json
 
 # Re-active this to get ideas for how the image size can be further reduced.
 #RUN echo "biggest dirs"
