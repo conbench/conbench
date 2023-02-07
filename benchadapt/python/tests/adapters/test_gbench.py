@@ -216,6 +216,9 @@ class TestGbenchAdapter:
         results = gbench_adapter.transform_results()
 
         assert len(results) == 2
+        # each benchmark name should have a different batch_id regardless of the number of results
+        assert len(set(res.tags["name"] for res in results)) == 2
+        assert len(set(res.batch_id for res in results)) == 2
         for result in results:
             assert isinstance(result, BenchmarkResult)
             assert result.tags["name"].endswith("MajorTensorConversionFixture")
