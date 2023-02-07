@@ -49,7 +49,7 @@ repository, and the results are hosted on the
 
 ## Index
 
-* [Contributing](https://github.com/conbench/conbench#contributing)
+* [Developer environment](https://github.com/conbench/conbench#developer-environment)
 * [Configuring the server](https://github.com/conbench/conbench#configuring-the-server)
 * [Creating accounts](https://github.com/conbench/conbench#creating-accounts)
 * [Authoring benchmarks](https://github.com/conbench/conbench#authoring-benchmarks)
@@ -59,72 +59,68 @@ repository, and the results are hosted on the
   * [R benchmarks](https://github.com/conbench/conbench#example-r-benchmarks)
 
 
-## Contributing
+## Developer environment
 
+### Dependencies
 
-### Developer environment
+- [`make`](https://www.gnu.org/software/make/), [`docker compose`](https://docs.docker.com/compose/install/): common developer tasks depend on these tools. They need to be set up on your system.
+- `GITHUB_API_TOKEN` environment variable: set up a GitHub API token using [GitHub's instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). It's recommended to only give the token read-only permissions to public repositories (which is the default for fine-grained personal access tokens). Run `export GITHUB_API_TOKEN="{token}"` in your current shell.
 
-Common developer workflows are simplified using `make` and `docker compose`.
-These need to be set up in your environment.
+### Makefile targets
 
-The following `make` commands assume to be run in the root folder of a local repository clone.
+The following Makefile targets implement common developer tasks. They assume to be run in the root folder of the repository.
 
-Before using these commands, set up a GitHub API token using [GitHub's instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). It's recommended to only give the token read-only permissions to public repositories (which is the default for fine-grained personal access tokens). Set the `GITHUB_API_TOKEN` environment variable to that token value. If you do not have the token set, certain behaviors may not function correctly.
-
-#### Start application
-
-`make run-app` is a simple way to start and experiment with Conbench locally.
+* `make run-app`: This command lets you experiment with Conbench locally.
 It runs the stack in a containerized fashion.
 It rebuilds container images from the current checkout, spawns
-multiple containers (including one for PostgreSQL), and then exposes Conbench's
+multiple containers (including one for the database), and then exposes Conbench's
 HTTP server on the host at http://127.0.0.1:5000.
-
-`make run-app` will stay in the foreground of your terminal, showing log output of all containers.
-
-Once you see access log lines like `GET /api/ping/ HTTP/1.1" 200` in the log output you can point your browser to http://127.0.0.1:5000.
-
-You can use `Ctrl+C` to terminate the containerized stack.
-Note that this only stops containers, and the next invocation of `make run-app` will use previous database state.
-
-Invoke `make teardown-app` to stop and remove containers.
-
+The command will stay in the foreground of your terminal, showing log output of all containers.
+Once you see access log lines like `GET /api/ping/ HTTP/1.1" 200` you can point your browser to http://127.0.0.1:5000.
+You can use `Ctrl+C` to terminate the containerized stack (this only stops containers, and the next invocation of `make run-app` will use previous database state -- invoke `make teardown-app` to stop and remove containers).
 If you wish to clear all database tables during local development you can hit http://127.0.0.1:5000/api/wipe-db with the browser or with e.g. curl.
 
-#### View API documentation
+* `make run-app-dev`: Similar to `make run-app`, but also mounts the repository's root directory into the container.
+Code changes are (should be) detected automatically and result in automatic code reload.
+
+* `make tests`:The nobrainer command to run the test suite just like CI does.
+For more fine-grained control see further below.
+
+* `make lint`: Performs invasive code linting in your local checkout.
+May modify files. Analogue to what CI requires.
+It requires for some commands to be available in your current shell.
+Dependencies can be installed with `pip install -r requirements-dev.txt`.
+
+### View API documentation
 
 Point your browser to http://127.0.0.1:5000/api/docs/.
 
-#### Run test suite
-
-`make tests` is the nobrainer command to run the entire test suite just like CI does.
-For more fine-grained control see further below.
-
-#### Lint codebase
-
-`make lint` performs invasive code linting in your local checkout (it may modify files), analogue to what CI requires.
-It requires for some commands to be available (`flake8`, `black`, `isort`).
-
-#### Python environment on the host
+### Python environment on the host
 
 CI and common developer commands use containerized workflows where dependencies are defined and easy to reason about via `Dockerfile`s.
 
-Some developer tasks however involve running Conbench tooling straight on the host.
+Note that the CPython version that Conbench is tested with in CI and that it is recommended to be deployed with is currently the latest 3.11.x release, as also defined in `Dockerfile` at the root of this repository.
 
-Here is how to install Python dependencies:
+Some developer tasks may involve running Conbench tooling straight on the host.
+Here is how to install the Python dependencies for the Conbench web application:
 
 ```bash
-pip install conbench[dev]
+pip install -r requirements-webapp.txt
 ```
 
-Note that the CPython version that Conbench is tested with in CI and that it is recommended to be deployed with is currently the latest 3.10.x release, as also defined in `Dockerfile` at the root of this repository.
+Dependencies for running code analysis and tests straight on the host can be installed with
 
-Other install options:
+```bash
+pip install -r requirements-dev.txt
+```
 
-* `pip install conbench`: installs CLI dependencies
-* `pip install conbench[server]`: installs CLI and server dependencies
-* `pip install conbench[dev]`: ` installs CLI, server, and testing/CI dependencies
+Dependencies for the (legacy) `conbench` CLI can be installed with
 
-#### Fine-grained test invocation
+```bash
+pip install -r requirements-cli.txt
+```
+
+### Fine-grained test invocation
 
 If `make test` is too coarse-grained, then this is how to take control of the containerized `pytest` test runner:
 
@@ -143,31 +139,11 @@ Useful command line arguments for local development (can be combined as desired)
 * `... pytest -s`: do not swallow log output during run
 * `... run -e CONBENCH_LOG_LEVEL_STDERR=DEBUG app ...`
 
-#### Legacy commands
+### Legacy commands
 
 The following commands are not guaranteed to work as documented, but provide valuable inspiration:
 
-##### Generate coverage report
-
-    (conbench) $ coverage run --source conbench -m pytest conbench/tests/
-    (conbench) $ coverage report -m
-
-##### Test migrations with the database running using brew
-
-    (conbench) $ brew services start postgres
-    (conbench) $ dropdb conbench_prod
-    (conbench) $ createdb conbench_prod
-    (conbench) $ alembic upgrade head
-
-##### Test migrations with the database running as a docker container
-
-    (conbench) $ brew services stop postgres
-    (conbench) $ docker compose down
-    (conbench) $ docker compose build
-    (conbench) $ docker compose run migration
-
-
-##### To autogenerate a migration
+#### To autogenerate a migration
 
     (conbench) $ brew services start postgres
     (conbench) $ dropdb conbench_prod
@@ -178,7 +154,7 @@ The following commands are not guaranteed to work as documented, but provide val
     (conbench) $ alembic revision --autogenerate -m "new"
 
 
-##### To populate local conbench with sample runs and benchmarks
+#### To populate local conbench with sample runs and benchmarks
 
 1. Start conbench app in Terminal window 1:
 
@@ -196,9 +172,9 @@ The following commands are not guaranteed to work as documented, but provide val
 
 New version of conbench package will be uploaded into PyPI by a new build for [conbench-deploy](.buildkite/conbench-deploy/pipeline.yml) Buildkite pipeline
 
-## Configuring the server
+## Configuring the web application
 
-The conbench server can be configured with various environment variables as
+The conbench web application can be configured with various environment variables as
 defined in [config.py](./conbench/config.py). Instructions are in that file.
 
 ## Creating accounts

@@ -6,6 +6,8 @@ on:
 env:
   # secrets.GITHUB_TOKEN is provided by GitHub Actions.
   # It allows for 1000 GitHub HTTP API requests per hour.
+  # Currently (as of 2023-02) graphql queries must use a GitHub PAT
+  # and cannot use a fine-grained token.
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
@@ -13,7 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: toshimaru/auto-author-assign@v1.6.2
+        name: Assign PR author to the PR itself
       - uses: octokit/graphql-action@v2.x
+        name: Get the linked issue
         id: get_linked_issue
         with:
           query: |
@@ -37,8 +41,16 @@ jobs:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           pr_number: ${{ github.event.pull_request.number }}
-      - run: "echo 'Issue output: ${{ steps.get_linked_issue.outputs.data }}'"
-      - run: |
-          echo '${{ steps.get_linked_issue.outputs.data }}' | \
+      - name: Show the linked issue output
+        env: 
+          RETRIEVED_ISSUE: ${{ steps.get_linked_issue.outputs.data }}
+        run: |
+          echo "Issue output: $RETRIEVED_ISSUE"
+        continue-on-error: true
+      - name: Assign the PR author to the issue
+        env: 
+          RETRIEVED_ISSUE: ${{ steps.get_linked_issue.outputs.data }}
+        run: |
+          echo "$RETRIEVED_ISSUE" | \
           jq -c '.. | objects | select(has("edges")) | .edges | .[].node.number' | \
-          xargs -I{} gh api repos/voltrondata/perfengtools/issues/{}/assignees -f assignees="${{ github.event.pull_request.user.login }}"
+          xargs -I{} gh api repos/conbench/conbench/issues/{}/assignees -f assignees="${{ github.event.pull_request.user.login }}"

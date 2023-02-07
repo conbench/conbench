@@ -1,9 +1,9 @@
-# Note(JP): we will have to figure out which of these targets will transition
-# to be 'public interface', i.e. used by developers. Those should only
-# conservatively be changed (in terms of naming and behavior). Other Makefile
-# targets might be considered 'private interface', to make things in CI simpler
-# -- those targets can change at will, often and brutally (their names, their
-# meaning, and their implementation)
+# Note(JP): we try to distinguish targets that are 'public interface' (i.e.
+# commonly used by developers) from targets that are 'private interface' (used
+# by CI, very rarely used by humans). 'public interface' targets should only
+# conservatively be changed (with conscious iteration on naming and behavior).
+# The other targets can change often and brutally (their names, their meaning,
+# and their implementation).
 
 # The use case that this target mainly has in mind: starting the application
 # locally to play around with this. This is not primarily meant for
@@ -30,7 +30,7 @@ db-populate:
 # This is used by CI for running the test suite. Documentation should encourage
 # developers to run this command locally, too.
 .PHONY: tests
-tests: set-build-info
+tests: require-env-ghtoken set-build-info
 	docker compose down --remove-orphans && \
 	docker compose build app && \
 	docker compose run \
@@ -61,15 +61,6 @@ lint:
 	mypy conbench
 
 
-# Run by CI, these commands should not modify files, but only check compliance.
-.PHONY: lint-ci
-lint-ci:
-	flake8
-	isort --check .
-	black --check --diff .
-	mypy conbench
-
-
 .PHONY: rebuild-expected-api-docs
 rebuild-expected-api-docs: run-app-bg
 	echo "using $(shell docker compose port app 5000) to reach app"
@@ -82,6 +73,24 @@ rebuild-expected-api-docs: run-app-bg
 	mv -f _new_api_docs.py ./conbench/tests/api/_expected_docs.py
 	rm _new_api_docs.json
 	git diff ./conbench/tests/api/_expected_docs.py
+
+# The targets above this comment have been in use by humans. Change
+# conservatively.
+
+
+# Run by CI, these commands should not modify files, but only check compliance.
+.PHONY: lint-ci
+lint-ci:
+	flake8
+	isort --check .
+	black --check --diff .
+	mypy conbench
+
+
+require-env-ghtoken:
+ifndef GITHUB_API_TOKEN
+	$(error the environment variable GITHUB_API_TOKEN must be set)
+endif
 
 
 .PHONY: run-app-bg
