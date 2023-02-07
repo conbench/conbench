@@ -20,10 +20,10 @@ like populating `machine_info` with metadata on the current machine. If you are 
 on a cluster instead, you will need to populate `cluster_info` yourself, and
 `machine_info` will remain empty.
 
-There is light validation, but [for now] the server is the ultimate validator; it is
+There is light validation, but [for now] the API is the ultimate validator; it is
 possible to make payloads that will be rejected.
 
-If you need to interact directly with a Conbench server's API instead of letting adapters
+If you need to interact directly with a Conbench webapp's API instead of letting adapters
 (see below) or another tool manage sending results for you, you can use
 [benchclients.ConbenchClient](https://github.com/conbench/conbench/blob/main/benchclients/python/benchclients/conbench.py)
 to make requests. As benchclients is a dependency of benchadapt, you should not need to
@@ -33,7 +33,7 @@ install anything new, and it is nicely set up to handle auth and such for you.
 
 The concept of Conbench adapters is for when you already have a benchmarking method that
 produces a pile of results (say in JSON files, though anything works), and you need to
-transform them into an appropriate form that can be sent to a Conbench server.
+transform them into an appropriate form that can be posted to a Conbench API.
 
 The `benchadapt.adapters.BenchmarkAdapter` abstract class defines a basic workflow:
 
@@ -42,7 +42,7 @@ are already guaranteed to exist, this can be set to do nothing.
 2. Transform results produced by the benchmarks into a list of `BenchmarkResult` instances.
 3. Postprocess results to ensure a consistent `run_id` and override any metadata fields
 not already set correctly.
-4. Post each result to a Conbench server.
+4. Post each result to a Conbench API.
 
 Classes that inherit from the abstract class need to define
 
@@ -66,7 +66,7 @@ Adapters have separate `.run()` and `.publish_results()` methods; the former run
 benchmarks, transforms the results, and stores them in a `.results` attribute of the
 instance. It does not post them, so is useful for looking at results interactively before
 sending them. `.publish_results()` takes the results from the `.results` attribute and
-posts them to a Conbench server.
+posts them to a Conbench API.
 
 The whole instance also has a `__call__()` method defined so it can be called like a
 function that both runs and publishes, so a somewhat minimal script for running
@@ -108,18 +108,16 @@ with information about the Conbench server and the current git metadata. See the
 
 ## Environment variables
 
-benchadapt relies on a number of environment variables. The Conbench server ones
-(`CONBENCH_*`) are used by `benchclients.ConbenchClient`; the git ones
+Some operations of benchadapt rely on a number of environment variables. The Conbench API
+ones (`CONBENCH_*`) are used by `benchclients.ConbenchClient`; the git ones
 (`CONBENCH_PROJECT_*`) are used to populate run and result metadata if not specified
 directly; and `CONBENCH_MACHINE_INFO_NAME` is for overriding the machine name in
 automatically gathered machine info when necessary:
 
-- `CONBENCH_URL`: Required. The URL of the Conbench server without a trailing
+- `CONBENCH_URL`: Required. The URL of the Conbench API without a trailing
 slash, e.g. `https://conbench.example.com`
-- `CONBENCH_EMAIL`: The email to use for Conbench login. Only required if the
-server is private.
-- `CONBENCH_PASSWORD`: The password to use for Conbench login. Only required
-if the server is private.
+- `CONBENCH_EMAIL`: The email to use for Conbench login
+- `CONBENCH_PASSWORD`: The password to use for Conbench login
 - `CONBENCH_PROJECT_REPOSITORY`: The repository name (in the format `org/repo`) or the
 URL (in the format `https://github.com/org/repo`)
 - `CONBENCH_PROJECT_PR_NUMBER`: [recommended] The number of the GitHub pull request that
