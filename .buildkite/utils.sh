@@ -2,6 +2,7 @@
 
 build_and_push() {
   set -x
+  make set-build-info
   docker build -t ${FLASK_APP} .
   docker tag ${FLASK_APP}:latest ${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}
   aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin ${DOCKER_REGISTRY}
