@@ -1,9 +1,22 @@
+"""
+Note: this module gets loaded both, when
+
+- invoking the (legacy) Conbench CLI
+- running the Conbench web application
+
+There should be cleaner separation of concerns in the future, and cleanly
+separate dependency considerations.
+
+Certain modules which are needed only in the web application can be imported
+in `create_application()` below.
+
+Also see https://github.com/conbench/conbench/pull/662#discussion_r1097781344
+"""
+
 import importlib.metadata as importlib_metadata
 import json
 import logging
 import os
-
-from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
 
 import conbench.logger
 
@@ -20,13 +33,16 @@ del importlib_metadata
 conbench.logger.setup(level_stderr="DEBUG", level_file=None, level_sqlalchemy="WARNING")
 log = logging.getLogger(__name__)
 
-# This is going to be an application-global singleton
+# This is going to be an application-global singleton (in the webapp, not the
+# CLI).
 metrics = None
 
 
 def create_application(config):
     global metrics
+
     import flask as f
+    from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
 
     app = f.Flask(__name__)
     app.config.from_object(config)
