@@ -41,9 +41,10 @@ class BenchmarkResult:
     validation : Dict [str, Any]
         Benchmark results validation metadata (e.g., errors, validation types).
     tags : Dict[str, Any]
-        Many things. Must include a ``name`` element (i.e. the benchmark name); often
-        includes parameters either as separate keys or as a string in a ``params`` key.
-        If suite subdivisions exist, use a ``suite`` tag. Determines history runs.
+        Many things. Must include a ``name`` element (i.e. the name corresponding to the
+        benchmark code); often includes parameters either as separate keys or as a string
+        in a ``params`` key. If suite subdivisions exist, use a ``suite`` tag. Determines
+        history runs.
     info : Dict[str, Any]
         Things like ``arrow_version``, ``arrow_compiler_id``, ``arrow_compiler_version``,
         ``benchmark_language_version, ``arrow_version_r``
