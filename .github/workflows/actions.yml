@@ -8,7 +8,7 @@ on:
 
 env:
   # secrets.GITHUB_TOKEN is provided by GitHub Actions and not
-  # bound to a personal user account. It allows for 1000 
+  # bound to a personal user account. It allows for 1000
   # GitHub HTTP API requests per hour. A personal token
   # allows for 5000 of those.
   GITHUB_API_TOKEN: ${{ secrets.PERSONAL_GITHUB_API_TOKEN }}
@@ -161,3 +161,19 @@ jobs:
       - name: Test benchconnect
         run: |
           pytest -vv benchconnect
+
+  cb-on-minikube:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: start minikube
+        id: minikube
+        uses: medyagh/setup-minikube@latest
+        with:
+          # from https://github.com/prometheus-operator/kube-prometheus#minikube
+          extra-config: kubelet.authentication-token-webhook=true,kubelet.authorization-mode=Webhook,scheduler.bind-address=0.0.0.0,controller-manager.bind-address=0.0.0.0
+          cpus: max
+          memory: max
+      - name: ci/minikube/test-conbench-on-mk.sh
+        run: export CONBENCH_REPO_ROOT_DIR=$(pwd) && bash ci/minikube/test-conbench-on-mk.sh

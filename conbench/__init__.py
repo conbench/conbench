@@ -1,3 +1,18 @@
+"""
+Note: this module gets loaded both, when
+
+- invoking the (legacy) Conbench CLI
+- running the Conbench web application
+
+There should be cleaner separation of concerns in the future, and cleanly
+separate dependency considerations.
+
+Certain modules which are needed only in the web application can be imported
+in `create_application()` below.
+
+Also see https://github.com/conbench/conbench/pull/662#discussion_r1097781344
+"""
+
 import importlib.metadata as importlib_metadata
 import json
 import logging
@@ -18,9 +33,16 @@ del importlib_metadata
 conbench.logger.setup(level_stderr="DEBUG", level_file=None, level_sqlalchemy="WARNING")
 log = logging.getLogger(__name__)
 
+# This is going to be an application-global singleton (in the webapp, not the
+# CLI).
+metrics = None
+
 
 def create_application(config):
+    global metrics
+
     import flask as f
+    from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
 
     app = f.Flask(__name__)
     app.config.from_object(config)
@@ -57,7 +79,30 @@ def create_application(config):
     else:
         log.info(log_cfg_msg)
 
+    # Use `GunicornPrometheusMetrics` when spawning a separate HTTP server for
+    # the metrics scrape endpoing. Note that this sets the global singleton.
+    # This needs PROMETHEUS_MULTIPROC_DIR to be set to a path to a directory.
+    _inspect_prom_multiproc_dir()
+    metrics = GunicornInternalPrometheusMetrics(app)
+
     return app
+
+
+def _inspect_prom_multiproc_dir():
+    """
+    Log information about the environment variable PROMETHEUS_MULTIPROC_DIR
+    and about the path it points to. This is helpful for debugging bad state.
+    """
+    path = os.environ.get("PROMETHEUS_MULTIPROC_DIR")
+    log.info("env PROMETHEUS_MULTIPROC_DIR: `%s`", path)
+
+    if not path:
+        return
+
+    try:
+        log.info("os.path.isdir('%s'): %s", path, os.path.isdir(path))
+    except OSError as exc:
+        log.info("os.path.isdir('%s') failed: %s", path, exc)
 
 
 def _init_application(application):
@@ -188,6 +233,9 @@ def dict_or_objattrs_to_nonsensitive_string(obj):
     return json.dumps(sanitized, sort_keys=True, default=str, indent=2)
 
 
+# Note(JP): when FLASK_APP is set then this here is not executed, but instead
+# gunicorn loads into the app using a stringified import instruction such as
+# `conbench:application` (codified in the gunicorn cmd line args).
 # see .flaskenv used by `$ flask run`
 if os.environ.get("FLASK_APP", None):
     from .config import Config

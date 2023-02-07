@@ -91,7 +91,7 @@ def log_after_retry_attempt(retry_state: tenacity.RetryCallState):
 # retrying strategy.
 @tenacity.retry(
     retry=tenacity.retry_if_exception_type(sqlalchemy.exc.OperationalError),
-    stop=tenacity.stop_after_attempt(10),
+    stop=tenacity.stop_after_attempt(50),
     wait=tenacity.wait_fixed(1),
     before=tenacity.before_log(log, logging.DEBUG),
     after=log_after_retry_attempt,

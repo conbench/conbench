@@ -6,7 +6,16 @@ services:
       # Note that currently this Dockerfile defines the image that' used for
       # Conbench production environments.
       dockerfile: Dockerfile
-    command: ["gunicorn", "-b", "0.0.0.0:5000", "-w", "5", "-t", "120", "conbench:application", "--access-logfile=-", "--error-logfile=-", "--preload"]
+    command: [
+          "gunicorn",
+          "-c", "conbench/gunicorn-conf.py",
+          "-b", "0.0.0.0:5000",
+          "-w", "5",
+          "-t", "120",
+          "conbench:application",
+          "--access-logfile=-",
+          "--error-logfile=-"
+          ]
     ports:
       # When using the default value `127.0.0.1::5000` (two colons) then the
       # container-internal port 5000 will be dynamically mapped to a free port
@@ -17,6 +26,8 @@ services:
       # DCOMP_CONBENCH_HOST_PORT to e.g. 127.0.0.1:5000 (that tries to bind to
       # port 5000 on the host).
       - ${DCOMP_CONBENCH_HOST_PORT:-127.0.0.1:}:5000
+      # Do this when introducing separate HTTP server for serving metrics.
+      # - ${DCOMP_CONBENCH_METRICS_HOST_PORT:-127.0.0.1:}:8000
     volumes:
       - ${PWD}/_conbench-coverage-dir:/etc/conbench-coverage-dir
     depends_on:
@@ -47,6 +58,7 @@ services:
       CONBENCH_OIDC_ISSUER_URL: http://dex:5556/dex-for-conbench
       CONBENCH_INTENDED_BASE_URL: http://127.0.0.1:5000/
       GITHUB_API_TOKEN: $GITHUB_API_TOKEN
+      PROMETHEUS_MULTIPROC_DIR: "/tmp/_conbench-promcl-coord-dir"
     healthcheck:
       test: "curl -sfS http://0.0.0.0:5000/api/ping/"
       interval: 5s
@@ -58,7 +70,7 @@ services:
     volumes:
       - ${PWD}/conbench/tests/containers/dex/config.yml:/etc/dex/config.docker.yaml
     ports:
-      - "5556:5556"
+      - "127.0.0.1::5556"
 
   db:
     image: library/postgres:12.4
@@ -72,4 +84,4 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - "5432:5432"
+      - "127.0.0.1::5432"

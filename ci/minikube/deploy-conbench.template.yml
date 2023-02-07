@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conbench-deployment
+spec:
+  selector:
+    matchLabels:
+      app: conbench
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: conbench
+    spec:
+      containers:
+      - name: conbench
+        image: "<CONBENCH_CONTAINER_IMAGE_SPEC>"
+        command: [
+          "gunicorn",
+          "-c", "conbench/gunicorn-conf.py",
+          "-b", "0.0.0.0:5000",
+          "-w", "5",
+          "conbench:application",
+          "--access-logfile=-",
+          "--error-logfile=-"
+          ]
+        # for minikube local docker images
+        # added via minikube image load <IMAGE_NAME>
+        imagePullPolicy: Never
+        #imagePullPolicy: "Always"
+        ports:
+          - name: gunicorn-port
+            containerPort: 5000
+        envFrom:
+          - configMapRef:
+              name: conbench-config
+          - secretRef:
+              name: conbench-secret
+        resources:
+          requests:
+            # A request of zero CPU and memory effectively means "infinitely
+            # small" for the scheduler deciding on which node to place the pod.
+            # Use this technique to get things running on small GHA runners.
+            memory: 0
+            cpu: 0
+        readinessProbe:
+          failureThreshold: 1
+          httpGet:
+            path: /api/ping/
+            port: 5000
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 2
+          timeoutSeconds: 20
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: monitoring.coreos.com/v1
+# This is a CRD defined by the prometheus-operator/kube-prometheus project
+kind: ServiceMonitor
+metadata:
+  name: conbench-service-monitor
+spec:
+  selector:
+    matchLabels:
+      app: conbench
+  endpoints:
+    # It's important that ServiceMonitor i) refers to a Service port  and ii)
+    # refers to it via its name.
+    - port: conbench-service-port
+      path: /metrics
+      scheme: http
+      # This defines the time resolution.
+      interval: 30s
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/target-type: ip
+  name: "conbench-service"
+  labels:
+    app: conbench
+spec:
+  ports:
+  - name: conbench-service-port
+    port: 80
+    targetPort: gunicorn-port
+    protocol: TCP
+  type: NodePort
+  selector:
+    app: "conbench"

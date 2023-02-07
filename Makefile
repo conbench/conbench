@@ -106,7 +106,8 @@ run-app-bg: set-build-info
 # fails then emit container logs before fast-failing the makefile target.
 .PHONY: test-run-app-dev
 test-run-app-dev: set-build-info
-	docker compose down
+	mkdir -p /tmp/_conbench-promcl-coord-dir
+	docker compose down --remove-orphans
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml \
 		up --build --wait --detach || (docker compose logs --since 30m; exit 1)
 	docker compose down
@@ -120,6 +121,30 @@ test-run-app-dev: set-build-info
 export CHECKOUT_VERSION_STRING ?= $(shell git rev-parse --short=9 HEAD)-dev
 DOCKER_REPO_ORG ?= conbench
 CONTAINER_IMAGE_SPEC=$(DOCKER_REPO_ORG)/conbench:$(CHECKOUT_VERSION_STRING)
+
+
+.PHONY: build-conbench-container-image
+build-conbench-container-image: set-build-info
+	docker build . -f Dockerfile -t ${CONTAINER_IMAGE_SPEC}
+	echo "Size of docker image:"
+	docker images --format "{{.Size}}" ${CONTAINER_IMAGE_SPEC}
+	# docker push ${CONTAINER_IMAGE_SPEC}
+
+
+# This target is used by ci/minikube/test-conbench-on-mk.sh. The `minikube
+# image load` technique allows for using local Docker images in k8s deployments
+# (as long as they specify `imagePullPolicy: Never`). That command however
+# takes a while for bigger images (about 1 min per GB, on my machine).
+# https://minikube.sigs.k8s.io/docs/handbook/pushing/
+# https://stackoverflow.com/a/62303945
+.PHONY: deploy-on-minikube
+deploy-on-minikube:
+	minikube status
+	mkdir -p _build
+	cp ci/minikube/deploy-conbench.template.yml _build/deploy-conbench.yml
+	sed -i.bak "s|<CONBENCH_CONTAINER_IMAGE_SPEC>|${CONTAINER_IMAGE_SPEC}|g" _build/deploy-conbench.yml
+	time minikube image load ${CONTAINER_IMAGE_SPEC}
+	minikube kubectl -- apply -f _build/deploy-conbench.yml
 
 
 .PHONY: set-build-info
