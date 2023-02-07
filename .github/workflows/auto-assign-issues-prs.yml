@@ -53,4 +53,4 @@ jobs:
         run: |
           echo "$RETRIEVED_ISSUE" | \
           jq -c '.. | objects | select(has("edges")) | .edges | .[].node.number' | \
-          xargs -I{} gh api repos/voltrondata/perfengtools/issues/{}/assignees -f assignees="${{ github.event.pull_request.user.login }}"
+          xargs -I{} gh api repos/voltrondata/conbench/conbench/{}/assignees -f assignees="${{ github.event.pull_request.user.login }}"
