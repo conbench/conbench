@@ -163,12 +163,12 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
 
     def _parse_results(self, results: dict, extra_tags: dict) -> List[BenchmarkResult]:
         """Parse a blob of results from gbench into a list of `BenchmarkResult` instances"""
-        # all results share a batch id
-        batch_id = uuid.uuid4().hex
         gbench_context, benchmark_groups = self._parse_gbench_json(results)
 
         parsed_results = []
         for benchmark in benchmark_groups:
+            # all results for a benchmark name share a batch id
+            batch_id = uuid.uuid4().hex
             result_parsed = self._parse_benchmark(
                 result=benchmark,
                 batch_id=batch_id,
