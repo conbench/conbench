@@ -9,7 +9,7 @@
 # locally to play around with this. This is not primarily meant for
 # _development_.
 .PHONY: run-app
-run-app:
+run-app: set-build-info
 	export DCOMP_CONBENCH_HOST_PORT=127.0.0.1:5000 && \
 		docker compose down && docker compose up --build
 
@@ -30,7 +30,7 @@ db-populate:
 # This is used by CI for running the test suite. Documentation should encourage
 # developers to run this command locally, too.
 .PHONY: tests
-tests: require-env-ghtoken
+tests: require-env-ghtoken set-build-info
 	docker compose down --remove-orphans && \
 	docker compose build app && \
 	docker compose run \
@@ -43,7 +43,7 @@ tests: require-env-ghtoken
 # Similar to `make run-app`, but with the `docker-compose.dev.yml` extension
 # That mounts the local checkout into the Conbench container.
 .PHONY: run-app-dev
-run-app-dev:
+run-app-dev: set-build-info
 	export DCOMP_CONBENCH_HOST_PORT=127.0.0.1:5000 && \
 		docker compose down && \
 			docker compose -f docker-compose.yml -f docker-compose.dev.yml \
@@ -94,7 +94,7 @@ endif
 
 
 .PHONY: run-app-bg
-run-app-bg:
+run-app-bg: set-build-info
 	docker compose up --build --wait --detach
 
 
@@ -105,8 +105,56 @@ run-app-bg:
 # teardown which is also expected to return with code 0. If the `up` command
 # fails then emit container logs before fast-failing the makefile target.
 .PHONY: test-run-app-dev
-test-run-app-dev:
+test-run-app-dev: set-build-info
 	docker compose down
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml \
 		up --build --wait --detach || (docker compose logs --since 30m; exit 1)
 	docker compose down
+
+
+# The version string representing the current checkout / working directory. The
+# default `dev` suffix represents a local dev environment. Override
+# CHECKOUT_VERSION_STRING with a different suffix (e.g. `ci`) in the CI
+# environment so that the version string attached to build artifacts reveals
+# the environment that the build artifact was created in.
+export CHECKOUT_VERSION_STRING ?= $(shell git rev-parse --short=9 HEAD)-dev
+DOCKER_REPO_ORG ?= conbench
+CONTAINER_IMAGE_SPEC=$(DOCKER_REPO_ORG)/conbench:$(CHECKOUT_VERSION_STRING)
+
+
+.PHONY: set-build-info
+set-build-info:
+	# Write a file buildinfo.json to the root of the repository. This file is
+	# later meant to be added to build artifacts / container images. For
+	# discovery during runtime (via convention on the path in the container
+	# file system). During non-containerized local dev, either do not fail when
+	# this file does not exist or use path convention on host file system or
+	# introduce an environment variable (sth like CONBENCH_BUILDINFO_PATH).
+	#
+	# Use `sed` for the replacements below. Exit code is 0 for both cases:
+	# replacement made, or replacement not made. Expect non-zero exit code only
+	# for e.g. file not existing.
+	#
+	# Notes:
+	# - `buildinfo.json` is not tracked in the repository.
+	# - `git branch --show-current` requires at least git 2.22.
+	# - use GITHUB_REF_NAME in GHA, documented with "The short ref name of the
+	#   branch or tag that triggered the workflow run. This value matches the
+	#   branch or tag name shown on GitHub"
+	# - use in-place editing with `sed` to make this portable across Linux and
+	#   macOS: https://stackoverflow.com/a/16746032/145400
+	cat ci/buildinfo.json.template > buildinfo.json
+	_GITBRANCH="$$(git branch --show-current)" || true; BRANCH_NAME=$${GITHUB_REF_NAME:-$$_GITBRANCH} && \
+	sed -i.bak "s|<BUILD_INFO_BRANCH_NAME>|$${BRANCH_NAME}|g" \
+		buildinfo.json
+	sed -i.bak "s|<BUILD_INFO_VERSION_STRING>|${CHECKOUT_VERSION_STRING}|g" \
+		buildinfo.json
+	sed -i.bak "s|<BUILD_INFO_COMMIT>|$$(git rev-parse --verify HEAD)|g" \
+		buildinfo.json
+	sed -i.bak "s|<BUILD_INFO_TIME_RFC3339>|$$(date --rfc-3339=seconds --utc)|g" \
+		buildinfo.json
+	sed -i.bak "s|<BUILD_INFO_HOSTNAME>|$$(hostname)|g" \
+		buildinfo.json
+	rm buildinfo.json.bak
+	echo "(re)generated buildinfo.json"
+	cat buildinfo.json

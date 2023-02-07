@@ -1,0 +1,7 @@
+{
+    "branch_name": "<BUILD_INFO_BRANCH_NAME>",
+    "version_string": "<BUILD_INFO_VERSION_STRING>",
+    "commit": "<BUILD_INFO_COMMIT>",
+    "build_time_rfc3339": "<BUILD_INFO_TIME_RFC3339>",
+    "build_hostname": "<BUILD_INFO_HOSTNAME>"
+}
