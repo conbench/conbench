@@ -171,6 +171,7 @@ jobs:
         id: minikube
         uses: medyagh/setup-minikube@latest
         with:
+          kubernetes-version: v1.24.10
           # from https://github.com/prometheus-operator/kube-prometheus#minikube
           extra-config: kubelet.authentication-token-webhook=true,kubelet.authorization-mode=Webhook,scheduler.bind-address=0.0.0.0,controller-manager.bind-address=0.0.0.0
           cpus: max

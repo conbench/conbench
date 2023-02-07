@@ -145,6 +145,7 @@ deploy-on-minikube:
 	sed -i.bak "s|<CONBENCH_CONTAINER_IMAGE_SPEC>|${CONTAINER_IMAGE_SPEC}|g" _build/deploy-conbench.yml
 	time minikube image load ${CONTAINER_IMAGE_SPEC}
 	minikube kubectl -- apply -f _build/deploy-conbench.yml
+		--kubernetes-version=v1.24.10 \
 
 
 .PHONY: set-build-info
