@@ -131,20 +131,49 @@ build-conbench-container-image: set-build-info
 	# docker push ${CONTAINER_IMAGE_SPEC}
 
 
-# This target is used by ci/minikube/test-conbench-on-mk.sh. The `minikube
-# image load` technique allows for using local Docker images in k8s deployments
-# (as long as they specify `imagePullPolicy: Never`). That command however
-# takes a while for bigger images (about 1 min per GB, on my machine).
+# On GHA, the default minikube profile name is used, cannot be overridden yet
+# (see https://github.com/medyagh/setup-minikube/issues/59). Locally, we use a
+# specific profile name though. Note that this target here is invoked in the
+# context of ci/minikube/test-conbench-on-mk.sh. That wrapper is expected to set  The `minikube image load`
+# technique allows for using local Docker images in k8s deployments (as long as
+# they specify `imagePullPolicy: Never`). That command however takes a while
+# for bigger images (about 1 min per GB, on my machine).
 # https://minikube.sigs.k8s.io/docs/handbook/pushing/
 # https://stackoverflow.com/a/62303945
 .PHONY: deploy-on-minikube
 deploy-on-minikube:
-	minikube status
+	minikube status || minikube status --profile mk-conbench
 	mkdir -p _build
 	cp ci/minikube/deploy-conbench.template.yml _build/deploy-conbench.yml
 	sed -i.bak "s|<CONBENCH_CONTAINER_IMAGE_SPEC>|${CONTAINER_IMAGE_SPEC}|g" _build/deploy-conbench.yml
-	time minikube image load ${CONTAINER_IMAGE_SPEC}
-	minikube kubectl -- apply -f _build/deploy-conbench.yml
+	time minikube --profile "${MINIKUBE_PROFILE_NAME}" image load ${CONTAINER_IMAGE_SPEC}
+	minikube --profile "${MINIKUBE_PROFILE_NAME}" kubectl -- apply -f _build/deploy-conbench.yml
+
+
+# Thin wrapper currently not covered by CI. But the core
+# (../ci/minikube/test-conbench-on-mk.sh) is covered.
+.PHONY: conbench-on-minikube
+conbench-on-minikube: build-conbench-container-image start-minikube
+	rm -rf _build && mkdir -p _build && cd _build && bash ../ci/minikube/test-conbench-on-mk.sh
+
+
+# Currently not covered by CI. This is for now only meant for local dev
+# machines (in GHA we use a special action to launch minikube). Use a specific
+# minikube profile name to not act on potentially other minikube VMs that are
+# running on the host. Some of the cmdline flags are taken from
+# https://github.com/prometheus-operator/kube-prometheus#minikube
+# https://minikube.sigs.k8s.io/docs/commands/start/
+.PHONY: start-minikube
+start-minikube:
+	minikube delete --profile mk-conbench
+	minikube start --profile mk-conbench --cpus=4 --memory=6g \
+		--disable-metrics \
+		--kubernetes-version=v1.24.10 \
+		--bootstrapper=kubeadm \
+		--extra-config=kubelet.authentication-token-webhook=true \
+		--extra-config=kubelet.authorization-mode=Webhook \
+		--extra-config=scheduler.bind-address=0.0.0.0 \
+		--extra-config=controller-manager.bind-address=0.0.0.0
 
 
 .PHONY: set-build-info
