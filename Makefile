@@ -124,7 +124,7 @@ CONTAINER_IMAGE_SPEC=$(DOCKER_REPO_ORG)/conbench:$(CHECKOUT_VERSION_STRING)
 
 
 .PHONY: build-conbench-container-image
-build-conbench-container-image:
+build-conbench-container-image: set-build-info
 	docker build . -f Dockerfile -t ${CONTAINER_IMAGE_SPEC}
 	echo "Size of docker image:"
 	docker images --format "{{.Size}}" ${CONTAINER_IMAGE_SPEC}
