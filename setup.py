@@ -2,8 +2,14 @@ import pathlib
 
 import setuptools
 
-with open("README.md", "r") as readme:
+repo_root = pathlib.Path(__file__).parent
+
+with open(repo_root / "README.md", "r") as readme:
     long_description = readme.read()
+
+__version__ = ""
+with open(repo_root / "conbench" / "_version.py", "r") as f:
+    exec(f.read())  # only overwrites the __version__ variable
 
 
 def parse_requirements(path: str):
@@ -22,7 +28,7 @@ requirements_dev = parse_requirements(path="requirements-dev.txt")
 
 setuptools.setup(
     name="conbench",
-    version="1.63.0",
+    version=__version__,
     description="Continuous Benchmarking (CB) Framework",
     long_description=long_description,
     long_description_content_type="text/markdown",
