@@ -212,3 +212,32 @@ set-build-info:
 	rm buildinfo.json.bak
 	echo "(re)generated buildinfo.json"
 	cat buildinfo.json
+# This uses JSONNET build tooling to rebuild all kube-prometheus manifest YAML
+# files from scratch, based on the file `conbench-flavor.jsonnet` (i.e,
+# including conbench-specific customizations). As long as the only type of
+# customization that we do is 'inject custom dashboards' we might not need this
+# method here (but can inject via k8s configmaps(s) directly). But it took me a
+# longish while to get this working (and to briefly understand the JSONNET
+# build chain), so I want to keep this Makefile target around for now. The
+# coreos/jsonnet-ci container image comes with `jq` (one could install this
+# locally with e.g. sudo dnf install jsonnet) and also with gojsontoyaml (which
+# is where I resorted to looking for a container image that has all
+# dependencies baked in).
+.PHONY: jsonnet-kube-prom-manifests
+jsonnet-kube-prom-manifests:
+#	rm -rf _kpbuild
+	mkdir -p _kpbuild && cd _kpbuild  && mkdir -p cb-kube-prometheus
+	cd _kpbuild/cb-kube-prometheus && \
+		docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
+			jb init || echo "exists"
+	cd _kpbuild/cb-kube-prometheus && \
+		docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
+			jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@v0.12.0
+	cd _kpbuild/cb-kube-prometheus && \
+		wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.12.0/build.sh -O build.sh
+	cp k8s/kube-prometheus/conbench-flavor.jsonnet _kpbuild/cb-kube-prometheus
+	cp k8s/kube-prometheus/conbench-grafana-dashboard.json _kpbuild/cb-kube-prometheus
+	cd _kpbuild/cb-kube-prometheus && \
+		docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
+			bash build.sh conbench-flavor.jsonnet
+	echo "compiled manifest files: _kpbuild/cb-kube-prometheus/manifests"
