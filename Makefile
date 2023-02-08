@@ -245,11 +245,16 @@ jsonnet-kube-prom-manifests:
 	echo "compiled manifest files: _kpbuild/cb-kube-prometheus/manifests"
 
 
-# kudos to https://askubuntu.com/a/1442898
-# sed `r` command to read the contents of a file to insert them
-# `d;` deleting the original matching line afterwards.
+# The Grafana dashboard JSON comes straight from the Grafana UI via copy/paste
+# into a local file. The awk command adds six-space indentation to the
+# dashboard JSON. The sed command then inserts the (indented) JSON the YAML
+# template. The indentation is important to keep the YAML valid. Kudos to
+# https://askubuntu.com/a/1442898 for the sed technique. Explanation: sed `r`
+# command to read the contents of a file to insert them `d;` deleting the
+# original matching line afterwards.
 .PHONY: build-cb-grafana-dashboard-cfgmap-yml
 build-cb-grafana-dashboard-cfgmap-yml:
-	sed -e '/<CONBENCH_GRAFANA_DASHBOARD_JSON>/{r k8s/kube-prometheus/conbench-grafana-dashboard.json' -e 'd;}' \
+	awk '{print "      " $$0}' k8s/kube-prometheus/conbench-grafana-dashboard.json > conbench-grafana-dashboard.json.indented
+	sed -e '/<CONBENCH_GRAFANA_DASHBOARD_JSON>/{r conbench-grafana-dashboard.json.indented' -e 'd;}' \
 		k8s/conbench-grafana-dashboard-configmap.template.yml \
 			> conbench-grafana-dashboard-configmap.yml
