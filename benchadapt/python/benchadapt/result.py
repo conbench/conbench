@@ -142,8 +142,8 @@ class BenchmarkResult:
         """
         Set a default value for `run_name` if not populated and `github["commit"]` is.
         Uses `run_reason`, but does not check if it's set, so may produce
-        `None: <commit hash>`. Since all three are required by the API, this should in
-        most situations produce a reasonably useful `run_name`.
+        `None: <commit hash>`. Since `run_reason` and commit are required by the API,
+        this should in most situations produce a reasonably useful `run_name`.
         """
         if not self.run_name and self.github.get("commit"):
             self.run_name = f"{self.run_reason}: {self.github['commit']}"
@@ -194,6 +194,7 @@ class BenchmarkResult:
             )
 
         for attr in [
+            "run_name",
             "optional_benchmark_info",
             "machine_info",
             "cluster_info",
