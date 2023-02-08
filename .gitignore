@@ -2,6 +2,7 @@
 .buildinfo.json
 _build
 _new_api_docs_json
+_kpbuild
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
