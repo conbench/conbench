@@ -1,1 +1,1 @@
-benchclients@git+https://github.com/conbench/conbench.git@main#subdirectory=benchclients/python
+benchclients

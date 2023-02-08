@@ -34,12 +34,3 @@ steps:
     concurrency_group: "conbench-deploy"
     command:
       - source .buildkite/utils.sh deploy
-
-  - label: "Upload Conbench to PyPI"
-    key: "upload-conbench-to-pypi"
-    depends_on: "deploy"
-    if: build.branch == 'main'
-    concurrency: 1
-    concurrency_group: "conbench-deploy"
-    command:
-      - source .buildkite/utils.sh upload_conbench_to_pypi
