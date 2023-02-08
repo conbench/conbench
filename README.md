@@ -59,6 +59,33 @@ repository, and the results are hosted on the
   * [R benchmarks](https://github.com/conbench/conbench#example-r-benchmarks)
 
 
+## Installation
+
+All packages in this repo can be installed from PyPI. Each package uses
+[CalVer](https://calver.org/) for versioning. No stability is guaranteed between PyPI
+versions, so consider pinning packages to a specific version in your code.
+
+```bash
+pip install benchadapt
+pip install benchclients
+pip install benchconnect
+pip install benchrun
+pip install conbench  # legacy CLI
+```
+
+We typically publish to PyPI often, when new features or bugfixes are needed by users,
+but not on every merge to `main`. To install the latest development version, install
+from git like so:
+
+```bash
+pip install 'benchadapt@git+https://github.com/conbench/conbench.git@main#subdirectory=benchadapt/python'
+pip install 'benchclients@git+https://github.com/conbench/conbench.git@main#subdirectory=benchclients/python'
+pip install 'benchconnect@git+https://github.com/conbench/conbench.git@main#subdirectory=benchconnect'
+pip install 'benchrun@git+https://github.com/conbench/conbench.git@main#subdirectory=benchrun/python'
+pip install 'conbench@git+https://github.com/conbench/conbench.git@main'
+```
+
+
 ## Developer environment
 
 ### Dependencies
@@ -165,12 +192,14 @@ The following commands are not guaranteed to work as documented, but provide val
         (conbench) $ python -m conbench.tests.populate_local_conbench
 
 
-### To upload new version of conbench package to PyPI
+### To upload new version of packages to PyPI
 
-1. Update version in [setup.py](setup.py)
-2. Commit your change into `main` branch
+1. Update the version in the package's `_version.py` file. We use
+   [CalVer](https://calver.org/) in the `YYYY.MM.DD` format.
+2. Commit your change into the `main` branch.
 
-New version of conbench package will be uploaded into PyPI by a new build for [conbench-deploy](.buildkite/conbench-deploy/pipeline.yml) Buildkite pipeline
+The [deploy-packages](./.github/workflows/actions.yml) GitHub Actions job will upload
+the new version and tag the new commit with the version number for reference.
 
 ## Configuring the web application
 
