@@ -190,18 +190,19 @@ jobs:
       - db-migrations
       - libraries
       - cb-on-minikube
-    matrix:
-      include:
-        - pkg_name: benchadapt
-          pkg_root: ./benchadapt/python
-        - pkg_name: benchclients
-          pkg_root: ./benchclients/python
-        - pkg_name: benchconnect
-          pkg_root: ./benchconnect
-        - pkg_name: benchrun
-          pkg_root: ./benchrun/python
-        - pkg_name: conbench
-          pkg_root: .
+    strategy:
+      matrix:
+        include:
+          - pkg_name: benchadapt
+            pkg_root: ./benchadapt/python
+          - pkg_name: benchclients
+            pkg_root: ./benchclients/python
+          - pkg_name: benchconnect
+            pkg_root: ./benchconnect
+          - pkg_name: benchrun
+            pkg_root: ./benchrun/python
+          - pkg_name: conbench
+            pkg_root: .
     steps:
       - name: checkout
         uses: actions/checkout@v3
