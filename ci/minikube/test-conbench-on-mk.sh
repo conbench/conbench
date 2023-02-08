@@ -33,7 +33,6 @@ minikube status --profile "${MINIKUBE_PROFILE_NAME}"
 # Expected output: conbench-grafana-dashboard-configmap.yml in repo root.
 ( cd "${CONBENCH_REPO_ROOT_DIR}" && make build-cb-grafana-dashboard-cfgmap-yml )
 cat ${CONBENCH_REPO_ROOT_DIR}/conbench-grafana-dashboard-configmap.yml | wc -l
-kubectl apply -f ${CONBENCH_REPO_ROOT_DIR}/conbench-grafana-dashboard-configmap.yml
 
 
 # A small cleanup recommended by
@@ -110,6 +109,10 @@ pushd kube-prometheus
         --namespace=monitoring
     kubectl apply -f manifests/
 popd
+
+
+# Requires namespace `monitoring` to exist by now.
+kubectl apply -f ${CONBENCH_REPO_ROOT_DIR}/conbench-grafana-dashboard-configmap.yml
 
 
 # On minikube with cpus=2 and memory=2000 (which is the github actions resource
