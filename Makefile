@@ -212,6 +212,8 @@ set-build-info:
 	rm buildinfo.json.bak
 	echo "(re)generated buildinfo.json"
 	cat buildinfo.json
+
+
 # This uses JSONNET build tooling to rebuild all kube-prometheus manifest YAML
 # files from scratch, based on the file `conbench-flavor.jsonnet` (i.e,
 # including conbench-specific customizations). As long as the only type of
@@ -241,3 +243,13 @@ jsonnet-kube-prom-manifests:
 		docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
 			bash build.sh conbench-flavor.jsonnet
 	echo "compiled manifest files: _kpbuild/cb-kube-prometheus/manifests"
+
+
+# kudos to https://askubuntu.com/a/1442898
+# sed `r` command to read the contents of a file to insert them
+# `d;` deleting the original matching line afterwards.
+.PHONY: build-cb-grafana-dashboard-cfgmap-yml
+build-cb-grafana-dashboard-cfgmap-yml:
+	sed -e '/<CONBENCH_GRAFANA_DASHBOARD_JSON>/{r k8s/kube-prometheus/conbench-grafana-dashboard.json' -e 'd;}' \
+		k8s/conbench-grafana-dashboard-configmap.template.yml \
+			> conbench-grafana-dashboard-configmap.yml
