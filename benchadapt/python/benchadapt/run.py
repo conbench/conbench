@@ -89,6 +89,15 @@ class BenchmarkRun:
     error_info: Dict[str, Any] = None
 
     def __post_init__(self) -> None:
+        self._maybe_set_name()
+
+    def _maybe_set_name(self) -> None:
+        """
+        Set a default value for `name` if not populated and `github["commit"]` is.
+        Uses `reason`, but does not check if it's set, so may produce
+        `None: <commit hash>`. Since reason and commit are required by the API, this
+        should in most situations produce a reasonably useful `name`.
+        """
         if not self.name and self.github.get("commit"):
             self.name = f"{self.reason}: {self.github['commit']}"
 
@@ -101,6 +110,7 @@ class BenchmarkRun:
         if value is None:
             value = _machine_info.detect_github_info()
         self._github_cache = value
+        self._maybe_set_name()
 
     @property
     def _cluster_info_property(self) -> Dict[str, Any]:
@@ -132,6 +142,7 @@ class BenchmarkRun:
             )
 
         for attr in [
+            "name",
             "machine_info",
             "cluster_info",
             "finished_timestamp",

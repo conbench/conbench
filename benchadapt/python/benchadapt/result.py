@@ -136,6 +136,15 @@ class BenchmarkResult:
     github: Dict[str, Any] = field(default_factory=_machine_info.github_info)
 
     def __post_init__(self) -> None:
+        self._maybe_set_run_name()
+
+    def _maybe_set_run_name(self) -> None:
+        """
+        Set a default value for `run_name` if not populated and `github["commit"]` is.
+        Uses `run_reason`, but does not check if it's set, so may produce
+        `None: <commit hash>`. Since `run_reason` and commit are required by the API,
+        this should in most situations produce a reasonably useful `run_name`.
+        """
         if not self.run_name and self.github.get("commit"):
             self.run_name = f"{self.run_reason}: {self.github['commit']}"
 
@@ -148,6 +157,7 @@ class BenchmarkResult:
         if value is None:
             value = _machine_info.detect_github_info()
         self._github_cache = value
+        self._maybe_set_run_name()
 
     @property
     def _cluster_info_property(self) -> Dict[str, Any]:
@@ -184,6 +194,7 @@ class BenchmarkResult:
             )
 
         for attr in [
+            "run_name",
             "optional_benchmark_info",
             "machine_info",
             "cluster_info",
