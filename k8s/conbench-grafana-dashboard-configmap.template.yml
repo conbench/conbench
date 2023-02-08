@@ -5,6 +5,7 @@ data:
     <CONBENCH_GRAFANA_DASHBOARD_JSON>
 metadata:
   labels:
+    grafana_dashboard: 1
     app.kubernetes.io/component: grafana
     app.kubernetes.io/name: grafana
     app.kubernetes.io/part-of: kube-prometheus
