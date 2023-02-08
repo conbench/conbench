@@ -200,12 +200,8 @@ The following commands are not guaranteed to work as documented, but provide val
 
 ### To upload new version of packages to PyPI
 
-1. Update the version in the package's `_version.py` file. We use
-   [CalVer](https://calver.org/) in the `YYYY.MM.DD` format.
-2. Commit your change into the `main` branch.
-
-The [deploy-packages](./.github/workflows/actions.yml) GitHub Actions job will upload
-the new version and tag the new commit with the version number for reference.
+Kick off a new run of the "Build and upload a package to PyPI" workflow on the [Actions
+page](https://github.com/conbench/conbench/actions).
 
 ## Configuring the web application
 
