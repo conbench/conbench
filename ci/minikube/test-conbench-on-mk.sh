@@ -25,9 +25,16 @@ if [ -z "${GITHUB_ACTION:=}" ]; then
     export MINIKUBE_PROFILE_NAME="mk-conbench"
 fi
 
-
 minikube config view
 minikube status --profile "${MINIKUBE_PROFILE_NAME}"
+
+
+# Needed later, but fail fast.
+# Expected output: conbench-grafana-dashboard-configmap.yml in repo root.
+( cd "${CONBENCH_REPO_ROOT_DIR}" && make build-cb-grafana-dashboard-cfgmap-yml )
+cat ${CONBENCH_REPO_ROOT_DIR}/conbench-grafana-dashboard-configmap.yml | wc -l
+kubectl apply -f ${CONBENCH_REPO_ROOT_DIR}/conbench-grafana-dashboard-configmap.yml
+
 
 # A small cleanup recommended by
 # https://github.com/prometheus-operator/kube-prometheus
