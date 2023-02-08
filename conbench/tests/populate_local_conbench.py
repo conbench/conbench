@@ -217,7 +217,7 @@ def register():
         "secret": "innocent-registration-key",
     }
     r = session.post(url, json=data)
-    if r.text and "Email address already in use":
+    if r.text and "Email address already in use" in r.text:
         return
 
     assert str(r.status_code).startswith("2"), f"register failed:\n{r.text}"

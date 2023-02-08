@@ -155,6 +155,11 @@ deploy-on-minikube:
 .PHONY: conbench-on-minikube
 conbench-on-minikube: build-conbench-container-image start-minikube
 	rm -rf _build && mkdir -p _build && cd _build && bash ../ci/minikube/test-conbench-on-mk.sh
+	@echo "run: kubectl --namespace monitoring port-forward svc/grafana 3000"
+	@echo "then open the Grafana UI at: http://localhost:3000 "
+	@echo "log in with admin/admin"
+	@echo "run: kubectl port-forward svc/conbench-service 8000:conbench-service-port"
+	@echo "then open the Conbench UI at: http://localhost:8000 "
 
 
 # Currently not covered by CI. This is for now only meant for local dev
@@ -212,3 +217,47 @@ set-build-info:
 	rm buildinfo.json.bak
 	echo "(re)generated buildinfo.json"
 	cat buildinfo.json
+
+
+# This uses JSONNET build tooling to rebuild all kube-prometheus manifest YAML
+# files based on the file `conbench-flavor.jsonnet` (i.e, including
+# conbench-specific customizations). It took me a longish while to get this
+# working (and to briefly understand the JSONNET build chain). This method here
+# is what we currently use for kube-prometheus customization. Note that the
+# coreos/jsonnet-ci container image used below comes with `jq` (one could
+# install this locally with e.g. sudo dnf install jsonnet) and also with
+# gojsontoyaml (which is where I resorted to looking for a container image that
+# has all dependencies baked in).
+.PHONY: jsonnet-kube-prom-manifests
+jsonnet-kube-prom-manifests:
+#	rm -rf _kpbuild
+	mkdir -p _kpbuild && cd _kpbuild  && mkdir -p cb-kube-prometheus
+	cd _kpbuild/cb-kube-prometheus && \
+		docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
+			jb init || echo "exists"
+	cd _kpbuild/cb-kube-prometheus && \
+		docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
+			jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@v0.12.0
+	cd _kpbuild/cb-kube-prometheus && \
+		wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.12.0/build.sh -O build.sh
+	cp k8s/kube-prometheus/conbench-flavor.jsonnet _kpbuild/cb-kube-prometheus
+	cp k8s/kube-prometheus/conbench-grafana-dashboard.json _kpbuild/cb-kube-prometheus
+	cd _kpbuild/cb-kube-prometheus && \
+		docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
+			bash build.sh conbench-flavor.jsonnet
+	echo "compiled manifest files: _kpbuild/cb-kube-prometheus/manifests"
+
+
+# The Grafana dashboard JSON comes straight from the Grafana UI via copy/paste
+# into a local file. The awk command adds six-space indentation to the
+# dashboard JSON. The sed command then inserts the (indented) JSON the YAML
+# template. The indentation is important to keep the YAML valid. Kudos to
+# https://askubuntu.com/a/1442898 for the sed technique. Explanation: sed `r`
+# command to read the contents of a file to insert them `d;` deleting the
+# original matching line afterwards.
+.PHONY: build-cb-grafana-dashboard-cfgmap-yml
+build-cb-grafana-dashboard-cfgmap-yml:
+	awk '{print "      " $$0}' k8s/kube-prometheus/conbench-grafana-dashboard.json > conbench-grafana-dashboard.json.indented
+	sed -e '/<CONBENCH_GRAFANA_DASHBOARD_JSON>/{r conbench-grafana-dashboard.json.indented' -e 'd;}' \
+		k8s/conbench-grafana-dashboard-configmap.template.yml \
+			> conbench-grafana-dashboard-configmap.yml

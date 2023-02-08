@@ -25,9 +25,9 @@ if [ -z "${GITHUB_ACTION:=}" ]; then
     export MINIKUBE_PROFILE_NAME="mk-conbench"
 fi
 
-
 minikube config view
 minikube status --profile "${MINIKUBE_PROFILE_NAME}"
+
 
 # A small cleanup recommended by
 # https://github.com/prometheus-operator/kube-prometheus
@@ -91,11 +91,12 @@ stringData:
 EOF
 
 
-# Set up the kube-prometheus stack. This follows the quickstart instructions
-# here: https://github.com/prometheus-operator/kube-prometheus#quickstart
-git clone https://github.com/prometheus-operator/kube-prometheus
-pushd kube-prometheus
-    git checkout v0.12.0  # release from 2023-01-27
+# Build custom version of kube-prometheus stack
+( cd "${CONBENCH_REPO_ROOT_DIR}" && make jsonnet-kube-prom-manifests )
+
+# Set up the kube-prometheus stack. This follows the customization instructions
+# at https://github.com/prometheus-operator/kube-prometheus/blob/v0.12.0/docs/customizing.md
+pushd "${CONBENCH_REPO_ROOT_DIR}"/_kpbuild/cb-kube-prometheus/
     kubectl apply --server-side -f manifests/setup
     kubectl wait \
         --for condition=Established \
