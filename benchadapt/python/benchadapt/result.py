@@ -139,6 +139,12 @@ class BenchmarkResult:
         self._maybe_set_run_name()
 
     def _maybe_set_run_name(self) -> None:
+        """
+        Set a default value for `run_name` if not populated and `github["commit"]` is.
+        Uses `run_reason`, but does not check if it's set, so may produce
+        `None: <commit hash>`. Since all three are required by the API, this should in
+        most situations produce a reasonably useful `run_name`.
+        """
         if not self.run_name and self.github.get("commit"):
             self.run_name = f"{self.run_reason}: {self.github['commit']}"
 
