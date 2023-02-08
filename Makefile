@@ -220,16 +220,14 @@ set-build-info:
 
 
 # This uses JSONNET build tooling to rebuild all kube-prometheus manifest YAML
-# files from scratch, based on the file `conbench-flavor.jsonnet` (i.e,
-# including conbench-specific customizations). As long as the only type of
-# customization that we do is 'inject custom dashboards' we might not need this
-# method here (but can inject via k8s configmaps(s) directly). But it took me a
-# longish while to get this working (and to briefly understand the JSONNET
-# build chain), so I want to keep this Makefile target around for now. The
-# coreos/jsonnet-ci container image comes with `jq` (one could install this
-# locally with e.g. sudo dnf install jsonnet) and also with gojsontoyaml (which
-# is where I resorted to looking for a container image that has all
-# dependencies baked in).
+# files based on the file `conbench-flavor.jsonnet` (i.e, including
+# conbench-specific customizations). It took me a longish while to get this
+# working (and to briefly understand the JSONNET build chain). This method here
+# is what we currently use for kube-prometheus customization. Note that the
+# coreos/jsonnet-ci container image used below comes with `jq` (one could
+# install this locally with e.g. sudo dnf install jsonnet) and also with
+# gojsontoyaml (which is where I resorted to looking for a container image that
+# has all dependencies baked in).
 .PHONY: jsonnet-kube-prom-manifests
 jsonnet-kube-prom-manifests:
 #	rm -rf _kpbuild
