@@ -86,3 +86,19 @@ class TestBenchmarkRun:
 
         assert run.machine_info["name"] == machine_info_name
         assert run.machine_info["name"] != run_json["machine_info"]["name"]
+
+    def test_name_defaulting(self, monkeypatch):
+        monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY", raising=False)
+        monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER", raising=False)
+        monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
+
+        with pytest.warns(
+            UserWarning,
+            match="Both CONBENCH_PROJECT_REPOSITORY and CONBENCH_PROJECT_COMMIT must be set if `github` is not specified",
+        ):
+            run = BenchmarkRun(reason=run_json["reason"])
+
+        assert run.github == {"commit": None, "repository": None, "pr_number": None}
+        assert run.name is None
+        run.github = run_json["github"]
+        assert run.name == f"{run_json['reason']}: {run_json['github']['commit']}"
