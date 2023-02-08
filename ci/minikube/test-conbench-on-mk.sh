@@ -29,21 +29,6 @@ minikube config view
 minikube status --profile "${MINIKUBE_PROFILE_NAME}"
 
 
-# Needed later, but fail fast.
-# Expected output: conbench-grafana-dashboard-configmap.yml in repo root.
-( cd "${CONBENCH_REPO_ROOT_DIR}" && make build-cb-grafana-dashboard-cfgmap-yml )
-cat ${CONBENCH_REPO_ROOT_DIR}/conbench-grafana-dashboard-configmap.yml | wc -l
-
-# Create `monitoring` namespace if it does not exist:
-# https://stackoverflow.com/a/65411733
-kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
-
-# Requires namespace `monitoring` to exist by now.
-# Needs to be submitted before applying other kube-prometheus manifests.
-# Otherwise this dashboard isn't picked up (?)
-kubectl apply -f ${CONBENCH_REPO_ROOT_DIR}/conbench-grafana-dashboard-configmap.yml
-
-
 # A small cleanup recommended by
 # https://github.com/prometheus-operator/kube-prometheus
 # Unclear if actually required.
@@ -106,11 +91,12 @@ stringData:
 EOF
 
 
-# Set up the kube-prometheus stack. This follows the quickstart instructions
-# here: https://github.com/prometheus-operator/kube-prometheus#quickstart
-git clone https://github.com/prometheus-operator/kube-prometheus
-pushd kube-prometheus
-    git checkout v0.12.0  # release from 2023-01-27
+# Build custom version of kube-prometheus stack
+( cd "${CONBENCH_REPO_ROOT_DIR}" && make jsonnet-kube-prom-manifests )
+
+# Set up the kube-prometheus stack. This follows the customization instructions
+# at https://github.com/prometheus-operator/kube-prometheus/blob/v0.12.0/docs/customizing.md
+pushd "${CONBENCH_REPO_ROOT_DIR}"/_kpbuild/cb-kube-prometheus/
     kubectl apply --server-side -f manifests/setup
     kubectl wait \
         --for condition=Established \
