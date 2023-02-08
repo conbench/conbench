@@ -24,7 +24,20 @@ def configure_engine(url):
         future=True,
         echo=False,
         pool_pre_ping=True,
-        connect_args={"options": "-c timezone=utc -c statement_timeout=30s"},
+        # As of today some requests take a (too) long while to generate a
+        # response for. We want to improve that fundamentally over time. Until
+        # then, it of course makes sense to deliver a response even if it takes
+        # a while. Sometimes, the response generation duration is dominated by
+        # a database query which takes a long time until it returns. We have
+        # seen the libpq statement timeout to hit in every now and then when it
+        # was set to 30 seconds. Setting it to 60 seconds increases the
+        # likelihood to deliver an HTTP response at all. Increasing it beyond
+        # 60 s probably does not make sense if we don't also increase timeout
+        # constants for the HTTP reverse proxy(s) in front of Conbench. Related
+        # tickets and discussions:
+        # https://github.com/conbench/conbench/issues/599
+        # https://github.com/conbench/conbench/pull/690
+        connect_args={"options": "-c timezone=utc -c statement_timeout=60s"},
     )
     session_maker.configure(bind=engine)
 
