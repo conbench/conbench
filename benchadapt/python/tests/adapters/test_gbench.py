@@ -221,6 +221,7 @@ class TestGbenchAdapter:
         assert len(set(res.batch_id for res in results)) == 2
         for result in results:
             assert isinstance(result, BenchmarkResult)
+            assert isinstance(result.run_name, str)
             assert result.tags["name"].endswith("MajorTensorConversionFixture")
             assert result.context == {"benchmark_language": "C++"}
             assert "params" in result.tags

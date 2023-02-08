@@ -96,19 +96,17 @@ class GoogleBenchmark:
     counters: List = None
 
     @classmethod
-    def from_runs(cls, name: str, runs: List[GoogleBenchmarkObservation]):
+    def from_runs(cls, runs: List[GoogleBenchmarkObservation]):
         """
         Create a GoogleBenchmarkGroup instance from a list of observations
 
         Parameters
         ----------
-        name: str
-              Name of the benchmark
         runs: List(GoogleBenchmarkObservation)
               Repetitions of GoogleBenchmarkObservation run.
         """
         return cls(
-            name=name,
+            name=runs[0].name,
             unit=runs[0].unit,
             time_unit=runs[0].time_unit,
             less_is_better=not runs[0].unit.endswith("per_second"),
@@ -179,8 +177,7 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
 
         return parsed_results
 
-    @staticmethod
-    def _parse_gbench_json(raw_json: dict) -> Tuple[dict, list]:
+    def _parse_gbench_json(self, raw_json: dict) -> Tuple[dict, list]:
         """
         Parse gbench result json into a context dict and a list of grouped benchmarks
 
@@ -200,13 +197,14 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
         ]
 
         benchmark_groups = groupby(
-            sorted(non_agg_benchmarks, key=lambda x: x["name"]), lambda x: x["name"]
+            sorted(non_agg_benchmarks, key=lambda x: x["name"]),
+            lambda x: self._parse_benchmark_name(full_name=x["name"])[0],
         )
 
         benchmarks = []
         for name, group in benchmark_groups:
             runs = [GoogleBenchmarkObservation(**obs) for obs in group]
-            benchmarks.append(GoogleBenchmark.from_runs(name=name, runs=runs))
+            benchmarks.append(GoogleBenchmark.from_runs(runs=runs))
 
         return gbench_context, benchmarks
 

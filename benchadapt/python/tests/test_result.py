@@ -104,6 +104,24 @@ class TestBenchmarkResult:
             ):
                 BenchmarkResult().to_publishable_dict()
 
+    def test_run_name_defaulting(self, monkeypatch):
+        monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY", raising=False)
+        monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER", raising=False)
+        monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
+
+        with pytest.warns(
+            UserWarning,
+            match="Both CONBENCH_PROJECT_REPOSITORY and CONBENCH_PROJECT_COMMIT must be set if `github` is not specified",
+        ):
+            res = BenchmarkResult(run_reason=res_json["run_reason"])
+
+        assert res.github == {"commit": None, "repository": None, "pr_number": None}
+        assert res.run_name is None
+        res.github = res_json["github"]
+        assert (
+            res.run_name == f"{res_json['run_reason']}: {res_json['github']['commit']}"
+        )
+
     def test_host_detection(self, monkeypatch):
         machine_info_name = "fake-computer-name"
         monkeypatch.setenv("CONBENCH_MACHINE_INFO_NAME", machine_info_name)
