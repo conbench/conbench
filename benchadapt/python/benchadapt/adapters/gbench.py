@@ -208,21 +208,23 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
             b for b in raw_json["benchmarks"] if b["run_type"] != "aggregate"
         ]
 
+        benchmarks = {}
         benchmark_groups = groupby(
             sorted(non_agg_benchmarks, key=lambda x: x["name"]),
             lambda x: self._parse_benchmark_name(full_name=x["name"])[0],
         )
-
-        benchmarks = {}
-        for name, group in benchmark_groups:
-            # all results for a benchmark name share a batch id
-            benchmarks[name] = {"batch_id": uuid.uuid4().hex, "cases": []}
+        # set one `batch_id` for all cases that share a benchmark name
+        for bm_name, group in benchmark_groups:
+            benchmarks[bm_name] = {"batch_id": uuid.uuid4().hex, "cases": []}
             benchmark_cases = groupby(
                 sorted(group, key=lambda x: x["name"]), lambda x: x["name"]
             )
-            for name_params, case in benchmark_cases:
-                runs = [GoogleBenchmarkObservation(**obs) for obs in case]
-                benchmarks[name]["cases"].append(GoogleBenchmark.from_runs(runs=runs))
+            # collapse all iterations for a benchmark case
+            for _, case in benchmark_cases:
+                iterations = [GoogleBenchmarkObservation(**obs) for obs in case]
+                benchmarks[bm_name]["cases"].append(
+                    GoogleBenchmark.from_runs(runs=iterations)
+                )
 
         return gbench_context, benchmarks
 
