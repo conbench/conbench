@@ -71,13 +71,10 @@ GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING = prometheus_client.Gauge(
 # specific setup we have (Python's client lib in multiprocessing mode) it seems
 # to report (from the start) the value 0. The value 0 however in this context
 # has a special meaning: quota exhausted. So, once this gauge reports as 0 we
-# want to know that this values came from an HTTP response. I was looking into
-# how-to-initialize it differently, and ended up going down the code rabbit
-# hole. I do believe the value 0 initialized here:
-# https://github.com/prometheus/client_python/blob/d27cb272e25eb1bb79f551d1dc598dd568b487d1/prometheus_client/mmap_dict.py#L93
-# For now, set a special value -1 that by convention means 'not initialized'.
-# That also means: if this ever shows a positive value or 0 then the value was
-# communciated within an HTTP Response.
+# want to know that this value came from an HTTP response. For now, set a
+# special value -1 that by convention in this case here shall mean 'not
+# initialized'. That is, if this ever shows a positive value or 0 then the
+# value was communciated within an HTTP Response.
 GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING.set(-1)
 
 
