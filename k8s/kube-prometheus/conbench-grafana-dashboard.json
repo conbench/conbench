@@ -1,15 +1,30 @@
 {
   "annotations": {
-    "list": []
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
   },
-  "refresh": "5s",
-  "schemaVersion": 37,
-  "style": "dark",
-  "tags": ["conbench"],
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
+  "id": 29,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -478,6 +493,12 @@
       "title": "Rate of exceptions thrown by request handlers [1/s], $timewindow mean",
       "type": "timeseries"
     }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": [
+    "conbench"
   ],
   "templating": {
     "list": [
