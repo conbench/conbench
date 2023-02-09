@@ -13,6 +13,10 @@ on:
           - benchconnect
           - benchrun
           - conbench
+      version_suffix:
+        description: Optional suffix if there's >1 release today. Recommended to leave blank.
+        required: false
+        type: string
 
 jobs:
   build-and-deploy:
@@ -23,9 +27,15 @@ jobs:
       - name: Define some variables to use later
         id: variables
         run: |
-          # Generate the new version number (YYYY.m.d.H.M, from the date in UTC)
+          # Generate the new version number (YYYY.m.d, from the date in UTC)
           # We don't want zero-padding. Use space-padding, then delete the spaces.
-          version=$(date -u +'%Y.%_m.%_d.%_H.%_M' | sed 's/ //g')
+          version=$(date -u +'%Y.%_m.%_d' | sed 's/ //g')
+
+          # If there's already been a release today, append the suffix. This should be rare.
+          if [[ '${{ inputs.version_suffix }}' ]]; then
+            version="${version}.${{ inputs.version_suffix }}"
+          fi
+
           echo "Generated version number: $version"
           echo "version=$version" >> $GITHUB_OUTPUT
 
@@ -57,7 +67,7 @@ jobs:
           # Generate a commit message
           commit_msg="🤖 ci: bump version of ${{ inputs.package }} to $version"
           echo "Commit message: $commit_msg"
-          echo "commit_msg=$commit_msg" >> $GITHUB_OUTPUT
+          echo "commit_msg='$commit_msg'" >> $GITHUB_OUTPUT
       - name: Replace version file
         run: |
           echo \
@@ -75,6 +85,8 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
+            // We could push directly to main, but this may be more auditable and allow
+            // us to discuss the release further on the PR
             const pull = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
