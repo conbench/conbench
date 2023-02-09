@@ -181,9 +181,8 @@ kubectl get pods -A
 sleep 1
 kubectl wait --timeout=90s --for=condition=Ready pods -l app=conbench
 
-#
 export CONBENCH_BASE_URL=$(minikube --profile "${MINIKUBE_PROFILE_NAME}" service conbench-service --url) && echo $CONBENCH_BASE_URL
-(cd "${CONBENCH_REPO_ROOT_DIR}" && make db-populate)
+# (cd "${CONBENCH_REPO_ROOT_DIR}" && make db-populate)
 
 sleep 5
 kubectl logs deployment/conbench-deployment --all-containers > conbench_container_output.log
