@@ -80,7 +80,7 @@ GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING = prometheus_client.Gauge(
 GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING.set(-1)
 
 
-def decorate_flask_app_with_metrics(app):
+def decorate_flask_app_with_metrics(app) -> None:
     """
     Add flask-prometheus-exporter magic to `app`.
 

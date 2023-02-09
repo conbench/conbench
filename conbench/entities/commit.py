@@ -11,9 +11,7 @@ import requests
 import sqlalchemy as s
 from sqlalchemy.orm import Query
 
-
-from conbench import util
-from conbench import metrics
+from conbench import metrics, util
 
 from ..config import Config
 from ..db import Session

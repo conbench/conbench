@@ -36,6 +36,7 @@ log = logging.getLogger(__name__)
 
 def create_application(config):
     import flask as f
+
     import conbench.metrics
 
     app = f.Flask(__name__)
