@@ -171,7 +171,7 @@ conbench-on-minikube: build-conbench-container-image start-minikube
 .PHONY: start-minikube
 start-minikube:
 	minikube delete --profile mk-conbench
-	minikube start --profile mk-conbench --cpus=4 --memory=6g \
+	minikube start --profile mk-conbench --cpus=2 --memory=4g \
 		--disable-metrics \
 		--kubernetes-version=v1.24.10 \
 		--bootstrapper=kubeadm \
