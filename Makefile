@@ -44,7 +44,7 @@ tests: require-env-ghtoken set-build-info
 # That mounts the local checkout into the Conbench container.
 .PHONY: run-app-dev
 run-app-dev: set-build-info
-	mkdir -p /tmp/_conbench-promcl-coord-dir
+	rm -rf /tmp/_conbench-promcl-coord-dir && mkdir /tmp/_conbench-promcl-coord-dir
 	export DCOMP_CONBENCH_HOST_PORT=127.0.0.1:5000 && \
 		docker compose down && \
 			docker compose -f docker-compose.yml -f docker-compose.dev.yml \

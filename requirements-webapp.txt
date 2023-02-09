@@ -16,6 +16,7 @@ marshmallow
 numpy
 oauthlib
 openapi-spec-validator
+prometheus-client
 prometheus-flask-exporter
 psutil
 psycopg2-binary

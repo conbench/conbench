@@ -11,7 +11,7 @@ import requests
 import sqlalchemy as s
 from sqlalchemy.orm import Query
 
-from conbench import util
+from conbench import metrics, util
 
 from ..config import Config
 from ..db import Session
@@ -618,6 +618,8 @@ class GitHub:
             # requests.
             time.sleep(wait_seconds)
 
+        # Give up after retrying.
+        metrics.COUNTER_GITHUB_HTTP_API_REQUEST_FAILURES.inc()
         raise Exception(
             f"_get_response(): deadline exceeded, giving up after {time.monotonic()-t0:.3f} s"
         )
@@ -628,6 +630,9 @@ class GitHub:
         `None` which indicates a retryable error.
         """
 
+        # This counter is meant to count _attempts_. Errors (failed attempts)
+        # are counted separately
+        metrics.COUNTER_GITHUB_HTTP_API_REQUESTS.inc()
         try:
             # This next line can raise exceptions corresponding to transient
             # issues related to DNS, TCP, HTTP during sending request, while
@@ -637,12 +642,19 @@ class GitHub:
             # on top of that.
             resp = self.session.get(url) if self.session else requests.get(url)
         except requests.exceptions.RequestException as exc:
+            metrics.COUNTER_GITHUB_HTTP_API_RETRYABLE_ERRORS.inc()
             log.info(
                 "error during HTTP request/response cycle: %s --  "
                 "assume that it's retryable, retry soon.",
                 exc,
             )
             return None
+
+        reqquota: Optional[int] = None
+        if "x-ratelimit-remaining" in resp.headers:
+            # Expect the value to always be int-convertible.
+            reqquota = int(resp.headers["x-ratelimit-remaining"])
+            metrics.GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING.set(reqquota)
 
         # In the code block below `resp` reflects an actual HTTP response.
         if resp.status_code == 200:
@@ -659,8 +671,10 @@ class GitHub:
         )
 
         if resp.status_code == 403:
+            metrics.COUNTER_GITHUB_HTTP_API_403RESPONSES.inc()
+
             log.info(
-                "x-ratelimit headers: %s",
+                "403 response, x-ratelimit headers: %s",
                 ", ".join(
                     f"{k}: {v}"
                     for k, v in resp.headers.items()
@@ -668,22 +682,27 @@ class GitHub:
                 ),
             )
 
-            if int(resp.headers.get("x-ratelimit-remaining", 0)) > 100:
-                log.info("quota not exhausted, try to retry soon")
-                # Add additional wait time, because this seems to be a legit
-                # HTTP request rate limiting error -- we have to seriously back
-                # off if we want to have success. The wait time in the
-                # _get_response() loop is too short.
-                time.sleep(2)
-                return None
+            if reqquota == 0:
+                metrics.COUNTER_GITHUB_HTTP_API_REQUEST_FAILURES.inc()
+                raise Exception("Hourly GitHub HTTP API quota exhausted")
 
-            raise Exception("Hourly GitHub HTTP API quota exhausted")
-
-        # For the rare occasion where the GitHub HTTP API returns a 5xx
-        # response we certainly want to retry immediately.
-        if str(resp.status_code).startswith("5"):
+            metrics.COUNTER_GITHUB_HTTP_API_RETRYABLE_ERRORS.inc()
+            log.info("quota not exhausted, try to retry soon")
+            # Add additional wait time, because this seems to be a legit
+            # HTTP request rate limiting error -- we have to seriously back
+            # off if we want to have success. The wait time in the
+            # _get_response() loop is too short.
+            time.sleep(2)
             return None
 
+        # For the rare occasion where the GitHub HTTP API returns a 5xx
+        # response we certainly want to retry.
+        if str(resp.status_code).startswith("5"):
+            metrics.COUNTER_GITHUB_HTTP_API_RETRYABLE_ERRORS.inc()
+            return None
+
+        # Non-retryable error.
+        metrics.COUNTER_GITHUB_HTTP_API_REQUEST_FAILURES.inc()
         raise Exception(
             f"Unexpected GitHub HTTP API response: {resp}",
         )
