@@ -45,7 +45,7 @@ pushd postgres-operator
 
     # Set number of Postgres instances to 1. Need to be conservative with k8s
     # cluster resources, because GHA offers limited resources.
-    sed -i 's|numberOfInstances: 2|numberOfInstances: 1|g' manifests/minimal-postgres-manifest.yaml
+    sed -i.bak 's|numberOfInstances: 2|numberOfInstances: 1|g' manifests/minimal-postgres-manifest.yaml
     cat manifests/minimal-postgres-manifest.yaml | grep numberOfInstances
 
     # alchemy: Remove 'clean_up' and 'start_minikube' from
@@ -54,7 +54,7 @@ pushd postgres-operator
     # delete line 256 and 257. That is safe, because a specific commit of this
     # file was checked out.
     cat ./run_operator_locally.sh | tail -n 15
-    sed -i '256d;257d' run_operator_locally.sh
+    sed -i.bak '256d;257d' run_operator_locally.sh
     cat ./run_operator_locally.sh | tail -n 15
     bash ./run_operator_locally.sh
 popd
