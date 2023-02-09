@@ -237,7 +237,7 @@ jsonnet-kube-prom-manifests:
 		docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
 			jb init || echo "exists"
 	cd _kpbuild/cb-kube-prometheus && \
-		docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
+		time docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
 			jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@v0.12.0
 	cd _kpbuild/cb-kube-prometheus && \
 		wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.12.0/build.sh -O build.sh
