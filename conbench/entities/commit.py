@@ -650,6 +650,12 @@ class GitHub:
             )
             return None
 
+        reqquota: Optional[int] = None
+        if "x-ratelimit-remaining" in resp.headers:
+            # Expect the value to always be int-convertible.
+            reqquota = int(resp.headers["x-ratelimit-remaining"])
+            metrics.GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING.set(reqquota)
+
         # In the code block below `resp` reflects an actual HTTP response.
         if resp.status_code == 200:
             # This may raise an exception if JSON-deserialization fails. If
@@ -666,8 +672,9 @@ class GitHub:
 
         if resp.status_code == 403:
             metrics.COUNTER_GITHUB_HTTP_API_403RESPONSES.inc()
+
             log.info(
-                "x-ratelimit headers: %s",
+                "403 response, x-ratelimit headers: %s",
                 ", ".join(
                     f"{k}: {v}"
                     for k, v in resp.headers.items()
@@ -675,24 +682,18 @@ class GitHub:
                 ),
             )
 
-            if "x-ratelimit-remaining" in resp.headers:
-                # Expect the value to always be int-convertible.
-                rem = int(resp.headers["x-ratelimit-remaining"])
+            if reqquota == 0:
+                metrics.COUNTER_GITHUB_HTTP_API_REQUEST_FAILURES.inc()
+                raise Exception("Hourly GitHub HTTP API quota exhausted")
 
-                metrics.GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING.set(rem)
-
-                if rem == 0:
-                    metrics.COUNTER_GITHUB_HTTP_API_REQUEST_FAILURES.inc()
-                    raise Exception("Hourly GitHub HTTP API quota exhausted")
-
-                metrics.COUNTER_GITHUB_HTTP_API_RETRYABLE_ERRORS.inc()
-                log.info("quota not exhausted, try to retry soon")
-                # Add additional wait time, because this seems to be a legit
-                # HTTP request rate limiting error -- we have to seriously back
-                # off if we want to have success. The wait time in the
-                # _get_response() loop is too short.
-                time.sleep(2)
-                return None
+            metrics.COUNTER_GITHUB_HTTP_API_RETRYABLE_ERRORS.inc()
+            log.info("quota not exhausted, try to retry soon")
+            # Add additional wait time, because this seems to be a legit
+            # HTTP request rate limiting error -- we have to seriously back
+            # off if we want to have success. The wait time in the
+            # _get_response() loop is too short.
+            time.sleep(2)
+            return None
 
         # For the rare occasion where the GitHub HTTP API returns a 5xx
         # response we certainly want to retry.
