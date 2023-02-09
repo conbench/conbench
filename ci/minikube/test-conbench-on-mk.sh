@@ -190,11 +190,13 @@ kubectl logs deployment/conbench-deployment --all-containers > conbench_containe
 cat conbench_container_output.log
 
 # Require access log line confirming that the /metrics endpoint was hit.
-# Temporarily disable the errexit guardrail.
+# Temporarily disable the errexit guardrail, and also disable xtrace for
+# verbosity control.
+set +e
+set +x
 attempt=0
 retries=10
 wait_seconds=3
-set +e
 until ( kubectl logs deployment/conbench-deployment --all-containers | grep '"GET /metrics HTTP/1.1" 200' )
 do
     retcode=$?
@@ -206,5 +208,6 @@ do
         exit 1
     fi
 done
-set +e
+set -e
+set -x
 
