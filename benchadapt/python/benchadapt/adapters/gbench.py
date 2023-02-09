@@ -164,20 +164,21 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
         gbench_context, benchmark_groups = self._parse_gbench_json(results)
 
         parsed_results = []
-        for benchmark in benchmark_groups:
-            # all results for a benchmark name share a batch id
-            batch_id = uuid.uuid4().hex
-            result_parsed = self._parse_benchmark(
-                result=benchmark,
-                batch_id=batch_id,
-                extra_tags=extra_tags,
-            )
-            result_parsed.optional_benchmark_info = {"gbench_context": gbench_context}
-            parsed_results.append(result_parsed)
+        for name, benchmark in benchmark_groups.items():
+            for case in benchmark["cases"]:
+                result_parsed = self._parse_benchmark(
+                    result=case,
+                    batch_id=benchmark["batch_id"],
+                    extra_tags=extra_tags,
+                )
+                result_parsed.optional_benchmark_info = {
+                    "gbench_context": gbench_context
+                }
+                parsed_results.append(result_parsed)
 
         return parsed_results
 
-    def _parse_gbench_json(self, raw_json: dict) -> Tuple[dict, list]:
+    def _parse_gbench_json(self, raw_json: dict) -> Tuple[dict, dict]:
         """
         Parse gbench result json into a context dict and a list of grouped benchmarks
 
@@ -188,6 +189,17 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
         contains a dict for all benchmarks in the run.
 
         Aggregate benchmarks are excluded, as they are duplicative of the raw benchmarks.
+
+        Structure of returns:
+
+        `gbench_context`: The `context` dict of gbench context, unedited.
+        `benchmarks`: {
+            <benchmark name>: {
+                "batch_id": <uuid>,
+                "cases": List[GoogleBenchmark]
+            },
+            ...
+        }
         """
         gbench_context = raw_json.get("context")
 
@@ -196,15 +208,23 @@ class GoogleBenchmarkAdapter(BenchmarkAdapter):
             b for b in raw_json["benchmarks"] if b["run_type"] != "aggregate"
         ]
 
+        benchmarks = {}
         benchmark_groups = groupby(
             sorted(non_agg_benchmarks, key=lambda x: x["name"]),
             lambda x: self._parse_benchmark_name(full_name=x["name"])[0],
         )
-
-        benchmarks = []
-        for name, group in benchmark_groups:
-            runs = [GoogleBenchmarkObservation(**obs) for obs in group]
-            benchmarks.append(GoogleBenchmark.from_runs(runs=runs))
+        # set one `batch_id` for all cases that share a benchmark name
+        for bm_name, group in benchmark_groups:
+            benchmarks[bm_name] = {"batch_id": uuid.uuid4().hex, "cases": []}
+            benchmark_cases = groupby(
+                sorted(group, key=lambda x: x["name"]), lambda x: x["name"]
+            )
+            # collapse all iterations for a benchmark case
+            for _, case in benchmark_cases:
+                iterations = [GoogleBenchmarkObservation(**obs) for obs in case]
+                benchmarks[bm_name]["cases"].append(
+                    GoogleBenchmark.from_runs(runs=iterations)
+                )
 
         return gbench_context, benchmarks
 
