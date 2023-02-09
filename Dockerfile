@@ -1,4 +1,12 @@
-FROM python:3.11-slim
+# Specify platform so that developers using this on ARM MacOS get to use the
+# same Python wheels (platform-specific binaries) that we use when running this
+# on Linux. Otherwise, some wheels might not exist on PyPI (psutil) and
+# compilation tools are required for building C extensions. Downside: when
+# executing an AMD64 image on ARM the QEMU emulation layer inficts a small
+# slowdown. Also see https://github.com/conbench/conbench/issues/709 and
+# https://docs.docker.com/engine/reference/builder/#from
+# https://www.docker.com/blog/multi-platform-docker-builds/
+FROM --platform=linux/amd64 python:3.11-slim
 
 # curl is needed for docker-compose health checks. `git` is needed by some unit
 # tests as of today.
