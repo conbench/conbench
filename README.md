@@ -110,13 +110,19 @@ If you wish to clear all database tables during local development you can hit ht
 * `make run-app-dev`: Similar to `make run-app`, but also mounts the repository's root directory into the container.
 Code changes are (should be) detected automatically and result in automatic code reload.
 
-* `make tests`:The nobrainer command to run the test suite just like CI does.
+* `make tests`: The nobrainer command to run the test suite just like CI does.
 For more fine-grained control see further below.
 
 * `make lint`: Performs invasive code linting in your local checkout.
 May modify files. Analogue to what CI requires.
 It requires for some commands to be available in your current shell.
 Dependencies can be installed with `pip install -r requirements-dev.txt`.
+
+* `make conbench-on-minikube`: requires [minikube](https://minikube.sigs.k8s.io/docs/start/).
+Deploys the Conbench API server to a local minikube-powered Kubernetes cluster.
+This also deploys a kube-prometheus-based observability stack.
+Use this target for local development in this area.
+
 
 ### View API documentation
 
