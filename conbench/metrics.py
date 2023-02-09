@@ -1,6 +1,7 @@
 """
-This module is about instrumenting the Conbench web application with Prometheus
-metrics.
+This module documents and initializes Prometheus metrics (Counters, Gauges,
+Histograms, Summaries). It also defines functions for integration with the
+Flask web application.
 
 Helpful resources about naming metrics, as well as metric types:
 
