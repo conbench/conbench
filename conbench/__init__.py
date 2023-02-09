@@ -83,7 +83,20 @@ def create_application(config):
     # the metrics scrape endpoing. Note that this sets the global singleton.
     # This needs PROMETHEUS_MULTIPROC_DIR to be set to a path to a directory.
     _inspect_prom_multiproc_dir()
-    metrics = GunicornInternalPrometheusMetrics(app)
+    metrics = GunicornInternalPrometheusMetrics(
+        app=app,
+        # Set bucket boundaries (unit: seconds) for tracking the distribution
+        # of HTTP request processing durations (Prometheus metric of type
+        # histogram). The default histogram buckets are not so useful for
+        # Conbench as of today, because they are optimized for low-latency
+        # APIs. Set bucket boundaries so that we have some resolution on the
+        # high latency tail end. Once we push request processing times more or
+        # less reliably below 10 seconds we can change these again. Each value
+        # defines the upper inclusive bound for the corresponding histogram
+        # bucket. Note that there is an implicit last/upper end bucket here
+        # catching all observations up to +inf.
+        buckets=(0.05, 0.1, 0.2, 0.5, 1.0, 3.0, 6.0, 10.0, 15.0, 20.0, 30.0, 50.0),
+    )
 
     return app
 

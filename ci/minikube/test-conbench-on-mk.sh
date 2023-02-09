@@ -190,5 +190,24 @@ kubectl logs deployment/conbench-deployment --all-containers > conbench_containe
 cat conbench_container_output.log
 
 # Require access log line confirming that the /metrics endpoint was hit.
-sleep 2
-grep '"GET /metrics HTTP/1.1" 200' conbench_container_output.log
+# Temporarily disable the errexit guardrail, and also disable xtrace for
+# verbosity control.
+set +e
+set +x
+attempt=0
+retries=10
+wait_seconds=3
+until ( kubectl logs deployment/conbench-deployment --all-containers | grep '"GET /metrics HTTP/1.1" 200' )
+do
+    retcode=$?
+    attempt=$(($attempt + 1))
+    if [ $attempt -lt $retries ]; then
+        echo "pipeline returncode: $retcode -- probe not yet found in log, retry soon"
+        sleep $wait_seconds
+    else
+        exit 1
+    fi
+done
+set -e
+set -x
+
