@@ -33,16 +33,10 @@ del importlib_metadata
 conbench.logger.setup(level_stderr="DEBUG", level_file=None, level_sqlalchemy="WARNING")
 log = logging.getLogger(__name__)
 
-# This is going to be an application-global singleton (in the webapp, not the
-# CLI).
-metrics = None
-
 
 def create_application(config):
-    global metrics
-
     import flask as f
-    from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
+    import conbench.metrics
 
     app = f.Flask(__name__)
     app.config.from_object(config)
@@ -79,43 +73,10 @@ def create_application(config):
     else:
         log.info(log_cfg_msg)
 
-    # Use `GunicornPrometheusMetrics` when spawning a separate HTTP server for
-    # the metrics scrape endpoing. Note that this sets the global singleton.
-    # This needs PROMETHEUS_MULTIPROC_DIR to be set to a path to a directory.
-    _inspect_prom_multiproc_dir()
-    metrics = GunicornInternalPrometheusMetrics(
-        app=app,
-        # Set bucket boundaries (unit: seconds) for tracking the distribution
-        # of HTTP request processing durations (Prometheus metric of type
-        # histogram). The default histogram buckets are not so useful for
-        # Conbench as of today, because they are optimized for low-latency
-        # APIs. Set bucket boundaries so that we have some resolution on the
-        # high latency tail end. Once we push request processing times more or
-        # less reliably below 10 seconds we can change these again. Each value
-        # defines the upper inclusive bound for the corresponding histogram
-        # bucket. Note that there is an implicit last/upper end bucket here
-        # catching all observations up to +inf.
-        buckets=(0.05, 0.1, 0.2, 0.5, 1.0, 3.0, 6.0, 10.0, 15.0, 20.0, 30.0, 50.0),
-    )
+    # This mutates `app` in-place.
+    conbench.metrics.decorate_flask_app_with_metrics(app)
 
     return app
-
-
-def _inspect_prom_multiproc_dir():
-    """
-    Log information about the environment variable PROMETHEUS_MULTIPROC_DIR
-    and about the path it points to. This is helpful for debugging bad state.
-    """
-    path = os.environ.get("PROMETHEUS_MULTIPROC_DIR")
-    log.info("env PROMETHEUS_MULTIPROC_DIR: `%s`", path)
-
-    if not path:
-        return
-
-    try:
-        log.info("os.path.isdir('%s'): %s", path, os.path.isdir(path))
-    except OSError as exc:
-        log.info("os.path.isdir('%s') failed: %s", path, exc)
 
 
 def _init_application(application):
