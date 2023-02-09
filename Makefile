@@ -171,7 +171,7 @@ conbench-on-minikube: build-conbench-container-image start-minikube
 .PHONY: start-minikube
 start-minikube:
 	minikube delete --profile mk-conbench
-	minikube start --profile mk-conbench --cpus=4 --memory=6g \
+	minikube start --profile mk-conbench --cpus=2 --memory=4g \
 		--disable-metrics \
 		--kubernetes-version=v1.24.10 \
 		--bootstrapper=kubeadm \
@@ -210,7 +210,7 @@ set-build-info:
 		buildinfo.json
 	sed -i.bak "s|<BUILD_INFO_COMMIT>|$$(git rev-parse --verify HEAD)|g" \
 		buildinfo.json
-	sed -i.bak "s|<BUILD_INFO_TIME_RFC3339>|$$(date --rfc-3339=seconds --utc)|g" \
+	sed -i.bak "s|<BUILD_INFO_TIME_RFC3339>|$$(date --utc +"%Y-%m-%d %H:%M:%SZ")|g" \
 		buildinfo.json
 	sed -i.bak "s|<BUILD_INFO_HOSTNAME>|$$(hostname)|g" \
 		buildinfo.json
