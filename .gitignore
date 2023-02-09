@@ -1,5 +1,5 @@
 # conbench-specific things
-.buildinfo.json
+buildinfo.json
 _build
 _new_api_docs_json
 _kpbuild
