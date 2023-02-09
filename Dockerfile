@@ -9,8 +9,7 @@
 FROM --platform=linux/amd64 python:3.11-slim
 
 # curl is needed for docker-compose health checks. `git` is needed by some unit
-# tests as of today. `gcc` may be needed to build psutil C ext on some
-# platforms.
+# tests as of today.
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
     curl git && apt-get clean && rm -rf /var/lib/apt/lists/*
 
