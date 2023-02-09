@@ -244,6 +244,6 @@ jsonnet-kube-prom-manifests:
 	cp k8s/kube-prometheus/conbench-flavor.jsonnet _kpbuild/cb-kube-prometheus
 	cp k8s/kube-prometheus/conbench-grafana-dashboard.json _kpbuild/cb-kube-prometheus
 	cd _kpbuild/cb-kube-prometheus && \
-		docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
+		time docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
 			bash build.sh conbench-flavor.jsonnet
 	echo "compiled manifest files: _kpbuild/cb-kube-prometheus/manifests"
