@@ -204,7 +204,8 @@ set-build-info:
 	# - use in-place editing with `sed` to make this portable across Linux and
 	#   macOS: https://stackoverflow.com/a/16746032/145400
 	cat ci/buildinfo.json.template > buildinfo.json
-	_GITBRANCH="$$(git branch --show-current)" || true; BRANCH_NAME=$${GITHUB_REF_NAME:-$$_GITBRANCH} && \
+	_GITBRANCH="$$(git branch --show-current)" || true; _CIBRANCH="$${BUILDKITE_BRANCH:-$$GITHUB_REF_NAME}"; \
+		BRANCH_NAME=$${_CIBRANCH:-$$_GITBRANCH} && \
 	sed -i.bak "s|<BUILD_INFO_BRANCH_NAME>|$${BRANCH_NAME}|g" \
 		buildinfo.json
 	sed -i.bak "s|<BUILD_INFO_VERSION_STRING>|${CHECKOUT_VERSION_STRING}|g" \
