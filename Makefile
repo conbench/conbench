@@ -212,7 +212,7 @@ set-build-info:
 		buildinfo.json
 	sed -i.bak "s|<BUILD_INFO_COMMIT>|$$(git rev-parse --verify HEAD)|g" \
 		buildinfo.json
-	sed -i.bak "s|<BUILD_INFO_TIME_RFC3339>|$$(date --utc +"%Y-%m-%d %H:%M:%SZ")|g" \
+	sed -i.bak "s|<BUILD_INFO_TIME_RFC3339>|$$(date -u +"%Y-%m-%d %H:%M:%SZ")|g" \
 		buildinfo.json
 	sed -i.bak "s|<BUILD_INFO_HOSTNAME>|$$(hostname)|g" \
 		buildinfo.json
