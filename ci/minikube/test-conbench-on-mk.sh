@@ -65,6 +65,13 @@ kubectl get pods -A
 # In the PostgreSQL cluster the user 'zalando' has superuser privileges. We can
 # rename that user if we'd like to by modifying minimal-postgres-manifest.yaml.
 # Get password for this user (was dynamically generated during bootstrap):
+# Wait until this secret is available.
+until kubectl get secret zalando.acid-minimal-cluster.credentials.postgresql.acid.zalan.do
+do
+    echo "postgres-operator does not seem to have created the secret yet. wait."
+    sleep 3
+done
+
 export POSTGRES_CONBENCH_USER_PASSWORD="$(kubectl get secret zalando.acid-minimal-cluster.credentials.postgresql.acid.zalan.do -o 'jsonpath={.data.password}' | base64 -d)"
 echo "db password: ${POSTGRES_CONBENCH_USER_PASSWORD}"
 
