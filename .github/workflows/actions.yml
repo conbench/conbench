@@ -41,8 +41,16 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: Install docs dependencies
-        run: pip install -r requirements-dev.txt
+      - name: Install sphinx dependencies, and our packages (for autodoc)
+        run: |
+          pip install \
+            # sphinx dependencies are in here
+            -r requirements-dev.txt \
+            -e ./benchclients/python \
+            -e ./benchadapt/python \
+            -e ./benchconnect \
+            -e ./benchrun/python \
+            -e .
       - name: Build docs
         run: |
           cd docs
