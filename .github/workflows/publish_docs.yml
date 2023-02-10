@@ -28,11 +28,14 @@ jobs:
           path: docs/_build/html
 
   deploy_docs:
-    needs: build
+    needs: build_docs
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
