@@ -53,6 +53,7 @@ jobs:
       - name: Build docs
         run: |
           cd docs
+          # Exit non-zero if there are warnings. Those can be very bad.
           make html SPHINXOPTS='-W --keep-going'
 
   # This is to confirm that commonly used developer commands still work.

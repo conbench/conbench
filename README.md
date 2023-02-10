@@ -195,6 +195,14 @@ The following commands are not guaranteed to work as documented, but provide val
 Kick off a new run of the "Build and upload a package to PyPI" workflow on the [Actions
 page](https://github.com/conbench/conbench/actions).
 
+### To add new documentation pages
+
+To add a new page to our GitHub Pages-hosted documentation:
+
+1. Add a file to `docs/pages/`. It can be RST or Markdown.
+2. In the toctree in the `docs/index.rst` file, add `pages/your_new_page` without the
+   file suffix.
+
 ## Configuring the web application
 
 The conbench web application can be configured with various environment variables as
