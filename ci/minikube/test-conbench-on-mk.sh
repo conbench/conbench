@@ -15,24 +15,15 @@ echo "CONBENCH_REPO_ROOT_DIR: $CONBENCH_REPO_ROOT_DIR"
 # debug info. We use a specific minikube profile name on local dev machines,
 # but cannot yet do so on GHA.
 
-# "minikube" is the default minikube profile name that a minikube instance gets
-# when started with default parameters.
-export MINIKUBE_PROFILE_NAME="minikube"
-if [ -z "${GITHUB_ACTION:=}" ]; then
-     # Not set, or set to emtpy string. Means: not executing in the context of
-     # a GitHub Action. Assume: local dev env. Use a non-default minikube
-     # profile name. (see https://github.com/medyagh/setup-minikube/issues/59)
-    export MINIKUBE_PROFILE_NAME="mk-conbench"
-fi
 
 minikube config view
-minikube status --profile "${MINIKUBE_PROFILE_NAME}"
+minikube status --profile mk-conbench || true
 
 
 # A small cleanup recommended by
 # https://github.com/prometheus-operator/kube-prometheus
 # Unclear if actually required.
-minikube addons disable metrics-server --profile "${MINIKUBE_PROFILE_NAME}"
+minikube addons disable metrics-server --profile mk-conbench
 
 # postgres-operator vastly simplifies setting up PostgreSQL in minikube for us:
 # https://postgres-operator.readthedocs.io
@@ -195,7 +186,7 @@ kubectl get pods -A
 sleep 1
 kubectl wait --timeout=90s --for=condition=Ready pods -l app=conbench
 
-export CONBENCH_BASE_URL=$(minikube --profile "${MINIKUBE_PROFILE_NAME}" service conbench-service --url) && echo $CONBENCH_BASE_URL
+export CONBENCH_BASE_URL=$(minikube --profile mk-conbench service conbench-service --url) && echo $CONBENCH_BASE_URL
 # (cd "${CONBENCH_REPO_ROOT_DIR}" && make db-populate)
 
 sleep 5
