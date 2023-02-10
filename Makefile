@@ -132,14 +132,12 @@ build-conbench-container-image: set-build-info
 	# docker push ${CONTAINER_IMAGE_SPEC}
 
 
-# On GHA, the default minikube profile name is used (see
-# https://github.com/medyagh/setup-minikube/issues/59). Locally, we use a
-# Conbench-specific profile name reduce the risk of touching a user's minikube
-# that is unrelated to Conbench. Note that this target here is invoked in the
-# context of ci/minikube/test-conbench-on-mk.sh. The `minikube image load`
-# technique allows for using local Docker images in k8s deployments (as long as
-# they specify `imagePullPolicy: Never`). That command however takes a while
-# for bigger images (about 1 min per GB, on my machine).
+# We use a Conbench-specific minikube profile name reduce the risk of touching
+# a user's minikube that is unrelated to Conbench. Note that this target here
+# is invoked in the context of ci/minikube/test-conbench-on-mk.sh. The
+# `minikube image load` technique allows for using local Docker images in k8s
+# deployments (as long as they specify `imagePullPolicy: Never`). That command
+# however takes a while for bigger images (about 1 min per GB, on my machine).
 # https://minikube.sigs.k8s.io/docs/handbook/pushing/
 # https://stackoverflow.com/a/62303945
 .PHONY: deploy-on-minikube
@@ -148,8 +146,8 @@ deploy-on-minikube:
 	mkdir -p _build
 	cp ci/minikube/deploy-conbench.template.yml _build/deploy-conbench.yml
 	sed -i.bak "s|<CONBENCH_CONTAINER_IMAGE_SPEC>|${CONTAINER_IMAGE_SPEC}|g" _build/deploy-conbench.yml
-	time minikube --profile "${MINIKUBE_PROFILE_NAME}" image load ${CONTAINER_IMAGE_SPEC}
-	minikube --profile "${MINIKUBE_PROFILE_NAME}" kubectl -- apply -f _build/deploy-conbench.yml
+	time minikube --profile mk-conbench image load ${CONTAINER_IMAGE_SPEC}
+	minikube --profile mk-conbench kubectl -- apply -f _build/deploy-conbench.yml
 
 
 # Thin wrapper currently not covered by CI. But the core
