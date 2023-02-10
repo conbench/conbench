@@ -6,6 +6,8 @@
 
 # Conbench
 
+Check out the docs at https://conbench.github.io/ !
+
 <img src="https://raw.githubusercontent.com/conbench/conbench/main/conbench.png" alt="Language-independent Continuous Benchmarking (CB) Framework">
 
 
@@ -45,18 +47,6 @@ repository, and the results are hosted on the
 
 
 <br>
-
-
-## Index
-
-* [Developer environment](https://github.com/conbench/conbench#developer-environment)
-* [Configuring the server](https://github.com/conbench/conbench#configuring-the-server)
-* [Creating accounts](https://github.com/conbench/conbench#creating-accounts)
-* [Authoring benchmarks](https://github.com/conbench/conbench#authoring-benchmarks)
-  * [Simple benchmarks](https://github.com/conbench/conbench#example-simple-benchmarks)
-  * [External benchmarks](https://github.com/conbench/conbench#example-external-benchmarks)
-  * [Case benchmarks](https://github.com/conbench/conbench#example-case-benchmarks)
-  * [R benchmarks](https://github.com/conbench/conbench#example-r-benchmarks)
 
 
 ## Installation
@@ -208,7 +198,9 @@ page](https://github.com/conbench/conbench/actions).
 ## Configuring the web application
 
 The conbench web application can be configured with various environment variables as
-defined in [config.py](./conbench/config.py). Instructions are in that file.
+defined in
+[config.py](https://github.com/conbench/conbench/blob/main/conbench/config.py).
+Instructions are in that file.
 
 ## Creating accounts
 

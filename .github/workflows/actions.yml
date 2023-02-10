@@ -36,6 +36,18 @@ jobs:
       - name: Run `make tests`
         run: make tests
 
+  check-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Install docs dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Build docs
+        run: |
+          cd docs
+          make html SPHINXOPTS='-W --keep-going'
+
   # This is to confirm that commonly used developer commands still work.
   dev-cmds:
     runs-on: ubuntu-latest

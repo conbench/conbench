@@ -7,6 +7,9 @@ isort
 lxml
 pytest>=7.0.0
 mypy
+myst-parser
+sphinx
+sphinx-autodoc-typehints
 types-beautifulsoup4
 types-psutil
 types-PyYAML
