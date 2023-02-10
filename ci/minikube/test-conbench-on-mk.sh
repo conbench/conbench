@@ -5,20 +5,18 @@ set -o nounset
 set -o pipefail
 set -o xtrace
 
+# Design choice for this script: assume that minikube cluster is running. Show
+# debug info. We use a specific minikube profile name on local dev machines,
+# but cannot yet do so on GHA.
 
 # Default to one directory up, for local workflows. CI sets
 # CONBENCH_REPO_ROOT_DIR for tighter control.
 CONBENCH_REPO_ROOT_DIR="${CONBENCH_REPO_ROOT_DIR:=..}"
 echo "CONBENCH_REPO_ROOT_DIR: $CONBENCH_REPO_ROOT_DIR"
 
-# Design choice for this script: assume that minikube cluster is running. Show
-# debug info. We use a specific minikube profile name on local dev machines,
-# but cannot yet do so on GHA.
-
-
+# Log debug info, do not crash script.
 minikube config view
 minikube status --profile mk-conbench || true
-
 
 # A small cleanup recommended by
 # https://github.com/prometheus-operator/kube-prometheus
@@ -48,13 +46,11 @@ pushd postgres-operator
     # at this point). Do this via line number deletion. In the original file,
     # delete line 256 and 257. That is safe, because a specific commit of this
     # file was checked out.
-    cat ./run_operator_locally.sh | tail -n 15
     sed -i.bak '256d;257d' run_operator_locally.sh
-    cat ./run_operator_locally.sh | tail -n 15
     bash ./run_operator_locally.sh
 popd
 
-# debuggability. show what's running now.
+# debuggability: show what's running now.
 kubectl get pods -A
 
 # In the PostgreSQL cluster the user 'zalando' has superuser privileges. We can
@@ -93,7 +89,7 @@ stringData:
 EOF
 
 
-# Build custom version of kube-prometheus stack
+# Build custom version of kube-prometheus stack.
 ( cd "${CONBENCH_REPO_ROOT_DIR}" && make jsonnet-kube-prom-manifests )
 
 # Set up the kube-prometheus stack. This follows the customization instructions
@@ -121,40 +117,34 @@ popd
 # with precision, but that's seemingly a very new concept in the k8s ecosystem:
 # https://github.com/kubernetes/kubernetes/issues/104737
 
-# Show contents (do not show api token), inject into k8s
+
 cat conbench-secrets-for-minikube.yml | grep -v TOKEN
 kubectl apply -f conbench-secrets-for-minikube.yml
 
-# Build container image and deploy Conbench into the k8s cluster. This uses
-# Makefile targets, i.e. the repo's root dir needs to be the current working
-# directory. Regardless in which current working directory we are right now; go
-# to that directory in a sub shell.
+# Deploy Conbench into the k8s cluster. This uses Makefile targets. That is,
+# the repo's root dir needs to be the current working directory. Regardless in
+# which current working directory we are right now; go to that directory in a
+# sub shell.
 (
     cd "${CONBENCH_REPO_ROOT_DIR}" && \
         make build-conbench-container-image && \
         make deploy-on-minikube
 )
 
-# The various `sleep`s below are also here to have less interleaved command
-# output in the GHA log viewer (the output created by set -o xtrace might
-# otherwise interleave with output from previously executed commands.
+# The various `sleep`s below are here to have less interleaved command output
+# in the GHA log viewer (the output created by set -o xtrace might otherwise
+# interleave with output from previously executed commands).
 
 # debuggability: show what's running now.
+sleep 1
 kubectl get pods -A
 
-# At this point it's expected that the postgres stack still needs a tiny bit
-# of time before it's operational.
-# One could do
-#   kubectl wait --timeout=90s --for=condition=Ready pods acid-minimal-cluster-0
-# but for now it seems this just works because Conbench has rather persistent
-# internal retrying upon DB connect error.
+# At this point it's expected that the postgres stack still needs a tiny bit of
+# time before it's operational. For now it seems this just works because
+# Conbench has rather persistent internal retrying upon DB connect error.
 
-# sleep 20
-# kubectl logs deployment/conbench-deployment --all-containers
-
-sleep 5
-kubectl get pods -A
-
+# These commands might be useful for debugging the state of things.
+# kubectl wait --timeout=90s --for=condition=Ready pods acid-minimal-cluster-0
 # kubectl describe pods/prometheus-k8s-0 --namespace monitoring
 
 # Explicitly wait for this dependency.
@@ -172,26 +162,17 @@ kubectl wait --timeout=90s --for=condition=Ready \
 # https://github.com/prometheus-operator/kube-prometheus/blob/main/docs/customizations/strip-limits.md
 sleep 1
 kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-0 -n monitoring
-
-
 # kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-1 -n monitoring
-# sleep 1
-# kubectl logs deployment/conbench-deployment --all-containers
 
 sleep 5
 kubectl get pods -A
 
-# Wait for the readiness check to succeed, which implies responsiveness to
-# /api/ping.
+# Wait for readiness check to succeed, which implies responsiveness to /api/ping.
 sleep 1
 kubectl wait --timeout=90s --for=condition=Ready pods -l app=conbench
 
-export CONBENCH_BASE_URL=$(minikube --profile mk-conbench service conbench-service --url) && echo $CONBENCH_BASE_URL
-# (cd "${CONBENCH_REPO_ROOT_DIR}" && make db-populate)
-
 sleep 5
 kubectl logs deployment/conbench-deployment --all-containers > conbench_container_output.log
-# show in logs
 cat conbench_container_output.log
 
 # Require access log line confirming that the /metrics endpoint was hit.
@@ -215,4 +196,3 @@ do
 done
 set -e
 set -x
-

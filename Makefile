@@ -155,11 +155,26 @@ deploy-on-minikube:
 .PHONY: conbench-on-minikube
 conbench-on-minikube: build-conbench-container-image start-minikube
 	rm -rf _build && mkdir -p _build && cd _build && bash ../ci/minikube/test-conbench-on-mk.sh
-	@echo "run: kubectl --namespace monitoring port-forward svc/grafana 3000"
-	@echo "then open the Grafana UI at: http://localhost:3000 "
-	@echo "log in with admin/admin"
-	@echo "run: kubectl port-forward svc/conbench-service 8000:conbench-service-port"
-	@echo "then open the Conbench UI at: http://localhost:8000 "
+	@echo
+	@echo "Grafana UI port-forward:"
+	@echo "     run: kubectl --namespace monitoring port-forward svc/grafana 3000"
+	@echo "     then open the Grafana UI at: http://localhost:3000 "
+	@echo "     log in with admin/admin"
+	@echo
+	@echo "Conbench UI port-forward:"
+	@echo "     kubectl port-forward svc/conbench-service 8000:conbench-service-port"
+	@echo "     then open the Conbench UI at: http://localhost:8000 "
+	@make -s minikube-conbench-url
+
+
+.PHONY: minikube-conbench-url
+minikube-conbench-url:
+	@CONBENCH_BASE_URL=$$(minikube --profile mk-conbench service conbench-service --url) && \
+		echo "" && \
+		echo "Depending on what you'd like to do next:" && \
+		echo "    open the Conbench UI at $${CONBENCH_BASE_URL}" && \
+		echo "    export CONBENCH_BASE_URL=$${CONBENCH_BASE_URL} && make db-populate" && \
+		echo ""
 
 
 # Currently not covered by CI. This is for now only meant for local dev
