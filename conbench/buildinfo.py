@@ -14,13 +14,17 @@ class Buildinfo:
     commit: str
     # Name of the branch carrying the commit.
     branch_name: str
-    # Example value: 2023-02-06 12:01:01+00:00
+    # Example value: 2023-02-06 12:01:01Z
     build_time_rfc3339: str
     build_hostname: str
-    # Canonical
+    # Version string as set by CI. Might as of today not be the same as
+    # __version__ of the Conbench webapp Python package. Needs consoldidation
+    # in the future.
     version_string: str
 
 
+# TODO: require this, remove ambiguity (crash if file not there or in
+# unexpected shape)
 BUILD_INFO: Optional[Buildinfo] = None
 try:
     # Try to discover additional build information at well-known path. For now,
