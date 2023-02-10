@@ -132,10 +132,11 @@ build-conbench-container-image: set-build-info
 	# docker push ${CONTAINER_IMAGE_SPEC}
 
 
-# On GHA, the default minikube profile name is used, cannot be overridden yet
-# (see https://github.com/medyagh/setup-minikube/issues/59). Locally, we use a
-# specific profile name though. Note that this target here is invoked in the
-# context of ci/minikube/test-conbench-on-mk.sh. That wrapper is expected to set  The `minikube image load`
+# On GHA, the default minikube profile name is used (see
+# https://github.com/medyagh/setup-minikube/issues/59). Locally, we use a
+# Conbench-specific profile name reduce the risk of touching a user's minikube
+# that is unrelated to Conbench. Note that this target here is invoked in the
+# context of ci/minikube/test-conbench-on-mk.sh. The `minikube image load`
 # technique allows for using local Docker images in k8s deployments (as long as
 # they specify `imagePullPolicy: Never`). That command however takes a while
 # for bigger images (about 1 min per GB, on my machine).

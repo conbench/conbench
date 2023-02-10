@@ -48,6 +48,10 @@ pushd postgres-operator
     sed -i.bak 's|numberOfInstances: 2|numberOfInstances: 1|g' manifests/minimal-postgres-manifest.yaml
     cat manifests/minimal-postgres-manifest.yaml | grep numberOfInstances
 
+    # Timeout after four minutes instead of one minute. On some platforms this
+    # takes longish. See https://github.com/conbench/conbench/issues/693.
+    sed -i.bak 's|{1..20}|{1..80}|g' ./run_operator_locally.sh
+
     # alchemy: Remove 'clean_up' and 'start_minikube' from
     # `run_operator_locally.sh` (the minikube cluster is already up and running
     # at this point). Do this via line number deletion. In the original file,

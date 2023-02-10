@@ -83,8 +83,8 @@ def decorate_flask_app_with_metrics(app) -> None:
     This mutates `app` in-place.
     """
     # Use `GunicornPrometheusMetrics` when spawning a separate HTTP server for
-    # the metrics scrape endpoing. Note that this sets the global singleton.
-    # This needs PROMETHEUS_MULTIPROC_DIR to be set to a path to a directory.
+    # the metrics scrape endpoing. This needs PROMETHEUS_MULTIPROC_DIR to be
+    # set to a path to a directory.
     _inspect_prom_multiproc_dir()
     GunicornInternalPrometheusMetrics(
         app=app,
