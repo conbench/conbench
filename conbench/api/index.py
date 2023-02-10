@@ -10,10 +10,9 @@ from .. import __version__
 from ..api import api, rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint
+from ..buildinfo import BUILD_INFO
 from ..config import Config
 from ..db import Session, empty_db_tables
-
-from ..buildinfo import BUILD_INFO
 
 log = logging.getLogger(__name__)
 
