@@ -171,9 +171,7 @@ jobs:
         with:
           kubernetes-version: v1.24.10
           # By convention, both locally and in CI we call this mk-conbench.
-          start-args: '--profile mk-conbench'
-          # from https://github.com/prometheus-operator/kube-prometheus#minikube
-          extra-config: kubelet.authentication-token-webhook=true,kubelet.authorization-mode=Webhook,scheduler.bind-address=0.0.0.0,controller-manager.bind-address=0.0.0.0
+          start-args: '--profile mk-conbench --extra-config=kubelet.cgroup-driver=systemd'
           cpus: max
           memory: max
       - name: ci/minikube/test-conbench-on-mk.sh
