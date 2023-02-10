@@ -2,6 +2,10 @@ name: Publish docs to GitHub Pages
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Build and upload a package to PyPI"]
+    types:
+      - completed
 
 jobs:
   build_docs:
