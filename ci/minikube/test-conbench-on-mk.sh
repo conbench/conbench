@@ -17,7 +17,7 @@ echo "CONBENCH_REPO_ROOT_DIR: $CONBENCH_REPO_ROOT_DIR"
 
 
 minikube config view
-minikube status --profile mk-conbench
+minikube status --profile mk-conbench || true
 
 
 # A small cleanup recommended by
