@@ -154,14 +154,17 @@ deploy-on-minikube:
 # (../ci/minikube/test-conbench-on-mk.sh) is covered.
 .PHONY: conbench-on-minikube
 conbench-on-minikube: build-conbench-container-image start-minikube
-#	rm -rf _build && mkdir -p _build && cd _build && bash ../ci/minikube/test-conbench-on-mk.sh
+	rm -rf _build && mkdir -p _build && cd _build && bash ../ci/minikube/test-conbench-on-mk.sh
 	@echo
-	@echo "run: kubectl --namespace monitoring port-forward svc/grafana 3000"
+	@echo "Grafana UI port-forward:"
+	@echo "     run: kubectl --namespace monitoring port-forward svc/grafana 3000"
 	@echo "     then open the Grafana UI at: http://localhost:3000 "
 	@echo "     log in with admin/admin"
 	@echo
-	@echo "run: kubectl port-forward svc/conbench-service 8000:conbench-service-port"
+	@echo "Conbench UI port-forward:"
+	@echo "     kubectl port-forward svc/conbench-service 8000:conbench-service-port"
 	@echo "     then open the Conbench UI at: http://localhost:8000 "
+	@echo
 
 
 .PHONY: minikube-conbench-url
