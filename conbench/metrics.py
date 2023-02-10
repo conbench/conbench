@@ -57,9 +57,7 @@ GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING = prometheus_client.Gauge(
     "header value.",
     # multiprocess mode gauges are tricky!
     # https://github.com/prometheus/client_python#multiprocess-mode-eg-gunicorn
-    # Return a single timeseries that is the minimum of the values of all
-    # processes (alive or dead).
-    multiprocess_mode="min",
+    multiprocess_mode="liveall",
 )
 
 
