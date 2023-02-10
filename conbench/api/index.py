@@ -13,6 +13,8 @@ from ..api._endpoint import ApiEndpoint
 from ..config import Config
 from ..db import Session, empty_db_tables
 
+from ..buildinfo import BUILD_INFO
+
 log = logging.getLogger(__name__)
 
 
@@ -112,6 +114,7 @@ class PingAPI(ApiEndpoint):
             "date": now.strftime("%a, %d %b %Y %H:%M:%S %Z"),
             "conbench_version": __version__,
             "alembic_version": alembic_version,
+            "commit": BUILD_INFO.commit,
         }
 
 
