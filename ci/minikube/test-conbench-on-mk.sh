@@ -176,6 +176,9 @@ kubectl wait --timeout=90s --for=condition=Ready \
 # appears as if prometheus-k8s-0 is reproducibly scraping Conbench. Looks like
 # prometheus-k8s-1 does not always start up on GHA because of a resource
 # shortage. Explicitly wait for prometheus-k8s-0, to do care about -1 for now.
+# Note that this here or a similar technique might allow for scheduling all
+# requested components:
+# https://github.com/prometheus-operator/kube-prometheus/blob/main/docs/customizations/strip-limits.md
 sleep 1
 kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-0 -n monitoring
 
