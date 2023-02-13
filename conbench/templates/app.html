@@ -160,6 +160,7 @@ function dropdown_column_search(data_table_id, column_indexes) {
                 .appendTo(this.header())
                 .on("click", function(e) {
                     that.search($(this).val()).draw();
+                    //stops ordering event when clicked on a menu selection
                     e.stopPropagation();
                 });
             mySelectList.append(
