@@ -83,7 +83,7 @@
                     <th scope="col">Benchmark</th>
                     <th scope="col">Mean</th>
                     <th scope="col">Z-Score</th>
-                    <th scope="col" style="white-space: nowrap;">Error</th>
+                    <th scope="col" style="width: 50px">Error</th>
                 </tr>
             </thead>
             <tbody>
@@ -115,7 +115,7 @@
                     {%  if benchmark.error %}<a href="{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}">
                         <i class="glyphicon glyphicon-exclamation-sign text-danger"
                            data-toggle="tooltip" data-placement="top" title="Has error">
-                        </i></a>
+                        </i><p> Error! </p></a>
                     {% endif %}
                 </td>
                 </tr>
