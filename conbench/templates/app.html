@@ -234,7 +234,7 @@ function column_search_implementation(data_table_id) {
             if (item < 10 && item > 1) {
                 dropdown_column_search(data_table_id, index)
             }
-            else if (item > 10){
+            else if (item >= 10){
                 free_text_column_search(data_table_id, index)
             }
             else if (item == 1) {
