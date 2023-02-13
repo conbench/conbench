@@ -16,6 +16,11 @@ local kp =
   // (import 'kube-prometheus/addons/pyrra.libsonnet') +
   {
     values+:: {
+      prometheus+: {
+        externalLabels: {
+          cluster: 'conbench-on-jps-minikube',
+        },
+      },
       common+: {
         namespace: 'monitoring',
       },
@@ -31,6 +36,10 @@ local kp =
     prometheus+: {
       prometheus+: {
         spec+: {
+          // Required for de-duplicating (and preventing double billing) on
+          // the receivind end (Grafana Cloud) when sending from more than one
+          // Prometheus replica.
+          replicaExternalLabelName: '__replica__',
           remoteWrite: [{
             url: '<put_a_remote_write_endpoint_url_here>',
             basicAuth: {
