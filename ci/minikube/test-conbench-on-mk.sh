@@ -86,7 +86,6 @@ stringData:
   SECRET_KEY: "not-actually-secret"
 EOF
 
-
 # Build custom version of kube-prometheus stack.
 ( cd "${CONBENCH_REPO_ROOT_DIR}" && make jsonnet-kube-prom-manifests )
 
@@ -100,6 +99,15 @@ pushd "${CONBENCH_REPO_ROOT_DIR}"/_kpbuild/cb-kube-prometheus/
         --namespace=monitoring
     kubectl apply -f manifests/
 popd
+
+
+# Set up invalid username/password for the Prometheus remote_write config.
+# remote_write will fail, and that is OK.
+echo "invalid-password" > _prom_remote_write_password
+kubectl create secret generic kubepromsecret \
+    --from-literal=username="inval-user" \
+    --from-file=password='_prom_remote_write_password' \
+    -n monitoring
 
 
 # On minikube with cpus=2 and memory=2000 (which is the github actions resource
