@@ -157,26 +157,43 @@ function dropdown_column_search(data_table_id, column_indexes) {
             var that = this;
             var reset = ""
             var mySelectList = $("<select class='custom-search-box'></select>")
-                //stops ordering event when clicked on a menu selection
+                //stops ordering event trigger when clicked on a menu selection
                 .on("click", function (e){
                     e.stopImmediatePropagation()
                 })
                 .appendTo(this.header())
                 .on("change", function() {
-                    that.search($(this).val()).draw();
+                    currentValue = $(this).val()
+                    //search for empty string value for the selected column
+                    if(currentValue === ""){
+                        that.search('^$', true, false).draw();
+                    }
+                    //reset search for the selected column
+                    else if(currentValue == "All"){
+                        that.search('').draw();
+                    }
+                    // select for non-empty values
+                    else{
+                        that.search(currentValue).draw();
+                    }
+                    console.log(currentValue)
                 });
             mySelectList.append(
-                $(`<option value="${reset}">${reset}</option>`)
+                $(`<option value="All">${reset}</option>`)
             );
             this.cache("search").unique().sort().each(function(param) {
-                // check for multiple whitespaces and empty string
-                if (/^\s*$/.test(param) == false) {
+                //trim the whitespaces (setting to empty string) before appending to drop-down list
+                param = param.trim()
+                // check for empty string
+                // if false update the non-empty values to the drop-down list
+                // else append string (Empty)
+                if (param !== "") {
                     mySelectList.append(
                         $(`<option value="${param}">${param}</option>`)
                     );
                 } else {
                     mySelectList.append(
-                        $(`<option value="${param}">null</option>`)
+                        $(`<option value="${param}">(Empty)</option>`)
                     );
                 }
             });
