@@ -28,25 +28,23 @@ minikube addons disable metrics-server --profile mk-conbench
 # Great docs: https://postgres-operator.readthedocs.io/en/latest/user/
 # Running ./run_operator_locally.sh means installing this manifest:
 # https://github.com/zalando/postgres-operator/blob/v1.9.0/manifests/minimal-postgres-manifest.yaml
-git clone https://github.com/zalando/postgres-operator
+#git clone https://github.com/zalando/postgres-operator
+git clone https://github.com/jgehrcke/postgres-operator
 pushd postgres-operator
-    git checkout v1.9.0  # release from 2023-01-30
+    # git checkout v1.9.0  # release from 2023-01-30
+    # Use this patch for better robustness for now, also see
+    # https://github.com/conbench/conbench/issues/693
+    git checkout jp/run-local-robustness
 
     # Set number of Postgres instances to 1. Need to be conservative with k8s
     # cluster resources, because GHA offers limited resources.
     sed -i.bak 's|numberOfInstances: 2|numberOfInstances: 1|g' manifests/minimal-postgres-manifest.yaml
     cat manifests/minimal-postgres-manifest.yaml | grep numberOfInstances
 
-    # Timeout after four minutes instead of one minute. On some platforms this
-    # takes longish. See https://github.com/conbench/conbench/issues/693.
-    sed -i.bak 's|{1..20}|{1..80}|g' ./run_operator_locally.sh
+    # Remove 'start_minikube' from `run_operator_locally.sh` (the minikube
+    # cluster is already up and running at this point).
+    sed -i.bak 's|^    start_minikube$|#start_minikube|g' ./run_operator_locally.sh
 
-    # alchemy: Remove 'clean_up' and 'start_minikube' from
-    # `run_operator_locally.sh` (the minikube cluster is already up and running
-    # at this point). Do this via line number deletion. In the original file,
-    # delete line 256 and 257. That is safe, because a specific commit of this
-    # file was checked out.
-    sed -i.bak '256d;257d' run_operator_locally.sh
     bash ./run_operator_locally.sh
 popd
 
