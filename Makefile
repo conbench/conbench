@@ -162,7 +162,7 @@ conbench-on-minikube: build-conbench-container-image start-minikube
 	@echo "     log in with admin/admin"
 	@echo
 	@echo "Conbench UI port-forward:"
-	@echo "     kubectl port-forward svc/conbench-service 8000:conbench-service-port"
+	@echo "     run: kubectl port-forward svc/conbench-service 8000:conbench-service-port"
 	@echo "     then open the Conbench UI at: http://localhost:8000 "
 	@make -s minikube-conbench-url
 
@@ -187,6 +187,7 @@ minikube-conbench-url:
 start-minikube:
 	minikube delete --profile mk-conbench
 	minikube start --profile mk-conbench --cpus=2 --memory=4g \
+		--driver=docker \
 		--disable-metrics \
 		--kubernetes-version=v1.24.10 \
 		--bootstrapper=kubeadm \
