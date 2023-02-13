@@ -157,11 +157,13 @@ function dropdown_column_search(data_table_id, column_indexes) {
             var that = this;
             var reset = ""
             var mySelectList = $("<select class='custom-search-box'></select>")
+                //stops ordering event when clicked on a menu selection
+                .on("click", function (e){
+                    e.stopImmediatePropagation()
+                })
                 .appendTo(this.header())
-                .on("click", function(e) {
+                .on("change", function() {
                     that.search($(this).val()).draw();
-                    //stops ordering event when clicked on a menu selection
-                    e.stopPropagation();
                 });
             mySelectList.append(
                 $(`<option value="${reset}">${reset}</option>`)
@@ -178,7 +180,6 @@ function dropdown_column_search(data_table_id, column_indexes) {
                     );
                 }
             });
-            // console.log(mySelectList)
         });
     });
 }
