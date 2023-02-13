@@ -35,6 +35,7 @@ class BaseClient(abc.ABC):
         self.session.mount("https://", adapter)
 
     def get(self, path: str) -> dict:
+        """Make a GET request"""
         url = self.base_url + path
         log.debug(f"GET {url}")
         res = self.session.get(url=url, timeout=self.timeout_s)
@@ -43,6 +44,7 @@ class BaseClient(abc.ABC):
         return res.json()
 
     def post(self, path: str, json: dict) -> Optional[dict]:
+        """Make a POST request"""
         url = self.base_url + path
 
         log.debug(f"POST {url} {dumps(json)}")
@@ -54,6 +56,7 @@ class BaseClient(abc.ABC):
             return res.json()
 
     def put(self, path: str, json: dict) -> Optional[dict]:
+        """Make a PUT request"""
         url = self.base_url + path
         log.debug(f"PUT {url} {dumps(json)}")
         res = self.session.put(url=url, json=json, timeout=self.timeout_s)

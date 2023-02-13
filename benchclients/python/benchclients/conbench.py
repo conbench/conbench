@@ -15,14 +15,15 @@ class ConbenchClient(BaseClient):
     adapter
         A requests adapter to mount to the requests session. If not given, one will be
         created with a backoff retry strategy.
+
     Environment variables
     ---------------------
     CONBENCH_URL
         The URL of the Conbench server. Required.
     CONBENCH_EMAIL
-        The email to use for Conbench login. Only required if the server is private.
+        The email to use for Conbench login. Only required for GETting if the server is private.
     CONBENCH_PASSWORD
-        The password to use for Conbench login. Only required if the server is private.
+        The password to use for Conbench login. Only required for GETting if the server is private.
     """
 
     def __init__(self, adapter: Optional[HTTPAdapter] = None):
