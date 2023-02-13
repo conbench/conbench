@@ -187,6 +187,7 @@ minikube-conbench-url:
 start-minikube:
 	minikube delete --profile mk-conbench
 	minikube start --profile mk-conbench --cpus=2 --memory=4g \
+		--driver=docker \
 		--disable-metrics \
 		--kubernetes-version=v1.24.10 \
 		--bootstrapper=kubeadm \
