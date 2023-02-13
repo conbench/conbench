@@ -1,6 +1,7 @@
 # benchclients
 
-A lightweight Python package with clients for working with APIs in the Conbench ecosystem
+A simple, low-dependency Python library with clients for calling the Conbench API and
+potentially other APIs in the Conbench ecosystem
 
 ## Installation
 
