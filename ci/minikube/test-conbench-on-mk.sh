@@ -5,6 +5,7 @@ set -o nounset
 set -o pipefail
 set -o xtrace
 
+
 # Design choice for this script: assume that minikube cluster is running. Show
 # debug info. We use a specific minikube profile name on local dev machines,
 # but cannot yet do so on GHA.
@@ -101,15 +102,23 @@ pushd "${CONBENCH_REPO_ROOT_DIR}"/_kpbuild/cb-kube-prometheus/
     kubectl apply -f manifests/
 popd
 
+if [ -z "${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH:=}" ]; then
+    # Not set, or set to emtpy string.
+    # Set up invalid username/password for the Prometheus remote_write config.
+    # remote_write will fail, and that is OK.
+    PWFILEPATH="_prom_remote_write_password"
+    echo "invalid-password" > $PWFILEPATH
+else
+    echo "${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH} is set, use that password."
+    PWFILEPATH="${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH}"
+fi
 
-# Set up invalid username/password for the Prometheus remote_write config.
-# remote_write will fail, and that is OK.
-echo "invalid-password" > _prom_remote_write_password
+echo "PROM_REMOTE_WRITE_USERNAME: $PROM_REMOTE_WRITE_USERNAME"
+echo "PWFILEPATH: $PWFILEPATH"
 kubectl create secret generic kubepromsecret \
-    --from-literal=username="inval-user" \
-    --from-file=password='_prom_remote_write_password' \
+    --from-literal=username="${PROM_REMOTE_WRITE_USERNAME:-invaliduser}" \
+    --from-file=password="${PWFILEPATH}" \
     -n monitoring
-
 
 # On minikube with cpus=2 and memory=2000 (which is the github actions resource
 # footprint by default) it's certainly possible to run everything we need for
