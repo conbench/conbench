@@ -266,6 +266,13 @@ jsonnet-kube-prom-manifests:
 			sed -i.bak "s|PROM_REMOTE_WRITE_ENDPOINT_URL|$${PROM_REMOTE_WRITE_ENDPOINT_URL}|g" \
 				_kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
 		fi
+	@if [ -z "$${PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE:=}" ]; then \
+			echo "PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE not set"; \
+		else \
+			echo "PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE set, use in JSONNET: $$PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE" && \
+			sed -i.bak "s|PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE|$${PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE}|g" \
+				_kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
+		fi
 	cd _kpbuild/cb-kube-prometheus && \
 		time docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
 			bash build.sh conbench-flavor.jsonnet
