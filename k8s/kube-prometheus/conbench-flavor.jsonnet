@@ -57,6 +57,25 @@ local kp =
                 key: 'password',
               },
             },
+            // Build up allowlist for the metrics to send. This is important
+            // to control cost: active series count is what mainly influences the
+            // cost storing metrics in e.g. Grafana Cloud.
+            // Reference docs for the mechanism used here:
+            // https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+            // https://github.com/prometheus-operator/prometheus-operator/blob/c237d26b62ee5e29087e01f173e94886ada5b2ec/Documentation/api.md#relabelconfig
+            // The "keep" strategy is documented with
+            // "Drop targets for which regex does not match the concatenated source_labels."
+            writeRelabelConfigs: [
+              {
+                action: 'keep',
+                regex: 'flask_.*|conbench_.*',
+                sourceLabels: [
+                  // In the Prometheus ecosystem this is a special label name.
+                  // The value of this label contains the name of the metric.
+                  '__name__',
+                ],
+              },
+            ],
           }],
         },
       },
