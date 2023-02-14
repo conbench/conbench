@@ -18,7 +18,7 @@ local kp =
     values+:: {
       prometheus+: {
         externalLabels: {
-          cluster: 'conbench-on-jps-minikube',
+          cluster: 'PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE',
         },
       },
       common+: {
