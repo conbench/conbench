@@ -108,18 +108,19 @@ if [ -z "${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH:=}" ]; then
     # Not set, or set to emtpy string.
     # Set up invalid username/password for the Prometheus remote_write config.
     # remote_write will fail, and that is OK.
-    PWFILEPATH="_prom_remote_write_password"
-    echo "invalid-password" > $PWFILEPATH
+    _rw_passw_filepath="_prom_remote_write_password"
+    echo "invalid-password" > $_rw_passw_filepath
 else
     echo "${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH} is set, use that password."
-    PWFILEPATH="${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH}"
+    _rw_passw_filepath="${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH}"
 fi
+_rw_username="${PROM_REMOTE_WRITE_USERNAME:-invaliduser}"
 
-echo "PROM_REMOTE_WRITE_USERNAME: $PROM_REMOTE_WRITE_USERNAME"
-echo "PWFILEPATH: $PWFILEPATH"
+echo "prom remote write username: $_rw_username"
+echo "prom remote write password filepath: $_rw_passw_filepath"
 kubectl create secret generic kubepromsecret \
-    --from-literal=username="${PROM_REMOTE_WRITE_USERNAME:-invaliduser}" \
-    --from-file=password="${PWFILEPATH}" \
+    --from-literal=username="${_rw_username}" \
+    --from-file=password="${_rw_passw_filepath}" \
     -n monitoring
 
 # On minikube with cpus=2 and memory=2000 (which is the github actions resource
@@ -134,7 +135,6 @@ kubectl create secret generic kubepromsecret \
 # we could also patch resource requests for already applied objects by going in
 # with precision, but that's seemingly a very new concept in the k8s ecosystem:
 # https://github.com/kubernetes/kubernetes/issues/104737
-
 
 cat conbench-secrets-for-minikube.yml | grep -v TOKEN
 kubectl apply -f conbench-secrets-for-minikube.yml
