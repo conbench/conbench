@@ -41,7 +41,12 @@ local kp =
           // Prometheus replica.
           replicaExternalLabelName: '__replica__',
           remoteWrite: [{
-            url: '<put_a_remote_write_endpoint_url_here>',
+            // If left as-is then Prometheus starts and periodically shows
+            // a log line saying that this is an invalid URL. That's fine!
+            // That is: replace this, if you want the k8s cluster to send
+            // metrics ot an external system. Leave this as-is when this
+            // capabily is not needed.
+            url: 'PROM_REMOTE_WRITE_ENDPOINT_URL',
             basicAuth: {
               username: {
                 name: 'kubepromsecret',
