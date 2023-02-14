@@ -5,6 +5,7 @@ set -o nounset
 set -o pipefail
 set -o xtrace
 
+
 # Design choice for this script: assume that minikube cluster is running. Show
 # debug info. We use a specific minikube profile name on local dev machines,
 # but cannot yet do so on GHA.
@@ -34,6 +35,7 @@ pushd postgres-operator
     # git checkout v1.9.0  # release from 2023-01-30
     # Use this patch for better robustness for now, also see
     # https://github.com/conbench/conbench/issues/693
+    # https://github.com/zalando/postgres-operator/pull/2218
     git checkout 43e2d18d900d342a4f7fbc919edd64c24ea57eac # on jp/run-local-robustness
 
     # Set number of Postgres instances to 1. Need to be conservative with k8s
@@ -86,6 +88,8 @@ stringData:
   SECRET_KEY: "not-actually-secret"
 EOF
 
+export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="ci-conbench-on-$(hostname -s)"
+
 # Build custom version of kube-prometheus stack.
 ( cd "${CONBENCH_REPO_ROOT_DIR}" && make jsonnet-kube-prom-manifests )
 
@@ -100,15 +104,24 @@ pushd "${CONBENCH_REPO_ROOT_DIR}"/_kpbuild/cb-kube-prometheus/
     kubectl apply -f manifests/
 popd
 
+if [ -z "${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH:=}" ]; then
+    # Not set, or set to emtpy string.
+    # Set up invalid username/password for the Prometheus remote_write config.
+    # remote_write will fail, and that is OK.
+    _rw_passw_filepath="_prom_remote_write_password"
+    echo "invalid-password" > $_rw_passw_filepath
+else
+    echo "${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH} is set, use that password."
+    _rw_passw_filepath="${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH}"
+fi
+_rw_username="${PROM_REMOTE_WRITE_USERNAME:-invaliduser}"
 
-# Set up invalid username/password for the Prometheus remote_write config.
-# remote_write will fail, and that is OK.
-echo "invalid-password" > _prom_remote_write_password
+echo "prom remote write username: $_rw_username"
+echo "prom remote write password filepath: $_rw_passw_filepath"
 kubectl create secret generic kubepromsecret \
-    --from-literal=username="inval-user" \
-    --from-file=password='_prom_remote_write_password' \
+    --from-literal=username="${_rw_username}" \
+    --from-file=password="${_rw_passw_filepath}" \
     -n monitoring
-
 
 # On minikube with cpus=2 and memory=2000 (which is the github actions resource
 # footprint by default) it's certainly possible to run everything we need for
@@ -122,7 +135,6 @@ kubectl create secret generic kubepromsecret \
 # we could also patch resource requests for already applied objects by going in
 # with precision, but that's seemingly a very new concept in the k8s ecosystem:
 # https://github.com/kubernetes/kubernetes/issues/104737
-
 
 cat conbench-secrets-for-minikube.yml | grep -v TOKEN
 kubectl apply -f conbench-secrets-for-minikube.yml
@@ -159,16 +171,14 @@ kubectl wait --timeout=90s --for=condition=Ready \
     pods -l app.kubernetes.io/name=prometheus-operator -n monitoring
 
 # Be sure that the Prometheus instances managed by the prometheus operator are
-# ready (ready to scrape!). There are two instances. At the time of writing it
-# appears as if prometheus-k8s-0 is reproducibly scraping Conbench. Looks like
-# prometheus-k8s-1 does not always start up on GHA because of a resource
-# shortage. Explicitly wait for prometheus-k8s-0, to do care about -1 for now.
-# Note that this here or a similar technique might allow for scheduling all
-# requested components:
+# ready (ready to scrape!). There are two instances: both are replicas of each
+# other in the same StatefulSet. Looks like prometheus-k8s-1 does not always
+# start up on GHA because of a resource shortage. Explicitly wait for
+# prometheus-k8s-0, to do care about -1 for now. Note that this here or a
+# similar technique might allow for scheduling all requested components:
 # https://github.com/prometheus-operator/kube-prometheus/blob/main/docs/customizations/strip-limits.md
 sleep 1
 kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-0 -n monitoring
-# kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-1 -n monitoring
 
 sleep 5
 kubectl get pods -A
