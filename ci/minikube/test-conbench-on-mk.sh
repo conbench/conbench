@@ -88,6 +88,8 @@ stringData:
   SECRET_KEY: "not-actually-secret"
 EOF
 
+export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="ci-conbench-on-$(hostname -s)"
+
 # Build custom version of kube-prometheus stack.
 ( cd "${CONBENCH_REPO_ROOT_DIR}" && make jsonnet-kube-prom-manifests )
 
@@ -169,16 +171,14 @@ kubectl wait --timeout=90s --for=condition=Ready \
     pods -l app.kubernetes.io/name=prometheus-operator -n monitoring
 
 # Be sure that the Prometheus instances managed by the prometheus operator are
-# ready (ready to scrape!). There are two instances. At the time of writing it
-# appears as if prometheus-k8s-0 is reproducibly scraping Conbench. Looks like
-# prometheus-k8s-1 does not always start up on GHA because of a resource
-# shortage. Explicitly wait for prometheus-k8s-0, to do care about -1 for now.
-# Note that this here or a similar technique might allow for scheduling all
-# requested components:
+# ready (ready to scrape!). There are two instances: both are replicas of each
+# other in the same StatefulSet. Looks like prometheus-k8s-1 does not always
+# start up on GHA because of a resource shortage. Explicitly wait for
+# prometheus-k8s-0, to do care about -1 for now. Note that this here or a
+# similar technique might allow for scheduling all requested components:
 # https://github.com/prometheus-operator/kube-prometheus/blob/main/docs/customizations/strip-limits.md
 sleep 1
 kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-0 -n monitoring
-# kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-1 -n monitoring
 
 sleep 5
 kubectl get pods -A
