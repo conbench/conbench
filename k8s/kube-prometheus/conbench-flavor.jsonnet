@@ -63,10 +63,14 @@ local kp =
             // Reference docs for the mechanism used here:
             // https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
             // https://github.com/prometheus-operator/prometheus-operator/blob/c237d26b62ee5e29087e01f173e94886ada5b2ec/Documentation/api.md#relabelconfig
-            // The "keep" strategy is documented with
-            // "Drop targets for which regex does not match the concatenated source_labels."
+            // Note: maybe it's easiest to allowlist by specific label
+            // key/value pairs? For example, we know that kube-prometheus
+            // stack magic adds a `container=conbench` k/v pair to all
+            // metrics it scraped from conbench webapp containers.
             writeRelabelConfigs: [
               {
+                // The "keep" strategy is documented with
+                // "Drop targets for which regex does not match the concatenated source_labels."
                 action: 'keep',
                 regex: 'flask_.*|conbench_.*',
                 sourceLabels: [
