@@ -34,6 +34,7 @@ pushd postgres-operator
     # git checkout v1.9.0  # release from 2023-01-30
     # Use this patch for better robustness for now, also see
     # https://github.com/conbench/conbench/issues/693
+    # https://github.com/zalando/postgres-operator/pull/2218
     git checkout 43e2d18d900d342a4f7fbc919edd64c24ea57eac # on jp/run-local-robustness
 
     # Set number of Postgres instances to 1. Need to be conservative with k8s
