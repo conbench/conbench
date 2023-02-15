@@ -1,0 +1,114 @@
+{
+    "status_code": 200,
+    "data": [
+        {
+            "batch_id": "some-batch-uuid-1",
+            "error": null,
+            "id": "some-benchmark-uuid-1",
+            "links": {
+                "context": "http://localhost/api/contexts/some-context-uuid-1/",
+                "info": "http://localhost/api/info/some-info-uuid-1/",
+                "list": "http://localhost/api/benchmarks/",
+                "run": "http://localhost/api/runs/some-run-uuid-1/",
+                "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/"
+            },
+            "run_id": "some-run-uuid-1",
+            "stats": {
+                "data": [
+                    0.099094,
+                    0.037129,
+                    0.036381,
+                    0.148896,
+                    0.008104,
+                    0.005496,
+                    0.009871,
+                    0.006008,
+                    0.007978,
+                    0.004733
+                ],
+                "iqr": 0.030442,
+                "iterations": 10,
+                "max": 0.148896,
+                "mean": 0.036369,
+                "median": 0.008988,
+                "min": 0.004733,
+                "q1": 0.0065,
+                "q3": 0.036942,
+                "stdev": 0.049194,
+                "time_unit": "s",
+                "times": [
+                    0.099094,
+                    0.037129,
+                    0.036381,
+                    0.148896,
+                    0.008104,
+                    0.005496,
+                    0.009871,
+                    0.006008,
+                    0.007978,
+                    0.004733
+                ],
+                "unit": "s",
+                "z_improvement": false,
+                "z_regression": false,
+                "z_score": null
+            },
+            "tags": {
+                "compression": "snappy",
+                "cpu_count": 2,
+                "dataset": "nyctaxi_sample",
+                "file_type": "parquet",
+                "id": "some-case-uuid-1",
+                "input_type": "arrow",
+                "name": "file-read"
+            },
+            "timestamp": "2020-11-25T21:02:42.706806"
+        },
+        {
+            "batch_id": "some-batch-uuid-1",
+            "error": {
+                "fatal": true,
+                "message": "Something went wrong",
+                "regression": false,
+                "stack_trace": "Traceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\nAssertionError"
+            },
+            "id": "some-benchmark-uuid-2",
+            "links": {
+                "context": "http://localhost/api/contexts/some-context-uuid-1/",
+                "info": "http://localhost/api/info/some-info-uuid-1/",
+                "list": "http://localhost/api/benchmarks/",
+                "run": "http://localhost/api/runs/some-run-uuid-1/",
+                "self": "http://localhost/api/benchmarks/some-benchmark-uuid-2/"
+            },
+            "run_id": "some-run-uuid-1",
+            "stats": {
+                "data": [],
+                "iqr": null,
+                "iterations": null,
+                "max": null,
+                "mean": null,
+                "median": null,
+                "min": null,
+                "q1": null,
+                "q3": null,
+                "stdev": null,
+                "time_unit": null,
+                "times": [],
+                "unit": null,
+                "z_improvement": false,
+                "z_regression": false,
+                "z_score": null
+            },
+            "tags": {
+                "compression": "snappy",
+                "cpu_count": 2,
+                "dataset": "nyctaxi_sample",
+                "file_type": "parquet",
+                "id": "some-case-uuid-2",
+                "input_type": "arrow",
+                "name": "file-write"
+            },
+            "timestamp": "2020-11-25T21:03:42.706806"
+        }
+    ]
+}

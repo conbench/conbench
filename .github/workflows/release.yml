@@ -9,6 +9,7 @@ on:
         type: choice
         options:
           - benchadapt
+          - benchalerts
           - benchclients
           - benchconnect
           - benchrun
@@ -42,6 +43,8 @@ jobs:
           # Find package root dir
           if [[ '${{ inputs.package }}' = 'benchadapt' ]]; then
             pkg_root=./benchadapt/python
+          elif [[ '${{ inputs.package }}' = 'benchalerts' ]]; then
+            pkg_root=./benchalerts
           elif [[ '${{ inputs.package }}' = 'benchclients' ]]; then
             pkg_root=./benchclients/python
           elif [[ '${{ inputs.package }}' = 'benchconnect' ]]; then

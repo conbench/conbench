@@ -144,12 +144,19 @@ jobs:
           # in order of dependency
           pip install \
             -e './benchclients/python[dev]' \
+            -e './benchalerts[dev]' \
             -e ./benchadapt/python \
             -e ./benchconnect \
             -e ./benchrun/python
       - name: Test benchclients
         run: |
           pytest -vv benchclients/python/tests
+      - name: Test benchalerts
+        env:
+          GITHUB_APP_ID: ${{ secrets.CONBENCH_APP_ID }}
+          GITHUB_APP_PRIVATE_KEY: ${{ secrets.CONBENCH_APP_PRIVATE_KEY }}
+        run: |
+          pytest -vv --log-level DEBUG benchalerts/tests
       - name: Test benchadapt
         run: |
           pytest -vv benchadapt/python/tests
