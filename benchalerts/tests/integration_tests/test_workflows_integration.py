@@ -49,6 +49,9 @@ def test_update_github_status_based_on_regressions(
     """While this test is running, you can watch
     https://github.com/conbench/benchalerts/pull/5 to see the statuses change!
     """
+    pytest.skip(
+        "https://github.com/conbench/conbench/issues/745 means timeouts cause this to fail"
+    )
     if (
         workflow == flows.update_github_status_based_on_regressions
         and not arrow_commit.startswith("13a")
