@@ -122,14 +122,6 @@ jobs:
             });
             console.log('PR merged. Response:');
             console.log(merge_response);
-
-            const delete_response = await github.rest.git.deleteRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'heads/${{ steps.variables.outputs.branch_name }}'
-            });
-            console.log('Branch deleted. Response:');
-            console.log(delete_response);
       - name: Sync local repo to main branch
         id: get_commit
         run: |
