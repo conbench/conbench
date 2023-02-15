@@ -67,6 +67,7 @@ versions, so consider pinning packages to a specific version in your code.
 
 ```bash
 pip install benchadapt
+pip install benchalerts
 pip install benchclients
 pip install benchconnect
 pip install benchrun
@@ -79,6 +80,7 @@ from git like so:
 
 ```bash
 pip install 'benchadapt@git+https://github.com/conbench/conbench.git@main#subdirectory=benchadapt/python'
+pip install 'benchalerts@git+https://github.com/conbench/conbench.git@main#subdirectory=benchalerts'
 pip install 'benchclients@git+https://github.com/conbench/conbench.git@main#subdirectory=benchclients/python'
 pip install 'benchconnect@git+https://github.com/conbench/conbench.git@main#subdirectory=benchconnect'
 pip install 'benchrun@git+https://github.com/conbench/conbench.git@main#subdirectory=benchrun/python'
