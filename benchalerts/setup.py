@@ -50,7 +50,7 @@ setuptools.setup(
     entry_points={},
     classifiers=[
         "Programming Language :: Python :: 3.8",
-        "License :: OSI Approved :: Apache 2 License",
+        "License :: OSI Approved :: Apache Software License",
     ],
     python_requires=">=3.8",
     maintainer="Austin Dickey",
