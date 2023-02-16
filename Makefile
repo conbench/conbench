@@ -174,8 +174,13 @@ conbench-on-minikube: build-conbench-container-image start-minikube
 .PHONY: minikube-conbench-url
 minikube-conbench-url:
 	@if [[ "$$OSTYPE" == "darwin"* ]]; then \
-		echo "Darwin detected. Not running automatically, because it's long-running: " && \
-		echo "  minikube --profile mk-conbench service conbench-service --url" && \
+		echo "" && \
+		echo "Darwin detected. Not running this automatically, because it's long-running: " && \
+		echo "    minikube --profile mk-conbench service conbench-service --url" && \
+		echo "" && \
+		echo "First, port-forward for the Conbench UI. Depending on what you'd like to do next:" && \
+		echo "    open the Conbench UI at http://127.0.0.1:8000" && \
+		echo "    export CONBENCH_BASE_URL=http://127.0.0.1:8000 && make db-populate" && \
 		echo ""; \
 	else \
 		CONBENCH_BASE_URL=$$(minikube --profile mk-conbench service conbench-service --url); \
