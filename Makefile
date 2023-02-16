@@ -167,14 +167,29 @@ conbench-on-minikube: build-conbench-container-image start-minikube
 	@make -s minikube-conbench-url
 
 
+# The `minikube ...service conbench-service --url` command returns immediately
+# on Linux, but is a long-running process on Darwin.
+# See https://github.com/conbench/conbench/issues/742.
+# Only run it on Linux.
 .PHONY: minikube-conbench-url
 minikube-conbench-url:
-	@CONBENCH_BASE_URL=$$(minikube --profile mk-conbench service conbench-service --url) && \
+	@if [[ "$$OSTYPE" == "darwin"* ]]; then \
+		echo "" && \
+		echo "Darwin detected. Not running this automatically, because it's long-running: " && \
+		echo "    minikube --profile mk-conbench service conbench-service --url" && \
+		echo "" && \
+		echo "First, port-forward for the Conbench UI. Depending on what you'd like to do next:" && \
+		echo "    open the Conbench UI at http://127.0.0.1:8000" && \
+		echo "    export CONBENCH_BASE_URL=http://127.0.0.1:8000 && make db-populate" && \
+		echo ""; \
+	else \
+		CONBENCH_BASE_URL=$$(minikube --profile mk-conbench service conbench-service --url); \
 		echo "" && \
 		echo "Depending on what you'd like to do next:" && \
 		echo "    open the Conbench UI at $${CONBENCH_BASE_URL}" && \
 		echo "    export CONBENCH_BASE_URL=$${CONBENCH_BASE_URL} && make db-populate" && \
-		echo ""
+		echo ""; \
+	fi
 
 
 # Currently not covered by CI. This is for now only meant for local dev
