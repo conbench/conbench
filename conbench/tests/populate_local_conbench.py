@@ -300,7 +300,7 @@ def create_benchmarks_data():
         "2462492389a8f2ca286c481852c84ba1f0d0eff9",
     ]
 
-    branches = ["apache:master", None] * 3
+    branches = ["apache:main", None] * 3
 
     means = [16.670462, 16.4, 16.5, 16.67, 16.7, 16.7]
 
