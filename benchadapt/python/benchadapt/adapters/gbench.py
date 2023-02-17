@@ -9,7 +9,7 @@ from ..result import BenchmarkResult
 from ._adapter import BenchmarkAdapter
 
 
-# adapted from https://github.com/apache/arrow/blob/master/dev/archery/archery/benchmark/google.py
+# adapted from https://github.com/apache/arrow/blob/main/dev/archery/archery/benchmark/google.py
 class GoogleBenchmarkObservation:
     """Represents one run of a single (google c++) benchmark.
     Aggregates are reported by Google Benchmark executables alongside

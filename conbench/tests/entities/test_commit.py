@@ -161,7 +161,7 @@ def test_get_github_commit_none():
         None,
         # as if github info were provided the advanced, github_info() way: that function
         # returns a branch string like this
-        "apache:master",
+        "apache:main",
     ],
 )
 def test_get_github_commit_and_fork_point_sha(branch):
@@ -179,8 +179,8 @@ def test_get_github_commit_and_fork_point_sha(branch):
         "author_name": "Diana Clarke",
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
-        "branch": "apache:master",
-        # this is the master branch, so the fork point sha == the commit sha
+        "branch": "apache:main",
+        # this is the default branch, so the fork point sha == the commit sha
         "fork_point_sha": sha,
     }
     try:
