@@ -199,9 +199,9 @@ page](https://github.com/conbench/conbench/actions).
 
 To add a new page to our GitHub Pages-hosted documentation:
 
-1. Add a file to `docs/pages/`. It can be RST or Markdown.
-2. In the toctree in the `docs/index.rst` file, add `pages/your_new_page` without the
-   file suffix.
+1. Add a Markdown file to `docs/pages/`.
+2. In the toctree in the `docs/index.rst` file, add `pages/your_new_page`, where
+   `your_new_page` is your new filename without the `.md` file suffix.
 
 ## Configuring the web application
 

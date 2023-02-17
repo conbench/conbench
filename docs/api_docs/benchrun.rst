@@ -1,5 +1,5 @@
-benchrun API documentation
-==========================
+``benchrun`` API documentation
+==============================
 
 .. automodule:: benchrun
    :members:

@@ -19,6 +19,7 @@ jobs:
           pip install \
             -r requirements-dev.txt \
             -e ./benchclients/python \
+            -e ./benchalerts \
             -e ./benchadapt/python \
             -e ./benchconnect \
             -e ./benchrun/python \

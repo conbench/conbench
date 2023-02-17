@@ -1,12 +1,12 @@
-benchadapt API documentation
-============================
+``benchadapt`` API documentation
+================================
 
 .. automodule:: benchadapt
    :members:
    :show-inheritance:
 
-benchadapt.adapters subpackage
-------------------------------
+``benchadapt.adapters`` subpackage
+----------------------------------
 
 .. automodule:: benchadapt.adapters
    :members:

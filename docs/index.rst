@@ -6,12 +6,14 @@
     :caption: Other pages:
 
     pages/benchadapt_readme
-    pages/benchclients_readme
-    pages/benchconnect_readme
-    pages/benchrun_readme
     api_docs/benchadapt
+    pages/benchalerts_readme
+    api_docs/benchalerts
+    pages/benchclients_readme
     api_docs/benchclients
+    pages/benchconnect_readme
     api_docs/benchconnect
+    pages/benchrun_readme
     api_docs/benchrun
     api_docs/conbench
 

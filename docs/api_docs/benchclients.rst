@@ -1,5 +1,5 @@
-benchclients API documentation
-==============================
+``benchclients`` API documentation
+==================================
 
 .. automodule:: benchclients
    :members:
