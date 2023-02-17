@@ -6,6 +6,8 @@
 
 # Conbench
 
+Check out the docs at https://conbench.github.io/conbench !
+
 <img src="https://raw.githubusercontent.com/conbench/conbench/main/conbench.png" alt="Language-independent Continuous Benchmarking (CB) Framework">
 
 
@@ -45,18 +47,6 @@ repository, and the results are hosted on the
 
 
 <br>
-
-
-## Index
-
-* [Developer environment](https://github.com/conbench/conbench#developer-environment)
-* [Configuring the server](https://github.com/conbench/conbench#configuring-the-server)
-* [Creating accounts](https://github.com/conbench/conbench#creating-accounts)
-* [Authoring benchmarks](https://github.com/conbench/conbench#authoring-benchmarks)
-  * [Simple benchmarks](https://github.com/conbench/conbench#example-simple-benchmarks)
-  * [External benchmarks](https://github.com/conbench/conbench#example-external-benchmarks)
-  * [Case benchmarks](https://github.com/conbench/conbench#example-case-benchmarks)
-  * [R benchmarks](https://github.com/conbench/conbench#example-r-benchmarks)
 
 
 ## Installation
@@ -205,10 +195,20 @@ The following commands are not guaranteed to work as documented, but provide val
 Kick off a new run of the "Build and upload a package to PyPI" workflow on the [Actions
 page](https://github.com/conbench/conbench/actions).
 
+### To add new documentation pages
+
+To add a new page to our GitHub Pages-hosted documentation:
+
+1. Add a Markdown file to `docs/pages/`.
+2. In the toctree in the `docs/index.rst` file, add `pages/your_new_page`, where
+   `your_new_page` is your new filename without the `.md` file suffix.
+
 ## Configuring the web application
 
 The conbench web application can be configured with various environment variables as
-defined in [config.py](./conbench/config.py). Instructions are in that file.
+defined in
+[config.py](https://github.com/conbench/conbench/blob/main/conbench/config.py).
+Instructions are in that file.
 
 ## Creating accounts
 
