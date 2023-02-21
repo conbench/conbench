@@ -76,10 +76,10 @@ rebuild-expected-api-docs: run-app-bg
 	git diff ./conbench/tests/api/_expected_docs.py
 
 
-# Build HTML docs, exiting non-zero if there are warnings. Those can be very bad.
+# Build HTML docs locally
 .PHONY: build-docs
 build-docs:
-	$(MAKE) -C docs html SPHINXOPTS='-W --keep-going'
+	$(MAKE) -C docs html
 	echo 'To see the generated docs, open docs/_build/html/index.html'
 
 # The targets above this comment have been in use by humans. Change

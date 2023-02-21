@@ -116,17 +116,14 @@ This also deploys a kube-prometheus-based observability stack.
 Use this target for local development in this area.
 
 * `make docs-build`: Builds HTML docs locally so you may check that they render
-  correctly with no linting problems. You may install dependencies with
-  ```
-  pip install \
-      -r requirements-dev.txt \
-      -e ./benchclients/python \
-      -e ./benchalerts \
-      -e ./benchadapt/python \
-      -e ./benchconnect \
-      -e ./benchrun/python \
-      -e .
-  ```
+  correctly with no linting problems. Dependencies can be installed with
+  `pip install -r requirements-dev.txt`. Also, if you're working on the docstrings of
+  any of this repo's python packages, ensure the package is installed locally before
+  using this command.
+
+  In CI, we use `make build-docs SPHINXOPTS='-W --keep-going'` to fail the build if
+  there are Sphinx warnings. When using this command locally, you can just do
+  `make build-docs`, but keep an eye on the warnings.
 
 ### View API documentation
 
