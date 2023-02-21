@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import List
 
 from .clients import CheckStatus
+from .log import fatal_and_log
 from .talk_to_conbench import RunComparison
 
 
@@ -182,15 +183,25 @@ def regression_details(comparisons: List[RunComparison]) -> str:
     if not any(comparison.baseline_info for comparison in comparisons):
         return None
 
-    z_score_threshold = comparisons[0].compare_results[0]["threshold_z"]
+    # Find the z-score threshold that was used so we can display it here
+    z_score_thresholds = set(
+        comparison.compare_results[0]["threshold_z"]
+        for comparison in comparisons
+        if comparison.compare_results is not None
+    )
+    if len(z_score_thresholds) != 1:
+        fatal_and_log(
+            f"There wasn't exactly one z_score_threshold: {z_score_thresholds=}"
+        )
+
     details = _clean(
         f"""
         Conbench has details about {len(comparisons)} total run(s) on this commit.
 
-        This report was generated using a z-score threshold of {z_score_threshold}. A
-        regression is defined as a benchmark exhibiting a z-score higher than the
-        threshold in the "bad" direction (e.g. down for iterations per second; up for
-        total time taken).
+        This report was generated using a z-score threshold of
+        {z_score_thresholds.pop()}. A regression is defined as a benchmark exhibiting a
+        z-score higher than the threshold in the "bad" direction (e.g. down for
+        iterations per second; up for total time taken).
         """
     )
     return details

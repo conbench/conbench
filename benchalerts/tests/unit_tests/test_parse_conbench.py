@@ -98,6 +98,21 @@ def mock_comparisons(request: SubRequest):
                 contender_info=no_baseline_info, benchmark_results=benchmark_results
             ),
         ]
+    elif how == "mixed_baseline_no_errors":
+        no_baseline_info["has_errors"] = False
+        contender_info["has_errors"] = False
+        benchmark_results[1]["error"] = None
+        compare_results_noregressions[1]["contender_error"] = None
+        return [
+            RunComparison(
+                contender_info=no_baseline_info, benchmark_results=benchmark_results
+            ),
+            RunComparison(
+                contender_info=contender_info,
+                baseline_info=baseline_info,
+                compare_results=compare_results_noregressions,
+            ),
+        ]
 
 
 def get_expected_markdown(filename: str) -> str:
@@ -115,6 +130,7 @@ def get_expected_markdown(filename: str) -> str:
         ("regressions", 2),
         ("no_baseline", 1),
         ("no_baseline_without_errors", 0),
+        ("mixed_baseline_no_errors", 0),
     ],
     indirect=["mock_comparisons"],
 )
@@ -130,6 +146,7 @@ def test_benchmarks_with_errors(mock_comparisons, expected_len):
         ("regressions", 2),
         ("no_baseline", 0),
         ("no_baseline_without_errors", 0),
+        ("mixed_baseline_no_errors", 0),
     ],
     indirect=["mock_comparisons"],
 )
@@ -144,6 +161,7 @@ def test_benchmarks_with_z_regressions(mock_comparisons, expected_len):
         ("noregressions", "summary_noregressions"),
         ("regressions", "summary_regressions"),
         ("no_baseline", "summary_nobaseline"),
+        ("mixed_baseline_no_errors", "summary_noregressions_noerrors"),
     ],
     indirect=["mock_comparisons"],
 )
@@ -162,6 +180,7 @@ def test_regression_summary(mock_comparisons, expected_md):
         ("regressions", "details_regressions"),
         ("no_baseline", None),
         ("no_baseline_without_errors", None),
+        ("mixed_baseline_no_errors", "details_noregressions"),
     ],
     indirect=["mock_comparisons"],
 )
@@ -183,6 +202,7 @@ def test_regression_details(mock_comparisons, expected_md):
         ("regressions", CheckStatus.FAILURE),
         ("no_baseline", CheckStatus.ACTION_REQUIRED),
         ("no_baseline_without_errors", CheckStatus.SKIPPED),
+        ("mixed_baseline_no_errors", CheckStatus.SUCCESS),
     ],
     indirect=["mock_comparisons"],
 )
