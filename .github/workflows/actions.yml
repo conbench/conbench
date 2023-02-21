@@ -51,11 +51,8 @@ jobs:
             -e ./benchconnect \
             -e ./benchrun/python \
             -e .
-      - name: Build docs
-        run: |
-          cd docs
-          # Exit non-zero if there are warnings. Those can be very bad.
-          make html SPHINXOPTS='-W --keep-going'
+      - name: Build docs, exiting non-zero on warnings (which can be very bad)
+        run: make build-docs SPHINXOPTS='-W --keep-going'
 
   # This is to confirm that commonly used developer commands still work.
   dev-cmds:

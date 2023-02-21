@@ -75,6 +75,13 @@ rebuild-expected-api-docs: run-app-bg
 	rm _new_api_docs.json
 	git diff ./conbench/tests/api/_expected_docs.py
 
+
+# Build HTML docs locally
+.PHONY: build-docs
+build-docs:
+	$(MAKE) -C docs html
+	echo 'To see the generated docs, open docs/_build/html/index.html'
+
 # The targets above this comment have been in use by humans. Change
 # conservatively.
 

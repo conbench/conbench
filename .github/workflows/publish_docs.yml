@@ -24,11 +24,8 @@ jobs:
             -e ./benchconnect \
             -e ./benchrun/python \
             -e .
-      - name: Build docs
-        run: |
-          cd docs
-          # Exit non-zero if there are warnings. Those can be very bad.
-          make html SPHINXOPTS='-W --keep-going'
+      - name: Build docs, exiting non-zero on warnings (which can be very bad)
+        run: make build-docs SPHINXOPTS='-W --keep-going'
       - name: Upload docs as an artifact
         uses: actions/upload-pages-artifact@v1
         with:

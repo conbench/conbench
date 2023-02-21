@@ -115,6 +115,15 @@ Deploys the Conbench API server to a local minikube-powered Kubernetes cluster.
 This also deploys a kube-prometheus-based observability stack.
 Use this target for local development in this area.
 
+* `make docs-build`: Builds HTML docs locally so you may check that they render
+  correctly with no linting problems. Dependencies can be installed with
+  `pip install -r requirements-dev.txt`. Also, if you're working on the docstrings of
+  any of this repo's python packages, ensure the package is installed locally before
+  using this command.
+
+  In CI, we use `make build-docs SPHINXOPTS='-W --keep-going'` to fail the build if
+  there are Sphinx warnings. When using this command locally, you can just do
+  `make build-docs`, but keep an eye on the warnings.
 
 ### View API documentation
 
@@ -202,6 +211,9 @@ To add a new page to our GitHub Pages-hosted documentation:
 1. Add a Markdown file to `docs/pages/`.
 2. In the toctree in the `docs/index.rst` file, add `pages/your_new_page`, where
    `your_new_page` is your new filename without the `.md` file suffix.
+
+To test that your new pages pass our documentation linter, run the `make docs-build`
+command, as described above.
 
 ## Configuring the web application
 
