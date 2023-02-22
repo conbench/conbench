@@ -372,7 +372,7 @@ def _add_rolling_stats_columns_to_df(
 
     # Clean up begins_distribution_change so it's a non-null boolean column
     df["begins_distribution_change"] = [
-        bool(x.get("begins_distribution_change", False))
+        bool(x.get("begins_distribution_change", False)) if x else False
         for x in df["change_annotations"]
     ]
 
