@@ -88,7 +88,7 @@ class _Serializer(EntitySerializer):
             "timestamp": history.timestamp.isoformat(),
             "run_name": history.name,
             "distribution_mean": _to_float(history.rolling_mean),
-            "distribution_stdev": _to_float(history.rolling_stddev or 0),
+            "distribution_stdev": _to_float(history.rolling_stddev) or 0.0,
         }
 
 
@@ -143,7 +143,7 @@ def get_history(case_id: str, context_id: str, hardware_hash: str, repo: str) ->
         history_df, include_current_commit_in_rolling_stats=False
     )
 
-    return history_df.itertuples()
+    return list(history_df.itertuples())
 
 
 def set_z_scores(benchmark_results: List[BenchmarkResult]):
