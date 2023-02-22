@@ -1,8 +1,8 @@
 import logging
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
-import numpy as np
 
+import numpy as np
 import pandas as pd
 import sqlalchemy as s
 
@@ -264,34 +264,10 @@ def _query_distribution_stats_by_run_id(
     stats_df = history_df.sort_values("timestamp", ascending=False).drop_duplicates(
         ["case_id", "context_id"]
     )
-
-    # TODO
-
-    # stats = (
-    #     Session.query(
-    #         history.c.case_id,
-    #         history.c.context_id,
-    #         # If we have multiple BenchmarkResults on one commit, they'll all have the
-    #         # same rolling_mean/rolling_stddev, so just select one of them
-    #         s.func.max(history.c.rolling_mean).label("dist_mean"),
-    #         s.func.max(history.c.rolling_stddev).label("dist_stddev"),
-    #     )
-    #     .select_from(history)
-    #     .join(
-    #         latest_commits,
-    #         s.and_(
-    #             latest_commits.c.case_id == history.c.case_id,
-    #             latest_commits.c.context_id == history.c.context_id,
-    #             latest_commits.c.max_commit_rank == history.c.commit_rank,
-    #         ),
-    #     )
-    #     .group_by(history.c.case_id, history.c.context_id)
-    #     .all()
-    # )
-
-    # return {
-    #     (row.case_id, row.context_id): (row.dist_mean, row.dist_stddev) for row in stats
-    # }
+    return {
+        (row.case_id, row.context_id): (row.rolling_mean, row.rolling_stddev)
+        for row in stats_df.itertuples()
+    }
 
 
 class _CommitIndexer(pd.api.indexers.BaseIndexer):
@@ -317,10 +293,10 @@ class _CommitIndexer(pd.api.indexers.BaseIndexer):
         # inserted to maintain order. We can use that to find the indexes of the end of
         # the window (same as the current commit) and start of the window (the current
         # commit minus the window size).
-        end_ixs = np.searchsorted(commit_ranks, commit_ranks, side=closed)
+        end_ixs = np.searchsorted(commit_ranks, commit_ranks, side=closed)  # type: ignore[call-overload]
         start_ixs = np.searchsorted(
             commit_ranks, commit_ranks - self.window_size, side=closed
-        )
+        )  # type: ignore[call-overload]
         return start_ixs, end_ixs
 
 
