@@ -321,7 +321,6 @@ class _CommitIndexer(pd.api.indexers.BaseIndexer):
         start_ixs = np.searchsorted(
             commit_ranks, commit_ranks - self.window_size, side=closed
         )
-        print([list(range(s, e)) for s, e in zip(start_ixs, end_ixs)])
         return start_ixs, end_ixs
 
 
@@ -388,7 +387,6 @@ def _add_rolling_stats_columns_to_df(
     ]
 
     # Add column with cumulative sum of distribution changes, to identify the segment
-    print("segment_id")
     df["segment_id"] = (
         df.groupby(["case_id", "context_id", "hash", "repository"])
         .rolling(
@@ -402,7 +400,6 @@ def _add_rolling_stats_columns_to_df(
     )
 
     # Add column with rolling mean of the means (only inside of the segment)
-    print("rolling_mean_excluding_this_commit")
     df["rolling_mean_excluding_this_commit"] = (
         df.groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
         .rolling(
@@ -422,7 +419,6 @@ def _add_rolling_stats_columns_to_df(
 
     # ...but if requested, include the current commit
     if include_current_commit_in_rolling_stats:
-        print("rolling_mean")
         df["rolling_mean"] = (
             df.groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
             .rolling(
@@ -443,7 +439,6 @@ def _add_rolling_stats_columns_to_df(
 
     # Add column with the rolling standard deviation of the residuals
     # (these can go outside the segment since we assume they don't change much)
-    print("rolling_stddev")
     df["rolling_stddev"] = (
         df.groupby(["case_id", "context_id", "hash", "repository"])  # not segment
         .rolling(
