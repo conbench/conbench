@@ -123,7 +123,7 @@ def get_history(case_id: str, context_id: str, hardware_hash: str, repo: str) ->
         .subquery()
     )
 
-    history_df = pd.read_sql(history.statement, Session.bind)
+    history_df = pd.read_sql(history.statement, Session.connection())
 
     history_df = _add_rolling_stats_columns_to_df(
         history_df, include_current_commit_in_rolling_stats=False
@@ -254,7 +254,7 @@ def _query_distribution_stats_by_run_id(
             ),
         )
 
-    history_df = pd.read_sql(history.statement, Session.bind)
+    history_df = pd.read_sql(history.statement, Session.connection())
 
     history_df = _add_rolling_stats_columns_to_df(
         history_df, include_current_commit_in_rolling_stats=True
