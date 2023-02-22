@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
+import numpy as np
 
 import pandas as pd
 import sqlalchemy as s
@@ -293,6 +294,37 @@ def _query_distribution_stats_by_run_id(
     # }
 
 
+class _CommitIndexer(pd.api.indexers.BaseIndexer):
+    """pandas isn't great about rolling over ranges, so this class lets us roll over
+    the commit timestamp column correctly (not caring about time between commits)."""
+
+    def get_window_bounds(
+        self,
+        num_values: int = 0,
+        min_periods: Optional[int] = None,
+        center: Optional[bool] = None,
+        closed: Optional[str] = None,
+        step: Optional[int] = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Return numpy arrays of the respective start and end indexes of all rolling
+        windows for this slice of commit timestamps.
+        """
+        # self.index_array is the (sorted) current slice of the timestamp column,
+        # converted to an int64 np array. Find the dense rank of each timestamp.
+        commit_ranks = pd.Series(self.index_array).rank(method="dense").values
+
+        # np.searchsorted() finds the indices into which values would need to be
+        # inserted to maintain order. We can use that to find the indexes of the end of
+        # the window (same as the current commit) and start of the window (the current
+        # commit minus the window size).
+        end_ixs = np.searchsorted(commit_ranks, commit_ranks, side=closed)
+        start_ixs = np.searchsorted(
+            commit_ranks, commit_ranks - self.window_size, side=closed
+        )
+        print([list(range(s, e)) for s, e in zip(start_ixs, end_ixs)])
+        return start_ixs, end_ixs
+
+
 def _add_rolling_stats_columns_to_df(
     df: pd.DataFrame, include_current_commit_in_rolling_stats: bool
 ) -> pd.DataFrame:
@@ -312,7 +344,6 @@ def _add_rolling_stats_columns_to_df(
     and this function will add these columns (more detail below):
 
         - begins_distribution_change (non-null bool, cleaned from change_annotations)
-        - commit_rank
         - segment_id
         - rolling_mean_excluding_this_commit
         - rolling_mean
@@ -350,28 +381,16 @@ def _add_rolling_stats_columns_to_df(
 
     # Clean up begins_distribution_change so it's a non-null boolean column
     df["begins_distribution_change"] = [
-        x.get("begins_distribution_change", False) for x in df["change_annotations"]
+        bool(x.get("begins_distribution_change", False))
+        for x in df["change_annotations"]
     ]
-
-    # When we do rolling calculations, we want to roll over commits (not individual
-    # BenchmarkResults, since there may be multiple of those on one commit). Create a
-    # column that represents the commit order so we can roll over that.
-    df["commit_rank"] = (
-        df.groupby(["case_id", "context_id", "hash", "repository"])["timestamp"].rank(
-            method="dense"
-        )
-        # HACK: pandas needs a datetime-like column if you want windows with
-        # potentially-different numbers of data points.
-        # TODO: use a subclass from pd.api.indexers.BaseIndexer instead
-        .astype("datetime64[s]")
-    )
 
     # Add column with cumulative sum of distribution changes, to identify the segment
     df["segment_id"] = (
         df.groupby(["case_id", "context_id", "hash", "repository"])
-        .rolling(window=f"{Config.DISTRIBUTION_COMMITS}s", on="commit_rank")[
-            "begins_distribution_change"
-        ]
+        .rolling(
+            _CommitIndexer(window_size=len(df) + 1), on="timestamp", closed="right"
+        )["begins_distribution_change"]
         .sum()
         .values
     )
@@ -380,15 +399,15 @@ def _add_rolling_stats_columns_to_df(
     df["rolling_mean_excluding_this_commit"] = (
         df.groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
         .rolling(
-            window=f"{Config.DISTRIBUTION_COMMITS}s",
-            on="commit_rank",
+            _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
+            on="timestamp",
             # Exclude the current commit first...
             closed="left",
         )["mean"]
         .mean()
         .values
     )
-    # (fill NaNs at the beginning of segments with the first value)
+    # (and fill NaNs at the beginning of segments with the first value)
     df["rolling_mean_excluding_this_commit"] = df[
         "rolling_mean_excluding_this_commit"
     ].combine_first(df["mean"])
@@ -398,8 +417,8 @@ def _add_rolling_stats_columns_to_df(
         df["rolling_mean"] = (
             df.groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
             .rolling(
-                window=f"{Config.DISTRIBUTION_COMMITS}s",
-                on="commit_rank",
+                _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
+                on="timestamp",
                 closed="right",
             )["mean"]
             .mean()
@@ -417,8 +436,8 @@ def _add_rolling_stats_columns_to_df(
     df["rolling_stddev"] = (
         df.groupby(["case_id", "context_id", "hash", "repository"])  # not segment
         .rolling(
-            window=f"{Config.DISTRIBUTION_COMMITS}s",
-            on="commit_rank",
+            _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
+            on="timestamp",
             closed="right" if include_current_commit_in_rolling_stats else "left",
         )["residual"]
         .std()
