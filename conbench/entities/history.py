@@ -120,7 +120,6 @@ def get_history(case_id: str, context_id: str, hardware_hash: str, repo: str) ->
             Commit.repository == repo,
             Hardware.hash == hardware_hash,
         )
-        .subquery()
     )
 
     history_df = pd.read_sql(history.statement, Session.connection())
