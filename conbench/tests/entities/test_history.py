@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from ...entities.commit import Commit
-from ...entities.history import get_history, set_z_scores, _to_float
+from ...entities.history import _to_float, get_history, set_z_scores
 from ...tests.api import _fixtures
 
 # These correspond to the benchmark_results of _fixtures.gen_fake_data() without modification

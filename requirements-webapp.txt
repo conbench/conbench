@@ -16,6 +16,7 @@ marshmallow
 numpy
 oauthlib
 openapi-spec-validator
+pandas
 prometheus-client
 prometheus-flask-exporter
 psutil
