@@ -376,7 +376,9 @@ def _add_rolling_stats_columns_to_df(
     """
     # pandas likes the data to be sorted
     df.sort_values(
-        ["case_id", "context_id", "hash", "repository", "timestamp"], inplace=True
+        ["case_id", "context_id", "hash", "repository", "timestamp"],
+        inplace=True,
+        ignore_index=True,
     )
 
     # Clean up begins_distribution_change so it's a non-null boolean column
@@ -386,16 +388,21 @@ def _add_rolling_stats_columns_to_df(
     ]
 
     # Add column with cumulative sum of distribution changes, to identify the segment
+    print("segment_id")
     df["segment_id"] = (
         df.groupby(["case_id", "context_id", "hash", "repository"])
         .rolling(
-            _CommitIndexer(window_size=len(df) + 1), on="timestamp", closed="right"
+            _CommitIndexer(window_size=len(df) + 1),
+            on="timestamp",
+            closed="right",
+            min_periods=1,
         )["begins_distribution_change"]
         .sum()
         .values
     )
 
     # Add column with rolling mean of the means (only inside of the segment)
+    print("rolling_mean_excluding_this_commit")
     df["rolling_mean_excluding_this_commit"] = (
         df.groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
         .rolling(
@@ -403,6 +410,7 @@ def _add_rolling_stats_columns_to_df(
             on="timestamp",
             # Exclude the current commit first...
             closed="left",
+            min_periods=1,
         )["mean"]
         .mean()
         .values
@@ -414,12 +422,14 @@ def _add_rolling_stats_columns_to_df(
 
     # ...but if requested, include the current commit
     if include_current_commit_in_rolling_stats:
+        print("rolling_mean")
         df["rolling_mean"] = (
             df.groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
             .rolling(
                 _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
                 on="timestamp",
                 closed="right",
+                min_periods=1,
             )["mean"]
             .mean()
             .values
@@ -433,12 +443,14 @@ def _add_rolling_stats_columns_to_df(
 
     # Add column with the rolling standard deviation of the residuals
     # (these can go outside the segment since we assume they don't change much)
+    print("rolling_stddev")
     df["rolling_stddev"] = (
         df.groupby(["case_id", "context_id", "hash", "repository"])  # not segment
         .rolling(
             _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
             on="timestamp",
             closed="right" if include_current_commit_in_rolling_stats else "left",
+            min_periods=1,
         )["residual"]
         .std()
         .values
