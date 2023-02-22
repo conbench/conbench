@@ -1,7 +1,11 @@
+import decimal
 import logging
+import math
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
+import numpy as np
+import pandas as pd
 import sqlalchemy as s
 
 from ..config import Config
@@ -14,6 +18,19 @@ from ..entities.hardware import Hardware
 from ..entities.run import Run
 
 log = logging.getLogger(__name__)
+
+
+def _to_float(number: Optional[Union[decimal.Decimal, float, int]]) -> Optional[float]:
+    """Standardize decimals/floats/ints/Nones/NaNs to be either floats or Nones"""
+    if number is None:
+        return None
+
+    number = float(number)
+    if math.isnan(number):
+        return None
+
+    return number
+
 
 # NOTE: Unlike other modules in this directory, the concept of "history" is not
 # explicitly represented in the database as a table, but we still need to define common
@@ -47,17 +64,17 @@ class _Serializer(EntitySerializer):
         # a multi-sample benchmark.
         data = []
         if history.data is not None:
-            data = [float(d) if d is not None else None for d in history.data]
+            data = [_to_float(d) for d in history.data]
 
         times = []
         if history.times is not None:
-            times = [float(t) if t is not None else None for t in history.times]
+            times = [_to_float(t) for t in history.times]
 
         return {
             "benchmark_id": history.id,
             "case_id": history.case_id,
             "context_id": history.context_id,
-            "mean": float(history.mean),
+            "mean": _to_float(history.mean),
             "data": data,
             "times": times,
             "unit": history.unit,
@@ -70,8 +87,8 @@ class _Serializer(EntitySerializer):
             # This is the Commit timestamp. Expose Result timestamp, too?
             "timestamp": history.timestamp.isoformat(),
             "run_name": history.name,
-            "distribution_mean": float(history.rolling_mean),
-            "distribution_stdev": float(history.rolling_stddev or 0),
+            "distribution_mean": _to_float(history.rolling_mean),
+            "distribution_stdev": _to_float(history.rolling_stddev) or 0.0,
         }
 
 
@@ -118,14 +135,15 @@ def get_history(case_id: str, context_id: str, hardware_hash: str, repo: str) ->
             Commit.repository == repo,
             Hardware.hash == hardware_hash,
         )
-        .subquery()
     )
 
-    history = _add_rolling_stats_columns_to_history_query(
-        history, include_current_commit_in_rolling_stats=False
+    history_df = pd.read_sql(history.statement, Session.connection())
+
+    history_df = _add_rolling_stats_columns_to_df(
+        history_df, include_current_commit_in_rolling_stats=False
     )
 
-    return Session.query(history).all()
+    return list(history_df.itertuples())
 
 
 def set_z_scores(benchmark_results: List[BenchmarkResult]):
@@ -168,10 +186,10 @@ def set_z_scores(benchmark_results: List[BenchmarkResult]):
                 (benchmark_result.case_id, benchmark_result.context_id), (None, None)
             )
             benchmark_result.z_score = _calculate_z_score(
-                data_point=benchmark_result.mean,
+                data_point=_to_float(benchmark_result.mean),
                 unit=benchmark_result.unit,
-                dist_mean=dist_mean,
-                dist_stddev=dist_stddev,
+                dist_mean=_to_float(dist_mean),
+                dist_stddev=_to_float(dist_stddev),
             )
 
 
@@ -250,55 +268,59 @@ def _query_distribution_stats_by_run_id(
             ),
         )
 
-    history = _add_rolling_stats_columns_to_history_query(
-        history.subquery(), include_current_commit_in_rolling_stats=True
+    history_df = pd.read_sql(history.statement, Session.connection())
+
+    history_df = _add_rolling_stats_columns_to_df(
+        history_df, include_current_commit_in_rolling_stats=True
     )
 
     # Select the latest rolling_mean/rolling_stddev for each distribution
-    latest_commits = (
-        Session.query(
-            history.c.case_id,
-            history.c.context_id,
-            s.func.max(history.c.commit_rank).label("max_commit_rank"),
-        )
-        .group_by(history.c.case_id, history.c.context_id)
-        .subquery()
+    stats_df = history_df.sort_values("timestamp", ascending=False).drop_duplicates(
+        ["case_id", "context_id"]
     )
-
-    stats = (
-        Session.query(
-            history.c.case_id,
-            history.c.context_id,
-            # If we have multiple BenchmarkResults on one commit, they'll all have the
-            # same rolling_mean/rolling_stddev, so just select one of them
-            s.func.max(history.c.rolling_mean).label("dist_mean"),
-            s.func.max(history.c.rolling_stddev).label("dist_stddev"),
-        )
-        .select_from(history)
-        .join(
-            latest_commits,
-            s.and_(
-                latest_commits.c.case_id == history.c.case_id,
-                latest_commits.c.context_id == history.c.context_id,
-                latest_commits.c.max_commit_rank == history.c.commit_rank,
-            ),
-        )
-        .group_by(history.c.case_id, history.c.context_id)
-        .all()
-    )
-
     return {
-        (row.case_id, row.context_id): (row.dist_mean, row.dist_stddev) for row in stats
+        (row.case_id, row.context_id): (row.rolling_mean, row.rolling_stddev)
+        for row in stats_df.itertuples()
     }
 
 
-def _add_rolling_stats_columns_to_history_query(
-    query: s.sql.Subquery, include_current_commit_in_rolling_stats: bool
-) -> s.sql.Subquery:
-    """Add columns with rolling statistical information to a query of BenchmarkResults
-    that represents historical data we're interested in.
+class _CommitIndexer(pd.api.indexers.BaseIndexer):
+    """pandas isn't great about rolling over ranges, so this class lets us roll over
+    the commit timestamp column correctly (not caring about time between commits)."""
 
-    The input subquery must already have the following columns:
+    def get_window_bounds(
+        self,
+        num_values: int = 0,
+        min_periods: Optional[int] = None,
+        center: Optional[bool] = None,
+        closed: Optional[str] = None,
+        step: Optional[int] = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Return numpy arrays of the respective start and end indexes of all rolling
+        windows for this slice of commit timestamps.
+        """
+        # self.index_array is the (sorted) current slice of the timestamp column,
+        # converted to an int64 np array. Find the dense rank of each timestamp.
+        commit_ranks = pd.Series(self.index_array).rank(method="dense").values
+
+        # np.searchsorted() finds the indices into which values would need to be
+        # inserted to maintain order. We can use that to find the indexes of the end of
+        # the window (same as the current commit) and start of the window (the current
+        # commit minus the window size).
+        end_ixs = np.searchsorted(commit_ranks, commit_ranks, side=closed)  # type: ignore[call-overload]
+        start_ixs = np.searchsorted(
+            commit_ranks, commit_ranks - self.window_size, side=closed
+        )  # type: ignore[call-overload]
+        return start_ixs, end_ixs
+
+
+def _add_rolling_stats_columns_to_df(
+    df: pd.DataFrame, include_current_commit_in_rolling_stats: bool
+) -> pd.DataFrame:
+    """Add columns with rolling statistical information to a DataFrame of
+    BenchmarkResults that represents historical data we're interested in.
+
+    The input DataFrame must already have the following columns:
 
         - BenchmarkResult.case_id
         - BenchmarkResult.context_id
@@ -311,7 +333,6 @@ def _add_rolling_stats_columns_to_history_query(
     and this function will add these columns (more detail below):
 
         - begins_distribution_change (non-null bool, cleaned from change_annotations)
-        - commit_rank
         - segment_id
         - rolling_mean_excluding_this_commit
         - rolling_mean
@@ -342,112 +363,85 @@ def _add_rolling_stats_columns_to_history_query(
     exclusive on the right side. This is useful if you want to compare each commit to
     the previous commit's rolling stats.
     """
-    # Define window ranges based on the server configuration
-    range_excluding_current_commit = (-Config.DISTRIBUTION_COMMITS, -1)
-    range_including_current_commit = (-Config.DISTRIBUTION_COMMITS + 1, 0)
+    # pandas likes the data to be sorted
+    df.sort_values(
+        ["case_id", "context_id", "hash", "repository", "timestamp"],
+        inplace=True,
+        ignore_index=True,
+    )
 
-    # Clean up a few columns so they're more usable
-    query = Session.query(
-        query,
-        # Clean up begins_distribution_change so it's a non-null boolean column
-        s.func.coalesce(
-            query.c.change_annotations["begins_distribution_change"].as_boolean(),
-            False,
-        ).label("begins_distribution_change"),
-        # When we do rolling calculations, we want to roll over commits (not individual
-        # BenchmarkResults, since there may be multiple of those on one commit). Create
-        # a column that represents the commit order so we can roll over that.
-        s.func.dense_rank().over(order_by=query.c.timestamp).label("commit_rank"),
-    ).subquery()
+    # Clean up begins_distribution_change so it's a non-null boolean column
+    df["begins_distribution_change"] = [
+        bool(x.get("begins_distribution_change", False))
+        for x in df["change_annotations"]
+    ]
 
     # Add column with cumulative sum of distribution changes, to identify the segment
-    query = Session.query(
-        query,
-        s.func.sum(query.c.begins_distribution_change.cast(s.Integer))
-        .over(
-            partition_by=(
-                query.c.case_id,
-                query.c.context_id,
-                query.c.hash,
-                query.c.repository,
-            ),
-            order_by=query.c.commit_rank,
-        )
-        .label("segment_id"),
-    ).subquery()
+    df["segment_id"] = (
+        df.groupby(["case_id", "context_id", "hash", "repository"])
+        .rolling(
+            _CommitIndexer(window_size=len(df) + 1),
+            on="timestamp",
+            closed="right",
+            min_periods=1,
+        )["begins_distribution_change"]
+        .sum()
+        .values
+    )
 
     # Add column with rolling mean of the means (only inside of the segment)
-    query = Session.query(
-        query,
-        s.func.coalesce(
-            s.func.avg(query.c.mean).over(
-                partition_by=(
-                    query.c.case_id,
-                    query.c.context_id,
-                    query.c.hash,
-                    query.c.repository,
-                    query.c.segment_id,
-                ),
-                order_by=query.c.commit_rank,
-                # Exclude the current commit first...
-                range_=range_excluding_current_commit,
-            ),
-            query.c.mean,
-        ).label("rolling_mean_excluding_this_commit"),
-    ).subquery()
+    df["rolling_mean_excluding_this_commit"] = (
+        df.groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
+        .rolling(
+            _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
+            on="timestamp",
+            # Exclude the current commit first...
+            closed="left",
+            min_periods=1,
+        )["mean"]
+        .mean()
+        .values
+    )
+    # (and fill NaNs at the beginning of segments with the first value)
+    df["rolling_mean_excluding_this_commit"] = df[
+        "rolling_mean_excluding_this_commit"
+    ].combine_first(df["mean"])
 
     # ...but if requested, include the current commit
     if include_current_commit_in_rolling_stats:
-        query = Session.query(
-            query,
-            s.func.avg(query.c.mean)
-            .over(
-                partition_by=(
-                    query.c.case_id,
-                    query.c.context_id,
-                    query.c.hash,
-                    query.c.repository,
-                    query.c.segment_id,
-                ),
-                order_by=query.c.commit_rank,
-                range_=range_including_current_commit,
-            )
-            .label("rolling_mean"),
-        ).subquery()
+        df["rolling_mean"] = (
+            df.groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
+            .rolling(
+                _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
+                on="timestamp",
+                closed="right",
+                min_periods=1,
+            )["mean"]
+            .mean()
+            .values
+        )
     else:
-        query = Session.query(
-            query, query.c.rolling_mean_excluding_this_commit.label("rolling_mean")
-        ).subquery()
+        df["rolling_mean"] = df["rolling_mean_excluding_this_commit"]
 
     # Add column with the residuals from the exclusive rolling mean, since we always
     # want to compare to the baseline distribution
-    query = Session.query(
-        query,
-        (query.c.mean - query.c.rolling_mean_excluding_this_commit).label("residual"),
-    ).subquery()
+    df["residual"] = df["mean"] - df["rolling_mean_excluding_this_commit"]
 
     # Add column with the rolling standard deviation of the residuals
     # (these can go outside the segment since we assume they don't change much)
-    query = Session.query(
-        query,
-        s.func.stddev(query.c.residual)
-        .over(
-            partition_by=(
-                query.c.case_id,
-                query.c.context_id,
-                query.c.hash,
-                query.c.repository,
-                # not by segment
-            ),
-            order_by=query.c.commit_rank,
-            range_=range_including_current_commit
-            if include_current_commit_in_rolling_stats
-            else range_excluding_current_commit,
-        )
-        .label("rolling_stddev"),
-    ).subquery()
+    df["rolling_stddev"] = (
+        df.groupby(["case_id", "context_id", "hash", "repository"])  # not segment
+        .rolling(
+            _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
+            on="timestamp",
+            closed="right" if include_current_commit_in_rolling_stats else "left",
+            min_periods=1,
+        )["residual"]
+        .std()
+        .values
+    )
 
-    return query
+    return df
 
 
 def _calculate_z_score(
