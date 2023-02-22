@@ -1,6 +1,8 @@
+import decimal
 import logging
+import math
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -16,6 +18,19 @@ from ..entities.hardware import Hardware
 from ..entities.run import Run
 
 log = logging.getLogger(__name__)
+
+
+def _to_float(number: Optional[Union[decimal.Decimal, float, int]]) -> Optional[float]:
+    """Standardize decimals/floats/ints/Nones/NaNs to be either floats or Nones"""
+    if number is None:
+        return None
+
+    number = float(number)
+    if math.isnan(number):
+        return None
+
+    return number
+
 
 # NOTE: Unlike other modules in this directory, the concept of "history" is not
 # explicitly represented in the database as a table, but we still need to define common
@@ -49,17 +64,17 @@ class _Serializer(EntitySerializer):
         # a multi-sample benchmark.
         data = []
         if history.data is not None:
-            data = [float(d) if d is not None else None for d in history.data]
+            data = [_to_float(d) for d in history.data]
 
         times = []
         if history.times is not None:
-            times = [float(t) if t is not None else None for t in history.times]
+            times = [_to_float(t) for t in history.times]
 
         return {
             "benchmark_id": history.id,
             "case_id": history.case_id,
             "context_id": history.context_id,
-            "mean": float(history.mean),
+            "mean": _to_float(history.mean),
             "data": data,
             "times": times,
             "unit": history.unit,
@@ -72,8 +87,8 @@ class _Serializer(EntitySerializer):
             # This is the Commit timestamp. Expose Result timestamp, too?
             "timestamp": history.timestamp.isoformat(),
             "run_name": history.name,
-            "distribution_mean": float(history.rolling_mean),
-            "distribution_stdev": float(history.rolling_stddev or 0),
+            "distribution_mean": _to_float(history.rolling_mean),
+            "distribution_stdev": _to_float(history.rolling_stddev or 0),
         }
 
 
@@ -171,10 +186,10 @@ def set_z_scores(benchmark_results: List[BenchmarkResult]):
                 (benchmark_result.case_id, benchmark_result.context_id), (None, None)
             )
             benchmark_result.z_score = _calculate_z_score(
-                data_point=float(benchmark_result.mean),
+                data_point=_to_float(benchmark_result.mean),
                 unit=benchmark_result.unit,
-                dist_mean=dist_mean,
-                dist_stddev=dist_stddev,
+                dist_mean=_to_float(dist_mean),
+                dist_stddev=_to_float(dist_stddev),
             )
 
 
