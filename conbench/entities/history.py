@@ -172,7 +172,7 @@ def set_z_scores(benchmark_results: List[BenchmarkResult]):
                 (benchmark_result.case_id, benchmark_result.context_id), (None, None)
             )
             benchmark_result.z_score = _calculate_z_score(
-                data_point=benchmark_result.mean,
+                data_point=float(benchmark_result.mean),
                 unit=benchmark_result.unit,
                 dist_mean=dist_mean,
                 dist_stddev=dist_stddev,
