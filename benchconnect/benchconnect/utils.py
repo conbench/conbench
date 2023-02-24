@@ -1,9 +1,12 @@
+import logging
 from json import dumps, load, loads
 from pathlib import Path
 from typing import Any, Dict, List
 
 import click
 from benchclients.logging import fatal_and_log, log
+
+log.setLevel(logging.DEBUG)
 
 ENV_VAR_HELP = """
 
