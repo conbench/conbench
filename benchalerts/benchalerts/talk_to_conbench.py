@@ -15,8 +15,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from .clients import ConbenchClient
-from .log import fatal_and_log, log
+from benchclients import ConbenchClient, fatal_and_log, log
 
 
 @dataclass

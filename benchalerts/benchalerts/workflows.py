@@ -15,8 +15,9 @@
 import os
 from typing import Optional
 
-from .clients import CheckStatus, ConbenchClient, GitHubRepoClient, StatusState
-from .log import log
+from benchclients import ConbenchClient, log
+
+from .integrations.github import CheckStatus, GitHubRepoClient, StatusState
 from .parse_conbench import (
     _clean,
     benchmarks_with_z_regressions,

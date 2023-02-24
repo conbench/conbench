@@ -14,8 +14,8 @@
 
 import pytest
 
-from benchalerts.clients import ConbenchClient
 from benchalerts.talk_to_conbench import get_comparison_to_baseline
+from benchclients import ConbenchClient
 
 
 @pytest.mark.parametrize(
@@ -54,9 +54,10 @@ from benchalerts.talk_to_conbench import get_comparison_to_baseline
 def test_get_comparison_to_baseline(
     monkeypatch: pytest.MonkeyPatch, conbench_url, commit, expected_len, expected_bip
 ):
-    pytest.skip(
-        "https://github.com/conbench/conbench/issues/745 means timeouts cause this to fail"
-    )
+    if "ursa" in conbench_url:
+        pytest.skip(
+            "https://github.com/conbench/conbench/issues/745 means timeouts cause this to fail"
+        )
     monkeypatch.setenv("CONBENCH_URL", conbench_url)
     cb = ConbenchClient()
     comparisons = get_comparison_to_baseline(cb, commit)

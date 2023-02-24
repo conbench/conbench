@@ -34,17 +34,18 @@ class BaseClient(abc.ABC):
         self.session = requests.Session()
         self.session.mount("https://", adapter)
 
-    def get(self, path: str) -> dict:
+    def get(self, path: str, params: Optional[dict] = None) -> dict:
         """Make a GET request"""
         url = self.base_url + path
-        log.debug(f"GET {url}")
-        res = self.session.get(url=url, timeout=self.timeout_s)
+        log.debug(f"GET {url} {params=}")
+        res = self.session.get(url=url, params=params, timeout=self.timeout_s)
         self._maybe_raise(res=res)
 
         return res.json()
 
-    def post(self, path: str, json: dict) -> Optional[dict]:
+    def post(self, path: str, json: Optional[dict] = None) -> Optional[dict]:
         """Make a POST request"""
+        json = json or {}
         url = self.base_url + path
 
         log.debug(f"POST {url} {dumps(json)}")

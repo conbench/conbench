@@ -18,7 +18,7 @@ from copy import deepcopy
 import pytest
 from _pytest.fixtures import SubRequest
 
-from benchalerts.clients import CheckStatus
+from benchalerts.integrations.github import CheckStatus
 from benchalerts.parse_conbench import (
     benchmarks_with_errors,
     benchmarks_with_z_regressions,

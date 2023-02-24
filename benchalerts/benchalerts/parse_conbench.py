@@ -16,8 +16,9 @@ import textwrap
 from dataclasses import dataclass
 from typing import List
 
-from .clients import CheckStatus
-from .log import fatal_and_log
+from benchclients import fatal_and_log
+
+from .integrations.github import CheckStatus
 from .talk_to_conbench import RunComparison
 
 

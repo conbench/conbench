@@ -15,8 +15,8 @@
 import pytest
 from _pytest.logging import LogCaptureFixture
 
-from benchalerts.clients import ConbenchClient
 from benchalerts.talk_to_conbench import get_comparison_to_baseline
+from benchclients import ConbenchClient
 
 from .mocks import MockAdapter
 
