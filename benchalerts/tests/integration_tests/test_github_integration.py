@@ -16,7 +16,7 @@ import os
 
 import pytest
 
-from benchalerts.clients import GitHubRepoClient
+from benchalerts.integrations.github import GitHubRepoClient
 
 
 @pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)

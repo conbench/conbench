@@ -13,15 +13,8 @@
 # limitations under the License.
 
 import pytest
-import requests
-from _pytest.logging import LogCaptureFixture
 
-from benchalerts.clients import (
-    CheckStatus,
-    ConbenchClient,
-    GitHubRepoClient,
-    StatusState,
-)
+from benchalerts.integrations.github import CheckStatus, GitHubRepoClient, StatusState
 
 from .mocks import MockAdapter
 
@@ -101,23 +94,3 @@ class TestMissingGithubEnvVars:
         monkeypatch.setenv("GITHUB_APP_ID", "123456")
         with pytest.raises(ValueError, match="GITHUB_APP_PRIVATE_KEY"):
             TestGitHubRepoClient().gh
-
-
-class TestConbenchClient:
-    @property
-    def cb(self):
-        return ConbenchClient(adapter=MockAdapter())
-
-    def test_conbench_fails_missing_env(self, missing_conbench_env):
-        with pytest.raises(ValueError, match="CONBENCH_URL"):
-            self.cb
-
-    @pytest.mark.parametrize("path", ["/error_with_content", "/error_without_content"])
-    def test_client_error_handling(self, conbench_env, path, caplog: LogCaptureFixture):
-        with pytest.raises(requests.HTTPError, match="404"):
-            self.cb.get(path)
-
-        if path == "/error_with_content":
-            assert 'Response content: {"code":' in caplog.text
-        else:
-            assert "Response content: None" in caplog.text

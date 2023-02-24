@@ -12,77 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import abc
 import datetime
 import enum
 import os
 import textwrap
-from json import dumps
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import jwt
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
-from .log import fatal_and_log, log
+from benchclients import BaseClient, fatal_and_log, log
 
-
-class _BaseClient(abc.ABC):
-    """A client to interact with an API.
-
-    Parameters
-    ----------
-    adapter
-        A requests adapter to mount to the requests session. If not given, one will be
-        created with a backoff retry strategy.
-    """
-
-    base_url: str
-    timeout_s = 10
-
-    def __init__(self, adapter: Optional[HTTPAdapter]):
-        if not adapter:
-            retry_strategy = Retry(
-                total=5,
-                status_forcelist=frozenset((429, 502, 503, 504)),
-                backoff_factor=4,  # will retry in 2, 4, 8, 16, 32 seconds
-            )
-            adapter = HTTPAdapter(max_retries=retry_strategy)
-
-        self.session = requests.Session()
-        self.session.mount("https://", adapter)
-
-    def get(self, path: str, params: Optional[dict] = None) -> dict:
-        url = self.base_url + path
-        log.debug(f"GET {url} {params=}")
-        res = self.session.get(url=url, params=params, timeout=self.timeout_s)
-        self._maybe_raise(res)
-        return res.json()
-
-    def post(self, path: str, json: dict = None) -> Optional[dict]:
-        json = json or {}
-        url = self.base_url + path
-        log.debug(f"POST {url} {dumps(json)}")
-        res = self.session.post(url=url, json=json, timeout=self.timeout_s)
-        self._maybe_raise(res)
-        if res.content:
-            return res.json()
-
-    @staticmethod
-    def _maybe_raise(res: requests.Response):
-        try:
-            res.raise_for_status()
-        except requests.HTTPError as e:
-            try:
-                res_content = e.response.content.decode()
-            except AttributeError:
-                res_content = e.response.content
-            log.error(f"Response content: {res_content}")
-            raise
+if TYPE_CHECKING:
+    from requests.adapters import HTTPAdapter
 
 
-class GitHubAppClient(_BaseClient):
+class GitHubAppClient(BaseClient):
     """A client to interact with a GitHub App.
 
     Parameters
@@ -100,7 +44,7 @@ class GitHubAppClient(_BaseClient):
         page.
     """
 
-    def __init__(self, adapter: Optional[HTTPAdapter] = None):
+    def __init__(self, adapter: Optional["HTTPAdapter"] = None):
         app_id = os.getenv("GITHUB_APP_ID")
         if not app_id:
             fatal_and_log("Environment variable GITHUB_APP_ID not found")
@@ -170,7 +114,7 @@ class CheckStatus(str, enum.Enum):
     TIMED_OUT = "timed_out"
 
 
-class GitHubRepoClient(_BaseClient):
+class GitHubRepoClient(BaseClient):
     """A client to interact with a GitHub repo.
 
     You may authenticate with the GitHub API using a GitHub Personal Access Token or a
@@ -198,7 +142,7 @@ class GitHubRepoClient(_BaseClient):
         authentication.
     """
 
-    def __init__(self, repo: str, adapter: Optional[HTTPAdapter] = None):
+    def __init__(self, repo: str, adapter: Optional["HTTPAdapter"] = None):
         if os.getenv("GITHUB_APP_ID") or os.getenv("GITHUB_APP_PRIVATE_KEY"):
             log.info("Attempting to authenticate as a GitHub App.")
             app_client = GitHubAppClient(adapter=adapter)
@@ -363,38 +307,3 @@ class GitHubRepoClient(_BaseClient):
             json["details_url"] = details_url
 
         return self.post("/check-runs", json=json)
-
-
-class ConbenchClient(_BaseClient):
-    """A client to interact with a Conbench server.
-
-    Parameters
-    ----------
-    adapter
-        A requests adapter to mount to the requests session. If not given, one will be
-        created with a backoff retry strategy.
-
-    Environment variables
-    ---------------------
-    CONBENCH_URL
-        The URL of the Conbench server. Required.
-    CONBENCH_EMAIL
-        The email to use for Conbench login. Only required if the server is private.
-    CONBENCH_PASSWORD
-        The password to use for Conbench login. Only required if the server is private.
-    """
-
-    def __init__(self, adapter: Optional[HTTPAdapter] = None):
-        url = os.getenv("CONBENCH_URL")
-        if not url:
-            fatal_and_log("Environment variable CONBENCH_URL not found")
-
-        super().__init__(adapter=adapter)
-        self.base_url = url + "/api"
-
-        login_creds = {
-            "email": os.getenv("CONBENCH_EMAIL"),
-            "password": os.getenv("CONBENCH_PASSWORD"),
-        }
-        if login_creds["email"] and login_creds["password"]:
-            self.post("/login/", json=login_creds)

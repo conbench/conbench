@@ -18,7 +18,7 @@ import pathlib
 import requests
 from requests.adapters import HTTPAdapter
 
-from benchalerts.log import log
+from benchclients import log
 
 response_dir = pathlib.Path(__file__).parent / "mocked_responses"
 

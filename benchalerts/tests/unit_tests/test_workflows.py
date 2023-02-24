@@ -19,7 +19,8 @@ import pytest
 from _pytest.logging import LogCaptureFixture
 
 import benchalerts.workflows as flows
-from benchalerts.clients import ConbenchClient, GitHubRepoClient
+from benchalerts.integrations.github import GitHubRepoClient
+from benchclients import ConbenchClient
 
 from .mocks import MockAdapter
 

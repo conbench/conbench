@@ -18,7 +18,7 @@ import time
 import pytest
 
 import benchalerts.workflows as flows
-from benchalerts.clients import GitHubRepoClient
+from benchalerts.integrations.github import GitHubRepoClient
 
 
 @pytest.mark.parametrize(
