@@ -1,26 +1,26 @@
 # Benchmarking and the development process
 
-Using benchmarks as a development tool is all about the context those benchmarks come from and are run in. This context is important not only to help interpret the benchmarks (did performance increase or decrease, compared to what?) they also make up the history of measurement for the benchmarks we are running.
+Using benchmarks as a development tool is all about the context those benchmarks come from and are run in. This context is important not only to help interpret the benchmarks (did performance increase or decrease, compared to what?) — they also make up the history of measurement for the benchmarks we are running.
 
-Although conbench can store benchmarks from anywhere within a git tree (or even software that is outside of a git tree), we typically benchmark at specific points within a git tree for different purposes. Further, we use the git history to situate where a benchmark came from in history, what came before it, and its relationship to various points of interest in the git tree.
+A benchmark result submitted to Conbench is typically associated with a specific commit in a specific git code repository, i.e. a node in a git tree (although one can also store results not associated with any code repository). If commit information is provided with a benchmark result, Conbench uses the git history to situate where a benchmark came from in history, what came before it, and its relationship to various points of interest in the git tree.
 
-In the most typically conbench setup we run benchmarks at different points in a repository’s git history: 
+In the most typical Conbench setup we recommend to run benchmarks at different points in a repository’s git history: 
 
-- On commits to one main branch that represent the history of the software over its development and release lifecycle.
+- On commits to the default main branch that represent the history of the software over its development and release lifecycle.
 - On PR branches, as requested (or if the benchmarks are fast enough, on each commit as it is added to a PR branch)
 
-When we compare benchmarks, we always have a _contender_ (the new code that we are considering) and a _baseline_ (the old code that were are comparing to). _Baseline_ commits will also define the history and distribution of values for a particular benchmark. This history is effectively the same benchmark measurements as they were measured through the git history (so on main, if our _baseline_ is commit HEAD-1, the history for that _baseline_ would include `HEAD-2`, `HEAD-3`, `HEAD-4`, …)
+When we compare benchmark result, we always have a _contender_ (the new code that we are considering) and a _baseline_ (the old code that were are comparing to). _Baseline_ commits will also define the history and distribution of values for a particular benchmark. This history is effectively the same benchmark measurements as they were measured through the git history (so on main, if our _baseline_ is commit HEAD-1, the history for that _baseline_ would include `HEAD-1`, `HEAD-2`, `HEAD-3`, `HEAD-4`, …)
 
 ## Commits to the main branch
 
-These benchmarks are the history of benchmarks that are used to track performance over time for the software we track. These are important to detect regressions that have been merged into the main branch and since we run them on every commit to the main branch, we know exactly which PR introduced a regression.
+These benchmark results are the history of benchmarks that are used to track performance over time for the software we track. These are important to detect regressions that have been merged into the main branch and since we run them on every commit to the main branch, we know exactly which PR introduced a regression.
 
 A few notes:
 
-- We currently only use squash commits in the repos we benchmark, so we have some assumptions built in to our process that assume squash commits. We could make this configurable, though in that case we would only want to benchmark the merges and not each constituent commit that a merge is made up of.
-- We currently have only one main branch in each of the repos we benchmark, this too can be expanded, in case we have multiple release branches that we need to track + keep track of.
+- We currently only effectively require the used of squash commits in the repos we benchmark, so we have some assumptions built in to our process that assume squash commits. (In the future, if needed, we could make this configurable).
+- We currently have only one main branch in each of the repos we benchmark (this too could be expanded if we see usecases for this, e.g. someone has multiple release branches that we need to track + keep track of).
 
-In order effectively use conbench, this set of benchmarks should be sent consistently. This will also catch regressions if they are not caught during the PR process.
+In order effectively use Conbench, this set of benchmarks should be sent consistently. This will also catch regressions if they are not caught during the PR process.
 
 The default comparison has as the _contender_, the most recent commit to main, and the _baseline_ is the commit just before that. 
 
@@ -47,4 +47,5 @@ _Example_ When we run benchmarks on the feature branch at commits A, B, or C tho
 
 #### Why not use the `HEAD` of main as the _baseline_?
 
-When we make comparisons (for example: to determine regressions) we typically compare the PR branch to the point it branched from on main. This allows us to ignore new, unrelated performance improvements that might have been made in main unrelated to the branch. For example: if I benchmark commit C, by default conbench will compare it with results from commit 1. So that if commits 2, 3, 4 all improved or regressed performance, that can be ignored for the purposes of this branch. If a developer *does* want to compare to the `HEAD` of main, the easiest + best way to do that would be to rebase and rerun the benchmarks (though we could add this comparison as well if it’s helpful, it is slightly more complicated to reason about).
+When we make comparisons (for example: to determine regressions) we typically compare the PR branch to the point it branched from on main. This allows us to ignore new, unrelated performance improvements that might have been made in main unrelated to the branch. For example: if I benchmark commit C, by default Conbench will compare it with results from commit 1. So that if commits 2, 3, 4 all improved or regressed performance, that can be ignored for the purposes of this branch. If a developer *does* want to compare to the `HEAD` of main, the easiest + best way to do that would be to rebase and rerun the benchmarks (though we could add this comparison as well if it’s helpful, it is slightly more complicated to reason about).
+ 
