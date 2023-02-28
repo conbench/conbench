@@ -24,6 +24,9 @@ minikube status --profile mk-conbench || true
 # Unclear if actually required.
 minikube addons disable metrics-server --profile mk-conbench
 
+# For testing the ingress controller spec
+minikube addons enable ingress --profile mk-conbench
+
 # postgres-operator vastly simplifies setting up PostgreSQL in minikube for us:
 # https://postgres-operator.readthedocs.io
 # Great docs: https://postgres-operator.readthedocs.io/en/latest/user/

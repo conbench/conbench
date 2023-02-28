@@ -151,7 +151,7 @@ build-conbench-container-image: set-build-info
 deploy-on-minikube:
 	minikube status || minikube status --profile mk-conbench
 	mkdir -p _build
-	cp ci/minikube/deploy-conbench.template.yml _build/deploy-conbench.yml
+	/bin/cp ci/minikube/deploy-conbench.template.yml _build/deploy-conbench.yml
 	sed -i.bak "s|<CONBENCH_CONTAINER_IMAGE_SPEC>|${CONTAINER_IMAGE_SPEC}|g" _build/deploy-conbench.yml
 	time minikube --profile mk-conbench image load ${CONTAINER_IMAGE_SPEC}
 	minikube --profile mk-conbench kubectl -- apply -f _build/deploy-conbench.yml
@@ -281,6 +281,7 @@ jsonnet-kube-prom-manifests:
 		wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.12.0/build.sh -O build.sh
 	cp k8s/kube-prometheus/conbench-flavor.jsonnet _kpbuild/cb-kube-prometheus
 	cp k8s/kube-prometheus/conbench-grafana-dashboard.json _kpbuild/cb-kube-prometheus
+	cp k8s/kube-prometheus/kube-prom-no-req-no-lim.jsonnet _kpbuild/cb-kube-prometheus
 	@if [ -z "$${PROM_REMOTE_WRITE_ENDPOINT_URL:=}" ]; then \
 			echo "PROM_REMOTE_WRITE_ENDPOINT_URL not set"; \
 		else \

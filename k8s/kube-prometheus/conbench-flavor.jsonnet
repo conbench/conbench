@@ -14,6 +14,7 @@ local kp =
   // (import 'kube-prometheus/addons/custom-metrics.libsonnet') +
   // (import 'kube-prometheus/addons/external-metrics.libsonnet') +
   // (import 'kube-prometheus/addons/pyrra.libsonnet') +
+  (import 'kube-prom-no-req-no-lim.jsonnet') +
   {
     values+:: {
       prometheus+: {
