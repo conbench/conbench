@@ -151,7 +151,7 @@ build-conbench-container-image: set-build-info
 deploy-on-minikube:
 	minikube status || minikube status --profile mk-conbench
 	mkdir -p _build
-	cp ci/minikube/deploy-conbench.template.yml _build/deploy-conbench.yml
+	/bin/cp ci/minikube/deploy-conbench.template.yml _build/deploy-conbench.yml
 	sed -i.bak "s|<CONBENCH_CONTAINER_IMAGE_SPEC>|${CONTAINER_IMAGE_SPEC}|g" _build/deploy-conbench.yml
 	time minikube --profile mk-conbench image load ${CONTAINER_IMAGE_SPEC}
 	minikube --profile mk-conbench kubectl -- apply -f _build/deploy-conbench.yml
