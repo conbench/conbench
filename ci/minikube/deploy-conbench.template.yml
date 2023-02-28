@@ -81,8 +81,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    alb.ingress.kubernetes.io/target-type: ip
   name: "conbench-service"
   labels:
     app: conbench
@@ -90,8 +88,32 @@ spec:
   ports:
   - name: conbench-service-port
     port: 80
+    # The port number above: the port that will be exposed by this service.
+    # `targetPort` is documented with "Number or name of the port to access on
+    # the pods targeted by the service."
     targetPort: gunicorn-port
     protocol: TCP
   type: NodePort
   selector:
     app: "conbench"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-conbenchservice
+spec:
+  rules:
+  - host: conbench.local
+    http:
+      # A list of paths (for example, /testpath), each of which has an
+      # associated backend defined with a service.name and a service.port.name
+      # or service.port.number
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: conbench-service
+            port:
+              number: 80
+  ingressClassName: nginx
