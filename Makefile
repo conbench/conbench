@@ -281,6 +281,7 @@ jsonnet-kube-prom-manifests:
 		wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.12.0/build.sh -O build.sh
 	cp k8s/kube-prometheus/conbench-flavor.jsonnet _kpbuild/cb-kube-prometheus
 	cp k8s/kube-prometheus/conbench-grafana-dashboard.json _kpbuild/cb-kube-prometheus
+	cp k8s/kube-prometheus/kube-prom-no-req-no-lim.jsonnet _kpbuild/cb-kube-prometheus
 	@if [ -z "$${PROM_REMOTE_WRITE_ENDPOINT_URL:=}" ]; then \
 			echo "PROM_REMOTE_WRITE_ENDPOINT_URL not set"; \
 		else \
