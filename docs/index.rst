@@ -3,6 +3,12 @@
 
 .. toctree::
     :maxdepth: 1
+    :caption: The conbench philosophy:
+
+    pages/benchmarking_and_the_dev_process.md
+
+.. toctree::
+    :maxdepth: 1
     :caption: Other pages:
 
     pages/benchadapt_readme
