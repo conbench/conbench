@@ -97,6 +97,19 @@ spec:
   selector:
     app: "conbench"
 ---
+# Create a bridge service of type ExternalName, pointing to a service in
+# another k8s namespace via magic DNS name. This bridge service now is in the
+# same namespace as the ingress rules defined further below (for an ingress
+# rule to apply it must be set up in the same namespace as the service that it
+# is referring to).
+kind: Service
+apiVersion: v1
+metadata:
+  name: grafana-bridge
+spec:
+  type: ExternalName
+  externalName: grafana.monitoring.svc.cluster.local
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -116,4 +129,11 @@ spec:
             name: conbench-service
             port:
               number: 80
+      - path: /grafana
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana-bridge
+            port:
+              number: 3000
   ingressClassName: nginx

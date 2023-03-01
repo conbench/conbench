@@ -32,6 +32,20 @@ local kp =
           // `bash build.sh conbench-flavor.jsonnet`
           'conbench-grafana-dashboard.json': (importstr 'conbench-grafana-dashboard.json'),
         },
+        config: {
+          // http://docs.grafana.org/installation/configuration/
+          sections: {
+            'auth.anonymous': { enabled: true },
+            // Configure Grafana to be available under sub path instead of
+            // root.
+            server: {
+              domain: 'conbench.local',
+              serve_from_sub_path: true,
+              // root_url: 'http://conbench.local/grafana/',
+              root_url: '%(protocol)s://%(domain)s:%(http_port)s/grafana/',
+            },
+          },
+        },
       },
     },
     prometheus+: {

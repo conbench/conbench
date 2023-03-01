@@ -49,6 +49,8 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
+    # "ip mode is required for sticky sessions to work with Application Load
+    # Balancers"
     alb.ingress.kubernetes.io/target-type: ip
   name: "conbench-service"
 spec:
