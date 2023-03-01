@@ -226,6 +226,10 @@ s.Index("benchmark_result_batch_id_index", BenchmarkResult.batch_id)
 s.Index("benchmark_result_info_id_index", BenchmarkResult.info_id)
 s.Index("benchmark_result_context_id_index", BenchmarkResult.context_id)
 
+# We order by benchmark_result.timestamp in /api/benchmarks/ -- that wants
+# and index!
+s.Index("benchmark_result_timestamp_index", BenchmarkResult.timestamp)
+
 
 class BenchmarkResultCreate(marshmallow.Schema):
     data = marshmallow.fields.List(
