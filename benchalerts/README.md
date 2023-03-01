@@ -21,19 +21,44 @@ In the future, there will be more places to submit alerts/reports/summaries, and
 configuration possible.
 
 Currently, the way to configure these workflows in CI is to create and run a Python
-script that imports this package and runs a workflow, like so:
+script that creates and runs an alerting pipeline, like so:
 
 ```python
 import os
-from benchalerts import update_github_check_based_on_regressions
 
-update_github_check_based_on_regressions(
-    contender_sha=os.environ["GITHUB_SHA"], repo="my_org/my_repo"
+import benchalerts.pipeline_steps as steps
+from benchalerts import AlertPipeline
+
+
+# Pretend we're running on GitHub Actions. Get some environment variables.
+# (they may be different for different CI systems)
+contender_sha = os.environ["GITHUB_SHA"]
+repo = os.environ["GITHUB_REPOSITORY"]
+build_url = (
+    os.environ["GITHUB_SERVER_URL"]
+    + f"/{repo}/actions/runs/"
+    + os.environ["GITHUB_RUN_ID"]
 )
+
+# Create a pipeline to update a GitHub Check
+pipeline = AlertPipeline(
+    steps=[
+        steps.GetConbenchZComparisonStep(contender_sha=contender_sha),
+        steps.GitHubCheckStep(repo=repo),
+    ],
+    error_handlers=[
+        steps.GitHubCheckErrorHandler(
+            commit_sha=contender_sha, repo=repo, build_url=build_url
+        )
+    ],
+)
+
+# Run the pipeline
+print(pipeline.run_pipeline())
 ```
 
-See the docstrings of each function for more details on how to configure the workflow,
-including how to set up the required environment variables.
+See the docstrings of each pipeline step for more details on how to configure the
+workflow, including how to set up the required environment variables.
 
 ## GitHub App Authentication
 

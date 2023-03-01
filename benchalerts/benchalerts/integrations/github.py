@@ -16,11 +16,11 @@ import datetime
 import enum
 import os
 import textwrap
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import jwt
-
-from benchclients import BaseClient, fatal_and_log, log
+from benchclients.base import BaseClient
+from benchclients.logging import fatal_and_log, log
 
 if TYPE_CHECKING:
     from requests.adapters import HTTPAdapter
@@ -45,11 +45,11 @@ class GitHubAppClient(BaseClient):
     """
 
     def __init__(self, adapter: Optional["HTTPAdapter"] = None):
-        app_id = os.getenv("GITHUB_APP_ID")
+        app_id = os.getenv("GITHUB_APP_ID", "")
         if not app_id:
             fatal_and_log("Environment variable GITHUB_APP_ID not found")
 
-        private_key = os.getenv("GITHUB_APP_PRIVATE_KEY")
+        private_key = os.getenv("GITHUB_APP_PRIVATE_KEY", "")
         if not private_key:
             fatal_and_log("Environment variable GITHUB_APP_PRIVATE_KEY not found")
 
@@ -147,10 +147,12 @@ class GitHubRepoClient(BaseClient):
             log.info("Attempting to authenticate as a GitHub App.")
             app_client = GitHubAppClient(adapter=adapter)
             token = app_client.get_app_access_token()
+            self._is_github_app_token = True
         else:
-            token = os.getenv("GITHUB_API_TOKEN")
+            token = os.getenv("GITHUB_API_TOKEN", "")
             if not token:
                 fatal_and_log("Environment variable GITHUB_API_TOKEN not found.")
+            self._is_github_app_token = False
 
         super().__init__(adapter=adapter)
         self.session.headers = {"Authorization": f"Bearer {token}"}
@@ -287,7 +289,7 @@ class GitHubRepoClient(BaseClient):
         dict
             GitHub's details about the new status.
         """
-        json = {"name": name, "head_sha": commit_sha}
+        json: Dict[str, Any] = {"name": name, "head_sha": commit_sha}
 
         if status in [CheckStatus.QUEUED, CheckStatus.IN_PROGRESS]:
             json["status"] = status.value

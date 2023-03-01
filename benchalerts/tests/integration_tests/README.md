@@ -4,7 +4,7 @@ Integration tests
 These tests will interact with various services like GitHub and Conbench. To run only
 these tests, do
 
-    pytest -vv --log-level=DEBUG tests/integration_tests
+    pytest -vv --log-level=DEBUG benchalerts/tests/integration_tests
 
 To run tests that interact with GitHub, you need the following environment variables
 configured correctly:
@@ -20,7 +20,7 @@ configured correctly:
     instructions in the
     [main README](../../README.md#creating-a-github-app-to-work-with-benchalerts).
     The App must be installed on the `conbench` organization, with access to the
-    `conbench/benchalerts` repository.
+    `conbench/conbench` repository.
 
     If the App has insufficient permissions, the tests will fail with a 403.
 

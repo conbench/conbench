@@ -16,7 +16,7 @@ import pytest
 
 from benchalerts.integrations.github import CheckStatus, GitHubRepoClient, StatusState
 
-from .mocks import MockAdapter
+from ..mocks import MockAdapter
 
 
 @pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)

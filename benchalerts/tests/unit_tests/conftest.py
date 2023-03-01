@@ -15,6 +15,10 @@
 import pytest
 from _pytest.fixtures import SubRequest
 
+from benchalerts.conbench_dataclasses import FullComparisonInfo, RunComparisonInfo
+
+from .mocks import MockResponse, response_dir
+
 
 @pytest.fixture
 def github_auth(request: SubRequest, monkeypatch: pytest.MonkeyPatch) -> str:
@@ -63,7 +67,118 @@ def conbench_env(monkeypatch: pytest.MonkeyPatch):
 
 
 @pytest.fixture
-def missing_conbench_env(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.delenv("CONBENCH_URL", raising=False)
-    monkeypatch.delenv("CONBENCH_EMAIL", raising=False)
-    monkeypatch.delenv("CONBENCH_PASSWORD", raising=False)
+def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
+    """Mock a FullComparisonInfo, like something that might be output from a
+    GetConbenchZComparisonStep.
+
+    Use this like
+    @pytest.mark.parametrize(
+        "mock_comparison_info",
+        [
+            "errors_baselines",
+            "errors_nobaselines",
+            "noerrors_nobaselines",
+            "regressions",
+            "noregressions",
+        ],
+        indirect=["mock_comparison_info"],
+    )
+    """
+    how: str = request.param
+
+    def _response(basename: str):
+        """Get a mocked response."""
+        filename = basename + ".json"
+        return MockResponse.from_file(response_dir / filename).json()
+
+    def _run(has_errors: bool, has_baseline: bool):
+        """Get a mocked run response."""
+        run_id = "some_contender" if has_baseline else "contender_wo_base"
+        res = _response(f"GET_conbench_runs_{run_id}")
+        res["has_errors"] = has_errors
+        return res
+
+    def _compare(has_errors: bool, has_regressions: bool):
+        """Get a mocked compare response."""
+        suffix = "" if has_regressions else "_threshold_z_500"
+        res = _response(
+            f"GET_conbench_compare_runs_some_baseline_some_contender{suffix}"
+        )
+        if not has_errors:
+            for result in res:
+                result["contender_error"] = None
+        return res
+
+    benchmark_results = _response("GET_conbench_benchmarks_run_id_contender_wo_base")
+
+    if how == "errors_baselines":
+        return FullComparisonInfo(
+            [
+                RunComparisonInfo(
+                    contender_info=_run(has_errors=True, has_baseline=True),
+                    baseline_info=_run(has_errors=True, has_baseline=True),
+                    compare_results=_compare(has_errors=True, has_regressions=True),
+                    benchmark_results=None,
+                )
+            ]
+            * 3
+        )
+    if how == "errors_nobaselines":
+        return FullComparisonInfo(
+            [
+                RunComparisonInfo(
+                    contender_info=_run(has_errors=True, has_baseline=False),
+                    baseline_info=None,
+                    compare_results=None,
+                    benchmark_results=benchmark_results,
+                )
+            ]
+            * 2
+        )
+    if how == "noerrors_nobaselines":
+        return FullComparisonInfo(
+            [
+                RunComparisonInfo(
+                    contender_info=_run(has_errors=False, has_baseline=False),
+                    baseline_info=None,
+                    compare_results=None,
+                    benchmark_results=None,
+                )
+            ]
+            * 2
+        )
+    if how == "regressions":
+        return FullComparisonInfo(
+            [
+                RunComparisonInfo(
+                    contender_info=_run(has_errors=False, has_baseline=False),
+                    baseline_info=None,
+                    compare_results=None,
+                    benchmark_results=None,
+                ),
+                RunComparisonInfo(
+                    contender_info=_run(has_errors=False, has_baseline=True),
+                    baseline_info=_run(has_errors=False, has_baseline=True),
+                    compare_results=_compare(has_errors=False, has_regressions=True),
+                    benchmark_results=None,
+                ),
+                RunComparisonInfo(
+                    contender_info=_run(has_errors=False, has_baseline=True),
+                    baseline_info=_run(has_errors=False, has_baseline=True),
+                    compare_results=_compare(has_errors=False, has_regressions=True),
+                    benchmark_results=None,
+                ),
+            ]
+        )
+    if how == "noregressions":
+        return FullComparisonInfo(
+            [
+                RunComparisonInfo(
+                    contender_info=_run(has_errors=False, has_baseline=True),
+                    baseline_info=_run(has_errors=False, has_baseline=True),
+                    compare_results=_compare(has_errors=False, has_regressions=False),
+                    benchmark_results=None,
+                )
+            ]
+            * 2
+        )
