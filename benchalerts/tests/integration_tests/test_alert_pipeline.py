@@ -28,6 +28,9 @@ def test_update_github_status_based_on_regressions(
     """While this test is running, you can watch
     https://github.com/conbench/benchalerts/pull/5 to see the statuses change!
     """
+    if github_auth == "pat" and os.getenv("CI"):
+        pytest.skip("The CI PAT does not work with this test")
+
     # note: something *might* go wrong if we go past 1000 statuses on this test SHA?
     # https://docs.github.com/en/rest/commits/statuses#create-a-commit-status
     test_status_repo = "conbench/benchalerts"
