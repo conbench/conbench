@@ -34,7 +34,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
     def get(self, benchmark_id):
         """
         ---
-        description: Get a benchmark.
+        description: Get a benchmark result.
         responses:
             "200": "BenchmarkEntity"
             "401": "401"
