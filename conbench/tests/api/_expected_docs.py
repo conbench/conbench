@@ -1385,7 +1385,7 @@
                 "tags": ["Benchmarks"],
             },
             "get": {
-                "description": "Get a benchmark.",
+                "description": "Get a benchmark result.",
                 "parameters": [
                     {
                         "in": "path",
