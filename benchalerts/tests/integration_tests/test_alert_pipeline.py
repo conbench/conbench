@@ -31,7 +31,7 @@ def test_update_github_status_based_on_regressions(
     if github_auth == "pat" and os.getenv("CI"):
         pytest.skip("The CI PAT does not work with this test")
 
-    # note: something *might* go wrong if we go past 1000 statuses on this test SHA?
+    # note: something *might* go wrong if we go past 1000 statuses on this test commit?
     # https://docs.github.com/en/rest/commits/statuses#create-a-commit-status
     test_status_repo = "conbench/benchalerts"
     test_status_commit = "4b9543876e8c1cee54c56980c3b2363aad71a8d4"
@@ -45,13 +45,13 @@ def test_update_github_status_based_on_regressions(
     # first, test error handlers
     error_handlers = [
         steps.GitHubStatusErrorHandler(
-            commit_sha=test_status_commit, repo=test_status_repo, build_url=build_url
+            commit_hash=test_status_commit, repo=test_status_repo, build_url=build_url
         )
     ]
     if github_auth == "app":
         error_handlers.append(
             steps.GitHubCheckErrorHandler(
-                commit_sha=test_status_commit,
+                commit_hash=test_status_commit,
                 repo=test_status_repo,
                 build_url=build_url,
             )
@@ -74,14 +74,14 @@ def test_update_github_status_based_on_regressions(
     # now a real pipeline
     pipeline_steps = [
         steps.GetConbenchZComparisonStep(
-            contender_sha=velox_commit, z_score_threshold=None, step_name="z_none"
+            commit_hash=velox_commit, z_score_threshold=None, step_name="z_none"
         ),
         steps.GetConbenchZComparisonStep(
-            contender_sha=velox_commit, z_score_threshold=500, step_name="z_500"
+            commit_hash=velox_commit, z_score_threshold=500, step_name="z_500"
         ),
         steps.GitHubStatusStep(
             repo=test_status_repo,
-            commit_sha=test_status_commit,
+            commit_hash=test_status_commit,
             comparison_step_name="z_500",
         ),
     ]
@@ -89,7 +89,7 @@ def test_update_github_status_based_on_regressions(
         pipeline_steps.append(
             steps.GitHubCheckStep(
                 repo=test_status_repo,
-                commit_sha=test_status_commit,
+                commit_hash=test_status_commit,
                 comparison_step_name="z_none",
             )
         )

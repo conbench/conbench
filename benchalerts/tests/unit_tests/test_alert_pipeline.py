@@ -10,7 +10,7 @@ from .mocks import MockAdapter
 
 @pytest.mark.parametrize("github_auth", ["app"], indirect=True)
 def test_reasonable_pipeline(conbench_env, github_auth):
-    contender_sha = "abc"
+    commit_hash = "abc"
     repo = "some/repo"
     build_url = "https://google.com"
 
@@ -20,13 +20,13 @@ def test_reasonable_pipeline(conbench_env, github_auth):
     pipeline = AlertPipeline(
         steps=[
             steps.GetConbenchZComparisonStep(
-                contender_sha=contender_sha,
+                commit_hash=commit_hash,
                 z_score_threshold=None,
                 conbench_client=conbench_client,
                 step_name="z_none",
             ),
             steps.GetConbenchZComparisonStep(
-                contender_sha=contender_sha,
+                commit_hash=commit_hash,
                 z_score_threshold=500,
                 conbench_client=conbench_client,
                 step_name="z_500",
@@ -40,12 +40,12 @@ def test_reasonable_pipeline(conbench_env, github_auth):
         ],
         error_handlers=[
             steps.GitHubCheckErrorHandler(
-                commit_sha=contender_sha,
+                commit_hash=commit_hash,
                 github_client=github_client,
                 build_url=build_url,
             ),
             steps.GitHubStatusErrorHandler(
-                commit_sha=contender_sha,
+                commit_hash=commit_hash,
                 github_client=github_client,
                 build_url=build_url,
             ),

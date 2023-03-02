@@ -36,7 +36,7 @@ def github_check_summary(
     full_comparison: FullComparisonInfo, warn_if_baseline_isnt_parent: bool
 ) -> str:
     """Generate a Markdown summary of what happened regarding errors and regressions."""
-    sha = full_comparison.contender_sha[:8]
+    hash = full_comparison.commit_hash[:8]
     summary = ""
 
     if full_comparison.benchmarks_with_errors:
@@ -56,7 +56,7 @@ def github_check_summary(
     if full_comparison.no_baseline_runs:
         summary += _clean(
             f"""
-            Conbench could not find a baseline run for contender commit `{sha}`. A
+            Conbench could not find a baseline run for contender commit `{hash}`. A
             baseline run needs to be on the default branch in the same repository, with
             the same hardware, and have at least one of the same benchmark case/context
             pairs as one of the runs on the contender commit.
@@ -67,7 +67,7 @@ def github_check_summary(
 
     summary += _clean(
         f"""
-        Contender commit `{sha}` had
+        Contender commit `{hash}` had
         {len(full_comparison.benchmarks_with_z_regressions)} performance regression(s)
         compared to its baseline runs.
         """

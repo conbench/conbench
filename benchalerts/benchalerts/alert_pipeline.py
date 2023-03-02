@@ -31,7 +31,8 @@ class AlertPipelineStep(abc.ABC):
 
         Returns
         -------
-        Anything (sent to subsequent steps via the ``previous_outputs`` dict).
+        Any
+            Anything (sent to subsequent steps via the ``previous_outputs`` dict).
         """
 
 
@@ -77,7 +78,8 @@ class AlertPipeline:
 
         Returns
         -------
-        All steps' outputs, keyed by step name.
+        Dict[str, Any]
+            All steps' outputs, keyed by step name.
         """
         step_outputs: Dict[str, Any] = {}
 

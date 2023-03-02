@@ -244,8 +244,8 @@ class FullComparisonInfo:
         return z_score_thresholds.pop()
 
     @property
-    def contender_sha(self) -> str:
-        """The contender SHA used in this analysis."""
+    def commit_hash(self) -> str:
+        """The contender hash used in this analysis."""
         return self.run_comparisons[0].contender_info["commit"]["sha"]
 
     @property

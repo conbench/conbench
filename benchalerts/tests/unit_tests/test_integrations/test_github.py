@@ -29,21 +29,21 @@ class TestGitHubRepoClient:
         output = self.gh.create_pull_request_comment(comment="test", pull_number=1347)
         assert output["body"] == "test"
 
-    def test_create_pull_request_comment_with_sha(self, github_auth):
-        output = self.gh.create_pull_request_comment(comment="test", commit_sha="abc")
+    def test_create_pull_request_comment_with_hash(self, github_auth):
+        output = self.gh.create_pull_request_comment(comment="test", commit_hash="abc")
         assert output["body"] == "test"
 
     def test_create_pull_request_comment_bad_input(self, github_auth):
         with pytest.raises(ValueError, match="missing"):
             self.gh.create_pull_request_comment(comment="test")
 
-    def test_comment_with_sha_fails_with_no_matching_prs(self, github_auth):
+    def test_comment_with_hash_fails_with_no_matching_prs(self, github_auth):
         with pytest.raises(ValueError, match="pull request"):
-            self.gh.create_pull_request_comment(comment="test", commit_sha="no_prs")
+            self.gh.create_pull_request_comment(comment="test", commit_hash="no_prs")
 
     def test_update_commit_status(self, github_auth):
         res = self.gh.update_commit_status(
-            commit_sha="abc",
+            commit_hash="abc",
             title="tests",
             description="Testing something",
             state=StatusState.SUCCESS,
@@ -54,7 +54,7 @@ class TestGitHubRepoClient:
     def test_update_commit_status_bad_state(self, github_auth):
         with pytest.raises(TypeError, match="StatusState"):
             self.gh.update_commit_status(
-                commit_sha="abc",
+                commit_hash="abc",
                 title="tests",
                 description="Testing something",
                 state="sorta working",
@@ -65,7 +65,7 @@ class TestGitHubRepoClient:
     def test_update_check(self, github_auth, in_progress):
         res = self.gh.update_check(
             name="tests",
-            commit_sha="abc",
+            commit_hash="abc",
             status=CheckStatus.IN_PROGRESS if in_progress else CheckStatus.SUCCESS,
             title="This was good",
             summary="Testing something",
@@ -76,7 +76,7 @@ class TestGitHubRepoClient:
 
     def test_update_check_bad_status(self, github_auth):
         with pytest.raises(TypeError, match="CheckStatus"):
-            self.gh.update_check(name="tests", commit_sha="abc", status="okay")
+            self.gh.update_check(name="tests", commit_hash="abc", status="okay")
 
 
 @pytest.mark.parametrize("github_auth", ["none"], indirect=True)

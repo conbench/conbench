@@ -35,8 +35,10 @@ class GitHubAppClient(BaseClient):
         A requests adapter to mount to the requests session. If not given, one will be
         created with a backoff retry strategy.
 
+    Notes
+    -----
     Environment variables
-    ---------------------
+    ~~~~~~~~~~~~~~~~~~~~~
     GITHUB_APP_ID
         The numeric GitHub App ID you can get from its settings page.
     GITHUB_APP_PRIVATE_KEY
@@ -129,8 +131,10 @@ class GitHubRepoClient(BaseClient):
         A requests adapter to mount to the requests session. If not given, one will be
         created with a backoff retry strategy.
 
+    Notes
+    -----
     Environment variables
-    ---------------------
+    ~~~~~~~~~~~~~~~~~~~~~
     GITHUB_APP_ID
         The numeric GitHub App ID you can get from its settings page. Only used for
         GitHub App authentication.
@@ -163,32 +167,32 @@ class GitHubRepoClient(BaseClient):
         comment: str,
         *,
         pull_number: Optional[int] = None,
-        commit_sha: Optional[str] = None,
+        commit_hash: Optional[str] = None,
     ):
         """Create a comment on a pull request, specified either by pull request number
-        or commit SHA.
+        or commit hash.
 
         Parameters
         ----------
         comment
             The comment text.
         pull_number
-            The number of the pull request. Specify either this or ``commit_sha``.
-        commit_sha
-            The SHA of a commit associated with the pull request. Specify either this
+            The number of the pull request. Specify either this or ``commit_hash``.
+        commit_hash
+            The hash of a commit associated with the pull request. Specify either this
             or ``pull_number``.
         """
-        if not pull_number and not commit_sha:
-            fatal_and_log("pull_number and commit_sha are both missing")
+        if not pull_number and not commit_hash:
+            fatal_and_log("pull_number and commit_hash are both missing")
 
-        if commit_sha:
+        if commit_hash:
             pull_numbers = [
-                pull["number"] for pull in self.get(f"/commits/{commit_sha}/pulls")
+                pull["number"] for pull in self.get(f"/commits/{commit_hash}/pulls")
             ]
             if len(pull_numbers) != 1:
                 fatal_and_log(
                     "Need exactly 1 pull request associated with commit "
-                    f"'{commit_sha}'. Found {pull_numbers}."
+                    f"'{commit_hash}'. Found {pull_numbers}."
                 )
             pull_number = pull_numbers[0]
 
@@ -200,7 +204,7 @@ class GitHubRepoClient(BaseClient):
 
     def update_commit_status(
         self,
-        commit_sha: str,
+        commit_hash: str,
         title: str,
         description: str,
         state: StatusState,
@@ -214,8 +218,8 @@ class GitHubRepoClient(BaseClient):
 
         Parameters
         ----------
-        commit_sha
-            The 40-character SHA of the commit to update.
+        commit_hash
+            The 40-character hash of the commit to update.
         title
             The title of the status. Subsequent updates with the same title will update
             the same status.
@@ -243,12 +247,12 @@ class GitHubRepoClient(BaseClient):
         if details_url:
             json["target_url"] = details_url
 
-        return self.post(f"/statuses/{commit_sha}", json=json)
+        return self.post(f"/statuses/{commit_hash}", json=json)
 
     def update_check(
         self,
         name: str,
-        commit_sha: str,
+        commit_hash: str,
         status: CheckStatus,
         title: Optional[str] = None,
         summary: Optional[str] = None,
@@ -266,8 +270,8 @@ class GitHubRepoClient(BaseClient):
         name
             The name of the check. Subsequent updates with the same name will overwrite
             the previous check.
-        commit_sha
-            The 40-character SHA of the commit to update.
+        commit_hash
+            The 40-character hash of the commit to update.
         status
             The overall check status. Must be one of the CheckStatus enum values. If
             it's QUEUED or IN_PROGRESS, the "started_at" field will be sent in the
@@ -289,7 +293,7 @@ class GitHubRepoClient(BaseClient):
         dict
             GitHub's details about the new status.
         """
-        json: Dict[str, Any] = {"name": name, "head_sha": commit_sha}
+        json: Dict[str, Any] = {"name": name, "head_sha": commit_hash}
 
         if status in [CheckStatus.QUEUED, CheckStatus.IN_PROGRESS]:
             json["status"] = status.value

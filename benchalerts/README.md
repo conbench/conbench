@@ -32,7 +32,7 @@ from benchalerts import AlertPipeline
 
 # Pretend we're running on GitHub Actions. Get some environment variables.
 # (they may be different for different CI systems)
-contender_sha = os.environ["GITHUB_SHA"]
+commit_hash = os.environ["GITHUB_SHA"]
 repo = os.environ["GITHUB_REPOSITORY"]
 build_url = (
     os.environ["GITHUB_SERVER_URL"]
@@ -43,12 +43,12 @@ build_url = (
 # Create a pipeline to update a GitHub Check
 pipeline = AlertPipeline(
     steps=[
-        steps.GetConbenchZComparisonStep(contender_sha=contender_sha),
+        steps.GetConbenchZComparisonStep(commit_hash=commit_hash),
         steps.GitHubCheckStep(repo=repo),
     ],
     error_handlers=[
         steps.GitHubCheckErrorHandler(
-            commit_sha=contender_sha, repo=repo, build_url=build_url
+            commit_hash=commit_hash, repo=repo, build_url=build_url
         )
     ],
 )

@@ -60,7 +60,7 @@ def test_get_comparison_to_baseline(
         )
     monkeypatch.setenv("CONBENCH_URL", conbench_url)
     cb = ConbenchClient()
-    step = GetConbenchZComparisonStep(contender_sha=commit, conbench_client=cb)
+    step = GetConbenchZComparisonStep(commit_hash=commit, conbench_client=cb)
     full_comparison = step.run_step(previous_outputs={})
     assert len(full_comparison.run_comparisons) == expected_len
     for run in full_comparison.run_comparisons:

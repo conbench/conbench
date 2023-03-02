@@ -27,7 +27,7 @@ def test_create_pull_request_comment(github_auth: str):
 
     gh = GitHubRepoClient("conbench/benchalerts")
     res = gh.create_pull_request_comment(
-        "posted from an integration test", commit_sha="adc9b73"
+        "posted from an integration test", commit_hash="adc9b73"
     )
     if github_auth == "pat":
         assert res["user"]["type"] == "User"

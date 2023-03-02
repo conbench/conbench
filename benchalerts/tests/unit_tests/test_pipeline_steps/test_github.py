@@ -84,14 +84,14 @@ def test_GitHubCheckErrorHandler(caplog: pytest.LogCaptureFixture, github_auth: 
     if github_auth == "pat":
         with pytest.raises(ValueError, match="GitHub App"):
             GitHubCheckErrorHandler(
-                commit_sha="abc",
+                commit_hash="abc",
                 github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
                 build_url="https://google.com",
             )
         return
 
     handler = GitHubCheckErrorHandler(
-        commit_sha="abc",
+        commit_hash="abc",
         github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
         build_url="https://google.com",
     )
@@ -108,9 +108,8 @@ def test_GitHubStatusErrorHandler(github_auth: str):
         traceback = format_exc()
 
     handler = GitHubStatusErrorHandler(
-        commit_sha="abc",
+        commit_hash="abc",
         github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
         build_url="https://google.com",
     )
     handler.handle_error(exc=exc, traceback=traceback)
-    assert True

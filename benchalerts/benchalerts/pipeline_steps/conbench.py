@@ -16,10 +16,10 @@ class GetConbenchZComparisonStep(AlertPipelineStep):
 
     Parameters
     ----------
-    contender_sha
-        The commit SHA of the contender commit to compare. Needs to match EXACTLY what
+    commit_hash
+        The commit hash of the contender commit to compare. Needs to match EXACTLY what
         Conbench has stored; typically 40 characters. It can't be a shortened version of
-        the SHA.
+        the hash.
     z_score_threshold
         The (positive) z-score threshold to send to the Conbench compare endpoint.
         Benchmarks with a z-score more extreme than this threshold will be marked as
@@ -33,19 +33,34 @@ class GetConbenchZComparisonStep(AlertPipelineStep):
 
     Returns
     -------
-    Information about each run associated with the contender commit, and a comparison to
-    its baseline run if that exists.
+    FullComparisonInfo
+        Information about each run associated with the contender commit, and a
+        comparison to its baseline run if that exists.
+
+    Notes
+    -----
+    Environment variables
+    ~~~~~~~~~~~~~~~~~~~~~
+    ``CONBENCH_URL``
+        The URL of the Conbench server. Only required if ``conbench_client`` is not
+        provided.
+    ``CONBENCH_EMAIL``
+        The email to use for Conbench login. Only required if ``conbench_client`` is not
+        provided and the server is private.
+    ``CONBENCH_PASSWORD``
+        The password to use for Conbench login. Only required if ``conbench_client`` is
+        not provided and the server is private.
     """
 
     def __init__(
         self,
-        contender_sha: str,
+        commit_hash: str,
         z_score_threshold: Optional[float] = None,
         conbench_client: Optional[ConbenchClient] = None,
         step_name: Optional[str] = None,
     ) -> None:
         super().__init__(step_name)
-        self.contender_sha = contender_sha
+        self.commit_hash = commit_hash
         self.z_score_threshold = z_score_threshold
         self.conbench_client = conbench_client or ConbenchClient()
 
@@ -53,12 +68,12 @@ class GetConbenchZComparisonStep(AlertPipelineStep):
         contender_run_ids = [
             run["id"]
             for run in self.conbench_client.get(
-                "/runs/", params={"sha": self.contender_sha}
+                "/runs/", params={"sha": self.commit_hash}
             )
         ]
         if not contender_run_ids:
             fatal_and_log(
-                f"Contender commit '{self.contender_sha}' doesn't have any runs in Conbench."
+                f"Contender commit '{self.commit_hash}' doesn't have any runs in Conbench."
             )
 
         log.info(f"Getting comparisons from {len(contender_run_ids)} run(s)")
