@@ -14,7 +14,7 @@
 
 import pytest
 
-from benchalerts.talk_to_conbench import get_comparison_to_baseline
+from benchalerts.pipeline_steps.conbench import GetConbenchZComparisonStep
 from benchclients import ConbenchClient
 
 
@@ -60,13 +60,14 @@ def test_get_comparison_to_baseline(
         )
     monkeypatch.setenv("CONBENCH_URL", conbench_url)
     cb = ConbenchClient()
-    comparisons = get_comparison_to_baseline(cb, commit)
-    assert len(comparisons) == expected_len
-    for comparison in comparisons:
-        assert comparison.baseline_is_parent is expected_bip
-        assert comparison.contender_link
-        assert comparison.contender_id
-        if comparison.compare_results:
-            assert comparison.compare_link
-            for benchmark in comparison.compare_results:
+    step = GetConbenchZComparisonStep(commit_hash=commit, conbench_client=cb)
+    full_comparison = step.run_step(previous_outputs={})
+    assert len(full_comparison.run_comparisons) == expected_len
+    for run in full_comparison.run_comparisons:
+        assert run.baseline_is_parent is expected_bip
+        assert run.contender_link
+        assert run.contender_id
+        if run.compare_results:
+            assert run.compare_link
+            for benchmark in run.compare_results:
                 assert benchmark["contender_run_id"]

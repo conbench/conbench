@@ -14,7 +14,9 @@
 
 import json
 import pathlib
+from typing import List, Tuple
 
+import pytest
 import requests
 from requests.adapters import HTTPAdapter
 
@@ -74,3 +76,48 @@ class MockAdapter(HTTPAdapter):
             raise Exception(f"Mock response not found at {response_path}")
 
         return MockResponse.from_file(response_path)
+
+
+def check_posted_markdown(
+    caplog: pytest.LogCaptureFixture, expected_markdowns: List[Tuple[str, str]]
+):
+    """After we run a test, search through the logs for what markdowns we
+    mock-posted to GitHub, and assert they are what we expected.
+    expected_markdowns should look like [(summary0, details0), (summary1, details1), ]
+    """
+    actual_summaries = [
+        log_record.message[9:]
+        for log_record in caplog.records
+        if log_record.levelname == "INFO"
+        and log_record.filename == "mocks.py"
+        and log_record.message.startswith("Summary: ")
+    ]
+    actual_detailses = [
+        log_record.message[9:]
+        for log_record in caplog.records
+        if log_record.levelname == "INFO"
+        and log_record.filename == "mocks.py"
+        and log_record.message.startswith("Details: ")
+    ]
+    assert len(expected_markdowns) == len(actual_summaries) == len(actual_detailses)
+
+    for (
+        (expected_summary_filename, expected_details_filename),
+        (actual_summary, actual_details),
+    ) in zip(expected_markdowns, zip(actual_summaries, actual_detailses)):
+        base_dir = pathlib.Path(__file__).parent / "expected_md"
+
+        with open(base_dir / (expected_summary_filename + ".md"), "r") as f:
+            expected_summary = f.read()
+        assert (
+            expected_summary.strip() == actual_summary.strip()
+        ), f"see tests/unit_tests/expected_md/{expected_summary_filename}.md"
+
+        if expected_details_filename is None:
+            assert actual_details == "None"
+        else:
+            with open(base_dir / (expected_details_filename + ".md"), "r") as f:
+                expected_details = f.read()
+            assert (
+                expected_details.strip() == actual_details.strip()
+            ), f"see tests/unit_tests/expected_md/{expected_details_filename}.md"

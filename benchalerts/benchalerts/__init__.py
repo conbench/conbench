@@ -12,14 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import pipeline_steps
 from ._version import __version__
-from .workflows import (
-    update_github_check_based_on_regressions,
-    update_github_status_based_on_regressions,
-)
+from .alert_pipeline import AlertPipeline
 
-__all__ = [
-    "__version__",
-    "update_github_check_based_on_regressions",
-    "update_github_status_based_on_regressions",
-]
+__all__ = ["__version__", "AlertPipeline", "pipeline_steps"]

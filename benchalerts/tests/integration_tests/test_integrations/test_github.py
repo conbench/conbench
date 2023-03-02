@@ -21,12 +21,13 @@ from benchalerts.integrations.github import GitHubRepoClient
 
 @pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)
 def test_create_pull_request_comment(github_auth: str):
+    """See comments here: https://github.com/conbench/benchalerts/pull/5"""
     if os.getenv("CI"):
         pytest.skip("Don't post a PR comment from CI")
 
     gh = GitHubRepoClient("conbench/benchalerts")
     res = gh.create_pull_request_comment(
-        "posted from an integration test", commit_sha="adc9b73"
+        "posted from an integration test", commit_hash="adc9b73"
     )
     if github_auth == "pat":
         assert res["user"]["type"] == "User"
