@@ -60,6 +60,7 @@ lint:
 	isort .
 	black .
 	mypy conbench
+	mypy benchalerts
 
 
 .PHONY: rebuild-expected-api-docs
@@ -93,6 +94,7 @@ lint-ci:
 	isort --check .
 	black --check --diff .
 	mypy conbench
+	mypy benchalerts
 
 
 require-env-ghtoken:
