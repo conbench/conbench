@@ -79,8 +79,8 @@ rebuild-expected-api-docs: run-app-bg
 .PHONY: alembic-new-migration
 alembic-new-migration: teardown-app
 	@if [ -z "$${ALEMBIC_MIGRATION_NAME:=}" ]; then \
-			echo "env var ALEMBIC_MIGRATION_NAME must be set to an expressive name"; \
-			exit 1; \
+		echo "env var ALEMBIC_MIGRATION_NAME must be set to an expressive name"; \
+		exit 1; \
 	fi
 	docker compose run --detach db
 	CREATE_ALL_TABLES=false docker compose \
