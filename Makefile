@@ -78,6 +78,7 @@ rebuild-expected-api-docs: run-app-bg
 
 .PHONY: alembic-new-migration
 alembic-new-migration: teardown-app
+	mkdir -p /tmp/_conbench-promcl-coord-dir
 	@if [ -z "$${ALEMBIC_MIGRATION_NAME:=}" ]; then \
 		echo "env var ALEMBIC_MIGRATION_NAME must be set to an expressive name"; \
 		exit 1; \
