@@ -150,7 +150,7 @@ jobs:
       # a better way to test this would be to change source code to
       # generate a non-noop migration.
       - name: Test make alembic-new-migration
-        run:
+        run: |
           make alembic-new-migration
           cat migrations/versions/*dummy_migr_name*
         env:
