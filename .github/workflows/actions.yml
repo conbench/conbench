@@ -147,6 +147,8 @@ jobs:
         run: make set-build-info && docker compose run -e CREATE_ALL_TABLES app alembic upgrade head
         env:
           CREATE_ALL_TABLES: false
+      - name: Test make alembic-new-migration
+        run: make alembic-new-migration
 
   libraries:
     runs-on: ubuntu-latest
