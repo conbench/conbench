@@ -1,4 +1,5 @@
 import logging
+import time
 from datetime import timezone
 from typing import Optional
 
@@ -61,7 +62,7 @@ class Run(Base, EntityMixin):
 
     @staticmethod
     def create(data):
-        # create if not exists
+        # create Hardware entity it it does not yet exist in database.
         hardware_type, field_name = (
             (Machine, "machine_info")
             if "machine_info" in data
@@ -77,42 +78,11 @@ class Run(Base, EntityMixin):
             branch = github_data.get("branch")
             sha = github_data["commit"]
 
-        # create if not exists
-        commit = Commit.first(sha=sha, repository=repository)
+        commit_id = commit_fetch_info_and_create_in_db_if_not_exists(
+            sha, repository, pr_number, branch
+        )
 
-        if not commit:
-            # Try to fetch data via GitHub HTTP API
-            gh_commit_dict = None
-            try:
-                # get_github_commit() may raise all those exceptions that can
-                # happen during an HTTP request cycle.
-                gh_commit_dict = get_github_commit(
-                    repository=repository, pr_number=pr_number, branch=branch, sha=sha
-                )
-            except Exception as exc:
-                log.info(
-                    "treat as unknown commit: error during get_github_commit(): %s", exc
-                )
-
-            if gh_commit_dict:
-                commit = Commit.create_github_context(sha, repository, gh_commit_dict)
-                try:
-                    backfill_default_branch_commits(repository, commit)
-                except Exception as e:
-                    # no matter what happened during backfilling, we want to return a
-                    # successful status code because the commit was created
-                    log.info(
-                        "Could not backfill default branch commits. Error "
-                        "during backfill_default_branch_commits():  %s",
-                        e,
-                    )
-
-            elif sha or repository:
-                commit = Commit.create_unknown_context(sha, repository)
-            else:
-                commit = Commit.create_no_context()
-
-        run = Run(**data, commit_id=commit.id, hardware_id=hardware.id)
+        run = Run(**data, commit_id=commit_id, hardware_id=hardware.id)
         run.save()
         return run
 
@@ -207,6 +177,117 @@ class Run(Base, EntityMixin):
     def get_baseline_id(self):
         run = self.get_baseline_run()
         return run.id if run else None
+
+
+def commit_fetch_info_and_create_in_db_if_not_exists(
+    sha, repository, pr_number, branch
+) -> str:
+    """
+    Insert new Commit entity into database if required.
+
+    If Commit not yet known in database: fetch data about commit (and related
+    commits) from GitHub HTTP API if possible. Exceptions during this process
+    are logged and otherwise swallowed.
+
+    Return Commit.id (DB primary key) of existing Commit entity or of newly
+    created one. Expect database collision upon insert (in this case the ID for
+    the existing commit entity is returned).
+
+    Has slightly ~unpredictable run duration as of interaction with GitHub HTTP
+    API.
+    """
+
+    def _guts(sha, repository, pr_number, branch) -> Commit:
+        """
+        Return a Commit object or raise `sqlalchemy.exc.IntegrityError`.
+        """
+        # Try to see if commit is already database. This is an optimization, to
+        # not needlessly interact with the GitHub HTTP API in case the commit
+        # is already in the database. first(): "Return the first result of this
+        # Query or None if the result doesn’t contain any row.""
+        commit: Optional[Commit] = Commit.first(sha=sha, repository=repository)
+
+        if commit is not None:
+            return commit
+
+        # Try to fetch metadata for commit via GitHub HTTP API. Fall back
+        # gracefully if that does not work.
+
+        gh_commit_dict = None
+        try:
+            # get_github_commit() may raise all those exceptions that can
+            # happen during an HTTP request cycle.
+            gh_commit_dict = get_github_commit(
+                repository=repository, pr_number=pr_number, branch=branch, sha=sha
+            )
+        except Exception as exc:
+            log.info(
+                "treat as unknown commit: error during get_github_commit(): %s", exc
+            )
+
+        if gh_commit_dict:
+            # We got data from GitHub. Insert into database.
+            commit = Commit.create_github_context(sha, repository, gh_commit_dict)
+
+            # The commit is known to GitHub. Fetch more data from GitHub.
+            # Gracefully degradate if that does not work.
+            try:
+                backfill_default_branch_commits(repository, commit)
+            except Exception as exc:
+                # Any error during this backfilling operation should not fail
+                # the HTTP request processing (we're right now in the middle of
+                # processing an HTTP request with new benchmark run data).
+                log.info(
+                    "Could not backfill default branch commits. Ignoring error "
+                    "during backfill_default_branch_commits():  %s",
+                    exc,
+                )
+
+        # If at least a commit hash and/or repository are provided, insert
+        # that. Note(JP): wouldn't it be better if we hat the constraint that a
+        # commit entity in the database has _at least_ repository specifier and
+        # commit hash? What is the value of a commit object that only refers to
+        # a repository (and not to a commit hash)?
+        elif sha or repository:
+            commit = Commit.create_unknown_context(sha, repository)
+        else:
+            # Note(JP): this creates a special commit object I think with no
+            # information.
+            commit = Commit.create_no_context()
+
+        return commit
+
+    t0 = time.monotonic()
+    try:
+        # `_guts()` is expected to raise IntegrityError when a concurrent racer
+        # did insert the Commit object by now. This can happen, also see
+        # https://github.com/conbench/conbench/issues/809
+        commit = _guts(sha, repository, pr_number, branch)
+    except s.exc.IntegrityError as exc:
+        # Expected error example:
+        #  sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) \
+        #    duplicate key value violates unique constraint "commit_index"
+        log.info("Ignored IntegrityError while inserting Commit: %s", exc)
+
+        # Look up the Commit entity again because this function must return the
+        # commit ID (DB primary key).
+        commit = Commit.first(sha=sha, repository=repository)
+
+        # After IntegrityError we assume that Commit exists in DB. Encode
+        # assumption, for easier debugging.
+        assert commit is not None
+
+    d_seconds = time.monotonic() - t0
+    log.info(
+        "commit_fetch_info_and_create_in_db_if_not_exists(%s, %s, %s, %s) took %.3f s",
+        sha,
+        repository,
+        pr_number,
+        branch,
+        d_seconds,
+    )
+
+    return commit.id
 
 
 class _Serializer(EntitySerializer):
