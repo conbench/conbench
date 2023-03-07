@@ -13,7 +13,7 @@ ARROW_REPO = "https://github.com/apache/arrow"
 CONBENCH_REPO = "https://github.com/conbench/conbench"
 
 
-def _expected_entity(benchmark_result, stats=None):
+def _expected_entity(benchmark_result: BenchmarkResult, stats=None):
     return _api_benchmark_entity(
         benchmark_result.id,
         benchmark_result.case_id,
@@ -537,12 +537,15 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
         location = "http://localhost/api/benchmarks/%s/" % new_id
+
         stats = self.valid_payload_with_iteration_error["stats"]
-        stats["data"] = [float(x) if x else None for x in stats["data"]]
-        stats["times"] = [float(x) if x else None for x in stats["times"]]
+        stats["data"] = [float(x) if x is not None else None for x in stats["data"]]
+        stats["times"] = [float(x) if x is not None else None for x in stats["times"]]
+
         self.assert_201_created(
             response, _expected_entity(benchmark_result, stats), location
         )
+
         assert (
             benchmark_result.error == self.valid_payload_with_iteration_error["error"]
         )
@@ -560,8 +563,8 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         benchmark_result = BenchmarkResult.one(id=new_id)
         location = "http://localhost/api/benchmarks/%s/" % new_id
         stats = self.valid_payload_with_iteration_error["stats"]
-        stats["data"] = [float(x) if x else None for x in stats["data"]]
-        stats["times"] = [float(x) if x else None for x in stats["times"]]
+        stats["data"] = [float(x) if x is not None else None for x in stats["data"]]
+        stats["times"] = [float(x) if x is not None else None for x in stats["times"]]
         self.assert_201_created(
             response, _expected_entity(benchmark_result, stats), location
         )

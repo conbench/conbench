@@ -22,4 +22,7 @@ class TestHistoryGet(_asserts.GetEnforcer):
         self.authenticate(client)
         benchmark_result = self._create()
         response = client.get(f"/api/history/{benchmark_result.id}/")
-        self.assert_200_ok(response, contains=_expected_entity(benchmark_result))
+        assert response.status_code == 200
+        hist_endpont_resp_deser = response.json
+        expected_resp_deser = _expected_entity(benchmark_result)
+        assert hist_endpont_resp_deser == expected_resp_deser

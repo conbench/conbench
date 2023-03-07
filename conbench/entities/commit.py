@@ -43,7 +43,8 @@ class Commit(Base, EntityMixin):
     author_name = NotNull(s.String(100))
     author_login = Nullable(s.String(50))
     author_avatar = Nullable(s.String(100))
-    timestamp = Nullable(s.DateTime(timezone=False))
+    # Note(JP): tz-naive datetime, git commit author date, in UTC.
+    timestamp: Optional[datetime] = Nullable(s.DateTime(timezone=False))
 
     def get_parent_commit(self):
         return Commit.first(sha=self.parent, repository=self.repository)
@@ -566,9 +567,14 @@ class GitHub:
 
         return {
             "parent": commit["parents"][0]["sha"] if commit["parents"] else None,
-            # Note: `commit_author["date"]` here is expected to be an ISO 8601
-            # timestring as returned by the GitHub HTTP API and that is
-            # tz-aware (Zulu time, UTC).
+            # Note(JP): `commit_author["date"]` represents the time when the
+            # commit was authored (when it was originally made on the developer
+            # machine). This time never changes. git also knows the concept of
+            # the commit date which is updated every time the commit is
+            # modified; for example when rebasing or cherry-picking. We don't
+            # consider this here. `commit_author["date"]` is expected to be an
+            # ISO 8601 timestring as returned by the GitHub HTTP API and that
+            # is tz-aware (Zulu time, UTC).
             "date": util.tznaive_iso8601_to_tzaware_dt(commit_author["date"]),
             # Note(JP): don't we want to indicate if the msg was truncated,
             # with e.g. an ellipsis?

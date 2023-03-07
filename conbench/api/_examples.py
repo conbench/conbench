@@ -354,24 +354,31 @@ def _api_context_entity(context_id, links=True):
 
 
 def _api_history_entity(benchmark_id, case_id, context_id, run_name):
-    return {
-        "benchmark_id": benchmark_id,
-        "case_id": case_id,
-        "context_id": context_id,
-        "hardware_hash": "diana-2-2-4-17179869184",
-        "unit": "s",
-        "data": BENCHMARK_ENTITY["stats"]["data"],
-        "times": BENCHMARK_ENTITY["stats"]["times"],
-        "mean": 0.036369,
-        "begins_distribution_change": False,
-        "distribution_mean": 0.036369,
-        "distribution_stdev": 0.000000,
-        "repository": "https://github.com/org/repo",
-        "sha": "02addad336ba19a654f9c857ede546331be7b631",
-        "timestamp": "2021-02-25T01:02:51",
-        "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
-        "run_name": run_name,
-    }
+    return [
+        {
+            "benchmark_result_id": benchmark_id,
+            "case_id": case_id,
+            "commit_hash": "02addad336ba19a654f9c857ede546331be7b631",
+            "commit_msg": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+            "commit_timestamp": "2021-02-25T01:02:51",
+            "context_id": context_id,
+            "data": BENCHMARK_ENTITY["stats"]["data"],
+            "hardware_hash": "diana-2-2-4-17179869184",
+            "mean": 0.036369,
+            "repository": "https://github.com/org/repo",
+            "run_name": run_name,
+            "times": BENCHMARK_ENTITY["stats"]["times"],
+            "unit": "s",
+            "zscorestats": {
+                "begins_distribution_change": False,
+                "residual": 0.0,
+                "rolling_mean": 0.036369,
+                "rolling_mean_excluding_this_commit": 0.036369,
+                "rolling_stddev": 0.0,
+                "segment_id": 0.0,
+            },
+        }
+    ]
 
 
 def _api_info_entity(info_id, links=True):

@@ -1,3 +1,5 @@
+import dataclasses
+import datetime
 import decimal
 import logging
 import math
@@ -58,25 +60,13 @@ class _Serializer(EntitySerializer):
         # `data` was representing durations then this vector was not duplicated
         # as `times`.
 
-        # For both, history.data and history.times expect either None or a list
-        # Make it so that in the output object they are always a list,
-        # potentially empty. `data` contains more than one value if this was
-        # a multi-sample benchmark.
-        data = []
-        if history.data is not None:
-            data = [_to_float(d) for d in history.data]
-
-        times = []
-        if history.times is not None:
-            times = [_to_float(t) for t in history.times]
-
         return {
             "benchmark_id": history.id,
             "case_id": history.case_id,
             "context_id": history.context_id,
             "mean": _to_float(history.mean),
-            "data": data,
-            "times": times,
+            "data": history.data,
+            "times": history.times,
             "unit": history.unit,
             "begins_distribution_change": history.begins_distribution_change,
             "hardware_hash": history.hash,
@@ -97,12 +87,73 @@ class HistorySerializer:
     many = _Serializer(many=True)
 
 
-def get_history(case_id: str, context_id: str, hardware_hash: str, repo: str) -> list:
-    """Given a case/context/hardware/repo, return all non-errored BenchmarkResults
-    (past, present, and future) on the default branch that match those criteria, along
-    with information about the stats of the distribution as of each BenchmarkResult.
-    Order is not guaranteed. Used to power the history API, which also powers the
-    timeseries plots.
+@dataclasses.dataclass
+class HistorySampleZscoreStats:
+    begins_distribution_change: bool
+    segment_id: str
+    rolling_mean_excluding_this_commit: float
+    rolling_mean: Optional[float]
+    residual: float
+    rolling_stddev: float
+
+
+@dataclasses.dataclass
+class HistorySample:
+    benchmark_result_id: str
+    case_id: str
+    context_id: str
+    # Is this `mean` really optional? When would this be None? this is
+    # populated from BenchmarkResult.mean which is nullable. It would be a
+    # major simplification if we knew that this is never None. Depends on the
+    # logic in BenchmarkResult.create() which is quite intransparent today,
+    # also there is a lack of spec
+    mean: Optional[float]
+    # math.nan is allowed for representing a failed iteration.
+    data: list[float]
+    times: list[float]
+    unit: str
+    hardware_hash: str
+    repository: str
+    commit_hash: str
+    commit_msg: str
+    # tz-naive timestamp of commit authoring time (to be interpreted in UTC
+    # timezone).
+    commit_timestamp: datetime.datetime
+    run_name: str
+    zscorestats: HistorySampleZscoreStats
+
+    def _dict_for_api_json(self) -> dict:
+        d = dataclasses.asdict(self)
+        # if performance is a concern then https://pypi.org/project/orjson/
+        # promises to be among the fastest for serializing python dataclass
+        # instances into JSON.
+        d["commit_timestamp"] = self.commit_timestamp.isoformat()
+        return d
+
+
+def get_history_for_benchmark(benchmark_result_id: str):
+    # First, find case / context / hardware / repo combination based on the
+    # input benchmark result ID. This database lookup may raise the `NotFound`
+    # exception.
+
+    benchmark_result: BenchmarkResult = BenchmarkResult.one(id=benchmark_result_id)
+    return get_history_for_cchr(
+        benchmark_result.case_id,
+        benchmark_result.context_id,
+        benchmark_result.run.hardware.hash,
+        benchmark_result.run.commit.repository,
+    )
+
+
+def get_history_for_cchr(
+    case_id: str, context_id: str, hardware_hash: str, repo: str
+) -> list[HistorySample]:
+    """
+    Given a case/context/hardware/repo, return all non-errored BenchmarkResults
+    (past, present, and future) on the default branch that match those
+    criteria, along with information about the stats of the distribution as of
+    each BenchmarkResult. Order is not guaranteed. Used to power the history
+    API, which also powers the timeseries plots.
 
     For further detail on the stats columns, see the docs of
     ``_add_rolling_stats_columns_to_history_query()``.
@@ -143,7 +194,61 @@ def get_history(case_id: str, context_id: str, hardware_hash: str, repo: str) ->
         history_df, include_current_commit_in_rolling_stats=False
     )
 
-    return list(history_df.itertuples())
+    # return list(history_df.itertuples())
+
+    samples: list[HistorySample] = []
+    # Iterate over rows of pandas dataframe; get each row as namedtuple.
+    for sample in history_df.itertuples():
+        # Note(JP): the Commit.timestamp is nullable, i.e. not all Commit
+        # entities in the DB have a timestamp (authoring time) attached.
+        # However, in this function I believe there is an invariant that the
+        # query only returns Commits that we have this metadata for (what's the
+        # precise reason for this invariant? I think there is one). Codify this
+        # invariant with an assertion.
+        assert isinstance(sample.timestamp, datetime.datetime)
+
+        zstats = HistorySampleZscoreStats(
+            begins_distribution_change=sample.begins_distribution_change,
+            segment_id=sample.segment_id,
+            rolling_mean_excluding_this_commit=sample.rolling_mean_excluding_this_commit,
+            rolling_mean=_to_float(sample.rolling_mean),
+            residual=sample.residual,
+            rolling_stddev=_to_float(sample.rolling_stddev) or 0.0,
+        )
+
+        # For both, `sample.data` and `sample.times`, expect either None or a
+        # list. Make it so that in the output object they are always a list,
+        # potentially empty. `data` and `times` contain more than one value if
+        # this was a multi-sample benchmark.
+
+        data = []
+        if sample.data is not None:
+            data = [float(d) if d is not None else math.nan for d in sample.data]
+
+        times = []
+        if sample.times is not None:
+            times = [float(t) if t is not None else math.nan for t in sample.times]
+
+        samples.append(
+            HistorySample(
+                benchmark_result_id=sample.id,
+                case_id=sample.case_id,
+                context_id=sample.context_id,
+                mean=sample.mean,
+                data=data,
+                times=times,
+                unit=sample.unit,
+                hardware_hash=sample.hash,
+                repository=sample.repository,
+                commit_msg=sample.message,
+                commit_hash=sample.sha,
+                commit_timestamp=sample.timestamp,
+                run_name=sample.name,
+                zscorestats=zstats,
+            )
+        )
+
+    return samples
 
 
 def set_z_scores(benchmark_results: List[BenchmarkResult]):
@@ -163,7 +268,7 @@ def set_z_scores(benchmark_results: List[BenchmarkResult]):
     attribute will be None on that BenchmarkResult.
     """
     # For most invocations of this function, there are very few unique run_ids among the
-    # benchmark_results. Sort them by run_id and run an optimized query for each group.
+    # benchmark_results. Sort them by run_id and run aoptimized query for each group.
     sorted_by_run_id = defaultdict(list)
     for benchmark_result in benchmark_results:
         sorted_by_run_id[benchmark_result.run_id].append(benchmark_result)

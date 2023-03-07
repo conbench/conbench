@@ -1,4 +1,5 @@
 import collections
+import copy
 import json
 import logging
 from typing import List, Optional, no_type_check
@@ -8,6 +9,8 @@ import bokeh.models
 import bokeh.plotting
 
 from conbench import util
+from conbench.api.history import get_history_for_benchmark
+from conbench.entities.history import HistorySample, HistorySampleZscoreStats
 
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
@@ -35,22 +38,19 @@ class TimeSeriesPlotMixin:
         return outliers, outlier_ids, outlier_names
 
     def get_history_plot(self, benchmark, run, i=0):
-        history = self._get_history(benchmark)
-        if history:
+        samples = get_history_for_benchmark(benchmark_result_id=benchmark["id"])
+
+        if len(samples) > 0:
+            assert isinstance(samples[0], HistorySample)
+
             return json.dumps(
                 bokeh.embed.json_item(
-                    time_series_plot(history, benchmark, run),
+                    time_series_plot(samples, benchmark, run),
                     f"plot-history-{i}",
                 )
             )
-        return None
 
-    def _get_history(self, benchmark):
-        response = self.api_get("api.history", benchmark_id=benchmark["id"])
-        if response.status_code != 200:
-            self.flash("Error getting history.")
-            return []
-        return response.json
+        return None
 
 
 def get_display_unit(unit):
@@ -150,12 +150,18 @@ def simple_bar_plot(benchmarks, height=400, width=400, vbar_width=0.7):
     return p
 
 
-def _should_format(data, unit):
+# Using `Optional[float]` here only because of BenchmarkResult.mean being
+# nullable as of today.
+def _should_format(floats: list[Optional[float]], unit):
     unit_fmt = formatter_for_unit(unit)
 
     units_formatted = set()
-    for x in data:
-        units_formatted.add(unit_fmt(float(x["mean"]), unit).split(" ", 1)[1])
+    for f in floats:
+        if f is None:
+            # I think in legacy code this would have simply blown up in a
+            # `float(None)``
+            continue
+        units_formatted.add(unit_fmt(f, unit).split(" ", 1)[1])
 
     unit_formatted = units_formatted.pop() if len(units_formatted) == 1 else None
 
@@ -176,7 +182,7 @@ def _insert_nans(some_list: list, indexes: List[int]):
 
 @no_type_check
 def _source(
-    data,
+    samples: list[HistorySample],
     unit,
     formatted=False,
     distribution_mean=False,
@@ -186,21 +192,25 @@ def _source(
 ):
     # Note(JP): important magic: if not specified otherwise, this extracts
     # the mean-over-time.
-    key = "distribution_mean" if distribution_mean else "mean"
-
     unit_fmt = formatter_for_unit(unit)
 
     # TODO: These commit message prefixes end up in the on-hover tooltip.
     # Change this to use short commit hashes. The long commit message prefix
     # does not unambiguously specify the commit. Ideally link to the commit, in
     # the tooltip?
-    commit_messages = [d["message"] for d in data]
+    commit_messages = [s.commit_msg for s in samples]
 
     # The `timestamp` property corresponds to the UTC-local commit time
     # (example value: 2022-03-03T19:48:06). That is, each string is ISO 8601
     # notation w/o timezone information. Transform those into tz-aware datetime
     # objects.
-    datetimes = util.tznaive_iso8601_to_tzaware_dt([x["timestamp"] for x in data])
+    #
+    # Note that we do too much forth and back here; define `commit_timestamp`
+    # properly on `HistorySample`  (to be tzaware and in UTC), then we can
+    # simplify.
+    datetimes = util.tznaive_iso8601_to_tzaware_dt(
+        [s.commit_timestamp.isoformat() for s in samples]
+    )
 
     # Get stringified versions of those datetimes for UI display purposes.
     # Include timezone information. This shows UTC for the %Z.
@@ -209,25 +219,35 @@ def _source(
     points, values_with_unit = [], []
 
     if alert_min:
-        for x in data:
-            alert = 5 * float(x["distribution_stdev"])
-            points.append(float(x["distribution_mean"]) - alert)
+        for x in samples:
+            alert = 5 * float(x.zscorestats.rolling_stddev)
+            points.append(float(x.zscorestats.rolling_mean) - alert)
             values_with_unit.append(unit_fmt(points[-1], unit))
 
     elif alert_max:
-        for x in data:
-            alert = 5 * float(x["distribution_stdev"])
-            points.append(float(x["distribution_mean"]) + alert)
+        for x in samples:
+            alert = 5 * float(x.zscorestats.rolling_stddev)
+            points.append(float(x.zscorestats.rolling_mean) + alert)
             values_with_unit.append(unit_fmt(points[-1], unit))
 
     else:
-        points = [x[key] for x in data]
+        # Note(JP): Review the `values_with_unit` construction. It's largely
+        # legacy code.
+        if distribution_mean:
+            points = [x.zscorestats.rolling_mean for x in samples]
+            values_with_unit = [
+                unit_fmt(float(x.zscorestats.rolling_mean), unit)
+                for x in samples
+                if x.zscorestats.rolling_mean
+            ]
 
-        # Note(JP): If `means` is just string-formatted `points` then this is
-        # kind of acknowledging that `points` is always a collection of mean
-        # values. It seems that this is a string value field that is only
-        # ever used for tooltip generation?
-        values_with_unit = [unit_fmt(float(x[key]), unit) for x in data if x[key]]
+        else:
+            # Again, non-obvious purpose of this function: if not specified
+            # otherwise, this extracts the multisample mean-over-time.
+            points = [x.mean for x in samples]
+            values_with_unit = [
+                unit_fmt(float(x.mean), unit) for x in samples if x.mean
+            ]
 
     if formatted:
         # Note(JP): why would we want to calculate the raw numeric data from
@@ -244,20 +264,27 @@ def _source(
         # List of (truncated) commit messages.
         "commit_messages": commit_messages,
         # List of short commit hashes with hashtag prefix
-        "commit_hashes_short": ["#" + d["sha"][:8] for d in data],
-        "relative_benchmark_urls": [f'/benchmarks/{d["benchmark_id"]}' for d in data],
+        "commit_hashes_short": ["#" + s.commit_hash[:8] for s in samples],
+        "relative_benchmark_urls": [
+            f"/benchmarks/{s.benchmark_result_id}" for s in samples
+        ],
         # Stringified values (truncated, with unit)
         "values_with_unit": values_with_unit,
     }
 
-    multisample, multisample_count = _inspect_for_multisample(data)
+    multisample, _ = _inspect_for_multisample(samples)
     if multisample:
-        # Add a column to the ColumnarDataSource: stringified individual
-        # samples (with units).
+        # multisample means: more than data point/iteration. Add a column to
+        # the ColumnarDataSource: stringified individual samples (with units).
         strings = []
-        for d in data:
-            samples = d["data"]
-            strings.append(", ".join(unit_fmt(s, unit) for s in samples))
+        # Note(JP): here it becomes obvious that we may need better naming to
+        # distinguish samples from samples :-). In the next line, `samples` is
+        # a list of entities that each may contain more than one per-iteration
+        # sample.
+        for s in samples:
+            # Terminology: subsample? itersample? rawsample?
+            subsamples = s.data
+            strings.append(", ".join(unit_fmt(ss, unit) for ss in subsamples))
 
         dsdict["multisample_strings_with_unit"] = strings
 
@@ -272,7 +299,7 @@ def _source(
     return bokeh.models.ColumnDataSource(data=dsdict)
 
 
-def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
+def _inspect_for_multisample(items: list[HistorySample]) -> tuple[bool, Optional[int]]:
     """
     `items`: list of benchmark results as encoded by the history variant of the
     `_Serializer(EntitySerializer)`.
@@ -286,7 +313,7 @@ def _inspect_for_multisample(items) -> tuple[bool, Optional[int]]:
 
     # Get number of samples for each benchmark.
     try:
-        samplecounts = [len(i["data"]) for i in items]
+        samplecounts = [len(i.data) for i in items]
     except KeyError:
         # TODO: clean up once type checking is tight enough.
         # Likely, the provided `items` for testing here are not strictly of the
@@ -413,59 +440,79 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
     )
 
 
-def time_series_plot(history, benchmark, run, height=380, width=1100):
-    # log.info("Time series plot for:\n%s", json.dumps(history, indent=2))
+def time_series_plot(
+    samples: List[HistorySample], benchmark, run, height=380, width=1100
+):
+    # log.info("Time series plot for:\n%s", json.dumps(samples, indent=2))
 
-    unit = history[0]["unit"]
-    with_dist = [h for h in history if h["distribution_mean"]]
-    formatted, axis_unit = _should_format(history, unit)
+    unit = samples[0].unit
+    with_dist = [s for s in samples if s.zscorestats.rolling_mean]
+    formatted, axis_unit = _should_format([s.mean for s in samples], unit)
     dist_change_indexes = [
-        ix for ix, result in enumerate(history) if result["begins_distribution_change"]
+        ix
+        for ix, sample in enumerate(samples)
+        if sample.zscorestats.begins_distribution_change
     ]
 
-    # Note(JP): `history` is an ordered list of dicts, each dict has a `mean`
+    # Note(JP): `samples` is an ordered list of dicts, each dict has a `mean`
     # key which is extracted here by default.
-    source_mean_over_time = _source(history, unit, formatted=formatted)
+    source_mean_over_time = _source(samples, unit, formatted=formatted)
 
     source_min_over_time = bokeh.models.ColumnDataSource(
         data=dict(
             # Insert NaNs to break the line at distribution changes
             x=_insert_nans(
-                util.tznaive_iso8601_to_tzaware_dt([x["timestamp"] for x in history]),
+                util.tznaive_iso8601_to_tzaware_dt(
+                    [s.commit_timestamp.isoformat() for s in samples]
+                ),
                 dist_change_indexes,
             ),
             # TODO: best-case is not always min, e.g. when data has a unit like
-            # bandwidth.
-            y=_insert_nans([min(x["data"]) for x in history], dist_change_indexes),
+            # bandwidth. Note(JP): min() must not have None passed as arg, that
+            # is why I have changed `s.data` to only contain type float
+            # elements (including math.nan, instead of None).
+            y=_insert_nans([min(s.data) for s in samples], dist_change_indexes),
         )
     )
 
+    dummy_hs = HistorySample(
+        mean=benchmark["stats"]["mean"],
+        commit_msg=run["commit"]["message"],
+        commit_timestamp=util.tznaive_iso8601_to_tzaware_dt(run["commit"]["timestamp"]),
+        commit_hash=run["commit"]["sha"],
+        benchmark_result_id=benchmark["id"],
+        repository=run["commit"]["repository"],
+        # Right now, the _source() function requires as first arg a list of
+        # HistorySample objects. Comply with this, but most of the info is
+        # ignored. We may want to add a new type for stream-lining this.
+        case_id="dummy",  # not consumed
+        context_id="dummy",  # not consumed
+        data=[0],  # not consumed
+        times=[0],  # not consumed
+        unit="dummy",  # not consumed
+        hardware_hash="dummy",  # not consumed
+        run_name="dummy",  # not consumed
+        zscorestats=HistorySampleZscoreStats(
+            begins_distribution_change=False,  # not consumed
+            segment_id="dummy",  # not consumed
+            rolling_mean_excluding_this_commit=0.0,  # not consumed
+            rolling_mean=0.0,  # not consumed
+            residual=0.0,  # not consumed
+            rolling_stddev=0.0,  # not consumed
+        ),
+    )
+
     source_current_bm_mean = _source(
-        [
-            {
-                "mean": benchmark["stats"]["mean"],
-                "message": run["commit"]["message"],
-                "timestamp": run["commit"]["timestamp"],
-                "sha": run["commit"]["sha"],
-                "benchmark_id": benchmark["id"],
-                "repository": run["commit"]["repository"],
-            }
-        ],
+        [dummy_hs],
         unit,
         formatted=formatted,
     )
 
+    # create same dummy structure, only difference: set min as mean.
+    dummy_hs_min = copy.copy(dummy_hs)
+    dummy_hs_min.mean = benchmark["stats"]["min"]
     source_current_bm_min = _source(
-        [
-            {
-                "mean": benchmark["stats"]["min"],
-                "message": run["commit"]["message"],
-                "timestamp": run["commit"]["timestamp"],
-                "sha": run["commit"]["sha"],
-                "benchmark_id": benchmark["id"],
-                "repository": run["commit"]["repository"],
-            }
-        ],
+        [dummy_hs_min],
         unit,
         formatted=formatted,
     )
@@ -560,7 +607,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     p.xaxis.major_label_orientation = 1
     p.yaxis.axis_label = axis_unit
 
-    multisample, multisample_count = _inspect_for_multisample(history)
+    multisample, multisample_count = _inspect_for_multisample(samples)
     label = "benchmark (n=1)"
     if multisample:
         label = "benchmark mean"
@@ -570,7 +617,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     scatter_mean_over_time = p.circle(
         source=source_mean_over_time,
         legend_label=label,
-        name="history",
+        name="samples",
         size=6,
         color="#ccc",
         line_width=1,
@@ -642,7 +689,12 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     for ix in dist_change_indexes:
         p.add_layout(
             bokeh.models.Span(
-                location=util.tznaive_iso8601_to_tzaware_dt(history[ix]["timestamp"]),
+                location=util.tznaive_iso8601_to_tzaware_dt(
+                    # transforming from datetime to string back to datetime is
+                    # weird; done as part of refactoring to not change too much
+                    # at the same time.
+                    samples[ix].commit_timestamp.isoformat()
+                ),
                 dimension="height",
                 line_color="purple",
                 line_dash="dashed",
@@ -653,8 +705,13 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
         if not dist_change_in_legend:
             # hack: add a dummy line so it appears on the legend
             p.line(
-                [util.tznaive_iso8601_to_tzaware_dt(history[ix]["timestamp"])] * 2,
-                [history[ix]["mean"]] * 2,
+                [
+                    util.tznaive_iso8601_to_tzaware_dt(
+                        samples[ix].commit_timestamp.isoformat()
+                    )
+                ]
+                * 2,
+                [samples[ix].mean] * 2,
                 legend_label="distribution change",
                 line_color="purple",
                 line_dash="dashed",
@@ -682,7 +739,7 @@ def time_series_plot(history, benchmark, run, height=380, width=1100):
     )
 
     p.legend.title_text_color = "darkgray"
-    p.legend.title = f"benchmark results: {len(history)}"
+    p.legend.title = f"benchmark results: {len(samples)}"
     p.legend.location = "top_left"
 
     # Change the number of expected/desired date x ticks. There is otherwise
