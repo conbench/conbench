@@ -20,6 +20,8 @@ class NotFound(NoResultFound):
 
 
 def generate_uuid():
+    # Consider using xid or UUID7 or something comparable so that primary
+    # key reflects insertion order.
     return uuid.uuid4().hex
 
 

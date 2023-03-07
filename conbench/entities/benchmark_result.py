@@ -1,3 +1,4 @@
+import math
 from datetime import timezone
 
 import flask as f
@@ -34,8 +35,12 @@ class BenchmarkResult(Base, EntityMixin):
     info_id = NotNull(s.String(50), s.ForeignKey("info.id"))
     context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
     run_id = NotNull(s.Text, s.ForeignKey("run.id"))
-    data = Nullable(postgresql.ARRAY(s.Numeric), default=[])
-    times = Nullable(postgresql.ARRAY(s.Numeric), default=[])
+
+    # These can be emtpy lists. An item in the list is of type float, which
+    # includes `math.nan` as valid value.
+    data: list[float] = Nullable(postgresql.ARRAY(s.Numeric), default=[])
+    times: list[float] = Nullable(postgresql.ARRAY(s.Numeric), default=[])
+
     case = relationship("Case", lazy="joined")
     # optional info at the benchmark level (i.e. information that isn't a tag that should create a separate case, but information that's good to hold around like links to logs)
     optional_benchmark_info = Nullable(postgresql.JSONB)
@@ -64,6 +69,13 @@ class BenchmarkResult(Base, EntityMixin):
     change_annotations = Nullable(postgresql.JSONB)
 
     @staticmethod
+    # We should work towards having a precise type annotation for `data`. It's
+    # the result of a (marshmallow) schema-validated JSON deserialization, and
+    # therefore the type information _should_ be available already. However,  I
+    # have not found a quick way to add a type annotation based on a
+    # marshmallow schema. Maybe this would be a strong reason to move to using
+    # pydantic -- I believe when defining a schema with pydantic, the
+    # corresponding type information can be used for mypy automatically.
     def create(data):
         """Create BenchmarkResult and write to database."""
         tags = data["tags"]
@@ -72,26 +84,59 @@ class BenchmarkResult(Base, EntityMixin):
 
         # defaults
         benchmark_result_data = {}
-        complete_iterations = False
+
+        # Note(JP): if no data was provided, should this stay `True`?
+        # We will see. https://github.com/conbench/conbench/issues/803.
+        any_errored_iteration = True
 
         if has_stats:
-            benchmark_result_data = data["stats"]
+            # Note(JP): this is the result of marshmallow
+            # deserializaiton/validation against the `BenchmarkResultCreate`
+            # schema below. This needs better naming. Most importantly, we
+            # should make use of typing information derived from the schema.
+            benchmark_result_data = data["stats"].copy()
+
+            # Note(JP): I think we may want to emit a Bad Request response when
+            # benchmark_result_data['data'] does not contain any non-null
+            # value. An empty list would then also be rejected right away. `if
+            # benchmark_result_data.get("data")` is probably supposed to catch
+            # the case where an empty list was provided.
 
             # calculate any missing stats if data available
-            if data["stats"].get("data"):
-                dat = [to_float(x) for x in benchmark_result_data["data"]]
+            if benchmark_result_data.get("data"):
+                # Note(JP): looks like `benchmark_result_data["data"]` is a
+                # list of either `None` or `Decimal` objects (currently
+                # enforced via marshmallow schema). Example:
+                #
+                # [Decimal('0.099094'), None, Decimal('0.036381')]
+                #
+                # TODO: let's lock this in with type annotations so that this
+                # is known _here_. Transform `None` to `math.nan` and `Decimal``
+                # to `float`` for subsequent calculations.
+                dat = [
+                    float(x) if x is not None else math.nan
+                    for x in benchmark_result_data["data"]
+                ]
 
-                # defaults
                 q1 = q3 = mean = median = min = max = stdev = iqr = None
 
-                # calculate stats only if the data is complete
-                complete_iterations = all([x is not None for x in dat])
-                if complete_iterations:
+                # calculate stats only if the data is complete. Note(JP): why?
+                # maybe we want to calculate that always if there are at least
+                # N (3?) data points.
+                any_errored_iteration = any([x is math.nan for x in dat])
+
+                if not any_errored_iteration:
+                    # Note(JP): do we really want to populate all of the below
+                    # except for stddev if the sample size is 1? In that case,
+                    # all of max, min, mean, q1 share the same value. I'd say
+                    # it makes more sense to calculate these statistics only if
+                    # three or more samples have been provided.
                     q1, q3 = np.percentile(dat, [25, 75])
                     mean = np.mean(dat)
                     median = np.median(dat)
                     min = np.min(dat)
                     max = np.max(dat)
+                    # review this: https://github.com/conbench/conbench/issues/802
                     stdev = np.std(dat) if len(dat) > 2 else 0
                     iqr = q3 - q1
 
@@ -119,10 +164,10 @@ class BenchmarkResult(Base, EntityMixin):
         if has_error:
             benchmark_result_data["error"] = data["error"]
 
-        # If there was no explicit error *and* the iterations aren't complete, we should add an error
+        # If there was no explicit error *and* at least one iteration failed aren't complete, we should add an error
         if (
             benchmark_result_data.get("error", None) is None
-            and complete_iterations is False
+            and any_errored_iteration is True
         ):
             benchmark_result_data["error"] = {
                 "status": "Partial result: not all iterations completed"
@@ -197,9 +242,6 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_result = BenchmarkResult(**benchmark_result_data)
         benchmark_result.save()
 
-        if "error" in data or not complete_iterations:
-            return benchmark_result
-
         return benchmark_result
 
     def update(self, data):
@@ -236,14 +278,38 @@ class BenchmarkResultCreate(marshmallow.Schema):
         marshmallow.fields.Decimal(allow_none=True),
         required=True,
         metadata={
-            "description": "A list of benchmark results (e.g. durations, throughput). This will be used as the main + only metric for regression and improvement. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`."
+            # Note(JP): we must specify: is it allowed to send an empty list?
+            # Is it allowed to send a list with only `null` values? Should
+            # there be the requirement that at least one non-null value must be
+            # present?
+            "description": conbench.util.dedent_rejoin(
+                """
+                A list of benchmark results (e.g. durations, throughput). This
+                will be used as the main + only metric for regression and
+                improvement. The values should be ordered in the order the
+                iterations were executed (the first element is the first
+                iteration, the second element is the second iteration, etc.).
+                If an iteration did not complete but others did and you want to
+                send partial data, mark each iteration that didn't complete as
+                `null`."""
+            )
         },
     )
     times = marshmallow.fields.List(
         marshmallow.fields.Decimal(allow_none=True),
         required=True,
         metadata={
-            "description": "A list of benchmark durations. If `data` is a duration measure, this should be a duplicate of that object. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`."
+            "description": conbench.util.dedent_rejoin(
+                """
+                A list of benchmark durations. If `data` is a duration measure,
+                this should be a duplicate of that object. The values should be
+                ordered in the order the iterations were executed (the first
+                element is the first iteration, the second element is the
+                second iteration, etc.). If an iteration did not complete but
+                others did and you want to send partial data, mark each
+                iteration that didn't complete as `null`.
+                """
+            )
         },
     )
     unit = marshmallow.fields.String(

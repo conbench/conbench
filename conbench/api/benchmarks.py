@@ -160,7 +160,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         return self.serializer.many.dump(benchmark_results)
 
     @flask_login.login_required
-    def post(self):
+    def post(self) -> None:
         """
         ---
         description:
@@ -182,6 +182,8 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         tags:
           - Benchmarks
         """
+        # Here it sould be easy to make `data` have a precise type (that mypy
+        # can use) based on the schema that we validate against.
         data = self.validate_benchmark(self.schema.create)
         benchmark_result = BenchmarkResult.create(data)
         set_z_scores([benchmark_result])

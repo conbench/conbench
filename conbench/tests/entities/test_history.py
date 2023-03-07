@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from ...entities.commit import Commit
-from ...entities.history import _to_float, get_history, set_z_scores
+from ...entities.history import _to_float, get_history_for_cchr, set_z_scores
 from ...tests.api import _fixtures
 
 # These correspond to the benchmark_results of _fixtures.gen_fake_data() without modification
@@ -59,22 +59,27 @@ def test_get_history():
             benchmark_results[ix].id for ix in expected_benchmark_results_ixs
         }
 
-        actual_history = get_history(
+        actual_history = get_history_for_cchr(
             benchmark_result.case_id,
             benchmark_result.context_id,
             benchmark_result.run.hardware.hash,
             benchmark_result.run.commit.repository,
         )
-        actual_benchmark_result_ids = {row.id for row in actual_history}
+        actual_benchmark_result_ids = {
+            row.benchmark_result_id for row in actual_history
+        }
 
         assert expected_benchmark_result_ids == actual_benchmark_result_ids
 
         if benchmark_result.id in actual_benchmark_result_ids:
             # we're on the default branch so the distribution stats should be available
             dist_mean, dist_stddev = [
-                (_to_float(row.rolling_mean), _to_float(row.rolling_stddev))
+                (
+                    _to_float(row.zscorestats.rolling_mean),
+                    _to_float(row.zscorestats.rolling_stddev),
+                )
                 for row in actual_history
-                if row.id == benchmark_result.id
+                if row.benchmark_result_id == benchmark_result.id
             ][0]
             if dist_stddev:
                 assert (

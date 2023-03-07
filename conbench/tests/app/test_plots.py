@@ -1,8 +1,38 @@
 import datetime
 
+from conbench import util
+from conbench.entities.history import HistorySample, HistorySampleZscoreStats
+
 from ...app._plots import _should_format, _simple_source, _source
 
-HISTORY = [
+
+def legacy_dict_to_hs(d: dict) -> HistorySample:
+    return HistorySample(
+        mean=d["mean"],
+        commit_msg=d["message"],
+        commit_timestamp=util.tznaive_iso8601_to_tzaware_dt(d["timestamp"]),
+        commit_hash=d["sha"],
+        benchmark_result_id=d["benchmark_id"],
+        repository=d["repository"],
+        case_id=d["case_id"],
+        context_id=d["context_id"],
+        unit=d["unit"],
+        hardware_hash=d["hardware_hash"],
+        run_name=d["run_name"],
+        data=[0],  # not provided in legacy struct
+        times=[0],  # not provided in legacy struct
+        zscorestats=HistorySampleZscoreStats(
+            begins_distribution_change=False,  # not provided in legacy struct
+            segment_id="dummy",  # not provided in legacy struct
+            rolling_mean_excluding_this_commit=0.0,  # not provided in legacy struct
+            rolling_mean=d["distribution_mean"],
+            residual=0.0,  # not provided in legacy struct
+            rolling_stddev=d["distribution_stdev"],
+        ),
+    )
+
+
+legacy_HISTORY = [
     {
         "benchmark_id": "b4466622481f4e3a927e962008309724",
         "case_id": "bdca99e75fee41e8aec77c2c1bc220ab",
@@ -79,6 +109,8 @@ HISTORY = [
         "unit": "B/s",
     },
 ]
+
+HISTORY = [legacy_dict_to_hs(d) for d in legacy_HISTORY]
 
 DATES = [
     datetime.datetime(2021, 8, 4, 10, 26, 7, tzinfo=datetime.timezone.utc),
@@ -231,15 +263,9 @@ def test_source_alert_max_formatted():
 
 def test_should_format():
     history = [
-        {
-            "mean": "392130886.117931",
-        },
-        {
-            "mean": "492130886.117931",
-        },
-        {
-            "mean": "592130886.117931",
-        },
+        392130886.117931,
+        492130886.117931,
+        592130886.117931,
     ]
     assert _should_format(history, "s") == (True, "seconds")
     assert _should_format(history, "B/s") == (True, "MiB/s")
@@ -249,15 +275,9 @@ def test_should_format():
 
 def test_should_format_values_too_small():
     history = [
-        {
-            "mean": "1.117931",
-        },
-        {
-            "mean": "2.117931",
-        },
-        {
-            "mean": "3.117931",
-        },
+        1.117931,
+        2.117931,
+        3.117931,
     ]
     assert _should_format(history, "s") == (True, "seconds")
     assert _should_format(history, "B/s") == (True, "bytes/second")
@@ -267,15 +287,9 @@ def test_should_format_values_too_small():
 
 def test_should_format_units_not_uniform():
     history = [
-        {
-            "mean": "392130886.117931",
-        },
-        {
-            "mean": "886.117931",
-        },
-        {
-            "mean": "592130886.117931",
-        },
+        392130886.117931,
+        886.117931,
+        592130886.117931,
     ]
     assert _should_format(history, "s") == (True, "seconds")
     assert _should_format(history, "B/s") == (False, "bytes/second")
