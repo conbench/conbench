@@ -76,6 +76,8 @@ class Run(Base, EntityMixin):
             repository = repository_to_url(github_data["repository"])
             pr_number = github_data.get("pr_number")
             branch = github_data.get("branch")
+            # Note(JP): this string may be zerolength as of today, does that
+            # make sense? Also see https://github.com/conbench/conbench/issues/817
             sha = github_data["commit"]
 
         commit_id = commit_fetch_info_and_create_in_db_if_not_exists(
@@ -197,7 +199,7 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
     API.
     """
 
-    def _guts(sha: str, repository: str, pr_number, branch: str) -> Commit:
+    def _guts(sha, repository, pr_number, branch) -> Commit:
         """
         Return a Commit object or raise `sqlalchemy.exc.IntegrityError`.
         """
@@ -243,12 +245,14 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
                     exc,
                 )
 
-        elif sha:
+        elif sha is not None and repository is not None:
             # As of input schema validation this means that both, commit has
             # and repository specifier are set. Also the database schema as of
             # the time of writing this comment requires both commit hash and
-            # repo specifier to be non-null. Encode this assumption here.
-            assert sha and repository
+            # repo specifier to be non-null. Empty string values seem to be
+            # allowed. I think we may want to have all Commit records in the
+            # database to have a repo and commit hash set. See
+            # https://github.com/conbench/conbench/issues/817
             commit = Commit.create_unknown_context(sha, repository)
         else:
             # Note(JP): this creates a special commit object I think with no
