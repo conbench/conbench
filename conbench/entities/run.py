@@ -197,7 +197,7 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
     API.
     """
 
-    def _guts(sha, repository, pr_number, branch) -> Commit:
+    def _guts(sha: str, repository: str, pr_number, branch: str) -> Commit:
         """
         Return a Commit object or raise `sqlalchemy.exc.IntegrityError`.
         """
@@ -243,12 +243,12 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
                     exc,
                 )
 
-        # If at least a commit hash and/or repository are provided, insert
-        # that. Note(JP): wouldn't it be better if we hat the constraint that a
-        # commit entity in the database has _at least_ repository specifier and
-        # commit hash? What is the value of a commit object that only refers to
-        # a repository (and not to a commit hash)?
-        elif sha or repository:
+        elif sha:
+            # As of input schema validation this means that both, commit has
+            # and repository specifier are set. Also the database schema as of
+            # the time of writing this comment requires both commit hash and
+            # repo specifier to be non-null. Encode this assumption here.
+            assert sha and repository
             commit = Commit.create_unknown_context(sha, repository)
         else:
             # Note(JP): this creates a special commit object I think with no
