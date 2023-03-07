@@ -1,14 +1,27 @@
 import abc
 import datetime
+import logging
 import subprocess
 import uuid
 from typing import Any, Dict, List
 
 import requests
 from benchclients.conbench import ConbenchClient
-from benchclients.logging import fatal_and_log, log
+from benchclients.logging import fatal_and_log
 
 from ..result import BenchmarkResult
+
+log = logging.getLogger("benchadapt.adapters")
+
+# `basicConfig()` does nothing if the root logger already has handlers
+# configured (that is, if this benchadapt library is imported in the context
+# of a program that already has a root logger with handlers set up, then the
+# following call is a noop.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
+    datefmt="%y%m%d-%H:%M:%S",
+)
 
 
 class BenchmarkAdapter(abc.ABC):
@@ -174,12 +187,12 @@ class BenchmarkAdapter(abc.ABC):
                 res = client.post(path="/benchmarks/", json=result_dict)
             except requests.exceptions.ReadTimeout as e:
                 error_time = datetime.datetime.utcnow()
-                print(f"{error_time} POST timed out: {repr(e)}. Retrying...")
+                log.info(f"{error_time} POST timed out: {repr(e)}. Retrying...")
                 try:
                     res = client.post(path="/benchmarks/", json=result_dict)
                 except requests.exceptions.ReadTimeout as ee:
                     error_time2 = datetime.datetime.utcnow()
-                    print(
+                    log.warning(
                         (
                             f"{error_time2} POST timed out again: {repr(ee)}. "
                             "Skipping and continuing to other results."
@@ -190,7 +203,7 @@ class BenchmarkAdapter(abc.ABC):
             res_list.append(res)
 
         if error:
-            print(f"POST at {error_time} timed out twice:")
+            log.error(f"POST at {error_time} timed out twice:")
             raise error
 
         log.info("All results sent to conbench")

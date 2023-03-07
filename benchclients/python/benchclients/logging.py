@@ -1,9 +1,12 @@
 import logging
 
-logging.basicConfig(
-    format="%(levelname)s [%(asctime)s] %(message)s", level=logging.INFO
-)
 log = logging.getLogger(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
+    datefmt="%y%m%d-%H:%M:%S",
+)
 
 
 def fatal_and_log(msg: str, etype: BaseException = ValueError):
