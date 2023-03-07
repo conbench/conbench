@@ -20,7 +20,13 @@ class BaseClient(abc.ABC):
     """
 
     base_url: str
-    timeout_s = 10
+    # Note(JP): I have bumped this from 10 to 75 seconds to err on side of
+    # caution (remove stress from DB, at the cost of potentially longer-running
+    # jobs, and at the cost of time-between-useful-logmsgs). This needs more
+    # context-specific timeout constants, also see
+    # https://github.com/conbench/conbench/issues/801 and
+    # https://github.com/conbench/conbench/issues/806
+    timeout_s = 75
 
     def __init__(self, adapter: Optional[HTTPAdapter]):
         if not adapter:
