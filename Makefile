@@ -77,6 +77,22 @@ rebuild-expected-api-docs: run-app-bg
 	git diff ./conbench/tests/api/_expected_docs.py
 
 
+.PHONY: alembic-new-migration
+alembic-new-migration: teardown-app
+	mkdir -p /tmp/_conbench-promcl-coord-dir
+	@if [ -z "$${ALEMBIC_MIGRATION_NAME:=}" ]; then \
+		echo "env var ALEMBIC_MIGRATION_NAME must be set to an expressive name"; \
+		exit 1; \
+	fi
+	docker compose run --detach db
+	CREATE_ALL_TABLES=false docker compose \
+		run -e CREATE_ALL_TABLES app alembic upgrade head
+	CREATE_ALL_TABLES=false docker compose -f docker-compose.yml -f docker-compose.dev.yml \
+		run -e CREATE_ALL_TABLES  app alembic revision --autogenerate -m ${ALEMBIC_MIGRATION_NAME}
+	@echo "a new file was generated in migrations/versions -- it is probably root-owned"
+	@echo 'run: sudo chown $$USER:$$(id -gn) migrations/versions/xxx.py'
+
+
 # Build HTML docs locally
 .PHONY: build-docs
 build-docs:

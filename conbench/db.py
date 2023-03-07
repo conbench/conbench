@@ -19,6 +19,7 @@ log = logging.getLogger(__name__)
 def configure_engine(url):
     global engine, session_maker, Session
 
+    log.info("create sqlalchemy DB engine")
     engine = create_engine(
         url,
         future=True,
@@ -39,6 +40,7 @@ def configure_engine(url):
         # https://github.com/conbench/conbench/pull/690
         connect_args={"options": "-c timezone=utc -c statement_timeout=60s"},
     )
+    log.info("bind engine to session")
     session_maker.configure(bind=engine)
 
 
