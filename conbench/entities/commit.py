@@ -44,7 +44,9 @@ class Commit(Base, EntityMixin):
     author_login = Nullable(s.String(50))
     author_avatar = Nullable(s.String(100))
     # Note(JP): tz-naive datetime, git commit author date, in UTC.
-    timestamp: Optional[datetime] = Nullable(s.DateTime(timezone=False))
+    # Edit: adding the type Optional[datetime] is not sufficient because
+    # further down we use `.label()` which seems to be sqlalchemy-specific
+    timestamp = Nullable(s.DateTime(timezone=False))
 
     def get_parent_commit(self):
         return Commit.first(sha=self.parent, repository=self.repository)
