@@ -1,7 +1,8 @@
 import datetime
 
-from conbench.entities.history import HistorySample, HistorySampleZscoreStats
 from conbench import util
+from conbench.entities.history import HistorySample, HistorySampleZscoreStats
+
 from ...app._plots import _should_format, _simple_source, _source
 
 
