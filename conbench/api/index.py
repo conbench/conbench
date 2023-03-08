@@ -32,7 +32,10 @@ def docs():
     # https://github.com/Topsort/openapi/pull/32.
     # The disadvantage is that this also shows up in the Swagger UI.
     mdchunks = []
-    for schemaname in spec.components.schemas.keys():
+    # Module import order is not stable and therefore the key sorting in this
+    # dictionary may be different for each application startup. Sort keys
+    # alphabetically to get a stable outcome.
+    for schemaname in sorted(spec.components.schemas.keys()):
         print(schemaname)
         mdchunks.append(
             f"## {schemaname}\n"
