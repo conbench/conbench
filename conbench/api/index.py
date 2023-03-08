@@ -19,6 +19,34 @@ log = logging.getLogger(__name__)
 
 @api.route("/docs.json")
 def docs():
+    # Note(JP): the `spec` object is being passed around and populated from a
+    # variety of places during module import time. Therefore it's advisable to
+    # not inspect/analyze it during import time because it might not be
+    # complete yet. The per-request dynamic construction below is probably fast
+    # enough (if not, we can add a cache that stores the result of the first
+    # request).
+
+    # The following uses a strategy for displaying object model schema in
+    # Redoc. See  https://github.com/conbench/conbench/pull/826 for a
+    # discussion. The current solution is modeled after
+    # https://github.com/Topsort/openapi/pull/32.
+    # The disadvantage is that this also shows up in the Swagger UI.
+    mdchunks = []
+    for schemaname in spec.components.schemas.keys():
+        print(schemaname)
+        mdchunks.append(
+            f"## {schemaname}\n"
+            f'<SchemaDefinition schemaRef="#/components/schemas/{schemaname}" />\n'
+        )
+
+    spec.tag(
+        {
+            "name": "Models",
+            "x-displayName": "Object models",
+            "description": "\n".join(mdchunks),
+        }
+    )
+
     d = spec.to_dict()
 
     # In TESTING mode there is a special endpoint that gets
@@ -32,10 +60,15 @@ def docs():
     return f.jsonify(d)
 
 
+# In addition to serving the Swagger UI at /api/docs, maybe temporarily also
+# serve the Redoc UI at /api/redoc. We can keep using/developing it at this URL
+# for starters. If we like it and if we think it's ready to replace the Swagger
+# UI then we can instead serve it at /api/docs.
 @api.route("/redoc")
 def redoc_html():
     # Rely on api_server_url to have a trailing slash.
     spec_url = api_server_url + "api/docs.json"
+
     return f"""
         <!DOCTYPE html>
         <html>
@@ -63,9 +96,6 @@ def redoc_html():
         </script>
         </html>
     """
-
-
-#           <redoc spec-url="{spec_url}"></redoc>
 
 
 class IndexSerializer:
