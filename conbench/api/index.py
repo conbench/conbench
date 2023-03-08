@@ -8,7 +8,7 @@ from sqlalchemy.sql import text
 
 from .. import __version__
 from ..api import api, rule
-from ..api._docs import spec, api_server_url
+from ..api._docs import api_server_url, spec
 from ..api._endpoint import ApiEndpoint
 from ..buildinfo import BUILD_INFO
 from ..config import Config
