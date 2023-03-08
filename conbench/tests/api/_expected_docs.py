@@ -1718,6 +1718,7 @@
                 "tags": ["Ping"],
             }
         },
+        "/api/redoc": {},
         "/api/register/": {
             "post": {
                 "description": "Sign up for a user account.",
@@ -1925,5 +1926,10 @@
         {"description": "Benchmark hardware", "name": "Hardware"},
         {"description": "Benchmark runs", "name": "Runs"},
         {"description": "Monitor status", "name": "Ping"},
+        {
+            "description": '## Error\n<SchemaDefinition schemaRef="#/components/schemas/Error" />\n\n## ErrorValidation\n<SchemaDefinition schemaRef="#/components/schemas/ErrorValidation" />\n\n## ErrorBadRequest\n<SchemaDefinition schemaRef="#/components/schemas/ErrorBadRequest" />\n\n## UserCreate\n<SchemaDefinition schemaRef="#/components/schemas/UserCreate" />\n\n## UserUpdate\n<SchemaDefinition schemaRef="#/components/schemas/UserUpdate" />\n\n## Register\n<SchemaDefinition schemaRef="#/components/schemas/Register" />\n\n## Login\n<SchemaDefinition schemaRef="#/components/schemas/Login" />\n\n## GitHubCreate\n<SchemaDefinition schemaRef="#/components/schemas/GitHubCreate" />\n\n## ClusterCreate\n<SchemaDefinition schemaRef="#/components/schemas/ClusterCreate" />\n\n## MachineCreate\n<SchemaDefinition schemaRef="#/components/schemas/MachineCreate" />\n\n## BenchmarkResultCreate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultCreate" />\n\n## BenchmarkCreate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkCreate" />\n\n## BenchmarkUpdate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkUpdate" />\n\n## Ping\n<SchemaDefinition schemaRef="#/components/schemas/Ping" />\n\n## RunCreate\n<SchemaDefinition schemaRef="#/components/schemas/RunCreate" />\n\n## RunUpdate\n<SchemaDefinition schemaRef="#/components/schemas/RunUpdate" />\n',
+            "name": "Models",
+            "x-displayName": "Object models",
+        },
     ],
 }
