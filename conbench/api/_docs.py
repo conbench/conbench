@@ -61,53 +61,53 @@ def _201_created(example, schema=None):
     }
 
 
-spec.components.response("200", {"description": "OK"})
-spec.components.response("201", {"description": "Created"})
-spec.components.response("202", {"description": "No Content (accepted)"})
-spec.components.response("204", {"description": "No Content (success)"})
-spec.components.response("302", {"description": "Found"})
-spec.components.response("400", _error("Bad Request", ex.API_400, "ErrorBadRequest"))
-spec.components.response("401", _error("Unauthorized", ex.API_401, "Error"))
-spec.components.response("404", _error("Not Found", ex.API_404, "Error"))
-spec.components.response("Ping", _200_ok(ex.API_PING, "Ping"))
-spec.components.response("Index", _200_ok(ex.API_INDEX))
-spec.components.response("BenchmarkEntity", _200_ok(ex.BENCHMARK_ENTITY))
-spec.components.response("BenchmarkList", _200_ok([ex.BENCHMARK_ENTITY]))
-spec.components.response("BenchmarkCreated", _201_created(ex.BENCHMARK_ENTITY))
-spec.components.response("CommitEntity", _200_ok(ex.COMMIT_ENTITY))
-spec.components.response("CommitList", _200_ok([ex.COMMIT_ENTITY]))
-spec.components.response("CompareEntity", _200_ok(ex.COMPARE_ENTITY))
-spec.components.response("CompareList", _200_ok(ex.COMPARE_LIST))
-spec.components.response("CompareBenchmarkResult", _200_ok(ex.COMPARE_BENCHMARK_RESULT))
-spec.components.response("ContextEntity", _200_ok(ex.CONTEXT_ENTITY))
-spec.components.response("ContextList", _200_ok([ex.CONTEXT_ENTITY]))
-spec.components.response("InfoList", _200_ok([ex.INFO_ENTITY]))
-spec.components.response("HistoryList", _200_ok([ex.HISTORY_ENTITY]))
-spec.components.response("InfoEntity", _200_ok(ex.INFO_ENTITY))
-spec.components.response("HardwareEntity", _200_ok(ex.HARDWARE_ENTITY))
-spec.components.response("HardwareList", _200_ok([ex.HARDWARE_ENTITY]))
-spec.components.response("RunEntity", _200_ok(ex.RUN_ENTITY))
-spec.components.response("RunList", _200_ok(ex.RUN_LIST))
-spec.components.response("RunCreated", _201_created(ex.RUN_ENTITY))
-spec.components.response("UserEntity", _200_ok(ex.USER_ENTITY))
-spec.components.response("UserList", _200_ok(ex.USER_LIST))
-spec.components.response("UserCreated", _201_created(ex.USER_ENTITY))
+# spec.components.response("200", {"description": "OK"})
+# spec.components.response("201", {"description": "Created"})
+# spec.components.response("202", {"description": "No Content (accepted)"})
+# spec.components.response("204", {"description": "No Content (success)"})
+# spec.components.response("302", {"description": "Found"})
+# spec.components.response("400", _error("Bad Request", ex.API_400, "ErrorBadRequest"))
+# spec.components.response("401", _error("Unauthorized", ex.API_401, "Error"))
+# spec.components.response("404", _error("Not Found", ex.API_404, "Error"))
+# spec.components.response("Ping", _200_ok(ex.API_PING, "Ping"))
+# spec.components.response("Index", _200_ok(ex.API_INDEX))
+# spec.components.response("BenchmarkEntity", _200_ok(ex.BENCHMARK_ENTITY))
+# spec.components.response("BenchmarkList", _200_ok([ex.BENCHMARK_ENTITY]))
+# spec.components.response("BenchmarkCreated", _201_created(ex.BENCHMARK_ENTITY))
+# spec.components.response("CommitEntity", _200_ok(ex.COMMIT_ENTITY))
+# spec.components.response("CommitList", _200_ok([ex.COMMIT_ENTITY]))
+# spec.components.response("CompareEntity", _200_ok(ex.COMPARE_ENTITY))
+# spec.components.response("CompareList", _200_ok(ex.COMPARE_LIST))
+# spec.components.response("CompareBenchmarkResult", _200_ok(ex.COMPARE_BENCHMARK_RESULT))
+# spec.components.response("ContextEntity", _200_ok(ex.CONTEXT_ENTITY))
+# spec.components.response("ContextList", _200_ok([ex.CONTEXT_ENTITY]))
+# spec.components.response("InfoList", _200_ok([ex.INFO_ENTITY]))
+# spec.components.response("HistoryList", _200_ok([ex.HISTORY_ENTITY]))
+# spec.components.response("InfoEntity", _200_ok(ex.INFO_ENTITY))
+# spec.components.response("HardwareEntity", _200_ok(ex.HARDWARE_ENTITY))
+# spec.components.response("HardwareList", _200_ok([ex.HARDWARE_ENTITY]))
+# spec.components.response("RunEntity", _200_ok(ex.RUN_ENTITY))
+# spec.components.response("RunList", _200_ok(ex.RUN_LIST))
+# spec.components.response("RunCreated", _201_created(ex.RUN_ENTITY))
+# spec.components.response("UserEntity", _200_ok(ex.USER_ENTITY))
+# spec.components.response("UserList", _200_ok(ex.USER_LIST))
+# spec.components.response("UserCreated", _201_created(ex.USER_ENTITY))
 
 
-tags = [
-    {"name": "Authentication"},
-    {"name": "Index", "description": "List of endpoints"},
-    {"name": "Users", "description": "Manage users"},
-    {"name": "Benchmarks", "description": "Record benchmarks"},
-    {"name": "Commits", "description": "Benchmarked commits"},
-    {"name": "Comparisons", "description": "Benchmark comparisons"},
-    {"name": "Info", "description": "Extra benchmark information"},
-    {"name": "Contexts", "description": "Benchmark contexts"},
-    {"name": "History", "description": "Benchmark history"},
-    {"name": "Hardware", "description": "Benchmark hardware"},
-    {"name": "Runs", "description": "Benchmark runs"},
-    {"name": "Ping", "description": "Monitor status"},
-]
+# tags = [
+#     {"name": "Authentication"},
+#     {"name": "Index", "description": "List of endpoints"},
+#     {"name": "Users", "description": "Manage users"},
+#     {"name": "Benchmarks", "description": "Record benchmarks"},
+#     {"name": "Commits", "description": "Benchmarked commits"},
+#     {"name": "Comparisons", "description": "Benchmark comparisons"},
+#     {"name": "Info", "description": "Extra benchmark information"},
+#     {"name": "Contexts", "description": "Benchmark contexts"},
+#     {"name": "History", "description": "Benchmark history"},
+#     {"name": "Hardware", "description": "Benchmark hardware"},
+#     {"name": "Runs", "description": "Benchmark runs"},
+#     {"name": "Ping", "description": "Monitor status"},
+# ]
 
-for tag in tags:
-    spec.tag(tag)
+# for tag in tags:
+#     spec.tag(tag)

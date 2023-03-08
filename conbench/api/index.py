@@ -8,7 +8,7 @@ from sqlalchemy.sql import text
 
 from .. import __version__
 from ..api import api, rule
-from ..api._docs import spec
+from ..api._docs import spec, api_server_url
 from ..api._endpoint import ApiEndpoint
 from ..buildinfo import BUILD_INFO
 from ..config import Config
@@ -30,6 +30,42 @@ def docs():
         del d["paths"]["/api/wipe-db"]
 
     return f.jsonify(d)
+
+
+@api.route("/redoc")
+def redoc_html():
+    # Rely on api_server_url to have a trailing slash.
+    spec_url = api_server_url + "api/docs.json"
+    return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Redoc</title>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet" />
+            <style>
+            body {{
+                margin: 0;
+                padding: 0;
+            }}
+            </style>
+        </head>
+        <body><redoc></redoc></body>
+        <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+        <script>
+        Redoc.init(
+            '{spec_url}',
+            {{
+                scrollYOffset: 50
+            }},
+        );
+        </script>
+        </html>
+    """
+
+
+#           <redoc spec-url="{spec_url}"></redoc>
 
 
 class IndexSerializer:
