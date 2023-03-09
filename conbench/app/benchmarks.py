@@ -4,6 +4,8 @@ import flask_login
 import flask_wtf
 import wtforms as w
 
+import conbench.util
+
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin
@@ -12,13 +14,19 @@ from ..config import Config
 
 
 class UpdateForm(flask_wtf.FlaskForm):
-    toggle_distribution_change = w.SubmitField(
-        render_kw={
-            "title": 'A distribution change means a sufficiently "different" '
-            "distribution began, such that data from before shouldn't be statistically "
-            "compared to data after."
-        }
+    title = conbench.util.dedent_rejoin(
+        """
+        This applies to the rolling window z-score change detection method. Use
+        this to annotate an expected, significant change of benchmarking
+        results from this point onwards. Specifically, this resets the rolling
+        window mean value calculation ("forget the past, all of it!"). The
+        rolling window standard deviation calculation is not affected. Think:
+        the standard deviation is used to measure spread, and then the current
+        mean is where that spread is centered. More about the rolling window
+        z-score method can be found in the documentation at [TODO].
+        """
     )
+    toggle_distribution_change = w.SubmitField(render_kw={"title": title})
 
 
 class DeleteForm(flask_wtf.FlaskForm):
