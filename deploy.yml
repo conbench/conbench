@@ -28,7 +28,7 @@ spec:
           "--access-logfile=-",
           # Add L specifier to access log, to log request processing duration. Also see
           # https://github.com/conbench/conbench/issues/810
-          "--access-logformat", '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" (%(L)s s',
+          "--access-logformat", '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" (%(L)s s)',
           "--error-logfile=-",
           "--preload"
           ]
