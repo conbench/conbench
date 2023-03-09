@@ -109,5 +109,6 @@ tags = [
     {"name": "Ping", "description": "Monitor status"},
 ]
 
+
 for tag in tags:
     spec.tag(tag)
