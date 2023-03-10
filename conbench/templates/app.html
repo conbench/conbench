@@ -76,11 +76,11 @@
     </div>
 {% endblock %}
 
-
 {% block content %}
-    <div class="container">
-        <br>
-        {% with messages = get_flashed_messages(with_categories=true) %}
+<div class="container">
+    <br>
+    <!-- https://flask.palletsprojects.com/en/2.2.x/patterns/flashing/#flashing-with-categories -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
             {% for category, message in messages %}
@@ -102,7 +102,13 @@
 
         {# application content needs to be provided in the app_content block #}
         {% block app_content %}{% endblock %}
+    <br>
+    <hr>
+    <div style="display:inline-block; float: right; color: #918d8c;">
+        Conbench {{ version_string_footer }} | <a href="/api/docs" target="_blank">api docs</a>
     </div>
+
+</div>
 {% endblock %}
 
 {% block scripts %}
