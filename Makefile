@@ -35,9 +35,10 @@ tests: require-env-ghtoken set-build-info
 	docker compose build app && \
 	docker compose run \
 		-e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage \
+		-e SQLALCHEMY_WARN_20=1 \
 		app \
 		coverage run --source conbench \
-			-m pytest -vv -s --durations=20 conbench/tests/
+			-m pytest -vv -s -W error::DeprecationWarning --durations=20 conbench/tests/
 
 
 # Similar to `make run-app`, but with the `docker-compose.dev.yml` extension
