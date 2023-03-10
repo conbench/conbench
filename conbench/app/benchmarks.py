@@ -16,14 +16,20 @@ from ..config import Config
 class UpdateForm(flask_wtf.FlaskForm):
     title = conbench.util.dedent_rejoin(
         """
-        This applies to the rolling window z-score change detection method. Use
-        this to annotate an expected, significant change of benchmarking
-        results from this point onwards. Specifically, this resets the rolling
-        window mean value calculation ("forget the past, all of it!"). The
-        rolling window standard deviation calculation is not affected. Think:
-        the standard deviation is used to measure spread, and then the current
-        mean is where that spread is centered. More about the rolling window
-        z-score method can be found in the documentation at [TODO].
+        This applies (only) to the rolling window z-score change detection
+        method indicated in the plot above.
+
+        Use this to annotate an expected, significant change of benchmarking
+        results from this point onwards. The annotation is persisted in the
+        Conbench database (but can be removed again by authorized users like
+        yourself).
+
+        Specifically, this resets the rolling window mean value calculation
+        ("forget the past, all of it!"). The rolling window standard deviation
+        calculation is not affected. Think: the standard deviation is used to
+        measure spread, and then the current mean is where that spread is
+        centered. More about the rolling window z-score method can be found in
+        the documentation at [TODO].
         """
     )
     toggle_distribution_change = w.SubmitField(render_kw={"title": title})
