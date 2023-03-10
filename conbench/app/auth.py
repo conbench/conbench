@@ -94,8 +94,10 @@ class Login(AppEndpoint):
             return self.redirect("app.index")
 
         form = self.form()
+
         if form.validate_on_submit():
             response = self.api_post("api.login", form)
+
             if response.status_code == 204:
                 # TODO: remove this last query from frontend
                 user = User.first(email=form.email.data)
@@ -106,6 +108,11 @@ class Login(AppEndpoint):
 
                 return self.redirect("app.index")
             else:
+                log.info(
+                    "login request failed, response details: %s, %s",
+                    response,
+                    response.text,
+                )
                 self.flash("Invalid email or password.", "danger")
 
         return self.page(form)
