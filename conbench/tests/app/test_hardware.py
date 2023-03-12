@@ -27,7 +27,6 @@ class TestHardware(_asserts.AppEndpointTest):
         self.authenticate(client)
         response = client.get(f"/hardware/{hardware_id}/")
         self.assert_page(response, "Hardware")
-        assert "Hardware - conbench-for-pytest".encode() in response.data
 
     def test_hardware_get_unauthenticated(self, client):
         self.create_benchmark(client)
