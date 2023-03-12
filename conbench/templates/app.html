@@ -95,8 +95,10 @@
             {% endfor %}
         {% endif %}
 
-        {# application content needs to be provided in the app_content block #}
-        {% block app_content %}{% endblock %}
+    {% endwith %}
+    {# application content needs to be provided in the app_content block #}
+    {% block app_content %}
+    {% endblock %}
     <br>
     <hr>
     <div style="display:inline-block; float: right; color: #918d8c;">
