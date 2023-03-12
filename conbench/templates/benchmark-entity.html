@@ -252,11 +252,11 @@
 <script type="text/javascript">
   $(document).ready(function ($) {
     $("#delete-form").find("#delete").attr("type", "button");
-    $("#delete-form").find("#delete").attr("data-toggle", "modal");
-    $("#delete-form").find("#delete").attr("data-target", "#confirm-delete");
-    $("#delete-form").find("#delete").attr("data-form-id", "#delete-form");
-    $("#delete-form").find("#delete").attr("data-href", "{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}");
-    $("#delete-form").find("#delete").attr("data-message", "<ul><li>Delete benchmark: <strong>{{ benchmark.id }}</strong></li></ul>");
+    $("#delete-form").find("#delete").attr("data-bs-toggle", "modal");
+    $("#delete-form").find("#delete").attr("data-bs-target", "#confirm-delete");
+    $("#delete-form").find("#delete").attr("data-cbcustom-form-id", "#delete-form");
+    $("#delete-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}");
+    $("#delete-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete benchmark result: <strong>{{ benchmark.id }}</strong></li></ul>");
   });
 
   {% if plot_history %}
