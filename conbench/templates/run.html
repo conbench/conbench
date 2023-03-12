@@ -195,11 +195,11 @@ $(document).ready(function() {
     $('#unit-tooltip').tooltip()
     {% if run_id %}
         $("#run-form").find("#delete").attr("type", "button");
-        $("#run-form").find("#delete").attr("data-toggle", "modal");
-        $("#run-form").find("#delete").attr("data-target", "#confirm-delete");
-        $("#run-form").find("#delete").attr("data-form-id", "#run-form");
-        $("#run-form").find("#delete").attr("data-href", "{{ url_for('app.run', run_id=run_id) }}");
-        $("#run-form").find("#delete").attr("data-message", "<ul><li>Delete run: <strong>{{ run_id }}</strong></li></ul>");
+        $("#run-form").find("#delete").attr("data-bs-toggle", "modal");
+        $("#run-form").find("#delete").attr("data-bs-target", "#confirm-delete");
+        $("#run-form").find("#delete").attr("data-cbcustom-form-id", "#run-form");
+        $("#run-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.run', run_id=run_id) }}");
+        $("#run-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete run: <strong>{{ run_id }}</strong></li></ul>");
     {% endif %}
 });
 
