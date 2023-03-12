@@ -233,10 +233,12 @@
   </div>
 </div>
 
-<div class="row">
-  <div class="col-md-8">
-    {{ wtf.quick_form(delete_form, id="delete-form", button_map={'delete': 'danger'}) }}
-  </div>
+<div class="row mt-5">
+  <br />
+  <form method="post" id="delete-form">
+    {{ delete_form.hidden_tag() }}
+    <input class="btn btn-danger" id="delete" name="delete" type="button" value="Delete benchmark result"></input>
+  </form>
 </div>
 
 
