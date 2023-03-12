@@ -95,6 +95,11 @@ class BenchmarkMixin:
 class RunMixin:
     def get_display_run(self, run_id):
         run, response = self._get_run(run_id)
+
+        if response.status_code == 404:
+            self.flash(f"Run ID unknown: {run_id}", "info")
+            return None
+
         if response.status_code != 200:
             self.flash("Error getting run.")
             return None
