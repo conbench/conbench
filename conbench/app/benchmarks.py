@@ -213,7 +213,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
                     "api.benchmark", benchmark_id=benchmark_id
                 )
                 if delete_response.status_code == 204:
-                    self.flash("Benchmark deleted.")
+                    self.flash(f"Benchmark result {benchmark_id} deleted.", "info")
                     return self.redirect("app.benchmarks")
 
         elif update_form.validate_on_submit():
