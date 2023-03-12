@@ -122,11 +122,15 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% if run_id %}
-            {{ wtf.quick_form(form, id="run-form", button_map={'delete': 'primary'}) }}
-        {%  endif %}
     </div>
 
+    {% if run %}
+    <br />
+    <form method="post" id="run-form">
+      {{ form.hidden_tag() }}
+      <input class="btn btn-danger" id="delete" name="delete" type="button" value="Delete Run"></input>
+    </form>
+    <br />
     <div class="col-md-12">
         <ul class="list-group">
             <li class="list-group-item active">Run</li>
