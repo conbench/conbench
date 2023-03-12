@@ -166,7 +166,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         if benchmark is None:
             return self.redirect("app.index")
 
-        update_button_color = "default"
+        update_button_color = "secondary"
         if flask_login.current_user.is_authenticated:
             if benchmark["change_annotations"].get("begins_distribution_change", False):
                 update_form.toggle_distribution_change.label.text = (
