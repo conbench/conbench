@@ -89,12 +89,8 @@
         {% if messages %}
             <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
             {% for category, message in messages %}
-            <div align="center">
-                <span class="flash-message">
-                    <span class="glyphicon glyphicon-flash submenu"></span>
-                    {{ message }}
-                </span>
-                <br>
+            <div class="alert alert-{{ category }}" role="alert">
+                <i class="bi bi-lightning"></i> {{ message }}
             </div>
             {% endfor %}
         {% endif %}
