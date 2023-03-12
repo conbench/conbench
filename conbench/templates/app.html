@@ -59,26 +59,26 @@
         </div>
     </nav>
 
-    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title"><span class="glyphicon glyphicon-trash submenu"></span>&nbsp; &nbsp; Confirm Delete</h4>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure?</p>
-                    <p id="confirm-delete-message"></p>
-                    <input id="delete-form-id" type="hidden" value="">
-                    <input id="delete-form-action" type="hidden" value="">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button id="confirm-delete-button" type="button" class="btn btn-primary" data-dismiss="modal">Delete</button>
-                </div>
+<!-- modal hidden by default, used for confirming deletion -->
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title"><i class="bi bi-trash3-fill"></i></h4>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure?</p>
+                <p id="confirm-delete-message"></p>
+                <input id="delete-form-id" type="hidden" value="">
+                <input id="delete-form-action" type="hidden" value="">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button id="confirm-delete-button" type="button" class="btn btn-danger" data-dismiss="modal">Delete</button>
             </div>
         </div>
     </div>
+</div>
 {% endblock %}
 
 {% block content %}
