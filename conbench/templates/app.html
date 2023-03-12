@@ -265,9 +265,11 @@ function column_search_implementation(data_table_id) {
 }
 
 $("#confirm-delete").on("show.bs.modal", function(e) {
-    $(this).find("#confirm-delete-message").html($(e.relatedTarget).data("message"));
-    $(this).find("#delete-form-id").attr("value", $(e.relatedTarget).data("form-id"));
-    $(this).find("#delete-form-action").attr("value", $(e.relatedTarget).data("href"));
+    // using cbcustom- prefix to indicate that this is introduced and used by
+    // conbench. for example, bootstrap 5 uses the bs- prefix
+    $(this).find("#confirm-delete-message").html($(e.relatedTarget).data("cbcustom-message"));
+    $(this).find("#delete-form-id").attr("value", $(e.relatedTarget).data("cbcustom-form-id"));
+    $(this).find("#delete-form-action").attr("value", $(e.relatedTarget).data("cbcustom-href"));
 });
 
 $("#confirm-delete-button").click(function(e){
