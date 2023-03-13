@@ -27,4 +27,4 @@ python-dotenv
 PyYAML
 requests
 tenacity
-SQLAlchemy<2
+SQLAlchemy>=2
