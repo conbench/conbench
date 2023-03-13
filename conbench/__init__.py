@@ -88,6 +88,11 @@ def _init_application(application):
     from .app import app
     from .config import Config
     from .db import configure_engine, create_all
+
+    # Note(JP): maybe this bootstrap extension doesn't do too much work for us.
+    # We use `quick_form()` here and there, and that is tied to bootstrap 3.
+    # Looks like we want to do that UI work 'manually' (it is not a lot of
+    # work), and can then remove this extension.
     from .extensions import bootstrap, login_manager
 
     bootstrap.init_app(application)

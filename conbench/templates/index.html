@@ -102,21 +102,13 @@
     </div>
 </div>
 
-<div class="row">
-  <div class="col-md-12">
-    <br>
-    <div align="right" style="display:inline-block; float: right; color: #C0C0C0;">
-       Conbench {{ version_string_footer }}
-    </div>
-  </div>
-</div>
 
 {% endblock %}
 
 
 {% block scripts %}
 {{super()}}
-<script type="text/javascript">
+<script>
   var table = $('#runs').DataTable({
       "order": [[0, 'desc']],
       // Make "Commit" (commit hash) column (4) more narrow, hide 'sorting'
