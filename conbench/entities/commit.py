@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 import flask as f
 import requests
 import sqlalchemy as s
-from sqlalchemy.orm import Query
+from sqlalchemy.orm import Mapped, Query
 
 from conbench import metrics, util
 
@@ -33,20 +33,20 @@ class CantFindAncestorCommitsError(Exception):
 
 class Commit(Base, EntityMixin):
     __tablename__ = "commit"
-    id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
-    sha = NotNull(s.String(50))
-    branch = Nullable(s.String(510))
-    fork_point_sha = Nullable(s.String(50))
-    parent = Nullable(s.String(50))
-    repository = NotNull(s.String(100))
-    message = NotNull(s.String(250))
-    author_name = NotNull(s.String(100))
-    author_login = Nullable(s.String(50))
-    author_avatar = Nullable(s.String(100))
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    sha: Mapped[str] = NotNull(s.String(50))
+    branch: Mapped[Optional[str]] = Nullable(s.String(510))
+    fork_point_sha: Mapped[Optional[str]] = Nullable(s.String(50))
+    parent: Mapped[Optional[str]] = Nullable(s.String(50))
+    repository: Mapped[str] = NotNull(s.String(100))
+    message: Mapped[str] = NotNull(s.String(250))
+    author_name: Mapped[str] = NotNull(s.String(100))
+    author_login: Mapped[Optional[str]] = Nullable(s.String(50))
+    author_avatar: Mapped[Optional[str]] = Nullable(s.String(100))
     # Note(JP): tz-naive datetime, git commit author date, in UTC.
     # Edit: adding the type Optional[datetime] is not sufficient because
     # further down we use `.label()` which seems to be sqlalchemy-specific
-    timestamp = Nullable(s.DateTime(timezone=False))
+    timestamp: Mapped[Optional[datetime]] = Nullable(s.DateTime(timezone=False))
 
     def get_parent_commit(self):
         return Commit.first(sha=self.parent, repository=self.repository)
@@ -120,7 +120,7 @@ class Commit(Base, EntityMixin):
         query = Session.query(
             Commit.id.label("ancestor_id"),
             Commit.timestamp.label("ancestor_timestamp"),
-            s.sql.expression.literal(True).label("on_default_branch"),
+            s.sql.expression.literal(True, s.Boolean).label("on_default_branch"),
             s.func.concat("1_", Commit.timestamp).label("commit_order"),
         ).filter(
             Commit.repository == self.repository,
@@ -133,7 +133,7 @@ class Commit(Base, EntityMixin):
             branch_query = Session.query(
                 Commit.id.label("ancestor_id"),
                 Commit.timestamp.label("ancestor_timestamp"),
-                s.sql.expression.literal(False).label("on_default_branch"),
+                s.sql.expression.literal(False, s.Boolean).label("on_default_branch"),
                 s.func.concat("2_", Commit.timestamp).label("commit_order"),
             ).filter(
                 Commit.repository == self.repository,
@@ -317,6 +317,9 @@ def backfill_default_branch_commits(repourl: str, new_commit: Commit) -> None:
     This may raise exceptions as of HTTP request/response cycle errors during
     GitHub HTTP API interaction.
     """
+    if new_commit.timestamp is None:
+        # This would be a no-op
+        return
 
     github = GitHub()
 
@@ -339,6 +342,9 @@ def backfill_default_branch_commits(repourl: str, new_commit: Commit) -> None:
 
     if last_tracked_commit:
         since = last_tracked_commit[0].timestamp
+        if since is None:
+            # This would be a no-op
+            return
 
     elif Config.TESTING and "apache/arrow" in repourl:
         # Also see https://github.com/conbench/conbench/issues/637.

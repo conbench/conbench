@@ -3,6 +3,7 @@ import flask_login
 import marshmallow
 import sqlalchemy as s
 import werkzeug.security
+from sqlalchemy.orm import Mapped
 
 from ..entities._entity import (
     Base,
@@ -21,10 +22,10 @@ def load_user(user_id):
 
 class User(flask_login.UserMixin, Base, EntityMixin):
     __tablename__ = "user"
-    id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
-    email = NotNull(s.String(120), index=True, unique=True)
-    name = NotNull(s.String(120))
-    password = NotNull(s.String(128))
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    email: Mapped[str] = NotNull(s.String(120), index=True, unique=True)
+    name: Mapped[str] = NotNull(s.String(120))
+    password: Mapped[str] = NotNull(s.String(128))
 
     def __repr__(self):
         return f"<User {self.email}>"

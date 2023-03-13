@@ -6,6 +6,7 @@ import marshmallow
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm import Mapped
 
 from ..entities._entity import (
     Base,
@@ -19,10 +20,10 @@ from ..entities._entity import (
 
 class Hardware(Base, EntityMixin):
     __tablename__ = "hardware"
-    id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
-    name = NotNull(s.Text)
-    type = NotNull(s.String(50))
-    hash = NotNull(s.String(1000))
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    name: Mapped[str] = NotNull(s.Text)
+    type: Mapped[str] = NotNull(s.String(50))
+    hash: Mapped[str] = NotNull(s.String(1000))
 
     __mapper_args__ = {"polymorphic_on": type, "polymorphic_identity": "hardware"}
 

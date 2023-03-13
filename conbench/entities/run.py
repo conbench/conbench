@@ -1,13 +1,13 @@
 import logging
 import time
-from datetime import timezone
+from datetime import datetime, timezone
 from typing import Optional
 
 import flask as f
 import marshmallow
 import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 
 import conbench.util
 
@@ -35,9 +35,9 @@ log = logging.getLogger(__name__)
 
 class Run(Base, EntityMixin):
     __tablename__ = "run"
-    id = NotNull(s.String(50), primary_key=True)
-    name = Nullable(s.String(250))
-    reason = Nullable(s.String(250))
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True)
+    name: Mapped[Optional[str]] = Nullable(s.String(250))
+    reason: Mapped[Optional[str]] = Nullable(s.String(250))
     # `timestamp`  is never set by API clients, i.e. the
     # `server_default=s.sql.func.now()` is always taking effect. That also
     # means that this property reflects the point in time of DB insertion (that
@@ -48,17 +48,21 @@ class Run(Base, EntityMixin):
     # timestamp on a DB server that does not have its system time in UTC? That
     # should not happen, as is hopefully confirmed by the test
     # `test_auto_generated_run_timestamp_value()`.
-    timestamp = NotNull(s.DateTime(timezone=False), server_default=s.sql.func.now())
+    timestamp: Mapped[datetime] = NotNull(
+        s.DateTime(timezone=False), server_default=s.sql.func.now()
+    )
     # tz-naive timestamp expected to refer to UTC time.
-    finished_timestamp = Nullable(s.DateTime(timezone=False))
-    info = Nullable(postgresql.JSONB)
-    error_info = Nullable(postgresql.JSONB)
-    error_type = Nullable(s.String(250))
-    commit_id = NotNull(s.String(50), s.ForeignKey("commit.id"))
-    commit = relationship("Commit", lazy="joined")
-    has_errors = NotNull(s.Boolean, default=False)
-    hardware_id = NotNull(s.String(50), s.ForeignKey("hardware.id"))
-    hardware = relationship("Hardware", lazy="joined")
+    finished_timestamp: Mapped[Optional[datetime]] = Nullable(
+        s.DateTime(timezone=False)
+    )
+    info: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
+    error_info: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
+    error_type: Mapped[Optional[str]] = Nullable(s.String(250))
+    commit_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("commit.id"))
+    commit: Mapped[Commit] = relationship("Commit", lazy="joined")
+    has_errors: Mapped[bool] = NotNull(s.Boolean, default=False)
+    hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
+    hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
 
     @staticmethod
     def create(data):
