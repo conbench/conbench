@@ -66,17 +66,11 @@ class TestBenchmarkRun:
         monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER")
         monkeypatch.delenv("CONBENCH_PROJECT_COMMIT")
 
-        with pytest.warns(
-            UserWarning,
-            match="Both CONBENCH_PROJECT_REPOSITORY and CONBENCH_PROJECT_COMMIT must be set if `github` is not specified",
+        with pytest.raises(
+            ValueError,
+            match="Run not publishable! `github.repository` and `github.commit` must be populated",
         ):
-            BenchmarkRun()
-
-            with pytest.raises(
-                ValueError,
-                match="Run not publishable! `github.repository` and `github.commit` must be populated",
-            ):
-                BenchmarkRun().to_publishable_dict()
+            BenchmarkRun().to_publishable_dict()
 
     def test_host_detection(self, monkeypatch):
         machine_info_name = "fake-computer-name"
@@ -92,11 +86,7 @@ class TestBenchmarkRun:
         monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER", raising=False)
         monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
 
-        with pytest.warns(
-            UserWarning,
-            match="Both CONBENCH_PROJECT_REPOSITORY and CONBENCH_PROJECT_COMMIT must be set if `github` is not specified",
-        ):
-            run = BenchmarkRun(reason=run_json["reason"])
+        run = BenchmarkRun(reason=run_json["reason"])
 
         assert run.github == {"commit": None, "repository": None, "pr_number": None}
         assert run.name is None
