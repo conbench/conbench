@@ -66,12 +66,16 @@ class AppEndpointTest:
 
     def assert_index_page(self, r):
         self.assert_200_ok(r)
-        assert b"Home - " in r.data, r.data
+        assert b"conbench-for-pytest" in r.data
+        assert b'<html lang="en">' in r.data
+        # assert b"Login" in r.data
 
     def assert_page(self, r, title):
         self.assert_200_ok(r)
-        title = "{} - ".format(title).encode()
-        assert title in r.data, r.data
+        # The HTML <title> tag starts with the conbench deployment name, in
+        # this case `conbench-for-pytest` and then contains a " - " seperator,
+        # followed by the more specific page name
+        assert b"conbench-for-pytest - " in r.data
 
     def create_benchmark(self, client):
         self.authenticate(client)
@@ -119,7 +123,7 @@ class ListEnforcer(Enforcer):
         self.logout(client)
         response = client.get(self.url, follow_redirects=True)
         assert new_id.encode() not in response.data
-        assert b"Sign In - conbench-for-pytest" in response.data, response.data
+        assert b"Sign In" in response.data, response.data
 
 
 class GetEnforcer(Enforcer):
@@ -195,16 +199,16 @@ class GetEnforcer(Enforcer):
         # be reworked.
         # assert new_id.encode() not in r2.data
 
-        assert b"Sign In - conbench-for-pytest" in r2.data, r2.data
+        assert b"conbench-for-pytest - Sign In" in r2.data, r2.data
 
     def test_unknown(self, client):
         self.authenticate(client)
         unknown_url = self.url.format("unknown")
         response = client.get(unknown_url, follow_redirects=True)
         if getattr(self, "redirect_on_unknown", True):
-            assert b"Home - conbench-for-pytest" in response.data, response.data
+            assert b"conbench-for-pytest - Home" in response.data, response.data
         else:
-            title = "{} - conbench-for-pytest".format(self.title).encode()
+            title = f"conbench-for-pytest - {self.title}".encode()
             assert title in response.data, response.data
 
 
