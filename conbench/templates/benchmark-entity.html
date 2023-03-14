@@ -47,7 +47,7 @@
 <div class="row">
   <div class="col-md-6">
     <ul class="list-group">
-      <li class="list-group-item active">Benchmark</li>
+      <li class="list-group-item list-group-item-primary">Benchmark</li>
       <li class="list-group-item" style="overflow-y: auto;">
         <b>benchmark</b>
         <div class="ellipsis-500" align="right" style="display:inline-block; float: right;">
@@ -84,7 +84,7 @@
       </li>
 
       {% if benchmark.error %}
-      <li class="list-group-item active">Error</li>
+      <li class="list-group-item list-group-item-primary">Error</li>
       <li class="list-group-item" style="overflow-y: auto;">
         <b>timestamp</b>
         <div align="right" style="display:inline-block; float: right;">
@@ -101,7 +101,7 @@
       {% endfor %}
       {% endif %}
       {% if benchmark.stats %}
-      <li class="list-group-item active">Result</li>
+      <li class="list-group-item list-group-item-primary">Result</li>
       <li class="list-group-item" style="overflow-y: auto;">
         <b>timestamp (start time)</b>
         <div align="right" style="display:inline-block; float: right;">
@@ -118,7 +118,7 @@
       {% endfor %}
       {% endif %}
 
-      <li class="list-group-item active">Tags</li>
+      <li class="list-group-item list-group-item-primary">Tags</li>
       {% for k,v in benchmark.tags.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
@@ -128,7 +128,7 @@
       </li>
       {% endfor %}
       {% if benchmark.optional_benchmark_info %}
-      <li class="list-group-item active">Additional Benchmark Details</li>
+      <li class="list-group-item list-group-item-primary">Additional Benchmark Details</li>
       {% for k,v in benchmark.optional_benchmark_info.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
@@ -139,7 +139,7 @@
       {% endfor %}
       {% endif %}
       {% if benchmark.validation %}
-      <li class="list-group-item active">Validation</li>
+      <li class="list-group-item list-group-item-primary">Validation</li>
       {% for k,v in benchmark.validation.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
@@ -155,7 +155,7 @@
   <div class="col-md-6">
     <ul class="list-group">
       {% if run and run.commit.url %}
-      <li class="list-group-item active">Commit</li>
+      <li class="list-group-item list-group-item-primary">Commit</li>
       <li class="list-group-item" style="overflow-y: auto;">
         <b>commit</b>
         <div class="ellipsis-500" align="right" style="display:inline-block; float: right;">
@@ -205,14 +205,14 @@
       </li>
       {% endif %}
       {% endif %}
-      <li class="list-group-item active">Hardware</li>
+      <li class="list-group-item list-group-item-primary">Hardware</li>
       {% for k,v in run.hardware.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
         <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
       </li>
       {% endfor %}
-      <li class="list-group-item active">Context</li>
+      <li class="list-group-item list-group-item-primary">Context</li>
       {% for k,v in benchmark.context.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
@@ -220,7 +220,7 @@
       </li>
       {% endfor %}
       {% if benchmark.info and benchmark.info|length > 1 %}
-      <li class="list-group-item active">Additional Context Details</li>
+      <li class="list-group-item list-group-item-primary">Additional Context Details</li>
       {% for k,v in benchmark.info.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
