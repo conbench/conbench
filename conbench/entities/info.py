@@ -1,6 +1,7 @@
 import flask as f
 import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm import Mapped
 
 from ..entities._entity import (
     Base,
@@ -13,8 +14,8 @@ from ..entities._entity import (
 
 class Info(Base, EntityMixin):
     __tablename__ = "info"
-    id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
-    tags = NotNull(postgresql.JSONB)
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    tags: Mapped[dict] = NotNull(postgresql.JSONB)
 
 
 s.Index("info_index", Info.tags, unique=True)

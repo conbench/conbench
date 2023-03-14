@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install linting dependencies
-        run: pip install -r requirements-dev.txt
+        run: pip install -r requirements-dev.txt -r requirements-webapp.txt
       - name: lint
         run: make lint-ci
 

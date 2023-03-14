@@ -4,7 +4,7 @@ import decimal
 import logging
 import math
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple, Union
+from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -109,8 +109,8 @@ class HistorySample:
     # also there is a lack of spec
     mean: Optional[float]
     # math.nan is allowed for representing a failed iteration.
-    data: list[float]
-    times: list[float]
+    data: List[float]
+    times: List[float]
     unit: str
     hardware_hash: str
     repository: str
@@ -147,7 +147,7 @@ def get_history_for_benchmark(benchmark_result_id: str):
 
 def get_history_for_cchr(
     case_id: str, context_id: str, hardware_hash: str, repo: str
-) -> list[HistorySample]:
+) -> List[HistorySample]:
     """
     Given a case/context/hardware/repo, return all non-errored BenchmarkResults
     (past, present, and future) on the default branch that match those
@@ -196,7 +196,7 @@ def get_history_for_cchr(
 
     # return list(history_df.itertuples())
 
-    samples: list[HistorySample] = []
+    samples: List[HistorySample] = []
     # Iterate over rows of pandas dataframe; get each row as namedtuple.
     for sample in history_df.itertuples():
         # Note(JP): the Commit.timestamp is nullable, i.e. not all Commit
@@ -269,7 +269,7 @@ def set_z_scores(benchmark_results: List[BenchmarkResult]):
     """
     # For most invocations of this function, there are very few unique run_ids among the
     # benchmark_results. Sort them by run_id and run aoptimized query for each group.
-    sorted_by_run_id = defaultdict(list)
+    sorted_by_run_id: DefaultDict[str, List[BenchmarkResult]] = defaultdict(list)
     for benchmark_result in benchmark_results:
         sorted_by_run_id[benchmark_result.run_id].append(benchmark_result)
 
@@ -551,7 +551,7 @@ def _add_rolling_stats_columns_to_df(
 
 def _calculate_z_score(
     data_point: Optional[float],
-    unit: str,
+    unit: Optional[str],
     dist_mean: Optional[float],
     dist_stddev: Optional[float],
 ) -> Optional[float]:

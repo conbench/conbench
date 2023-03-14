@@ -1,5 +1,6 @@
 import math
-from datetime import timezone
+from datetime import datetime, timezone
+from typing import List, Optional
 
 import flask as f
 import marshmallow
@@ -7,7 +8,7 @@ import numpy as np
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 
 import conbench.util
 
@@ -30,43 +31,47 @@ from ..entities.run import GitHubCreate, Run
 
 class BenchmarkResult(Base, EntityMixin):
     __tablename__ = "benchmark_result"
-    id = NotNull(s.String(50), primary_key=True, default=generate_uuid)
-    case_id = NotNull(s.String(50), s.ForeignKey("case.id"))
-    info_id = NotNull(s.String(50), s.ForeignKey("info.id"))
-    context_id = NotNull(s.String(50), s.ForeignKey("context.id"))
-    run_id = NotNull(s.Text, s.ForeignKey("run.id"))
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    case_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("case.id"))
+    info_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("info.id"))
+    context_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("context.id"))
+    run_id: Mapped[str] = NotNull(s.Text, s.ForeignKey("run.id"))
 
     # These can be emtpy lists. An item in the list is of type float, which
     # includes `math.nan` as valid value.
-    data: list[float] = Nullable(postgresql.ARRAY(s.Numeric), default=[])
-    times: list[float] = Nullable(postgresql.ARRAY(s.Numeric), default=[])
+    data: Mapped[Optional[List[float]]] = Nullable(
+        postgresql.ARRAY(s.Numeric), default=[]
+    )
+    times: Mapped[Optional[List[float]]] = Nullable(
+        postgresql.ARRAY(s.Numeric), default=[]
+    )
 
-    case = relationship("Case", lazy="joined")
+    case: Mapped[Case] = relationship("Case", lazy="joined")
     # optional info at the benchmark level (i.e. information that isn't a tag that should create a separate case, but information that's good to hold around like links to logs)
-    optional_benchmark_info = Nullable(postgresql.JSONB)
+    optional_benchmark_info: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
     # this info should probably be called something like context-info it's details about the context that are optional | we believe won't impact performance
-    info = relationship("Info", lazy="joined")
-    context = relationship("Context", lazy="joined")
-    run = relationship("Run", lazy="select")
-    unit = Nullable(s.Text)
-    time_unit = Nullable(s.Text)
-    batch_id = Nullable(s.Text)
+    info: Mapped[Info] = relationship("Info", lazy="joined")
+    context: Mapped[Context] = relationship("Context", lazy="joined")
+    run: Mapped[Run] = relationship("Run", lazy="select")
+    unit: Mapped[Optional[str]] = Nullable(s.Text)
+    time_unit: Mapped[Optional[str]] = Nullable(s.Text)
+    batch_id: Mapped[Optional[str]] = Nullable(s.Text)
     # Do not store timezone information in the DB. Instead, follow timezone
     # convention: the application code must make sure that what we store is the
     # user-given time in UTC.
-    timestamp = NotNull(s.DateTime(timezone=False))
-    iterations = Nullable(s.Integer)
-    min = Nullable(s.Numeric, check("min>=0"))
-    max = Nullable(s.Numeric, check("max>=0"))
-    mean = Nullable(s.Numeric, check("mean>=0"))
-    median = Nullable(s.Numeric, check("median>=0"))
-    stdev = Nullable(s.Numeric, check("stdev>=0"))
-    q1 = Nullable(s.Numeric, check("q1>=0"))
-    q3 = Nullable(s.Numeric, check("q3>=0"))
-    iqr = Nullable(s.Numeric, check("iqr>=0"))
-    error = Nullable(postgresql.JSONB)
-    validation = Nullable(postgresql.JSONB)
-    change_annotations = Nullable(postgresql.JSONB)
+    timestamp: Mapped[datetime] = NotNull(s.DateTime(timezone=False))
+    iterations: Mapped[Optional[int]] = Nullable(s.Integer)
+    min: Mapped[Optional[float]] = Nullable(s.Numeric, check("min>=0"))
+    max: Mapped[Optional[float]] = Nullable(s.Numeric, check("max>=0"))
+    mean: Mapped[Optional[float]] = Nullable(s.Numeric, check("mean>=0"))
+    median: Mapped[Optional[float]] = Nullable(s.Numeric, check("median>=0"))
+    stdev: Mapped[Optional[float]] = Nullable(s.Numeric, check("stdev>=0"))
+    q1: Mapped[Optional[float]] = Nullable(s.Numeric, check("q1>=0"))
+    q3: Mapped[Optional[float]] = Nullable(s.Numeric, check("q3>=0"))
+    iqr: Mapped[Optional[float]] = Nullable(s.Numeric, check("iqr>=0"))
+    error: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
+    validation: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
+    change_annotations: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
 
     @staticmethod
     # We should work towards having a precise type annotation for `data`. It's

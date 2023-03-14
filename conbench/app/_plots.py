@@ -2,7 +2,7 @@ import collections
 import copy
 import json
 import logging
-from typing import List, Optional, no_type_check
+from typing import List, Optional, Tuple, no_type_check
 
 import bokeh.events
 import bokeh.models
@@ -152,7 +152,7 @@ def simple_bar_plot(benchmarks, height=400, width=400, vbar_width=0.7):
 
 # Using `Optional[float]` here only because of BenchmarkResult.mean being
 # nullable as of today.
-def _should_format(floats: list[Optional[float]], unit):
+def _should_format(floats: List[Optional[float]], unit):
     unit_fmt = formatter_for_unit(unit)
 
     units_formatted = set()
@@ -182,7 +182,7 @@ def _insert_nans(some_list: list, indexes: List[int]):
 
 @no_type_check
 def _source(
-    samples: list[HistorySample],
+    samples: List[HistorySample],
     unit,
     formatted=False,
     distribution_mean=False,
@@ -299,7 +299,7 @@ def _source(
     return bokeh.models.ColumnDataSource(data=dsdict)
 
 
-def _inspect_for_multisample(items: list[HistorySample]) -> tuple[bool, Optional[int]]:
+def _inspect_for_multisample(items: List[HistorySample]) -> Tuple[bool, Optional[int]]:
     """
     `items`: list of benchmark results as encoded by the history variant of the
     `_Serializer(EntitySerializer)`.
@@ -584,7 +584,7 @@ def time_series_plot(
         toolbar_location="right",
         x_range=(t_start, t_end),
     )
-    p.toolbar.logo = None
+    p.toolbar.logo = None  # type: ignore[attr-defined]
 
     # TapTool is not responding to each click event, but but only triggers when
     # clicking a glyph:
@@ -688,7 +688,7 @@ def time_series_plot(
     dist_change_in_legend = False
     for ix in dist_change_indexes:
         p.add_layout(
-            bokeh.models.Span(
+            bokeh.models.Span(  # type: ignore[attr-defined]
                 location=util.tznaive_iso8601_to_tzaware_dt(
                     # transforming from datetime to string back to datetime is
                     # weird; done as part of refactoring to not change too much

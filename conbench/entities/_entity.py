@@ -3,16 +3,16 @@ import uuid
 from typing import List
 
 import flask as f
-from sqlalchemy import Column, distinct
+from sqlalchemy import distinct
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, mapped_column
 from sqlalchemy.orm.exc import NoResultFound
 
 from ..db import Session
 
 Base = declarative_base()
-NotNull = functools.partial(Column, nullable=False)
-Nullable = functools.partial(Column, nullable=True)
+NotNull = functools.partial(mapped_column, nullable=False)
+Nullable = functools.partial(mapped_column, nullable=True)
 
 
 class NotFound(NoResultFound):
