@@ -108,7 +108,7 @@ def generate_benchmarks_data(
         fields_set = {
             f"{benchmark_language}_specific_{key}_field_1": "value-1",
             f"{benchmark_language}_specific_{key}_field_2": f"{benchmark_language}-{key}-value-2",
-            f"{key}_field_3": f"{benchmark_language}-{key}-value-2",
+            f"{key}_field_3": f"{benchmark_language}-{key}-value-3",
             f"{key}_field_4": None if benchmark_language == "Python" else "value-4",
         }
         data[key].update(fields_set)
@@ -427,7 +427,7 @@ def generate_synthetic_benchmark_history():
         for c in reversed(ARROW_COMMIT_HASH_LINES_50.splitlines())
         if c.strip()
     ]
-    benchmark_name = "dummy-bench"
+    benchmark_name = "dummybenchname"
 
     distr_mean = 20.0
     # `lower_bound` is to simulate the real-world effect of there being a
