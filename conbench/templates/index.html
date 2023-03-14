@@ -107,10 +107,13 @@
 <script>
   var table = $('#runs').DataTable({
       // the default default seems to be the first item in lengthMenu.
-      "lengthMenu": [ 5, 15, 50, 75, 100 ],
+      "lengthMenu": [ 5, 10, 50, 75, 100 ],
       // but when pageLength is also set, then _this_ is the default.
-      "pageLength": 15,
+      "pageLength": 10,
       "order": [[0, 'desc']],
+      // https://datatables.net/reference/option/dom
+      // put `l` to the bottom
+      "dom": "frtipl",
       //"lengthMenu": [ 20, 25, 50, 75, 100 ],
       // Make "Commit" (commit hash) column (4) more narrow, hide 'sorting'
       // toggle. Sorting by commit hash is not needed, in particular because
