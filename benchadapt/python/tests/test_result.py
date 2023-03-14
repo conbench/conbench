@@ -94,26 +94,16 @@ class TestBenchmarkResult:
 
         with pytest.warns(
             UserWarning,
-            match="Both CONBENCH_PROJECT_REPOSITORY and CONBENCH_PROJECT_COMMIT must be set if `github` is not specified",
+            match="Result not publishable! `github.repository` and `github.commit` must be populated",
         ):
-            BenchmarkResult()
-
-            with pytest.warns(
-                UserWarning,
-                match="Result not publishable! `github.repository` and `github.commit` must be populated",
-            ):
-                BenchmarkResult().to_publishable_dict()
+            BenchmarkResult().to_publishable_dict()
 
     def test_run_name_defaulting(self, monkeypatch):
         monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY", raising=False)
         monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER", raising=False)
         monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
 
-        with pytest.warns(
-            UserWarning,
-            match="Both CONBENCH_PROJECT_REPOSITORY and CONBENCH_PROJECT_COMMIT must be set if `github` is not specified",
-        ):
-            res = BenchmarkResult(run_reason=res_json["run_reason"])
+        res = BenchmarkResult(run_reason=res_json["run_reason"])
 
         assert res.github == {"commit": None, "repository": None, "pr_number": None}
         assert res.run_name is None
