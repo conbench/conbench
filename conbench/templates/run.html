@@ -2,21 +2,21 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item active">Run</li>
-        {% if run_id %}
-        <li class="breadcrumb-item active" aria-current="page">{{ run_id }}</li>
-        {% endif %}
-        {% if compare_runs_url %}
-        <span align="right" style="display:inline-block; float: right;">
-          <a href="{{ compare_runs_url }}">compare <span class="glyphicon glyphicon-arrow-right"></span></a>
-        </span>
-        {% endif %}
-      </ol>
-    </nav>
-
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item active">Run</li>
+    {% if run_id %}
+    <li class="breadcrumb-item active" aria-current="page">{{ run_id }}</li>
     {% endif %}
+  </ol>
+</nav>
+
+{% if compare_runs_url %}
+<p class="fs-5">
+  <i class="bi bi-file-diff"></i> <a href="{{ compare_runs_url }}">compare to baseline</a>
+</p>
+
+{% endif %}
 
 
 {% if plot_history %}
