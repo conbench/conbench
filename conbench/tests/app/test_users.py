@@ -49,7 +49,7 @@ class TestUser(_asserts.AppEndpointTest):
         }
         response = client.post(f"/users/{other.id}/", data=data, follow_redirects=True)
         self.assert_page(response, "User")
-        assert b"User updated." in response.data
+        assert b"User updated" in response.data
         assert b'value="New Name"' in response.data
 
     def test_user_update_unauthenticated(self, client):
@@ -86,7 +86,7 @@ class TestUser(_asserts.AppEndpointTest):
         data = {"delete": ["Delete"], "csrf_token": self.get_csrf_token(response)}
         response = client.post(f"/users/{other.id}/", data=data, follow_redirects=True)
         self.assert_page(response, "Users")
-        assert b"User deleted." in response.data
+        assert b"User deleted" in response.data
 
         # cannot get user after
         response = client.get(f"/users/{other.id}/", follow_redirects=True)
@@ -135,7 +135,7 @@ class TestUserCreate(_asserts.AppEndpointTest):
         }
         response = client.post("/users/create/", data=data, follow_redirects=True)
         self.assert_page(response, "Users")
-        assert b"User created." in response.data
+        assert b"User created" in response.data
 
     def test_user_create_post_unauthenticated(self, client):
         response = client.post("/users/create/", data={}, follow_redirects=True)
