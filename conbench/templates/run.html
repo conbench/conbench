@@ -16,19 +16,6 @@
       </ol>
     </nav>
 
-    {% if run %}
-      {% if run.commit.display_message %}
-    <div class="row">
-      <div class="col-md-12">
-        <ul class="list-group">
-          <li class="list-group-item" align="right" style="border-style:none">
-          Commit:
-          <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
-          </li>
-         </ul>
-      </div>
-    </div>
-      {% endif %}
     {% endif %}
 
 
@@ -135,6 +122,12 @@
     <div class="col-md-12">
         <ul class="list-group">
             <li class="list-group-item list-group-item-secondary">Run details:</li>
+
+            <li class="list-group-item">
+              Commit:
+              <div align="right" style="display:inline-block; float: right;"><a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a></div>
+            </li>
+
             <li class="list-group-item" style="overflow-y: auto;">
                 Timestamp:
                 <div align="right" style="display:inline-block; float: right;">{{ run.timestamp }}</div>
