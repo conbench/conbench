@@ -95,6 +95,11 @@ class BenchmarkMixin:
 class RunMixin:
     def get_display_run(self, run_id):
         run, response = self._get_run(run_id)
+
+        if response.status_code == 404:
+            self.flash(f"Run ID unknown: {run_id}", "info")
+            return None
+
         if response.status_code != 200:
             self.flash("Error getting run.")
             return None
@@ -126,17 +131,39 @@ class RunMixin:
 
         # Note(JP): `run["commit"]["timestamp"]` can be `None`, see
         # https://github.com/conbench/conbench/pull/651
+        # Does run["commit"] every result in KeyError?
         self._display_time(run["commit"], "timestamp")
         repository = run["commit"]["repository"]
         repository_name = repository
+
         if "github.com/" in repository:
             repository_name = repository.split("github.com/")[1]
+
         run["display_name"] = ""
         if run["name"]:
             run["display_name"] = run["name"].split(":", 1)[0]
+
         run["commit"]["display_repository"] = repository_name
+
+        # Note(JP): does run["commit"]["message"] ever result in KeyError?
+        # I think `display_message()` may be thought of constructing the text
+        # for a URL. But.... shrug. This needs consolidation.
         commit_message = display_message(run["commit"]["message"])
+
+        # Note(JP): run.commit.url and run.commit.display_message seem to be
+        # consumed in the HTML template. Here I am a little lost about the
+        # guarantees -- are they always available? We need to resolve this with
+        # proper type annotations and schemata. Until then, do poor-man's
+        # validation to prevent AttributeError and KeyError.
+        # display_message really seems to be name of the link
         run["commit"]["display_message"] = commit_message
+        if not commit_message:  # None or empty string
+            if run["commit"].get("url"):  # be real conservative
+                run["commit"]["display_message"] = run["commit"].get("url")
+            else:
+                # let the template consume these two keys.
+                run["commit"]["url"] = "#"
+                run["commit"]["display_message"] = "not commit info"
 
     def _display_time(self, obj, field):
         timestring = obj[field]
@@ -166,7 +193,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         if benchmark is None:
             return self.redirect("app.index")
 
-        update_button_color = "default"
+        update_button_color = "secondary"
         if flask_login.current_user.is_authenticated:
             if benchmark["change_annotations"].get("begins_distribution_change", False):
                 update_form.toggle_distribution_change.label.text = (
@@ -213,7 +240,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
                     "api.benchmark", benchmark_id=benchmark_id
                 )
                 if delete_response.status_code == 204:
-                    self.flash("Benchmark deleted.")
+                    self.flash(f"Benchmark result {benchmark_id} deleted.", "info")
                     return self.redirect("app.benchmarks")
 
         elif update_form.validate_on_submit():

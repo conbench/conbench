@@ -1,3 +1,5 @@
+import re
+
 from ...tests.app import _asserts
 
 
@@ -39,7 +41,9 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
             f"/benchmarks/{benchmark_id}/", data=data, follow_redirects=True
         )
         self.assert_page(response, "Benchmarks")
-        assert b"Benchmark deleted." in response.data
+        assert re.search(
+            r"Benchmark result \w+ deleted\.", response.text, flags=re.ASCII
+        )
 
         # cannot get benchmark after
         response = client.get(f"/benchmarks/{benchmark_id}/", follow_redirects=True)

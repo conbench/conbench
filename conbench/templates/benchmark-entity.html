@@ -10,8 +10,7 @@
     <li class="breadcrumb-item active">
       <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">Batch</a>
     </li>
-    <li class="breadcrumb-item active">Benchmark</li>
-    <li class="breadcrumb-item active" aria-current="page">{{ benchmark.id }}</li>
+    <li class="breadcrumb-item active aria-current="page">Benchmark result {{ benchmark.id }}</li>
   </ol>
 </nav>
 
@@ -48,7 +47,7 @@
 <div class="row">
   <div class="col-md-6">
     <ul class="list-group">
-      <li class="list-group-item active">Benchmark</li>
+      <li class="list-group-item list-group-item-primary">Benchmark</li>
       <li class="list-group-item" style="overflow-y: auto;">
         <b>benchmark</b>
         <div class="ellipsis-500" align="right" style="display:inline-block; float: right;">
@@ -85,7 +84,7 @@
       </li>
 
       {% if benchmark.error %}
-      <li class="list-group-item active">Error</li>
+      <li class="list-group-item list-group-item-primary">Error</li>
       <li class="list-group-item" style="overflow-y: auto;">
         <b>timestamp</b>
         <div align="right" style="display:inline-block; float: right;">
@@ -102,7 +101,7 @@
       {% endfor %}
       {% endif %}
       {% if benchmark.stats %}
-      <li class="list-group-item active">Result</li>
+      <li class="list-group-item list-group-item-primary">Result</li>
       <li class="list-group-item" style="overflow-y: auto;">
         <b>timestamp (start time)</b>
         <div align="right" style="display:inline-block; float: right;">
@@ -119,7 +118,7 @@
       {% endfor %}
       {% endif %}
 
-      <li class="list-group-item active">Tags</li>
+      <li class="list-group-item list-group-item-primary">Tags</li>
       {% for k,v in benchmark.tags.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
@@ -129,7 +128,7 @@
       </li>
       {% endfor %}
       {% if benchmark.optional_benchmark_info %}
-      <li class="list-group-item active">Additional Benchmark Details</li>
+      <li class="list-group-item list-group-item-primary">Additional Benchmark Details</li>
       {% for k,v in benchmark.optional_benchmark_info.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
@@ -140,7 +139,7 @@
       {% endfor %}
       {% endif %}
       {% if benchmark.validation %}
-      <li class="list-group-item active">Validation</li>
+      <li class="list-group-item list-group-item-primary">Validation</li>
       {% for k,v in benchmark.validation.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
@@ -156,7 +155,7 @@
   <div class="col-md-6">
     <ul class="list-group">
       {% if run and run.commit.url %}
-      <li class="list-group-item active">Commit</li>
+      <li class="list-group-item list-group-item-primary">Commit</li>
       <li class="list-group-item" style="overflow-y: auto;">
         <b>commit</b>
         <div class="ellipsis-500" align="right" style="display:inline-block; float: right;">
@@ -206,14 +205,14 @@
       </li>
       {% endif %}
       {% endif %}
-      <li class="list-group-item active">Hardware</li>
+      <li class="list-group-item list-group-item-primary">Hardware</li>
       {% for k,v in run.hardware.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
         <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
       </li>
       {% endfor %}
-      <li class="list-group-item active">Context</li>
+      <li class="list-group-item list-group-item-primary">Context</li>
       {% for k,v in benchmark.context.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
@@ -221,7 +220,7 @@
       </li>
       {% endfor %}
       {% if benchmark.info and benchmark.info|length > 1 %}
-      <li class="list-group-item active">Additional Context Details</li>
+      <li class="list-group-item list-group-item-primary">Additional Context Details</li>
       {% for k,v in benchmark.info.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
@@ -233,10 +232,12 @@
   </div>
 </div>
 
-<div class="row">
-  <div class="col-md-8">
-    {{ wtf.quick_form(delete_form, id="delete-form", button_map={'delete': 'danger'}) }}
-  </div>
+<div class="row mt-5">
+  <br />
+  <form method="post" id="delete-form">
+    {{ delete_form.hidden_tag() }}
+    <input class="btn btn-danger" id="delete" name="delete" type="button" value="Delete benchmark result"></input>
+  </form>
 </div>
 
 
@@ -250,11 +251,11 @@
 <script type="text/javascript">
   $(document).ready(function ($) {
     $("#delete-form").find("#delete").attr("type", "button");
-    $("#delete-form").find("#delete").attr("data-toggle", "modal");
-    $("#delete-form").find("#delete").attr("data-target", "#confirm-delete");
-    $("#delete-form").find("#delete").attr("data-form-id", "#delete-form");
-    $("#delete-form").find("#delete").attr("data-href", "{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}");
-    $("#delete-form").find("#delete").attr("data-message", "<ul><li>Delete benchmark: <strong>{{ benchmark.id }}</strong></li></ul>");
+    $("#delete-form").find("#delete").attr("data-bs-toggle", "modal");
+    $("#delete-form").find("#delete").attr("data-bs-target", "#confirm-delete");
+    $("#delete-form").find("#delete").attr("data-cbcustom-form-id", "#delete-form");
+    $("#delete-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}");
+    $("#delete-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete benchmark result: <strong>{{ benchmark.id }}</strong></li></ul>");
   });
 
   {% if plot_history %}

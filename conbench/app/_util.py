@@ -60,6 +60,7 @@ def set_display_error(benchmark):
 
 
 def display_message(message):
+    # Note(JP): why is that important, useful?
     # truncate git shas in commit message
     for m in re.findall(r"\b[0-9a-f]{40}\b", message):
         message = message.replace(m, m[:7])

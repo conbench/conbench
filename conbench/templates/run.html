@@ -2,34 +2,21 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item active">Run</li>
-        {% if run_id %}
-        <li class="breadcrumb-item active" aria-current="page">{{ run_id }}</li>
-        {% endif %}
-        {% if compare_runs_url %}
-        <span align="right" style="display:inline-block; float: right;">
-          <a href="{{ compare_runs_url }}">compare <span class="glyphicon glyphicon-arrow-right"></span></a>
-        </span>
-        {% endif %}
-      </ol>
-    </nav>
-
-    {% if run %}
-      {% if run.commit.display_message %}
-    <div class="row">
-      <div class="col-md-12">
-        <ul class="list-group">
-          <li class="list-group-item" align="right" style="border-style:none">
-          Commit:
-          <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
-          </li>
-         </ul>
-      </div>
-    </div>
-      {% endif %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item active">Run</li>
+    {% if run_id %}
+    <li class="breadcrumb-item active" aria-current="page">{{ run_id }}</li>
     {% endif %}
+  </ol>
+</nav>
+
+{% if compare_runs_url %}
+<p class="fs-5">
+  <i class="bi bi-file-diff"></i> <a href="{{ compare_runs_url }}">compare to baseline</a>
+</p>
+
+{% endif %}
 
 
 {% if plot_history %}
@@ -73,8 +60,9 @@
 {% endif %}
 
     <div class="col-md-12">
+        <h4>Benchmarks in run</h4>
         <table id="benchmarks" class="table table-striped table-bordered table-hover">
-        <caption>Benchmarks{% include 'units-tooltip.html' %}</caption>
+        <!-- does not display right: <caption>Benchmarks{% include 'units-tooltip.html' %}</caption>-->
             <thead>
                 <tr>
                     <th scope="col">Date</th>
@@ -122,31 +110,35 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% if run_id %}
-            {{ wtf.quick_form(form, id="run-form", button_map={'delete': 'primary'}) }}
-        {%  endif %}
     </div>
 
+    {% if run %}
+    <br />
+    <form method="post" id="run-form">
+      {{ form.hidden_tag() }}
+      <input class="btn btn-danger" id="delete" name="delete" type="button" value="Delete Run"></input>
+    </form>
+    <br />
     <div class="col-md-12">
         <ul class="list-group">
-            <li class="list-group-item active">Run</li>
+            <li class="list-group-item list-group-item-secondary">Run details:</li>
+
+            <li class="list-group-item">
+              Commit:
+              <div align="right" style="display:inline-block; float: right;"><a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a></div>
+            </li>
+
             <li class="list-group-item" style="overflow-y: auto;">
-                <b>Timestamp</b>
-                {% if run.timestamp is not none %}
-                    <div align="right" style="display:inline-block; float: right;">{{ run.timestamp }}</div>
-                {% endif %}
+                Timestamp:
+                <div align="right" style="display:inline-block; float: right;">{{ run.timestamp }}</div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
-                <b>Finished Timestamp</b>
-                {% if run.finished_timestamp is not none %}
-                    <div align="right" style="display:inline-block; float: right;">{{ run.finished_timestamp }}</div>
-                {% endif %}
+                Finished Timestamp:
+                <div align="right" style="display:inline-block; float: right;">{{ run.finished_timestamp }}</div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
-                <b>Error Type</b>
-                {% if run.error_type is not none %}
-                    <div align="right" style="display:inline-block; float: right;">{{ run.error_type }}</div>
-                {% endif %}
+                Error Type:
+                <div align="right" style="display:inline-block; float: right;">{{ run.error_type }}</div>
             </li>
             {% if run.error_info %}
                 <li class="list-group-item active">Error Info</li>
@@ -172,6 +164,7 @@
             {% endif %}
         </ul>
     </div>
+    {% endif %}
 
 
 {% endblock %}
@@ -195,11 +188,11 @@ $(document).ready(function() {
     $('#unit-tooltip').tooltip()
     {% if run_id %}
         $("#run-form").find("#delete").attr("type", "button");
-        $("#run-form").find("#delete").attr("data-toggle", "modal");
-        $("#run-form").find("#delete").attr("data-target", "#confirm-delete");
-        $("#run-form").find("#delete").attr("data-form-id", "#run-form");
-        $("#run-form").find("#delete").attr("data-href", "{{ url_for('app.run', run_id=run_id) }}");
-        $("#run-form").find("#delete").attr("data-message", "<ul><li>Delete run: <strong>{{ run_id }}</strong></li></ul>");
+        $("#run-form").find("#delete").attr("data-bs-toggle", "modal");
+        $("#run-form").find("#delete").attr("data-bs-target", "#confirm-delete");
+        $("#run-form").find("#delete").attr("data-cbcustom-form-id", "#run-form");
+        $("#run-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.run', run_id=run_id) }}");
+        $("#run-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete run: <strong>{{ run_id }}</strong></li></ul>");
     {% endif %}
 });
 
