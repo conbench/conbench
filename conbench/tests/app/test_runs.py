@@ -1,3 +1,5 @@
+import re
+
 from ...tests.api import _fixtures
 from ...tests.app import _asserts
 
@@ -28,7 +30,7 @@ class TestRunDelete(_asserts.DeleteEnforcer):
 
         response = client.get(f"/runs/{run_id}/", follow_redirects=True)
         self.assert_page(response, "Run")
-        assert b"Error getting run." in response.data
+        assert re.search(r"Run ID unknown: \w+", response.text, flags=re.ASCII)
 
     def test_unauthenticated(self, client):
         self.create_benchmark(client)
