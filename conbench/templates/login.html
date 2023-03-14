@@ -1,7 +1,14 @@
 {% extends "app.html" %}
 {% block app_content %}
 
+<div class="row">
+<div class="col-md-4"></div>
 
+<!-- center column, also see
+     https://getbootstrap.com/docs/5.2/examples/grid/#containers
+-->
+<div class="col-md-4">
+<h4>Sign in</h4>
 <form method="post" novalidate>
   {{ form.hidden_tag() }}
   <div class="mb-3">
@@ -13,6 +20,7 @@
       {{ form.password(class_="form-control", size=80) }}
   </div>
   <div class="mb-3 form-check">
+
       {{ form.remember_me(class_="form-check-input") }} {{ form.remember_me.label }}
   </div>
   <button type="submit" class="btn btn-primary">Sign in</button>
@@ -32,7 +40,9 @@
   {% endif %}
 {% endif %}
 
-
+</div>
+<div class="col-md-4"></div>
+</div>
 
 
 {% endblock %}
