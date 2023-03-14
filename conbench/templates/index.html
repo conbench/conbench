@@ -1,30 +1,28 @@
 {% extends "app.html" %}
 
 {% block app_content %}
-<div class="row">
-  <div class="col-md-12">
-    <div class="jumbotron">
-      <div class="media">
-        <div class="media-body">
-          <h4 class="media-heading">Con·bench</h4>
-          <h4>/kənˈben(t)SH/</h4>
-          <h5><i>noun</i></h5>
-          <h3>Language-independent Continuous Benchmarking (CB) Framework</h3>
-        </div>
-        <div class="media-right">
-          <img class="media-object" style="padding: 5px" src="{{ url_for('static', filename='bar-graph.png') }}" height="150">
+
+<div class="p-3 mb-4 bg-light rounded-3">
+  <div class="container-fluid py-2">
+    <div class="row mb-3">
+      <div class="col-md-5">
+        <h1 class="display-5 fw-bold">Con·bench</h1>
+        <p class="col-md-8 fs-4">/kənˈben(t)SH/ <br /><i>noun</i></p>
+      </div>
+      <div class="col-md-7">
+        <div class="float-end">
+          <img class="media-object" style="padding: 5px" src="{{ url_for('static', filename='bar-graph.png') }}" height="180">
         </div>
       </div>
     </div>
   </div>
 </div>
 
-
 <div class="row">
     <hr />
     <div class="col-md-12">
         <h4>Recent runs</h4>
-        <table id="runs" class="table table-striped table-bordered table-hover">
+        <table id="runs" class="table table-hover">
             <thead>
                 <tr>
                     <th scope="col">Run creation time</th>
