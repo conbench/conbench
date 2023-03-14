@@ -106,7 +106,12 @@
 {{super()}}
 <script>
   var table = $('#runs').DataTable({
+      // the default default seems to be the first item in lengthMenu.
+      "lengthMenu": [ 5, 15, 50, 75, 100 ],
+      // but when pageLength is also set, then _this_ is the default.
+      "pageLength": 15,
       "order": [[0, 'desc']],
+      //"lengthMenu": [ 20, 25, 50, 75, 100 ],
       // Make "Commit" (commit hash) column (4) more narrow, hide 'sorting'
       // toggle. Sorting by commit hash is not needed, in particular because
       // one can filter by commit hash via input field. Do the same for the
@@ -114,7 +119,7 @@
       // First column has index 0.
       "columnDefs": [{ "orderable": false, "targets": [1, 4, 5] }],
       "language": {
-          "searchPlaceholder": "commit hash works too",
+          "searchPlaceholder": "search across all columns",
       },
 });
 
