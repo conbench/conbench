@@ -18,11 +18,13 @@
   </div>
 </div>
 
-<div class="row">
-    <hr />
-    <div class="col-md-12">
-        <h4>Recent runs</h4>
-        <table id="runs" class="table table-hover">
+
+<div class="p-2"><h3>Recent runs</h3></div>
+<hr class="border border-danger border-2 opacity-50">
+
+<!-- https://getbootstrap.com/docs/5.2/content/tables/#responsive-tables -->
+<div class="table-responsive">
+<table id="runs" class="table table-hover">
             <thead>
                 <tr>
                     <th scope="col">Run creation time</th>
@@ -94,10 +96,8 @@
                 </tr>
                 {% endfor %}
             </tbody>
-        </table>
-    </div>
+</table>
 </div>
-
 
 {% endblock %}
 
