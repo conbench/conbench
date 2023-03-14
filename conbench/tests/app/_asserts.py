@@ -56,7 +56,7 @@ class AppEndpointTest:
 
     def assert_login_page(self, r):
         self.assert_200_ok(r)
-        assert b"<h1>Sign In</h1>" in r.data, r.data
+        assert b"Sign in" in r.data
         assert b"New user?" in r.data
 
     def assert_registration_page(self, r):
