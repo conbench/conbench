@@ -5,13 +5,14 @@
       <ol class="breadcrumb">
         {% if benchmarks %}
         <li class="breadcrumb-item active">
+          <!-- Note(jp): the benchmark results don't necessarily have the same
+               run in common, so this hierarchy might be misleading.
+               see https://github.com/conbench/conbench/issues/873
+          -->
           <a href="{{ url_for('app.run', run_id=benchmarks[0].run_id) }}">Run</a>
         </li>
         {% endif %}
-        <li class="breadcrumb-item active">Batch</li>
-        {% if benchmarks %}
-        <li class="breadcrumb-item active" aria-current="page">{{ benchmarks[0].batch_id }}</li>
-        {% endif %}
+        <li class="breadcrumb-item active">Batch {{requested_batch_id}}</li>
       </ol>
     </nav>
 
@@ -47,15 +48,17 @@
 <div class="col-md-2"></div>
 {% endif %}
 
-    <div class="col-md-12">
-        <table id="benchmarks" class="table table-striped table-bordered table-hover">
-        <caption>Benchmarks{% include 'units-tooltip.html' %}</caption>
+
+<h3>Benchmark results with given batch ID</h3>
+
+        <table id="benchmarks" class="table table-hover">
+
             <thead>
                 <tr>
                     <th scope="col">Date</th>
                     <th scope="col">Lang</th>
-                    <th scope="col">Batch</th>
-                    <th scope="col">Benchmark</th>
+                    <th scope="col">Benchmark (suite) name</th>
+                    <th scope="col" style="width: 35%">Benchmark result (case permutation is shown)</th>
                     <th scope="col">Mean</th>
                     <th scope="col" style="white-space: nowrap;">Z-Score</th>
                 </tr>
@@ -87,7 +90,7 @@
                 {% endfor %}
             </tbody>
         </table>
-    </div>
+
 
 {% endblock %}
 

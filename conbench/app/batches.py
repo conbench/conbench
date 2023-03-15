@@ -13,7 +13,7 @@ from ..config import Config
 
 
 class BatchPlot(AppEndpoint, ContextMixin):
-    def page(self, by_group):
+    def page(self, by_group, requested_batch_id):
         plots, raw, i = [], [], 1
         for benchmarks in by_group.values():
             raw.extend(benchmarks)
@@ -28,9 +28,12 @@ class BatchPlot(AppEndpoint, ContextMixin):
             application=Config.APPLICATION_NAME,
             title="Batch",
             resources=bokeh.resources.CDN.render(),
+            # Note(JP): `raw` seems to be the ungrouped list of benchmarks as
+            # obtained below via `self._get_benchmarks(batch_id)`
             benchmarks=raw,
             plots=plots,
             search_value=f.request.args.get("search"),
+            requested_batch_id=requested_batch_id,
         )
 
     @authorize_or_terminate
@@ -44,12 +47,18 @@ class BatchPlot(AppEndpoint, ContextMixin):
         by_group = collections.defaultdict(list)
         contexts = self.get_contexts(benchmarks)
         for benchmark in benchmarks:
+            # Note(JP): This, among others, sets
+            #
+            #   benchmark["display_batch"] = batch
+            #
+            # whereas `batch` here is not the batch_id, but a per-benchmark
+            # result (suite) name derived from benchmark result tags
             augment(benchmark, contexts)
             tags = benchmark["tags"]
             key = f'{tags["name"]}-{tags.get(group_by_key, "")}'
             by_group[key].append(benchmark)
 
-        return self.page(by_group)
+        return self.page(by_group, batch_id)
 
     def _get_benchmarks(self, batch_id):
         response = self.api_get("api.benchmarks", batch_id=batch_id)
