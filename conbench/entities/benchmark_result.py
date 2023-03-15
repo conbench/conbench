@@ -269,7 +269,12 @@ class BenchmarkResult(Base, EntityMixin):
 
 s.Index("benchmark_result_run_id_index", BenchmarkResult.run_id)
 s.Index("benchmark_result_case_id_index", BenchmarkResult.case_id)
+
+# Note(JP): we provde an API endpoint that allows for querying all benchmark
+# results that have a certain batch name set. Therefore, this index is
+# valuable.
 s.Index("benchmark_result_batch_id_index", BenchmarkResult.batch_id)
+
 s.Index("benchmark_result_info_id_index", BenchmarkResult.info_id)
 s.Index("benchmark_result_context_id_index", BenchmarkResult.context_id)
 
