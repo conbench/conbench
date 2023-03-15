@@ -69,13 +69,13 @@ class User(AppEndpoint):
             if delete_form.validate_on_submit():
                 delete_response = self.api_delete("api.user", user_id=user_id)
                 if delete_response.status_code == 204:
-                    self.flash("User deleted.")
+                    self.flash("User deleted", "info")
                     return self.redirect("app.users")
         elif form.validate_on_submit():
             # submit button pressed
             response = self.api_put("api.user", form, user_id=user_id)
             if response.status_code == 200:
-                self.flash("User updated.")
+                self.flash("User updated", "info")
                 return self.redirect("app.user", user_id=user_id)
 
         if response and not form.errors:
@@ -159,7 +159,7 @@ class UserCreate(AppEndpoint):
         if form.validate_on_submit():
             response = self.api_post("api.users", form)
             if response.status_code == 201:
-                self.flash("User created.")
+                self.flash("User created", "info")
                 return self.redirect("app.users")
 
         if response and not form.errors:
