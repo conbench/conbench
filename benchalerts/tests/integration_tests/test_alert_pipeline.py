@@ -22,9 +22,7 @@ from benchalerts import AlertPipeline
 
 
 @pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)
-def test_update_github_status_based_on_regressions(
-    monkeypatch: pytest.MonkeyPatch, github_auth: str
-):
+def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
     """While this test is running, you can watch
     https://github.com/conbench/benchalerts/pull/5 to see the statuses change!
     """
@@ -86,13 +84,14 @@ def test_update_github_status_based_on_regressions(
         ),
     ]
     if github_auth == "app":
-        pipeline_steps.append(
+        pipeline_steps += [
             steps.GitHubCheckStep(
                 repo=test_status_repo,
                 commit_hash=test_status_commit,
                 comparison_step_name="z_none",
-            )
-        )
+            ),
+            steps.GitHubPRCommentAboutCheckStep(pr_number=5, repo=test_status_repo),
+        ]
 
     pipeline = AlertPipeline(pipeline_steps)
     outputs = pipeline.run_pipeline()
@@ -103,6 +102,13 @@ def test_update_github_status_based_on_regressions(
     if github_auth == "app":
         assert outputs["GitHubStatusStep"]["creator"]["type"] == "Bot"
         assert outputs["GitHubCheckStep"]["conclusion"] == "failure"
+        assert outputs["GitHubPRCommentAboutCheckStep"]["body"].startswith(
+            """## ⚡️ Benchmark results ⚡️
+
+Found 1 regression(s).
+
+See the full report [here]("""
+        )
 
     # sleep to see the updated statuses on the PR
     time.sleep(1)
