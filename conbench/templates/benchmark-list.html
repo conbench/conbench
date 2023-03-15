@@ -2,20 +2,28 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <div class="row">
-        <div class="hidden">{{ wtf.quick_form(delete_benchmark_form, id="delete-benchmark-form") }}</div>
-        <div class="col-md-12">
+<!-- recipe taken from https://getbootstrap.com/docs/5.0/utilities/flex/#auto-margins -->
+<div class="d-flex">
+  <div class="p-2"><h3>Recent benchmark results</h3></div>
+</div>
+
+<hr class="border border-danger border-2 opacity-50">
+
+<!-- note(jp): this form is not displayed, but must be there for the individual
+  trash icons in the table to work
+-->
+<div style="display: none;">{{ wtf.quick_form(delete_benchmark_form, id="delete-benchmark-form") }}</div>
+<table id="users" class="table table-hover">
             <table id="benchmarks" class="table table-hover">
-            <caption>Benchmarks</caption>
                 <thead>
                     <tr>
-                        <th scope="col">Date</th>
+                        <th scope="col">Timestamp</th>
                         <th scope="col">Lang</th>
                         <th scope="col">Batch</th>
                         <th scope="col">Benchmark</th>
-                        <th scope="col">Mean</th>
+                        <th scope="col" style="width: 10%">Mean</th>
                         {% if not current_user.is_anonymous %}
-                          <th scope="col"></th>
+                        <th scope="col" style="width: 5%">Delete</th>
                         {% endif %}
                     </tr>
                 </thead>
@@ -34,20 +42,18 @@
                          </a></td>
                          <td>{{ benchmark.display_mean }}</td>
                          {% if not current_user.is_anonymous %}
-                         <td data-href="{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}"
-                             data-toggle="modal"
-                             data-target="#confirm-delete"
-                             data-form-id="#delete-benchmark-form"
-                             data-message="<ul><li>Delete benchmark: <strong>{{ benchmark.id }}</strong></li></ul>">
-                             <span class="glyphicon glyphicon-trash submenu"></span>
+                         <td data-cbcustom-href="{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}"
+                             data-bs-toggle="modal"
+                             data-bs-target="#confirm-delete"
+                             data-cbcustom-form-id="#delete-benchmark-form"
+                             data-cbcustom-message="<ul><li>Delete benchmark result: <strong>{{ benchmark.id }}</strong></li></ul>">
+                             <i class="bi bi-trash3"></i>
                          </td>
                          {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-    </div>
 {% endblock %}
 
 {% block scripts %}
