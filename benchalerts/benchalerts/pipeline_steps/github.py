@@ -7,7 +7,12 @@ from benchclients.logging import fatal_and_log, log
 from ..alert_pipeline import AlertPipelineErrorHandler, AlertPipelineStep
 from ..conbench_dataclasses import FullComparisonInfo
 from ..integrations.github import CheckStatus, GitHubRepoClient, StatusState
-from ..message_formatting import _clean, github_check_details, github_check_summary
+from ..message_formatting import (
+    _clean,
+    github_check_details,
+    github_check_summary,
+    pr_comment_link_to_check,
+)
 
 
 class GitHubCheckStep(AlertPipelineStep):
@@ -228,6 +233,82 @@ class GitHubStatusStep(AlertPipelineStep):
                 f"There were {len(full_comparison.benchmarks_with_z_regressions)} "
                 "benchmark regression(s) in this commit"
             )
+
+
+class GitHubPRCommentAboutCheckStep(AlertPipelineStep):
+    """An ``AlertPipeline`` step to make a comment on a PR about a GitHub Check that was
+    created by a previously-run ``GitHubCheckStep``. This is useful if you're running
+    benchmarks on a merge-commit, and no one is necessarily monitoring the Checks on the
+    default branch. It should be set up to notify the PR that caused the merge-commit,
+    so that the relevant people can take action if necessary.
+
+    Parameters
+    ----------
+    pr_number
+        The number of the PR to make the comment on.
+    repo
+        The repo name to make the comment on, in the form "owner/repo". Either provide
+        this or ``github_client``.
+    github_client
+        A GitHubRepoClient instance. Either provide this or ``repo``.
+    check_step_name
+        The name of the ``GitHubCheckStep`` that ran earlier in the pipeline. Defaults
+        to "GitHubCheckStep" (which was the default if no name was given to that step).
+    step_name
+        The name for this step. If not given, will default to this class's name.
+
+    Returns
+    -------
+    dict
+        The response body from the GitHub HTTP API as a dict.
+
+    Notes
+    -----
+    Environment variables
+    ~~~~~~~~~~~~~~~~~~~~~
+    ``GITHUB_APP_ID``
+        The ID of a GitHub App that has been set up according to this package's
+        instructions and installed to your repo. Recommended over ``GITHUB_API_TOKEN``.
+        Only required if ``repo`` is provided instead of ``github_client``.
+    ``GITHUB_APP_PRIVATE_KEY``
+        The private key file contents of a GitHub App that has been set up according to
+        this package's instructions and installed to your repo. Recommended over
+        ``GITHUB_API_TOKEN``. Only required if ``repo`` is provided instead of
+        ``github_client``.
+    ``GITHUB_API_TOKEN``
+        A GitHub Personal Access Token with the ``repo:status`` permission. Only
+        required if not authenticating with a GitHub App, and if ``repo`` is provided
+        instead of ``github_client``.
+    """
+
+    def __init__(
+        self,
+        pr_number: int,
+        repo: Optional[str] = None,
+        github_client: Optional[GitHubRepoClient] = None,
+        check_step_name: str = "GitHubCheckStep",
+        step_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(step_name=step_name)
+        self.pr_number = pr_number
+        self.github_client = github_client or GitHubRepoClient(repo=repo or "")
+        self.check_step_name = check_step_name
+
+    def run_step(self, previous_outputs: Dict[str, Any]) -> dict:
+        check_details: dict = previous_outputs[self.check_step_name]
+        res = self.github_client.create_pull_request_comment(
+            comment=self._default_comment(
+                summary=check_details["output"]["title"],
+                check_link=check_details["html_url"],
+            ),
+            pull_number=self.pr_number,
+        )
+        return res
+
+    @staticmethod
+    def _default_comment(summary: str, check_link: str) -> str:
+        """Construct a PR comment that summarizes and links to a GitHub Check."""
+        return pr_comment_link_to_check(summary, check_link)
 
 
 class GitHubCheckErrorHandler(AlertPipelineErrorHandler):

@@ -108,3 +108,16 @@ def github_check_details(full_comparison: FullComparisonInfo) -> Optional[str]:
         """
     )
     return details
+
+
+def pr_comment_link_to_check(summary: str, check_link: str) -> str:
+    """Generate a GitHub PR comment that summarizes and links to a GitHub Check."""
+    return _clean(
+        f"""
+        ## ⚡️ Benchmark results ⚡️
+
+        {summary}.
+
+        See the full report [here]({check_link}).
+        """
+    )

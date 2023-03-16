@@ -37,6 +37,9 @@ def test_reasonable_pipeline(conbench_env, github_auth):
             steps.GitHubStatusStep(
                 github_client=github_client, comparison_step_name="z_500"
             ),
+            steps.GitHubPRCommentAboutCheckStep(
+                pr_number=1, github_client=github_client
+            ),
         ],
         error_handlers=[
             steps.GitHubCheckErrorHandler(
@@ -53,7 +56,13 @@ def test_reasonable_pipeline(conbench_env, github_auth):
     )
 
     res = pipeline.run_pipeline()
-    for step_name in ["z_none", "z_500", "GitHubCheckStep", "GitHubStatusStep"]:
+    for step_name in [
+        "z_none",
+        "z_500",
+        "GitHubCheckStep",
+        "GitHubStatusStep",
+        "GitHubPRCommentAboutCheckStep",
+    ]:
         assert res[step_name]
 
     # now force an error to test error handling

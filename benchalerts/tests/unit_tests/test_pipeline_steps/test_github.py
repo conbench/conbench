@@ -7,11 +7,12 @@ from benchalerts.integrations.github import GitHubRepoClient
 from benchalerts.pipeline_steps.github import (
     GitHubCheckErrorHandler,
     GitHubCheckStep,
+    GitHubPRCommentAboutCheckStep,
     GitHubStatusErrorHandler,
     GitHubStatusStep,
 )
 
-from ..mocks import MockAdapter, check_posted_markdown
+from ..mocks import MockAdapter, MockResponse, check_posted_markdown, response_dir
 
 
 @pytest.mark.parametrize(
@@ -70,6 +71,21 @@ def test_GitHubStatusStep(mock_comparison_info: FullComparisonInfo, github_auth:
         comparison_step_name="comparison_step",
     )
     res = step.run_step({"comparison_step": mock_comparison_info})
+    assert res
+
+
+@pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)
+def test_GitHubPRCommentAboutCheckStep(github_auth: str):
+    mock_check_response = MockResponse.from_file(
+        response_dir / "POST_github_check-runs.json"
+    ).json()
+
+    step = GitHubPRCommentAboutCheckStep(
+        pr_number=1,
+        github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
+        check_step_name="check_step",
+    )
+    res = step.run_step(previous_outputs={"check_step": mock_check_response})
     assert res
 
 
