@@ -2,25 +2,11 @@
 
 {% block app_content %}
 
-<div class="p-3 mb-4 bg-light rounded-3">
-  <div class="container-fluid py-2">
-    <div class="row mb-3">
-      <div class="col-md-5">
-        <h1 class="display-5 fw-bold">Con·bench</h1>
-        <p class="col-md-8 fs-4">/kənˈben(t)SH/ <br /><i>noun</i></p>
-      </div>
-      <div class="col-md-7">
-        <div class="float-end">
-          <img class="media-object" style="padding: 5px" src="{{ url_for('static', filename='bar-graph.png') }}" height="180">
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
+<h1 class="display-3 text-center" style="margin-bottom: 40px">/kənˈben(t)SH/</h1>
 
-<div class="p-2"><h3>Recent runs</h3></div>
-<hr class="border border-danger border-2 opacity-50">
+<div class="p-0"><h3>Recent runs</h3></div>
+<hr class="border border-danger border-1 opacity-50">
 
 <!-- https://getbootstrap.com/docs/5.2/content/tables/#responsive-tables -->
 <div class="table-responsive">
@@ -113,7 +99,7 @@
       "order": [[0, 'desc']],
       // https://datatables.net/reference/option/dom
       // put `l` to the bottom
-      "dom": "frtipl",
+      "dom": "lfrtip",
       //"lengthMenu": [ 20, 25, 50, 75, 100 ],
       // Make "Commit" (commit hash) column (4) more narrow, hide 'sorting'
       // toggle. Sorting by commit hash is not needed, in particular because
