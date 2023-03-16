@@ -10,7 +10,7 @@
 
 <!-- https://getbootstrap.com/docs/5.2/content/tables/#responsive-tables -->
 <div class="table-responsive">
-<table id="runs" class="table table-hover">
+<table id="runs" class="table table-hover" style="display:none">
             <thead>
                 <tr>
                     <th scope="col">Run creation time</th>
@@ -110,6 +110,11 @@
       "language": {
           "searchPlaceholder": "search across all columns",
       },
+      initComplete: function () {
+        var api = this.api();
+        $('#runs').show();
+        api.columns.adjust();
+      }
 });
 
 
