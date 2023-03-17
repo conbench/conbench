@@ -77,9 +77,10 @@ class Run(Base, EntityMixin):
         # Work towards a state where these are guaranteed to be either None or
         # non-zerolength strings.
         repo_url: Optional[str] = None
-        pr_number: Optional[str] = None
         branch: Optional[str] = None
         commit_hash: Optional[str] = None
+
+        pr_number: Optional[int] = None
 
         if github_data := data.pop("github", None):
             # Note(JP): this should ensure that the `repository` Column in the
@@ -110,16 +111,15 @@ class Run(Base, EntityMixin):
                 # a repository context, and there is a commit to refer to.
                 log.warning("Run.create(): zero-length string github_data['commit']")
 
-            if github_data.get("pr_number"):
-                # Only set to non-None when non-empty string.
-                pr_number = github_data.get("pr_number")
-
             if github_data.get("branch"):
                 # Only set to non-None when non-empty string.
                 branch = github_data.get("branch")
 
+            # This assignment is expected to retain the Optional[int] type.
+            pr_number = github_data.get("pr_number")
+
         # Before DB insertion its good to have clarity.
-        for testitem in (commit_hash, repo_url, pr_number, branch):
+        for testitem in (commit_hash, repo_url, branch):
             assert testitem is None or len(testitem) > 0, github_data
 
         commit_id = commit_fetch_info_and_create_in_db_if_not_exists(
