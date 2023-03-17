@@ -1,5 +1,6 @@
 import collections
 import copy
+import dataclasses
 import json
 import logging
 from typing import List, Optional, Tuple, no_type_check
@@ -16,6 +17,13 @@ from ..hacks import sorted_data
 from ..units import formatter_for_unit
 
 log = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class BokehPlotJSONOrError:
+    # mutually exclusive
+    jsondoc: Optional[str]
+    reason_why_no_plot: Optional[str]
 
 
 class TimeSeriesPlotMixin:
@@ -37,20 +45,33 @@ class TimeSeriesPlotMixin:
         outlier_names = [f'{b["display_batch"]}, {b["display_name"]}' for b in outliers]
         return outliers, outlier_ids, outlier_names
 
-    def get_history_plot(self, benchmark, run, i=0):
+    def get_history_plot(self, benchmark, run, i=0) -> BokehPlotJSONOrError:
+        """
+        Generate JSON string for inclusion in HTML doc or a reason for why
+        the plot-describing JSON doc was not generated.
+        """
         samples = get_history_for_benchmark(benchmark_result_id=benchmark["id"])
 
-        if len(samples) > 0:
+        # The number (1, 2, 3?) maybe needs to be tuned further. Also see
+        # https://github.com/conbench/conbench/issues/867
+        if len(samples) > 2:
             assert isinstance(samples[0], HistorySample)
-
-            return json.dumps(
+            jsondoc = json.dumps(
                 bokeh.embed.json_item(
                     time_series_plot(samples, benchmark, run),
-                    f"plot-history-{i}",
+                    f"plot-history-{i}",  # type: ignore
                 )
             )
+            return BokehPlotJSONOrError(jsondoc, None)
 
-        return None
+        # This reason/error will be shown verbatim in HTML, so this should be
+        # a nice message.
+        return BokehPlotJSONOrError(
+            None,
+            f"not enough history items yet ({len(samples)}). Keep submitting "
+            "results for this specific benchmark scenario (case permutation, "
+            "and context)!",
+        )
 
 
 def get_display_unit(unit):
