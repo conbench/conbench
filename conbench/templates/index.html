@@ -94,30 +94,36 @@
 {% block scripts %}
 {{super()}}
 <script>
-  var table = $('#runs').DataTable({
-      // the default default seems to be the first item in lengthMenu.
-      "lengthMenu": [ 5, 10, 50, 75, 100 ],
-      // but when pageLength is also set, then _this_ is the default.
-      "pageLength": 10,
-      "order": [[0, 'desc']],
-      // https://datatables.net/reference/option/dom
-      // put `l` to the bottom
-      "dom": "lfrtip",
-      //"lengthMenu": [ 20, 25, 50, 75, 100 ],
-      // Make "Commit" (commit hash) column (4) more narrow, hide 'sorting'
-      // toggle. Sorting by commit hash is not needed, in particular because
-      // one can filter by commit hash via input field. Do the same for the
-      // "Commit author" column (1), and the "Commit message" columnn (5).
-      // First column has index 0.
-      "columnDefs": [{ "orderable": false, "targets": [1, 4, 5] }],
-      "language": {
-          "searchPlaceholder": "search across all columns",
-      },
-      initComplete: function () {
-        var api = this.api();
-        $('#runs').show();
-        api.columns.adjust();
-      }
+$(document).ready(function () {
+  $('table.cb-runs-table').each(function() {
+    //console.log('hallo! this:', this)
+    $(this).DataTable({
+        // the default default seems to be the first item in lengthMenu.
+        "lengthMenu": [ 5, 10, 50, 75, 100, 250, 750 ],
+        // but when pageLength is also set, then _this_ is the default.
+        "pageLength": 8,
+        "order": [[0, 'desc']],
+        // https://datatables.net/reference/option/dom
+        // put `l` to the bottom
+        "dom": "lfrtip",
+        //"lengthMenu": [ 20, 25, 50, 75, 100 ],
+        // Make "Commit" (commit hash) column (4) more narrow, hide 'sorting'
+        // toggle. Sorting by commit hash is not needed, in particular because
+        // one can filter by commit hash via input field. Do the same for the
+        // "Commit author" column (1), and the "Commit message" columnn (5).
+        // First column has index 0.
+        //"columnDefs": [{ "orderable": false, "targets": [1, 4, 5] }],
+        "language": {
+            "searchPlaceholder": "search across all columns",
+        },
+        initComplete: function () {
+          var api = this.api();
+          $('table.cb-runs-table').show();
+          api.columns.adjust();
+        },
+      })
+    }
+  );
 });
 
 
