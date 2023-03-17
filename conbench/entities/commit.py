@@ -37,11 +37,15 @@ class Commit(Base, EntityMixin):
     sha: Mapped[str] = NotNull(s.String(50))
     branch: Mapped[Optional[str]] = Nullable(s.String(510))
     fork_point_sha: Mapped[Optional[str]] = Nullable(s.String(50))
+
+    # Note(JP): this is supposed to be the commit hash of the parent commit.
+    # Need to make the naming nicer, and I also believe we want to manage
+    # that parent/child relationship better?
     parent: Mapped[Optional[str]] = Nullable(s.String(50))
 
     # This is meant to be the URL to the repository without trailing slash.
     # Should be renamed to repo_url
-    repository: Mapped[str] = NotNull(s.String(100))
+    repository: Mapped[str] = NotNull(s.String(300))
     message: Mapped[str] = NotNull(s.String(250))
     author_name: Mapped[str] = NotNull(s.String(100))
     author_login: Mapped[Optional[str]] = Nullable(s.String(50))
@@ -54,6 +58,7 @@ class Commit(Base, EntityMixin):
     timestamp: Mapped[Optional[datetime]] = Nullable(s.DateTime(timezone=False))
 
     def get_parent_commit(self):
+        # Hm -- should this not be done with a foreign key relationship?
         return Commit.first(sha=self.parent, repository=self.repository)
 
     def get_fork_point_commit(self) -> Optional["Commit"]:
