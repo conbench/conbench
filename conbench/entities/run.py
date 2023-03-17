@@ -186,7 +186,7 @@ class Run(Base, EntityMixin):
 
 
 def commit_fetch_info_and_create_in_db_if_not_exists(
-    sha, repository, pr_number, branch
+    commit_hash, repo_url, pr_number, branch
 ) -> str:
     """
     Insert new Commit entity into database if required.
@@ -203,7 +203,7 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
     API.
     """
 
-    def _guts(sha, repository, pr_number, branch) -> Commit:
+    def _guts(commit_hash, repo_url, pr_number, branch) -> Commit:
         """
         Return a Commit object or raise `sqlalchemy.exc.IntegrityError`.
         """
@@ -211,7 +211,7 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
         # not needlessly interact with the GitHub HTTP API in case the commit
         # is already in the database. first(): "Return the first result of this
         # Query or None if the result doesn’t contain any row.""
-        commit: Optional[Commit] = Commit.first(sha=sha, repository=repository)
+        commit: Optional[Commit] = Commit.first(sha=commit_hash, repository=repo_url)
 
         if commit is not None:
             return commit
@@ -224,7 +224,7 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
             # get_github_commit() may raise all those exceptions that can
             # happen during an HTTP request cycle.
             gh_commit_dict = get_github_commit(
-                repository=repository, pr_number=pr_number, branch=branch, sha=sha
+                repository=repo_url, pr_number=pr_number, branch=branch, sha=commit_hash
             )
         except Exception as exc:
             log.info(
@@ -233,12 +233,12 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
 
         if gh_commit_dict:
             # We got data from GitHub. Insert into database.
-            commit = Commit.create_github_context(sha, repository, gh_commit_dict)
+            commit = Commit.create_github_context(commit_hash, repo_url, gh_commit_dict)
 
             # The commit is known to GitHub. Fetch more data from GitHub.
             # Gracefully degradate if that does not work.
             try:
-                backfill_default_branch_commits(repository, commit)
+                backfill_default_branch_commits(repo_url, commit)
             except Exception as exc:
                 # Any error during this backfilling operation should not fail
                 # the HTTP request processing (we're right now in the middle of
@@ -249,15 +249,15 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
                     exc,
                 )
 
-        elif sha is not None and repository is not None:
+        elif commit_hash is not None and repo_url is not None:
             # As of input schema validation this means that both, commit has
             # and repository specifier are set. Also the database schema as of
-            # the time of writing this comment requires both commit hash and
+            # the time of writing this comment requires both commit commit_hash and
             # repo specifier to be non-null. Empty string values seem to be
             # allowed. I think we may want to have all Commit records in the
-            # database to have a repo and commit hash set. See
+            # database to have a repo and commit commit_hash set. See
             # https://github.com/conbench/conbench/issues/817
-            commit = Commit.create_unknown_context(sha, repository)
+            commit = Commit.create_unknown_context(commit_hash, repo_url)
         else:
             # Note(JP): this creates a special commit object I think with no
             # information.
@@ -270,7 +270,7 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
         # `_guts()` is expected to raise IntegrityError when a concurrent racer
         # did insert the Commit object by now. This can happen, also see
         # https://github.com/conbench/conbench/issues/809
-        commit = _guts(sha, repository, pr_number, branch)
+        commit = _guts(commit_hash, repo_url, pr_number, branch)
     except s.exc.IntegrityError as exc:
         # Expected error example:
         #  sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) \
@@ -279,7 +279,7 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
 
         # Look up the Commit entity again because this function must return the
         # commit ID (DB primary key).
-        commit = Commit.first(sha=sha, repository=repository)
+        commit = Commit.first(sha=commit_hash, repository=repo_url)
 
         # After IntegrityError we assume that Commit exists in DB. Encode
         # assumption, for easier debugging.
@@ -288,8 +288,8 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
     d_seconds = time.monotonic() - t0
     log.info(
         "commit_fetch_info_and_create_in_db_if_not_exists(%s, %s, %s, %s) took %.3f s",
-        sha,
-        repository,
+        commit_hash,
+        repo_url,
         pr_number,
         branch,
         d_seconds,
