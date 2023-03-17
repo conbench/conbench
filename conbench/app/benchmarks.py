@@ -210,8 +210,10 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
             delattr(delete_form, "delete")
             delattr(update_form, "toggle_distribution_change")
 
+        plotinfo = self.get_history_plot(benchmark, run)
+
         return self.render_template(
-            "benchmark-entity.html",
+            "benchmark-result.html",
             application=Config.APPLICATION_NAME,
             title="Benchmark",
             benchmark=benchmark,
@@ -219,7 +221,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
             delete_form=delete_form,
             update_form=update_form,
             resources=bokeh.resources.CDN.render(),
-            plot_history=self.get_history_plot(benchmark, run),
+            history_plot_info=plotinfo,
             update_button_color=update_button_color,
         )
 

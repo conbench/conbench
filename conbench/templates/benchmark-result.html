@@ -16,9 +16,8 @@
 
 
 <br />
-{% if plot_history %}
+{% if history_plot_info.jsondoc is not none %}
 <div align="center">{{ benchmark.display_batch }}, {{ benchmark.display_name }}</div>
-{% endif %}
 <div id="plot-history-0" align="center"></div>
 <div class="row">
   <div class="col-md-12" style="padding-top: 10px;">
@@ -34,6 +33,11 @@
     </div>
   </div>
 </div>
+{% else %}
+<div class="alert alert-info" role="alert">
+  Cannot display history plot for this benchmark result: {{ history_plot_info.reason_why_no_plot }}
+</div>
+{% endif %}
 <br />
 
 <div class="row">
@@ -258,10 +262,10 @@
     $("#delete-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete benchmark result: <strong>{{ benchmark.id }}</strong></li></ul>");
   });
 
-  {% if plot_history %}
+  {% if history_plot_info.jsondoc %}
   $(document).ready(function () {
-    Bokeh.embed.embed_item({{ plot_history | safe }});
-});
+    Bokeh.embed.embed_item({{ history_plot_info.jsondoc | safe }});
+  });
   {% endif %}
 
 </script>
