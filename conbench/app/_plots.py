@@ -47,7 +47,8 @@ class TimeSeriesPlotMixin:
 
     def get_history_plot(self, benchmark, run, i=0) -> BokehPlotJSONOrError:
         """
-        Return raw JSON string
+        Generate JSON string for inclusion in HTML doc or a reason for why
+        the plot-describing JSON doc was not generated.
         """
         samples = get_history_for_benchmark(benchmark_result_id=benchmark["id"])
 
