@@ -182,7 +182,7 @@ var table = $('#benchmarks').dataTable( {
 } );
 
 enable_search_query_string('#benchmarks');
-column_search_implementation('#benchmarks');
+column_search_implementation($('#benchmarks'));
 
 $(document).ready(function() {
     $('#unit-tooltip').tooltip()
