@@ -132,7 +132,13 @@ enable_search_query_string('#runs');
 /* specify the HTML table id (string) for
  which search functionality should be enabled
 */
-column_search_implementation('#runs');
+//column_search_implementation('table.cb-runs-table');
 
+// Apply this custom search logic to each DataTablyfied <table> in the Dom
+$('table.cb-runs-table').each(
+  function() {
+    column_search_implementation($(this));
+  }
+);
 </script>
 {% endblock %}
