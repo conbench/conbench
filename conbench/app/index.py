@@ -3,11 +3,11 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from ..db import Session
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app.benchmarks import RunMixin
 from ..config import Config
+from ..db import Session
 from ..entities.run import Run
 
 

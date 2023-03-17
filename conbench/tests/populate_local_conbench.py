@@ -5,7 +5,6 @@ import random
 import statistics
 import time
 import uuid
-
 from typing import List
 
 import requests
