@@ -435,7 +435,7 @@ class GitHubCreate(marshmallow.Schema):
     commit = marshmallow.fields.String(
         required=True,
         metadata={
-            "description": "The 40-character commit SHA of the repo being benchmarked"
+            "description": "The 40-character commit hash of the repo being benchmarked"
         },
     )
     repository = marshmallow.fields.String(
@@ -450,8 +450,6 @@ class GitHubCreate(marshmallow.Schema):
         },
     )
     pr_number = marshmallow.fields.Integer(
-        # I think this means that all of these pass validation:
-        # empty string, non-empty-string, null
         required=False,
         allow_none=True,
         metadata={
@@ -460,6 +458,8 @@ class GitHubCreate(marshmallow.Schema):
         },
     )
     branch = marshmallow.fields.String(
+        # I think this means that all of these pass validation:
+        # empty string, non-empty-string, null
         required=False,
         allow_none=True,
         metadata={
