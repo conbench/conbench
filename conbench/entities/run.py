@@ -439,6 +439,10 @@ class GitHubCreate(marshmallow.Schema):
         },
     )
     repository = marshmallow.fields.String(
+        # Does this allow for empty strings or not?
+        # Unclear, after reading marshmallow docs. Testes this. Yes, this
+        # allows for empty string:
+        # https://github.com/marshmallow-code/marshmallow/issues/76#issuecomment-1473348472
         required=True,
         metadata={
             "description": "The repository name (in the format `org/repo`) or the URL "
@@ -446,6 +450,8 @@ class GitHubCreate(marshmallow.Schema):
         },
     )
     pr_number = marshmallow.fields.Integer(
+        # I think this means that all of these pass validation:
+        # empty string, non-empty-string, null
         required=False,
         allow_none=True,
         metadata={

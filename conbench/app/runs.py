@@ -12,7 +12,10 @@ from ..app.benchmarks import ContextMixin, RunMixin
 from ..config import Config
 
 
-# This class has the same name as `entities.Run`.
+# This class had the same name as `entities.Run`. Mypy got confused:
+#   conbench/app/__init__.py:16: error: Incompatible import of "Run"
+#   (imported name has type "Type[conbench.app.runs.Run]", local name has
+#     type "Type[conbench.entities.run.Run]")  [assignment]
 class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, benchmarks, baseline_run, contender_run, form, run_id):
         compare_runs_url = None
