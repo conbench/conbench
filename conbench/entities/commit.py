@@ -152,6 +152,9 @@ class Commit(Base, EntityMixin):
 
     @staticmethod
     def create_no_context():
+        # Special commit row, a singleton that call results can relate to (in
+        # DB, via forgeign key) that have _no_ commit information set. But: is
+        # that needed? Why have that relation at all then?
         commit = Commit.first(sha="", repository="")
         if not commit:
             commit = Commit.create(
@@ -167,11 +170,19 @@ class Commit(Base, EntityMixin):
         return commit
 
     @staticmethod
-    def create_unknown_context(sha, repository):
+    def create_unknown_context(hash: str, repo_url: str) -> "Commit":
+        # Note(JP): I think this means "could not verify, could not get further
+        # info from remote API" -- but we _do_ have a commit hash, and a
+        # repository URL specifier -- insert that into the database. Also see
+        # https://github.com/conbench/conbench/issues/817
+        assert hash is not None
+        assert len(hash)
+        assert repo_url.startswith('http')
+
         return Commit.create(
             {
-                "sha": sha,
-                "repository": repository,
+                "sha": hash,
+                "repository": repo_url,
                 "parent": None,
                 "timestamp": None,
                 "message": "",
