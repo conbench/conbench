@@ -339,7 +339,7 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
 
     # commits with less context
     commits["sha"] = Commit.create_unknown_context(
-        sha="sha", repository="https://github.com/org/something_else_entirely"
+        hash="sha", repo_url="https://github.com/org/something_else_entirely"
     )
     commits[""] = Commit.create_no_context()
 
