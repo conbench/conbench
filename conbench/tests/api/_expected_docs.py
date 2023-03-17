@@ -1180,7 +1180,7 @@
                         "type": "string",
                     },
                     "commit": {
-                        "description": "The 40-character commit SHA of the repo being benchmarked",
+                        "description": "The 40-character commit hash of the repo being benchmarked",
                         "type": "string",
                     },
                     "pr_number": {
