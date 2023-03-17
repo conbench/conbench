@@ -177,7 +177,7 @@ class Commit(Base, EntityMixin):
         # https://github.com/conbench/conbench/issues/817
         assert hash is not None
         assert len(hash)
-        assert repo_url.startswith('http')
+        assert repo_url.startswith("http")
 
         return Commit.create(
             {
