@@ -1,5 +1,9 @@
+import logging
+
 from collections import defaultdict
 from dataclasses import dataclass
+from urllib.parse import urlparse
+
 
 from sqlalchemy import select
 
@@ -9,6 +13,8 @@ from ..app.benchmarks import RunMixin
 from ..config import Config
 from ..db import Session
 from ..entities.run import Run
+
+log = logging.getLogger(__name__)
 
 
 class Index(AppEndpoint, RunMixin):
@@ -34,7 +40,7 @@ class Index(AppEndpoint, RunMixin):
         # consistency between benchmark results in the run is currently not
         # granted: https://github.com/conbench/conbench/issues/864
 
-        repo_runs_map = defaultdict(list)
+        reponame_runs_map = defaultdict(list)
 
         for r in runs:
             rd = RunForDisplay(
@@ -42,18 +48,40 @@ class Index(AppEndpoint, RunMixin):
                 commit_message_short=short_commit_msg(r.commit.message),
                 run=r,
             )
-            repo_runs_map[r.commit.repository].append(rd)
 
-        return self.page(repo_runs_map)
+            rname = repo_url_to_display_name(r.commit.repo_url)
+            reponame_runs_map[rname].append(rd)
+
+        return self.page(reponame_runs_map)
+
+
+def repo_url_to_display_name(url: str) -> str:
+    try:
+        result = urlparse(url)
+    except ValueError as exc:
+        log.warning("repo_url failed urlparse(): %s, %s", url, exc)
+        # In this case, don't care about cosmetics: display the 'raw' data.
+        return url
+
+    if result.path == "":
+        # In this case, don't care about cosmetics: display the 'raw' data.
+        return url
+
+    # A common case is that there now is a leading slash. Remove that. Note
+    # that `strip()` also operates on the trailing end. I think there shouldn't
+    # be a trailing slash, but if it's there, remove it, too.
+    return result.path.strip("/")
 
 
 @dataclass
 class RunForDisplay:
     ctime_for_table: str
     commit_message_short: str
-    # Also expose the raw Run object
+    # Expose the raw Run object (but this needs to be used with a lot of
+    # care, in the template -- for VSCode supporting Python variable types and
+    # auot-completion in a jinja2 template see
+    # https://github.com/microsoft/pylance-release/discussions/4090)
     run: Run
-    # commit_url: Optional[str]
 
 
 def short_commit_msg(msg: str):

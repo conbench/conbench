@@ -5,10 +5,9 @@
 
 <h1 class="display-3 text-center" style="margin-bottom: 40px">/ˈkɒnbɛnʧ/</h1>
 
-{% for repo_url, runobjs in repo_runs_map.items() %}
+{% for reponame, runobjs in repo_runs_map.items() %}
 <div class="p-0">
-  <h4>Recent runs</h4>
-  <p>for <a href="{{repo_url}}">{{repo_url}}</a></p>
+  <h4>Recent runs for {{reponame}}</h4>
 </div>
 <hr class="border border-danger border-1 opacity-50">
 <!-- https://getbootstrap.com/docs/5.2/content/tables/#responsive-tables -->
