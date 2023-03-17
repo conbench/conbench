@@ -68,6 +68,68 @@ class Commit(Base, EntityMixin):
             return Commit.first(sha=self.fork_point_sha, repository=self.repository)
 
     @property
+    def repo_url(self) -> Optional[str]:
+        """
+        Return a URL string or None. The returned string is guaranteed to start
+        with 'http' and is guanrateed to not have a trailing slash.
+
+        The `None` case is here because I think the database may contain emtpy
+        strings.
+        """
+        u = self.repository
+        if u.startswith("http"):
+            # Remove trailing slash(es), if applicable.
+            return u.rstrip("/")
+
+        return None
+
+    @property
+    def commit_url(self) -> Optional[str]:
+        """
+        Return a URL string pointing to the commit, or None. The returned
+        string is guaranteed to start with 'http' and is guanrateed to not have
+        a trailing slash.
+
+        The `None` case is here because I think the database may contain emtpy
+        strings.
+
+        The URL path construction via /commit/{hash} is as of today
+        GitHub-specific. Therefore, there may be cases where the URL is
+        invalid (when the base URL does not point got GitHub)
+        """
+        u = self.repository
+        if u.startswith("http"):
+            # Remove trailing slash(es) from base URL, if applicable. Ideally
+            # this kind of normalization happens before DB insertion.
+            return u.rstrip("/") + f"/commit/{self.hash}"
+
+        return None
+
+    @property
+    def hash(self) -> str:
+        """
+        The full-length commit hash.
+
+        This is here for naming and documentation purposes.
+        """
+        return self.sha
+
+    @property
+    def author_avatar_url(self) -> Optional[str]:
+        """
+        Return a URL string or None.
+
+        The returned string is guaranteed to start with 'http' and is
+        guanrateed to not have a trailing slash.
+        """
+        u = self.author_avatar
+        if u and u.startswith("http"):
+            # Remove trailing slash(es), if applicable.
+            return u.rstrip("/")
+
+        return None
+
+    @property
     def commit_ancestry_query(self) -> Query:
         """Return a query that returns the IDs and timestamps of all Commits in the
         direct ancestry of this commit, all the way back to the initial commit. Also
