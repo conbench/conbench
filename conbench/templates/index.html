@@ -5,85 +5,88 @@
 
 <h1 class="display-3 text-center" style="margin-bottom: 40px">/ˈkɒnbɛnʧ/</h1>
 
-<div class="p-0"><h3>Recent runs</h3></div>
+{% for repo_url, runobjs in repo_runs_map.items() %}
+<div class="p-0">
+  <h4>Recent runs</h4>
+  <p>for <a href="{{repo_url}}">{{repo_url}}</a></p>
+</div>
 <hr class="border border-danger border-1 opacity-50">
-
 <!-- https://getbootstrap.com/docs/5.2/content/tables/#responsive-tables -->
-<div class="table-responsive">
-<table id="runs" class="table table-hover" style="display:none">
-            <thead>
-                <tr>
-                    <th scope="col">Run creation time</th>
-                    <th scope="col" style="width: 195px">Commit author</th>
-                    <th scope="col">Repository</th>
-                    <th scope="col">Hardware</th>
-                    <th scope="col" class="commit-col" style="width: 65px">Commit</th>
-                    <th scope="col" style="width: 150px">Commit message</th>
-                    <th scope="col" class="reason-col" style="width: 80px">Reason</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for run in runs %}
-                <tr>
-                     <td style="white-space: nowrap;">
-                         {% if run.has_errors or run.error_info %}
-                             <i class="glyphicon glyphicon-exclamation-sign text-danger"
-                                data-toggle="tooltip"
-                                data-placement="top"
-                                title="Run or some benchmarks have errors"></i>
-                         {% else %}
-                            <i class="glyphicon glyphicon-ok-circle text-success"></i>
-                         {% endif %}
-                         <a href="{{ url_for('app.run', run_id=run.id) }}">{{ run.display_timestamp }}</a>
-                     </td>
+<div class="table-responsive" style="margin-bottom: 50px">
+<!-- wow, the width:100% on the table below is really important, otherwise
+     datatables might miscalculate the column widths, but only when using
+     colspan in the header. I got that pointer in this thread:
+     https://datatables.net/forums/discussion/comment/144435/#Comment_144435
+     but otherwise spent way too much time debugging. This structure repeats,
+     and only the _first_ table had properties
+-->
+<table class="cb-runs-table table table-hover" style="width:100%; display: none">
+<thead>
+    {# https://datatables.net/examples/basic_init/complex_header.html #}
+    <tr>
+        <th scope="colgroup" colspan="3">Run</th>
+        <th scope="colgroup" colspan="3">Commit</th>
+    </tr>
+    <tr>
+        <!-- add tooltip, saying that this is DB insertion time -->
+        <th scope="col" style="width: 180px">insertion time</th>
+        <th scope="col" class="reason-col">reason</th>
+        <th scope="col" style="width: 150px">hardware</th>
+        <th scope="col" style="width: 170px">author</th>
+        <th scope="col" class="commit-col" style="width: 90px">hash</th>
+        <th scope="col">message</th>
+    </tr>
+</thead>
 
-                     <td>
-                         <div class="table-entry">
-                       {% if run.commit.author_avatar %}
-                         <img src="{{ run.commit.author_avatar }}" height="30" style="border-radius: 50%;">&nbsp;
-                       {% endif %}
-                       {{ run.commit.author_name }}
-                         </div>
-                     </td>
+<tbody>
+  {% for r in runobjs %}
+  <tr>
+    <td style="white-space: nowrap;">
+        <a href="{{ url_for('app.run', run_id=r.run.id) }}">{{ r.ctime_for_table }}</a>
+        {% if r.run.has_errors or r.run.error_info %}
+            <i class="bi bi-exclamation-circle text-danger"
+              data-toggle="tooltip"
+              data-placement="top"
+              title="This Run contains at least one benchmark result with an error"></i>
+        {% endif %}
+    </td>
 
-                    <td>
-                         <div class="table-entry">
-                             <a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a>
-                         </div>
-                    </td>
+    <td>
+      {% if r.run.reason %}
+        <div class="table-entry">{{ r.run.reason }}</div>
+      {% else %}
+        <div class="table-entry"></div>
+      {% endif %}
+    </td>
 
-                    <td>
-                         <div class="table-entry">{{ run.hardware.name }}</div>
-                    </td>
-                    <td>
-                         <div class="table-entry">
-                             <!--NOTE: enables full commit SHA search while maintaining partial SHA display for UI -->
-                             <a href="{{ run.commit.url }}"> {{ run.commit.sha[:7] }}
-                             <p class="hide-text">{{ run.commit.sha }}</p>
-                         </a>
-                         </div>
-                    </td>
+    <td><div class="table-entry">{{ r.run.hardware.name }}</div></td>
 
-                    <td>
-                         {% if run.commit.display_message %}
-                            <div class="table-entry">{{ run.commit.display_message }}</div>
-                         {% else %}
-                            <div class="table-entry"></div>
-                         {% endif %}
-                    </td>
+    <td>
+      <div class="table-entry">
+        {% if r.run.commit.author_avatar_url is not none %}
+          <img alt="avatar" src="{{ r.run.commit.author_avatar_url  }}" height="25" style="border-radius: 50%;">&nbsp;
+        {% endif %}
+        {{ r.run.commit.author_name }}
+      </div>
+    </td>
 
-                    <td>
-                         {% if run.reason %}
-                           <div class="table-entry">{{ run.reason }}</div>
-                         {% else %}
-                           <div class="table-entry"></div>
-                         {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+    <td>
+      {% if r.run.commit.commit_url is not none %}
+        <a href="{{ r.run.commit.commit_url }}">{{ r.run.commit.hash[:7] }}</a>
+      {% else %}
+        {# is this a valid scenario? when there's a hash, but no url? #}
+        {{ r.run.commit.hash[:7] }}
+      {% endif %}
+      <!--NOTE: enable full commit has search while maintaining partial hash display -->
+      <p style="display:none">{{ r.run.commit.hash }}</p>
+    </td>
+    <td>{{ r.commit_message_short }}</td>
+  </tr>
+  {% endfor %}
+</tbody>
 </table>
 </div>
+{% endfor %}
 
 {% endblock %}
 
