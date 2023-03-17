@@ -51,7 +51,7 @@ from benchclients import ConbenchClient
         ),
     ],
 )
-def test_get_comparison_to_baseline(
+def test_GetConbenchZComparisonStep(
     monkeypatch: pytest.MonkeyPatch, conbench_url, commit, expected_len, expected_bip
 ):
     if "ursa" in conbench_url:
