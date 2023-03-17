@@ -66,16 +66,16 @@ class AppEndpointTest:
 
     def assert_index_page(self, r):
         self.assert_200_ok(r)
-        assert b"conbench-for-pytest" in r.data
+        assert b"local-dev-conbench" in r.data
         assert b'<html lang="en">' in r.data
         # assert b"Login" in r.data
 
     def assert_page(self, r, title):
         self.assert_200_ok(r)
         # The HTML <title> tag starts with the conbench deployment name, in
-        # this case `conbench-for-pytest` and then contains a " - " seperator,
+        # this case `local-dev-conbench` and then contains a " - " seperator,
         # followed by the more specific page name
-        assert b"conbench-for-pytest - " in r.data
+        assert b"local-dev-conbench - " in r.data
 
     def create_benchmark(self, client):
         self.authenticate(client)
@@ -199,16 +199,16 @@ class GetEnforcer(Enforcer):
         # be reworked.
         # assert new_id.encode() not in r2.data
 
-        assert b"conbench-for-pytest - Sign In" in r2.data, r2.data
+        assert b"local-dev-conbench - Sign In" in r2.data, r2.data
 
     def test_unknown(self, client):
         self.authenticate(client)
         unknown_url = self.url.format("unknown")
         response = client.get(unknown_url, follow_redirects=True)
         if getattr(self, "redirect_on_unknown", True):
-            assert b"conbench-for-pytest - Home" in response.data, response.data
+            assert b"local-dev-conbench - Home" in response.data, response.data
         else:
-            title = f"conbench-for-pytest - {self.title}".encode()
+            title = f"local-dev-conbench - {self.title}".encode()
             assert title in response.data, response.data
 
 
