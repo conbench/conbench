@@ -12,7 +12,11 @@ from ..app.benchmarks import ContextMixin, RunMixin
 from ..config import Config
 
 
-class Run(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
+# This class had the same name as `entities.Run`. Mypy got confused:
+#   conbench/app/__init__.py:16: error: Incompatible import of "Run"
+#   (imported name has type "Type[conbench.app.runs.Run]", local name has
+#     type "Type[conbench.entities.run.Run]")  [assignment]
+class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, benchmarks, baseline_run, contender_run, form, run_id):
         compare_runs_url = None
         if not flask_login.current_user.is_authenticated:
@@ -91,6 +95,6 @@ class DeleteForm(flask_wtf.FlaskForm):
 
 rule(
     "/runs/<run_id>/",
-    view_func=Run.as_view("run"),
+    view_func=ViewRun.as_view("run"),
     methods=["GET", "POST"],
 )

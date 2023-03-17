@@ -38,10 +38,15 @@ class Commit(Base, EntityMixin):
     branch: Mapped[Optional[str]] = Nullable(s.String(510))
     fork_point_sha: Mapped[Optional[str]] = Nullable(s.String(50))
     parent: Mapped[Optional[str]] = Nullable(s.String(50))
+
+    # This is meant to be the URL to the repository without trailing slash.
+    # Should be renamed to repo_url
     repository: Mapped[str] = NotNull(s.String(100))
     message: Mapped[str] = NotNull(s.String(250))
     author_name: Mapped[str] = NotNull(s.String(100))
     author_login: Mapped[Optional[str]] = Nullable(s.String(50))
+
+    # I think this is guaranteed to be a URL. Is it?
     author_avatar: Mapped[Optional[str]] = Nullable(s.String(100))
     # Note(JP): tz-naive datetime, git commit author date, in UTC.
     # Edit: adding the type Optional[datetime] is not sufficient because
@@ -147,6 +152,9 @@ class Commit(Base, EntityMixin):
 
     @staticmethod
     def create_no_context():
+        # Special commit row, a singleton that call results can relate to (in
+        # DB, via forgeign key) that have _no_ commit information set. But: is
+        # that needed? Why have that relation at all then?
         commit = Commit.first(sha="", repository="")
         if not commit:
             commit = Commit.create(
@@ -162,11 +170,19 @@ class Commit(Base, EntityMixin):
         return commit
 
     @staticmethod
-    def create_unknown_context(sha, repository):
+    def create_unknown_context(hash: str, repo_url: str) -> "Commit":
+        # Note(JP): I think this means "could not verify, could not get further
+        # info from remote API" -- but we _do_ have a commit hash, and a
+        # repository URL specifier -- insert that into the database. Also see
+        # https://github.com/conbench/conbench/issues/817
+        assert hash is not None
+        assert len(hash)
+        assert repo_url.startswith("http")
+
         return Commit.create(
             {
-                "sha": sha,
-                "repository": repository,
+                "sha": hash,
+                "repository": repo_url,
                 "parent": None,
                 "timestamp": None,
                 "message": "",
@@ -249,9 +265,22 @@ GITHUB = "https://api.github.com"
 this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
-def repository_to_name(repository):
+def repository_to_name(repository: str) -> str:
+    """
+    Normalize user-given repository information into an org/repo notation.
+
+    (I try to document this in hindsight)
+
+    Expected input variants:
+
+    Guaranteed to return a string.
+
+    If the input string is a URL that is independent of github then the return
+    value is still a URL.
+    """
     if not repository:
         return ""
+
     name = repository
     if "github.com/" in repository:
         name = repository.split("github.com/")[1]
@@ -260,9 +289,23 @@ def repository_to_name(repository):
     return name
 
 
-def repository_to_url(repository):
+def repository_to_url(repository: str) -> str:
+    """
+    Warning: this may return an emtpy string, output is not guaranteed to be
+    a URL.
+    """
     name = repository_to_name(repository)
-    return f"https://github.com/{name.lower()}" if name else ""
+
+    if not name:
+        # What is this needed for? With this, Commit.repository can be set to
+        # be an empty string, I think.
+        return ""
+
+    # Note(JP): the `lower()` appears to be dangerous. URLs are case-sensitive.
+    # We should trust user-given input in that regard, or at least think this
+    # through a little further. Also see
+    # https://github.com/conbench/conbench/issues/818
+    return f"https://github.com/{name.lower()}"
 
 
 def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) -> dict:
@@ -305,7 +348,7 @@ def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) ->
     return commit
 
 
-def backfill_default_branch_commits(repourl: str, new_commit: Commit) -> None:
+def backfill_default_branch_commits(repo_url: str, new_commit: Commit) -> None:
     """Catches up the default-branch commits in the database.
 
     Will search GitHub for any untracked commits, between the given new_commit back in
@@ -323,11 +366,12 @@ def backfill_default_branch_commits(repourl: str, new_commit: Commit) -> None:
 
     github = GitHub()
 
-    # `repourl` is expected to be a URL pointing to a GitHub repositopry. It
-    # must be of the shape "https://github.com/org/repo". `repospec` then is
-    # unambiguously specifying the same GitHub repository using the canonical
-    # "org/repo" notation.
-    repospec = repository_to_name(repourl)
+    # Note(JP): the way I read the code I think that `repo_url` is expected to
+    # be a URL pointing to a GitHub repositopry. It must be of the shape
+    # "https://github.com/org/repo". `repospec` then is unambiguously
+    # specifying the same GitHub repository using the canonical "org/repo"
+    # notation.
+    repospec = repository_to_name(repo_url)
 
     # This triggers one HTTP request.
     default_branch = github.get_default_branch(repospec)
@@ -335,7 +379,7 @@ def backfill_default_branch_commits(repourl: str, new_commit: Commit) -> None:
     last_tracked_commit = Commit.all(
         filter_args=[Commit.sha != new_commit.sha, Commit.timestamp.isnot(None)],
         branch=default_branch,
-        repository=repourl,
+        repository=repo_url,
         order_by=Commit.timestamp.desc(),
         limit=1,
     )
@@ -346,7 +390,7 @@ def backfill_default_branch_commits(repourl: str, new_commit: Commit) -> None:
             # This would be a no-op
             return
 
-    elif Config.TESTING and "apache/arrow" in repourl:
+    elif Config.TESTING and "apache/arrow" in repo_url:
         # Also see https://github.com/conbench/conbench/issues/637.
         log.info(
             "backfill_default_branch_commits(): apache/arrow and "
