@@ -337,7 +337,7 @@ def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) ->
     return commit
 
 
-def backfill_default_branch_commits(repourl: str, new_commit: Commit) -> None:
+def backfill_default_branch_commits(repo_url: str, new_commit: Commit) -> None:
     """Catches up the default-branch commits in the database.
 
     Will search GitHub for any untracked commits, between the given new_commit back in
@@ -355,11 +355,12 @@ def backfill_default_branch_commits(repourl: str, new_commit: Commit) -> None:
 
     github = GitHub()
 
-    # `repourl` is expected to be a URL pointing to a GitHub repositopry. It
-    # must be of the shape "https://github.com/org/repo". `repospec` then is
-    # unambiguously specifying the same GitHub repository using the canonical
-    # "org/repo" notation.
-    repospec = repository_to_name(repourl)
+    # Note(JP): the way I read the code I think that `repo_url` is expected to
+    # be a URL pointing to a GitHub repositopry. It must be of the shape
+    # "https://github.com/org/repo". `repospec` then is unambiguously
+    # specifying the same GitHub repository using the canonical "org/repo"
+    # notation.
+    repospec = repository_to_name(repo_url)
 
     # This triggers one HTTP request.
     default_branch = github.get_default_branch(repospec)
@@ -367,7 +368,7 @@ def backfill_default_branch_commits(repourl: str, new_commit: Commit) -> None:
     last_tracked_commit = Commit.all(
         filter_args=[Commit.sha != new_commit.sha, Commit.timestamp.isnot(None)],
         branch=default_branch,
-        repository=repourl,
+        repository=repo_url,
         order_by=Commit.timestamp.desc(),
         limit=1,
     )
@@ -378,7 +379,7 @@ def backfill_default_branch_commits(repourl: str, new_commit: Commit) -> None:
             # This would be a no-op
             return
 
-    elif Config.TESTING and "apache/arrow" in repourl:
+    elif Config.TESTING and "apache/arrow" in repo_url:
         # Also see https://github.com/conbench/conbench/issues/637.
         log.info(
             "backfill_default_branch_commits(): apache/arrow and "
