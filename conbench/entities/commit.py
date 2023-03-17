@@ -368,6 +368,18 @@ def repository_to_url(repository: str) -> str:
         # be an empty string, I think.
         return ""
 
+    # Note(JP): `name` may still be a URL. In that case, return this.
+    if name.startswith("http"):
+        return name
+
+    # Now that we're seemingly generating a github.com-specific URL, we should
+    # make sure that `name` appears to be in org/repo notation, i.e. contains
+    # a slash.
+    if "/" not in name:
+        log.warning(
+            "repository_to_url() about to create invalid URL, name is: %s", name
+        )
+
     # Note(JP): the `lower()` appears to be dangerous. URLs are case-sensitive.
     # We should trust user-given input in that regard, or at least think this
     # through a little further. Also see
