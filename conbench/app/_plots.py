@@ -59,7 +59,7 @@ class TimeSeriesPlotMixin:
             jsondoc = json.dumps(
                 bokeh.embed.json_item(
                     time_series_plot(samples, benchmark, run),
-                    f"plot-history-{i}",
+                    f"plot-history-{i}",  # type: ignore
                 )
             )
             return BokehPlotJSONOrError(jsondoc, None)
