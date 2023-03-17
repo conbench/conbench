@@ -38,10 +38,15 @@ class Commit(Base, EntityMixin):
     branch: Mapped[Optional[str]] = Nullable(s.String(510))
     fork_point_sha: Mapped[Optional[str]] = Nullable(s.String(50))
     parent: Mapped[Optional[str]] = Nullable(s.String(50))
+
+    # This is meant to be the URL to the repository without trailing slash.
+    # Should be renamed to repo_url
     repository: Mapped[str] = NotNull(s.String(100))
     message: Mapped[str] = NotNull(s.String(250))
     author_name: Mapped[str] = NotNull(s.String(100))
     author_login: Mapped[Optional[str]] = Nullable(s.String(50))
+
+    # I think this is guaranteed to be a URL. Is it?
     author_avatar: Mapped[Optional[str]] = Nullable(s.String(100))
     # Note(JP): tz-naive datetime, git commit author date, in UTC.
     # Edit: adding the type Optional[datetime] is not sufficient because
@@ -249,9 +254,22 @@ GITHUB = "https://api.github.com"
 this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
-def repository_to_name(repository):
+def repository_to_name(repository: str) -> str:
+    """
+    Normalize user-given repository information into an org/repo notation.
+
+    (I try to document this in hindsight)
+
+    Expected input variants:
+
+    Guaranteed to return a string.
+
+    If the input string is a URL that is independent of github then the return
+    value is still a URL.
+    """
     if not repository:
         return ""
+
     name = repository
     if "github.com/" in repository:
         name = repository.split("github.com/")[1]
@@ -260,9 +278,23 @@ def repository_to_name(repository):
     return name
 
 
-def repository_to_url(repository):
+def repository_to_url(repository: str) -> str:
+    """
+    Warning: this may return an emtpy string, output is not guaranteed to be
+    a URL.
+    """
     name = repository_to_name(repository)
-    return f"https://github.com/{name.lower()}" if name else ""
+
+    if not name:
+        # What is this needed for? With this, Commit.repository can be set to
+        # be an empty string, I think.
+        return ""
+
+    # Note(JP): the `lower()` appears to be dangerous. URLs are case-sensitive.
+    # We should trust user-given input in that regard, or at least think this
+    # through a little further. Also see
+    # https://github.com/conbench/conbench/issues/818
+    return f"https://github.com/{name.lower()}"
 
 
 def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) -> dict:

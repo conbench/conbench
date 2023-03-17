@@ -158,6 +158,8 @@ class RunMixin:
         # display_message really seems to be name of the link
         run["commit"]["display_message"] = commit_message
         if not commit_message:  # None or empty string
+            # Note(JP): I wonder where the "url" ever got set.
+            # Maybe in the _Serializer(EntitySerializer) for Commit?
             if run["commit"].get("url"):  # be real conservative
                 run["commit"]["display_message"] = run["commit"].get("url")
             else:
