@@ -110,6 +110,11 @@ May modify files. Analogue to what CI requires.
 It requires for some commands to be available in your current shell.
 Dependencies can be installed with `pip install -r requirements-dev.txt`.
 
+* `make alembic-new-migration`: Attempts to generate a new migration Python module in `migrations/versions/`.
+Requires setting the environment variable `ALEMBIC_MIGRATION_NAME` before invocation.
+Example: `export ALEMBIC_MIGRATION_NAME='repo_url_lenth'`.
+After the file was created you may want to change its permissions re-format it with `black`.
+
 * `make conbench-on-minikube`: requires [minikube](https://minikube.sigs.k8s.io/docs/start/).
 Deploys the Conbench API server to a local minikube-powered Kubernetes cluster.
 This also deploys a kube-prometheus-based observability stack.
