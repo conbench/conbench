@@ -84,14 +84,17 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
         ),
     ]
     if github_auth == "app":
-        pipeline_steps += [
+        pipeline_steps.append(
             steps.GitHubCheckStep(
                 repo=test_status_repo,
                 commit_hash=test_status_commit,
                 comparison_step_name="z_none",
-            ),
-            steps.GitHubPRCommentAboutCheckStep(pr_number=5, repo=test_status_repo),
-        ]
+            )
+        )
+        if not os.getenv("CI"):  # don't post PR comments in CI
+            pipeline_steps.append(
+                steps.GitHubPRCommentAboutCheckStep(pr_number=5, repo=test_status_repo)
+            )
 
     pipeline = AlertPipeline(pipeline_steps)
     outputs = pipeline.run_pipeline()
@@ -102,13 +105,14 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
     if github_auth == "app":
         assert outputs["GitHubStatusStep"]["creator"]["type"] == "Bot"
         assert outputs["GitHubCheckStep"]["conclusion"] == "failure"
-        assert outputs["GitHubPRCommentAboutCheckStep"]["body"].startswith(
-            """## ⚡️ Benchmark results ⚡️
+        if not os.getenv("CI"):
+            assert outputs["GitHubPRCommentAboutCheckStep"]["body"].startswith(
+                """## ⚡️ Benchmark results ⚡️
 
 Found 1 regression(s).
 
 See the full report [here]("""
-        )
+            )
 
     # sleep to see the updated statuses on the PR
     time.sleep(1)
