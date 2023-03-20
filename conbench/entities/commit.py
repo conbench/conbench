@@ -515,7 +515,7 @@ def backfill_default_branch_commits(repo_url: str, new_commit: Commit) -> None:
 
 class GitHubHTTPApiClient:
     def __init__(self) -> None:
-        self._auth_token_pool: itertools.cycle(self._read_tokens_from_env())
+        self._read_tokens_from_env()
 
         self.test_shas = {
             "02addad336ba19a654f9c857ede546331be7b631": "github_child.json",
@@ -537,15 +537,16 @@ class GitHubHTTPApiClient:
     def _read_tokens_from_env(self) -> None:
         """
         This reads GITHUB_API_TOKEN, initializes a cycling iterator (if more
-        than one token was provided), and always populates
-        self._current_auth_token (with either None, or with a token)
+        than one token was provided), and always populates self._token_pool
+        (None, or pool of size greater 1), and self._current_auth_token (with
+        either None, or with a token).
 
         When reading GitHub API token(s) from environment: support two formats:
         one token, or more than one token (comma-separated)
         """
 
         data = os.getenv("GITHUB_API_TOKEN")
-        self._token_pool: Optional[List] = None
+        self._token_pool: Optional[itertools.cycle[str]] = None
         self._current_auth_token = None
         if data is None:
             log.info("GITHUB_API_TOKEN env not set")
