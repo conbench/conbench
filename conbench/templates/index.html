@@ -28,7 +28,7 @@
     </tr>
     <tr>
         <!-- add tooltip, saying that this is DB insertion time -->
-        <th scope="col" style="width: 180px">insertion time</th>
+        <th scope="col" style="width: 180px">insertion time (result count)</th>
         <th scope="col" class="reason-col">reason</th>
         <th scope="col" style="width: 150px">hardware</th>
         <th scope="col" style="width: 170px">author</th>
@@ -41,7 +41,7 @@
   {% for r in runobjs %}
   <tr>
     <td style="white-space: nowrap;">
-        <a href="{{ url_for('app.run', run_id=r.run.id) }}">{{ r.ctime_for_table }}</a>
+        <a href="{{ url_for('app.run', run_id=r.run.id) }}">{{ r.ctime_for_table }}</a>  ({{ r.result_count }})
         {% if r.run.has_errors or r.run.error_info %}
             <i class="bi bi-exclamation-circle text-danger"
               data-toggle="tooltip"

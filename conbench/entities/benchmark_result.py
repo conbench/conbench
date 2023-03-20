@@ -35,7 +35,20 @@ class BenchmarkResult(Base, EntityMixin):
     case_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("case.id"))
     info_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("info.id"))
     context_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("context.id"))
+
+    # Follow
+    # https://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#one-to-many
+    # There is a one-to-many relationship between Run (one) and BenchmarkResult
+    # (0, 1, many). Result is child. Run is parent. Child has column with
+    # foreign key, pointing to parent.
     run_id: Mapped[str] = NotNull(s.Text, s.ForeignKey("run.id"))
+    # Note that `immediate` means that " items should be loaded as the parents
+    # are loaded, using a separate SELECT statement, or identity map fetch for
+    # simple many-to-one references." Do this until we see that this is a perf
+    # problem. Use case: count results per run (that use case can be solved by
+    # adding a cache/counter into the DB, also see
+    # https://stackoverflow.com/q/45407402/145400)
+    run: Mapped[Run] = relationship("Run", lazy="immediate", back_populates="results")
 
     # These can be emtpy lists. An item in the list is of type float, which
     # includes `math.nan` as valid value.
@@ -52,7 +65,7 @@ class BenchmarkResult(Base, EntityMixin):
     # this info should probably be called something like context-info it's details about the context that are optional | we believe won't impact performance
     info: Mapped[Info] = relationship("Info", lazy="joined")
     context: Mapped[Context] = relationship("Context", lazy="joined")
-    run: Mapped[Run] = relationship("Run", lazy="select")
+
     unit: Mapped[Optional[str]] = Nullable(s.Text)
     time_unit: Mapped[Optional[str]] = Nullable(s.Text)
     batch_id: Mapped[Optional[str]] = Nullable(s.Text)

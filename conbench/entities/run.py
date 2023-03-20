@@ -1,7 +1,7 @@
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, List
 
 import flask as f
 import marshmallow
@@ -12,6 +12,7 @@ from sqlalchemy.orm import Mapped, relationship
 import conbench.util
 
 from ..db import Session
+
 from ..entities._entity import (
     Base,
     EntityExists,
@@ -20,6 +21,9 @@ from ..entities._entity import (
     NotNull,
     Nullable,
 )
+
+from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
+
 from ..entities.commit import (
     CantFindAncestorCommitsError,
     Commit,
@@ -71,6 +75,11 @@ class Run(Base, EntityMixin):
     has_errors: Mapped[bool] = NotNull(s.Boolean, default=False)
     hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
     hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
+
+    # Follow ttps://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#one-to-many.
+    # There is a one-to-many relationship between Run (one) and BenchmarkResult
+    # (0, 1, many).
+    results: Mapped[List["BenchmarkResult"]] = relationship(back_populates="run")
 
     @staticmethod
     def create(data) -> "Run":
