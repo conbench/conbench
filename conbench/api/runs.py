@@ -4,7 +4,7 @@ import flask_login
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
-from ..entities._entity import NotFound
+from ..entities._entity import EntityExists, NotFound
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
 from ..entities.run import Run, RunFacadeSchema, RunSerializer
@@ -136,7 +136,12 @@ class RunListAPI(ApiEndpoint):
           - Runs
         """
         data = self.validate(self.schema.create)
-        run = Run.create(data)
+
+        try:
+            run = Run.create(data)
+        except EntityExists as exc:
+            return f.jsonify(error=409, description=str(exc)), 409
+
         return self.response_201_created(self.serializer.one.dump(run))
 
 

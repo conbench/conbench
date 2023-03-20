@@ -19,6 +19,18 @@ class NotFound(NoResultFound):
     pass
 
 
+class EntityExists(Exception):
+    """
+    Custom exception representing a database conflict. Meant to be caught from
+    within HTTP request handlers, and to be translated into an HTTP response
+    with status code 409. The `msg` in `raise EntityExists(msg)` is meant to be
+    exposed directly to the HTTP client (that is, construct it mindfully: do
+    not expose meaningless detail).
+    """
+
+    pass
+
+
 def generate_uuid():
     # Consider using xid or UUID7 or something comparable so that primary
     # key reflects insertion order.
