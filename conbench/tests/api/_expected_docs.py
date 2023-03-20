@@ -1200,7 +1200,6 @@
                 "properties": {
                     "email": {"format": "email", "type": "string"},
                     "password": {"type": "string"},
-                    "remember_me": {"type": "boolean"},
                 },
                 "required": ["email", "password"],
                 "type": "object",
