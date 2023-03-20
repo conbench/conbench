@@ -1,3 +1,5 @@
+import logging
+
 import bokeh
 import flask as f
 import flask_login
@@ -11,6 +13,9 @@ from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin
 from ..app._util import augment, display_message, display_time
 from ..config import Config
+
+
+log = logging.getLogger(__name__)
 
 
 class UpdateForm(flask_wtf.FlaskForm):
@@ -56,8 +61,19 @@ class ContextMixin:
 class BenchmarkMixin:
     def get_display_benchmark(self, benchmark_id):
         benchmark, response = self._get_benchmark(benchmark_id)
+
+        if response.status_code == 404:
+            self.flash("unknown benchmark ID: {benchmark_id}", "info")
+
         if response.status_code != 200:
-            self.flash("Error getting benchmark.")
+            # Note(JP): quick band-aid to at least not swallow err detail, need
+            # to do better err handling
+            log.info(
+                "get_display_benchmark(): internal api resp with code %s: %s",
+                response.status_code,
+                response.text,
+            )
+            self.flash("Error getting benchmark", "info")
             return None
 
         augment(benchmark)
