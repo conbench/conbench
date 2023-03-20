@@ -1,4 +1,4 @@
-import functools
+import itertools
 import json
 import logging
 import os
@@ -406,7 +406,7 @@ def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) ->
     if not repository or not sha:
         return {}
 
-    github = GitHub()
+    github = GitHubHTTPApiClient()
     name = repository_to_name(repository)
 
     # `github.get_commit()` below may raise an exception if the GitHub
@@ -443,7 +443,7 @@ def backfill_default_branch_commits(repo_url: str, new_commit: Commit) -> None:
         # This would be a no-op
         return
 
-    github = GitHub()
+    github = GitHubHTTPApiClient()
 
     # Note(JP): the way I read the code I think that `repo_url` is expected to
     # be a URL pointing to a GitHub repositopry. It must be of the shape
@@ -513,8 +513,10 @@ def backfill_default_branch_commits(repo_url: str, new_commit: Commit) -> None:
         )
 
 
-class GitHub:
-    def __init__(self):
+class GitHubHTTPApiClient:
+    def __init__(self) -> None:
+        self._auth_token_pool: itertools.cycle(self._read_tokens_from_env())
+
         self.test_shas = {
             "02addad336ba19a654f9c857ede546331be7b631": "github_child.json",
             "4beb514d071c9beec69b8917b5265e77ade22fb3": "github_parent.json",
@@ -531,6 +533,61 @@ class GitHub:
             "testing repository with just org/repo",
             "testing repository with git@g",
         ]
+
+    def _read_tokens_from_env(self) -> None:
+        """
+        This reads GITHUB_API_TOKEN, initializes a cycling iterator (if more
+        than one token was provided), and always populates
+        self._current_auth_token (with either None, or with a token)
+
+        When reading GitHub API token(s) from environment: support two formats:
+        one token, or more than one token (comma-separated)
+        """
+
+        data = os.getenv("GITHUB_API_TOKEN")
+        self._token_pool: Optional[List] = None
+        self._current_auth_token = None
+        if data is None:
+            log.info("GITHUB_API_TOKEN env not set")
+            return
+
+        log.info("GITHUB_API_TOKEN env was set, length of data: %s", len(data))
+
+        token_candidates = [data]
+        if "," in data:
+            token_candidates = data.split(",")
+
+        tokens_to_use = []
+        for t in token_candidates:
+            if len(t) < 5 or len(t) > 120:
+                log.info("bad token length, ignore: %s", len(t))
+            else:
+                tokens_to_use.append(t)
+
+        if len(tokens_to_use) == 0:
+            return
+
+        if len(tokens_to_use) == 1:
+            self._current_auth_token = tokens_to_use[0]
+            log.info("configured one GitHub HTTP API auth token")
+            return
+
+        self._token_pool = itertools.cycle(tokens_to_use)
+        self._current_auth_token = next(self._token_pool)
+        log.info("current auth token starts with: %s", self._current_auth_token[:3])
+
+    def _rotate_auth_token(self):
+        """
+        Return True if token was rotated, False otherwise.
+        """
+        if self._token_pool is None:
+            # convention: pool size greater than 1, rotation takes effect.
+            log.debug("tried rotating auth token, but no pool is configured")
+            return False
+
+        self._current_auth_token = next(self._token_pool)
+        log.info("current auth token starts with: %s", self._current_auth_token[:3])
+        return True
 
     def get_default_branch(self, name):
         if name == "org/repo":
@@ -662,14 +719,6 @@ class GitHub:
         branch = response["head"]["label"]
         return branch
 
-    @functools.cached_property
-    def session(self):
-        token, session = os.getenv("GITHUB_API_TOKEN"), None
-        if token:
-            session = requests.Session()
-            session.headers = {"Authorization": f"Bearer {token}"}
-        return session
-
     def _mocked_get_response(self, sha) -> dict:
         """
         Note(JP): this function performed magic before and I am trying to write
@@ -777,7 +826,14 @@ class GitHub:
             # has a little bit of retrying built-in by default for some of
             # these errors, but it's not trying too hard. Add more retrying
             # on top of that.
-            resp = self.session.get(url) if self.session else requests.get(url)
+            if self._current_auth_token:
+                resp = requests.get(
+                    url,
+                    headers={"Authorization": f"Bearer { self._current_auth_token}"},
+                )
+            else:
+                resp = requests.get(url)
+
         except requests.exceptions.RequestException as exc:
             metrics.COUNTER_GITHUB_HTTP_API_RETRYABLE_ERRORS.inc()
             log.info(
@@ -820,6 +876,10 @@ class GitHub:
             )
 
             if reqquota == 0:
+                if self._rotate_auth_token():
+                    log.info("rotated auth token, retry request")
+                    return None
+
                 metrics.COUNTER_GITHUB_HTTP_API_REQUEST_FAILURES.inc()
                 raise Exception("Hourly GitHub HTTP API quota exhausted")
 
