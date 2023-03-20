@@ -1,7 +1,7 @@
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Optional, List
+from typing import List, Optional
 
 import flask as f
 import marshmallow
@@ -21,8 +21,6 @@ from ..entities._entity import (
     NotNull,
     Nullable,
 )
-
-from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
 
 from ..entities.commit import (
     CantFindAncestorCommitsError,
@@ -79,7 +77,10 @@ class Run(Base, EntityMixin):
     # Follow ttps://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#one-to-many.
     # There is a one-to-many relationship between Run (one) and BenchmarkResult
     # (0, 1, many).
-    results: Mapped[List["BenchmarkResult"]] = relationship(back_populates="run")
+    # Ignorantly importing BenchmarkResult results in circular import err.
+    results: Mapped[List["BenchmarkResult"]] = relationship(  # noqa
+        back_populates="run"
+    )
 
     @staticmethod
     def create(data) -> "Run":
