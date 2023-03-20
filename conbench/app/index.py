@@ -34,7 +34,7 @@ class Index(AppEndpoint, RunMixin):
             select(Run).order_by(Run.timestamp.desc()).limit(1000)
         ).all()
 
-        # Note(JP): group runs by associated commit.repository value Note that
+        # Note(JP): group runs by associated commit.repository value. Note that
         # consistency between benchmark results in the run is currently not
         # granted: https://github.com/conbench/conbench/issues/864
 
@@ -49,6 +49,11 @@ class Index(AppEndpoint, RunMixin):
 
             rname = repo_url_to_display_name(r.commit.repo_url)
             reponame_runs_map[rname].append(rd)
+
+        # A quick/pragmatic decision for now, not set in stone: get a stable
+        # sort order of repositories the way they are listed on that page;
+        # do this by sorting alphabetically.
+        reponame_runs_map = dict(sorted(reponame_runs_map.items()))
 
         return self.page(reponame_runs_map)
 
