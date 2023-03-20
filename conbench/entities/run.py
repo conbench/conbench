@@ -149,6 +149,8 @@ class Run(Base, EntityMixin):
                 raise EntityExists(
                     f"conflict: a Run with ID {data['id']} already exists"
                 )
+            else:
+                raise
 
         return run
 
