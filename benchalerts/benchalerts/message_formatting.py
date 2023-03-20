@@ -112,12 +112,18 @@ def github_check_details(full_comparison: FullComparisonInfo) -> Optional[str]:
 
 def pr_comment_link_to_check(summary: str, check_link: str) -> str:
     """Generate a GitHub PR comment that summarizes and links to a GitHub Check."""
-    return _clean(
-        f"""
-        ## ⚡️ Benchmark results ⚡️
+    summary_lines = summary.split("\n")
 
-        {summary}.
+    # Strip off the "note" and afterwards (would be noisy in a comment)
+    note_index = [ix for ix, line in enumerate(summary_lines) if line == "### Note"]
+    if note_index:
+        summary_lines = summary_lines[: note_index[0]]
 
-        See the full report [here]({check_link}).
-        """
+    summary_preview = "\n".join(summary_lines[:20])
+    if len(summary_lines) > 20:
+        summary_preview += "\n..."
+
+    return (
+        f"A [full benchmark report]({check_link}) is ready. Here is a preview:\n\n"
+        + summary_preview
     )

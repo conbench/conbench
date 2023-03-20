@@ -107,11 +107,11 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
         assert outputs["GitHubCheckStep"]["conclusion"] == "failure"
         if not os.getenv("CI"):
             assert outputs["GitHubPRCommentAboutCheckStep"]["body"].startswith(
-                """## ⚡️ Benchmark results ⚡️
-
-Found 1 regression(s).
-
-See the full report [here]("""
+                "A [full benchmark report](https://github.com/conbench/benchalerts/runs/"
+            )
+            assert (
+                "Contender commit `c76715c9` had 1 performance regression(s) compared to its baseline runs."
+                in outputs["GitHubPRCommentAboutCheckStep"]["body"]
             )
 
     # sleep to see the updated statuses on the PR

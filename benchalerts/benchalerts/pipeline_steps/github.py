@@ -298,7 +298,7 @@ class GitHubPRCommentAboutCheckStep(AlertPipelineStep):
         check_details: dict = previous_outputs[self.check_step_name]
         res = self.github_client.create_pull_request_comment(
             comment=self._default_comment(
-                summary=check_details["output"]["title"],
+                summary=check_details["output"]["summary"],
                 check_link=check_details["html_url"],
             ),
             pull_number=self.pr_number,
