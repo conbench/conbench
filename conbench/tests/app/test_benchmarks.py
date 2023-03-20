@@ -22,7 +22,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
         self.authenticate(client)
         response = client.get("/benchmarks/unknown/", follow_redirects=True)
         self.assert_index_page(response)
-        assert b"Error getting benchmark." in response.data
+        assert re.search(r"unknown benchmark ID: \w+", response.text, flags=re.ASCII)
 
 
 class TestBenchmarkDelete(_asserts.DeleteEnforcer):
@@ -48,7 +48,7 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
         # cannot get benchmark after
         response = client.get(f"/benchmarks/{benchmark_id}/", follow_redirects=True)
         self.assert_index_page(response)
-        assert b"Error getting benchmark." in response.data
+        assert re.search(r"unknown benchmark ID: \w+", response.text, flags=re.ASCII)
 
     def test_unauthenticated(self, client):
         benchmark_id = self.create_benchmark(client)
