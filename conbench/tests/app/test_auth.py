@@ -38,7 +38,6 @@ class TestRegister(_asserts.AppEndpointTest):
         data = {
             "email": "register@example.com",
             "password": "register",
-            "remember_me": True,
             "csrf_token": self.get_csrf_token(response),
         }
         response = client.post("/login/", data=data, follow_redirects=True)
@@ -58,7 +57,6 @@ class TestRegister(_asserts.AppEndpointTest):
             "password": "register",
             "password2": "register",
             "secret": TestConfig.REGISTRATION_KEY,
-            "remember_me": True,
             "csrf_token": self.get_csrf_token(response),
         }
         response = client.post("/register/", data=data, follow_redirects=True)
