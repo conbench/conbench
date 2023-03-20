@@ -83,11 +83,11 @@ class CompareMixin:
 
         threshold = f.request.args.get("threshold")
         if threshold is not None:
-            threshold = int(threshold)
+            threshold = float(threshold)
 
         threshold_z = f.request.args.get("threshold_z")
         if threshold_z is not None:
-            threshold_z = int(threshold_z)
+            threshold_z = float(threshold_z)
 
         try:
             baseline_id, contender_id = compare_ids.split("...", 1)
@@ -120,11 +120,11 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
           - in: query
             name: threshold
             schema:
-              type: integer
+              type: number
           - in: query
             name: threshold_z
             schema:
-              type: integer
+              type: number
         tags:
           - Comparisons
         """
@@ -174,11 +174,11 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
           - in: query
             name: threshold
             schema:
-              type: integer
+              type: number
           - in: query
             name: threshold_z
             schema:
-              type: integer
+              type: number
         tags:
           - Comparisons
         """
