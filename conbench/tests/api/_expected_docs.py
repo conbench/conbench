@@ -1473,11 +1473,11 @@
                         "schema": {"type": "string"},
                     },
                     {"in": "query", "name": "raw", "schema": {"type": "boolean"}},
-                    {"in": "query", "name": "threshold", "schema": {"type": "integer"}},
+                    {"in": "query", "name": "threshold", "schema": {"type": "number"}},
                     {
                         "in": "query",
                         "name": "threshold_z",
-                        "schema": {"type": "integer"},
+                        "schema": {"type": "number"},
                     },
                 ],
                 "responses": {
@@ -1500,11 +1500,11 @@
                         "schema": {"type": "string"},
                     },
                     {"in": "query", "name": "raw", "schema": {"type": "boolean"}},
-                    {"in": "query", "name": "threshold", "schema": {"type": "integer"}},
+                    {"in": "query", "name": "threshold", "schema": {"type": "number"}},
                     {
                         "in": "query",
                         "name": "threshold_z",
-                        "schema": {"type": "integer"},
+                        "schema": {"type": "number"},
                     },
                 ],
                 "responses": {
@@ -1547,11 +1547,11 @@
                         "schema": {"type": "string"},
                     },
                     {"in": "query", "name": "raw", "schema": {"type": "boolean"}},
-                    {"in": "query", "name": "threshold", "schema": {"type": "integer"}},
+                    {"in": "query", "name": "threshold", "schema": {"type": "number"}},
                     {
                         "in": "query",
                         "name": "threshold_z",
-                        "schema": {"type": "integer"},
+                        "schema": {"type": "number"},
                     },
                 ],
                 "responses": {

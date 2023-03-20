@@ -1,3 +1,5 @@
+import pytest
+
 from ...api._examples import (
     _api_compare_benchmark_result,
     _api_compare_entity,
@@ -221,11 +223,15 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
             return [benchmark_result_1, benchmark_result_2], entity
         return entity
 
-    def test_compare(self, client):
+    @pytest.mark.parametrize("threshold_z", [None, "5.7"])
+    def test_compare(self, client, threshold_z):
         self.authenticate(client)
         name = _uuid()
         new_entities, compare = self._create(name, verbose=True)
-        response = client.get(f"/api/compare/benchmarks/{compare.id}/")
+        query_string = {"threshold_z": threshold_z} if threshold_z else None
+        response = client.get(
+            f"/api/compare/benchmarks/{compare.id}/", query_string=query_string
+        )
 
         benchmark_ids = [e.id for e in new_entities]
         batch_ids = [e.batch_id for e in new_entities]
@@ -256,6 +262,8 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "contender_z_regression": True,
             }
         )
+        if threshold_z:
+            expected["threshold_z"] = float(threshold_z)
         self.assert_200_ok(response, expected)
 
     def test_compare_with_error(self, client):
@@ -327,7 +335,8 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
             return [benchmark_result_1, benchmark_result_2], entity
         return entity
 
-    def test_compare(self, client):
+    @pytest.mark.parametrize("threshold_z", [None, "5.7"])
+    def test_compare(self, client, threshold_z):
         self.authenticate(client)
         run_id, batch_id = _uuid(), _uuid()
         new_entities, compare = self._create(
@@ -336,7 +345,10 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
             batch_id=batch_id,
         )
         new_ids = [e.id for e in new_entities]
-        response = client.get(f"/api/compare/batches/{compare.id}/")
+        query_string = {"threshold_z": threshold_z} if threshold_z else None
+        response = client.get(
+            f"/api/compare/batches/{compare.id}/", query_string=query_string
+        )
 
         # cheating by comparing batch to same batch
         batch_ids = [batch_id, batch_id]
@@ -369,6 +381,10 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
                 },
             ],
         )
+        for e in expected:
+            if threshold_z:
+                e["threshold_z"] = float(threshold_z)
+
         self.assert_200_ok(response, None, contains=expected[0])
         self.assert_200_ok(response, None, contains=expected[1])
 
@@ -421,7 +437,8 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             return [benchmark_result_1, benchmark_result_2], entity
         return entity
 
-    def test_compare(self, client):
+    @pytest.mark.parametrize("threshold_z", [None, "5.7"])
+    def test_compare(self, client, threshold_z):
         self.authenticate(client)
         run_id, batch_id = _uuid(), _uuid()
         new_entities, compare = self._create(
@@ -430,7 +447,10 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             batch_id=batch_id,
         )
         new_ids = [e.id for e in new_entities]
-        response = client.get(f"/api/compare/runs/{compare.id}/")
+        query_string = {"threshold_z": threshold_z} if threshold_z else None
+        response = client.get(
+            f"/api/compare/runs/{compare.id}/", query_string=query_string
+        )
 
         # cheating by comparing run to same run
         run_ids = [run_id, run_id]
@@ -463,6 +483,10 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                 },
             ],
         )
+        for e in expected:
+            if threshold_z:
+                e["threshold_z"] = float(threshold_z)
+
         self.assert_200_ok(response, None, contains=expected[0])
         self.assert_200_ok(response, None, contains=expected[1])
 
