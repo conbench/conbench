@@ -125,24 +125,6 @@ $(document).ready(function() {
     }, 2000); // <-- time in milliseconds
 });
 
-function enable_search_query_string(data_table) {
-    $(data_table).on('search.dt', function () {
-        var current_search_value = $('.dataTables_filter input').val();
-        var new_url = window.location.protocol + "//" + window.location.host + window.location.pathname
-        if (current_search_value) {
-            new_url += "?search=" + encodeURIComponent(current_search_value)
-        }
-        window.history.replaceState(null, document.title, new_url)
-    });
-
-    $(document).ready(function() {
-        var table =  $(data_table).DataTable();
-        {% if search_value %}
-            table.search("{{ search_value }}").draw();
-        {% endif %}
-    });
-
-}
 
 /*
 INFO:
@@ -212,12 +194,12 @@ INFO:
     Based on the indexes of the columns, input boxes are created. The search is triggered on
     key press.
 INPUTS:
- data_table_id: string
+ data_table_elem: DOM element for the <table>
  column_indexes: array
  */
-function free_text_column_search(data_table_id, column_indexes) {
+function free_text_column_search(data_table_elem, column_indexes) {
     $(document).ready(function() {
-        var table = $(data_table_id).DataTable();
+        var table = data_table_elem.DataTable();
         table.columns(column_indexes).every(function() {
             var that = this;
             var title = this.header().textContent;
@@ -241,11 +223,11 @@ INFO:
         - Search is not enabled with single OR null data points and a message is logged on console
         - If any unidentified value (beyond assumed definitions) is encountered, a message is logged on console
 INPUT:
-    data_table_id: string
+    data_table_elem: DOM element for the <table>
  */
-function column_search_implementation(data_table_id) {
+function column_search_implementation(data_table_elem) {
     $(document).ready(function() {
-        var table = $(data_table_id).DataTable();
+        var table = data_table_elem.DataTable();
         var unique_count = [];
         table.columns().every( function () {
             var current = this;
@@ -255,10 +237,10 @@ function column_search_implementation(data_table_id) {
         console.log(unique_count)
         unique_count.forEach(function (item, index) {
             if (item < 10 && item > 1) {
-                dropdown_column_search(data_table_id, index)
+                dropdown_column_search(data_table_elem, index)
             }
             else if (item >= 10){
-                free_text_column_search(data_table_id, index)
+                free_text_column_search(data_table_elem, index)
             }
             else if (item == 1) {
                 console.log("Search isn't enabled with one/null data point")

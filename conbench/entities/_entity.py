@@ -58,6 +58,19 @@ class EntityMixin:
         use kwargs, e.g. ``all(x=y)``. Else if you need something more complicated, use
         e.g. ``all(filter_args=[cls.x != y])``.
         """
+        # Note(JP): This is now a legacy technique, see
+        #  https://docs.sqlalchemy.org/en/20/changelog/migration_20.html#orm-query-unified-with-core-select
+        # "The Query object (as well as the BakedQuery and ShardedQuery
+        # extensions) become long term legacy objects, replaced by the direct
+        # usage of the select() [...] Because the vast majority of an ORM
+        # application is expected to make use of Query objects as well as that
+        # the Query interface being available does not impact the new
+        # interface, the object will stay around in 2.0 but will no longer be
+        # part of documentation nor will it be supported for the most part. The
+        # select() construct now suits both the Core and ORM use cases, which
+        # when invoked via the Session.execute() method will return
+        # ORM-oriented results, that is, ORM objects if that’s what was
+        # requested.""
         query = Session.query(cls)
         if filter_args:
             query = query.filter(*filter_args)

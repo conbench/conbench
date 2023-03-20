@@ -5,8 +5,15 @@ import random
 import statistics
 import time
 import uuid
+from typing import List
 
 import requests
+
+"""
+Side effect: emit one or more (submitted) benchmark IDs on stdout, one ID per
+line.
+"""
+
 
 log = logging.getLogger()
 logging.basicConfig(
@@ -31,8 +38,27 @@ def main():
     create_benchmarks_data()
     log.info("start create_benchmarks_data()")
     create_benchmarks_data_with_history()
-    log.info("start generate_synthetic_benchmark_history()")
-    generate_synthetic_benchmark_history()
+
+    arrow_commits = [
+        c.strip()
+        for c in reversed(ARROW_COMMIT_HASH_LINES_50.splitlines())
+        if c.strip()
+    ]
+
+    log.info("start generate_synthetic_benchmark_history(arrow_commits)")
+    generate_synthetic_benchmark_history(
+        arrow_commits, "https://github.com/apache/arrow"
+    )
+
+    conbench_commits = [
+        c.strip()
+        for c in reversed(CONBENCH_COMMIT_HASH_LINES_50.splitlines())
+        if c.strip()
+    ]
+    log.info("start generate_synthetic_benchmark_history(conbench_commits)")
+    generate_synthetic_benchmark_history(
+        conbench_commits, "https://github.com/conbench/conbench"
+    )
 
 
 def generate_benchmarks_data(
@@ -45,10 +71,13 @@ def generate_benchmarks_data(
     hardware_type,
     reason,
     mean=16.670462,
+    repo_url="https://github.com/apache/arrow",
 ):
     """
     Generate a dictionary that complies with the BenchmarkCreate schema.
     """
+    assert repo_url.startswith("http")
+    assert not repo_url.endswith("/")
     run_name = f"{reason}: {commit}" if reason else commit
     data = {
         "batch_id": uuid.uuid4().hex,
@@ -58,7 +87,7 @@ def generate_benchmarks_data(
         },
         "github": {
             "commit": commit,
-            "repository": "https://github.com/apache/arrow",
+            "repository": repo_url,
             "branch": branch,
         },
         "info": {
@@ -124,7 +153,9 @@ def generate_benchmarks_data(
         }
     else:
         data["machine_info"] = {
-            "name": "machine1",
+            # Some projects set massive machine names. See how the UI deals
+            # with that.
+            "name": "heracles-pr-head-publish-pr-2409-3-4sd19-3wrn5-lf0jw",
             "architecture_name": "aarch64",
             "cpu_core_count": "16",
             "cpu_frequency_max_hz": "0",
@@ -154,6 +185,7 @@ def generate_benchmarks_data_with_error(
     timestamp,
     hardware_type,
     reason,
+    repo_url,
 ):
     data = generate_benchmarks_data(
         run_id,
@@ -164,6 +196,7 @@ def generate_benchmarks_data_with_error(
         timestamp,
         hardware_type,
         reason,
+        repo_url,
     )
     data.pop("stats")
     data["error"] = {"command": "some command", "stack trace": "stack trace ..."}
@@ -179,6 +212,7 @@ def generate_benchmarks_data_with_iteration_missing(
     timestamp,
     hardware_type,
     reason,
+    repo_url,
     with_error=True,
 ):
     data = generate_benchmarks_data(
@@ -190,6 +224,7 @@ def generate_benchmarks_data_with_iteration_missing(
         timestamp,
         hardware_type,
         reason,
+        repo_url,
     )
     stats = data.pop("stats")
 
@@ -334,6 +369,7 @@ def create_benchmarks_data():
                             timestamp,
                             hardware_type,
                             reason,
+                            repo_url="https://github.com/apache/arrow",
                         )
                     else:
                         benchmark_data = generate_benchmarks_data(
@@ -346,6 +382,7 @@ def create_benchmarks_data():
                             hardware_type,
                             reason,
                             mean,
+                            repo_url="https://github.com/apache/arrow",
                         )
 
                     # Is this actually posting _one_ benchmark result or
@@ -399,6 +436,7 @@ def create_benchmarks_data_with_history():
                         "Python",
                         timestamp,
                         "machine",
+                        repo_url="https://github.com/apache/arrow",
                         reason="commit",
                         # in order to see the auto-populating of errors on partial completes
                         with_error=True if benchmark_name == "csv-read" else False,
@@ -414,6 +452,7 @@ def create_benchmarks_data_with_history():
                         "machine",
                         reason="commit",
                         mean=mean,
+                        repo_url="https://github.com/apache/arrow",
                     )
 
                 benchmark_id = post_benchmark_result(benchmark_data)
@@ -421,12 +460,7 @@ def create_benchmarks_data_with_history():
                 runs.append((run_id, timestamp))
 
 
-def generate_synthetic_benchmark_history():
-    commits = [
-        c.strip()
-        for c in reversed(ARROW_COMMIT_HASH_LINES_50.splitlines())
-        if c.strip()
-    ]
+def generate_synthetic_benchmark_history(commit_hashes: List[str], repo_url: str):
     benchmark_name = "dummybenchname"
 
     distr_mean = 20.0
@@ -448,7 +482,7 @@ def generate_synthetic_benchmark_history():
         # this sample's duration.
         return s + slowdown_offset + slowdown_lin * random.random()
 
-    for idx, commit_hash in enumerate(commits, 1):
+    for idx, commit_hash in enumerate(commit_hashes, 1):
         # Get current time as tzaware datetime object in UTC timezone, and
         # then subtract
         run_start = datetime.datetime.utcnow().replace(
@@ -468,6 +502,7 @@ def generate_synthetic_benchmark_history():
             hardware_type="dummymachine",
             reason="commit",
             mean=None,
+            repo_url=repo_url,
         )
 
         # Set (overwrite) duration / stats property. Generate with statistical
@@ -578,6 +613,65 @@ ARROW_COMMIT_HASH_LINES_50 = """
     1e8ca94fc3682eb97bcf243545dcb282c1aaa0b4
     """
 
+
+"""
+50 commits of conbench/conbench walking backwards from 782abc9e. Obtained with
+this command:
+
+git log --pretty=%P -n 50 782abc9e2c1147866eb251acb612192d8fded5d
+"""
+CONBENCH_COMMIT_HASH_LINES_50 = """
+    5efe7f943ca2b7d8a53c1d8eb91e31da4fe2e4b5
+    dc93e27b5175478078055bf0ce2ddc82e2cf058c
+    d29b38984c3b9a192d12e9e0ec9839256b5c3f6b
+    c6d9f29c2e8298fb0b8afbcfa3be592dc15a2c26
+    64fa515487c33b56b40d813a48d952ca08f54d94
+    b84e345f04dfe06f3e6855ede20339a982a35a00
+    67cbe18fe7674a065f08e72d10ea38a966952f3a
+    f951788d3e6f64231dd5462c241cc39e1bea67e7
+    743ff0f9fb4f3dc541e5c174a9962435ebe20963
+    5e626d479ed38ef53e02d102f084df4387f331eb
+    56febfa76372a97e587a8a66b98b491fa9d0211d
+    439bbbeab4084e4675c589225bf4221d97b0b4b6
+    622ca514eb6091d4bb79a18f83e573f1d9ec99a2
+    fbf5a6ce898532d44327e3ac961f5abb852843bc
+    70fe149585c1090806eeb607510549ce8c68ebee
+    d3aab65a0093e89a829316b0ecf4e46ed4821d95
+    cfc9cd96c9ad39af7873f3e9f84a3e9d582fd4bd
+    ce4d66fa17d1cc7e5de1ed17317843e99fae1e6e
+    2f0ec6d5f9c06159bc9e0b2096d1c197e135a8bd
+    ba3cead8dc5adfe1bca13c3dd28b077c18d41714
+    020aabc67baed285dfb3ea0d179839bf3d8d7a67
+    408cba4db5ac914212b0be9cfd1bd0ceeccc7ff0
+    aa95b6d52ff6cb6697b7ab8d04c43d6cf3612860
+    841a171798e8772eef4212a9287c98bab46d8634
+    38c99be78e3325422a54986c6513d7de49417dbc
+    8554cefdfbb6dcef4ca899a27f09c8496ebd4729
+    61977d0d65a76e75a998f96fda77852dabf66048
+    57a25fba7bcd0cafa9b179f40972eefbcf70db24
+    105b5be2658c22bd0167cefdde72b0491e083b30
+    faea929851065967bbf650f090db846ff2efecc9
+    4ad2feee944af41b89659ee24b5071be18545ef8
+    ff6869ab7d434983926ff6f41db3e535416d178c
+    eebf5ff6a05b902e3713cb2cff42bd8b1e372465
+    275617881da25ebe744d7b0502290ed44f7c3a21
+    fb10abffad4354b019d9f759a08b33aad03811f6
+    81d378fdbae2c3ce0c2dddc89cc3aff8420bf7e5
+    a6ca5c4411248a510116ca996a60dc26b93c32fd
+    8f2523afb28687c8d2d29457937de8b1b65fe434
+    3f199827cdb40d33cd885d09b5f2dc24c25419bb
+    175bc404b2f39f1518efef8e33a20848b4c4bac5
+    7313f14fcf142a587dca006d0ccdfea69378bfea
+    93257b0b627a6a017384cc02f0c7c06ee2346ec1
+    344497a5b2b2b157a57d25f7d03154da11dc5425
+    0fcb746695a33f9f85aeb490b10bd30449b246ff
+    0bb0685bb442ef1e030b93b53474005c8407a7c6
+    3bf542c4fdf377b1d2c0be7a801a004e62fd1393
+    169bcf69406752d7a49c7bec9c4f554081efed16
+    05fa6b5975e3e758b384b254854a3f1eb4c4056e
+    7660ed9fd8caabdeac7044d9a5a7312d1cdb0a5d
+    4e7441d72f1d14cf9a40525eca8993f7713937a7
+    """
 
 if __name__ == "__main__":
     main()

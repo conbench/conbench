@@ -96,7 +96,8 @@ jobs:
         run: |
             pip install requests # the nonly non-stdlib dependency as of now
             export CONBENCH_BASE_URL=http://$(docker compose port app 5000)
-            export SOME_BENCHMARK_ID="$(make -s db-populate)"
+            # Get first line of stdout, interpret as benchmark ID
+            export SOME_BENCHMARK_ID="$(make -s db-populate | head -1)"
             echo "conbench base URL: $CONBENCH_BASE_URL"
             echo "a valid benchmark ID: $SOME_BENCHMARK_ID"
             cd ci
