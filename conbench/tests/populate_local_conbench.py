@@ -9,6 +9,12 @@ from typing import List
 
 import requests
 
+"""
+Side effect: emit one or more (submitted) benchmark IDs on stdout, one ID per
+line.
+"""
+
+
 log = logging.getLogger()
 logging.basicConfig(
     level=logging.INFO,
