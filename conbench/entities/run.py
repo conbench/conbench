@@ -14,13 +14,12 @@ import conbench.util
 from ..db import Session
 from ..entities._entity import (
     Base,
+    EntityExists,
     EntityMixin,
     EntitySerializer,
     NotNull,
     Nullable,
-    EntityExists,
 )
-
 from ..entities.commit import (
     CantFindAncestorCommitsError,
     Commit,
@@ -29,7 +28,6 @@ from ..entities.commit import (
     get_github_commit,
     repository_to_url,
 )
-
 from ..entities.hardware import (
     Cluster,
     ClusterSchema,
