@@ -627,6 +627,7 @@ def time_series_plot(
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
     p.yaxis.axis_label = axis_unit
+    p.xaxis.axis_label = "date of commit associated with the benchmark result"
 
     multisample, multisample_count = _inspect_for_multisample(samples)
     label = "benchmark (n=1)"
@@ -751,7 +752,7 @@ def time_series_plot(
     p.add_tools(
         bokeh.models.HoverTool(
             tooltips=[
-                ("date", "$x{%F}"),
+                ("commit date", "$x{%F}"),
                 ("value", "@values_with_unit"),
             ],
             formatters={"$x": "datetime"},
