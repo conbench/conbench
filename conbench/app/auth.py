@@ -25,7 +25,6 @@ class Logout(AppEndpoint):
 class LoginForm(flask_wtf.FlaskForm):
     email = w.StringField("Email", validators=[v.DataRequired()])
     password = w.PasswordField("Password", validators=[v.DataRequired()])
-    remember_me = w.BooleanField("Remember Me")
     submit = w.SubmitField("Submit")
 
 
@@ -67,7 +66,6 @@ class Login(AppEndpoint):
         return {
             "email": form.email.data,
             "password": form.password.data,
-            "remember_me": form.remember_me.data,
         }
 
     def get(self):
@@ -104,7 +102,7 @@ class Login(AppEndpoint):
                 # NOTE(JP): this is the second time that we call
                 # `flask_login.login_user` while the actual user agent waits
                 # for an HTTP response.
-                flask_login.login_user(user, remember=form.remember_me.data)
+                flask_login.login_user(user)
 
                 return self.redirect("app.index")
             else:

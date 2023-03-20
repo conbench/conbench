@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 class LoginSchema(marshmallow.Schema):
     email = marshmallow.fields.Email(required=True)
     password = marshmallow.fields.String(required=True)
-    remember_me = marshmallow.fields.Boolean(dump_default=False)
 
 
 class LoginAPI(ApiEndpoint):
@@ -40,14 +39,13 @@ class LoginAPI(ApiEndpoint):
         data = self.validate(self.schema)
         email = data.get("email")
         password = data.get("password")
-        remember_me = data.get("remember_me")
 
         user = User.first(email=email)
         if user is None or not user.check_password(password):
             flask_login.logout_user()
             self.abort_400_bad_request("Invalid email or password.")
 
-        flask_login.login_user(user, remember=remember_me)
+        flask_login.login_user(user, remember=True)
         return self.response_204_no_content()
 
 
