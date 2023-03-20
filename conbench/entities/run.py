@@ -12,7 +12,15 @@ from sqlalchemy.orm import Mapped, relationship
 import conbench.util
 
 from ..db import Session
-from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, Nullable
+from ..entities._entity import (
+    Base,
+    EntityMixin,
+    EntitySerializer,
+    NotNull,
+    Nullable,
+    EntityExists,
+)
+
 from ..entities.commit import (
     CantFindAncestorCommitsError,
     Commit,
@@ -21,6 +29,7 @@ from ..entities.commit import (
     get_github_commit,
     repository_to_url,
 )
+
 from ..entities.hardware import (
     Cluster,
     ClusterSchema,
@@ -135,7 +144,14 @@ class Run(Base, EntityMixin):
         )
 
         run = Run(**data, commit_id=commit_id, hardware_id=hardware.id)
-        run.save()
+        try:
+            run.save()
+        except s.exc.IntegrityError as exc:
+            if "unique constraint" in str(exc) and "run_pkey" in str(exc):
+                raise EntityExists(
+                    f"conflict: a Run with ID {data['id']} already exists"
+                )
+
         return run
 
     def get_baseline_run(

@@ -432,6 +432,18 @@ class TestRunPost(_asserts.PostEnforcer):
         location = f"http://localhost/api/runs/{run_id}/"
         self.assert_201_created(response, _expected_entity(run), location)
 
+    def test_create_run_same_id(self, client):
+        self.authenticate(client)
+        run_id = self.valid_payload_with_error["id"]
+        assert not Run.first(id=run_id)
+        resp = client.post(self.url, json=self.valid_payload_with_error)
+        assert resp.status_code == 201
+        resp = client.post(self.url, json=self.valid_payload_with_error)
+        assert resp.status_code == 409, resp.text
+        assert "conflict" in resp.json["description"].lower()
+        assert resp.json["error"] == 409
+        assert run_id in resp.json["description"].lower()
+
     def test_create_run_timestamp_not_allowed(self, client):
         self.authenticate(client)
         payload = self.valid_payload.copy()
