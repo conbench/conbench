@@ -63,7 +63,7 @@ class BenchmarkMixin:
         benchmark, response = self._get_benchmark(benchmark_id)
 
         if response.status_code == 404:
-            self.flash("unknown benchmark ID: {benchmark_id}", "info")
+            self.flash(f"unknown benchmark ID: {benchmark_id}", "info")
 
         if response.status_code != 200:
             # Note(JP): quick band-aid to at least not swallow err detail, need
