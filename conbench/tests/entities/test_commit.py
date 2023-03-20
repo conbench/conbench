@@ -423,4 +423,4 @@ def test_parse_pull_request_commit():
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
     }
-    assert GitHub._parse_commit(commit) == expected
+    assert GitHubHTTPApiClient._parse_commit(commit) == expected
