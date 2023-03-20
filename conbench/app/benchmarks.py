@@ -14,7 +14,6 @@ from ..app._plots import TimeSeriesPlotMixin
 from ..app._util import augment, display_message, display_time
 from ..config import Config
 
-
 log = logging.getLogger(__name__)
 
 
