@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 class LoginSchema(marshmallow.Schema):
     email = marshmallow.fields.Email(required=True)
     password = marshmallow.fields.String(required=True)
-    remember_me = marshmallow.fields.Boolean(dump_default=False)
 
 
 class LoginAPI(ApiEndpoint):

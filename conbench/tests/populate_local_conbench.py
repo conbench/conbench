@@ -262,7 +262,7 @@ def login():
     url = f"{base_url}/login/"
     log.info("login via: %s", url)
 
-    data = {"email": "e@e.com", "password": "test", "remember_me": True}
+    data = {"email": "e@e.com", "password": "test"}
     r = session.post(url, json=data)
     assert str(r.status_code).startswith("2"), f"login failed:\n{r.text}"
     log.info("login succeeded")
