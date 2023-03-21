@@ -415,23 +415,22 @@ def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) ->
     if not repository or not sha:
         return {}
 
-    github = GitHubHTTPApiClient()
     name = repository_to_name(repository)
 
     # `github.get_commit()` below may raise an exception if the GitHub
     # GitHub HTTP API failed, e.g. with a 4xx rate limiting response.
-    commit = github.get_commit(name, sha)
+    commit = _github.get_commit(name, sha)
 
     if branch:
         commit["branch"] = branch
     elif pr_number:
-        commit["branch"] = github.get_branch_from_pr_number(
+        commit["branch"] = _github.get_branch_from_pr_number(
             name=name, pr_number=pr_number
         )
     else:
-        commit["branch"] = github.get_default_branch(name=name)
+        commit["branch"] = _github.get_default_branch(name=name)
 
-    commit["fork_point_sha"] = github.get_fork_point_sha(name=name, sha=sha)
+    commit["fork_point_sha"] = _github.get_fork_point_sha(name=name, sha=sha)
 
     return commit
 
@@ -452,8 +451,6 @@ def backfill_default_branch_commits(repo_url: str, new_commit: Commit) -> None:
         # This would be a no-op
         return
 
-    github = GitHubHTTPApiClient()
-
     # Note(JP): the way I read the code I think that `repo_url` is expected to
     # be a URL pointing to a GitHub repositopry. It must be of the shape
     # "https://github.com/org/repo". `repospec` then is unambiguously
@@ -462,7 +459,7 @@ def backfill_default_branch_commits(repo_url: str, new_commit: Commit) -> None:
     repospec = repository_to_name(repo_url)
 
     # This triggers one HTTP request.
-    default_branch = github.get_default_branch(repospec)
+    default_branch = _github.get_default_branch(repospec)
 
     last_tracked_commit = Commit.all(
         filter_args=[Commit.sha != new_commit.sha, Commit.timestamp.isnot(None)],
@@ -523,8 +520,13 @@ def backfill_default_branch_commits(repo_url: str, new_commit: Commit) -> None:
 
 
 class GitHubHTTPApiClient:
+    """
+    An instance of this class is meant to be used in a per-process
+    singleton-fashion for doing GitHub HTTP API client interaction.
+    """
+
     def __init__(self) -> None:
-        self._read_tokens_from_env()
+        self._read_auth_tokens_from_env()
 
         self.test_shas = {
             "02addad336ba19a654f9c857ede546331be7b631": "github_child.json",
@@ -543,7 +545,7 @@ class GitHubHTTPApiClient:
             "testing repository with git@g",
         ]
 
-    def _read_tokens_from_env(self) -> None:
+    def _read_auth_tokens_from_env(self) -> None:
         """
         This reads GITHUB_API_TOKEN, initializes a cycling iterator (if more
         than one token was provided), and always populates
@@ -567,12 +569,14 @@ class GitHubHTTPApiClient:
             log.info("GITHUB_API_TOKEN env not set")
             return
 
-        log.info("GITHUB_API_TOKEN env was set, length of data: %s", len(data))
+        log.info("GITHUB_API_TOKEN env is set, length of data: %s", len(data))
 
         token_candidates = data.split(",")
 
         tokens_to_use: List[str] = []
-        for t in token_candidates:
+        for tc in token_candidates:
+            # Remove leading and trailing whitespace.
+            t = tc.strip()
             if len(t) < 5 or len(t) > 120:
                 log.info("bad token length, ignore: %s", len(t))
             else:
@@ -591,6 +595,10 @@ class GitHubHTTPApiClient:
         # value.
         self._token_pool = itertools.cycle(tokens_to_use)
         self._token_pool_size = len(tokens_to_use)
+        log.info(
+            "configured GitHub HTTP API authentication token pool: %s",
+            ", ".join(f"{ttu[:6]}..." for ttu in tokens_to_use),
+        )
         self._rotate_auth_token()
 
     def _rotate_auth_token(self):
@@ -604,7 +612,11 @@ class GitHubHTTPApiClient:
 
         self._current_auth_token = next(self._token_pool)
         # Note: personal access tokens have a common prefix, like ghp_
-        log.info("current auth token starts with: %s", self._current_auth_token[:6])
+        log.info(
+            "current auth token has length %s and starts with: %s",
+            len(self._current_auth_token),
+            self._current_auth_token[:6],
+        )
         return True
 
     def get_default_branch(self, name):
@@ -938,3 +950,8 @@ class GitHubHTTPApiClient:
         raise Exception(
             f"Unexpected GitHub HTTP API response: {resp}",
         )
+
+
+# Initialize long-lived, cross-request GitHub HTTP API client object. This
+# object internally maintains state that is meant to be long-lived.
+_github = GitHubHTTPApiClient()
