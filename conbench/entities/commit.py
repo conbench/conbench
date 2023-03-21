@@ -594,7 +594,8 @@ class GitHubHTTPApiClient:
             return False
 
         self._current_auth_token = next(self._token_pool)
-        log.info("current auth token starts with: %s", self._current_auth_token[:3])
+        # Note: personal access tokens have a common prefix, like ghp_
+        log.info("current auth token starts with: %s", self._current_auth_token[:6])
         return True
 
     def get_default_branch(self, name):
