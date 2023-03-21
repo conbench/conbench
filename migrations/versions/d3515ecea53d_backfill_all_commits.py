@@ -16,7 +16,7 @@ from typing import List, Tuple
 from alembic import op
 from sqlalchemy import MetaData, Table, distinct, select
 
-from conbench.entities.commit import Commit, GitHub, repository_to_name
+from conbench.entities.commit import Commit, _github, repository_to_name
 
 # revision identifiers, used by Alembic.
 revision = "d3515ecea53d"
@@ -30,7 +30,6 @@ def upgrade():
     meta = MetaData()
     meta.reflect(bind=connection)
     commit_table: Table = meta.tables["commit"]
-    github = GitHub()
 
     repos: List[Tuple[str]] = list(
         connection.execute(select(distinct(commit_table.c.repository)))
@@ -43,8 +42,11 @@ def upgrade():
             continue
 
         name = repository_to_name(repo)
-        default_branch = github.get_default_branch(name)
-        all_commits = github.get_commits_to_branch(
+
+        # This deliberately (mis)uses the per-process singleton GitHub HTTP API
+        # client object from commit.py
+        default_branch = _github.get_default_branch(name)
+        all_commits = _github.get_commits_to_branch(
             name=name,
             branch=default_branch,
             since=datetime.datetime(1970, 1, 1),
