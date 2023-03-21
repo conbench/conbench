@@ -547,18 +547,19 @@ class GitHubHTTPApiClient:
 
         data = os.getenv("GITHUB_API_TOKEN")
         self._token_pool: Optional[itertools.cycle[str]] = None
-        self._current_auth_token = None
+
+        # Convention: empty string means not set
+        self._current_auth_token: str = ""
+
         if data is None:
             log.info("GITHUB_API_TOKEN env not set")
             return
 
         log.info("GITHUB_API_TOKEN env was set, length of data: %s", len(data))
 
-        token_candidates = [data]
-        if "," in data:
-            token_candidates = data.split(",")
+        token_candidates = data.split(",")
 
-        tokens_to_use = []
+        tokens_to_use: List[str] = []
         for t in token_candidates:
             if len(t) < 5 or len(t) > 120:
                 log.info("bad token length, ignore: %s", len(t))
