@@ -1,7 +1,7 @@
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Optional
+from typing import List, Optional
 
 import flask as f
 import marshmallow
@@ -71,6 +71,14 @@ class Run(Base, EntityMixin):
     has_errors: Mapped[bool] = NotNull(s.Boolean, default=False)
     hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
     hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
+
+    # Follow ttps://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#one-to-many.
+    # There is a one-to-many relationship between Run (one) and BenchmarkResult
+    # (0, 1, many).
+    # Ignorantly importing BenchmarkResult results in circular import err.
+    results: Mapped[List["BenchmarkResult"]] = relationship(  # type: ignore # noqa
+        back_populates="run"
+    )
 
     @staticmethod
     def create(data) -> "Run":

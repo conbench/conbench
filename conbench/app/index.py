@@ -44,6 +44,7 @@ class Index(AppEndpoint, RunMixin):
             rd = RunForDisplay(
                 ctime_for_table=r.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"),
                 commit_message_short=short_commit_msg(r.commit.message),
+                result_count=len(r.results),
                 run=r,
             )
 
@@ -80,6 +81,7 @@ def repo_url_to_display_name(url: str) -> str:
 class RunForDisplay:
     ctime_for_table: str
     commit_message_short: str
+    result_count: int
     # Expose the raw Run object (but this needs to be used with a lot of
     # care, in the template -- for VSCode supporting Python variable types and
     # auot-completion in a jinja2 template see

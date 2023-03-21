@@ -29,6 +29,7 @@
     <tr>
         <!-- add tooltip, saying that this is DB insertion time -->
         <th scope="col" style="width: 180px">insertion time</th>
+        <th scope="col">results</th>
         <th scope="col" class="reason-col">reason</th>
         <th scope="col" style="width: 150px">hardware</th>
         <th scope="col" style="width: 170px">author</th>
@@ -46,9 +47,11 @@
             <i class="bi bi-exclamation-circle text-danger"
               data-toggle="tooltip"
               data-placement="top"
-              title="This Run contains at least one benchmark result with an error"></i>
+              title="This Run contains a benchmark result with an error, or is otherwise labeled as errored"></i>
         {% endif %}
     </td>
+
+    <td>{{ r.result_count }}</td>
 
     <td>
       {% if r.run.reason %}
