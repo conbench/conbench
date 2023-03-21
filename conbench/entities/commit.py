@@ -490,7 +490,7 @@ def backfill_default_branch_commits(repo_url: str, new_commit: Commit) -> None:
 
     # This triggers potentially many HTTP requests to the GitHub HTTP API.
     # May raise exceptions as of HTTP request/response cycle errors.
-    commits = github.get_commits_to_branch(
+    commits = _github.get_commits_to_branch(
         name=repospec,
         branch=default_branch,
         since=since,
