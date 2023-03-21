@@ -786,7 +786,7 @@ class GitHubHTTPApiClient:
         while time.monotonic() < deadline:
             attempt += 1
 
-            result = self._get_response_retrycore(url)
+            result = self._get_response_retry_guts(url)
 
             if result is not None:
                 return result
@@ -811,7 +811,7 @@ class GitHubHTTPApiClient:
             f"_get_response(): deadline exceeded, giving up after {time.monotonic()-t0:.3f} s"
         )
 
-    def _get_response_retrycore(self, url) -> Optional[dict]:
+    def _get_response_retry_guts(self, url) -> Optional[dict]:
         """
         Return deserialized JSON-structure or raise an exception or return
         `None` which indicates a retryable error.
