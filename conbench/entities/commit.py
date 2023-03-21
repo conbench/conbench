@@ -537,9 +537,11 @@ class GitHubHTTPApiClient:
     def _read_tokens_from_env(self) -> None:
         """
         This reads GITHUB_API_TOKEN, initializes a cycling iterator (if more
-        than one token was provided), and always populates self._token_pool
-        (None, or pool of size greater 1), and self._current_auth_token (with
-        either None, or with a token).
+        than one token was provided), and always populates
+
+        self._token_pool (None, or pool of size greater 1)
+        self._token_pool_size (int size)
+        self._current_auth_token (empty string, or with a token).
 
         When reading GitHub API token(s) from environment: support two formats:
         one token, or more than one token (comma-separated)
@@ -547,8 +549,9 @@ class GitHubHTTPApiClient:
 
         data = os.getenv("GITHUB_API_TOKEN")
         self._token_pool: Optional[itertools.cycle[str]] = None
+        self._token_pool_size: int = 0
 
-        # Convention: empty string means not set
+        # Convention: empty string means: not set
         self._current_auth_token: str = ""
 
         if data is None:
@@ -567,14 +570,18 @@ class GitHubHTTPApiClient:
                 tokens_to_use.append(t)
 
         if len(tokens_to_use) == 0:
+            #
             return
 
         if len(tokens_to_use) == 1:
             self._current_auth_token = tokens_to_use[0]
-            log.info("configured one GitHub HTTP API auth token")
+            log.info("configured a single GitHub HTTP API auth token")
             return
 
+        # This is the only place where self._token_pool is set to a non-None
+        # value.
         self._token_pool = itertools.cycle(tokens_to_use)
+        self._token_pool_size = len(tokens_to_use)
         self._rotate_auth_token()
 
     def _rotate_auth_token(self):
