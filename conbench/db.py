@@ -38,7 +38,11 @@ def configure_engine(url):
         # tickets and discussions:
         # https://github.com/conbench/conbench/issues/599
         # https://github.com/conbench/conbench/pull/690
-        connect_args={"options": "-c timezone=utc -c statement_timeout=60s"},
+        # https://docs.sqlalchemy.org/en/20/core/engines.html#use-the-connect-args-dictionary-parameter
+        connect_args={
+            "options": "-c timezone=utc -c statement_timeout=60s",
+            "connect_timeout": 3,
+        },
     )
     log.info("bind engine to session")
     session_maker.configure(bind=engine)
@@ -132,6 +136,7 @@ def create_all():
         else:
             raise
 
+    log.info("create_all(engine) returned. dispose()")
     engine.dispose()
 
 
