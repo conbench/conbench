@@ -76,7 +76,7 @@ class Run(Base, EntityMixin):
     # There is a one-to-many relationship between Run (one) and BenchmarkResult
     # (0, 1, many).
     # Ignorantly importing BenchmarkResult results in circular import err.
-    results: Mapped[List["BenchmarkResult"]] = relationship(  # noqa
+    results: Mapped[List["BenchmarkResult"]] = relationship(  # type: ignore # noqa
         back_populates="run"
     )
 
