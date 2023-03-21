@@ -41,7 +41,9 @@ def configure_engine(url):
         # https://docs.sqlalchemy.org/en/20/core/engines.html#use-the-connect-args-dictionary-parameter
         connect_args={
             "options": "-c timezone=utc -c statement_timeout=60s",
-            "connect_timeout": 3,
+            # The `connect_timeout` parameter is documented in
+            # https://www.postgresql.org/docs/12/libpq-connect.html
+            "connect_timeout": 3,  # unit: seconds
         },
     )
     log.info("bind engine to session")
