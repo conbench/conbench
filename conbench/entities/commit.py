@@ -2,6 +2,7 @@ import itertools
 import json
 import logging
 import os
+import threading
 import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
@@ -29,6 +30,14 @@ log = logging.getLogger(__name__)
 
 class CantFindAncestorCommitsError(Exception):
     pass
+
+
+# Used for keeping track of the per-request count of GitHub HTTP API
+# authentication token rotations. Must be mutated from / locked to precisely
+# one HTTP request handler. That's guaranteed as long as we use gunicorn's
+# process worker. If we were to transition to thread workers, this should be a
+# threadlocal. Prepare for that (there is no downside attached).
+_tloc = threading.local()
 
 
 class Commit(Base, EntityMixin):
@@ -791,6 +800,12 @@ class GitHubHTTPApiClient:
         deadline = t0 + timeout_seconds
         attempt: int = 0
 
+        # (re)set this to be zero before starting into the retry loop. This
+        # thread-local variable is mutated from within
+        # `_get_response_retry_guts()`. Cannot trivially set type to int, see
+        # https://github.com/python/mypy/issues/2388
+        _tloc.auth_token_rotations = 0
+
         while time.monotonic() < deadline:
             attempt += 1
 
@@ -886,8 +901,19 @@ class GitHubHTTPApiClient:
 
             if reqquota == 0:
                 if self._rotate_auth_token():
-                    log.info("rotated auth token, retry request")
-                    return None
+                    _tloc.auth_token_rotations += 1
+                    # Example: rotations performed: 1, pool size: 2
+                    #  -> proceed (this request/token pair was not tried)
+                    # Example: rotations performed: 2, pool size: 2
+                    #  -> proceed (this request/token pair was tried once before,
+                    #     try this one again, but after that give up)
+                    # Example: rotations performed: 3, pool size: 2
+                    #  -> give up
+                    if _tloc.auth_token_rotations <= self._token_pool_size:
+                        log.info("reqquota 0, rotated auth token, retry request")
+                        return None
+
+                    log.info("reqquota 0, cycled through auth token pool, give up")
 
                 metrics.COUNTER_GITHUB_HTTP_API_REQUEST_FAILURES.inc()
                 raise Exception("Hourly GitHub HTTP API quota exhausted")
