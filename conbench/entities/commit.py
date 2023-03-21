@@ -577,8 +577,11 @@ class GitHubHTTPApiClient:
         for tc in token_candidates:
             # Remove leading and trailing whitespace.
             t = tc.strip()
-            if len(t) < 5 or len(t) > 120:
-                log.info("bad token length, ignore: %s", len(t))
+            # Sanity-check the length. The fine-grained personal tokens
+            # seemingly have a length smaller 100, but don't try to be precise
+            # here.
+            if len(t) < 5 or len(t) > 130:
+                log.info("unexpected token length, ignore: %s", len(t))
             else:
                 tokens_to_use.append(t)
 
@@ -611,11 +614,16 @@ class GitHubHTTPApiClient:
             return False
 
         self._current_auth_token = next(self._token_pool)
-        # Note: personal access tokens have a common prefix, like ghp_
+        # Fine-grained personal access tokens are prefixed with `github_pat_``
+        # Personal access tokens (classic) have the prefix `ghp_`
+        tpfx = self._current_auth_token[:6]
+        if self._current_auth_token.startswith("github_pat_"):
+            tpfx = self._current_auth_token[:14]
+
         log.info(
             "current auth token has length %s and starts with: %s",
             len(self._current_auth_token),
-            self._current_auth_token[:6],
+            tpfx,
         )
         return True
 
