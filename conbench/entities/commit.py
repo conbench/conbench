@@ -574,8 +574,7 @@ class GitHubHTTPApiClient:
             return
 
         self._token_pool = itertools.cycle(tokens_to_use)
-        self._current_auth_token = next(self._token_pool)
-        log.info("current auth token starts with: %s", self._current_auth_token[:3])
+        self._rotate_auth_token()
 
     def _rotate_auth_token(self):
         """
