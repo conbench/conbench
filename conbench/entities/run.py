@@ -12,7 +12,6 @@ from sqlalchemy.orm import Mapped, relationship
 import conbench.util
 
 from ..db import Session
-
 from ..entities._entity import (
     Base,
     EntityExists,
@@ -21,7 +20,6 @@ from ..entities._entity import (
     NotNull,
     Nullable,
 )
-
 from ..entities.commit import (
     CantFindAncestorCommitsError,
     Commit,
