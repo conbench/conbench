@@ -7,11 +7,13 @@ on:
   pull_request:
 
 env:
-  # secrets.GITHUB_TOKEN is provided by GitHub Actions and not
-  # bound to a personal user account. It allows for 1000
-  # GitHub HTTP API requests per hour. A personal token
-  # allows for 5000 of those.
-  GITHUB_API_TOKEN: ${{ secrets.PERSONAL_GITHUB_API_TOKEN }}
+  # secrets.GITHUB_TOKEN is provided by GitHub Actions and not bound to a
+  # personal user account. It allows for 1000 GitHub HTTP API requests per
+  # hour. A personal token allows for 5000 of those. The pool has N of these
+  # configured, allowing for automatic rotation after quota consumption.
+  # Also see https://github.com/conbench/conbench/issues/917.
+  # Future: potentially rename that variable: _POOL suffix
+  GITHUB_API_TOKEN: ${{ secrets.PERSONAL_GITHUB_API_TOKEN_POOL }}
 
 jobs:
   lint:

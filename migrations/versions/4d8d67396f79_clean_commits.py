@@ -36,9 +36,7 @@ def upgrade():
     from conbench.entities import _entity
 
     _entity.Session = alembic_session
-    from conbench.entities.commit import Commit, GitHub, repository_to_name
-
-    github = GitHub()
+    from conbench.entities.commit import Commit, _github, repository_to_name
 
     repos = alembic_session.query(Commit.repository).distinct().all()
     log.info(f"All repos: {repos}")
@@ -52,7 +50,7 @@ def upgrade():
             continue
 
         name = repository_to_name(repo)
-        default_branch = github.get_default_branch(name)
+        default_branch = _github.get_default_branch(name)
 
         # ______ Enrich commits that are missing information, if possible ______
 
@@ -64,12 +62,12 @@ def upgrade():
         )
         log.info(f"Found {len(commits)} to fix")
         for commit in commits:
-            commit_details = github.get_commit(name, commit.sha)
+            commit_details = _github.get_commit(name, commit.sha)
             if not commit_details:
                 log.error(f"Couldn't find commit details for sha '{commit.sha}'")
                 commit_details = {}
 
-            fork_point_sha = github.get_fork_point_sha(name, commit.sha)
+            fork_point_sha = _github.get_fork_point_sha(name, commit.sha)
             if not fork_point_sha:
                 log.error(f"Couldn't find the fork_point_sha for sha '{commit.sha}'")
 

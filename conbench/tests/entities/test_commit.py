@@ -10,7 +10,7 @@ import sqlalchemy as s
 from ...entities.commit import (
     CantFindAncestorCommitsError,
     Commit,
-    GitHub,
+    GitHubHTTPApiClient,
     backfill_default_branch_commits,
     get_github_commit,
     repository_to_name,
@@ -367,7 +367,7 @@ def test_parse_commits():
         "389587c566e0d0d59b635a76fcc8dbb89358d6ec",
         "32679ddf0495a50b2158146709e7ecfd27a467d9",
     ]
-    assert GitHub._parse_commits(commits) == expected
+    assert GitHubHTTPApiClient._parse_commits(commits) == expected
 
 
 def test_parse_commit():
@@ -384,12 +384,12 @@ def test_parse_commit():
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
     }
-    assert GitHub._parse_commit(commit) == expected
+    assert GitHubHTTPApiClient._parse_commit(commit) == expected
 
     # test a long message
     commit["commit"]["message"] = "a" * 500
     expected["message"] = "a" * 240
-    assert GitHub._parse_commit(commit) == expected
+    assert GitHubHTTPApiClient._parse_commit(commit) == expected
 
 
 def test_parse_commit_no_author():
@@ -406,7 +406,7 @@ def test_parse_commit_no_author():
         "author_login": None,
         "author_avatar": None,
     }
-    assert GitHub._parse_commit(commit) == expected
+    assert GitHubHTTPApiClient._parse_commit(commit) == expected
 
 
 def test_parse_pull_request_commit():
@@ -423,4 +423,4 @@ def test_parse_pull_request_commit():
         "author_login": "dianaclarke",
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
     }
-    assert GitHub._parse_commit(commit) == expected
+    assert GitHubHTTPApiClient._parse_commit(commit) == expected
