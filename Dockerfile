@@ -3,15 +3,23 @@
 # on Linux. Otherwise, some wheels might not exist on PyPI (psutil) and
 # compilation tools are required for building C extensions. Downside: when
 # executing an AMD64 image on ARM the QEMU emulation layer inficts a small
-# slowdown. Also see https://github.com/conbench/conbench/issues/709 and
+# slowdown.
+# Also see https://github.com/conbench/conbench/issues/709 and
 # https://docs.docker.com/engine/reference/builder/#from
 # https://www.docker.com/blog/multi-platform-docker-builds/
-FROM --platform=linux/amd64 python:3.11-slim
+# FROM --platform=linux/amd64 python:3.11-slim
+#
+# Update: the slowdown may be not so small, see
+# https://github.com/conbench/conbench/issues/914
+# The downside here is that with `build-essential` baked into the image we
+# do a bad job optimizing for image size; but we do that anyway so far, so
+# maybe it's really not a big deal.
+FROM python:3.11-slim
 
 # curl is needed for docker-compose health checks. `git` is needed by some unit
 # tests as of today.
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
-    curl git && apt-get clean && rm -rf /var/lib/apt/lists/*
+    curl git build-essential && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements-webapp.txt /tmp/
 COPY requirements-dev.txt /tmp/
