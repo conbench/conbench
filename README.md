@@ -1,12 +1,10 @@
 <p align="right">
 <a href="https://github.com/conbench/conbench/blob/main/.github/workflows/actions.yml"><img alt="Build Status" src="https://github.com/conbench/conbench/actions/workflows/actions.yml/badge.svg?branch=main"></a>
-<a href="https://coveralls.io/github/conbench/conbench?branch=main"><img src="https://coveralls.io/repos/github/conbench/conbench/badge.svg?branch=main&kill_cache=06b9891a46827df564072ae831b13897599f7f3d" alt="Coverage Status" /></a>
-<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 
 # Conbench
 
-Check out the docs at https://conbench.github.io/conbench !
+Check out the docs at https://conbench.github.io/conbench.
 
 <img src="https://raw.githubusercontent.com/conbench/conbench/main/conbench.png" alt="Language-independent Continuous Benchmarking (CB) Framework">
 
@@ -26,7 +24,6 @@ compare results across varying benchmark machines, languages, and cases.
 
 There is also a Conbench command line interface, useful for Continuous
 Benchmarking (CB) orchestration alongside your development pipeline.
-
 
 <p align="center">
     <img src="https://arrow.apache.org/img/arrow.png" alt="Apache Arrow" height="100">

@@ -33,11 +33,8 @@ db-populate:
 tests: require-env-ghtoken set-build-info
 	docker compose down --remove-orphans && \
 	docker compose build app && \
-	docker compose run \
-		-e COVERAGE_FILE=/etc/conbench-coverage-dir/.coverage \
-		app \
-		coverage run --source conbench \
-			-m pytest -vv -s --durations=20 conbench/tests/
+	docker compose run app \
+		pytest -vv -s --durations=20 conbench/tests/
 
 
 # Similar to `make run-app`, but with the `docker-compose.dev.yml` extension
