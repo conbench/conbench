@@ -74,7 +74,7 @@ services:
       - "127.0.0.1::5556"
 
   db:
-    image: library/postgres:12.4
+    image: library/postgres:15.2-alpine
     environment:
       POSTGRES_DB: "postgres"
       POSTGRES_USER: "postgres"
