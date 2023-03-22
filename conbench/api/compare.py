@@ -10,7 +10,7 @@ from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
 from ..entities.compare import CompareBenchmarkResultSerializer
 from ..entities.history import set_z_scores
-from ..hacks import set_display_batch, set_display_name
+from ..hacks import set_display_benchmark_name, set_display_case_permutation
 
 
 def _compare_entity(benchmark_result):
@@ -134,10 +134,10 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
         baseline_benchmark_result = self._get(baseline_id)
         contender_benchmark_result = self._get(contender_id)
         set_z_scores([baseline_benchmark_result, contender_benchmark_result])
-        set_display_name(baseline_benchmark_result)
-        set_display_name(contender_benchmark_result)
-        set_display_batch(baseline_benchmark_result)
-        set_display_batch(contender_benchmark_result)
+        set_display_case_permutation(baseline_benchmark_result)
+        set_display_case_permutation(contender_benchmark_result)
+        set_display_benchmark_name(baseline_benchmark_result)
+        set_display_benchmark_name(contender_benchmark_result)
 
         baseline = _compare_entity(baseline_benchmark_result)
         contender = _compare_entity(contender_benchmark_result)
@@ -191,12 +191,12 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
 
         baseline_items, contender_items = [], []
         for benchmark_result in baselines:
-            set_display_name(benchmark_result)
-            set_display_batch(benchmark_result)
+            set_display_benchmark_name(benchmark_result)
+            set_display_benchmark_name(benchmark_result)
             baseline_items.append(_compare_entity(benchmark_result))
         for benchmark_result in contenders:
-            set_display_name(benchmark_result)
-            set_display_batch(benchmark_result)
+            set_display_benchmark_name(benchmark_result)
+            set_display_benchmark_name(benchmark_result)
             contender_items.append(_compare_entity(benchmark_result))
 
         pairs = _get_pairs(baseline_items, contender_items)

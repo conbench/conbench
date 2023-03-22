@@ -81,11 +81,11 @@
                      <td>{{ benchmark.display_language }}</td>
                      <td>
                        <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">
-                         {{ benchmark.display_batch }}
+                         {{ benchmark.display_bmname }}
                        </a>
                      </td>
                      <td><a href="{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}">
-                         {{ benchmark.display_name }}
+                         {{ benchmark.display_case_perm}}
                      </a></td>
                      <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
                      {% if benchmark.stats.z_score is not none %}

@@ -69,10 +69,10 @@
                      <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
                      <td>{{ benchmark.display_language }}</td>
                      <td>
-                         <div>{{ benchmark.display_batch }}</div>
+                         <div>{{ benchmark.display_bmname }}</div>
                      </td>
                      <td><a href="{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}">
-                         <div>{{ benchmark.display_name }}</div>
+                         <div>{{ benchmark.display_case_perm }}</div>
                      </a></td>
                      <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
                      {% if benchmark.stats.z_score is not none %}
