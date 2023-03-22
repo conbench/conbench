@@ -93,7 +93,11 @@ EOF
 
 export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="ci-conbench-on-$(hostname -s)"
 
-# Build custom version of kube-prometheus stack.
+
+# JSONNET-build our custom version of kube-prometheus. Before JSONNET
+# compilation mutate the main document to make adjustments for the minikube
+# environment (smaller resource footprint, anonymous access to Grafana UI).
+export MUTATE_JSONNET_FILE_FOR_MINIKUBE=true
 ( cd "${CONBENCH_REPO_ROOT_DIR}" && make jsonnet-kube-prom-manifests )
 
 # Set up the kube-prometheus stack. This follows the customization instructions

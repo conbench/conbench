@@ -284,22 +284,31 @@ set-build-info:
 # coreos/jsonnet-ci container image used below comes with `jq` (one could
 # install this locally with e.g. sudo dnf install jsonnet) and also with
 # gojsontoyaml (which is where I resorted to looking for a container image that
-# has all dependencies baked in).
+# has all dependencies baked in). If MUTATE_JSONNET_FILE_FOR_MINIKUBE is set:
+# do modifications for CI and local dev on minikube. Modify JSONNET file. Maybe
+# it's chaotic to do sed-based templating on top of JSONNET, we can maybe do
+# that better in the future based on JSONNET external variables?
 .PHONY: jsonnet-kube-prom-manifests
 jsonnet-kube-prom-manifests:
 #	rm -rf _kpbuild
 	mkdir -p _kpbuild && cd _kpbuild  && mkdir -p cb-kube-prometheus
 	cd _kpbuild/cb-kube-prometheus && \
 		docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
-			jb init || echo "exists"
+			jb init || echo "exists: ignore, proceed"
 	cd _kpbuild/cb-kube-prometheus && \
 		time docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
 			jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@v0.12.0
-	cd _kpbuild/cb-kube-prometheus && \
-		wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.12.0/build.sh -O build.sh
 	cp k8s/kube-prometheus/conbench-flavor.jsonnet _kpbuild/cb-kube-prometheus
 	cp k8s/kube-prometheus/conbench-grafana-dashboard.json _kpbuild/cb-kube-prometheus
 	cp k8s/kube-prometheus/kube-prom-no-req-no-lim.jsonnet _kpbuild/cb-kube-prometheus
+	@if [ -z "$${MUTATE_JSONNET_FILE_FOR_MINIKUBE:=}" ]; then \
+			echo "MUTATE_JSONNET_FILE_FOR_MINIKUBE not set"; \
+		else \
+			echo "MUTATE_JSONNET_FILE_FOR_MINIKUBE set, mutate JSONNET"; \
+			sed -i.bak 's|// (import "kube-prom|(import "kube-prom|g' _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
+			sed -i.bak 's|// "auth.anonymous"|"auth.anonymous"|g' _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
+			cat _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
+		fi
 	@if [ -z "$${PROM_REMOTE_WRITE_ENDPOINT_URL:=}" ]; then \
 			echo "PROM_REMOTE_WRITE_ENDPOINT_URL not set"; \
 		else \
@@ -314,6 +323,8 @@ jsonnet-kube-prom-manifests:
 			sed -i.bak "s|PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE|$${PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE}|g" \
 				_kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
 		fi
+	cd _kpbuild/cb-kube-prometheus && \
+		wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.12.0/build.sh -O build.sh
 	cd _kpbuild/cb-kube-prometheus && \
 		time docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
 			bash build.sh conbench-flavor.jsonnet
