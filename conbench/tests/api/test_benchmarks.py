@@ -938,13 +938,13 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
     def test_create_benchmark_name_missing(self, client):
         self.authenticate(client)
-        payload = _fixtures.VALID_PAYLOAD.copy()
+        payload = copy.deepcopy(_fixtures.VALID_PAYLOAD)
         del payload["tags"]["name"]
-        resp = client.post(self.url, json=payload)
-        # TODO: https://github.com/conbench/conbench/issues/935
-        # This here just quickly checks that there is a failure at all,
-        # that 'name' is required.
-        assert resp.status_code == 500
+        with pytest.raises(KeyError):
+            client.post(self.url, json=payload)
+            # TODO: https://github.com/conbench/conbench/issues/935
+            # This here just quickly checks that there is a failure at all,
+            # that 'name' is required.
 
     def test_create_benchmark_context_empty(self, client):
         """
