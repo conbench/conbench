@@ -4,7 +4,7 @@
 
 # Conbench
 
-Check out the docs at https://conbench.github.io/conbench !
+Check out the docs at https://conbench.github.io/conbench.
 
 <img src="https://raw.githubusercontent.com/conbench/conbench/main/conbench.png" alt="Language-independent Continuous Benchmarking (CB) Framework">
 
