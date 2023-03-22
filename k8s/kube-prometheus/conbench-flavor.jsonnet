@@ -14,7 +14,7 @@ local kp =
   // (import 'kube-prometheus/addons/custom-metrics.libsonnet') +
   // (import 'kube-prometheus/addons/external-metrics.libsonnet') +
   // (import 'kube-prometheus/addons/pyrra.libsonnet') +
-  (import 'kube-prom-no-req-no-lim.jsonnet') +
+  // (import "kube-prom-no-req-no-lim.jsonnet") +  // auto-uncommented-by-ci
   {
     values+:: {
       prometheus+: {
@@ -35,7 +35,7 @@ local kp =
         config: {
           // http://docs.grafana.org/installation/configuration/
           sections: {
-            'auth.anonymous': { enabled: true },
+            // "auth.anonymous": { enabled: true },  // auto-uncommented-by-ci
             // Configure Grafana to be available under sub path instead of
             // root.
             server: {
@@ -59,7 +59,7 @@ local kp =
             // If left as-is then Prometheus starts and periodically shows
             // a log line saying that this is an invalid URL. That's fine!
             // That is: replace this, if you want the k8s cluster to send
-            // metrics ot an external system. Leave this as-is when this
+            // metrics to an external system. Leave this as-is when this
             // capabily is not needed.
             url: 'PROM_REMOTE_WRITE_ENDPOINT_URL',
             basicAuth: {
