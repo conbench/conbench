@@ -1027,7 +1027,7 @@
                     },
                     "stats": {"$ref": "#/components/schemas/BenchmarkResultCreate"},
                     "tags": {
-                        "description": "Details that define the individual benchmark case that is being run (e.g. name, query type, data source, parameters). These are details about a benchmark that define different cases, for example: for a file reading benchmark, some tags might be: the data source being read, the compression that file is written in, the output format, etc.",
+                        "description": 'The set of key/value pairs that defines a benchmark case permutation. Top-level keys must be strings. Allowed value types are ... (to be specified).  The special key "name" must be provided with a string value: it indicates the name of the conceptual benchmark that was performed for obtaining the result at hand. All case permutations of a conceptual benchmark by definition have this name in common.  We advise that each unique case (as defined by the complete set of key/value pairs) indeed corresponds to unique benchmarking behavior. That is, typically, these key/value pairs directly correspond to input parameters to your benchmarking method.  Example: a conceptual benchmark with name "foo-write-file" might have meaningful case permutations involving tag names such as `compression_method` (values: `gzip`, `lzma`, ...), `file_format` (values: `csv`, `hdf5`, ...), `dataset_name` (values: `foo`, `bar`, ...). For each conceptual benchmark, it is OK to have no or many case permutations.',
                         "type": "object",
                     },
                     "timestamp": {
