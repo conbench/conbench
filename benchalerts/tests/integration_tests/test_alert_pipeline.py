@@ -32,7 +32,9 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
     # note: something *might* go wrong if we go past 1000 statuses on this test commit?
     # https://docs.github.com/en/rest/commits/statuses#create-a-commit-status
     test_status_repo = "conbench/benchalerts"
-    test_status_commit = "4b9543876e8c1cee54c56980c3b2363aad71a8d4"
+    # Note: this will start failing after N test executions, see
+    # https://github.com/conbench/conbench/issues/945
+    test_status_commit = "9cff2efafa1a44c924310569f576de97e8dc9b57"
 
     monkeypatch.setenv("CONBENCH_URL", "https://velox-conbench.voltrondata.run/")
     velox_commit = "c76715c9db1eea7cf3f32dca6fe78fc35c4f3ecd"

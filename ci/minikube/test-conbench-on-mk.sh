@@ -185,27 +185,24 @@ kubectl wait --timeout=90s --for=condition=Ready \
 # similar technique might allow for scheduling all requested components:
 # https://github.com/prometheus-operator/kube-prometheus/blob/main/docs/customizations/strip-limits.md
 sleep 1
-kubectl wait --timeout=90s --for=condition=Ready pods prometheus-k8s-0 -n monitoring
+kubectl wait --timeout=180s --for=condition=Ready pods prometheus-k8s-0 -n monitoring
 
 sleep 5
 kubectl get pods -A
 
 # Wait for readiness check to succeed, which implies responsiveness to /api/ping.
 sleep 1
-kubectl wait --timeout=90s --for=condition=Ready pods -l app=conbench
+kubectl wait --timeout=180s --for=condition=Ready pods -l app=conbench
 
 sleep 5
-kubectl logs deployment/conbench-deployment --all-containers > conbench_container_output.log
-cat conbench_container_output.log
-
 # Require access log line confirming that the /metrics endpoint was hit.
 # Temporarily disable the errexit guardrail, and also disable xtrace for
 # verbosity control.
 set +e
 set +x
 attempt=0
-retries=10
-wait_seconds=3
+retries=15
+wait_seconds=5
 until ( kubectl logs deployment/conbench-deployment --all-containers | grep '"GET /metrics HTTP/1.1" 200' )
 do
     retcode=$?
@@ -214,6 +211,8 @@ do
         echo "pipeline returncode: $retcode -- probe not yet found in log, retry soon"
         sleep $wait_seconds
     else
+        kubectl logs deployment/conbench-deployment --all-containers > conbench_container_output.log
+        cat conbench_container_output.log
         exit 1
     fi
 done
