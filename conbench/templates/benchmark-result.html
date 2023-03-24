@@ -18,11 +18,13 @@
 </nav>
 
 
+
 <br />
 {% if history_plot_info.jsondoc is not none %}
-<div align="center"><p class="fs-4">{{ benchmark.display_bmname }}</p></div>
-<div align="center">{{ benchmark.display_case_perm }}</div>
-<div id="plot-history-0" align="center"></div>
+<h3>History plot for benchmark '{{ benchmark.display_bmname }}'</h3>
+<p class="fst-italic fw-light">For a specific case permutation and hardware/context (see below)</p>
+<!-- <div>{{ benchmark.display_case_perm }}</div> -->
+<div class="mt-4" id="plot-history-0" align="center"></div>
 <div class="row">
   <div class="col-md-12" style="padding-top: 10px;">
     Click on a benchmark result (grey point) in the plot to see a corresponding benchmark result summary.
