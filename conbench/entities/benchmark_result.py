@@ -416,7 +416,7 @@ class _Serializer(EntitySerializer):
         # Note(JP): this is interesting, here we put the `name` and `id` keys
         # into tags. That is, the `tags` as returned may look different from
         # the tags as injected.
-        tags = {"id": case.id, "name": case.name}
+        tags = {"name": case.name}
         tags.update(case.tags)
         return {
             "id": benchmark_result.id,
