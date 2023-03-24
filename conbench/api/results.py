@@ -224,12 +224,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             # Is an empty string a valid JSON key? Yes:
             # https://stackoverflow.com/a/58917082/145400
             if len(key) == 0:
-                return (
-                    f.jsonify(
-                        description="tags: zero-length string as key is not allowed"
-                    ),
-                    400,
-                )
+                return resp400("tags: zero-length string as key is not allowed")
 
             # This is an important decision: be liberal in what we accept. We
             # don't want to consider empty string or None values for the actual
@@ -257,18 +252,15 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
 
             if not isinstance(value, str):
                 # Do not silently drop this, bit emit bad request.
-                return (
-                    f.jsonify(
-                        description=f"tags: bad value type for key `{key}`, only string values are allowed, got `{type(value)}` "
-                    ),
-                    400,
+                return resp400(
+                    "tags: bad value type for key `{key}`, only string values are allowed, got `{type(value)}`"
                 )
 
+        # Note(JP): in the future this will also raise further validation
+        # errors that are to be exposed via a 400 response to the HTTP client
         benchmark_result = BenchmarkResult.create(data)
 
         set_z_scores([benchmark_result])
-
-        log.info("benchmark_result: %s", benchmark_result)
 
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 
@@ -277,6 +269,19 @@ def make_json_response(data: bytes, status_code: int) -> f.Response:
     # Note(JP): it's documented that a byte sequence can be passed in:
     # https://flask.palletsprojects.com/en/2.2.x/api/#flask.Flask.make_response
     return f.make_response((data, status_code, {"content-type": "application/json"}))
+
+
+def resp400(description: str) -> f.Response:
+    """
+    Utility for canonical generation of 400 Bad Request response with an
+    error description. Define elsewhere once used elsewhere.
+    """
+    return f.make_response(
+        # This puts a JSON body into the response with a JSON object with one
+        # key, the description
+        f.jsonify(description=description),
+        400,
+    )
 
 
 benchmark_entity_view = BenchmarkEntityAPI.as_view("benchmark")
