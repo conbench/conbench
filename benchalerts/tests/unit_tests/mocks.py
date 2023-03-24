@@ -62,11 +62,16 @@ class MockAdapter(HTTPAdapter):
         req: requests.PreparedRequest = args[0]
         log.info(f"Sent request {req}({req.__dict__}) with kwargs {kwargs}")
 
-        # to help with test_workflows.py, log the markdowns that were posted
+        # to help with check_posted_markdown(), log the markdowns that were posted
         if req.url.endswith("check-runs"):
             body = json.loads(req.body)
             log.info("Summary: " + body["output"]["summary"])
             log.info("Details: " + str(body["output"].get("text")))
+
+        # to help with check_posted_comment(), log the comments that were posted
+        if req.url.endswith("comments"):
+            body = json.loads(req.body)
+            log.info("Comment: " + body["body"])
 
         method = req.method
         clean_url = self.clean_base_url(req.url)
@@ -121,3 +126,30 @@ def check_posted_markdown(
             assert (
                 expected_details.strip() == actual_details.strip()
             ), f"see tests/unit_tests/expected_md/{expected_details_filename}.md"
+
+
+def check_posted_comment(
+    caplog: pytest.LogCaptureFixture, expected_comments: List[str]
+):
+    """After we run a test, search through the logs for what comments we
+    mock-posted to GitHub, and assert they are what we expected.
+    """
+    actual_comments = [
+        log_record.message[9:]
+        for log_record in caplog.records
+        if log_record.levelname == "INFO"
+        and log_record.filename == "mocks.py"
+        and log_record.message.startswith("Comment: ")
+    ]
+    assert len(expected_comments) == len(actual_comments)
+
+    for expected_comment_filename, actual_comment in zip(
+        expected_comments, actual_comments
+    ):
+        base_dir = pathlib.Path(__file__).parent / "expected_md"
+
+        with open(base_dir / (expected_comment_filename + ".md"), "r") as f:
+            expected_comment = f.read()
+        assert (
+            expected_comment.strip() == actual_comment.strip()
+        ), f"see tests/unit_tests/expected_md/{expected_comment_filename}.md"
