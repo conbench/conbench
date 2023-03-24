@@ -21,6 +21,9 @@ from ..entities.history import set_z_scores
 log = logging.getLogger(__name__)
 
 
+log = logging.getLogger(__name__)
+
+
 class BenchmarkValidationMixin:
     def validate_benchmark(self, schema):
         return self.validate(schema)
@@ -186,7 +189,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         return make_json_response(jsonbytes, 200)
 
     @flask_login.login_required
-    def post(self) -> None:
+    def post(self) -> f.Response:
         """
         ---
         description:
@@ -211,7 +214,51 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         # Here it should be easy to make `data` have a precise type (that mypy
         # can use) based on the schema that we validate against.
         data = self.validate_benchmark(self.schema.create)
+
+        # This next block inspects and mutates `tags`, with the goal that all
+        # keys are non-empty strings, and all values are non-empty strings.
+        # ideally this should be done as part of schema validation above.
+        tags = data["tags"]
+        for key, value in list(tags.items()):
+            # In JSON, a key is always of type string. We can rely on this
+            # here, but codify this invariant.
+            assert isinstance(key, str)
+            # Is an empty string a valid JSON key? Yes:
+            # https://stackoverflow.com/a/58917082/145400
+            if len(key) == 0:
+                return (
+                    f.jsonify(
+                        description="tags: zero-length string as key is not allowed"
+                    ),
+                    400,
+                )
+
+            # This is an important decision: be liberal in what we accept. We
+            # don't want to consider empty string or None values for the actual
+            # case permutation. We don't want to store this in the database.
+            # Drop these key/value pairs. Make sure that this is documented in
+            # the API spec. We could reject the corresponding HTTP request of
+            # course with a Bad Request response, but that might unnecessarily
+            # invasive in view of legacy tooling.
+            if value == "" or value is None:
+                log.warning("silently drop tag key/value pair: `%s`, `%s`", key, value)
+                # Remove key/value pair, check next one. Mutating the
+                # dictionary while we iterate over it? That is why the
+                # iteration happens over a copy of kv pairs.
+                del tags[key]
+                continue
+
+            if not isinstance(value, str):
+                # Do not silently drop this, bit emit bad request.
+                return (
+                    f.jsonify(
+                        description=f"tags: bad property `{key}`, only string values are allowed"
+                    ),
+                    400,
+                )
+
         benchmark_result = BenchmarkResult.create(data)
+
         set_z_scores([benchmark_result])
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 

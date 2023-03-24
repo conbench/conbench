@@ -609,8 +609,8 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
             "description": conbench.util.dedent_rejoin(
                 """
                 The set of key/value pairs that defines a benchmark case
-                permutation. Top-level keys must be strings. Allowed value
-                types are ... (to be specified).
+                permutation. Top-level keys must be strings. Values must be
+                strings, too. Keys with empty string values are ignored.
 
                 The special key "name" must be provided with a string value: it
                 indicates the name of the conceptual benchmark that was
