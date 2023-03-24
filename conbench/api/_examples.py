@@ -125,7 +125,7 @@ def _api_benchmark_entity(
         "change_annotations": {},
         "tags": {
             "compression": "snappy",
-            "cpu_count": 2,
+            "cpu_count": "2",
             "dataset": "nyctaxi_sample",
             "file_type": "parquet",
             "input_type": "arrow",
@@ -508,7 +508,7 @@ COMPARE_ENTITY = _api_compare_entity(
     "snappy, nyctaxi_sample, parquet, arrow",
     {
         "compression": "snappy",
-        "cpu_count": 2,
+        "cpu_count": "2",
         "dataset": "nyctaxi_sample",
         "file_type": "parquet",
         "input_type": "arrow",
@@ -528,7 +528,7 @@ COMPARE_LIST = _api_compare_list(
     [
         {
             "compression": "snappy",
-            "cpu_count": 2,
+            "cpu_count": "2",
             "dataset": "nyctaxi_sample",
             "file_type": "parquet",
             "input_type": "arrow",
@@ -536,7 +536,7 @@ COMPARE_LIST = _api_compare_list(
         },
         {
             "compression": "snappy",
-            "cpu_count": 2,
+            "cpu_count": "2",
             "dataset": "nyctaxi_sample",
             "file_type": "parquet",
             "input_type": "arrow",

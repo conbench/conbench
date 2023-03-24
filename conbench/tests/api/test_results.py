@@ -945,6 +945,28 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             # This here just quickly checks that there is a failure at all,
             # that 'name' is required.
 
+    @pytest.mark.parametrize(
+        "tagdict",
+        [
+            # empty string key
+            {"name": "foo", "": "foo"},
+            # dict type value
+            {"name": "foo", "foo": {"foo": "bar"}},
+            # array type value
+            {"name": "foo", "foo": ["foo"]},
+        ],
+    )
+    def test_create_benchmark_bad_tags(self, client, tagdict):
+        self.authenticate(client)
+        payload = copy.deepcopy(_fixtures.VALID_PAYLOAD)
+        payload["tags"] = tagdict.copy()
+        resp = client.post(self.url, json=payload)
+        assert resp.status_code == 400
+        assert (
+            "tags: bad value type for key" in resp.text
+            or "tags: zero-length string as key is not allowed" in resp.text
+        )
+
     def test_create_benchmark_context_empty(self, client):
         """
         It is an error to provide no context object (see test above). Whether

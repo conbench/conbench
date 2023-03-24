@@ -244,7 +244,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
             CASE,
             tags={
                 "dataset": "nyctaxi_sample",
-                "cpu_count": 2,
+                "cpu_count": "2",
                 "file_type": "parquet",
                 "input_type": "arrow",
                 "compression": "snappy",
@@ -288,7 +288,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
             CASE,
             tags={
                 "dataset": "nyctaxi_sample",
-                "cpu_count": 2,
+                "cpu_count": "2",
                 "file_type": "parquet",
                 "input_type": "arrow",
                 "compression": "snappy",
@@ -367,7 +367,7 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
             tags=[
                 {
                     "dataset": "nyctaxi_sample",
-                    "cpu_count": 2,
+                    "cpu_count": "2",
                     "file_type": "parquet",
                     "input_type": "arrow",
                     "compression": "snappy",
@@ -375,7 +375,7 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
                 },
                 {
                     "dataset": "nyctaxi_sample",
-                    "cpu_count": 2,
+                    "cpu_count": "2",
                     "file_type": "parquet",
                     "input_type": "arrow",
                     "compression": "snappy",
@@ -469,7 +469,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             tags=[
                 {
                     "dataset": "nyctaxi_sample",
-                    "cpu_count": 2,
+                    "cpu_count": "2",
                     "file_type": "parquet",
                     "input_type": "arrow",
                     "compression": "snappy",
@@ -477,7 +477,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                 },
                 {
                     "dataset": "nyctaxi_sample",
-                    "cpu_count": 2,
+                    "cpu_count": "2",
                     "file_type": "parquet",
                     "input_type": "arrow",
                     "compression": "snappy",
@@ -520,7 +520,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             tags=[
                 {
                     "dataset": "nyctaxi_sample",
-                    "cpu_count": 2,
+                    "cpu_count": "2",
                     "file_type": "parquet",
                     "input_type": "arrow",
                     "compression": "snappy",
@@ -528,7 +528,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                 },
                 {
                     "dataset": "nyctaxi_sample",
-                    "cpu_count": 2,
+                    "cpu_count": "2",
                     "file_type": "parquet",
                     "input_type": "arrow",
                     "compression": "snappy",

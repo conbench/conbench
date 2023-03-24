@@ -18,8 +18,6 @@ from ..entities.benchmark_result import (
 from ..entities.case import Case
 from ..entities.history import set_z_scores
 
-log = logging.getLogger(__name__)
-
 
 log = logging.getLogger(__name__)
 
@@ -248,11 +246,20 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
                 del tags[key]
                 continue
 
+            # Note(JP): this code path should go away after we adjust our
+            # client tooling to not send numeric values anymore.
+            if isinstance(value, int) or isinstance(value, float):
+                log.warning(
+                    "stringify numeric case parameter value: `%s`, `%s`", key, value
+                )
+                tags[key] = str(value)
+                continue
+
             if not isinstance(value, str):
                 # Do not silently drop this, bit emit bad request.
                 return (
                     f.jsonify(
-                        description=f"tags: bad property `{key}`, only string values are allowed"
+                        description=f"tags: bad value type for key `{key}`, only string values are allowed, got `{type(value)}` "
                     ),
                     400,
                 )
@@ -260,6 +267,9 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         benchmark_result = BenchmarkResult.create(data)
 
         set_z_scores([benchmark_result])
+
+        log.info("benchmark_result: %s", benchmark_result)
+
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 
 
