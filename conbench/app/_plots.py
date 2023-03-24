@@ -42,7 +42,10 @@ class TimeSeriesPlotMixin:
 
         outliers = [benchmarks_by_id[o[1]] for o in outliers]
         outlier_ids = [b["id"] for b in outliers]
-        outlier_names = [f'{b["display_batch"]}, {b["display_name"]}' for b in outliers]
+        # Note(JP): TODO: it appears that this is not covered by the test suite
+        outlier_names = [
+            f'{b["display_bmname"]}, {b["display_case_perm"]}' for b in outliers
+        ]
         return outliers, outlier_ids, outlier_names
 
     def get_history_plot(self, benchmark, run, i=0) -> BokehPlotJSONOrError:
