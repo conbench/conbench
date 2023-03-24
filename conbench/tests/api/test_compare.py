@@ -9,7 +9,7 @@ from ...api.compare import _get_pairs
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
-CASE = "compression=snappy, cpu_count=2, file_type=parquet, input_type=arrow, dataset=nyctaxi_sample"
+CASE = "compression=snappy, cpu_count=2, dataset=nyctaxi_sample, file_type=parquet, input_type=arrow"
 
 
 class FakeEntity:
@@ -248,8 +248,9 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "file_type": "parquet",
                 "input_type": "arrow",
                 "compression": "snappy",
-                # The benchmark name is now not part of the emitted tags anymore.
-                # "name": name,
+                # The benchmark name should in the future not be part of the
+                # emitted tags anymore.
+                "name": name,
             },
         )
         expected.update(
@@ -291,7 +292,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "file_type": "parquet",
                 "input_type": "arrow",
                 "compression": "snappy",
-                # "name": name,
+                "name": name,
             },
         )
         expected.update(
@@ -370,7 +371,7 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
                     "file_type": "parquet",
                     "input_type": "arrow",
                     "compression": "snappy",
-                    # "name": "read",
+                    "name": "read",
                 },
                 {
                     "dataset": "nyctaxi_sample",
@@ -378,7 +379,7 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
                     "file_type": "parquet",
                     "input_type": "arrow",
                     "compression": "snappy",
-                    # "name": "write",
+                    "name": "write",
                 },
             ],
         )
@@ -472,7 +473,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                     "file_type": "parquet",
                     "input_type": "arrow",
                     "compression": "snappy",
-                    # "name": "read",
+                    "name": "read",
                 },
                 {
                     "dataset": "nyctaxi_sample",
@@ -480,7 +481,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                     "file_type": "parquet",
                     "input_type": "arrow",
                     "compression": "snappy",
-                    # "name": "write",
+                    "name": "write",
                 },
             ],
         )
@@ -523,7 +524,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                     "file_type": "parquet",
                     "input_type": "arrow",
                     "compression": "snappy",
-                    # "name": "read",
+                    "name": "read",
                 },
                 {
                     "dataset": "nyctaxi_sample",
@@ -531,7 +532,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                     "file_type": "parquet",
                     "input_type": "arrow",
                     "compression": "snappy",
-                    # "name": "write",
+                    "name": "write",
                 },
             ],
         )

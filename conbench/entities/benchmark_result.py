@@ -413,9 +413,9 @@ class _Serializer(EntitySerializer):
     def _dump(self, benchmark_result):
         z_score = float(benchmark_result.z_score) if benchmark_result.z_score else None
         case = benchmark_result.case
-        # This is interesting, here we put the `name` and `id` keys into tags.
-        # That is, the `tags` as returned may look different from the tags as
-        # injected.
+        # Note(JP): this is interesting, here we put the `name` and `id` keys
+        # into tags. That is, the `tags` as returned may look different from
+        # the tags as injected.
         tags = {"id": case.id, "name": case.name}
         tags.update(case.tags)
         return {
