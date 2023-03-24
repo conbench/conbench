@@ -9,7 +9,7 @@ from ...api.compare import _get_pairs
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
-CASE = "snappy, cpu_count=2, parquet, arrow, nyctaxi_sample"
+CASE = "compression=snappy, cpu_count=2, dataset=nyctaxi_sample, file_type=parquet, input_type=arrow"
 
 
 class FakeEntity:
@@ -248,6 +248,8 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
                 "file_type": "parquet",
                 "input_type": "arrow",
                 "compression": "snappy",
+                # The benchmark name should in the future not be part of the
+                # emitted tags anymore.
                 "name": name,
             },
         )

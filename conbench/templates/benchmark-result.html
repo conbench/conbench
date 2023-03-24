@@ -17,7 +17,8 @@
 
 <br />
 {% if history_plot_info.jsondoc is not none %}
-<div align="center">{{ benchmark.display_batch }}, {{ benchmark.display_name }}</div>
+<div align="center"><p class="fs-4">{{ benchmark.display_bmname }}</p></div>
+<div align="center">{{ benchmark.display_case_perm }}</div>
 <div id="plot-history-0" align="center"></div>
 <div class="row">
   <div class="col-md-12" style="padding-top: 10px;">
@@ -51,27 +52,27 @@
 <div class="row">
   <div class="col-md-6">
     <ul class="list-group">
-      <li class="list-group-item list-group-item-primary">Benchmark</li>
+      <li class="list-group-item list-group-item-primary">Benchmark details</li>
       <li class="list-group-item" style="overflow-y: auto;">
-        <b>benchmark</b>
-        <div class="ellipsis-500" align="right" style="display:inline-block; float: right;">
-          {{ benchmark.display_name }}
-        </div>
-      </li>
-      <li class="list-group-item" style="overflow-y: auto;">
-        <b>batch</b>
+        <b>Benchmark name</b>
         <div align="right" style="display:inline-block; float: right;">
-          <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id ) }}">{{ benchmark.display_batch }}</a>
+          <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id ) }}">{{ benchmark.display_bmname }}</a>
         </div>
       </li>
       <li class="list-group-item" style="overflow-y: auto;">
-        <b>run</b>
+        <b>Benchmark case permutation</b>
+        <div align="right" style="display:inline-block; float: right;">
+          {{ benchmark.display_case_perm }}
+        </div>
+      </li>
+      <li class="list-group-item" style="overflow-y: auto;">
+        <b>Run ID</b>
         <div align="right" style="display:inline-block; float: right;">
           <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">{{ benchmark.run_id }}</a>
         </div>
       </li>
       <li class="list-group-item" style="overflow-y: auto;">
-        <b>run name</b>
+        <b>Run name</b>
         <div align="right" style="display:inline-block; float: right;">
           {% if run.name %}
           {{ run.name }}
@@ -79,7 +80,7 @@
         </div>
       </li>
       <li class="list-group-item" style="overflow-y: auto;">
-        <b>run reason</b>
+        <b>Run reason</b>
         <div align="right" style="display:inline-block; float: right;">
           {% if run.reason %}
           {{ run.reason }}
@@ -126,9 +127,7 @@
       {% for k,v in benchmark.tags.items() %}
       <li class="list-group-item" style="overflow-y: auto;">
         <b>{{ k }}</b>
-        {% if v is not none %}
         <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-        {% endif %}
       </li>
       {% endfor %}
       {% if benchmark.optional_benchmark_info %}

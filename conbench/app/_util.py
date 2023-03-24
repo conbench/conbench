@@ -1,13 +1,13 @@
 import re
 
-from ..hacks import set_display_batch, set_display_name
+from ..hacks import set_display_benchmark_name, set_display_case_permutation
 from ..units import formatter_for_unit
 
 
 def augment(benchmark, contexts=None):
-    set_display_name(benchmark)
+    set_display_benchmark_name(benchmark)
     set_display_time(benchmark)
-    set_display_batch(benchmark)
+    set_display_case_permutation(benchmark)
     set_display_mean(benchmark)
     set_display_language(benchmark, contexts)
     set_display_error(benchmark)

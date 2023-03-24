@@ -121,11 +121,11 @@ class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         contender_copy = copy.deepcopy(contender)
         baseline_copy["tags"] = {
             "compare": "baseline",
-            "name": baseline["display_name"],
+            "name": baseline["display_case_perm"],
         }
         contender_copy["tags"] = {
             "compare": "contender",
-            "name": contender["display_name"],
+            "name": contender["display_case_perm"],
         }
         plot = json.dumps(
             bokeh.embed.json_item(

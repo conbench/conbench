@@ -108,7 +108,7 @@ matching fields between baseline and contender are aligned and mismatched fields
 
     </div>
 
-	<div align="center">{{ baseline.display_batch }}, {{ baseline.display_name }}</div>
+	<div align="center">{{ baseline.display_bmname }}, {{ baseline.display_case_perm }}</div>
     <div id="plot-history-0" align="center"></div>
     <br/>
 
@@ -126,13 +126,13 @@ matching fields between baseline and contender are aligned and mismatched fields
             <li class="list-group-item" style="overflow-y: auto;">
               <b>batch</b>
               <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.batch', batch_id=baseline.batch_id ) }}">{{ baseline.display_batch }}</a>
+                <a href="{{ url_for('app.batch', batch_id=baseline.batch_id ) }}">{{ baseline.display_bmname }}</a>
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
               <b>benchmark</b>
               <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.benchmark', benchmark_id=baseline.id) }}">{{ baseline.display_name }}</a>
+                <a href="{{ url_for('app.benchmark', benchmark_id=baseline.id) }}">{{ baseline.display_case_perm }}</a>
               </div>
             </li>
             {% if baseline_run %}
@@ -231,13 +231,13 @@ matching fields between baseline and contender are aligned and mismatched fields
             <li class="list-group-item" style="overflow-y: auto;">
               <b>batch</b>
               <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.batch', batch_id=contender.batch_id ) }}">{{ contender.display_batch }}</a>
+                <a href="{{ url_for('app.batch', batch_id=contender.batch_id ) }}">{{ contender.display_bmname }}</a>
               </div>
             </li>
             <li class="list-group-item" style="overflow-y: auto;">
               <b>benchmark</b>
               <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.benchmark', benchmark_id=contender.id) }}">{{ contender.display_name }}</a>
+                <a href="{{ url_for('app.benchmark', benchmark_id=contender.id) }}">{{ contender.display_case_perm }}</a>
               </div>
             </li>
             {% if contender_run %}

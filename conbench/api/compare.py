@@ -10,10 +10,10 @@ from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
 from ..entities.compare import CompareBenchmarkResultSerializer
 from ..entities.history import set_z_scores
-from ..hacks import set_display_batch, set_display_name
+from ..hacks import set_display_benchmark_name, set_display_case_permutation
 
 
-def _compare_entity(benchmark_result):
+def _compare_entity(benchmark_result: BenchmarkResult):
     return {
         "id": benchmark_result.id,
         "batch_id": benchmark_result.batch_id,
@@ -23,8 +23,10 @@ def _compare_entity(benchmark_result):
         "value": benchmark_result.mean,
         "error": benchmark_result.error,
         "unit": benchmark_result.unit,
-        "benchmark": benchmark_result.display_name,
-        "batch": benchmark_result.display_batch,
+        # TODO: change this property name to reflect the idea of 'case permutation'
+        "benchmark": benchmark_result.display_case_perm,
+        # TODO: change this property name to reflect the idea of 'benchmark name'
+        "batch": benchmark_result.display_bmname,
         "language": benchmark_result.context.tags.get("benchmark_language", "unknown"),
         "tags": benchmark_result.case.tags,
         "z_score": benchmark_result.z_score,
@@ -134,10 +136,10 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
         baseline_benchmark_result = self._get(baseline_id)
         contender_benchmark_result = self._get(contender_id)
         set_z_scores([baseline_benchmark_result, contender_benchmark_result])
-        set_display_name(baseline_benchmark_result)
-        set_display_name(contender_benchmark_result)
-        set_display_batch(baseline_benchmark_result)
-        set_display_batch(contender_benchmark_result)
+        set_display_case_permutation(baseline_benchmark_result)
+        set_display_case_permutation(contender_benchmark_result)
+        set_display_benchmark_name(baseline_benchmark_result)
+        set_display_benchmark_name(contender_benchmark_result)
 
         baseline = _compare_entity(baseline_benchmark_result)
         contender = _compare_entity(contender_benchmark_result)
@@ -191,12 +193,14 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
 
         baseline_items, contender_items = [], []
         for benchmark_result in baselines:
-            set_display_name(benchmark_result)
-            set_display_batch(benchmark_result)
+            # TODO: define dynamic properties on BenchmarkResult instead of
+            # mutating these objects here in-place.
+            set_display_benchmark_name(benchmark_result)
+            set_display_case_permutation(benchmark_result)
             baseline_items.append(_compare_entity(benchmark_result))
         for benchmark_result in contenders:
-            set_display_name(benchmark_result)
-            set_display_batch(benchmark_result)
+            set_display_benchmark_name(benchmark_result)
+            set_display_case_permutation(benchmark_result)
             contender_items.append(_compare_entity(benchmark_result))
 
         pairs = _get_pairs(baseline_items, contender_items)
