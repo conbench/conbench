@@ -1,5 +1,4 @@
 import logging
-
 from typing import Dict, List
 
 from conbench.entities.benchmark_result import BenchmarkResult
@@ -67,7 +66,7 @@ def set_display_case_permutation(bmresult: Dict | BenchmarkResult):
     else:
         # This is the result of a needless re-serialization cycle
         # Test if we can work with that assumption
-        if not "name" in tags:
+        if "name" not in tags:
             log.warning("dict bm result w/o name in tags")
 
     caseperm_string_chunks = get_case_kvpair_strings(tags)
