@@ -1,3 +1,3 @@
-A [full benchmark report](https://github.com/github/hello-world/runs/4) is ready for commit `abc`.
+There were no benchmark performance regressions. 🎉
 
-Based on this analysis, there were not any performance regressions.
+The [full Conbench report](https://github.com/github/hello-world/runs/4) for commit `abc` has more details.

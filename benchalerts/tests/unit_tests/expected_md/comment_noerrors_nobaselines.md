@@ -1,3 +1,3 @@
-A [full benchmark report](https://github.com/github/hello-world/runs/4) is ready for commit `no_basel`.
+There weren't enough matching historic benchmark runs to make a call on whether there were regressions.
 
-There weren't enough matching historic runs to make a call on whether there were regressions.
+The [full Conbench report](https://github.com/github/hello-world/runs/4) for commit `no_basel` has more details.

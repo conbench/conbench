@@ -32,12 +32,19 @@ def _run_bullet(reason: str, time: str, link: str) -> str:
     return f"- {reason.title()} Run at [{time}]({link})"
 
 
-def _list_results(benchmark_results: List[BenchmarkResultInfo]) -> str:
+def _list_results(
+    benchmark_results: List[BenchmarkResultInfo], limit: Optional[int] = None
+) -> str:
     """Create a Markdown list of benchmark result information."""
     out = ""
     previous_run_id = ""
 
-    for benchmark_result in benchmark_results:
+    for ix, benchmark_result in enumerate(benchmark_results):
+        if limit and ix >= limit:
+            number_unlisted = len(benchmark_results) - limit
+            out += f"\n- and {number_unlisted} more (see the report linked below)"
+            break
+
         # Separate each run into a section, with a title for the run
         if benchmark_result.run_id != previous_run_id:
             out += "\n\n"
@@ -106,7 +113,7 @@ def github_check_summary(
         summary += "### Benchmarks with regressions:"
         summary += _list_results(full_comparison.benchmarks_with_z_regressions)
 
-    summary += "## All benchmark runs\n"
+    summary += f"## All benchmark runs on commit `{hash}`\n"
     for comparison in full_comparison.run_comparisons:
         summary += "\n"
         summary += _run_bullet(
@@ -136,16 +143,10 @@ def github_check_details(full_comparison: FullComparisonInfo) -> Optional[str]:
     if full_comparison.no_baseline_runs:
         return None
 
-    s = _Pluralizer(full_comparison.run_comparisons).s
     details = _clean(
         f"""
-        Conbench has details about {len(full_comparison.run_comparisons)} run{s} on this
-        commit.
-
         This report was generated using the lookback z-score method with a z-score
-        threshold of {full_comparison.z_score_threshold}. A regression is defined as a
-        benchmark exhibiting a z-score higher than the threshold in the "bad" direction
-        (e.g. down for iterations per second; up for total time taken).
+        threshold of {full_comparison.z_score_threshold}.
         """
     )
     return details
@@ -155,13 +156,7 @@ def pr_comment_link_to_check(
     full_comparison: FullComparisonInfo, check_link: str
 ) -> str:
     """Generate a GitHub PR comment that summarizes and links to a GitHub Check."""
-    comment = _clean(
-        f"""
-        A [full benchmark report]({check_link}) is ready for commit
-        `{full_comparison.commit_hash[:8]}`.
-        """
-    )
-    comment += "\n\n"
+    comment = ""
 
     if full_comparison.benchmarks_with_errors:
         pluralizer = _Pluralizer(full_comparison.benchmarks_with_errors)
@@ -170,16 +165,19 @@ def pr_comment_link_to_check(
         comment += _clean(
             f"""
             There {were} {len(full_comparison.benchmarks_with_errors)} benchmark
-            result{s} with an error.
+            result{s} with an error:
             """
         )
-    elif full_comparison.no_baseline_runs:
+        comment += _list_results(full_comparison.benchmarks_with_errors, limit=2)
+
+    if full_comparison.no_baseline_runs:
         comment += _clean(
             """
-            There weren't enough matching historic runs to make a call on whether there
-            were regressions.
+            There weren't enough matching historic benchmark runs to make a call on
+            whether there were regressions.
             """
         )
+        comment += "\n\n"
     elif full_comparison.benchmarks_with_z_regressions:
         pluralizer = _Pluralizer(full_comparison.benchmarks_with_z_regressions)
         were = pluralizer.were
@@ -187,14 +185,23 @@ def pr_comment_link_to_check(
         comment += _clean(
             f"""
             There {were} {len(full_comparison.benchmarks_with_z_regressions)} benchmark
-            result{s} with a performance regression.
+            result{s} with a performance regression:
             """
         )
+        comment += _list_results(full_comparison.benchmarks_with_z_regressions, limit=2)
     else:
         comment += _clean(
             """
-            Based on this analysis, there were not any performance regressions.
+            There were no benchmark performance regressions. 🎉
             """
         )
+        comment += "\n\n"
+
+    comment += _clean(
+        f"""
+        The [full Conbench report]({check_link}) for commit
+        `{full_comparison.commit_hash[:8]}` has more details.
+        """
+    )
 
     return comment

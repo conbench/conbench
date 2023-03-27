@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import re
 import time
 
 import pytest
@@ -106,15 +107,21 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
         assert outputs["GitHubStatusStep"]["creator"]["type"] == "User"
     if github_auth == "app":
         assert outputs["GitHubStatusStep"]["creator"]["type"] == "Bot"
-        assert outputs["GitHubCheckStep"]["conclusion"] == "failure"
+        assert outputs["GitHubCheckStep"][0]["conclusion"] == "failure"
         if not os.getenv("CI"):
-            assert outputs["GitHubPRCommentAboutCheckStep"]["body"].startswith(
-                "A [full benchmark report](https://github.com/conbench/benchalerts/runs/"
+            expected_comment = """There was 1 benchmark result with a performance regression:
+
+- Commit Run at [2023-02-28 18:08:51Z](http://velox-conbench.voltrondata.run/compare/runs/GHA-4273957972-1...GHA-4296026775-1/)
+  - [flatMap](http://velox-conbench.voltrondata.run/benchmarks/ff7a1a86df5a4d56b6dbfb006c13c638)
+
+The [full Conbench report](https://github.com/conbench/benchalerts/runs/RUN_ID) for commit `c76715c9` has more details."""
+
+            actual_comment = outputs["GitHubPRCommentAboutCheckStep"]["body"].strip()
+            actual_comment = re.sub(
+                r"benchalerts/runs/\d+", "benchalerts/runs/RUN_ID", actual_comment
             )
-            assert (
-                "Contender commit `c76715c9` had 1 performance regression(s) compared to its baseline runs."
-                in outputs["GitHubPRCommentAboutCheckStep"]["body"]
-            )
+
+            assert expected_comment == actual_comment
 
     # sleep to see the updated statuses on the PR
     time.sleep(1)
