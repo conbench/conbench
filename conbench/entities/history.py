@@ -1,8 +1,10 @@
+import copy
 import dataclasses
 import datetime
 import decimal
 import logging
 import math
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
@@ -168,6 +170,7 @@ def get_history_for_cchr(
             BenchmarkResult.data,
             BenchmarkResult.times,
             BenchmarkResult.change_annotations,
+            BenchmarkResult.timestamp.label("result_timestamp"),
             Hardware.hash,
             Commit.sha,
             Commit.repository,
@@ -339,6 +342,7 @@ def _query_distribution_stats_by_run_id(
             BenchmarkResult.context_id,
             BenchmarkResult.change_annotations,
             BenchmarkResult.mean,
+            BenchmarkResult.timestamp.label("result_timestamp"),
             Hardware.hash,
             s.sql.expression.literal(run.commit.repository).label("repository"),
             commits.c.ancestor_timestamp.label("timestamp"),
@@ -431,6 +435,7 @@ def _add_rolling_stats_columns_to_df(
         - BenchmarkResult.context_id
         - BenchmarkResult.change_annotations
         - BenchmarkResult.mean
+        - BenchmarkResult.timestamp.label("result_timestamp")
         - Hardware.hash
         - Commit.repository
         - Commit.timestamp
@@ -468,6 +473,8 @@ def _add_rolling_stats_columns_to_df(
     exclusive on the right side. This is useful if you want to compare each commit to
     the previous commit's rolling stats.
     """
+    df = _ZScoreAutomatedDetector().detect(df=df)
+
     # pandas likes the data to be sorted
     df.sort_values(
         ["case_id", "context_id", "hash", "repository", "timestamp"],
@@ -480,6 +487,9 @@ def _add_rolling_stats_columns_to_df(
         bool(x.get("begins_distribution_change", False)) if x else False
         for x in df["change_annotations"]
     ]
+
+    # Add in step changes automatically detected
+    df["begins_distribution_change"] = df["begins_distribution_change"] | df["is_step"]
 
     # Add column with cumulative sum of distribution changes, to identify the segment
     df["segment_id"] = (
@@ -495,8 +505,9 @@ def _add_rolling_stats_columns_to_df(
     )
 
     # Add column with rolling mean of the means (only inside of the segment)
-    df["rolling_mean_excluding_this_commit"] = (
-        df.groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
+    df.loc[~df.is_outlier, "rolling_mean_excluding_this_commit"] = (
+        df.loc[~df.is_outlier]
+        .groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
         .rolling(
             _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
             on="timestamp",
@@ -508,14 +519,15 @@ def _add_rolling_stats_columns_to_df(
         .values
     )
     # (and fill NaNs at the beginning of segments with the first value)
-    df["rolling_mean_excluding_this_commit"] = df[
-        "rolling_mean_excluding_this_commit"
-    ].combine_first(df["mean"])
+    df.loc[~df.is_outlier, "rolling_mean_excluding_this_commit"] = df.loc[
+        ~df.is_outlier, "rolling_mean_excluding_this_commit"
+    ].combine_first(df.loc[~df.is_outlier, "mean"])
 
     # ...but if requested, include the current commit
     if include_current_commit_in_rolling_stats:
-        df["rolling_mean"] = (
-            df.groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
+        df.loc[~df.is_outlier, "rolling_mean"] = (
+            df.loc[~df.is_outlier]
+            .groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
             .rolling(
                 _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
                 on="timestamp",
@@ -534,8 +546,9 @@ def _add_rolling_stats_columns_to_df(
 
     # Add column with the rolling standard deviation of the residuals
     # (these can go outside the segment since we assume they don't change much)
-    df["rolling_stddev"] = (
-        df.groupby(["case_id", "context_id", "hash", "repository"])  # not segment
+    df.loc[~df.is_outlier, "rolling_stddev"] = (
+        df.loc[~df.is_outlier]
+        .groupby(["case_id", "context_id", "hash", "repository"])  # not segment
         .rolling(
             _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
             on="timestamp",
@@ -570,3 +583,82 @@ def _calculate_z_score(
         z_score = z_score * -1
 
     return z_score
+
+
+class _AutomatedDetector(ABC):
+    @abstractmethod
+    def detect(self, df: pd.DataFrame) -> pd.Series:
+        """Detect outliers and distribution shifts in historical data
+
+        For a particular detection algorithm, should take a dataframe of the same
+        sort as `_add_rolling_stats_columns_to_df`, and return that dataframe with
+        two additional columns:
+
+        - `is_step` (bool): Is this point the start of a new segment?
+        - `is_outlier` (bool): Is this point an outlier that should be ignored?
+        """
+
+
+class _ZScoreAutomatedDetector(_AutomatedDetector):
+    def detect(self, df: pd.DataFrame, z_score_threshold=5.0) -> pd.DataFrame:
+        tmp_df = copy.deepcopy(df)
+
+        # skip computation if no history
+        if df.shape[0] == 0:
+            tmp_df["is_step"] = pd.Series([], dtype=bool)
+            tmp_df["is_outlier"] = pd.Series([], dtype=bool)
+            return tmp_df
+
+        # pandas likes the data to be sorted
+        tmp_df.sort_values(
+            [
+                "case_id",
+                "context_id",
+                "hash",
+                "repository",
+                "timestamp",
+                "result_timestamp",
+            ],
+            inplace=True,
+            ignore_index=True,
+        )
+
+        # split / apply
+        out_group_df_list = []
+        for _, group_df in tmp_df.groupby(
+            ["case_id", "context_id", "hash", "repository"]
+        ):
+            # clean copy will only get result columns
+            out_group_df = copy.deepcopy(group_df)
+
+            group_df["mean_diff"] = group_df["mean"].diff()
+            mean_diff_clipped = group_df.mean_diff[
+                (group_df.mean_diff > group_df.mean_diff.quantile(0.05))
+                & (group_df.mean_diff < group_df.mean_diff.quantile(0.95))
+            ]
+            group_df["z_score"] = (
+                group_df.mean_diff - mean_diff_clipped.mean()
+            ) / mean_diff_clipped.std()
+
+            group_df["is_shift"] = group_df.z_score.abs() > z_score_threshold
+            group_df["reverts"] = (
+                group_df.is_shift
+                & group_df.is_shift.shift(-1)
+                & (
+                    (group_df.z_score + group_df.z_score.shift(1)).abs()
+                    > z_score_threshold
+                )
+            )
+            out_group_df["is_step"] = (
+                group_df.is_shift
+                & ~group_df.reverts
+                & ~group_df.reverts.shift(1, fill_value=False)
+            )
+            out_group_df["is_outlier"] = group_df.is_shift & group_df.reverts
+
+            out_group_df_list.append(out_group_df)
+
+        # combine
+        out_df = pd.concat(out_group_df_list)
+
+        return out_df
