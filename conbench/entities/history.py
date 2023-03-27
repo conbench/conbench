@@ -4,7 +4,6 @@ import datetime
 import decimal
 import logging
 import math
-from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
@@ -473,7 +472,7 @@ def _add_rolling_stats_columns_to_df(
     exclusive on the right side. This is useful if you want to compare each commit to
     the previous commit's rolling stats.
     """
-    df = _ZScoreAutomatedDetector().detect(df=df)
+    df = zscore_automated_detect(df=df)
 
     # pandas likes the data to be sorted
     df.sort_values(
@@ -585,80 +584,74 @@ def _calculate_z_score(
     return z_score
 
 
-class _AutomatedDetector(ABC):
-    @abstractmethod
-    def detect(self, df: pd.DataFrame) -> pd.Series:
-        """Detect outliers and distribution shifts in historical data
+def zscore_automated_detect(self, df: pd.DataFrame, z_score_threshold=5.0) -> pd.DataFrame:
+    """Detect outliers and distribution shifts in historical data
 
-        For a particular detection algorithm, should take a dataframe of the same
-        sort as `_add_rolling_stats_columns_to_df`, and return that dataframe with
-        two additional columns:
+    Uses a z-score-based detection algorithm, taking a dataframe of the same
+    sort as `_add_rolling_stats_columns_to_df`, and returning that dataframe with
+    two additional columns:
 
-        - `is_step` (bool): Is this point the start of a new segment?
-        - `is_outlier` (bool): Is this point an outlier that should be ignored?
-        """
+    - `is_step` (bool): Is this point the start of a new segment?
+    - `is_outlier` (bool): Is this point an outlier that should be ignored?
+    """
+    tmp_df = copy.deepcopy(df)
 
+    # skip computation if no history
+    if df.shape[0] == 0:
+        tmp_df["is_step"] = pd.Series([], dtype=bool)
+        tmp_df["is_outlier"] = pd.Series([], dtype=bool)
+        return tmp_df
 
-class _ZScoreAutomatedDetector(_AutomatedDetector):
-    def detect(self, df: pd.DataFrame, z_score_threshold=5.0) -> pd.DataFrame:
-        tmp_df = copy.deepcopy(df)
+    # pandas likes the data to be sorted
+    tmp_df.sort_values(
+        [
+            "case_id",
+            "context_id",
+            "hash",
+            "repository",
+            "timestamp",
+            "result_timestamp",
+        ],
+        inplace=True,
+        ignore_index=True,
+    )
 
-        # skip computation if no history
-        if df.shape[0] == 0:
-            tmp_df["is_step"] = pd.Series([], dtype=bool)
-            tmp_df["is_outlier"] = pd.Series([], dtype=bool)
-            return tmp_df
+    # split / apply
+    out_group_df_list = []
+    for _, group_df in tmp_df.groupby(
+        ["case_id", "context_id", "hash", "repository"]
+    ):
+        # clean copy will only get result columns
+        out_group_df = copy.deepcopy(group_df)
 
-        # pandas likes the data to be sorted
-        tmp_df.sort_values(
-            [
-                "case_id",
-                "context_id",
-                "hash",
-                "repository",
-                "timestamp",
-                "result_timestamp",
-            ],
-            inplace=True,
-            ignore_index=True,
+        group_df["mean_diff"] = group_df["mean"].diff()
+        mean_diff_clipped = group_df.mean_diff[
+            (group_df.mean_diff > group_df.mean_diff.quantile(0.05))
+            & (group_df.mean_diff < group_df.mean_diff.quantile(0.95))
+        ]
+        group_df["z_score"] = (
+            group_df.mean_diff - mean_diff_clipped.mean()
+        ) / mean_diff_clipped.std()
+
+        group_df["is_shift"] = group_df.z_score.abs() > z_score_threshold
+        group_df["reverts"] = (
+            group_df.is_shift
+            & group_df.is_shift.shift(-1)
+            & (
+                (group_df.z_score + group_df.z_score.shift(1)).abs()
+                > z_score_threshold
+            )
         )
+        out_group_df["is_step"] = (
+            group_df.is_shift
+            & ~group_df.reverts
+            & ~group_df.reverts.shift(1, fill_value=False)
+        )
+        out_group_df["is_outlier"] = group_df.is_shift & group_df.reverts
 
-        # split / apply
-        out_group_df_list = []
-        for _, group_df in tmp_df.groupby(
-            ["case_id", "context_id", "hash", "repository"]
-        ):
-            # clean copy will only get result columns
-            out_group_df = copy.deepcopy(group_df)
+        out_group_df_list.append(out_group_df)
 
-            group_df["mean_diff"] = group_df["mean"].diff()
-            mean_diff_clipped = group_df.mean_diff[
-                (group_df.mean_diff > group_df.mean_diff.quantile(0.05))
-                & (group_df.mean_diff < group_df.mean_diff.quantile(0.95))
-            ]
-            group_df["z_score"] = (
-                group_df.mean_diff - mean_diff_clipped.mean()
-            ) / mean_diff_clipped.std()
+    # combine
+    out_df = pd.concat(out_group_df_list)
 
-            group_df["is_shift"] = group_df.z_score.abs() > z_score_threshold
-            group_df["reverts"] = (
-                group_df.is_shift
-                & group_df.is_shift.shift(-1)
-                & (
-                    (group_df.z_score + group_df.z_score.shift(1)).abs()
-                    > z_score_threshold
-                )
-            )
-            out_group_df["is_step"] = (
-                group_df.is_shift
-                & ~group_df.reverts
-                & ~group_df.reverts.shift(1, fill_value=False)
-            )
-            out_group_df["is_outlier"] = group_df.is_shift & group_df.reverts
-
-            out_group_df_list.append(out_group_df)
-
-        # combine
-        out_df = pd.concat(out_group_df_list)
-
-        return out_df
+    return out_df
