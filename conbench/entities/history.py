@@ -584,7 +584,9 @@ def _calculate_z_score(
     return z_score
 
 
-def zscore_automated_detect(self, df: pd.DataFrame, z_score_threshold=5.0) -> pd.DataFrame:
+def zscore_automated_detect(
+    self, df: pd.DataFrame, z_score_threshold=5.0
+) -> pd.DataFrame:
     """Detect outliers and distribution shifts in historical data
 
     Uses a z-score-based detection algorithm, taking a dataframe of the same
@@ -618,9 +620,7 @@ def zscore_automated_detect(self, df: pd.DataFrame, z_score_threshold=5.0) -> pd
 
     # split / apply
     out_group_df_list = []
-    for _, group_df in tmp_df.groupby(
-        ["case_id", "context_id", "hash", "repository"]
-    ):
+    for _, group_df in tmp_df.groupby(["case_id", "context_id", "hash", "repository"]):
         # clean copy will only get result columns
         out_group_df = copy.deepcopy(group_df)
 
@@ -634,14 +634,7 @@ def zscore_automated_detect(self, df: pd.DataFrame, z_score_threshold=5.0) -> pd
         ) / mean_diff_clipped.std()
 
         group_df["is_shift"] = group_df.z_score.abs() > z_score_threshold
-        group_df["reverts"] = (
-            group_df.is_shift
-            & group_df.is_shift.shift(-1)
-            & (
-                (group_df.z_score + group_df.z_score.shift(1)).abs()
-                > z_score_threshold
-            )
-        )
+        group_df["reverts"] = group_df.is_shift & group_df.is_shift.shift(-1)
         out_group_df["is_step"] = (
             group_df.is_shift
             & ~group_df.reverts
