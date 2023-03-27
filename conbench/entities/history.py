@@ -584,9 +584,7 @@ def _calculate_z_score(
     return z_score
 
 
-def zscore_automated_detect(
-    self, df: pd.DataFrame, z_score_threshold=5.0
-) -> pd.DataFrame:
+def zscore_automated_detect(df: pd.DataFrame, z_score_threshold=5.0) -> pd.DataFrame:
     """Detect outliers and distribution shifts in historical data
 
     Uses a z-score-based detection algorithm, taking a dataframe of the same
