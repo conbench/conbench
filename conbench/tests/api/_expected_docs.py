@@ -105,7 +105,6 @@
                                 "cpu_count": 2,
                                 "dataset": "nyctaxi_sample",
                                 "file_type": "parquet",
-                                "id": "some-case-uuid-1",
                                 "input_type": "arrow",
                                 "name": "file-write",
                             },
@@ -178,7 +177,6 @@
                                 "cpu_count": 2,
                                 "dataset": "nyctaxi_sample",
                                 "file_type": "parquet",
-                                "id": "some-case-uuid-1",
                                 "input_type": "arrow",
                                 "name": "file-write",
                             },
@@ -252,7 +250,6 @@
                                     "cpu_count": 2,
                                     "dataset": "nyctaxi_sample",
                                     "file_type": "parquet",
-                                    "id": "some-case-uuid-1",
                                     "input_type": "arrow",
                                     "name": "file-write",
                                 },
@@ -1027,7 +1024,7 @@
                     },
                     "stats": {"$ref": "#/components/schemas/BenchmarkResultCreate"},
                     "tags": {
-                        "description": 'The set of key/value pairs that defines a benchmark case permutation. Top-level keys must be strings. Allowed value types are ... (to be specified).  The special key "name" must be provided with a string value: it indicates the name of the conceptual benchmark that was performed for obtaining the result at hand. All case permutations of a conceptual benchmark by definition have this name in common.  We advise that each unique case (as defined by the complete set of key/value pairs) indeed corresponds to unique benchmarking behavior. That is, typically, these key/value pairs directly correspond to input parameters to your benchmarking method.  Example: a conceptual benchmark with name "foo-write-file" might have meaningful case permutations involving tag names such as `compression_method` (values: `gzip`, `lzma`, ...), `file_format` (values: `csv`, `hdf5`, ...), `dataset_name` (values: `foo`, `bar`, ...). For each conceptual benchmark, it is OK to have no or many case permutations.',
+                        "description": 'The set of key/value pairs that defines a benchmark case permutation. Top-level keys must be strings. Allowed value types are ... (to be specified).  The special key "name" must be provided with a string value: it indicates the name of the conceptual benchmark that was performed for obtaining the result at hand. All case permutations of a conceptual benchmark by definition have this name in common.  We advise that each unique case (as defined by the complete set of key/value pairs) indeed corresponds to unique benchmarking behavior. That is, typically, these key/value pairs directly correspond to input parameters to your benchmarking method.  Example: a conceptual benchmark with name "foo-write-file" might have meaningful case permutations involving tag names such as `compression_method` (values: `gzip`, `lzma`, ...), `file_format` (values: `csv`, `hdf5`, ...), `dataset_name` (values: `foo`, `bar`, ...). For each conceptual benchmark, it is valid to have one or many case permutations (if you supply no tags, there is necessarily a single mutation with the special property that it has no tags).',
                         "type": "object",
                     },
                     "timestamp": {

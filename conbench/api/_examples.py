@@ -24,7 +24,6 @@ def _api_user_entity(user):
 
 def _api_benchmark_entity(
     benchmark_result_id,
-    case_id,
     info_id,
     context_id,
     batch_id,
@@ -125,7 +124,6 @@ def _api_benchmark_entity(
         "optional_benchmark_info": optional_benchmark_info,
         "change_annotations": {},
         "tags": {
-            "id": case_id,
             "compression": "snappy",
             "cpu_count": 2,
             "dataset": "nyctaxi_sample",
@@ -492,7 +490,6 @@ def _api_run_entity(
 
 BENCHMARK_ENTITY = _api_benchmark_entity(
     "some-benchmark-uuid-1",
-    "some-case-uuid-1",
     "some-info-uuid-1",
     "some-context-uuid-1",
     "some-batch-uuid-1",

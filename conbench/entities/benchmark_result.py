@@ -416,7 +416,7 @@ class _Serializer(EntitySerializer):
         # Note(JP): this is interesting, here we put the `name` and `id` keys
         # into tags. That is, the `tags` as returned may look different from
         # the tags as injected.
-        tags = {"id": case.id, "name": case.name}
+        tags = {"name": case.name}
         tags.update(case.tags)
         return {
             "id": benchmark_result.id,
@@ -605,7 +605,9 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
                 such as `compression_method` (values: `gzip`, `lzma`, ...),
                 `file_format` (values: `csv`, `hdf5`, ...), `dataset_name`
                 (values: `foo`, `bar`, ...). For each conceptual benchmark, it
-                is OK to have no or many case permutations.
+                is valid to have one or many case permutations (if you supply
+                no tags, there is necessarily a single mutation with the
+                special property that it has no tags).
                 """
             )
         },

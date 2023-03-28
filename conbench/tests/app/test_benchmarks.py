@@ -33,7 +33,7 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
         self.authenticate(client)
         response = client.get(f"/benchmarks/{benchmark_id}/")
         self.assert_page(response, "Benchmark")
-        assert f"{benchmark_id}</li>".encode() in response.data
+        assert f"{benchmark_id[:6]}".encode() in response.data
 
         # delete benchmark
         data = {"delete": ["Delete"], "csrf_token": self.get_csrf_token(response)}
