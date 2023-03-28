@@ -490,7 +490,6 @@ def _api_run_entity(
 
 BENCHMARK_ENTITY = _api_benchmark_entity(
     "some-benchmark-uuid-1",
-    "some-case-uuid-1",
     "some-info-uuid-1",
     "some-context-uuid-1",
     "some-batch-uuid-1",

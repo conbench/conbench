@@ -16,7 +16,6 @@ CONBENCH_REPO = "https://github.com/conbench/conbench"
 def _expected_entity(benchmark_result: BenchmarkResult, stats=None):
     return _api_benchmark_entity(
         benchmark_result.id,
-        benchmark_result.case_id,
         benchmark_result.info_id,
         benchmark_result.context_id,
         benchmark_result.batch_id,
