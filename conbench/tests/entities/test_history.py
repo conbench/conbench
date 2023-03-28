@@ -11,7 +11,7 @@ EXPECTED_Z_SCORES = [
     28.477042698148946,
     0.7071067811865444,
     2.1213203435596393,
-    None,  # 13.435028842544385,
+    13.435028842544385,
     1.0928748862317967,
     -2.1857497724635935,
     -4.486538431438488,
@@ -119,7 +119,7 @@ def test_append_z_scores():
             name=benchmark_results[0].case.name,
         )
     )
-    expected_z_scores = EXPECTED_Z_SCORES + [-66.46960984215899]
+    expected_z_scores = EXPECTED_Z_SCORES + [-52.99938107760085]
 
     set_z_scores(benchmark_results)
     for benchmark_result, expected_z_score in zip(benchmark_results, expected_z_scores):
