@@ -343,11 +343,29 @@ class BenchmarkResultList(AppEndpoint, ContextMixin):
 
 rule(
     "/benchmark-results/",
-    view_func=BenchmarkResultList.as_view("benchmarks"),
+    view_func=BenchmarkResultList.as_view("benchmark-results"),
     methods=["GET"],
 )
+
 rule(
     "/benchmark-results/<benchmark_id>/",
+    view_func=BenchmarkResult.as_view("benchmark-result"),
+    methods=["GET", "POST"],
+)
+
+
+# Legacy route, which people have used to communicate a URL e.g. via Slack or
+# email, or in downstream reporting, to point to a specific benchmark result
+# view. Keep this working _in addition to_ the new, more descriptive
+# `/benchmark-results/<benchmark_id>/` path. Keep this working for as long as
+# we can do so with ease. Next step for this outstretched transition might be
+# to build custom logic that would act on the shape of <benchmark_id> and emit
+# a redirect response. Note that this needs a different name argument passed to
+# the as_view() method, otherwise one sees an error like `View function mapping
+# is overwriting an existing endpoint function: app.benchmark`
+# Context: https://github.com/conbench/conbench/pull/966#issuecomment-1487072612
+rule(
+    "/benchmarks/<benchmark_id>/",
     view_func=BenchmarkResult.as_view("benchmark"),
     methods=["GET", "POST"],
 )
