@@ -8,7 +8,7 @@ from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin, simple_bar_plot
 from ..app._util import augment
-from ..app.benchmarks import BenchmarkMixin, RunMixin
+from ..app.benchmarks import BenchmarkResultMixin, RunMixin
 from ..config import Config
 from ..entities.run import commit_hardware_run_map
 
@@ -23,7 +23,7 @@ def all_keys(dict1, dict2, attr):
     )
 
 
-class Compare(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
+class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, comparisons, regressions, improvements, baseline_id, contender_id):
         unknown = "unknown...unknown"
         compare_runs_url = f.url_for("app.compare-runs", compare_ids=unknown)

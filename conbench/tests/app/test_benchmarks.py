@@ -4,7 +4,7 @@ from ...tests.app import _asserts
 
 
 class TestBenchmarkList(_asserts.ListEnforcer):
-    url = "/benchmarks/"
+    url = "/benchmark-results/"
     title = "Benchmarks"
 
     def _create(self, client):
@@ -12,7 +12,7 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
 
 class TestBenchmarkGet(_asserts.GetEnforcer):
-    url = "/benchmarks/{}/"
+    url = "/benchmark-results/{}/"
     title = "Benchmark"
 
     def _create(self, client):
@@ -20,7 +20,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
 
     def test_flash_message(self, client):
         self.authenticate(client)
-        response = client.get("/benchmarks/unknown/", follow_redirects=True)
+        response = client.get("/benchmark-results/unknown/", follow_redirects=True)
         self.assert_index_page(response)
         assert re.search(r"unknown benchmark ID: \w+", response.text, flags=re.ASCII)
 
@@ -31,14 +31,14 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
 
         # can get benchmark before
         self.authenticate(client)
-        response = client.get(f"/benchmarks/{benchmark_id}/")
+        response = client.get(f"/benchmark-results/{benchmark_id}/")
         self.assert_page(response, "Benchmark")
         assert f"{benchmark_id[:6]}".encode() in response.data
 
         # delete benchmark
         data = {"delete": ["Delete"], "csrf_token": self.get_csrf_token(response)}
         response = client.post(
-            f"/benchmarks/{benchmark_id}/", data=data, follow_redirects=True
+            f"/benchmark-results/{benchmark_id}/", data=data, follow_redirects=True
         )
         self.assert_page(response, "Benchmarks")
         assert re.search(
@@ -46,7 +46,9 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
         )
 
         # cannot get benchmark after
-        response = client.get(f"/benchmarks/{benchmark_id}/", follow_redirects=True)
+        response = client.get(
+            f"/benchmark-results/{benchmark_id}/", follow_redirects=True
+        )
         self.assert_index_page(response)
         assert re.search(r"unknown benchmark ID: \w+", response.text, flags=re.ASCII)
 
@@ -55,7 +57,7 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
         self.logout(client)
         data = {"delete": ["Delete"]}
         response = client.post(
-            f"/benchmarks/{benchmark_id}/", data=data, follow_redirects=True
+            f"/benchmark-results/{benchmark_id}/", data=data, follow_redirects=True
         )
         self.assert_login_page(response)
 
@@ -64,7 +66,7 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
         self.authenticate(client)
         data = {"delete": ["Delete"]}
         response = client.post(
-            f"/benchmarks/{benchmark_id}/", data=data, follow_redirects=True
+            f"/benchmark-results/{benchmark_id}/", data=data, follow_redirects=True
         )
         self.assert_page(response, "Benchmark")
         assert b"The CSRF token is missing." in response.data
