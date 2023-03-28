@@ -1,12 +1,11 @@
 import functools
 import logging
 
+import psycopg2
 import sqlalchemy.exc
 import tenacity
-import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
-
 
 from .config import Config
 
