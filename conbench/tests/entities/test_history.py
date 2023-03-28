@@ -1,7 +1,15 @@
 from datetime import datetime
 
+import numpy as np
+import pandas as pd
+
 from ...entities.commit import Commit
-from ...entities.history import _to_float, get_history_for_cchr, set_z_scores
+from ...entities.history import (
+    _detect_shifts_with_trimmed_estimators,
+    _to_float,
+    get_history_for_cchr,
+    set_z_scores,
+)
 from ...tests.api import _fixtures
 
 # These correspond to the benchmark_results of _fixtures.gen_fake_data() without modification
@@ -150,3 +158,39 @@ def test_append_z_scores_with_distribution_change():
     set_z_scores(benchmark_results)
     for benchmark_result, expected_z_score in zip(benchmark_results, expected_z_scores):
         assert benchmark_result.z_score == expected_z_score
+
+
+def test_detect_shifts_with_trimmed_estimators():
+    np.random.seed(47)
+    mean_vals = pd.Series(np.random.randn(100))
+
+    # shift
+    mean_vals[50:] += 20
+    # outliers
+    outlier_indices = [5, 95]
+    mean_vals[outlier_indices] = 10
+
+    df = pd.DataFrame(
+        {
+            "case_id": ["fake-case"] * 100,
+            "context_id": ["fake-context"] * 100,
+            "hash": ["fake-hash"] * 100,
+            "repository": ["fake-repo"] * 100,
+            "timestamp": np.arange(100),
+            "result_timestamp": np.arange(100),
+            "mean": mean_vals,
+        }
+    )
+
+    result_df = _detect_shifts_with_trimmed_estimators(df)
+
+    assert list(result_df.columns) == list(df.columns) + ["is_step", "is_outlier"]
+    for i, is_outlier in enumerate(result_df.is_outlier):
+        if i in outlier_indices:
+            assert is_outlier
+        else:
+            assert not is_outlier
+
+    assert not np.any(result_df.is_step[:50])
+    assert result_df.is_step[50]
+    assert not np.any(result_df.is_step[51:])
