@@ -1022,7 +1022,7 @@
                         "description": "Reason for the Run (optional, does not need to be unique). Ignored when Run was previously created.",
                         "type": "string",
                     },
-                    "stats": {"$ref": "#/components/schemas/BenchmarkResultCreate"},
+                    "stats": {"$ref": "#/components/schemas/BenchmarkResultStats"},
                     "tags": {
                         "description": 'The set of key/value pairs that defines a benchmark case permutation. Top-level keys must be strings. Allowed value types are ... (to be specified).  The special key "name" must be provided with a string value: it indicates the name of the conceptual benchmark that was performed for obtaining the result at hand. All case permutations of a conceptual benchmark by definition have this name in common.  We advise that each unique case (as defined by the complete set of key/value pairs) indeed corresponds to unique benchmarking behavior. That is, typically, these key/value pairs directly correspond to input parameters to your benchmarking method.  Example: a conceptual benchmark with name "foo-write-file" might have meaningful case permutations involving tag names such as `compression_method` (values: `gzip`, `lzma`, ...), `file_format` (values: `csv`, `hdf5`, ...), `dataset_name` (values: `foo`, `bar`, ...). For each conceptual benchmark, it is valid to have one or many case permutations (if you supply no tags, there is necessarily a single mutation with the special property that it has no tags).',
                         "type": "object",
@@ -1045,6 +1045,66 @@
                     "tags",
                     "timestamp",
                 ],
+                "type": "object",
+            },
+            "BenchmarkResultStats": {
+                "properties": {
+                    "data": {
+                        "description": "A list of benchmark results (e.g. durations, throughput). This will be used as the main + only metric for regression and improvement. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`.",
+                        "items": {"nullable": True, "type": "number"},
+                        "type": "array",
+                    },
+                    "iqr": {
+                        "description": "The inter-quartile range from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "iterations": {
+                        "description": "Number of iterations that were executed (should be the length of `data` and `times`)",
+                        "type": "integer",
+                    },
+                    "max": {
+                        "description": "The maximum from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "mean": {
+                        "description": "The mean from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "median": {
+                        "description": "The median from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "min": {
+                        "description": "The minimum from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "q1": {
+                        "description": "The first quartile from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "q3": {
+                        "description": "The third quartile from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "stdev": {
+                        "description": "The standard deviation from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
+                        "type": "number",
+                    },
+                    "time_unit": {
+                        "description": "The unit of the times object (e.g. seconds, nanoseconds)",
+                        "type": "string",
+                    },
+                    "times": {
+                        "description": "A list of benchmark durations. If `data` is a duration measure, this should be a duplicate of that object. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`.",
+                        "items": {"nullable": True, "type": "number"},
+                        "type": "array",
+                    },
+                    "unit": {
+                        "description": "The unit of the data object (e.g. seconds, B/s)",
+                        "type": "string",
+                    },
+                },
+                "required": ["data", "iterations", "time_unit", "times", "unit"],
                 "type": "object",
             },
             "BenchmarkResultUpdate": {
@@ -1313,7 +1373,7 @@
         },
         "/api/benchmarks/{benchmark_id}/": {
             "delete": {
-                "description": "Delete a benchmark.",
+                "description": "Delete a benchmark result.",
                 "parameters": [
                     {
                         "in": "path",
@@ -1347,7 +1407,7 @@
                 "tags": ["Benchmarks"],
             },
             "put": {
-                "description": "Edit a benchmark.",
+                "description": "Edit a benchmark result.",
                 "parameters": [
                     {
                         "in": "path",
@@ -1867,7 +1927,7 @@
         {"description": "Benchmark runs", "name": "Runs"},
         {"description": "Monitor status", "name": "Ping"},
         {
-            "description": '## BenchmarkResultCreate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultCreate" />\n\n## BenchmarkResultUpdate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultUpdate" />\n\n## ClusterCreate\n<SchemaDefinition schemaRef="#/components/schemas/ClusterCreate" />\n\n## Error\n<SchemaDefinition schemaRef="#/components/schemas/Error" />\n\n## ErrorBadRequest\n<SchemaDefinition schemaRef="#/components/schemas/ErrorBadRequest" />\n\n## ErrorValidation\n<SchemaDefinition schemaRef="#/components/schemas/ErrorValidation" />\n\n## GitHubCreate\n<SchemaDefinition schemaRef="#/components/schemas/GitHubCreate" />\n\n## Login\n<SchemaDefinition schemaRef="#/components/schemas/Login" />\n\n## MachineCreate\n<SchemaDefinition schemaRef="#/components/schemas/MachineCreate" />\n\n## Ping\n<SchemaDefinition schemaRef="#/components/schemas/Ping" />\n\n## Register\n<SchemaDefinition schemaRef="#/components/schemas/Register" />\n\n## RunCreate\n<SchemaDefinition schemaRef="#/components/schemas/RunCreate" />\n\n## RunUpdate\n<SchemaDefinition schemaRef="#/components/schemas/RunUpdate" />\n\n## UserCreate\n<SchemaDefinition schemaRef="#/components/schemas/UserCreate" />\n\n## UserUpdate\n<SchemaDefinition schemaRef="#/components/schemas/UserUpdate" />\n',
+            "description": '## BenchmarkResultCreate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultCreate" />\n\n## BenchmarkResultStats\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultStats" />\n\n## BenchmarkResultUpdate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultUpdate" />\n\n## ClusterCreate\n<SchemaDefinition schemaRef="#/components/schemas/ClusterCreate" />\n\n## Error\n<SchemaDefinition schemaRef="#/components/schemas/Error" />\n\n## ErrorBadRequest\n<SchemaDefinition schemaRef="#/components/schemas/ErrorBadRequest" />\n\n## ErrorValidation\n<SchemaDefinition schemaRef="#/components/schemas/ErrorValidation" />\n\n## GitHubCreate\n<SchemaDefinition schemaRef="#/components/schemas/GitHubCreate" />\n\n## Login\n<SchemaDefinition schemaRef="#/components/schemas/Login" />\n\n## MachineCreate\n<SchemaDefinition schemaRef="#/components/schemas/MachineCreate" />\n\n## Ping\n<SchemaDefinition schemaRef="#/components/schemas/Ping" />\n\n## Register\n<SchemaDefinition schemaRef="#/components/schemas/Register" />\n\n## RunCreate\n<SchemaDefinition schemaRef="#/components/schemas/RunCreate" />\n\n## RunUpdate\n<SchemaDefinition schemaRef="#/components/schemas/RunUpdate" />\n\n## UserCreate\n<SchemaDefinition schemaRef="#/components/schemas/UserCreate" />\n\n## UserUpdate\n<SchemaDefinition schemaRef="#/components/schemas/UserUpdate" />\n',
             "name": "Models",
             "x-displayName": "Object models",
         },

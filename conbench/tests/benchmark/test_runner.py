@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from ...entities.benchmark_result import BenchmarkFacadeSchema
+from ...entities.benchmark_result import BenchmarkResultFacadeSchema
 from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
 from ._example_benchmarks import (
@@ -59,7 +59,7 @@ def test_runner_simple_benchmark():
     ]:
         benchmark = benchmark_class()
         [(result, output)] = benchmark.run(iterations=10)
-        assert not BenchmarkFacadeSchema.create.validate(result)
+        assert not BenchmarkResultFacadeSchema.create.validate(result)
         expected_tags = {"name": tag}
         assert output == 2
         assert_keys_equal(result, payload_example)
@@ -86,7 +86,7 @@ def test_runner_simple_benchmark_that_fails():
         [(_, _)] = benchmark.run(iterations=10)
 
     result = benchmark.conbench.published_benchmark
-    assert not BenchmarkFacadeSchema.create.validate(result)
+    assert not BenchmarkResultFacadeSchema.create.validate(result)
     # print(result)
     assert_keys_equal(result, EXAMPLE_WITH_ERROR)
     for key in ["info", "context", "github", "machine_info"]:
@@ -112,7 +112,7 @@ def test_runner_case_benchmark():
     benchmark = CasesBenchmark()
     case = ("2", "10")
     [(result, output)] = benchmark.run(case=case, iterations=10)
-    assert not BenchmarkFacadeSchema.create.validate(result)
+    assert not BenchmarkResultFacadeSchema.create.validate(result)
     expected_tags = {"name": "matrix", "rows": "2", "columns": "10"}
     assert output == [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -135,7 +135,7 @@ def test_runner_case_benchmark():
 def test_runner_external_benchmark():
     benchmark = ExternalBenchmark()
     [(result, output)] = benchmark.run()
-    assert not BenchmarkFacadeSchema.create.validate(result)
+    assert not BenchmarkResultFacadeSchema.create.validate(result)
     expected_tags = {"name": "external"}
     assert output == {
         "data": [100, 200, 300],
@@ -159,7 +159,7 @@ def test_runner_can_specify_run_and_batch_id():
     benchmark = SimpleBenchmark()
     run_id, batch_id = _uuid(), _uuid()
     [(result, output)] = benchmark.run(run_id=run_id, batch_id=batch_id)
-    assert not BenchmarkFacadeSchema.create.validate(result)
+    assert not BenchmarkResultFacadeSchema.create.validate(result)
     assert output == 2
     assert result["run_id"] == run_id
     assert result["batch_id"] == batch_id
@@ -168,7 +168,7 @@ def test_runner_can_specify_run_and_batch_id():
 def test_runner_can_omit_run_and_batch_id():
     benchmark = SimpleBenchmark()
     [(result, output)] = benchmark.run()
-    assert not BenchmarkFacadeSchema.create.validate(result)
+    assert not BenchmarkResultFacadeSchema.create.validate(result)
     assert output == 2
     assert result["run_id"] is not None
     assert result["batch_id"] is not None
@@ -177,7 +177,7 @@ def test_runner_can_omit_run_and_batch_id():
 def test_runner_null_run_and_batch_id():
     benchmark = SimpleBenchmark()
     [(result, output)] = benchmark.run(run_id=None, batch_id=None)
-    assert not BenchmarkFacadeSchema.create.validate(result)
+    assert not BenchmarkResultFacadeSchema.create.validate(result)
     assert output == 2
     assert result["run_id"] is not None
     assert result["batch_id"] is not None
@@ -187,7 +187,7 @@ def test_runner_omit_batch_id():
     benchmark = SimpleBenchmark()
     run_id = _uuid()
     [(result, output)] = benchmark.run(run_id=run_id)
-    assert not BenchmarkFacadeSchema.create.validate(result)
+    assert not BenchmarkResultFacadeSchema.create.validate(result)
     assert output == 2
     assert result["run_id"] == run_id
     assert result["batch_id"] is not None
@@ -197,7 +197,7 @@ def test_runner_null_batch_id():
     benchmark = SimpleBenchmark()
     run_id = _uuid()
     [(result, output)] = benchmark.run(run_id=run_id, batch_id=None)
-    assert not BenchmarkFacadeSchema.create.validate(result)
+    assert not BenchmarkResultFacadeSchema.create.validate(result)
     assert output == 2
     assert result["run_id"] == run_id
     assert result["batch_id"] is not None
@@ -207,7 +207,7 @@ def test_runner_omit_run_id():
     benchmark = SimpleBenchmark()
     batch_id = _uuid()
     [(result, output)] = benchmark.run(batch_id=batch_id)
-    assert not BenchmarkFacadeSchema.create.validate(result)
+    assert not BenchmarkResultFacadeSchema.create.validate(result)
     assert output == 2
     assert result["batch_id"] == batch_id
     assert result["run_id"] is not None
@@ -217,7 +217,7 @@ def test_runner_null_run_id():
     benchmark = SimpleBenchmark()
     batch_id = _uuid()
     [(result, output)] = benchmark.run(batch_id=batch_id, run_id=None)
-    assert not BenchmarkFacadeSchema.create.validate(result)
+    assert not BenchmarkResultFacadeSchema.create.validate(result)
     assert output == 2
     assert result["batch_id"] == batch_id
     assert result["run_id"] is not None

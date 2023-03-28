@@ -6,7 +6,7 @@ from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import (
-    BenchmarkFacadeSchema,
+    BenchmarkResultFacadeSchema,
     BenchmarkResult,
     BenchmarkResultSerializer,
 )
@@ -21,7 +21,7 @@ class BenchmarkValidationMixin:
 
 class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
     serializer = BenchmarkResultSerializer()
-    schema = BenchmarkFacadeSchema()
+    schema = BenchmarkResultFacadeSchema()
 
     def _get(self, benchmark_id):
         try:
@@ -102,7 +102,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
 
 class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
     serializer = BenchmarkResultSerializer()
-    schema = BenchmarkFacadeSchema()
+    schema = BenchmarkResultFacadeSchema()
 
     @maybe_login_required
     def get(self):
@@ -203,5 +203,9 @@ rule(
     view_func=benchmark_entity_view,
     methods=["GET", "DELETE", "PUT"],
 )
-spec.components.schema("BenchmarkResultCreate", schema=BenchmarkFacadeSchema.create)
-spec.components.schema("BenchmarkResultUpdate", schema=BenchmarkFacadeSchema.update)
+spec.components.schema(
+    "BenchmarkResultCreate", schema=BenchmarkResultFacadeSchema.create
+)
+spec.components.schema(
+    "BenchmarkResultUpdate", schema=BenchmarkResultFacadeSchema.update
+)
