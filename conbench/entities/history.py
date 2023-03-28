@@ -627,13 +627,20 @@ def zscore_automated_detect(df: pd.DataFrame, z_score_threshold=5.0) -> pd.DataF
         out_group_df = copy.deepcopy(group_df)
 
         group_df["mean_diff"] = group_df["mean"].diff()
-        mean_diff_clipped = group_df.mean_diff[
-            (group_df.mean_diff > group_df.mean_diff.quantile(0.05))
-            & (group_df.mean_diff < group_df.mean_diff.quantile(0.95))
-        ]
+        mean_diff_clipped = copy.deepcopy(group_df.mean_diff)
+        mean_diff_clipped.loc[
+            (group_df.mean_diff < group_df.mean_diff.quantile(0.05))
+            | (group_df.mean_diff > group_df.mean_diff.quantile(0.95))
+        ] = np.nan
+        group_df["rolling_mean"] = mean_diff_clipped.rolling(
+            Config.DISTRIBUTION_COMMITS, min_periods=1
+        ).mean()
+        group_df["rolling_std"] = mean_diff_clipped.rolling(
+            Config.DISTRIBUTION_COMMITS, min_periods=1
+        ).std()
         group_df["z_score"] = (
-            group_df.mean_diff - mean_diff_clipped.mean()
-        ) / mean_diff_clipped.std()
+            group_df.mean_diff - group_df.rolling_mean
+        ) / group_df.rolling_std
 
         group_df["is_shift"] = group_df.z_score.abs() > z_score_threshold
         group_df["reverts"] = group_df.is_shift & group_df.is_shift.shift(-1)
