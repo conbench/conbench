@@ -358,49 +358,49 @@ class BenchmarkResultCreate(marshmallow.Schema):
     min = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The minimum from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The minimum from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     max = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The maximum from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The maximum from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     mean = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The mean from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The mean from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     median = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The median from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The median from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     stdev = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The standard deviation from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The standard deviation from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     q1 = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The first quartile from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The first quartile from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     q3 = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The third quartile from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The third quartile from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     iqr = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The inter-quartile range from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The inter-quartile range from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
 
