@@ -36,11 +36,6 @@ class GitHubCheckStep(AlertPipelineStep):
         The name of the ``GetConbenchZComparisonStep`` that ran earlier in the pipeline.
         Defaults to "GetConbenchZComparisonStep" (which was the default if no name was
         given to that step).
-    warn_if_baseline_isnt_parent
-        If True, will add a warning to any report generated where all baseline runs
-        weren't on the contender commit's direct parent. This is informative to leave
-        True (the default) for workflows run on the default branch, but might be noisy
-        for workflows run on pull request commits.
     step_name
         The name for this step. If not given, will default to this class's name.
 
@@ -71,7 +66,6 @@ class GitHubCheckStep(AlertPipelineStep):
         github_client: Optional[GitHubRepoClient] = None,
         commit_hash: Optional[str] = None,
         comparison_step_name: str = "GetConbenchZComparisonStep",
-        warn_if_baseline_isnt_parent: bool = True,
         step_name: Optional[str] = None,
     ) -> None:
         super().__init__(step_name=step_name)
@@ -83,7 +77,6 @@ class GitHubCheckStep(AlertPipelineStep):
             )
         self.commit_hash = commit_hash
         self.comparison_step_name = comparison_step_name
-        self.warn_if_baseline_isnt_parent = warn_if_baseline_isnt_parent
 
     def run_step(
         self, previous_outputs: Dict[str, Any]
@@ -102,10 +95,7 @@ class GitHubCheckStep(AlertPipelineStep):
                 if full_comparison.benchmarks_with_errors
                 else f"Found {len(full_comparison.benchmarks_with_z_regressions)} regression{s}"
             ),
-            summary=self._default_check_summary(
-                full_comparison,
-                self.warn_if_baseline_isnt_parent,
-            ),
+            summary=self._default_check_summary(full_comparison),
             details=self._default_check_details(full_comparison),
             # point to the homepage table filtered to runs of this commit
             details_url=f"{full_comparison.app_url}/?search={full_comparison.commit_hash}",
@@ -129,10 +119,8 @@ class GitHubCheckStep(AlertPipelineStep):
             return CheckStatus.SUCCESS
 
     @staticmethod
-    def _default_check_summary(
-        full_comparison: FullComparisonInfo, warn_if_baseline_isnt_parent: bool
-    ) -> str:
-        return github_check_summary(full_comparison, warn_if_baseline_isnt_parent)
+    def _default_check_summary(full_comparison: FullComparisonInfo) -> str:
+        return github_check_summary(full_comparison)
 
     @staticmethod
     def _default_check_details(full_comparison: FullComparisonInfo) -> Optional[str]:
