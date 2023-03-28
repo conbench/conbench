@@ -45,14 +45,12 @@ def test_GitHubCheckStep(
             GitHubCheckStep(
                 github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
                 comparison_step_name="comparison_step",
-                warn_if_baseline_isnt_parent=True,
             )
         return
 
     step = GitHubCheckStep(
         github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
         comparison_step_name="comparison_step",
-        warn_if_baseline_isnt_parent=True,
     )
     gh_res, full_comparison = step.run_step({"comparison_step": mock_comparison_info})
     assert gh_res

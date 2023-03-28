@@ -62,9 +62,7 @@ def _list_results(
     return out
 
 
-def github_check_summary(
-    full_comparison: FullComparisonInfo, warn_if_baseline_isnt_parent: bool
-) -> str:
+def github_check_summary(full_comparison: FullComparisonInfo) -> str:
     """Generate a Markdown summary of what happened regarding errors and regressions."""
     hash = full_comparison.commit_hash[:8]
     summary = ""
@@ -119,19 +117,6 @@ def github_check_summary(
             comparison.contender_reason,
             comparison.contender_datetime,
             comparison.contender_link,
-        )
-    summary += "\n\n"
-
-    if full_comparison.no_baseline_is_parent and warn_if_baseline_isnt_parent:
-        summary += _clean(
-            """
-            ### Note
-
-            No baseline run was on the immediate parent commit of the contender commit.
-            This probably means that no matching benchmarks (with the same repository,
-            hardware, case, and context) successfully ran on the parent commit. See the
-            link below for details.
-            """
         )
 
     return summary
