@@ -3,8 +3,10 @@ import logging
 
 import sqlalchemy.exc
 import tenacity
+import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+
 
 from .config import Config
 
@@ -14,6 +16,9 @@ Session = scoped_session(session_maker)
 
 
 log = logging.getLogger(__name__)
+
+
+log.info("psycopg2.__libpq_version__: %s", psycopg2.__libpq_version__)
 
 
 def configure_engine(url):
