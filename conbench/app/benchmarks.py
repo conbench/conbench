@@ -17,7 +17,7 @@ from ..config import Config
 log = logging.getLogger(__name__)
 
 
-class UpdateForm(flask_wtf.FlaskForm):
+class BenchmarkResultUpdateForm(flask_wtf.FlaskForm):
     title = conbench.util.dedent_rejoin(
         """
         This applies (only) to the rolling window z-score change detection
@@ -39,7 +39,7 @@ class UpdateForm(flask_wtf.FlaskForm):
     toggle_distribution_change = w.SubmitField(render_kw={"title": title})
 
 
-class DeleteForm(flask_wtf.FlaskForm):
+class BenchmarkResultDeleteForm(flask_wtf.FlaskForm):
     delete = w.SubmitField("Delete")
 
 
@@ -57,7 +57,7 @@ class ContextMixin:
         return contexts
 
 
-class BenchmarkMixin:
+class BenchmarkResultMixin:
     def get_display_benchmark(self, benchmark_id):
         benchmark, response = self._get_benchmark(benchmark_id)
 
@@ -205,7 +205,7 @@ class RunMixin:
         return response.json, response
 
 
-class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
+class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, benchmark, run, delete_form, update_form):
         if benchmark is None:
             return self.redirect("app.index")
@@ -243,14 +243,16 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
     @authorize_or_terminate
     def get(self, benchmark_id):
         benchmark, run = self._get_benchmark_and_run(benchmark_id)
-        return self.page(benchmark, run, DeleteForm(), UpdateForm())
+        return self.page(
+            benchmark, run, BenchmarkResultDeleteForm(), BenchmarkResultUpdateForm()
+        )
 
     def post(self, benchmark_id):
         if not flask_login.current_user.is_authenticated:
             return self.redirect("app.login")
 
-        delete_form, delete_response = DeleteForm(), None
-        update_form, update_response = UpdateForm(), None
+        delete_form, delete_response = BenchmarkResultDeleteForm(), None
+        update_form, update_response = BenchmarkResultUpdateForm(), None
 
         if delete_form.delete.data:
             # delete button pressed
@@ -289,7 +291,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         benchmark, run = self._get_benchmark_and_run(benchmark_id)
         return self.page(benchmark, run, delete_form, update_form)
 
-    def data(self, form: UpdateForm):
+    def data(self, form: BenchmarkResultUpdateForm):
         """Construct the data to PUT when calling self.api_put()."""
         if form.toggle_distribution_change.data:
             return {"change_annotations": {"begins_distribution_change": False}}
@@ -304,7 +306,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         return benchmark, run
 
 
-class BenchmarkList(AppEndpoint, ContextMixin):
+class BenchmarkResultList(AppEndpoint, ContextMixin):
     def page(self, benchmarks):
         # Note(JP): What type is benchmarks? As of `response =
         # self.api_get("api.benchmarks")` down below it's seemingly the result
@@ -318,7 +320,7 @@ class BenchmarkList(AppEndpoint, ContextMixin):
             application=Config.APPLICATION_NAME,
             title="Benchmarks",
             benchmarks=benchmarks,
-            delete_benchmark_form=DeleteForm(),
+            delete_benchmark_form=BenchmarkResultDeleteForm(),
             search_value=f.request.args.get("search"),
         )
 
@@ -337,12 +339,12 @@ class BenchmarkList(AppEndpoint, ContextMixin):
 
 
 rule(
-    "/benchmarks/",
-    view_func=BenchmarkList.as_view("benchmarks"),
+    "/benchmark-results/",
+    view_func=BenchmarkResultList.as_view("benchmarks"),
     methods=["GET"],
 )
 rule(
-    "/benchmarks/<benchmark_id>/",
-    view_func=Benchmark.as_view("benchmark"),
+    "/benchmark-results/<benchmark_id>/",
+    view_func=BenchmarkResult.as_view("benchmark"),
     methods=["GET", "POST"],
 )
