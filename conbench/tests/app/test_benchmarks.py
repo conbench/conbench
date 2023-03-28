@@ -13,7 +13,7 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
 class TestBenchmarkGet(_asserts.GetEnforcer):
     url = "/benchmark-results/{}/"
-    title = "Benchmark"
+    title = "Benchmark result"
 
     def _create(self, client):
         return self.create_benchmark(client)
@@ -22,7 +22,19 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
         self.authenticate(client)
         response = client.get("/benchmark-results/unknown/", follow_redirects=True)
         self.assert_index_page(response)
-        assert re.search(r"unknown benchmark ID: \w+", response.text, flags=re.ASCII)
+        assert re.search(
+            r"unknown benchmark result ID: \w+", response.text, flags=re.ASCII
+        )
+
+    def test_legacy_route(self, client):
+        # Context: https://github.com/conbench/conbench/pull/966#issuecomment-1487072612
+        response = client.get(
+            "/benchmarks/unknown-benchmark-result-id/", follow_redirects=True
+        )
+        self.assert_index_page(response)
+        assert re.search(
+            r"unknown benchmark result ID: \w+", response.text, flags=re.ASCII
+        )
 
 
 class TestBenchmarkDelete(_asserts.DeleteEnforcer):
@@ -50,7 +62,9 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
             f"/benchmark-results/{benchmark_id}/", follow_redirects=True
         )
         self.assert_index_page(response)
-        assert re.search(r"unknown benchmark ID: \w+", response.text, flags=re.ASCII)
+        assert re.search(
+            r"unknown benchmark result ID: \w+", response.text, flags=re.ASCII
+        )
 
     def test_unauthenticated(self, client):
         benchmark_id = self.create_benchmark(client)
