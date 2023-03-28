@@ -300,7 +300,7 @@ s.Index("benchmark_result_context_id_index", BenchmarkResult.context_id)
 s.Index("benchmark_result_timestamp_index", BenchmarkResult.timestamp)
 
 
-class BenchmarkResultCreate(marshmallow.Schema):
+class BenchmarkResultStatsSchema(marshmallow.Schema):
     data = marshmallow.fields.List(
         marshmallow.fields.Decimal(allow_none=True),
         required=True,
@@ -405,10 +405,6 @@ class BenchmarkResultCreate(marshmallow.Schema):
     )
 
 
-class BenchmarkResultSchema:
-    create = BenchmarkResultCreate()
-
-
 class _Serializer(EntitySerializer):
     def _dump(self, benchmark_result):
         z_score = float(benchmark_result.z_score) if benchmark_result.z_score else None
@@ -486,7 +482,7 @@ or improvements, should we treat data from before this result as incomparable?
 """
 
 
-class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
+class _BenchmarkResultCreateSchema(marshmallow.Schema):
     run_id = marshmallow.fields.String(
         required=True,
         metadata={
@@ -573,7 +569,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
             )
         },
     )
-    stats = marshmallow.fields.Nested(BenchmarkResultSchema().create, required=False)
+    stats = marshmallow.fields.Nested(BenchmarkResultStatsSchema(), required=False)
     error = marshmallow.fields.Dict(
         required=False,
         metadata={
@@ -672,7 +668,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
         return data
 
 
-class _BenchmarkFacadeSchemaUpdate(marshmallow.Schema):
+class _BenchmarkResultUpdateSchema(marshmallow.Schema):
     change_annotations = marshmallow.fields.Dict(
         required=False,
         metadata={
@@ -686,6 +682,6 @@ delete an existing key, set the value to null.
     )
 
 
-class BenchmarkFacadeSchema:
-    create = _BenchmarkFacadeSchemaCreate()
-    update = _BenchmarkFacadeSchemaUpdate()
+class BenchmarkResultFacadeSchema:
+    create = _BenchmarkResultCreateSchema()
+    update = _BenchmarkResultUpdateSchema()
