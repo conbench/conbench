@@ -59,10 +59,11 @@ class ContextMixin:
 
 class BenchmarkResultMixin:
     def get_display_benchmark(self, benchmark_id):
+        # this gets a benchmark _result_, we need more renaming.
         benchmark, response = self._get_benchmark(benchmark_id)
 
         if response.status_code == 404:
-            self.flash(f"unknown benchmark ID: {benchmark_id}", "info")
+            self.flash(f"unknown benchmark result ID: {benchmark_id}", "info")
 
         if response.status_code != 200:
             # Note(JP): quick band-aid to at least not swallow err detail, need
@@ -85,7 +86,9 @@ class BenchmarkResultMixin:
 
         return benchmark
 
+    # this gets a benchmark result, we need more renaming.
     def _get_benchmark(self, benchmark_id):
+        # TODO: remove re-serialization indirection.
         response = self.api_get(
             "api.benchmark",
             benchmark_id=benchmark_id,
@@ -262,7 +265,7 @@ class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlo
                 )
                 if delete_response.status_code == 204:
                     self.flash(f"Benchmark result {benchmark_id} deleted.", "info")
-                    return self.redirect("app.benchmarks")
+                    return self.redirect("app.benchmark-results")
 
         elif update_form.validate_on_submit():
             # toggle_distribution_change button pressed
