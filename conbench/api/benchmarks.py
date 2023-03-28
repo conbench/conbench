@@ -55,7 +55,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
     def put(self, benchmark_id):
         """
         ---
-        description: Edit a benchmark.
+        description: Edit a benchmark result.
         responses:
             "200": "BenchmarkEntity"
             "401": "401"
@@ -82,7 +82,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
     def delete(self, benchmark_id):
         """
         ---
-        description: Delete a benchmark.
+        description: Delete a benchmark result.
         responses:
             "204": "204"
             "401": "401"
