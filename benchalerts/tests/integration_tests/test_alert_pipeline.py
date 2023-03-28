@@ -109,7 +109,7 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
         assert outputs["GitHubStatusStep"]["creator"]["type"] == "Bot"
         assert outputs["GitHubCheckStep"][0]["conclusion"] == "failure"
         if not os.getenv("CI"):
-            expected_comment = """There was 1 benchmark result with a performance regression:
+            expected_comment = """There was 1 benchmark result indicating a performance regression:
 
 - Commit Run at [2023-02-28 18:08:51Z](http://velox-conbench.voltrondata.run/compare/runs/GHA-4273957972-1...GHA-4296026775-1/)
   - [flatMap](http://velox-conbench.voltrondata.run/benchmarks/ff7a1a86df5a4d56b6dbfb006c13c638)
