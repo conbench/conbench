@@ -12,7 +12,13 @@ from benchalerts.pipeline_steps.github import (
     GitHubStatusStep,
 )
 
-from ..mocks import MockAdapter, MockResponse, check_posted_markdown, response_dir
+from ..mocks import (
+    MockAdapter,
+    MockResponse,
+    check_posted_comment,
+    check_posted_markdown,
+    response_dir,
+)
 
 
 @pytest.mark.parametrize(
@@ -48,8 +54,9 @@ def test_GitHubCheckStep(
         comparison_step_name="comparison_step",
         warn_if_baseline_isnt_parent=True,
     )
-    res = step.run_step({"comparison_step": mock_comparison_info})
-    assert res
+    gh_res, full_comparison = step.run_step({"comparison_step": mock_comparison_info})
+    assert gh_res
+    assert full_comparison == mock_comparison_info
     check_posted_markdown(caplog, [(expected_check_summary, expected_check_details)])
 
 
@@ -74,8 +81,24 @@ def test_GitHubStatusStep(mock_comparison_info: FullComparisonInfo, github_auth:
     assert res
 
 
+@pytest.mark.parametrize(
+    ["mock_comparison_info", "expected_comment"],
+    [
+        ("errors_baselines", "comment_errors_baselines"),
+        ("errors_nobaselines", "comment_errors_nobaselines"),
+        ("noerrors_nobaselines", "comment_noerrors_nobaselines"),
+        ("regressions", "comment_regressions"),
+        ("noregressions", "comment_noregressions"),
+    ],
+    indirect=["mock_comparison_info"],
+)
 @pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)
-def test_GitHubPRCommentAboutCheckStep(github_auth: str):
+def test_GitHubPRCommentAboutCheckStep(
+    mock_comparison_info: FullComparisonInfo,
+    expected_comment: str,
+    caplog: pytest.LogCaptureFixture,
+    github_auth: str,
+):
     mock_check_response = MockResponse.from_file(
         response_dir / "POST_github_check-runs.json"
     ).json()
@@ -85,8 +108,11 @@ def test_GitHubPRCommentAboutCheckStep(github_auth: str):
         github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
         check_step_name="check_step",
     )
-    res = step.run_step(previous_outputs={"check_step": mock_check_response})
+    res = step.run_step(
+        previous_outputs={"check_step": (mock_check_response, mock_comparison_info)}
+    )
     assert res
+    check_posted_comment(caplog, [expected_comment])
 
 
 @pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)

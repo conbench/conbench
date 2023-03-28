@@ -1,6 +1,6 @@
 """Pipeline steps to talk to GitHub."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from benchclients.logging import fatal_and_log, log
 
@@ -9,6 +9,7 @@ from ..conbench_dataclasses import FullComparisonInfo
 from ..integrations.github import CheckStatus, GitHubRepoClient, StatusState
 from ..message_formatting import (
     _clean,
+    _Pluralizer,
     github_check_details,
     github_check_summary,
     pr_comment_link_to_check,
@@ -47,6 +48,8 @@ class GitHubCheckStep(AlertPipelineStep):
     -------
     dict
         The response body from the GitHub HTTP API as a dict.
+    FullComparisonInfo
+        The FullComparisonInfo object that the GetConbenchZComparisonStep output.
 
     Notes
     -----
@@ -82,11 +85,14 @@ class GitHubCheckStep(AlertPipelineStep):
         self.comparison_step_name = comparison_step_name
         self.warn_if_baseline_isnt_parent = warn_if_baseline_isnt_parent
 
-    def run_step(self, previous_outputs: Dict[str, Any]) -> dict:
+    def run_step(
+        self, previous_outputs: Dict[str, Any]
+    ) -> Tuple[dict, FullComparisonInfo]:
         full_comparison: FullComparisonInfo = previous_outputs[
             self.comparison_step_name
         ]
 
+        s = _Pluralizer(full_comparison.benchmarks_with_z_regressions).s
         res = self.github_client.update_check(
             name="Conbench performance report",
             commit_hash=self.commit_hash or full_comparison.commit_hash,
@@ -94,7 +100,7 @@ class GitHubCheckStep(AlertPipelineStep):
             title=(
                 "Some benchmarks had errors"
                 if full_comparison.benchmarks_with_errors
-                else f"Found {len(full_comparison.benchmarks_with_z_regressions)} regression(s)"
+                else f"Found {len(full_comparison.benchmarks_with_z_regressions)} regression{s}"
             ),
             summary=self._default_check_summary(
                 full_comparison,
@@ -105,7 +111,7 @@ class GitHubCheckStep(AlertPipelineStep):
             details_url=f"{full_comparison.app_url}/?search={full_comparison.commit_hash}",
         )
         log.debug(res)
-        return res
+        return res, full_comparison
 
     # TODO: a way to override the following behavior
     # (see https://github.com/conbench/conbench/issues/774)
@@ -229,9 +235,12 @@ class GitHubStatusStep(AlertPipelineStep):
         elif full_comparison.no_baseline_runs:
             return "Could not find any baseline runs to compare to"
         else:
+            pluralizer = _Pluralizer(full_comparison.benchmarks_with_z_regressions)
+            were = pluralizer.were
+            s = pluralizer.s
             return (
-                f"There were {len(full_comparison.benchmarks_with_z_regressions)} "
-                "benchmark regression(s) in this commit"
+                f"There {were} {len(full_comparison.benchmarks_with_z_regressions)} "
+                f"benchmark regression{s} in this commit"
             )
 
 
@@ -295,10 +304,11 @@ class GitHubPRCommentAboutCheckStep(AlertPipelineStep):
         self.check_step_name = check_step_name
 
     def run_step(self, previous_outputs: Dict[str, Any]) -> dict:
-        check_details: dict = previous_outputs[self.check_step_name]
+        check_details, full_comparison = previous_outputs[self.check_step_name]
+
         res = self.github_client.create_pull_request_comment(
             comment=self._default_comment(
-                summary=check_details["output"]["summary"],
+                full_comparison=full_comparison,
                 check_link=check_details["html_url"],
             ),
             pull_number=self.pr_number,
@@ -306,9 +316,9 @@ class GitHubPRCommentAboutCheckStep(AlertPipelineStep):
         return res
 
     @staticmethod
-    def _default_comment(summary: str, check_link: str) -> str:
+    def _default_comment(full_comparison: FullComparisonInfo, check_link: str) -> str:
         """Construct a PR comment that summarizes and links to a GitHub Check."""
-        return pr_comment_link_to_check(summary, check_link)
+        return pr_comment_link_to_check(full_comparison, check_link)
 
 
 class GitHubCheckErrorHandler(AlertPipelineErrorHandler):
