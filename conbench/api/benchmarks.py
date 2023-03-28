@@ -6,8 +6,8 @@ from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import (
-    BenchmarkResultFacadeSchema,
     BenchmarkResult,
+    BenchmarkResultFacadeSchema,
     BenchmarkResultSerializer,
 )
 from ..entities.case import Case
