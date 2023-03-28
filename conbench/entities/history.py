@@ -487,8 +487,12 @@ def _add_rolling_stats_columns_to_df(
         for x in df["change_annotations"]
     ]
 
-    # Add in step changes automatically detected
-    df["begins_distribution_change"] = df["begins_distribution_change"] | df["is_step"]
+    # NOTE(EV): If unquoted, this line will integrate manually-specified distribution
+    # changes with those automatically detected. Before enabling this, we want a way for
+    # users to manually remove an automatically-detected step-change.
+    #
+    # # Add in step changes automatically detected
+    # df["begins_distribution_change"] = df["begins_distribution_change"] | df["is_step"]
 
     # Add column with cumulative sum of distribution changes, to identify the segment
     df["segment_id"] = (
