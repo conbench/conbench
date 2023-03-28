@@ -978,7 +978,7 @@
             },
         },
         "schemas": {
-            "BenchmarkCreate": {
+            "BenchmarkResultCreate": {
                 "properties": {
                     "batch_id": {"type": "string"},
                     "change_annotations": {
@@ -1047,67 +1047,7 @@
                 ],
                 "type": "object",
             },
-            "BenchmarkResultCreate": {
-                "properties": {
-                    "data": {
-                        "description": "A list of benchmark results (e.g. durations, throughput). This will be used as the main + only metric for regression and improvement. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`.",
-                        "items": {"nullable": True, "type": "number"},
-                        "type": "array",
-                    },
-                    "iqr": {
-                        "description": "The inter-quartile range from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
-                        "type": "number",
-                    },
-                    "iterations": {
-                        "description": "Number of iterations that were executed (should be the length of `data` and `times`)",
-                        "type": "integer",
-                    },
-                    "max": {
-                        "description": "The maximum from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
-                        "type": "number",
-                    },
-                    "mean": {
-                        "description": "The mean from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
-                        "type": "number",
-                    },
-                    "median": {
-                        "description": "The median from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
-                        "type": "number",
-                    },
-                    "min": {
-                        "description": "The minimum from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
-                        "type": "number",
-                    },
-                    "q1": {
-                        "description": "The first quartile from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
-                        "type": "number",
-                    },
-                    "q3": {
-                        "description": "The third quartile from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
-                        "type": "number",
-                    },
-                    "stdev": {
-                        "description": "The standard deviation from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing.",
-                        "type": "number",
-                    },
-                    "time_unit": {
-                        "description": "The unit of the times object (e.g. seconds, nanoseconds)",
-                        "type": "string",
-                    },
-                    "times": {
-                        "description": "A list of benchmark durations. If `data` is a duration measure, this should be a duplicate of that object. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`.",
-                        "items": {"nullable": True, "type": "number"},
-                        "type": "array",
-                    },
-                    "unit": {
-                        "description": "The unit of the data object (e.g. seconds, B/s)",
-                        "type": "string",
-                    },
-                },
-                "required": ["data", "iterations", "time_unit", "times", "unit"],
-                "type": "object",
-            },
-            "BenchmarkUpdate": {
+            "BenchmarkResultUpdate": {
                 "properties": {
                     "change_annotations": {
                         "description": 'Post-analysis annotations about this BenchmarkResult that\ngive details about whether it represents a change, outlier, etc. in the overall\ndistribution of BenchmarkResults.\n\nCurrently-recognized keys that change Conbench behavior:\n\n- `begins_distribution_change` (bool) - Is this result the first result of a sufficiently\n"different" distribution than the result on the previous commit (for the same\nhardware/case/context)? That is, when evaluating whether future results are regressions\nor improvements, should we treat data from before this result as incomparable?\n\n\nThis endpoint will only update the user-specified keys, and leave the rest alone. To\ndelete an existing key, set the value to null.\n',
@@ -1357,12 +1297,14 @@
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": "#/components/schemas/BenchmarkCreate"}
+                            "schema": {
+                                "$ref": "#/components/schemas/BenchmarkResultCreate"
+                            }
                         }
                     }
                 },
                 "responses": {
-                    "201": {"$ref": "#/components/responses/BenchmarkCreated"},
+                    "201": {"$ref": "#/components/responses/BenchmarkResultCreated"},
                     "400": {"$ref": "#/components/responses/400"},
                     "401": {"$ref": "#/components/responses/401"},
                 },
@@ -1417,7 +1359,9 @@
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": "#/components/schemas/BenchmarkUpdate"}
+                            "schema": {
+                                "$ref": "#/components/schemas/BenchmarkResultUpdate"
+                            }
                         }
                     }
                 },
@@ -1923,7 +1867,7 @@
         {"description": "Benchmark runs", "name": "Runs"},
         {"description": "Monitor status", "name": "Ping"},
         {
-            "description": '## BenchmarkCreate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkCreate" />\n\n## BenchmarkResultCreate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultCreate" />\n\n## BenchmarkUpdate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkUpdate" />\n\n## ClusterCreate\n<SchemaDefinition schemaRef="#/components/schemas/ClusterCreate" />\n\n## Error\n<SchemaDefinition schemaRef="#/components/schemas/Error" />\n\n## ErrorBadRequest\n<SchemaDefinition schemaRef="#/components/schemas/ErrorBadRequest" />\n\n## ErrorValidation\n<SchemaDefinition schemaRef="#/components/schemas/ErrorValidation" />\n\n## GitHubCreate\n<SchemaDefinition schemaRef="#/components/schemas/GitHubCreate" />\n\n## Login\n<SchemaDefinition schemaRef="#/components/schemas/Login" />\n\n## MachineCreate\n<SchemaDefinition schemaRef="#/components/schemas/MachineCreate" />\n\n## Ping\n<SchemaDefinition schemaRef="#/components/schemas/Ping" />\n\n## Register\n<SchemaDefinition schemaRef="#/components/schemas/Register" />\n\n## RunCreate\n<SchemaDefinition schemaRef="#/components/schemas/RunCreate" />\n\n## RunUpdate\n<SchemaDefinition schemaRef="#/components/schemas/RunUpdate" />\n\n## UserCreate\n<SchemaDefinition schemaRef="#/components/schemas/UserCreate" />\n\n## UserUpdate\n<SchemaDefinition schemaRef="#/components/schemas/UserUpdate" />\n',
+            "description": '## BenchmarkResultCreate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultCreate" />\n\n## BenchmarkResultUpdate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultUpdate" />\n\n## ClusterCreate\n<SchemaDefinition schemaRef="#/components/schemas/ClusterCreate" />\n\n## Error\n<SchemaDefinition schemaRef="#/components/schemas/Error" />\n\n## ErrorBadRequest\n<SchemaDefinition schemaRef="#/components/schemas/ErrorBadRequest" />\n\n## ErrorValidation\n<SchemaDefinition schemaRef="#/components/schemas/ErrorValidation" />\n\n## GitHubCreate\n<SchemaDefinition schemaRef="#/components/schemas/GitHubCreate" />\n\n## Login\n<SchemaDefinition schemaRef="#/components/schemas/Login" />\n\n## MachineCreate\n<SchemaDefinition schemaRef="#/components/schemas/MachineCreate" />\n\n## Ping\n<SchemaDefinition schemaRef="#/components/schemas/Ping" />\n\n## Register\n<SchemaDefinition schemaRef="#/components/schemas/Register" />\n\n## RunCreate\n<SchemaDefinition schemaRef="#/components/schemas/RunCreate" />\n\n## RunUpdate\n<SchemaDefinition schemaRef="#/components/schemas/RunUpdate" />\n\n## UserCreate\n<SchemaDefinition schemaRef="#/components/schemas/UserCreate" />\n\n## UserUpdate\n<SchemaDefinition schemaRef="#/components/schemas/UserUpdate" />\n',
             "name": "Models",
             "x-displayName": "Object models",
         },

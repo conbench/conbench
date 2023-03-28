@@ -221,7 +221,7 @@ class BenchmarkResult(Base, EntityMixin):
         # exist yet. Use the user-given `id` (string) as primary key. If the
         # Run is already known in the database then only update the
         # `has_errors` property, if necessary. All other run-specific
-        # properties provided as part of this BenchmarkCreate structure (like
+        # properties provided as part of this BenchmarkResultCreate structure (like
         # `machine_info` and `run_name`) get silently ignored.
         run = Run.first(id=data["run_id"])
         if run:

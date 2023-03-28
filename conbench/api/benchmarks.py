@@ -68,7 +68,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
         requestBody:
             content:
                 application/json:
-                    schema: BenchmarkUpdate
+                    schema: BenchmarkResultUpdate
         tags:
           - Benchmarks
         """
@@ -172,13 +172,13 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             the fields describing the Run (such as name, hardware info, ...}
             are silently ignored.
         responses:
-            "201": "BenchmarkCreated"
+            "201": "BenchmarkResultCreated"
             "400": "400"
             "401": "401"
         requestBody:
             content:
                 application/json:
-                    schema: BenchmarkCreate
+                    schema: BenchmarkResultCreate
         tags:
           - Benchmarks
         """
@@ -203,5 +203,5 @@ rule(
     view_func=benchmark_entity_view,
     methods=["GET", "DELETE", "PUT"],
 )
-spec.components.schema("BenchmarkCreate", schema=BenchmarkFacadeSchema.create)
-spec.components.schema("BenchmarkUpdate", schema=BenchmarkFacadeSchema.update)
+spec.components.schema("BenchmarkResultCreate", schema=BenchmarkFacadeSchema.create)
+spec.components.schema("BenchmarkResultUpdate", schema=BenchmarkFacadeSchema.update)
