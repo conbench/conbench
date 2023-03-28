@@ -6,8 +6,8 @@ from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import (
-    BenchmarkFacadeSchema,
     BenchmarkResult,
+    BenchmarkResultFacadeSchema,
     BenchmarkResultSerializer,
 )
 from ..entities.case import Case
@@ -21,7 +21,7 @@ class BenchmarkValidationMixin:
 
 class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
     serializer = BenchmarkResultSerializer()
-    schema = BenchmarkFacadeSchema()
+    schema = BenchmarkResultFacadeSchema()
 
     def _get(self, benchmark_id):
         try:
@@ -55,7 +55,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
     def put(self, benchmark_id):
         """
         ---
-        description: Edit a benchmark.
+        description: Edit a benchmark result.
         responses:
             "200": "BenchmarkEntity"
             "401": "401"
@@ -68,7 +68,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
         requestBody:
             content:
                 application/json:
-                    schema: BenchmarkUpdate
+                    schema: BenchmarkResultUpdate
         tags:
           - Benchmarks
         """
@@ -82,7 +82,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
     def delete(self, benchmark_id):
         """
         ---
-        description: Delete a benchmark.
+        description: Delete a benchmark result.
         responses:
             "204": "204"
             "401": "401"
@@ -102,7 +102,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
 
 class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
     serializer = BenchmarkResultSerializer()
-    schema = BenchmarkFacadeSchema()
+    schema = BenchmarkResultFacadeSchema()
 
     @maybe_login_required
     def get(self):
@@ -172,13 +172,13 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             the fields describing the Run (such as name, hardware info, ...}
             are silently ignored.
         responses:
-            "201": "BenchmarkCreated"
+            "201": "BenchmarkResultCreated"
             "400": "400"
             "401": "401"
         requestBody:
             content:
                 application/json:
-                    schema: BenchmarkCreate
+                    schema: BenchmarkResultCreate
         tags:
           - Benchmarks
         """
@@ -203,5 +203,9 @@ rule(
     view_func=benchmark_entity_view,
     methods=["GET", "DELETE", "PUT"],
 )
-spec.components.schema("BenchmarkCreate", schema=BenchmarkFacadeSchema.create)
-spec.components.schema("BenchmarkUpdate", schema=BenchmarkFacadeSchema.update)
+spec.components.schema(
+    "BenchmarkResultCreate", schema=BenchmarkResultFacadeSchema.create
+)
+spec.components.schema(
+    "BenchmarkResultUpdate", schema=BenchmarkResultFacadeSchema.update
+)

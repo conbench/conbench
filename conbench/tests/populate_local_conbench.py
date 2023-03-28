@@ -74,7 +74,7 @@ def generate_benchmarks_data(
     repo_url="https://github.com/apache/arrow",
 ):
     """
-    Generate a dictionary that complies with the BenchmarkCreate schema.
+    Generate a dictionary that complies with the BenchmarkResultCreate schema.
     """
     assert repo_url.startswith("http")
     assert not repo_url.endswith("/")
@@ -270,7 +270,7 @@ def login():
 
 def post_benchmark_result(data):
     """
-    Expect `data` to be a single BenchmarkCreate structure.
+    Expect `data` to be a single BenchmarkResultCreate structure.
 
     Return benchmark ID (as returned by API) or raise an exception
     (the code below may fail with wild exceptions such as AttributeError)
@@ -490,7 +490,7 @@ def generate_synthetic_benchmark_history(commit_hashes: List[str], repo_url: str
         ) - datetime.timedelta(hours=10 * idx)
         run_start_timestring_iso8601 = run_start.isoformat()
 
-        # Submit a BenchmarkCreate structure. Use a random run_id so that
+        # Submit a BenchmarkResultCreate structure. Use a random run_id so that
         # each benchmark created in this loop refers to a different run.
         bdata = generate_benchmarks_data(
             run_id=str(uuid.uuid4())[9:],

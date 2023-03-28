@@ -221,7 +221,7 @@ class BenchmarkResult(Base, EntityMixin):
         # exist yet. Use the user-given `id` (string) as primary key. If the
         # Run is already known in the database then only update the
         # `has_errors` property, if necessary. All other run-specific
-        # properties provided as part of this BenchmarkCreate structure (like
+        # properties provided as part of this BenchmarkResultCreate structure (like
         # `machine_info` and `run_name`) get silently ignored.
         run = Run.first(id=data["run_id"])
         if run:
@@ -300,7 +300,7 @@ s.Index("benchmark_result_context_id_index", BenchmarkResult.context_id)
 s.Index("benchmark_result_timestamp_index", BenchmarkResult.timestamp)
 
 
-class BenchmarkResultCreate(marshmallow.Schema):
+class BenchmarkResultStatsSchema(marshmallow.Schema):
     data = marshmallow.fields.List(
         marshmallow.fields.Decimal(allow_none=True),
         required=True,
@@ -358,55 +358,51 @@ class BenchmarkResultCreate(marshmallow.Schema):
     min = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The minimum from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The minimum from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     max = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The maximum from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The maximum from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     mean = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The mean from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The mean from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     median = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The median from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The median from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     stdev = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The standard deviation from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The standard deviation from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     q1 = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The first quartile from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The first quartile from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     q3 = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The third quartile from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The third quartile from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
     iqr = marshmallow.fields.Decimal(
         required=False,
         metadata={
-            "description": "The inter-quartile range from `data`, will be calculdated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
+            "description": "The inter-quartile range from `data`, will be calculated on the server if not present (the preferred method), but can be overridden if sent. Will be marked `null` if any iterations are missing."
         },
     )
-
-
-class BenchmarkResultSchema:
-    create = BenchmarkResultCreate()
 
 
 class _Serializer(EntitySerializer):
@@ -486,7 +482,7 @@ or improvements, should we treat data from before this result as incomparable?
 """
 
 
-class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
+class _BenchmarkResultCreateSchema(marshmallow.Schema):
     run_id = marshmallow.fields.String(
         required=True,
         metadata={
@@ -573,7 +569,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
             )
         },
     )
-    stats = marshmallow.fields.Nested(BenchmarkResultSchema().create, required=False)
+    stats = marshmallow.fields.Nested(BenchmarkResultStatsSchema(), required=False)
     error = marshmallow.fields.Dict(
         required=False,
         metadata={
@@ -672,7 +668,7 @@ class _BenchmarkFacadeSchemaCreate(marshmallow.Schema):
         return data
 
 
-class _BenchmarkFacadeSchemaUpdate(marshmallow.Schema):
+class _BenchmarkResultUpdateSchema(marshmallow.Schema):
     change_annotations = marshmallow.fields.Dict(
         required=False,
         metadata={
@@ -686,6 +682,6 @@ delete an existing key, set the value to null.
     )
 
 
-class BenchmarkFacadeSchema:
-    create = _BenchmarkFacadeSchemaCreate()
-    update = _BenchmarkFacadeSchemaUpdate()
+class BenchmarkResultFacadeSchema:
+    create = _BenchmarkResultCreateSchema()
+    update = _BenchmarkResultUpdateSchema()
