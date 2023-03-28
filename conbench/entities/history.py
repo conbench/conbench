@@ -472,7 +472,7 @@ def _add_rolling_stats_columns_to_df(
     exclusive on the right side. This is useful if you want to compare each commit to
     the previous commit's rolling stats.
     """
-    df = zscore_automated_detect(df=df)
+    df = _detect_shifts_with_trimmed_estimators(df=df)
 
     # pandas likes the data to be sorted
     df.sort_values(
@@ -588,12 +588,15 @@ def _calculate_z_score(
     return z_score
 
 
-def zscore_automated_detect(df: pd.DataFrame, z_score_threshold=5.0) -> pd.DataFrame:
+def _detect_shifts_with_trimmed_estimators(
+    df: pd.DataFrame, z_score_threshold=5.0
+) -> pd.DataFrame:
     """Detect outliers and distribution shifts in historical data
 
-    Uses a z-score-based detection algorithm, taking a dataframe of the same
-    sort as `_add_rolling_stats_columns_to_df`, and returning that dataframe with
-    two additional columns:
+    Uses a z-score-based detection algorithm that uses trimmed rolling means and standard
+    deviations to avoid influence by outliers. Takes a dataframe of the same sort as
+    `_add_rolling_stats_columns_to_df`, and returning that dataframe with two additional
+    columns:
 
     - `is_step` (bool): Is this point the start of a new segment?
     - `is_outlier` (bool): Is this point an outlier that should be ignored?
