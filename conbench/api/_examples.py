@@ -125,7 +125,6 @@ def _api_benchmark_entity(
         "optional_benchmark_info": optional_benchmark_info,
         "change_annotations": {},
         "tags": {
-            "id": case_id,
             "compression": "snappy",
             "cpu_count": 2,
             "dataset": "nyctaxi_sample",
