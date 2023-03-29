@@ -8,7 +8,7 @@ rule: Callable = app.add_url_rule
 
 from .auth import *  # noqa
 from .batches import *  # noqa
-from .benchmarks import *  # noqa
+from .results import *  # noqa
 from .compare import *  # noqa
 from .hardware import *  # noqa
 from .index import *  # noqa

@@ -8,7 +8,7 @@ from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin, simple_bar_plot
 from ..app._util import augment
-from ..app.benchmarks import BenchmarkResultMixin, RunMixin
+from ..app.results import BenchmarkResultMixin, RunMixin
 from ..config import Config
 from ..entities.run import commit_hardware_run_map
 
