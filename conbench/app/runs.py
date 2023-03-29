@@ -8,7 +8,7 @@ from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin
 from ..app._util import augment
-from ..app.benchmarks import ContextMixin, RunMixin
+from ..app.results import ContextMixin, RunMixin
 from ..config import Config
 
 

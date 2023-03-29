@@ -8,7 +8,7 @@ from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import simple_bar_plot
 from ..app._util import augment
-from ..app.benchmarks import ContextMixin
+from ..app.results import ContextMixin
 from ..config import Config
 
 
