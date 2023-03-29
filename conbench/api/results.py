@@ -213,48 +213,59 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         # can use) based on the schema that we validate against.
         data = self.validate_benchmark(self.schema.create)
 
-        # This next block inspects and mutates `tags`, with the goal that all
-        # keys are non-empty strings, and all values are non-empty strings.
-        # ideally this should be done as part of schema validation above.
+        # Note(JP): this next block inspects and mutates `tags`, with the goal
+        # that all keys are non-empty strings, and all values are non-empty
+        # strings. See
+        # https://github.com/conbench/conbench/pull/948#discussion_r1149090197
+        # for background. Summary of current desired behavior: primitive value
+        # types are accepted (string, boolean, float, int; non-string values
+        # are converted to string before DB insertion). Other value types
+        # (array -> list, object -> dict) lead to request rejection.
         tags = data["tags"]
+        # Iterate over a copy of key/value pairs.
         for key, value in list(tags.items()):
-            # In JSON, a key is always of type string. We can rely on this
-            # here, but codify this invariant.
+            # In JSON, a key is always of type string. We rely on this, codify
+            # this invariant.
             assert isinstance(key, str)
-            # Is an empty string a valid JSON key? Yes:
-            # https://stackoverflow.com/a/58917082/145400
+
+            # An empty string is a valid JSON key. Do not allow this.
             if len(key) == 0:
                 return resp400("tags: zero-length string as key is not allowed")
 
-            # This is an important decision: be liberal in what we accept. We
-            # don't want to consider empty string or None values for the actual
-            # case permutation. We don't want to store this in the database.
-            # Drop these key/value pairs. Make sure that this is documented in
-            # the API spec. We could reject the corresponding HTTP request of
-            # course with a Bad Request response, but that might unnecessarily
-            # invasive in view of legacy tooling.
+            # For now, be liberal in what we accept. Do not consider empty
+            # string or None values for the case permutation (do not store
+            # those in the DB, drop these key/value pairs). This is documented
+            # in the API spec. Maybe in the future we want to reject such
+            # requests with a Bad Request response.
             if value == "" or value is None:
-                log.warning("silently drop tag key/value pair: `%s`, `%s`", key, value)
-                # Remove key/value pair, check next one. Mutating the
-                # dictionary while we iterate over it? That is why the
-                # iteration happens over a copy of kv pairs.
+                log.warning("drop tag key/value pair: `%s`, `%s`", key, value)
+                # Remove current key/value pair, proceed with next key. This
+                # mutates the dictionary `data["tags"]`; for keeping this a
+                # sane operation the loop iterates over a copy of key/value
+                # pairs.
                 del tags[key]
                 continue
 
             # Note(JP): this code path should go away after we adjust our
             # client tooling to not send numeric values anymore.
-            if isinstance(value, int) or isinstance(value, float):
-                log.warning(
-                    "stringify numeric case parameter value: `%s`, `%s`", key, value
-                )
+            if isinstance(value, (int, float, bool)):
+                # I think we first want to adjust some client tooling before
+                # enabling this log line:
+                # log.warning("stringify case parameter value: `%s`, `%s`", key, value)
+                # Replace value, proceed with next key.
                 tags[key] = str(value)
                 continue
 
+            # This should be logically equivalent with the value being either
+            # of type dict or of type list.
             if not isinstance(value, str):
-                # Do not silently drop this, bit emit bad request.
+                # Emit Bad Request response..
                 return resp400(
-                    "tags: bad value type for key `{key}`, only string values are allowed, got `{type(value)}`"
+                    "tags: bad value type for key `{key}`, JSON object and array is not allowed`"
                 )
+
+        # At this point, assume that data["tags"] is a flat dictionary with
+        # keys being non-empty strings, and values being non-empty strings.
 
         # Note(JP): in the future this will also raise further validation
         # errors that are to be exposed via a 400 response to the HTTP client
