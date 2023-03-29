@@ -967,6 +967,8 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             or "tags: zero-length string as key is not allowed" in resp.text
         )
 
+    # Context: see https://github.com/conbench/conbench/pull/948
+    # we might want to apply more strictness in the future
     @pytest.mark.parametrize(
         "tagdict",
         [
