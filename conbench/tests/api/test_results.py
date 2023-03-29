@@ -967,6 +967,33 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             or "tags: zero-length string as key is not allowed" in resp.text
         )
 
+    @pytest.mark.parametrize(
+        "tagdict",
+        [
+            # Boolean value is currently allowed
+            {"name": "foo", "key1": False},
+            # Int value is currently allowed
+            {"name": "foo", "key2": 1},
+            # Float value is currently allowed
+            {"name": "foo", "key3": 1.2},
+            # non-empty string value is allowed
+            {"name": "foo", "key4": "aa"},
+            # empty string value is currently allowed (accepted, but dropped)
+            {"name": "foo", "key5": ""},
+            # None value is currently allowed (accepted, but dropped)
+            {"name": "foo", "key6": None},
+        ],
+    )
+    def test_create_benchmark_good_tags(self, client, tagdict):
+        self.authenticate(client)
+        payload = copy.deepcopy(_fixtures.VALID_PAYLOAD)
+        payload["tags"] = tagdict.copy()
+        resp = client.post(self.url, json=payload)
+        assert resp.status_code == 201
+        assert resp.json["tags"]
+        assert "key5" not in resp.json["tags"]
+        assert "key6" not in resp.json["tags"]
+
     def test_create_benchmark_context_empty(self, client):
         """
         It is an error to provide no context object (see test above). Whether
