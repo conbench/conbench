@@ -43,82 +43,6 @@
                 },
                 "description": "Not Found",
             },
-<<<<<<< HEAD
-=======
-            "BenchmarkCreated": {
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "batch_id": "some-batch-uuid-1",
-                            "change_annotations": {},
-                            "error": None,
-                            "id": "some-benchmark-uuid-1",
-                            "links": {
-                                "context": "http://localhost/api/contexts/some-context-uuid-1/",
-                                "info": "http://localhost/api/info/some-info-uuid-1/",
-                                "list": "http://localhost/api/benchmarks/",
-                                "run": "http://localhost/api/runs/some-run-uuid-1/",
-                                "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
-                            },
-                            "optional_benchmark_info": None,
-                            "run_id": "some-run-uuid-1",
-                            "stats": {
-                                "data": [
-                                    0.099094,
-                                    0.037129,
-                                    0.036381,
-                                    0.148896,
-                                    0.008104,
-                                    0.005496,
-                                    0.009871,
-                                    0.006008,
-                                    0.007978,
-                                    0.004733,
-                                ],
-                                "iqr": 0.030442,
-                                "iterations": 10,
-                                "max": 0.148896,
-                                "mean": 0.036369,
-                                "median": 0.008988,
-                                "min": 0.004733,
-                                "q1": 0.0065,
-                                "q3": 0.036942,
-                                "stdev": 0.049194,
-                                "time_unit": "s",
-                                "times": [
-                                    0.099094,
-                                    0.037129,
-                                    0.036381,
-                                    0.148896,
-                                    0.008104,
-                                    0.005496,
-                                    0.009871,
-                                    0.006008,
-                                    0.007978,
-                                    0.004733,
-                                ],
-                                "unit": "s",
-                                "z_improvement": False,
-                                "z_regression": False,
-                                "z_score": None,
-                            },
-                            "tags": {
-                                "compression": "snappy",
-                                "cpu_count": "2",
-                                "dataset": "nyctaxi_sample",
-                                "file_type": "parquet",
-                                "id": "some-case-uuid-1",
-                                "input_type": "arrow",
-                                "name": "file-write",
-                            },
-                            "timestamp": "2020-11-25T21:02:44Z",
-                            "validation": None,
-                        }
-                    }
-                },
-                "description": "Created \n\n The resulting entity URL is returned in the Location header.",
-            },
->>>>>>> 9586a76 (update docs)
             "BenchmarkEntity": {
                 "content": {
                     "application/json": {
@@ -324,7 +248,7 @@
                             },
                             "tags": {
                                 "compression": "snappy",
-                                "cpu_count": 2,
+                                "cpu_count": "2",
                                 "dataset": "nyctaxi_sample",
                                 "file_type": "parquet",
                                 "input_type": "arrow",
@@ -1100,11 +1024,7 @@
                     },
                     "stats": {"$ref": "#/components/schemas/BenchmarkResultStats"},
                     "tags": {
-<<<<<<< HEAD
-                        "description": 'The set of key/value pairs that defines a benchmark case permutation. Top-level keys must be strings. Allowed value types are ... (to be specified).  The special key "name" must be provided with a string value: it indicates the name of the conceptual benchmark that was performed for obtaining the result at hand. All case permutations of a conceptual benchmark by definition have this name in common.  We advise that each unique case (as defined by the complete set of key/value pairs) indeed corresponds to unique benchmarking behavior. That is, typically, these key/value pairs directly correspond to input parameters to your benchmarking method.  Example: a conceptual benchmark with name "foo-write-file" might have meaningful case permutations involving tag names such as `compression_method` (values: `gzip`, `lzma`, ...), `file_format` (values: `csv`, `hdf5`, ...), `dataset_name` (values: `foo`, `bar`, ...). For each conceptual benchmark, it is valid to have one or many case permutations (if you supply no tags, there is necessarily a single mutation with the special property that it has no tags).',
-=======
-                        "description": 'The set of key/value pairs that defines a benchmark case permutation. Top-level keys must be strings. Values must be strings, too. Keys with empty string values are ignored.  The special key "name" must be provided with a string value: it indicates the name of the conceptual benchmark that was performed for obtaining the result at hand. All case permutations of a conceptual benchmark by definition have this name in common.  We advise that each unique case (as defined by the complete set of key/value pairs) indeed corresponds to unique benchmarking behavior. That is, typically, these key/value pairs directly correspond to input parameters to your benchmarking method.  Example: a conceptual benchmark with name "foo-write-file" might have meaningful case permutations involving tag names such as `compression_method` (values: `gzip`, `lzma`, ...), `file_format` (values: `csv`, `hdf5`, ...), `dataset_name` (values: `foo`, `bar`, ...). For each conceptual benchmark, it is OK to have no or many case permutations.',
->>>>>>> 9586a76 (update docs)
+                        "description": 'The set of key/value pairs that defines a benchmark case permutation. Top-level keys must be strings. Values must be strings, too. Keys with empty string values are ignored.  The special key "name" must be provided with a string value: it indicates the name of the conceptual benchmark that was performed for obtaining the result at hand. All case permutations of a conceptual benchmark by definition have this name in common.  We advise that each unique case (as defined by the complete set of key/value pairs) indeed corresponds to unique benchmarking behavior. That is, typically, these key/value pairs directly correspond to input parameters to your benchmarking method.  Example: a conceptual benchmark with name "foo-write-file" might have meaningful case permutations involving tag names such as `compression_method` (values: `gzip`, `lzma`, ...), `file_format` (values: `csv`, `hdf5`, ...), `dataset_name` (values: `foo`, `bar`, ...). For each conceptual benchmark, it is valid to have one or many case permutations (if you supply no tags, there is necessarily a single mutation with the special property that it has no tags).',
                         "type": "object",
                     },
                     "timestamp": {
