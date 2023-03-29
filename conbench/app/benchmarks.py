@@ -17,7 +17,7 @@ from ..config import Config
 log = logging.getLogger(__name__)
 
 
-class UpdateForm(flask_wtf.FlaskForm):
+class BenchmarkResultUpdateForm(flask_wtf.FlaskForm):
     title = conbench.util.dedent_rejoin(
         """
         This applies (only) to the rolling window z-score change detection
@@ -39,7 +39,7 @@ class UpdateForm(flask_wtf.FlaskForm):
     toggle_distribution_change = w.SubmitField(render_kw={"title": title})
 
 
-class DeleteForm(flask_wtf.FlaskForm):
+class BenchmarkResultDeleteForm(flask_wtf.FlaskForm):
     delete = w.SubmitField("Delete")
 
 
@@ -57,12 +57,13 @@ class ContextMixin:
         return contexts
 
 
-class BenchmarkMixin:
+class BenchmarkResultMixin:
     def get_display_benchmark(self, benchmark_id):
+        # this gets a benchmark _result_, we need more renaming.
         benchmark, response = self._get_benchmark(benchmark_id)
 
         if response.status_code == 404:
-            self.flash(f"unknown benchmark ID: {benchmark_id}", "info")
+            self.flash(f"unknown benchmark result ID: {benchmark_id}", "info")
 
         if response.status_code != 200:
             # Note(JP): quick band-aid to at least not swallow err detail, need
@@ -85,7 +86,9 @@ class BenchmarkMixin:
 
         return benchmark
 
+    # this gets a benchmark result, we need more renaming.
     def _get_benchmark(self, benchmark_id):
+        # TODO: remove re-serialization indirection.
         response = self.api_get(
             "api.benchmark",
             benchmark_id=benchmark_id,
@@ -205,7 +208,7 @@ class RunMixin:
         return response.json, response
 
 
-class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
+class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, benchmark, run, delete_form, update_form):
         if benchmark is None:
             return self.redirect("app.index")
@@ -243,14 +246,16 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
     @authorize_or_terminate
     def get(self, benchmark_id):
         benchmark, run = self._get_benchmark_and_run(benchmark_id)
-        return self.page(benchmark, run, DeleteForm(), UpdateForm())
+        return self.page(
+            benchmark, run, BenchmarkResultDeleteForm(), BenchmarkResultUpdateForm()
+        )
 
     def post(self, benchmark_id):
         if not flask_login.current_user.is_authenticated:
             return self.redirect("app.login")
 
-        delete_form, delete_response = DeleteForm(), None
-        update_form, update_response = UpdateForm(), None
+        delete_form, delete_response = BenchmarkResultDeleteForm(), None
+        update_form, update_response = BenchmarkResultUpdateForm(), None
 
         if delete_form.delete.data:
             # delete button pressed
@@ -260,7 +265,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
                 )
                 if delete_response.status_code == 204:
                     self.flash(f"Benchmark result {benchmark_id} deleted.", "info")
-                    return self.redirect("app.benchmarks")
+                    return self.redirect("app.benchmark-results")
 
         elif update_form.validate_on_submit():
             # toggle_distribution_change button pressed
@@ -289,7 +294,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         benchmark, run = self._get_benchmark_and_run(benchmark_id)
         return self.page(benchmark, run, delete_form, update_form)
 
-    def data(self, form: UpdateForm):
+    def data(self, form: BenchmarkResultUpdateForm):
         """Construct the data to PUT when calling self.api_put()."""
         if form.toggle_distribution_change.data:
             return {"change_annotations": {"begins_distribution_change": False}}
@@ -304,7 +309,7 @@ class Benchmark(AppEndpoint, BenchmarkMixin, RunMixin, TimeSeriesPlotMixin):
         return benchmark, run
 
 
-class BenchmarkList(AppEndpoint, ContextMixin):
+class BenchmarkResultList(AppEndpoint, ContextMixin):
     def page(self, benchmarks):
         # Note(JP): What type is benchmarks? As of `response =
         # self.api_get("api.benchmarks")` down below it's seemingly the result
@@ -318,7 +323,7 @@ class BenchmarkList(AppEndpoint, ContextMixin):
             application=Config.APPLICATION_NAME,
             title="Benchmarks",
             benchmarks=benchmarks,
-            delete_benchmark_form=DeleteForm(),
+            delete_benchmark_form=BenchmarkResultDeleteForm(),
             search_value=f.request.args.get("search"),
         )
 
@@ -337,12 +342,30 @@ class BenchmarkList(AppEndpoint, ContextMixin):
 
 
 rule(
-    "/benchmarks/",
-    view_func=BenchmarkList.as_view("benchmarks"),
+    "/benchmark-results/",
+    view_func=BenchmarkResultList.as_view("benchmark-results"),
     methods=["GET"],
 )
+
+rule(
+    "/benchmark-results/<benchmark_id>/",
+    view_func=BenchmarkResult.as_view("benchmark-result"),
+    methods=["GET", "POST"],
+)
+
+
+# Legacy route, which people have used to communicate a URL e.g. via Slack or
+# email, or in downstream reporting, to point to a specific benchmark result
+# view. Keep this working _in addition to_ the new, more descriptive
+# `/benchmark-results/<benchmark_id>/` path. Keep this working for as long as
+# we can do so with ease. Next step for this outstretched transition might be
+# to build custom logic that would act on the shape of <benchmark_id> and emit
+# a redirect response. Note that this needs a different name argument passed to
+# the as_view() method, otherwise one sees an error like `View function mapping
+# is overwriting an existing endpoint function: app.benchmark`
+# Context: https://github.com/conbench/conbench/pull/966#issuecomment-1487072612
 rule(
     "/benchmarks/<benchmark_id>/",
-    view_func=Benchmark.as_view("benchmark"),
+    view_func=BenchmarkResult.as_view("benchmark"),
     methods=["GET", "POST"],
 )

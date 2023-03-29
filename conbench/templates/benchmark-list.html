@@ -37,12 +37,12 @@
                              <div>{{ benchmark.display_bmname }}</div>
                            </a>
                          </td>
-                         <td><a href="{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}">
+                         <td><a href="{{ url_for('app.benchmark-result', benchmark_id=benchmark.id) }}">
                               <div>{{ benchmark.display_case_perm }}</div>
                          </a></td>
                          <td>{{ benchmark.display_mean }}</td>
                          {% if not current_user.is_anonymous %}
-                         <td data-cbcustom-href="{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}"
+                         <td data-cbcustom-href="{{ url_for('app.benchmark-result', benchmark_id=benchmark.id) }}"
                              data-bs-toggle="modal"
                              data-bs-target="#confirm-delete"
                              data-cbcustom-form-id="#delete-benchmark-form"
