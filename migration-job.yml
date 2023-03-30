@@ -29,4 +29,8 @@ spec:
               name: conbench-migration-config
           - secretRef:
               name: conbench-secret
+        resources:
+          requests:
+            memory: '10Mi'
+            cpu: 0.1
       restartPolicy: Never

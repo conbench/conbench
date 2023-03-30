@@ -7,11 +7,26 @@ spec:
     matchLabels:
       app: conbench
   replicas: 2
+  # the number of seconds you want to wait for your Deployment to progress
+  # before the system reports back that the Deployment has failed progressing -
+  # surfaced as a condition with type: Progressing, status: "False". and
+  # reason: ProgressDeadlineExceeded in the status of the resource.
+  # Defaults to 600 (10 min), give this 15 mins here.
+  ProgressDeadlineExceeded: 900
+  # `minReadySeconds`: Defaults to 0: The Pod will be considered available as
+  # soon as it is ready. However, wait a bit for things to equilibrate, this is
+  # also important for Service-based request routing (we don't want to receive
+  # requests too early).
+  minReadySeconds: 10
   strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
     type: RollingUpdate
+    rollingUpdate:
+      # The number of pods that can be created above the desired amount of pods
+      # during an update. That is, with `replicas: 2` and `maxSurge: 1` we
+      # can have at most three pods at the same time.
+      maxSurge: 1
+      # Make it so that during the update at least one pod is ready.
+      maxUnavailable: 1
   template:
     metadata:
       labels:
@@ -43,8 +58,8 @@ spec:
               name: conbench-secret
         resources:
           requests:
-            memory: '2Gi'
-            cpu: 0.5
+            memory: '900Mi'
+            cpu: 0.2
         readinessProbe:
           failureThreshold: 1
           httpGet:
