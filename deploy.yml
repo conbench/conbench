@@ -34,7 +34,8 @@ spec:
           ]
         imagePullPolicy: "Always"
         ports:
-          - containerPort: 5000
+          - name: gunicorn-port
+            containerPort: 5000
         envFrom:
           - configMapRef:
               name: conbench-config
