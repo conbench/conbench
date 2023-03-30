@@ -31,6 +31,8 @@ spec:
               name: conbench-secret
         resources:
           requests:
+            # Pretend that we don't need resources, so that node placement
+            # succeeds even on small-resource k8s clusters.
             memory: '10Mi'
-            cpu: 0.1
+            cpu: 1m
       restartPolicy: Never
