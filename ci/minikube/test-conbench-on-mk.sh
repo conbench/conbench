@@ -100,6 +100,14 @@ export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="ci-conbench-on-$(hostname -s)"
 export MUTATE_JSONNET_FILE_FOR_MINIKUBE=true
 ( cd "${CONBENCH_REPO_ROOT_DIR}" && make jsonnet-kube-prom-manifests )
 
+# The kube-prometheus stack's custom JSONNET stack is configured to allow for
+# monitoring the `staging` namespace. I've done this to resemble a "prod"
+# environment where Conbench is deployed in a k8s namespace called `staging`.
+# With that setup, the namespace needs to exist before deploying
+# kube-prometheus.
+# kudos to https://stackoverflow.com/a/65411733/145400
+kubectl create namespace staging --dry-run=client -o yaml | kubectl apply -f -
+
 # Set up the kube-prometheus stack. This follows the customization instructions
 # at https://github.com/prometheus-operator/kube-prometheus/blob/v0.12.0/docs/customizing.md
 pushd "${CONBENCH_REPO_ROOT_DIR}"/_kpbuild/cb-kube-prometheus/
