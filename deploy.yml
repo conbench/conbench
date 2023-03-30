@@ -34,7 +34,8 @@ spec:
           ]
         imagePullPolicy: "Always"
         ports:
-          - containerPort: 5000
+          - name: gunicorn-port
+            containerPort: 5000
         envFrom:
           - configMapRef:
               name: conbench-config
@@ -59,19 +60,43 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: "conbench-service"
+  labels:
+    app: conbench
   annotations:
     # "ip mode is required for sticky sessions to work with Application Load
     # Balancers"
     alb.ingress.kubernetes.io/target-type: ip
-  name: "conbench-service"
 spec:
   ports:
-  - port: 80
-    targetPort: 5000
+  - name: conbench-service-port
+    port: 80
+    # The port number above: the port that will be exposed by this service.
+    # `targetPort` is documented with "Number or name of the port to access on
+    # the pods targeted by the service."
+    targetPort: gunicorn-port
     protocol: TCP
   type: NodePort
   selector:
     app: "conbench"
+---
+apiVersion: monitoring.coreos.com/v1
+# This is a CRD defined by the prometheus-operator/kube-prometheus project
+kind: ServiceMonitor
+metadata:
+  name: conbench-service-monitor
+spec:
+  selector:
+    matchLabels:
+      app: conbench
+  endpoints:
+    # It's important that ServiceMonitor i) refers to a Service port  and ii)
+    # refers to it via its name.
+    - port: conbench-service-port
+      path: /metrics
+      scheme: http
+      # This defines the time resolution.
+      interval: 30s
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
