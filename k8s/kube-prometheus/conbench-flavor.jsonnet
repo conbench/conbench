@@ -14,13 +14,23 @@ local kp =
   // (import 'kube-prometheus/addons/custom-metrics.libsonnet') +
   // (import 'kube-prometheus/addons/external-metrics.libsonnet') +
   // (import 'kube-prometheus/addons/pyrra.libsonnet') +
-  // (import "kube-prom-no-req-no-lim.jsonnet") +  // auto-uncommented-by-ci
+  // Pretend to almost not need any resources. Of course this can be dangerous.
+  // This is to make it easier to get going with testing in k8s environments
+  // that have limited resource offers.
+  (import 'kube-prom-no-req-no-lim.jsonnet') +
   {
     values+:: {
       prometheus+: {
         externalLabels: {
           cluster: 'PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE',
         },
+        // Configure the namespaces that should be monitored; this is important
+        // for automated privilege configuration. If a namespace not configured
+        // here has a ServiceMonitor object then the scraper Prometheuses try
+        // to act on it, but will fail with errors like
+        // `User \"system:serviceaccount:monitoring:prometheus-k8s\" cannot list resource ...`
+        // Also see https://github.com/prometheus-operator/kube-prometheus/blob/main/docs/monitoring-other-namespaces.md
+        namespaces: ['default', 'kube-system', 'monitoring', 'staging'],
       },
       common+: {
         namespace: 'monitoring',

@@ -302,7 +302,6 @@ jsonnet-kube-prom-manifests:
 			echo "MUTATE_JSONNET_FILE_FOR_MINIKUBE not set"; \
 		else \
 			echo "MUTATE_JSONNET_FILE_FOR_MINIKUBE set, mutate JSONNET"; \
-			sed -i.bak 's|// (import "kube-prom|(import "kube-prom|g' _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
 			sed -i.bak 's|// "auth.anonymous"|"auth.anonymous"|g' _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
 			cat _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
 		fi
