@@ -96,6 +96,7 @@ class HistorySampleZscoreStats:
     rolling_mean: Optional[float]
     residual: float
     rolling_stddev: float
+    is_outlier: bool
 
 
 @dataclasses.dataclass
@@ -216,6 +217,7 @@ def get_history_for_cchr(
             rolling_mean=_to_float(sample.rolling_mean),
             residual=sample.residual,
             rolling_stddev=_to_float(sample.rolling_stddev) or 0.0,
+            is_outlier=sample.is_outlier or False,
         )
 
         # For both, `sample.data` and `sample.times`, expect either None or a

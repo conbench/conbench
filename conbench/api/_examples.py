@@ -374,6 +374,7 @@ def _api_history_entity(benchmark_id, case_id, context_id, run_name):
                 "rolling_mean_excluding_this_commit": 0.036369,
                 "rolling_stddev": 0.0,
                 "segment_id": 0.0,
+                "is_outlier": False,
             },
         }
     ]

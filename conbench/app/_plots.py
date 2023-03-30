@@ -27,11 +27,11 @@ class BokehPlotJSONOrError:
 
 
 class TimeSeriesPlotMixin:
-    def get_outliers(self, benchmarks):
+    def get_biggest_changes(self, benchmarks):
         benchmarks_by_id = {b["id"]: b for b in benchmarks}
 
-        # top 3 outliers
-        outliers = sorted(
+        # top 3 regressions or improvements
+        biggest_changes = sorted(
             [
                 (abs(float(b["stats"]["z_score"])), b["id"])
                 for b in benchmarks
@@ -40,13 +40,13 @@ class TimeSeriesPlotMixin:
             reverse=True,
         )[:3]
 
-        outliers = [benchmarks_by_id[o[1]] for o in outliers]
-        outlier_ids = [b["id"] for b in outliers]
+        biggest_changes = [benchmarks_by_id[o[1]] for o in biggest_changes]
+        biggest_changes_ids = [b["id"] for b in biggest_changes]
         # Note(JP): TODO: it appears that this is not covered by the test suite
-        outlier_names = [
-            f'{b["display_bmname"]}, {b["display_case_perm"]}' for b in outliers
+        biggest_changes_names = [
+            f'{b["display_bmname"]}, {b["display_case_perm"]}' for b in biggest_changes
         ]
-        return outliers, outlier_ids, outlier_names
+        return biggest_changes, biggest_changes_ids, biggest_changes_names
 
     def get_history_plot(self, benchmark, run, i=0) -> BokehPlotJSONOrError:
         """
@@ -471,6 +471,8 @@ def time_series_plot(
 
     unit = samples[0].unit
     with_dist = [s for s in samples if s.zscorestats.rolling_mean]
+    inliers = [s for s in samples if not s.zscorestats.is_outlier]
+    outliers = [s for s in samples if s.zscorestats.is_outlier]
     formatted, axis_unit = _should_format([s.mean for s in samples], unit)
     dist_change_indexes = [
         ix
@@ -480,14 +482,15 @@ def time_series_plot(
 
     # Note(JP): `samples` is an ordered list of dicts, each dict has a `mean`
     # key which is extracted here by default.
-    source_mean_over_time = _source(samples, unit, formatted=formatted)
+    source_mean_over_time = _source(inliers, unit, formatted=formatted)
+    source_outlier_mean_over_time = _source(outliers, unit, formatted=formatted)
 
     source_min_over_time = bokeh.models.ColumnDataSource(
         data=dict(
             # Insert NaNs to break the line at distribution changes
             x=_insert_nans(
                 util.tznaive_iso8601_to_tzaware_dt(
-                    [s.commit_timestamp.isoformat() for s in samples]
+                    [s.commit_timestamp.isoformat() for s in inliers]
                 ),
                 dist_change_indexes,
             ),
@@ -495,7 +498,7 @@ def time_series_plot(
             # bandwidth. Note(JP): min() must not have None passed as arg, that
             # is why I have changed `s.data` to only contain type float
             # elements (including math.nan, instead of None).
-            y=_insert_nans([min(s.data) for s in samples], dist_change_indexes),
+            y=_insert_nans([min(s.data) for s in inliers], dist_change_indexes),
         )
     )
 
@@ -523,6 +526,7 @@ def time_series_plot(
             rolling_mean=0.0,  # not consumed
             residual=0.0,  # not consumed
             rolling_stddev=0.0,  # not consumed
+            is_outlier=False,  # not consumed
         ),
     )
 
@@ -638,6 +642,22 @@ def time_series_plot(
         label = "benchmark mean"
         if multisample_count:
             label += f" (n={multisample_count})"
+
+    scatter_outlier_mean_over_time = p.circle(
+        source=source_outlier_mean_over_time,
+        legend_label=label,
+        name="outliers",
+        size=6,
+        line_color="#ccc",
+        fill_color="white",
+        line_width=1,
+        selection_color="#76bf5a",  # like bootstrap panel dff0d8, but darker
+        selection_line_color="#5da540",  # same green, again darker
+        # Cannot change the size upon selection
+        # selection_size=10,
+        nonselection_fill_alpha=1.0,
+        nonselection_line_alpha=1.0,
+    )
 
     scatter_mean_over_time = p.circle(
         source=source_mean_over_time,
@@ -760,6 +780,18 @@ def time_series_plot(
             ],
             formatters={"$x": "datetime"},
             renderers=hover_renderers,
+        )
+    )
+
+    p.add_tools(
+        bokeh.models.HoverTool(
+            tooltips=[
+                ("commit date", "$x{%F}"),
+                ("value", "@values_with_unit"),
+                ("outlier", "True"),
+            ],
+            formatters={"$x": "datetime"},
+            renderers=[scatter_outlier_mean_over_time],
         )
     )
 

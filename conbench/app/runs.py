@@ -25,9 +25,14 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             compare = f'{baseline_run["id"]}...{contender_run["id"]}'
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
 
-        outliers, outlier_ids, outlier_names = self.get_outliers(benchmarks)
+        (
+            biggest_changes,
+            biggest_changes_ids,
+            biggest_changes_names,
+        ) = self.get_biggest_changes(benchmarks)
         plot_history = [
-            self.get_history_plot(b, contender_run, i) for i, b in enumerate(outliers)
+            self.get_history_plot(b, contender_run, i)
+            for i, b in enumerate(biggest_changes)
         ]
 
         return self.render_template(
@@ -41,8 +46,8 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             form=form,
             resources=bokeh.resources.CDN.render(),
             plot_history=plot_history,
-            outlier_names=outlier_names,
-            outlier_ids=outlier_ids,
+            outlier_names=biggest_changes_names,
+            outlier_ids=biggest_changes_ids,
             search_value=f.request.args.get("search"),
         )
 
