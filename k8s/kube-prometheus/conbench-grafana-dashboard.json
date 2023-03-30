@@ -120,7 +120,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "rate(flask_http_request_exceptions_total[$timewindow])",
+          "expr": "rate(flask_http_request_exceptions_total{namespace=\"$namespace\"}[$timewindow])",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -213,10 +213,18 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(flask_http_request_total{}[$timewindow]))",
+          "expr": "sum(rate(flask_http_request_total{namespace=\"$namespace\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "hide": false,
+          "refId": "B"
         }
       ],
       "title": "Flask response generation rate [1/s], $timewindow mean",
@@ -403,7 +411,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (status) (rate(flask_http_request_total[$timewindow]))",
+          "expr": "sum by (status) (rate(flask_http_request_total{namespace=\"$namespace\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -497,7 +505,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_total[$timewindow]))",
+          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_total{namespace=\"$namespace\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -584,7 +592,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (le) (rate(flask_http_request_duration_seconds_bucket{method!=\"GET\"}[$timewindow]))",
+          "expr": "sum by (le) (rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\",method!=\"GET\"}[$timewindow]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "range": true,
@@ -682,7 +690,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "conbench_github_httpapi_quota_remaining",
+          "expr": "conbench_github_httpapi_quota_remaining{namespace=\"$namespace\"}",
           "legendFormat": "pid:{{pid}}, {{instance}}",
           "range": true,
           "refId": "A"
@@ -769,7 +777,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (le) (rate(flask_http_request_duration_seconds_bucket{method=\"GET\"}[$timewindow]))",
+          "expr": "sum by (le) (rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\",method=\"GET\"}[$timewindow]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "range": true,
@@ -864,7 +872,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_failed_total[$timewindow]))",
+          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_failed_total{namespace=\"$namespace\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -933,6 +941,33 @@
         "regex": "",
         "skipUrlSync": false,
         "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "staging",
+          "value": "staging"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "P1809F7CD0C75ACF3"
+        },
+        "definition": "label_values(namespace)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "namespace",
+        "multi": false,
+        "name": "namespace",
+        "options": [],
+        "query": {
+          "query": "label_values(namespace)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
       }
     ]
   },
