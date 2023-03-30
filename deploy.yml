@@ -60,15 +60,21 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: "conbench-service"
+  labels:
+    app: conbench
   annotations:
     # "ip mode is required for sticky sessions to work with Application Load
     # Balancers"
     alb.ingress.kubernetes.io/target-type: ip
-  name: "conbench-service"
 spec:
   ports:
-  - port: 80
-    targetPort: 5000
+  - name: conbench-service-port
+    port: 80
+    # The port number above: the port that will be exposed by this service.
+    # `targetPort` is documented with "Number or name of the port to access on
+    # the pods targeted by the service."
+    targetPort: gunicorn-port
     protocol: TCP
   type: NodePort
   selector:
