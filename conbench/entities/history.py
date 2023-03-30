@@ -489,7 +489,7 @@ def _add_rolling_stats_columns_to_df(
         for x in df["change_annotations"]
     ]
 
-    # NOTE(EV): If unquoted, this line will integrate manually-specified distribution
+    # NOTE(EV): If uncommented, this line will integrate manually-specified distribution
     # changes with those automatically detected. Before enabling this, we want a way for
     # users to manually remove an automatically-detected step-change.
     #
