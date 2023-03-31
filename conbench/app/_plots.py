@@ -484,6 +484,7 @@ def time_series_plot(
     # key which is extracted here by default.
     source_mean_over_time = _source(inliers, unit, formatted=formatted)
     source_outlier_mean_over_time = _source(outliers, unit, formatted=formatted)
+    source_unfiltered_mean_over_time = _source(samples, unit, formatted=formatted)
 
     source_min_over_time = bokeh.models.ColumnDataSource(
         data=dict(
@@ -629,7 +630,9 @@ def time_series_plot(
     # of a specific data source this can be decided in the callback when
     # passing a data source to the callback and then inspecting
     # `s1.selected.indices`.
-    p.js_on_event("tap", gen_js_callback_tap_detect_unselect(source_mean_over_time))
+    p.js_on_event(
+        "tap", gen_js_callback_tap_detect_unselect(source_unfiltered_mean_over_time)
+    )
 
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
@@ -643,13 +646,12 @@ def time_series_plot(
         if multisample_count:
             label += f" (n={multisample_count})"
 
-    scatter_outlier_mean_over_time = p.circle(
-        source=source_outlier_mean_over_time,
+    scatter_mean_over_time = p.circle(
+        source=source_unfiltered_mean_over_time,
         legend_label=label,
-        name="outliers",
+        name="samples",
         size=6,
-        line_color="#ccc",
-        fill_color="white",
+        color="#ccc",
         line_width=1,
         selection_color="#76bf5a",  # like bootstrap panel dff0d8, but darker
         selection_line_color="#5da540",  # same green, again darker
@@ -659,12 +661,13 @@ def time_series_plot(
         nonselection_line_alpha=1.0,
     )
 
-    scatter_mean_over_time = p.circle(
-        source=source_mean_over_time,
-        legend_label=label,
-        name="samples",
+    scatter_outlier_mean_over_time = p.circle(
+        source=source_outlier_mean_over_time,
+        legend_label=f"outlier {label}",
+        name="outliers",
         size=6,
-        color="#ccc",
+        line_color="#ccc",
+        fill_color="white",
         line_width=1,
         selection_color="#76bf5a",  # like bootstrap panel dff0d8, but darker
         selection_line_color="#5da540",  # same green, again darker
@@ -766,6 +769,7 @@ def time_series_plot(
 
     hover_renderers = [
         scatter_mean_over_time,
+        scatter_outlier_mean_over_time,
         cur_bench_mean_circle,
     ]
 
@@ -780,18 +784,6 @@ def time_series_plot(
             ],
             formatters={"$x": "datetime"},
             renderers=hover_renderers,
-        )
-    )
-
-    p.add_tools(
-        bokeh.models.HoverTool(
-            tooltips=[
-                ("commit date", "$x{%F}"),
-                ("value", "@values_with_unit"),
-                ("outlier", "True"),
-            ],
-            formatters={"$x": "datetime"},
-            renderers=[scatter_outlier_mean_over_time],
         )
     )
 
