@@ -704,7 +704,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "",
+      "description": "This shows data only for those requests to /api/*\nRequests to /api/ping are excluded.\nRedirect responses are excluded.\n",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -777,14 +777,14 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (le) (rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\",method=\"GET\"}[$timewindow]))",
+          "expr": "sum by (le) (rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\",method=\"GET\",path=~\"/api/.*\",path!~\"/api/ping.*\",status!~\"3..\"}[$timewindow]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "GET requests: Flask HTTP response generation duration, event rate [1/s]. Observation period: $timewindow",
+      "title": "/api GET requests: response generation duration, event rate [1/s]. Observation period: $timewindow",
       "type": "heatmap"
     },
     {
@@ -892,9 +892,9 @@
     "list": [
       {
         "current": {
-          "selected": true,
-          "text": "1m",
-          "value": "1m"
+          "selected": false,
+          "text": "5m",
+          "value": "5m"
         },
         "hide": 0,
         "includeAll": false,
@@ -972,7 +972,7 @@
     ]
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
