@@ -138,7 +138,9 @@ metadata:
     # (also spread across multiple k8s namespaces) can configure the _same_ ALB
     # in AWS.
     alb.ingress.kubernetes.io/group.name: cb-alb-group
-    alb.ingress.kubernetes.io/group.order: "1"
+    # allow for higher-prio config elsewhere, this can be important for path
+    # evaluation rules.
+    alb.ingress.kubernetes.io/group.order: "9"
     # Configure health check against Conbench containers
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
     alb.ingress.kubernetes.io/healthcheck-path: /api/ping/
