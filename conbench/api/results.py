@@ -1,10 +1,13 @@
+import logging
+
 import flask as f
 import flask_login
-
 from sqlalchemy import select
+
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
+from ..db import Session
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import (
     BenchmarkResult,
@@ -13,10 +16,6 @@ from ..entities.benchmark_result import (
 )
 from ..entities.case import Case
 from ..entities.history import set_z_scores
-from ..db import Session
-
-import logging
-
 
 log = logging.getLogger(__name__)
 
