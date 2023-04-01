@@ -2,10 +2,8 @@ import logging
 
 import flask as f
 import flask_login
-from sqlalchemy import select
-
-
 import orjson
+from sqlalchemy import select
 
 from ..api import rule
 from ..api._docs import spec
@@ -179,6 +177,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         # See https://github.com/conbench/conbench/issues/999 -- for rather
         # typical queries, using orjson instead of stdlib can significantly
         # cut JSON serialization time.
+
         jsonbytes: bytes = orjson.dumps(
             [r.to_dict_for_json_api() for r in benchmark_results],
             option=orjson.OPT_INDENT_2,
