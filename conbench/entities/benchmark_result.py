@@ -283,6 +283,82 @@ class BenchmarkResult(Base, EntityMixin):
 
         super().update(data)
 
+    def to_dict_for_json_api(benchmark_result):
+        # `self` is just convention :-P
+        #
+        # Note(JP): Communicating the z-score as part of the benchmark result
+        # object is a legacy approach. I think in the future we want to have a
+        # property called `analyses` (or so, conceptually); and then this is
+        # either empty, or shows details per-method. That could look like:
+        #
+        # analyses: { lookback-z-score: { z-score: 3.2, z-regression: true } }
+        try:
+            benchmark_result.z_score = float(benchmark_result.z_score)
+        except (AttributeError, ValueError, TypeError):
+            # Not all objects have this attribute set -> AttributeError.
+            # Some objects might have a non-numeric value set? Not sure -> ValueError
+            benchmark_result.z_score = None
+
+        # Note(JP): having case/tags here is interesting; this requires a JOIN
+        # query when fetching BenchmarkResult objects from the database.
+        case = benchmark_result.case
+        # Note(JP): this is interesting, here we put the `name` and `id` keys
+        # into tags. That is, the `tags` as returned may look different from
+        # the tags as injected.
+        tags = {"name": case.name}
+        tags.update(case.tags)
+        return {
+            "id": benchmark_result.id,
+            "run_id": benchmark_result.run_id,
+            "batch_id": benchmark_result.batch_id,
+            "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
+                benchmark_result.timestamp
+            ),
+            "tags": tags,
+            "optional_benchmark_info": benchmark_result.optional_benchmark_info,
+            "validation": benchmark_result.validation,
+            "change_annotations": benchmark_result.change_annotations or {},
+            "stats": {
+                "data": [to_float(x) for x in benchmark_result.data],
+                "times": [to_float(x) for x in benchmark_result.times],
+                "unit": benchmark_result.unit,
+                "time_unit": benchmark_result.time_unit,
+                "iterations": benchmark_result.iterations,
+                "min": to_float(benchmark_result.min),
+                "max": to_float(benchmark_result.max),
+                "mean": to_float(benchmark_result.mean),
+                "median": to_float(benchmark_result.median),
+                "stdev": to_float(benchmark_result.stdev),
+                "q1": to_float(benchmark_result.q1),
+                "q3": to_float(benchmark_result.q3),
+                "iqr": to_float(benchmark_result.iqr),
+                # Note(JP): it's interesting that this was added here into
+                # `stats`, that's not a nice separation between input and
+                # output.`
+                "z_score": benchmark_result.z_score,
+                "z_regression": z_regression(benchmark_result.z_score),
+                "z_improvement": z_improvement(benchmark_result.z_score),
+            },
+            "error": benchmark_result.error,
+            "links": {
+                "list": f.url_for("api.benchmarks", _external=True),
+                "self": f.url_for(
+                    "api.benchmark", benchmark_id=benchmark_result.id, _external=True
+                ),
+                "info": f.url_for(
+                    "api.info", info_id=benchmark_result.info_id, _external=True
+                ),
+                "context": f.url_for(
+                    "api.context",
+                    context_id=benchmark_result.context_id,
+                    _external=True,
+                ),
+                "run": f.url_for(
+                    "api.run", run_id=benchmark_result.run_id, _external=True
+                ),
+            },
+        }
+
 
 s.Index("benchmark_result_run_id_index", BenchmarkResult.run_id)
 s.Index("benchmark_result_case_id_index", BenchmarkResult.case_id)
@@ -407,61 +483,7 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
 
 class _Serializer(EntitySerializer):
     def _dump(self, benchmark_result):
-        z_score = float(benchmark_result.z_score) if benchmark_result.z_score else None
-        case = benchmark_result.case
-        # Note(JP): this is interesting, here we put the `name` and `id` keys
-        # into tags. That is, the `tags` as returned may look different from
-        # the tags as injected.
-        tags = {"name": case.name}
-        tags.update(case.tags)
-        return {
-            "id": benchmark_result.id,
-            "run_id": benchmark_result.run_id,
-            "batch_id": benchmark_result.batch_id,
-            "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
-                benchmark_result.timestamp
-            ),
-            "tags": tags,
-            "optional_benchmark_info": benchmark_result.optional_benchmark_info,
-            "validation": benchmark_result.validation,
-            "change_annotations": benchmark_result.change_annotations or {},
-            "stats": {
-                "data": [to_float(x) for x in benchmark_result.data],
-                "times": [to_float(x) for x in benchmark_result.times],
-                "unit": benchmark_result.unit,
-                "time_unit": benchmark_result.time_unit,
-                "iterations": benchmark_result.iterations,
-                "min": to_float(benchmark_result.min),
-                "max": to_float(benchmark_result.max),
-                "mean": to_float(benchmark_result.mean),
-                "median": to_float(benchmark_result.median),
-                "stdev": to_float(benchmark_result.stdev),
-                "q1": to_float(benchmark_result.q1),
-                "q3": to_float(benchmark_result.q3),
-                "iqr": to_float(benchmark_result.iqr),
-                "z_score": z_score,
-                "z_regression": z_regression(benchmark_result.z_score),
-                "z_improvement": z_improvement(benchmark_result.z_score),
-            },
-            "error": benchmark_result.error,
-            "links": {
-                "list": f.url_for("api.benchmarks", _external=True),
-                "self": f.url_for(
-                    "api.benchmark", benchmark_id=benchmark_result.id, _external=True
-                ),
-                "info": f.url_for(
-                    "api.info", info_id=benchmark_result.info_id, _external=True
-                ),
-                "context": f.url_for(
-                    "api.context",
-                    context_id=benchmark_result.context_id,
-                    _external=True,
-                ),
-                "run": f.url_for(
-                    "api.run", run_id=benchmark_result.run_id, _external=True
-                ),
-            },
-        }
+        return benchmark_result.to_dict_for_json_api()
 
 
 class BenchmarkResultSerializer:
