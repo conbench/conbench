@@ -176,6 +176,9 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
                 order_by=BenchmarkResult.timestamp.desc(), limit=500
             )
 
+        # See https://github.com/conbench/conbench/issues/999 -- for rather
+        # typical queries, using orjson instead of stdlib can significantly
+        # cut JSON serialization time.
         jsonbytes: bytes = orjson.dumps(
             [r.to_dict_for_json_api() for r in benchmark_results],
             option=orjson.OPT_INDENT_2,
