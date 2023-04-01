@@ -118,11 +118,19 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         """
         ---
         description:
-            Get a list of benchmark results.
+            Return a JSON array of benchmark results.
 
             On-the-fly processing with the lookback z-score change detection
             method is only performed when requesting a specific "batch" via the
             `batch_id` query parameter.
+
+            When fetching benchmark results for a specific conceptual benchmark
+            (with the `name` query parameter) then at most 10000 results
+            are returned.
+
+            Benchmark results are usually returned in order of their
+            timestamp property (user-given benchmark start time), newest first.
+
         responses:
             "200": "BenchmarkList"
             "401": "401"
@@ -144,9 +152,9 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         """
         # Note(JP): "case name" is the conceptual benchmark name. Interesting,
         # so this is like asking "give me results for this benchmark".
-        # There was no limit here, that does not make sense. Introduce an
-        # arbitrary limit for now.
         if name_arg := f.request.args.get("name"):
+            # TODO: This needs a limit, and sorting behavior.
+            # arbitrary limit for now.
             benchmark_results = BenchmarkResult.search(
                 filters=[Case.name == name_arg],
                 joins=[Case],
