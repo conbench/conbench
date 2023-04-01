@@ -116,19 +116,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
     def get(self):
         """
         ---
-        description:
-            Return a JSON array of benchmark results.
-
-            On-the-fly processing with the lookback z-score change detection
-            method is only performed when requesting a specific "batch" via the
-            `batch_id` query parameter.
-
-            When fetching benchmark results for a specific conceptual benchmark
-            (with the `name` query parameter) then at most 10000 results
-            are returned.
-
-            Benchmark results are usually returned in order of their
-            timestamp property (user-given benchmark start time), newest first.
+        description: Get a list of benchmarks.
 
         responses:
             "200": "BenchmarkList"
