@@ -176,7 +176,12 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
                 order_by=BenchmarkResult.timestamp.desc(), limit=500
             )
 
-        return self.serializer.many.dump(benchmark_results)
+        jsonbytes: bytes = orjson.dumps(
+            [r.to_dict_for_json_api() for r in benchmark_results],
+            option=orjson.OPT_INDENT_2,
+        )
+
+        return make_json_response(jsonbytes, 200)
 
     @flask_login.login_required
     def post(self) -> None:
@@ -207,6 +212,12 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         benchmark_result = BenchmarkResult.create(data)
         set_z_scores([benchmark_result])
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
+
+
+def make_json_response(data: bytes, status_code: int) -> f.Response:
+    # Note(JP): it's documented that a byte sequence can be passed in:
+    # https://flask.palletsprojects.com/en/2.2.x/api/#flask.Flask.make_response
+    return f.make_response((data, status_code, {"content-type": "application/json"}))
 
 
 benchmark_entity_view = BenchmarkEntityAPI.as_view("benchmark")
