@@ -40,9 +40,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
     def get(self, benchmark_id):
         """
         ---
-        description:
-            Get a benchmark result. This includes on-the-fly processing
-            with the lookback z-score change detection method.
+        description: Get a benchmark result.
         responses:
             "200": "BenchmarkEntity"
             "401": "401"
@@ -117,7 +115,6 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         """
         ---
         description: Get a list of benchmarks.
-
         responses:
             "200": "BenchmarkList"
             "401": "401"
