@@ -77,6 +77,11 @@ s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g;\
         s/{{FLASK_APP}}/${FLASK_APP}/g" |
     kubectl apply -f -
   kubectl rollout status deployment/conbench-deployment
+
+  # Towards https://github.com/conbench/conbench/issues/993.
+  # The current working directory, I hope, is the Conbench checkout.
+  make jsonnet-kube-prom-manifests || echo "ouch, but ignore for now"
+
 }
 
 rollback() {
