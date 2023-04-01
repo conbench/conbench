@@ -1,6 +1,7 @@
 import flask as f
 import flask_login
 
+from sqlalchemy import select
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
@@ -12,6 +13,12 @@ from ..entities.benchmark_result import (
 )
 from ..entities.case import Case
 from ..entities.history import set_z_scores
+from ..db import Session
+
+import logging
+
+
+log = logging.getLogger(__name__)
 
 
 class BenchmarkValidationMixin:
@@ -34,7 +41,9 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
     def get(self, benchmark_id):
         """
         ---
-        description: Get a benchmark result.
+        description:
+            Get a benchmark result. This includes on-the-fly processing
+            with the lookback z-score change detection method.
         responses:
             "200": "BenchmarkEntity"
             "401": "401"
@@ -108,7 +117,12 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
     def get(self):
         """
         ---
-        description: Get a list of benchmarks.
+        description:
+            Get a list of benchmark results.
+
+            On-the-fly processing with the lookback z-score change detection
+            method is only performed when requesting a specific "batch" via the
+            `batch_id` query parameter.
         responses:
             "200": "BenchmarkList"
             "401": "401"
@@ -128,34 +142,44 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         tags:
           - Benchmarks
         """
+        # Note(JP): "case name" is the conceptual benchmark name. Interesting,
+        # so this is like asking "give me results for this benchmark".
+        # There was no limit here, that does not make sense. Introduce an
+        # arbitrary limit for now.
         if name_arg := f.request.args.get("name"):
             benchmark_results = BenchmarkResult.search(
                 filters=[Case.name == name_arg],
                 joins=[Case],
             )
-            # Since there's no limit on the number of BenchmarkResults, we could take
-            # forever calculating z-scores with no caching advantage. So don't do that.
-            for benchmark_result in benchmark_results:
-                benchmark_result.z_score = None
+
         elif batch_id_arg := f.request.args.get("batch_id"):
             batch_ids = batch_id_arg.split(",")
             benchmark_results = BenchmarkResult.search(
                 filters=[BenchmarkResult.batch_id.in_(batch_ids)]
             )
+            # When asking for a specific batch_id then perform the lookback
+            # z-score method on the fly (this is costly!)
             set_z_scores(benchmark_results)
+
         elif run_id_arg := f.request.args.get("run_id"):
+            # Note(JP): https://github.com/conbench/conbench/issues/978 Given
+            # Conbench's data model we want to limit the number of run_ids that
+            # can be provided here. Maybe to 1, maybe to 5. Querying results
+            # for 100 runs (seen in practice) is for now difficult to support.
             run_ids = run_id_arg.split(",")
-            benchmark_results = BenchmarkResult.search(
-                filters=[BenchmarkResult.run_id.in_(run_ids)]
-            )
-            set_z_scores(benchmark_results)
+            if len(run_ids) > 5:
+                log.warning(
+                    "suspicious query /api/benchmarks for many run_ids -- see conbench/conbench/issues/978"
+                )
+
+            benchmark_results = Session.scalars(
+                select(BenchmarkResult).where(BenchmarkResult.run_id.in_(run_ids))
+            ).all()
+
         else:
             benchmark_results = BenchmarkResult.all(
                 order_by=BenchmarkResult.timestamp.desc(), limit=500
             )
-            # Setting z-scores takes too long for this one too.
-            for benchmark_result in benchmark_results:
-                benchmark_result.z_score = None
 
         return self.serializer.many.dump(benchmark_results)
 
@@ -182,7 +206,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         tags:
           - Benchmarks
         """
-        # Here it sould be easy to make `data` have a precise type (that mypy
+        # Here it should be easy to make `data` have a precise type (that mypy
         # can use) based on the schema that we validate against.
         data = self.validate_benchmark(self.schema.create)
         benchmark_result = BenchmarkResult.create(data)
