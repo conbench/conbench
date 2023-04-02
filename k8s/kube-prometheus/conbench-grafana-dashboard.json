@@ -120,7 +120,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "rate(flask_http_request_exceptions_total{namespace=\"$namespace\"}[$timewindow])",
+          "expr": "rate(flask_http_request_exceptions_total{namespace=~\"$namespace\"}[$timewindow])",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -213,7 +213,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(flask_http_request_total{namespace=\"$namespace\"}[$timewindow]))",
+          "expr": "sum(rate(flask_http_request_total{namespace=~\"$namespace\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -316,7 +316,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_total{namespace=\"$namespace\"}[$timewindow]))",
+          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_total{namespace=~\"$namespace\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -411,7 +411,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (status) (rate(flask_http_request_total{namespace=\"$namespace\"}[$timewindow]))",
+          "expr": "sum by (status) (rate(flask_http_request_total{namespace=~\"$namespace\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -505,7 +505,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_failed_total{namespace=\"$namespace\"}[$timewindow]))",
+          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_failed_total{namespace=~\"$namespace\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -592,7 +592,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (le) (rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\",method=\"GET\",path=\"/\",status=\"200\"}[$timewindow]))",
+          "expr": "sum by (le) (rate(flask_http_request_duration_seconds_bucket{namespace=~\"$namespace\",method=\"GET\",path=\"/\",status=\"200\"}[$timewindow]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "range": true,
@@ -775,7 +775,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (le) (rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\",method!=\"GET\",path=~\"/api/.*\"}[$timewindow]))",
+          "expr": "sum by (le) (rate(flask_http_request_duration_seconds_bucket{namespace=~\"$namespace\",method!=\"GET\",path=~\"/api/.*\"}[$timewindow]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "range": true,
@@ -873,7 +873,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "conbench_github_httpapi_quota_remaining{namespace=\"$namespace\"}",
+          "expr": "conbench_github_httpapi_quota_remaining{namespace=~\"$namespace\"}",
           "legendFormat": "pid:{{pid}}, {{instance}}",
           "range": true,
           "refId": "A"
@@ -960,7 +960,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (le) (rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\",method=\"GET\",path=~\"/api/.*\",path!~\"/api/ping.*\",status!~\"3..\"}[$timewindow]))",
+          "expr": "sum by (le) (rate(flask_http_request_duration_seconds_bucket{namespace=~\"$namespace\",method=\"GET\",path=~\"/api/.*\",path!~\"/api/ping.*\",status!~\"3..\"}[$timewindow]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "range": true,
