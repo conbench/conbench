@@ -159,7 +159,6 @@ class PingAPI(ApiEndpoint):
         if Config.TESTING:
             alembic_version = "not-set-in-testing"
         else:
-            query = text("SELECT version_num FROM alembic_version")
             try:
                 # In local deployment the PostgreSQL server logs: `ERROR:  relation
                 # "alembic_version" does not exist at character 25`. That is
@@ -167,7 +166,9 @@ class PingAPI(ApiEndpoint):
                 # Should we make it so that this table exists also for those
                 # dev/from-scratch deployments? Update(JP): pragmatic solution:
                 # do not query in TESTING mode.
-                alembic_version = list(Session.execute(query))[0]["version_num"]
+                alembic_version = list(
+                    Session.execute(text("SELECT version_num FROM alembic_version"))
+                )[0][0]
             except Exception as exc:
                 # Reduce noise: do not log full error, and also only on debug
                 # level.
