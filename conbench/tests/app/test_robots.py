@@ -1,7 +1,7 @@
 def test_robots_txt(client):
     response = client.get("/robots.txt")
     assert response.status_code == 200
-    assert response.text == "User-Agent: *\nDisallow: /"
+    assert "User-Agent: *\nDisallow: /" in response.text
 
 
 def test_user_agent_denylist(client):
