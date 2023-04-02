@@ -44,7 +44,13 @@ class Index(AppEndpoint, RunMixin):
             rd = RunForDisplay(
                 ctime_for_table=r.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"),
                 commit_message_short=short_commit_msg(r.commit.message),
-                result_count=len(r.results),
+                # Temporary band-aid; we cannot fetch all last-1000-run-related
+                # BenchmarkResult objects each time we render the landing page.
+                # See https://github.com/conbench/conbench/issues/977 However,
+                # we will find a pragmatic way to still display a per-run
+                # result count (estimate). I want to leave this code intact for
+                # now and display a placeholder.
+                result_count="",
                 run=r,
             )
 
@@ -81,7 +87,7 @@ def repo_url_to_display_name(url: str) -> str:
 class RunForDisplay:
     ctime_for_table: str
     commit_message_short: str
-    result_count: int
+    result_count: str | int
     # Expose the raw Run object (but this needs to be used with a lot of
     # care, in the template -- for VSCode supporting Python variable types and
     # auot-completion in a jinja2 template see
