@@ -464,23 +464,24 @@ def generate_synthetic_benchmark_history(commit_hashes: List[str], repo_url: str
     benchmark_name = "dummybenchname"
 
     distr_mean = 20.0
+    distr_std = 2.0
     # `lower_bound` is to simulate the real-world effect of there being a
     # theoretical optimum: the fastest benchmark duration time with all sources
     # of noise being silenced.
     lower_bound = 17.5
-    slowdown_offset = distr_mean * 0.1
-    slowdown_lin = distr_mean * 0.1
-    distribution = statistics.NormalDist(mu=20.0, sigma=2)
+    slowdown_offset = 2.0 * distr_std
+    outlier_offset = 20.0 * distr_std
+    distribution = statistics.NormalDist(mu=distr_mean, sigma=distr_std)
 
     # Collect benchmark IDs as returned by the Conbench API after submission.
     benchmark_ids = []
 
-    def sample_slowdown(s):
+    def sample_slowdown(s, offset: float):
         # "slowdown" refers to the idea that the individual number has a time
         # unit (measuring a duration) and that a certain benchmark result was
         # affected by a more or less significant slowdown effect, increasing
         # this sample's duration.
-        return s + slowdown_offset + slowdown_lin * random.random()
+        return s + offset * random.random()
 
     for idx, commit_hash in enumerate(commit_hashes, 1):
         # Get current time as tzaware datetime object in UTC timezone, and
@@ -522,13 +523,18 @@ def generate_synthetic_benchmark_history(commit_hashes: List[str], repo_url: str
         # a slowdown.
         if random.random() < 0.1:
             # Shift all samples a little higher (not by the same amount)
-            samples = [sample_slowdown(s) for s in samples]
+            samples = [sample_slowdown(s, offset=slowdown_offset) for s in samples]
+
+        # Simulate outliers with more significant slowdowns
+        if random.random() < 0.08:
+            # Shift all samples a little higher (not by the same amount)
+            samples = [sample_slowdown(s, offset=outlier_offset) for s in samples]
 
         # Simulate for any sample to have been affected by some blip-slowdown
         if random.random() < 0.02:
             # Shift a specific, random sample a little higher
             rndidx = random.randint(0, len(samples) - 1)
-            samples[rndidx] = sample_slowdown(samples[rndidx])
+            samples[rndidx] = sample_slowdown(samples[rndidx], offset=slowdown_offset)
 
         bdata["stats"] = {
             "data": [str(s) for s in samples],

@@ -30,7 +30,7 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         compare_batches_url = f.url_for("app.compare-batches", compare_ids=unknown)
         baseline, contender, plot, plot_history = None, None, None, None
         baseline_run, contender_run = None, None
-        outlier_names, outlier_urls = None, None
+        biggest_changes_names, outlier_urls = None, None
 
         if comparisons and self.type == "batch":
             ids = {c["baseline_run_id"] for c in comparisons if c["baseline_run_id"]}
@@ -70,14 +70,18 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
                 return self.redirect("app.index")
             for benchmark in benchmarks:
                 augment(benchmark)
-            outliers, outlier_ids, outlier_names = self.get_outliers(benchmarks)
+            (
+                biggest_changes,
+                biggest_changes_ids,
+                biggest_changes_names,
+            ) = self.get_biggest_changes(benchmarks)
             outlier_urls = [
                 comparisons_by_id.get(x, {}).get("compare_benchmarks_url", "")
-                for x in outlier_ids
+                for x in biggest_changes_ids
             ]
             plot_history = [
                 self.get_history_plot(b, contender_run, i)
-                for i, b in enumerate(outliers)
+                for i, b in enumerate(biggest_changes)
             ]
 
         return self.render_template(
@@ -99,7 +103,7 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             contender_run=contender_run,
             compare_runs_url=compare_runs_url,
             compare_batches_url=compare_batches_url,
-            outlier_names=outlier_names,
+            outlier_names=biggest_changes_names,
             outlier_urls=outlier_urls,
             search_value=f.request.args.get("search"),
             tags_fields=all_keys(baseline, contender, "tags"),

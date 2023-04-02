@@ -644,6 +644,7 @@
                                     "unit": "s",
                                     "zscorestats": {
                                         "begins_distribution_change": False,
+                                        "is_outlier": False,
                                         "residual": 0.0,
                                         "rolling_mean": 0.036369,
                                         "rolling_mean_excluding_this_commit": 0.036369,

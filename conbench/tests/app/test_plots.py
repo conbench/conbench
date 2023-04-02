@@ -28,6 +28,7 @@ def legacy_dict_to_hs(d: dict) -> HistorySample:
             rolling_mean=d["distribution_mean"],
             residual=0.0,  # not provided in legacy struct
             rolling_stddev=d["distribution_stdev"],
+            is_outlier=False,  # not provided in legacy struct
         ),
     )
 
