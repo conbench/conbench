@@ -42,7 +42,7 @@ def create_application(config):
     app = f.Flask(__name__)
     app.config.from_object(config)
 
-    _init_application(app)
+    _init_flask_application(app)
 
     # Re-configure logging using user-given configuration details.
     log.debug("re-configure logging")
@@ -80,12 +80,13 @@ def create_application(config):
     return app
 
 
-def _init_application(application):
+def _init_flask_application(app):
+    import flask
     import flask_swagger_ui
     import werkzeug.exceptions
 
     from .api import api
-    from .app import app
+    from .app import app as blueprint_app
     from .config import Config
     from .db import configure_engine, create_all
 
@@ -95,14 +96,15 @@ def _init_application(application):
     # work), and can then remove this extension.
     from .extensions import bootstrap, login_manager
 
-    bootstrap.init_app(application)
-    login_manager.init_app(application)
+    bootstrap.init_app(app)
+    login_manager.init_app(app)
+
     api_docs = flask_swagger_ui.get_swaggerui_blueprint(
         "/api/docs",
         "/api/docs.json",
         config={"app_name": Config.APPLICATION_NAME},
     )
-    configure_engine(application.config["SQLALCHEMY_DATABASE_URI"])
+    configure_engine(app.config["SQLALCHEMY_DATABASE_URI"])
 
     # Do not create all tables when running alembic migrations in
     # production (CREATE_ALL_TABLES=false) using k8s migration job
@@ -110,27 +112,27 @@ def _init_application(application):
         log.debug("Config.CREATE_ALL_TABLES appears to be set, call create_all()")
         create_all()
 
-    application.register_blueprint(app, url_prefix="/")
-    application.register_blueprint(api, url_prefix="/api")
-    application.register_blueprint(api_docs, url_prefix="/api/docs")
-    application.register_error_handler(
-        werkzeug.exceptions.HTTPException, _json_http_errors
-    )
-    _init_api_docs(application)
+    app.register_blueprint(blueprint_app, url_prefix="/")
+    app.register_blueprint(api, url_prefix="/api")
+    app.register_blueprint(api_docs, url_prefix="/api/docs")
+    app.register_error_handler(werkzeug.exceptions.HTTPException, _json_http_errors)
+    _init_api_docs(app)
 
     def _dated_url_for(endpoint, **values):
         import flask as f
 
-        # add time to static assets to force cache invalidation
+        # add time to static assets to force browser/proxy cache invalidation
         if endpoint == "static":
             filename = values.get("filename", None)
             if filename:
-                file_path = os.path.join(application.root_path, endpoint, filename)
+                file_path = os.path.join(app.root_path, endpoint, filename)
                 values["q"] = int(os.stat(file_path).st_mtime)
         return f.url_for(endpoint, **values)
 
-    @application.context_processor
+    @app.context_processor
     def override_url_for():
+        # https://flask.palletsprojects.com/en/2.2.x/templating/#context-processors
+        # Note(JP): this monkey-patches the url_for method with a fancy one
         return dict(url_for=_dated_url_for)
 
 
