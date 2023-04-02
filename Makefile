@@ -284,16 +284,19 @@ set-build-info:
 # has all dependencies baked in). If MUTATE_JSONNET_FILE_FOR_MINIKUBE is set:
 # do modifications for CI and local dev on minikube. Modify JSONNET file. Maybe
 # it's chaotic to do sed-based templating on top of JSONNET, we can maybe do
-# that better in the future based on JSONNET external variables?
-# Note: the default jsonnetfile.json file is the outcome of `jb init`.
+# that better in the future based on JSONNET external variables? Note: the
+# default jsonnetfile.json file is the outcome of `jb init`. Note2: in BK the
+# --user $$(id -u):$$(id -g) didn't help to achieve useful file permissions in
+# the host filesystem. Resort to doing a brute-force `chmod -R 777 *'` in the
+# container, while writing into a dir on the host.
 .PHONY: jsonnet-kube-prom-manifests
 jsonnet-kube-prom-manifests:
 #	rm -rf _kpbuild
 	mkdir -p _kpbuild && cd _kpbuild  && mkdir -p cb-kube-prometheus
 	cd _kpbuild/cb-kube-prometheus && echo '{"version": 1, "dependencies": [], "legacyImports": true}' > jsonnetfile.json
 	cd _kpbuild/cb-kube-prometheus && \
-		time docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
-			jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@v0.12.0
+		time docker run --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
+			sh -c 'jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@v0.12.0 && chmod -R 777 *'
 	cd _kpbuild/cb-kube-prometheus && /bin/ls -ahl
 	cp k8s/kube-prometheus/conbench-flavor.jsonnet _kpbuild/cb-kube-prometheus
 	cp k8s/kube-prometheus/conbench-grafana-dashboard.json _kpbuild/cb-kube-prometheus
@@ -323,6 +326,6 @@ jsonnet-kube-prom-manifests:
 	cd _kpbuild/cb-kube-prometheus && \
 		wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.12.0/build.sh -O build.sh
 	cd _kpbuild/cb-kube-prometheus && \
-		time docker run --user $$(id -u):$$(id -g) --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
-			bash build.sh conbench-flavor.jsonnet
+		time docker run  --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
+			sh -c 'bash build.sh conbench-flavor.jsonnet && chmod -R 777 *'
 	echo "compiled manifest files: _kpbuild/cb-kube-prometheus/manifests"
