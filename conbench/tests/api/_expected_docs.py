@@ -102,7 +102,7 @@
                             },
                             "tags": {
                                 "compression": "snappy",
-                                "cpu_count": 2,
+                                "cpu_count": "2",
                                 "dataset": "nyctaxi_sample",
                                 "file_type": "parquet",
                                 "input_type": "arrow",
@@ -175,7 +175,7 @@
                                 },
                                 "tags": {
                                     "compression": "snappy",
-                                    "cpu_count": 2,
+                                    "cpu_count": "2",
                                     "dataset": "nyctaxi_sample",
                                     "file_type": "parquet",
                                     "input_type": "arrow",
@@ -248,7 +248,7 @@
                             },
                             "tags": {
                                 "compression": "snappy",
-                                "cpu_count": 2,
+                                "cpu_count": "2",
                                 "dataset": "nyctaxi_sample",
                                 "file_type": "parquet",
                                 "input_type": "arrow",
@@ -405,7 +405,7 @@
                             "regression": False,
                             "tags": {
                                 "compression": "snappy",
-                                "cpu_count": 2,
+                                "cpu_count": "2",
                                 "dataset": "nyctaxi_sample",
                                 "file_type": "parquet",
                                 "input_type": "arrow",
@@ -449,7 +449,7 @@
                                 "regression": False,
                                 "tags": {
                                     "compression": "snappy",
-                                    "cpu_count": 2,
+                                    "cpu_count": "2",
                                     "dataset": "nyctaxi_sample",
                                     "file_type": "parquet",
                                     "input_type": "arrow",
@@ -485,7 +485,7 @@
                                 "regression": False,
                                 "tags": {
                                     "compression": "snappy",
-                                    "cpu_count": 2,
+                                    "cpu_count": "2",
                                     "dataset": "nyctaxi_sample",
                                     "file_type": "parquet",
                                     "input_type": "arrow",
@@ -1024,7 +1024,7 @@
                     },
                     "stats": {"$ref": "#/components/schemas/BenchmarkResultStats"},
                     "tags": {
-                        "description": 'The set of key/value pairs that defines a benchmark case permutation. Top-level keys must be strings. Allowed value types are ... (to be specified).  The special key "name" must be provided with a string value: it indicates the name of the conceptual benchmark that was performed for obtaining the result at hand. All case permutations of a conceptual benchmark by definition have this name in common.  We advise that each unique case (as defined by the complete set of key/value pairs) indeed corresponds to unique benchmarking behavior. That is, typically, these key/value pairs directly correspond to input parameters to your benchmarking method.  Example: a conceptual benchmark with name "foo-write-file" might have meaningful case permutations involving tag names such as `compression_method` (values: `gzip`, `lzma`, ...), `file_format` (values: `csv`, `hdf5`, ...), `dataset_name` (values: `foo`, `bar`, ...). For each conceptual benchmark, it is valid to have one or many case permutations (if you supply no tags, there is necessarily a single mutation with the special property that it has no tags).',
+                        "description": 'The set of key/value pairs that represents a specific benchmark case permutation (a specific set of parameters).  Keys must be non-empty strings. Values should be non-empty strings.  The special key "name" must be provided with a string value: it indicates the name of the conceptual benchmark that was performed for obtaining the result at hand. All case permutations of a conceptual benchmark by definition have this name in common.  Example: a conceptual benchmark with name "foo-write-file" might have meaningful case permutations involving tag names such as `compression-method` (values: `gzip`, `lzma`, ...), `file-format` (values: `csv`, `hdf5`, ...), `dataset-name` (values: `foo`, `bar`, ...).  For each conceptual benchmark, it is valid to have one or many case permutations (if you supply only "name", then there is necessarily a single mutation with the special property that it has no other tags set).  We advise that each unique case (as defined by the complete set of key/value pairs) indeed corresponds to unique benchmarking behavior. That is, typically, all key/value pairs other than "name" directly correspond to input parameters to the same conceptual benchmark. Note however that Conbench benchmark result tags are not meant to store type information. Benchmark authors are advised to find a custom convention for mapping benchmark input parameters to tags.  Currently, primitive value types (int, float, boolean) are accepted, but stored as strings. Keys with empty string values or null values are ignored. In the future, Conbench might disallow all non-string values.',
                         "type": "object",
                     },
                     "timestamp": {

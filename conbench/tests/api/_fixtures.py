@@ -108,7 +108,7 @@ VALID_PAYLOAD = {
     },
     "tags": {
         "compression": "snappy",
-        "cpu_count": 2,
+        "cpu_count": "2",
         "dataset": "nyctaxi_sample",
         "file_type": "parquet",
         "input_type": "arrow",

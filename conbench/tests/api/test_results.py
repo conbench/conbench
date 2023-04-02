@@ -945,6 +945,57 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
             # This here just quickly checks that there is a failure at all,
             # that 'name' is required.
 
+    @pytest.mark.parametrize(
+        "tagdict",
+        [
+            # empty string key
+            {"name": "foo", "": "foo"},
+            # dict type value
+            {"name": "foo", "foo": {"foo": "bar"}},
+            # array type value
+            {"name": "foo", "foo": ["foo"]},
+        ],
+    )
+    def test_create_benchmark_bad_tags(self, client, tagdict):
+        self.authenticate(client)
+        payload = copy.deepcopy(_fixtures.VALID_PAYLOAD)
+        payload["tags"] = tagdict.copy()
+        resp = client.post(self.url, json=payload)
+        assert resp.status_code == 400
+        assert (
+            "tags: bad value type for key" in resp.text
+            or "tags: zero-length string as key is not allowed" in resp.text
+        )
+
+    # Context: see https://github.com/conbench/conbench/pull/948
+    # we might want to apply more strictness in the future
+    @pytest.mark.parametrize(
+        "tagdict",
+        [
+            # Boolean value is currently allowed
+            {"name": "foo", "key1": False},
+            # Int value is currently allowed
+            {"name": "foo", "key2": 1},
+            # Float value is currently allowed
+            {"name": "foo", "key3": 1.2},
+            # non-empty string value is allowed
+            {"name": "foo", "key4": "aa"},
+            # empty string value is currently allowed (accepted, but dropped)
+            {"name": "foo", "key5": ""},
+            # None value is currently allowed (accepted, but dropped)
+            {"name": "foo", "key6": None},
+        ],
+    )
+    def test_create_benchmark_good_tags(self, client, tagdict):
+        self.authenticate(client)
+        payload = copy.deepcopy(_fixtures.VALID_PAYLOAD)
+        payload["tags"] = tagdict.copy()
+        resp = client.post(self.url, json=payload)
+        assert resp.status_code == 201
+        assert resp.json["tags"]
+        assert "key5" not in resp.json["tags"]
+        assert "key6" not in resp.json["tags"]
+
     def test_create_benchmark_context_empty(self, client):
         """
         It is an error to provide no context object (see test above). Whether

@@ -186,7 +186,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         return make_json_response(jsonbytes, 200)
 
     @flask_login.login_required
-    def post(self) -> None:
+    def post(self) -> f.Response:
         """
         ---
         description:
@@ -211,8 +211,67 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         # Here it should be easy to make `data` have a precise type (that mypy
         # can use) based on the schema that we validate against.
         data = self.validate_benchmark(self.schema.create)
+
+        # Note(JP): this next block inspects and mutates `tags`, with the goal
+        # that all keys are non-empty strings, and all values are non-empty
+        # strings. See
+        # https://github.com/conbench/conbench/pull/948#discussion_r1149090197
+        # for background. Summary of current desired behavior: primitive value
+        # types are accepted (string, boolean, float, int; non-string values
+        # are converted to string before DB insertion). Other value types
+        # (array -> list, object -> dict) lead to request rejection.
+        tags = data["tags"]
+        # Iterate over a copy of key/value pairs.
+        for key, value in list(tags.items()):
+            # In JSON, a key is always of type string. We rely on this, codify
+            # this invariant.
+            assert isinstance(key, str)
+
+            # An empty string is a valid JSON key. Do not allow this.
+            if len(key) == 0:
+                return resp400("tags: zero-length string as key is not allowed")
+
+            # For now, be liberal in what we accept. Do not consider empty
+            # string or None values for the case permutation (do not store
+            # those in the DB, drop these key/value pairs). This is documented
+            # in the API spec. Maybe in the future we want to reject such
+            # requests with a Bad Request response.
+            if value == "" or value is None:
+                log.warning("drop tag key/value pair: `%s`, `%s`", key, value)
+                # Remove current key/value pair, proceed with next key. This
+                # mutates the dictionary `data["tags"]`; for keeping this a
+                # sane operation the loop iterates over a copy of key/value
+                # pairs.
+                del tags[key]
+                continue
+
+            # Note(JP): this code path should go away after we adjust our
+            # client tooling to not send numeric values anymore.
+            if isinstance(value, (int, float, bool)):
+                # I think we first want to adjust some client tooling before
+                # enabling this log line:
+                # log.warning("stringify case parameter value: `%s`, `%s`", key, value)
+                # Replace value, proceed with next key.
+                tags[key] = str(value)
+                continue
+
+            # This should be logically equivalent with the value being either
+            # of type dict or of type list.
+            if not isinstance(value, str):
+                # Emit Bad Request response..
+                return resp400(
+                    "tags: bad value type for key `{key}`, JSON object and array is not allowed`"
+                )
+
+        # At this point, assume that data["tags"] is a flat dictionary with
+        # keys being non-empty strings, and values being non-empty strings.
+
+        # Note(JP): in the future this will also raise further validation
+        # errors that are to be exposed via a 400 response to the HTTP client
         benchmark_result = BenchmarkResult.create(data)
+
         set_z_scores([benchmark_result])
+
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 
 
@@ -220,6 +279,19 @@ def make_json_response(data: bytes, status_code: int) -> f.Response:
     # Note(JP): it's documented that a byte sequence can be passed in:
     # https://flask.palletsprojects.com/en/2.2.x/api/#flask.Flask.make_response
     return f.make_response((data, status_code, {"content-type": "application/json"}))
+
+
+def resp400(description: str) -> f.Response:
+    """
+    Utility for canonical generation of 400 Bad Request response with an
+    error description. Define elsewhere once used elsewhere.
+    """
+    return f.make_response(
+        # This puts a JSON body into the response with a JSON object with one
+        # key, the description
+        f.jsonify(description=description),
+        400,
+    )
 
 
 benchmark_entity_view = BenchmarkEntityAPI.as_view("benchmark")
