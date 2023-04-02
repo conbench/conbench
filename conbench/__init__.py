@@ -135,6 +135,24 @@ def _init_flask_application(app):
         # Note(JP): this monkey-patches the url_for method with a fancy one
         return dict(url_for=_dated_url_for)
 
+    @app.before_request
+    def deny_common_bots():
+        """
+        Terminate request processing by emitting a 403 response if the user
+        agent string is part of a denylist.
+
+        https://github.com/conbench/conbench/issues/1012
+        https://flask.palletsprojects.com/en/2.2.x/api/#flask.Flask.before_request
+        Note on case sensitivity: https://stackoverflow.com/a/57562733/145400
+        """
+        denylist = ["dataforseobot", "dotbot", "petalbot"]
+        ua = flask.request.headers.get("User-Agent")
+        if ua:  # not None, not empty string
+            haystack = ua.lower()
+            for needle in denylist:
+                if needle in haystack:
+                    return flask.make_response(("unexpected user agent", 403))
+
 
 def _init_api_docs(application):
     from .api._docs import spec
