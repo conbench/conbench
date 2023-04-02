@@ -10,8 +10,12 @@ set -o xtrace
 # debug info. We use a specific minikube profile name on local dev machines,
 # but cannot yet do so on GHA.
 
-# Default to one directory up, for local workflows. CI sets
-# CONBENCH_REPO_ROOT_DIR for tighter control.
+# Special note: this script does not make an assumption about the current
+# working directory. It can be/should be runnable in any directory. It however
+# needs to know where the conbench repo's root directory is. Default to one
+# directory up, for local workflows (so that this can be run in a "build dir" in
+# the repo's root, e.g. conbench-repo-root/_build). CI is expected to set
+# CONBENCH_REPO_ROOT_DIR for precise control.
 CONBENCH_REPO_ROOT_DIR="${CONBENCH_REPO_ROOT_DIR:=..}"
 echo "CONBENCH_REPO_ROOT_DIR: $CONBENCH_REPO_ROOT_DIR"
 
@@ -98,45 +102,14 @@ export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="ci-conbench-on-$(hostname -s)"
 # compilation mutate the main document to make adjustments for the minikube
 # environment (smaller resource footprint, anonymous access to Grafana UI).
 export MUTATE_JSONNET_FILE_FOR_MINIKUBE=true
-( cd "${CONBENCH_REPO_ROOT_DIR}" && make jsonnet-kube-prom-manifests )
 
-# The kube-prometheus stack's custom JSONNET stack is configured to allow for
-# monitoring the `staging` namespace. I've done this to resemble a "prod"
-# environment where Conbench is deployed in a k8s namespace called `staging`.
-# With that setup, the namespace needs to exist before deploying
-# kube-prometheus.
-# kudos to https://stackoverflow.com/a/65411733/145400
-kubectl create namespace staging --dry-run=client -o yaml | kubectl apply -f -
-
-# Set up the kube-prometheus stack. This follows the customization instructions
-# at https://github.com/prometheus-operator/kube-prometheus/blob/v0.12.0/docs/customizing.md
-pushd "${CONBENCH_REPO_ROOT_DIR}"/_kpbuild/cb-kube-prometheus/
-    kubectl apply --server-side -f manifests/setup
-    kubectl wait \
-        --for condition=Established \
-        --all CustomResourceDefinition \
-        --namespace=monitoring
-    kubectl apply -f manifests/
-popd
-
-if [ -z "${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH:=}" ]; then
-    # Not set, or set to emtpy string.
-    # Set up invalid username/password for the Prometheus remote_write config.
-    # remote_write will fail, and that is OK.
-    _rw_passw_filepath="_prom_remote_write_password"
-    echo "invalid-password" > $_rw_passw_filepath
-else
-    echo "${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH} is set, use that password."
-    _rw_passw_filepath="${PROM_REMOTE_WRITE_PASSWORD_FILE_PATH}"
-fi
-_rw_username="${PROM_REMOTE_WRITE_USERNAME:-invaliduser}"
-
-echo "prom remote write username: $_rw_username"
-echo "prom remote write password filepath: $_rw_passw_filepath"
-kubectl create secret generic kubepromsecret \
-    --from-literal=username="${_rw_username}" \
-    --from-file=password="${_rw_passw_filepath}" \
-    -n monitoring
+(
+    cd "${CONBENCH_REPO_ROOT_DIR}" && \
+    make jsonnet-kube-prom-manifests && \
+    bash k8s/kube-prometheus/deploy-or-update.sh && \
+    # Do this twice, to check for idempotency of this script.
+    bash k8s/kube-prometheus/deploy-or-update.sh
+)
 
 # On minikube with cpus=2 and memory=2000 (which is the github actions resource
 # footprint by default) it's certainly possible to run everything we need for
