@@ -64,9 +64,11 @@ else
 fi
 _rw_username="${PROM_REMOTE_WRITE_USERNAME:-invaliduser}"
 
+# do not error out when secret already exists, replace with new value
+# https://stackoverflow.com/a/45881259/145400
 echo "'pusher prom' remote_write username: $_rw_username"
 echo "'pusher prom' remote_write password filepath: $_rw_passw_filepath"
 kubectl create secret generic kubepromsecret \
     --from-literal=username="${_rw_username}" \
     --from-file=password="${_rw_passw_filepath}" \
-    -n monitoring
+    -n monitoring --save-config --dry-run=client -o yaml | kubectl apply -f -
