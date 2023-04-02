@@ -72,12 +72,12 @@ class Run(Base, EntityMixin):
     hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
     hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
 
-    # Follow ttps://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#one-to-many.
+    # Follow https://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#one-to-many.
     # There is a one-to-many relationship between Run (one) and BenchmarkResult
     # (0, 1, many).
     # Ignorantly importing BenchmarkResult results in circular import err.
     results: Mapped[List["BenchmarkResult"]] = relationship(  # type: ignore # noqa
-        back_populates="run"
+        back_populates="run", lazy="select"
     )
 
     @staticmethod

@@ -42,13 +42,18 @@ class BenchmarkResult(Base, EntityMixin):
     # (0, 1, many). Result is child. Run is parent. Child has column with
     # foreign key, pointing to parent.
     run_id: Mapped[str] = NotNull(s.Text, s.ForeignKey("run.id"))
-    # Note that `immediate` means that " items should be loaded as the parents
-    # are loaded, using a separate SELECT statement, or identity map fetch for
-    # simple many-to-one references." Do this until we see that this is a perf
-    # problem. Use case: count results per run (that use case can be solved by
-    # adding a cache/counter into the DB, also see
-    # https://stackoverflow.com/q/45407402/145400)
-    run: Mapped[Run] = relationship("Run", lazy="immediate", back_populates="results")
+
+    # Between Run (one) and Result (many) there is a one-to-many relationship
+    # that we want to tell SQLAlchemy af ew things about via the following
+    # `relationship()` call. Note that `lazy="select"` is a sane default here.
+    # It means that another SELECT statement is issued upon attribute access
+    # time. `select=immediate` would mean that items are to be loaded from the
+    # DBas the parent is loaded, using a separate SELECT statement _per child_
+    # (which did bite us, in particular for those Run entities associated with
+    # O(1000) Result entities, i.e. hundreds of thousands of SELECT queries
+    # were emitted for building the landing page. A joined query can always be
+    # performed on demand.
+    run: Mapped[Run] = relationship("Run", lazy="select", back_populates="results")
 
     # These can be emtpy lists. An item in the list is of type float, which
     # includes `math.nan` as valid value.
