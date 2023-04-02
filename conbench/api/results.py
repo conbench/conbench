@@ -18,7 +18,6 @@ from ..entities.benchmark_result import (
 from ..entities.case import Case
 from ..entities.history import set_z_scores
 
-
 log = logging.getLogger(__name__)
 
 
