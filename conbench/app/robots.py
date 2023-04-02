@@ -3,9 +3,12 @@ import flask as f
 from ..app import rule
 from ..app._endpoint import AppEndpoint
 
+# Discourage search engines from crawling a Conbench instance.
+# We might want to make this configurable.
+# Context: https://github.com/conbench/conbench/issues/447
 text = """
 User-Agent: *
-Allow: /
+Disallow: /
 """
 
 
