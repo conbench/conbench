@@ -82,6 +82,14 @@ def decorate_flask_app_with_metrics(app) -> None:
 
     This mutates `app` in-place.
     """
+    # If the environment tells us something unique about us when we are
+    # one replica of N replicas, then inject the uniqueness too all emitted
+    # metrics -- see https://github.com/conbench/conbench/issues/1008
+    default_labels = {}
+    epn = os.environ.get("ENV_POD_NAME")
+    if epn:
+        default_labels["envpodname"] = epn
+
     # Use `GunicornPrometheusMetrics` when spawning a separate HTTP server for
     # the metrics scrape endpoint. This needs PROMETHEUS_MULTIPROC_DIR to be
     # set to a path to a directory.
@@ -98,7 +106,10 @@ def decorate_flask_app_with_metrics(app) -> None:
         # defines the upper inclusive bound for the corresponding histogram
         # bucket. Note that there is an implicit last/upper end bucket here
         # catching all observations up to +inf.
-        buckets=(0.05, 0.1, 0.2, 0.5, 1.0, 3.0, 6.0, 10.0, 15.0, 20.0, 30.0, 50.0),
+        # Update(JP): removed two buckets compared to initial stab, to work on
+        # cardinatlity.
+        buckets=(0.05, 0.1, 0.2, 0.5, 1.0, 5.0, 10.0, 20.0, 40.0, 70.0),
+        default_labels=default_labels,
     )
 
 

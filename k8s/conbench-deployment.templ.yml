@@ -68,6 +68,20 @@ spec:
         ports:
           - name: gunicorn-port
             containerPort: 5000
+        # Inject environment information so that each Conbench container can
+        # tell something unique about itself. Motivated by
+        # https://github.com/conbench/conbench/issues/1008
+        # This k8s API is documented here:
+        # https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/#the-downward-api
+        env:
+          - name: ENV_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: ENV_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
         envFrom:
           - configMapRef:
               name: conbench-config
