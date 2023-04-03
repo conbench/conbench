@@ -41,7 +41,12 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
     def get(self, benchmark_id):
         """
         ---
-        description: Get a benchmark result.
+        description: |
+            Get a specific benchmark result.
+
+            This includes on-the-fly analysis with the lookback z-score
+            change detection method, and the corresponding result is emitted
+            as part of the benchmark result object.
         responses:
             "200": "BenchmarkEntity"
             "401": "401"
@@ -115,7 +120,26 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
     def get(self):
         """
         ---
-        description: Get a list of benchmarks.
+        description: |
+            Return a JSON array of benchmark results.
+
+            Note that this endpoint does not provide on-the-fly change
+            detection analysis (lookback z-score method).
+
+            Behavior at the time of writing (subject to change):
+
+            Benchmark results are usually returned in order of their
+            timestamp property (user-given benchmark start time), newest first.
+
+            When no argument is provided, the last 1000 benchmark results
+            are emitted.
+
+            The `run_id` argument can be provided to obtain benchmark
+            results for one or more specific runs. This attempts to fetch
+            all associated benchmark results from the database and tries
+            to return them all in a single response; use that with caution:
+            keep the number of run_ids low or equal to, unless you know better.
+
         responses:
             "200": "BenchmarkList"
             "401": "401"
@@ -139,7 +163,6 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         # so this is like asking "give me results for this benchmark".
         if name_arg := f.request.args.get("name"):
             # TODO: This needs a limit, and sorting behavior.
-            # arbitrary limit for now.
             benchmark_results = BenchmarkResult.search(
                 filters=[Case.name == name_arg],
                 joins=[Case],
@@ -150,9 +173,6 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             benchmark_results = BenchmarkResult.search(
                 filters=[BenchmarkResult.batch_id.in_(batch_ids)]
             )
-            # When asking for a specific batch_id then perform the lookback
-            # z-score method on the fly (this is costly!)
-            set_z_scores(benchmark_results)
 
         elif run_id_arg := f.request.args.get("run_id"):
             # Note(JP): https://github.com/conbench/conbench/issues/978 Given
@@ -171,7 +191,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
 
         else:
             benchmark_results = BenchmarkResult.all(
-                order_by=BenchmarkResult.timestamp.desc(), limit=500
+                order_by=BenchmarkResult.timestamp.desc(), limit=1000
             )
 
         # See https://github.com/conbench/conbench/issues/999 -- for rather
