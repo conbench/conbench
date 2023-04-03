@@ -39,7 +39,7 @@ spec:
       containers:
       - name: conbench
         # Injected by the Buildkite pipeline.
-        image: "{{CONBENCH_CONTAINER_IMAGE_SPEC}}"
+        image: "{{CONBENCH_WEBAPP_IMAGE_SPEC}}"
         # Note(JP): these are the invocation parameters as they have
         # organically grown -- I think I'd love to a model where we do not use
         # process-workers, but single-process multi-thread. As of the time of

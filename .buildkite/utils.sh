@@ -50,26 +50,36 @@ deploy_secrets_and_config() {
 
 run_migrations() {
   set -x
+
+  export IMAGE_SPEC="${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}"
+
   aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
   kubectl config set-context --current --namespace=${NAMESPACE}
-  cat migration-job.yml | sed "\
-        s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g;\
-        s/{{DOCKER_REGISTRY}}/${DOCKER_REGISTRY}/g;\
-        s/{{FLASK_APP}}/${FLASK_APP}/g" |
-    kubectl delete --ignore-not-found=true -f -
-  cat migration-job.yml | sed "\
-        s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g;\
-        s/{{DOCKER_REGISTRY}}/${DOCKER_REGISTRY}/g;\
-        s/{{FLASK_APP}}/${FLASK_APP}/g" |
-    kubectl apply -f -
+
+  sed "s|{{CONBENCH_WEBAPP_IMAGE_SPEC}}|${IMAGE_SPEC}|g" \
+    < k8s/conbench-database-migration.templ.yml \
+    > _jobspec
+
+  # Delete job first -- why is that important?
+  kubectl delete --ignore-not-found=true -f _jobspec
+  kubectl apply -f _jobspec
+
+  # Note(JP): we give this 24 hours of time. Why? For those heavy migration
+  # jobs that really take so long? Interesting.
   kubectl wait --for=condition=complete --timeout=86400s job/conbench-migration
-  (($(kubectl get job conbench-migration -o jsonpath={.status.succeeded}) == "1")) && exit 0 || exit 1
+
+  # Can't we do this kind of err handling in the `wait` command?
+  (($(kubectl get job conbench-migration -o jsonpath={.status.succeeded}) == "1")) \
+    && exit 0 || exit 1
 }
 
 deploy() {
   set -x
 
-  export CONBENCH_CONTAINER_IMAGE_SPEC="${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}"
+  # Note: it seems like FLASK_APP is always just "conbench". Maybe we should
+  # hard-code this to "conbench-webapp", indicating that this is the
+  # web application's container image.
+  export IMAGE_SPEC="${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}"
 
   # Note(JP): This runs as part of a BK pipeline and uses AWS credentials that
   # have the `--group system:masters --username admin` privilege, see:
@@ -81,11 +91,9 @@ deploy() {
   # NAMESPACE is something like "default" or "staging"
   kubectl config set-context --current --namespace=${NAMESPACE}
 
-
-
   # (Re-)apply deployment. BUILDKITE_COMMIT is the Conbench repo commit.
   cat k8s/conbench-deployment.templ.yml | \
-    sed "s/{{CONBENCH_CONTAINER_IMAGE_SPEC}}/${CONBENCH_CONTAINER_IMAGE_SPEC}/g" | kubectl apply -f -
+    sed "s|{{CONBENCH_WEBAPP_IMAGE_SPEC}}|${IMAGE_SPEC}|g" | kubectl apply -f -
 
   # (Re-)apply ALB ingress config. Note(JP): if this results in re-creation of
   # the ALB then we need to out-of-band update an A record in Route53, because
@@ -116,4 +124,5 @@ rollback() {
   kubectl rollout status deployment/conbench-deployment
 }
 
+# why is this here? hm :).
 "$@"
