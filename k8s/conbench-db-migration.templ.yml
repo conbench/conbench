@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: conbench-migration
-        image: "{{DOCKER_REGISTRY}}/{{FLASK_APP}}:{{BUILDKITE_COMMIT}}"
+        image: "{{CONBENCH_WEBAPP_IMAGE_SPEC}}"
         command:
         - /bin/sh
         - -c
@@ -33,6 +33,7 @@ spec:
           requests:
             # Pretend that we don't need resources, so that node placement
             # succeeds even on small-resource k8s clusters.
-            memory: '10Mi'
+            memory: '1Mi'
             cpu: 1m
       restartPolicy: Never
+
