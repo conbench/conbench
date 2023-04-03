@@ -1,0 +1,96 @@
+# This is used for 'production' deployments in Buildkite pipelines.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conbench-deployment
+spec:
+  selector:
+    matchLabels:
+      app: conbench
+  replicas: 2
+  # Note(JP): give this 15 min instead of 10; the rollout does not need to be
+  # super fast and sometimes we want to manually fix a problem while the deploy
+  # pipeline keeps waiting -- "The number of seconds you want to wait for your
+  # Deployment to progress before the system reports back that the Deployment
+  # has failed progressing - surfaced as a condition with type: Progressing,
+  # status: "False" with reason: ProgressDeadlineExceeded in the status of the
+  # resource" Defaults to 600 (10 min).
+  progressDeadlineSeconds: 900
+  # Note(JP): `minReadySeconds`: Defaults to 0: The Pod will be considered available as
+  # soon as it is "ready". In the absence of rigorous ready-checks, wait to
+  # increase likelihood for equilibration (for DB connectivity, and other init
+  # phase special cases). This is also important for Service-based request
+  # routing (we don't want to receive requests too early). But yes, ideally
+  # this is tackled with really good readiness checks.
+  minReadySeconds: 15 strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # Note(JP): the number of pods that can be created above the desired
+      # amount of pods during an update. That is, with `replicas: 2` and
+      # `maxSurge: 1`, we can have at most three pods at the same time.
+      maxSurge: 1
+      # Make it so that during the update at least one pod is ready.
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: conbench
+    spec:
+      containers:
+      - name: conbench
+        # Injected by the Buildkite pipeline.
+        image: "{{CONBENCH_CONTAINER_IMAGE_SPEC}}"
+        # Note(JP): these are the invocation parameters as they have
+        # organically grown -- I think I'd love to a model where we do not use
+        # process-workers, but single-process multi-thread. As of the time of
+        # writing, the machine that this runs on has only ~1 CPU core to offer
+        # anyway (per replica, assuming 2 replicas). I like the idea of running
+        # one process per container, and then being able to use a simple
+        # heap-based cache with canonical Python data structures (e.g., dict)
+        # between the threads in that process. We can add CPU resources to the
+        # system by allowing for more containers (replicas). Having one process
+        # per container also simplifies log output, removes the preload topic
+        # and prom metrics coordination topic from the picture.
+        command: [
+          "gunicorn", "-b", "0.0.0.0:5000",
+          "-w", "5",
+          "-t", "120",
+          "conbench:application",
+          "--access-logfile=-",
+          # Add L specifier to access log, to log request processing duration. Also see
+          # https://github.com/conbench/conbench/issues/810
+          "--access-logformat", '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" (%(L)s s)',
+          "--error-logfile=-",
+          "--preload"
+          ]
+        imagePullPolicy: "Always"
+        ports:
+          - name: gunicorn-port
+            containerPort: 5000
+        envFrom:
+          - configMapRef:
+              name: conbench-config
+          - secretRef:
+              name: conbench-secret
+        resources:
+          requests:
+            # Note(JP): these are so small to allow for deployment rollover
+            # on a too-busy k8s cluster (resource contention).
+            memory: '500Mi'
+            cpu: 0.2
+        # TODO(JP): define liveness probe (for k8s to restart upon e.g.
+        # deadlock). Readiness is really about when to serve traffic.
+        readinessProbe:
+          failureThreshold: 1
+          httpGet:
+            # Note(JP): this issues a database query, consider that.
+            path: /api/ping/
+            port: 5000
+            scheme: HTTP
+          # TODO: make this smaller
+          initialDelaySeconds: 60
+          # Make this bigger
+          periodSeconds: 10
+          successThreshold: 2
+          timeoutSeconds: 20
+      terminationGracePeriodSeconds: 60

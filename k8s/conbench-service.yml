@@ -1,0 +1,27 @@
+# This is used in a BK pipeline, in prod
+apiVersion: v1
+kind: Service
+metadata:
+  name: "conbench-service"
+  labels:
+    app: conbench
+  annotations:
+    # `kubectl describe ingress -n staging` shows `FailedDeployModel`
+    #  With error detail "Failed deploy model due to InvalidParameter: 1
+    # validation error(s) found: minimum field value of 1,
+    # CreateTargetGroupInput.Port." Searched. Found
+    # https://github.com/kubernetes-sigs/aws-load-balancer-controller/issues/1695#issuecomment-850411558
+    # which suggests as solution the `target-type: ip` below.
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ports:
+  - name: conbench-service-port
+    port: 80
+    # The port number above: the port that will be exposed by this service.
+    # `targetPort` is documented with "Number or name of the port to access on
+    # the pods targeted by the service."
+    targetPort: gunicorn-port
+    protocol: TCP
+  type: NodePort
+  selector:
+    app: "conbench"
