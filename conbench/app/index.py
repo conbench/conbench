@@ -1,8 +1,10 @@
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
+from typing import Optional
 from urllib.parse import urlparse
 
+import flask
 from sqlalchemy import select
 
 from ..app import rule
@@ -13,6 +15,18 @@ from ..db import Session
 from ..entities.run import Run
 
 log = logging.getLogger(__name__)
+
+
+def _cloud_lb_health_check_shortcut() -> Optional[flask.Response]:
+    # Pragmatic short-cut for
+    # https://github.com/conbench/conbench/issues/1007
+    ua = flask.request.headers.get("User-Agent")
+    if ua:
+        if "HealthChecker" in ua:
+            return flask.make_response(("thanks, we're good", 200))
+
+    # Explicit None.
+    return None
 
 
 class Index(AppEndpoint, RunMixin):
@@ -28,6 +42,10 @@ class Index(AppEndpoint, RunMixin):
 
     @authorize_or_terminate
     def get(self):
+        resp = _cloud_lb_health_check_shortcut()
+        if resp is not None:
+            return resp
+
         # Following
         # https://docs.sqlalchemy.org/en/20/orm/queryguide/select.html#selecting-orm-entities
         runs = Session.scalars(
