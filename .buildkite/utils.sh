@@ -68,6 +68,12 @@ run_migrations() {
   # jobs that really take so long? Interesting.
   kubectl wait --for=condition=complete --timeout=86400s job/conbench-migration
 
+  # Get job's stdout/err. This parses this line of text to get to the pod name:
+  #
+  # Normal  SuccessfulCreate  10m    job-controller  Created pod: conbench-migration-wpcp5
+  export JOB_POD_NAME="$(kubectl describe job conbench-migration | grep SuccessfulCreate | tail -n1 | awk '{print $7}')"
+  kubectl logs --all-containers "${JOB_POD_NAME}"
+
   # Can't we do this kind of err handling in the `wait` command?
   (($(kubectl get job conbench-migration -o jsonpath={.status.succeeded}) == "1")) \
     && exit 0 || exit 1

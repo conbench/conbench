@@ -22,7 +22,8 @@ spec:
   # phase special cases). This is also important for Service-based request
   # routing (we don't want to receive requests too early). But yes, ideally
   # this is tackled with really good readiness checks.
-  minReadySeconds: 15 strategy:
+  minReadySeconds: 15
+  strategy:
     type: RollingUpdate
     rollingUpdate:
       # Note(JP): the number of pods that can be created above the desired
