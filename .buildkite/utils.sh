@@ -85,7 +85,7 @@ deploy() {
 
   # (Re-)apply deployment. BUILDKITE_COMMIT is the Conbench repo commit.
   cat k8s/conbench-deployment.templ.yml | \
-    sed "s/{{CONBENCH_CONTAINER_IMAGE_SPEC}}/${CONBENCH_CONTAINER_IMAGE_SPEC}/g" | kubectl apply -f -
+    sed "s|{{CONBENCH_WEBAPP_IMAGE_SPEC}}|${IMAGE_SPEC}|g" | kubectl apply -f -
 
   # (Re-)apply ALB ingress config. Note(JP): if this results in re-creation of
   # the ALB then we need to out-of-band update an A record in Route53, because
@@ -116,4 +116,5 @@ rollback() {
   kubectl rollout status deployment/conbench-deployment
 }
 
+# why is this here? hm :).
 "$@"
