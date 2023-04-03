@@ -1341,7 +1341,7 @@
         },
         "/api/benchmarks/": {
             "get": {
-                "description": "Get a list of benchmarks.",
+                "description": "Return a JSON array of benchmark results.\n\nNote that this endpoint does not provide on-the-fly change\ndetection analysis (lookback z-score method).\n\nBehavior at the time of writing (subject to change):\n\nBenchmark results are usually returned in order of their\ntimestamp property (user-given benchmark start time), newest first.\n\nWhen no argument is provided, the last 1000 benchmark results\nare emitted.\n\nThe `run_id` argument can be provided to obtain benchmark\nresults for one or more specific runs. This attempts to fetch\nall associated benchmark results from the database and tries\nto return them all in a single response; use that with caution:\nkeep the number of run_ids low or equal to, unless you know better.\n",
                 "parameters": [
                     {"in": "query", "name": "name", "schema": {"type": "string"}},
                     {"in": "query", "name": "batch_id", "schema": {"type": "string"}},
@@ -1391,7 +1391,7 @@
                 "tags": ["Benchmarks"],
             },
             "get": {
-                "description": "Get a benchmark result.",
+                "description": "Get a specific benchmark result.\n\nThis includes on-the-fly analysis with the lookback z-score\nchange detection method, and the corresponding result is emitted\nas part of the benchmark result object.\n",
                 "parameters": [
                     {
                         "in": "path",
