@@ -120,6 +120,21 @@ deploy() {
   # The current working directory, I hope, is the Conbench checkout.
   make jsonnet-kube-prom-manifests || echo "ouch, but ignore for now"
 
+  # Note(JP): let's do a bit of magic. In the special case of working against
+  # vd-2 (specific EKS cluster in a specific AWS account, powering two specific
+  # Conbench deployments): install the conbench-flavored kube-prometheus stack,
+  # or update it. Updates may be as tiny as rolling out Grafana dashboard
+  # changes. I really do hope that this works (that it is OK to run this even N
+  # times per day against the same k8s cluster), because this will be fantastic
+  # in terms of developer productivity. The comments in
+  # k8s/kube-prometheus/deploy-or-update.sh explain relevant concepts. Notably,
+  # `k8s/kube-prometheus/deploy-or-update.sh` itself is tested in Conbench repo
+  # CI as part of the minikube flow.
+  set +x
+  if [[ "$EKS_CLUSTER" == "vd-2" ]]; then
+    echo "vd-2: run k8s/kube-prometheus/deploy-or-update.sh, and pray that this does not impede the robustness of our deploy pipeline"
+    bash k8s/kube-prometheus/deploy-or-update.sh
+  fi
 }
 
 rollback() {
