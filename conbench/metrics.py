@@ -96,6 +96,11 @@ def decorate_flask_app_with_metrics(app) -> None:
     _inspect_prom_multiproc_dir()
     GunicornInternalPrometheusMetrics(
         app=app,
+        # See https://github.com/conbench/conbench/issues/1006
+        # We will have to maybe iterate on those endpoint names,
+        # and maybe, just maybe, add _some_ URL paths back when we understand
+        # that we need them.
+        group_by="endpoint",
         # Set bucket boundaries (unit: seconds) for tracking the distribution
         # of HTTP request processing durations (Prometheus metric of type
         # histogram). The default histogram buckets are not so useful for
