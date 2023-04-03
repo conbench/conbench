@@ -133,6 +133,7 @@ deploy() {
   set +x
   if [[ "$EKS_CLUSTER" == "vd-2" ]]; then
     echo "vd-2: run k8s/kube-prometheus/deploy-or-update.sh, and pray that this does not impede the robustness of our deploy pipeline"
+    export CONBENCH_REPO_ROOT_DIR="$(pwd)"
     bash k8s/kube-prometheus/deploy-or-update.sh
   fi
 }
