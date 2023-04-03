@@ -68,14 +68,38 @@ run_migrations() {
 
 deploy() {
   set -x
+
+  export CONBENCH_CONTAINER_IMAGE_SPEC="${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}"
+
+  # Note(JP): This runs as part of a BK pipeline and uses AWS credentials that
+  # have the `--group system:masters --username admin` privilege, see:
+  # infra/blob/0a21e9a2eee1ea158d2a2a5d216407741feb3931/conbench/app/stacks/eks/main.tf#L80
+  # EKS_CLUSTER is currently "vd-2" for cb&cb-staging.
   aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
+
+  # All of the following kubectl commands operate on a definite namespace.
+  # NAMESPACE is something like "default" or "staging"
   kubectl config set-context --current --namespace=${NAMESPACE}
-  cat deploy.yml | sed "\
-s/{{BUILDKITE_COMMIT}}/${BUILDKITE_COMMIT}/g;\
-        s/{{CERTIFICATE_ARN}}/${CERTIFICATE_ARN}/g;\
-        s/{{DOCKER_REGISTRY}}/${DOCKER_REGISTRY}/g;\
-        s/{{FLASK_APP}}/${FLASK_APP}/g" |
-    kubectl apply -f -
+
+
+
+  # (Re-)apply deployment. BUILDKITE_COMMIT is the Conbench repo commit.
+  cat k8s/conbench-deployment.templ.yml | \
+    sed "s/{{CONBENCH_CONTAINER_IMAGE_SPEC}}/${CONBENCH_CONTAINER_IMAGE_SPEC}/g" | kubectl apply -f -
+
+  # (Re-)apply ALB ingress config. Note(JP): if this results in re-creation of
+  # the ALB then we need to out-of-band update an A record in Route53, because
+  # we do not yet use k8s externalDNS features.
+  cat k8s/conbench-cloud-ingress.templ.yml | \
+    sed "s/{{CERTIFICATE_ARN}}/${CERTIFICATE_ARN}/g" | kubectl apply -f -
+
+  kubectl apply -f k8s/conbench-service.yml
+  kubectl apply -f k8s/conbench-service-monitor.yml
+
+  # Note(JP); this might be nonobvious, but `rollout status` waits for
+  # progressDeadlineSeconds (see deployment manifast) before it exits non-zero.
+  # See
+  # https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#failed-deployment
   kubectl rollout status deployment/conbench-deployment
 
   # Towards https://github.com/conbench/conbench/issues/993.
