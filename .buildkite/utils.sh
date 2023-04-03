@@ -57,7 +57,7 @@ run_migrations() {
   kubectl config set-context --current --namespace=${NAMESPACE}
 
   sed "s|{{CONBENCH_WEBAPP_IMAGE_SPEC}}|${IMAGE_SPEC}|g" \
-    < k8s/conbench-database-migration.templ.yml \
+    < k8s/conbench-db-migration.templ.yml \
     > _jobspec
 
   # Delete job first -- why is that important?
