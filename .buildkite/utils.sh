@@ -76,7 +76,10 @@ run_migrations() {
 deploy() {
   set -x
 
-  export CONBENCH_CONTAINER_IMAGE_SPEC="${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}"
+  # Note: it seems like FLASK_APP is always just "conbench". Maybe we should
+  # hard-code this to "conbench-webapp", indicating that this is the
+  # web application's container image.
+  export IMAGE_SPEC="${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}"
 
   # Note(JP): This runs as part of a BK pipeline and uses AWS credentials that
   # have the `--group system:masters --username admin` privilege, see:
@@ -87,8 +90,6 @@ deploy() {
   # All of the following kubectl commands operate on a definite namespace.
   # NAMESPACE is something like "default" or "staging"
   kubectl config set-context --current --namespace=${NAMESPACE}
-
-
 
   # (Re-)apply deployment. BUILDKITE_COMMIT is the Conbench repo commit.
   cat k8s/conbench-deployment.templ.yml | \
