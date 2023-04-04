@@ -246,7 +246,8 @@ class Conbench(Connection, MixinPython, MixinR):
             output,
         ) = self._init(kwargs)
 
-        tags["name"] = name
+        if (tags.get("name") is None) or (tags["name"] == ""):
+            tags["name"] = name
 
         batch_id = options.get("batch_id")
         if not batch_id:
