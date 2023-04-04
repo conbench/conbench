@@ -16,7 +16,6 @@ from ..entities.benchmark_result import (
     BenchmarkResultSerializer,
 )
 from ..entities.case import Case
-from ..entities.history import set_z_scores
 
 log = logging.getLogger(__name__)
 
@@ -44,9 +43,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
         description: |
             Get a specific benchmark result.
 
-            This includes on-the-fly analysis with the lookback z-score
-            change detection method, and the corresponding result is emitted
-            as part of the benchmark result object.
+            The "z_score" key in the response is deprecated and only returns null.
         responses:
             "200": "BenchmarkEntity"
             "401": "401"
@@ -60,7 +57,6 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
           - Benchmarks
         """
         benchmark_result = self._get(benchmark_id)
-        set_z_scores([benchmark_result])
         return self.serializer.one.dump(benchmark_result)
 
     @flask_login.login_required
@@ -87,7 +83,6 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
         benchmark_result = self._get(benchmark_id)
         data = self.validate_benchmark(self.schema.update)
         benchmark_result.update(data)
-        set_z_scores([benchmark_result])
         return self.serializer.one.dump(benchmark_result)
 
     @flask_login.login_required
@@ -289,8 +284,6 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         # Note(JP): in the future this will also raise further validation
         # errors that are to be exposed via a 400 response to the HTTP client
         benchmark_result = BenchmarkResult.create(data)
-
-        set_z_scores([benchmark_result])
 
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 

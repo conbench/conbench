@@ -1391,7 +1391,7 @@
                 "tags": ["Benchmarks"],
             },
             "get": {
-                "description": "Get a specific benchmark result.\n\nThis includes on-the-fly analysis with the lookback z-score\nchange detection method, and the corresponding result is emitted\nas part of the benchmark result object.\n",
+                "description": 'Get a specific benchmark result.\n\nThe "z_score" key in the response is deprecated and only returns null.\n',
                 "parameters": [
                     {
                         "in": "path",
