@@ -309,7 +309,7 @@ jsonnet-kube-prom-manifests:
 		else \
 			echo "MUTATE_JSONNET_FILE_FOR_MINIKUBE set, mutate JSONNET"; \
 			sed -i.bak 's|// "auth.anonymous"|"auth.anonymous"|g' _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
-			sed -i.bak '/\/\/ <comment-used-by-ci: pvc-start>/,/\/\/ <comment-used-by-ci: pvc-end>/d' _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
+			sed -i.bak '\|// <comment-used-by-ci: pvc-start>|,\|// <comment-used-by-ci: pvc-end>|d' _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
 			cat _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
 		fi
 	@if [ -z "$${PROM_REMOTE_WRITE_ENDPOINT_URL:=}" ]; then \
