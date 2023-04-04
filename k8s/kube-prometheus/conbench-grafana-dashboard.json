@@ -46,6 +46,7 @@
             "axisColorMode": "series",
             "axisLabel": "",
             "axisPlacement": "auto",
+            "axisSoftMin": 0,
             "barAlignment": 0,
             "drawStyle": "line",
             "fillOpacity": 4,
@@ -56,7 +57,7 @@
               "viz": false
             },
             "lineInterpolation": "linear",
-            "lineWidth": 5,
+            "lineWidth": 2,
             "pointSize": 6,
             "scaleDistribution": {
               "log": 10,
@@ -389,7 +390,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 7
+        "y": 6
       },
       "id": 3,
       "options": {
@@ -425,7 +426,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "The rate of failed HTTP requests, either after retrying or upon first attempt.",
+      "description": "Based on a counter that is incremented right before attempting to make an HTTP request, i.e. this rate includes failed requests.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -449,7 +450,8 @@
             "lineWidth": 3,
             "pointSize": 5,
             "scaleDistribution": {
-              "type": "linear"
+              "log": 2,
+              "type": "symlog"
             },
             "showPoints": "auto",
             "spanNulls": false,
@@ -483,7 +485,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 13
+        "y": 7
       },
       "id": 11,
       "options": {
@@ -505,13 +507,13 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_failed_total{namespace=~\"$namespace\"}[$timewindow]))",
-          "legendFormat": "__auto",
+          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_total{namespace=~\"$namespace\"}[$timewindow]))",
+          "legendFormat": "",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "GitHub HTTP API request error rate [1/s], $timewindow mean",
+      "title": "GitHub HTTP API request rate [1/s], $timewindow mean",
       "type": "timeseries"
     },
     {
@@ -539,7 +541,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 13
       },
       "id": 13,
       "options": {
@@ -607,12 +609,11 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "The rate of GitHub HTTP API responses received with status code 403. Some of these errors may have been retried.",
+      "description": "The rate of failed HTTP requests, either after retrying or upon first attempt.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "semi-dark-red",
-            "mode": "fixed"
+            "mode": "palette-classic"
           },
           "custom": {
             "axisCenteredZero": false,
@@ -666,7 +667,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 21
+        "y": 15
       },
       "id": 12,
       "options": {
@@ -688,13 +689,13 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (instance)(rate(conbench_github_httpapi_403responses_total[$timewindow]))",
+          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_failed_total{namespace=~\"$namespace\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "GitHub HTTP API 403 error rate [1/s], $timewindow mean",
+      "title": "GitHub HTTP API request error rate [1/s], $timewindow mean",
       "type": "timeseries"
     },
     {
@@ -722,7 +723,7 @@
         "h": 11,
         "w": 12,
         "x": 12,
-        "y": 22
+        "y": 21
       },
       "id": 6,
       "options": {
@@ -775,7 +776,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method!=\"GET\",http_handler_name=~\"api/.*\"}[$timewindow]))",
+          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method!=\"GET\",http_handler_name=~\"api.*\"}[$timewindow]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "range": true,
@@ -851,12 +852,14 @@
         "h": 11,
         "w": 12,
         "x": 0,
-        "y": 29
+        "y": 31
       },
       "id": 10,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "last"
+          ],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -873,7 +876,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "conbench_github_httpapi_quota_remaining{namespace=~\"$namespace\"}",
+          "expr": "conbench_github_httpapi_quota_remaining{namespace=~\"$namespace\"} > 0",
           "legendFormat": "pid:{{pid}}, {{instance}}",
           "range": true,
           "refId": "A"
@@ -907,7 +910,7 @@
         "h": 11,
         "w": 12,
         "x": 12,
-        "y": 33
+        "y": 32
       },
       "id": 5,
       "options": {
