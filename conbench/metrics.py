@@ -18,7 +18,11 @@ https://github.com/rycus86/prometheus_flask_exporter/issues/147
 import logging
 import os
 
+import flask
+
 import prometheus_client
+
+from prometheus_flask_exporter import NO_PREFIX
 from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
 
 log = logging.getLogger(__name__)
@@ -100,7 +104,7 @@ def decorate_flask_app_with_metrics(app) -> None:
         # We will have to maybe iterate on those endpoint names,
         # and maybe, just maybe, add _some_ URL paths back when we understand
         # that we need them.
-        group_by="endpoint",
+        group_by=http_handler_name,
         # Set bucket boundaries (unit: seconds) for tracking the distribution
         # of HTTP request processing durations (Prometheus metric of type
         # histogram). The default histogram buckets are not so useful for
@@ -115,7 +119,40 @@ def decorate_flask_app_with_metrics(app) -> None:
         # cardinatlity.
         buckets=(0.05, 0.1, 0.2, 0.5, 1.0, 5.0, 10.0, 20.0, 40.0, 70.0),
         default_labels=default_labels,
+        defaults_prefix=NO_PREFIX,  # Remove the default "flask" prefix
     )
+
+
+def http_handler_name(r: flask.Request) -> str:
+    """
+    Return string that is then used as matric label _value_ for representing
+    the specific API endpoint / route handler that the currently incoming HTTP
+    Request (as represented by the object `r` ) triggers.
+
+    `r.endpoint` as built by Flask for example is
+
+        - "api.runs"
+        - "app.login"
+        - "api.ping"
+        - "static"
+        - ...
+
+    https://flask.palletsprojects.com/en/2.2.x/api/?highlight=endpoint#flask.Request.endpoint
+
+    We define this function here for two good reasons:
+        - to make this behavior explicit.
+        - to allow for manually setting the _name_ of the metric label -- by
+          default it would be "endpoint" which is sadly in conflict with
+          another label already set by other parts of our metrics machinery.
+          Use a completely different, generic name that can be re-used
+          meaningfully when using something other than Flask. I like
+          http_handler_name, and that's how we call this function.
+
+    Here is the code that looks up the name of _this_ callable:
+    https://github.com/rycus86/prometheus_flask_exporter/blob/413d73b629d40833fa6d85b6141dece87f102573/prometheus_flask_exporter/__init__.py#L402
+
+    See https://github.com/conbench/conbench/issues/1006 for reference.
+    """
 
 
 def _inspect_prom_multiproc_dir():
