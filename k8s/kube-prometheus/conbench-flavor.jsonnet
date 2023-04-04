@@ -61,6 +61,36 @@ local kp =
     prometheus+: {
       prometheus+: {
         spec+: {
+          // https://github.com/prometheus-operator/kube-prometheus/blob/117ce2f8b51621ccb480e8bdd712ae21e92b744e/examples/prometheus-pvc.jsonnet
+          // vd-2 in mind. Almost ephemeral setup. But we want to retain
+          // data across kube-prometheus updates. Use short retention and tiny
+          // persistent volumes.
+          retention: '6d',
+          // <comment-used-by-ci: pvc-start>
+          storage: {
+            volumeClaimTemplate: {
+              apiVersion: 'v1',
+              kind: 'PersistentVolumeClaim',
+              spec: {
+                accessModes: ['ReadWriteOnce'],
+                // 6 days vs 9Gi? I have no idea, but sounds roughly reasonable
+                // given the not-too-big-data-rate we expect. But we have to
+                // see, and measure: easy, there is a dashboard for that. Note:
+                // think of this as an advanced buffer. This is an ephemeral
+                // system that should write data out to a more long-term
+                // storage-optimized system.
+                resources: { requests: { storage: '9Gi' } },
+                // storageClassName: 'gp2'. aws-ebs-csi-driver method was a bit
+                // mad. EBS-backed "local storage" to on vd-2 nodes however
+                // works. Manually exposed ext4-formatted partitions to k8s
+                // with a rather beautiful setup using the Local Persistent
+                // Volume CSI Driver, offering a storage class which is for
+                // now called 'fundisk-elb-backed' because fun und such.
+                storageClassName: 'fundisk-elb-backed',
+              },
+            },
+          },
+          // <comment-used-by-ci: pvc-end>
           // Required for de-duplicating (and preventing double billing) on
           // the receivind end (Grafana Cloud) when sending from more than one
           // Prometheus replica.
