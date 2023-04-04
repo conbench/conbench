@@ -288,10 +288,10 @@ set-build-info:
 # default jsonnetfile.json file is the outcome of `jb init`. Note2: in BK the
 # --user $$(id -u):$$(id -g) didn't help to achieve useful file permissions in
 # the host filesystem. Resort to doing a brute-force `chmod -R 777 *'` in the
-# container, while writing into a dir on the host. kudos to kudos to "5.
-# Selective Deletion of Certain Lines / 68. Print all lines in the file except
-# a section between two regular expressions." using a "range match" (not the
-# substitute command!).
+# container, while writing into a dir on the host. kudos to
+# https://catonmat.net/sed-one-liners-explained-part-two "5. Selective Deletion
+# of Certain Lines / 68. Print all lines in the file except a section between
+# two regular expressions." using a pattern range / range match.
 .PHONY: jsonnet-kube-prom-manifests
 jsonnet-kube-prom-manifests:
 	mkdir -p _kpbuild && cd _kpbuild  && mkdir -p cb-kube-prometheus
