@@ -151,9 +151,10 @@ def http_handler_name(r: flask.Request) -> str:
 
     See https://github.com/conbench/conbench/issues/1006 for reference.
     """
-    ep: str = r.endpoint
+    ep = r.endpoint
     if ep is None:
         log.warning("should not happen: `endpoint` is none in http_handler_name()")
+        return "none"
 
     return ep
 
