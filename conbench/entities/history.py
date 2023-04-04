@@ -4,8 +4,7 @@ import datetime
 import decimal
 import logging
 import math
-from collections import defaultdict
-from typing import DefaultDict, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -255,58 +254,63 @@ def get_history_for_cchr(
     return samples
 
 
-def set_z_scores(benchmark_results: List[BenchmarkResult]):
+def set_z_scores(benchmark_results: List[BenchmarkResult], baseline_commit: Commit):
     """Set the "z_score" attribute on each given BenchmarkResult, comparing it to the
-    distribution of BenchmarkResults that share the same case/context/hardware/repo,
-    ending with the most recent BenchmarkResult in the given BenchmarkResult's commit
-    ancestry on the default branch. (We choose a commit from the default branch as the
-    end commit, because we probably don't want "bad" commits early on in a PR to set
-    artificially low z-scores later in the PR.)
+    distribution of BenchmarkResults that share the same case/context/hardware/repo, in
+    the git ancestry of the baseline_commit (inclusive).
+
+    The given benchmark_results must all have the same run_id.
 
     This function does not affect the database whatsoever. It only populates an
     attribute on the given python objects. This is typically called right before
     returning a jsonify-ed response from the API, so the "z_score" attribute shouldn't
     already be set, but if it is already set, it will be silently overwritten.
 
-    Should not raise anything. If we can't find a z-score for some reason, the z_score
-    attribute will be None on that BenchmarkResult.
+    Should not raise anything, except a ValueError if there are mixed run_ids provided.
+    If we can't find a z-score for some reason, the z_score attribute will be None on
+    that BenchmarkResult.
     """
-    # For most invocations of this function, there are very few unique run_ids among the
-    # benchmark_results. Sort them by run_id and run aoptimized query for each group.
-    sorted_by_run_id: DefaultDict[str, List[BenchmarkResult]] = defaultdict(list)
+    run_ids = set(result.run_id for result in benchmark_results)
+    if len(run_ids) != 1:
+        raise ValueError(f"Encountered mixed run_ids in set_z_scores(): {run_ids}")
+    run_id = run_ids.pop()
+
+    if len(benchmark_results) == 1:
+        # performance optimization
+        case_id = benchmark_results[0].case_id
+        context_id = benchmark_results[0].context_id
+    else:
+        case_id = None
+        context_id = None
+
+    distribution_stats = _query_distribution_stats_by_run_id(
+        run_id=run_id,
+        baseline_commit=baseline_commit,
+        case_id=case_id,
+        context_id=context_id,
+    )
+
     for benchmark_result in benchmark_results:
-        sorted_by_run_id[benchmark_result.run_id].append(benchmark_result)
-
-    for run_id, result_group in sorted_by_run_id.items():
-        if len(result_group) == 1:
-            # performance optimization
-            case_id = result_group[0].case_id
-            context_id = result_group[0].context_id
-        else:
-            case_id = None
-            context_id = None
-
-        distribution_stats = _query_distribution_stats_by_run_id(
-            run_id, case_id=case_id, context_id=context_id
+        dist_mean, dist_stddev = distribution_stats.get(
+            (benchmark_result.case_id, benchmark_result.context_id), (None, None)
         )
-
-        for benchmark_result in result_group:
-            dist_mean, dist_stddev = distribution_stats.get(
-                (benchmark_result.case_id, benchmark_result.context_id), (None, None)
-            )
-            benchmark_result.z_score = _calculate_z_score(
-                data_point=_to_float(benchmark_result.mean),
-                unit=benchmark_result.unit,
-                dist_mean=_to_float(dist_mean),
-                dist_stddev=_to_float(dist_stddev),
-            )
+        benchmark_result.z_score = _calculate_z_score(
+            data_point=_to_float(benchmark_result.mean),
+            unit=benchmark_result.unit,
+            dist_mean=_to_float(dist_mean),
+            dist_stddev=_to_float(dist_stddev),
+        )
 
 
 def _query_distribution_stats_by_run_id(
-    run_id: str, case_id: Optional[str], context_id: Optional[str]
+    run_id: str,
+    baseline_commit: Commit,
+    case_id: Optional[str],
+    context_id: Optional[str],
 ) -> Dict[Tuple[str, str], Tuple[Optional[float], Optional[float]]]:
-    """Given a run_id, return stats of the distribution of BenchmarkResults in the run's
-    commit ancestry, by case/context. Returns a dict that looks like
+    """Given a run id and baseline commit, return stats of the distribution of
+    BenchmarkResults matching the run's hardware, in the baseline_commit's ancestry, by
+    case/context. Returns a dict that looks like
 
     ``{(case_id, context_id): (dist_mean, dist_stddev)}``
 
@@ -319,24 +323,20 @@ def _query_distribution_stats_by_run_id(
     run = Run.get(run_id)
 
     try:
-        commits = run.commit.commit_ancestry_query.subquery()
+        commits = baseline_commit.commit_ancestry_query.subquery()
     except CantFindAncestorCommitsError as e:
         log.debug(f"Couldn't _query_distribution_stats_by_run_id() because {e}")
         return {}
 
-    # Get the last DISTRIBUTION_COMMITS ancestor commits on the default branch
+    # Get the last DISTRIBUTION_COMMITS ancestor commits of the baseline commit
     commits = (
         Session.query(commits)
-        .filter(
-            commits.c.on_default_branch.is_(True),
-            commits.c.ancestor_id != run.commit_id,
-        )
         .order_by(commits.c.commit_order.desc())
         .limit(Config.DISTRIBUTION_COMMITS)
         .subquery()
     )
 
-    # Find all historic commits in the distribution to analyze
+    # Find all historic results in the distribution to analyze
     history = (
         Session.query(
             BenchmarkResult.case_id,
@@ -345,7 +345,7 @@ def _query_distribution_stats_by_run_id(
             BenchmarkResult.mean,
             BenchmarkResult.timestamp.label("result_timestamp"),
             Hardware.hash,
-            s.sql.expression.literal(run.commit.repository).label("repository"),
+            s.sql.expression.literal(baseline_commit.repository).label("repository"),
             commits.c.ancestor_timestamp.label("timestamp"),
         )
         .select_from(BenchmarkResult)

@@ -322,6 +322,7 @@ class TestCompareBatchesGet(_asserts.GetEnforcer):
 
     def _create(self, verbose=False, run_id=None, batch_id=None):
         batch_id = batch_id if batch_id is not None else _uuid()
+        run_id = run_id if run_id is not None else _uuid()
         benchmark_result_1 = _fixtures.benchmark_result(
             name="read",
             run_id=run_id,

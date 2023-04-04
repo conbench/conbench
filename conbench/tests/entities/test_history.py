@@ -1,37 +1,106 @@
 from datetime import datetime
+from typing import Callable
 
 import numpy as np
 import pandas as pd
+import pytest
+import sqlalchemy as s
 
+from ...db import Session
 from ...entities.commit import Commit
 from ...entities.history import (
     _detect_shifts_with_trimmed_estimators,
-    _to_float,
     get_history_for_cchr,
     set_z_scores,
 )
 from ...tests.api import _fixtures
 
+
+# Some different strategies for choosing a baseline commit to test set_z_scores()
+def _get_closest_defaultbranch_ancestor(commit: Commit) -> Commit:
+    """If on the default branch, use the parent as baseline. Else use the fork point."""
+    fork_point_commit = commit.get_fork_point_commit()
+    if commit == fork_point_commit:
+        return commit.get_parent_commit()
+    else:
+        return fork_point_commit
+
+
+def _get_parent(commit: Commit) -> Commit:
+    """Always use the parent as baseline."""
+    return commit.get_parent_commit()
+
+
+def _get_head_of_default(commit: Commit) -> Commit:
+    """Use the head of the default branch as baseline."""
+    return Session.scalars(
+        s.select(Commit)
+        .filter(Commit.branch == "default", Commit.repository == commit.repository)
+        .order_by(s.desc(Commit.timestamp))
+        .limit(1)
+    ).first()
+
+
 # These correspond to the benchmark_results of _fixtures.gen_fake_data() without modification
-EXPECTED_Z_SCORES = [
-    None,
-    None,
-    28.477042698148946,
-    0.7071067811865444,
-    2.1213203435596393,
-    13.435028842544385,
-    1.0928748862317967,
-    -2.1857497724635935,
-    -4.486538431438488,
-    -4.946696853470237,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    -5.98205200884773,
-]
+EXPECTED_Z_SCORES = {
+    "closest_defaultbranch_ancestor": [
+        None,
+        None,
+        28.477042698148946,
+        0.7071067811865444,
+        2.1213203435596393,
+        13.435028842544385,
+        1.0928748862317967,
+        -2.1857497724635935,
+        -4.486538431438488,
+        -4.946696853470237,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        -5.98205200884773,
+    ],
+    "parent": [
+        None,
+        None,
+        28.477042698148946,
+        0.7071067811865444,
+        2.1213203435596393,
+        13.435028842544385,
+        1.0928748862317967,
+        -2.8246140882627757,
+        -4.486538431438488,
+        -4.946696853470237,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        -5.98205200884773,
+    ],
+    "head_of_default": [
+        0.6624922329803099,
+        0.6082883205453794,
+        1.7268570607654594,
+        0.6624922329803099,
+        0.7166961454152404,
+        1.150327444894684,
+        1.150327444894684,
+        0.12045310863100521,
+        -0.602265543155026,
+        -0.7468094903278821,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        -1.0720329649374651,
+    ],
+}
 
 
 def test_get_history():
@@ -60,8 +129,8 @@ def test_get_history():
     ), "you should test all benchmark_results"
 
     # each input BenchmarkResult will give a subset of all BenchmarkResults as its history
-    for benchmark_result, expected_benchmark_results_ixs, expected_z_score in zip(
-        benchmark_results, all_expected_benchmark_results_ixs, EXPECTED_Z_SCORES
+    for benchmark_result, expected_benchmark_results_ixs in zip(
+        benchmark_results, all_expected_benchmark_results_ixs
     ):
         expected_benchmark_result_ids = {
             benchmark_results[ix].id for ix in expected_benchmark_results_ixs
@@ -79,33 +148,39 @@ def test_get_history():
 
         assert expected_benchmark_result_ids == actual_benchmark_result_ids
 
-        if benchmark_result.id in actual_benchmark_result_ids:
-            # we're on the default branch so the distribution stats should be available
-            dist_mean, dist_stddev = [
-                (
-                    _to_float(row.zscorestats.rolling_mean),
-                    _to_float(row.zscorestats.rolling_stddev),
-                )
-                for row in actual_history
-                if row.benchmark_result_id == benchmark_result.id
-            ][0]
-            if dist_stddev:
-                assert (
-                    dist_mean - _to_float(benchmark_result.mean)
-                ) / dist_stddev == expected_z_score
-            else:
-                assert expected_z_score is None
 
-
-def test_append_z_scores():
+@pytest.mark.parametrize(
+    ["strategy_name", "get_baseline_func"],
+    [
+        ("closest_defaultbranch_ancestor", _get_closest_defaultbranch_ancestor),
+        ("parent", _get_parent),
+        ("head_of_default", _get_head_of_default),
+    ],
+)
+def test_set_z_scores(
+    strategy_name: str, get_baseline_func: Callable[[Commit], Commit]
+):
     _, benchmark_results = _fixtures.gen_fake_data()
     assert len(benchmark_results) == len(
-        EXPECTED_Z_SCORES
+        EXPECTED_Z_SCORES[strategy_name]
     ), "you should test all benchmark_results"
 
-    set_z_scores(benchmark_results)
-    for benchmark_result, expected_z_score in zip(benchmark_results, EXPECTED_Z_SCORES):
+    for benchmark_result in benchmark_results:
+        baseline_commit = get_baseline_func(benchmark_result.run.commit)
+        if baseline_commit:
+            set_z_scores(
+                benchmark_results=[benchmark_result], baseline_commit=baseline_commit
+            )
+        else:
+            benchmark_result.z_score = None
+
+    for benchmark_result, expected_z_score in zip(
+        benchmark_results, EXPECTED_Z_SCORES[strategy_name]
+    ):
         assert benchmark_result.z_score == expected_z_score
+
+    if strategy_name == "head_of_default":
+        return
 
     # Post another result and ensure the previous z-scores didn't change
     new_commit = Commit.create(
@@ -127,17 +202,37 @@ def test_append_z_scores():
             name=benchmark_results[0].case.name,
         )
     )
-    expected_z_scores = EXPECTED_Z_SCORES + [-52.99938107760085]
+    expected_z_scores = EXPECTED_Z_SCORES[strategy_name] + [-52.99938107760085]
 
-    set_z_scores(benchmark_results)
+    for benchmark_result in benchmark_results:
+        baseline_commit = get_baseline_func(benchmark_result.run.commit)
+        if baseline_commit:
+            set_z_scores(
+                benchmark_results=[benchmark_result], baseline_commit=baseline_commit
+            )
+        else:
+            benchmark_result.z_score = None
+
     for benchmark_result, expected_z_score in zip(benchmark_results, expected_z_scores):
         assert benchmark_result.z_score == expected_z_score
 
 
-def test_append_z_scores_with_distribution_change():
-    expected_z_scores = EXPECTED_Z_SCORES.copy()
+@pytest.mark.parametrize(
+    ["strategy_name", "get_baseline_func"],
+    [
+        ("closest_defaultbranch_ancestor", _get_closest_defaultbranch_ancestor),
+        ("parent", _get_parent),
+    ],
+)
+def test_set_z_scores_with_distribution_change(
+    strategy_name: str, get_baseline_func: Callable[[Commit], Commit]
+):
+    expected_z_scores = EXPECTED_Z_SCORES[strategy_name].copy()
     expected_z_scores[6] = 0.0
-    expected_z_scores[7] = -32.90896534380864
+    if strategy_name == "closest_defaultbranch_ancestor":
+        expected_z_scores[7] = -32.90896534380864
+    else:
+        expected_z_scores[7] = -3.846766028925861
     expected_z_scores[8] = -56.00297033789095
     expected_z_scores[9] = -60.62177826491064
     expected_z_scores[16] = -71.0140831103239
@@ -155,7 +250,15 @@ def test_append_z_scores_with_distribution_change():
         expected_z_scores
     ), "you should test all benchmark_results"
 
-    set_z_scores(benchmark_results)
+    for benchmark_result in benchmark_results:
+        baseline_commit = get_baseline_func(benchmark_result.run.commit)
+        if baseline_commit:
+            set_z_scores(
+                benchmark_results=[benchmark_result], baseline_commit=baseline_commit
+            )
+        else:
+            benchmark_result.z_score = None
+
     for benchmark_result, expected_z_score in zip(benchmark_results, expected_z_scores):
         assert benchmark_result.z_score == expected_z_score
 
