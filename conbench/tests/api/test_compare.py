@@ -315,6 +315,30 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         response = client.get("/api/compare/benchmarks/foo...bar/")
         self.assert_404_not_found(response)
 
+    @pytest.mark.parametrize(
+        ["baseline_result_id", "expected_z_score"],
+        [
+            # result on the fork point commit
+            (5, -2.1857497724635935),
+            # result on the parent commit
+            (6, -2.8246140882627757),
+            # result on the head commit of the default branch
+            (8, 0.12045310863100521),
+        ],
+    )
+    def test_compare_different_baselines(
+        self, client, baseline_result_id, expected_z_score
+    ):
+        self.authenticate(client)
+        _, benchmark_results = _fixtures.gen_fake_data()
+        contender = benchmark_results[7]
+        baseline = benchmark_results[baseline_result_id]
+        response = client.get(
+            f"/api/compare/benchmarks/{baseline.id}...{contender.id}/"
+        )
+        assert response.status_code == 200, response.status_code
+        assert response.json["contender_z_score"] == expected_z_score
+
 
 class TestCompareBatchesGet(_asserts.GetEnforcer):
     url = "/api/compare/batches/{}/"
@@ -558,6 +582,28 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         self.authenticate(client)
         response = client.get("/api/compare/runs/foo...bar/")
         self.assert_404_not_found(response)
+
+    @pytest.mark.parametrize(
+        ["baseline_result_id", "expected_z_score"],
+        [
+            # result on the fork point commit
+            (5, -2.1857497724635935),
+            # result on the parent commit
+            (6, -2.8246140882627757),
+            # result on the head commit of the default branch
+            (8, 0.12045310863100521),
+        ],
+    )
+    def test_compare_different_baselines(
+        self, client, baseline_result_id, expected_z_score
+    ):
+        self.authenticate(client)
+        _, benchmark_results = _fixtures.gen_fake_data()
+        contender = benchmark_results[7].run_id
+        baseline = benchmark_results[baseline_result_id].run_id
+        response = client.get(f"/api/compare/runs/{baseline}...{contender}/")
+        assert response.status_code == 200, response.status_code
+        assert response.json[0]["contender_z_score"] == expected_z_score
 
 
 class TestCompareCommitsGet(_asserts.GetEnforcer):
