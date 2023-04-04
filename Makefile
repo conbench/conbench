@@ -288,10 +288,12 @@ set-build-info:
 # default jsonnetfile.json file is the outcome of `jb init`. Note2: in BK the
 # --user $$(id -u):$$(id -g) didn't help to achieve useful file permissions in
 # the host filesystem. Resort to doing a brute-force `chmod -R 777 *'` in the
-# container, while writing into a dir on the host.
+# container, while writing into a dir on the host. kudos to kudos to "5.
+# Selective Deletion of Certain Lines / 68. Print all lines in the file except
+# a section between two regular expressions." using a "range match" (not the
+# substitute command!).
 .PHONY: jsonnet-kube-prom-manifests
 jsonnet-kube-prom-manifests:
-#	rm -rf _kpbuild
 	mkdir -p _kpbuild && cd _kpbuild  && mkdir -p cb-kube-prometheus
 	cd _kpbuild/cb-kube-prometheus && echo '{"version": 1, "dependencies": [], "legacyImports": true}' > jsonnetfile.json
 	cd _kpbuild/cb-kube-prometheus && \
@@ -307,6 +309,7 @@ jsonnet-kube-prom-manifests:
 		else \
 			echo "MUTATE_JSONNET_FILE_FOR_MINIKUBE set, mutate JSONNET"; \
 			sed -i.bak 's|// "auth.anonymous"|"auth.anonymous"|g' _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
+			sed -i.bak '/\/\/ <comment-used-by-ci: pvc-start>/,/\/\/ <comment-used-by-ci: pvc-end>/d' _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
 			cat _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
 		fi
 	@if [ -z "$${PROM_REMOTE_WRITE_ENDPOINT_URL:=}" ]; then \
