@@ -12,11 +12,13 @@ set -o xtrace
 
 # Special note: this script does not make an assumption about the current
 # working directory. It can be/should be runnable in any directory. It however
-# needs to know where the conbench repo's root directory is. Default to one
-# directory up, for local workflows (so that this can be run in a "build dir" in
-# the repo's root, e.g. conbench-repo-root/_build). CI is expected to set
-# CONBENCH_REPO_ROOT_DIR for precise control.
-CONBENCH_REPO_ROOT_DIR="${CONBENCH_REPO_ROOT_DIR:=..}"
+# needs to know where the conbench repo's root directory is. Default to two
+# directories up from _this_ scruptfile, for local workflows (so that this can
+# be run in e.g. an ephemeral "build dir" of some kind. CI is expected to set
+# CONBENCH_REPO_ROOT_DIR for precise control. Export, so that it's available to
+# child processes.
+_this_script_dir="$(dirname "$(realpath -s "$0")")"  # https://stackoverflow.com/a/11114547/145400
+export CONBENCH_REPO_ROOT_DIR="${CONBENCH_REPO_ROOT_DIR:=$_this_script_dir/../../}"
 echo "CONBENCH_REPO_ROOT_DIR: $CONBENCH_REPO_ROOT_DIR"
 
 # Log debug info, do not crash script.
