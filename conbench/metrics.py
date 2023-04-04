@@ -19,9 +19,7 @@ import logging
 import os
 
 import flask
-
 import prometheus_client
-
 from prometheus_flask_exporter import NO_PREFIX
 from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
 
