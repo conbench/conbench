@@ -264,7 +264,7 @@ class Conbench(Connection, MixinPython, MixinR):
             output,
         ) = self._init(kwargs)
 
-        if (tags.get("name") is not None) and (name == tags["name"]):
+        if (tags.get("name") is not None) and (name != tags["name"]):
             raise ValueError(
                 f"`name` and `tags[\"name\"] are both supplied and do not match: {name=} != {tags['name']=}"
             )
