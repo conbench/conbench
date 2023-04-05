@@ -8,6 +8,7 @@ import subprocess
 import time
 import traceback
 import uuid
+from typing import Any, Optional, Tuple
 
 import numpy as np
 
@@ -233,8 +234,25 @@ class Conbench(Connection, MixinPython, MixinR):
     def machine_info(self):
         return machine_info(self.config.host_name)
 
-    def record(self, result, name, error=None, publish=True, **kwargs):
-        """Record and publish an external benchmark result."""
+    def record(
+        self, result, name, error=None, publish=True, **kwargs
+    ) -> Tuple[dict, Optional[Any]]:
+        """
+        Build up a dictionary in compliance with Conbench's benchmark result
+        JSON schema.
+
+        Publish that benchmark result to the Conbench HTTP API (if `publish` is
+        True).
+
+        Return the dictionary.
+
+        The `name` parameter is here for legacy reasons and allows for passing
+        the name of the conceptual benchmark; "the benchmark name".
+
+        The benchmark name can however as of today also be provided via
+        `tags['name']` in `kwargs`. Throw ValueError upon conflict when both
+        are provided.
+        """
         (
             tags,
             optional_benchmark_info,
@@ -246,11 +264,14 @@ class Conbench(Connection, MixinPython, MixinR):
             output,
         ) = self._init(kwargs)
 
-        if (tags.get("name") is not None) and (name == tags["name"]):
+        if (tags.get("name") is not None) and (name != tags["name"]):
             raise ValueError(
                 f"`name` and `tags[\"name\"] are both supplied and do not match: {name=} != {tags['name']=}"
             )
 
+        # Make sure that `name` key is in tags; currently the canonical way to
+        # communicate the name of the benchmark that this result has been
+        # obtained for.
         tags["name"] = name
 
         batch_id = options.get("batch_id")
@@ -261,20 +282,23 @@ class Conbench(Connection, MixinPython, MixinR):
         if not run_id:
             run_id = self._run_id
 
-        benchmark = {
+        # Make this naming challenge explicit.
+        optional_result_info = optional_benchmark_info
+
+        benchmark_result = {
             "run_id": run_id,
             "batch_id": batch_id,
             "timestamp": _now_formatted(),
             "context": context,
             "info": info,
             "tags": tags,
-            "optional_benchmark_info": optional_benchmark_info,
+            "optional_benchmark_info": optional_result_info,
             "github": github,
         }
         if error:
-            benchmark["error"] = error
+            benchmark_result["error"] = error
         else:
-            benchmark["stats"] = self._stats(
+            benchmark_result["stats"] = self._stats(
                 result["data"],
                 result["unit"],
                 result.get("times", []),
@@ -282,21 +306,22 @@ class Conbench(Connection, MixinPython, MixinR):
             )
 
         if cluster_info:
-            benchmark["cluster_info"] = cluster_info
+            benchmark_result["cluster_info"] = cluster_info
         else:
-            benchmark["machine_info"] = self.machine_info
+            benchmark_result["machine_info"] = self.machine_info
 
         run_name = options.get("run_name")
         if run_name is not None:
-            benchmark["run_name"] = run_name
+            benchmark_result["run_name"] = run_name
 
         run_reason = options.get("run_reason")
         if run_reason is not None:
-            benchmark["run_reason"] = run_reason
+            benchmark_result["run_reason"] = run_reason
 
         if publish:
-            self.publish(benchmark)
-        return benchmark, output
+            self.publish(benchmark_result)
+
+        return benchmark_result, output
 
     def get_run_id(self, options):
         run_id = options.get("run_id")
