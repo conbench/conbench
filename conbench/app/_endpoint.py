@@ -11,6 +11,8 @@ import werkzeug
 from .. import __version__
 from ..buildinfo import BUILD_INFO
 
+from ..config import Config
+
 log = logging.getLogger(__name__)
 
 
@@ -140,8 +142,24 @@ class AppEndpoint(flask.views.MethodView):
     def render_template(self, template, **kwargs):
         # inject/overwrite
         kwargs["version_string_footer"] = VERSION_STRING_FOOTER
-
         return f.render_template(template, **kwargs)
+
+    def error_page(self, msg: str, alert_level="danger") -> str:
+        """
+        Generate HTML text which shows an error page, presenting an error
+        message.
+
+        This is OK to be delivered in a status-200 HTTP response for now.
+        """
+        # add more as desired
+        assert alert_level in ("info", "danger", "primary", "warning")
+        return f.render_template(
+            "error.html",
+            error_message=msg,
+            application=Config.APPLICATION_NAME,
+            title=self.title,
+            alert_level=alert_level,
+        )
 
     def flash(self, *args):
         return f.flash(*args)

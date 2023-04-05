@@ -16,6 +16,7 @@ from ..entities.benchmark_result import (
     BenchmarkResultSerializer,
 )
 from ..entities.case import Case
+from ._resp import json_response_for_byte_sequence, resp400
 
 log = logging.getLogger(__name__)
 
@@ -112,7 +113,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
     schema = BenchmarkResultFacadeSchema()
 
     @maybe_login_required
-    def get(self):
+    def get(self) -> f.Response:
         """
         ---
         description: |
@@ -198,7 +199,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             option=orjson.OPT_INDENT_2,
         )
 
-        return make_json_response(jsonbytes, 200)
+        return json_response_for_byte_sequence(jsonbytes, 200)
 
     @flask_login.login_required
     def post(self) -> f.Response:
@@ -286,25 +287,6 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         benchmark_result = BenchmarkResult.create(data)
 
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
-
-
-def make_json_response(data: bytes, status_code: int) -> f.Response:
-    # Note(JP): it's documented that a byte sequence can be passed in:
-    # https://flask.palletsprojects.com/en/2.2.x/api/#flask.Flask.make_response
-    return f.make_response((data, status_code, {"content-type": "application/json"}))
-
-
-def resp400(description: str) -> f.Response:
-    """
-    Utility for canonical generation of 400 Bad Request response with an
-    error description. Define elsewhere once used elsewhere.
-    """
-    return f.make_response(
-        # This puts a JSON body into the response with a JSON object with one
-        # key, the description
-        f.jsonify(description=description),
-        400,
-    )
 
 
 benchmark_entity_view = BenchmarkEntityAPI.as_view("benchmark")
