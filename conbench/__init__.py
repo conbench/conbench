@@ -174,9 +174,7 @@ def _init_api_docs(application):
             spec.path(view=view_fn)
 
 
-def _json_http_errors(
-    exc: werkzeug.exceptions.HTTPException,
-) -> werkzeug.wrappers.Response:
+def _json_http_errors(exc) -> werkzeug.wrappers.Response:
     """
     Turn an HTTPException object into a JSON response where exception detail
     is emitted as part of the JSON document.
