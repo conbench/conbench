@@ -136,7 +136,7 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
         baseline_benchmark_result = self._get(baseline_id)
         contender_benchmark_result = self._get(contender_id)
         set_z_scores(
-            benchmark_results=[contender_benchmark_result],
+            contender_benchmark_results=[contender_benchmark_result],
             baseline_commit=baseline_benchmark_result.run.commit,
         )
         # TODO: remove baseline-z-score-related keys from this endpoint
@@ -196,7 +196,8 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
         baselines = self._get(baseline_id)
         contenders = self._get(contender_id)
         set_z_scores(
-            benchmark_results=contenders, baseline_commit=baselines[0].run.commit
+            contender_benchmark_results=contenders,
+            baseline_commit=baselines[0].run.commit,
         )
         # TODO: remove baseline-z-score-related keys from this endpoint
         for baseline in baselines:

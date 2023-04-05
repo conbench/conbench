@@ -331,10 +331,10 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
     ):
         self.authenticate(client)
         _, benchmark_results = _fixtures.gen_fake_data()
-        contender = benchmark_results[7]
-        baseline = benchmark_results[baseline_result_id]
+        contender_result = benchmark_results[7]  # on a PR branch
+        baseline_result = benchmark_results[baseline_result_id]
         response = client.get(
-            f"/api/compare/benchmarks/{baseline.id}...{contender.id}/"
+            f"/api/compare/benchmarks/{baseline_result.id}...{contender_result.id}/"
         )
         assert response.status_code == 200, response.status_code
         assert response.json["contender_z_score"] == expected_z_score
@@ -599,9 +599,11 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
     ):
         self.authenticate(client)
         _, benchmark_results = _fixtures.gen_fake_data()
-        contender = benchmark_results[7].run_id
-        baseline = benchmark_results[baseline_result_id].run_id
-        response = client.get(f"/api/compare/runs/{baseline}...{contender}/")
+        contender_run_id = benchmark_results[7].run_id  # on a PR branch
+        baseline_run_id = benchmark_results[baseline_result_id].run_id
+        response = client.get(
+            f"/api/compare/runs/{baseline_run_id}...{contender_run_id}/"
+        )
         assert response.status_code == 200, response.status_code
         assert response.json[0]["contender_z_score"] == expected_z_score
 
