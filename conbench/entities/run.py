@@ -162,17 +162,16 @@ class Run(Base, EntityMixin):
 
         return run
 
-    def get_baseline_run(
+    def get_default_baseline_run(
         self,
         commit_limit: int = 20,
-        on_default_branch: bool = False,
         case_id: Optional[str] = None,
         context_id: Optional[str] = None,
     ) -> Optional["Run"]:
         """Return the closest ancestor of this Run, where the ancestor run:
 
         - is in the last ``commit_limit`` commits of this Run's commit ancestry
-        - is on the default branch, if on_default_branch is True (else on any branch)
+        - is on the default branch
         - shares this Run's hardware
         - has a BenchmarkResult with the given case_id/context_id, if those are given
         - if they aren't given, has a BenchmarkResult with the case_id/context_id of
@@ -189,17 +188,22 @@ class Run(Base, EntityMixin):
 
         this_commit: Commit = self.commit
         try:
-            ancestor_commits = (
-                this_commit.commit_ancestry_query
-                # don't count this run's commit
-                .filter(Commit.id != this_commit.id)
-                .order_by(s.desc("commit_order"))
-                .limit(commit_limit)
-                .subquery()
-            )
+            ancestor_commits = this_commit.commit_ancestry_query.subquery()
         except CantFindAncestorCommitsError as e:
-            log.debug(f"Couldn't get_baseline_run() because {e}")
+            log.debug(f"Couldn't get_default_baseline_run() because {e}")
             return None
+
+        ancestor_commits = (
+            Session.query(ancestor_commits)
+            .filter(
+                # don't count this run's commit
+                ancestor_commits.c.ancestor_id != this_commit.id,
+                ancestor_commits.c.on_default_branch.is_(True),
+            )
+            .order_by(s.desc("commit_order"))
+            .limit(commit_limit)
+            .subquery()
+        )
 
         closest_run_id_query = (
             Session.query(BenchmarkResult.run_id)
@@ -208,11 +212,6 @@ class Run(Base, EntityMixin):
             .join(ancestor_commits, ancestor_commits.c.ancestor_id == Run.commit_id)
             .filter(Hardware.id == self.hardware_id)
         )
-
-        if on_default_branch:
-            closest_run_id_query = closest_run_id_query.filter(
-                ancestor_commits.c.on_default_branch.is_(True)
-            )
 
         # Filter to the correct case(s)/context(s)
         if case_id and context_id:
@@ -250,8 +249,8 @@ class Run(Base, EntityMixin):
 
         return Run.get(closest_run_id)
 
-    def get_baseline_id(self):
-        run = self.get_baseline_run()
+    def get_default_baseline_id(self):
+        run = self.get_default_baseline_run()
         return run.id if run else None
 
 
@@ -404,7 +403,7 @@ class _Serializer(EntitySerializer):
             },
         }
         if not self.many:
-            baseline_id, baseline_url = run.get_baseline_id(), None
+            baseline_id, baseline_url = run.get_default_baseline_id(), None
             if baseline_id:
                 baseline_url = f.url_for("api.run", run_id=baseline_id, _external=True)
             result["links"]["baseline"] = baseline_url

@@ -8,7 +8,7 @@ from ..entities.run import Run
 class _Serializer(EntitySerializer):
     def _dump(self, commits):
         def _run(contender):
-            baseline = contender.get_baseline_run()
+            baseline = contender.get_default_baseline_run()
             baseline_url, contender_url, compare_url = None, None, None
             baseline_timestamp, contender_timestamp = None, None
 

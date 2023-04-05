@@ -231,6 +231,27 @@ class TestRunGet(_asserts.GetEnforcer):
         response = client.get(f"/api/runs/{contender_run.id}/")
         self.assert_200_ok(response, _expected_entity(contender_run, baseline_run.id))
 
+    def test_baseline_run_always_on_default_branch(self, client):
+        self.authenticate(client)
+        _, benchmark_results = _fixtures.gen_fake_data()
+
+        successes = 0
+        for benchmark_result in benchmark_results:
+            response = client.get(f"/api/runs/{benchmark_result.run_id}/")
+            assert response.status_code == 200, f"bad response: {response.__dict__}"
+            baseline_run_link = response.json["links"].get("baseline")
+            if baseline_run_link:
+                baseline_run_response = client.get(
+                    baseline_run_link.replace("http://localhost", "")
+                )
+                assert (
+                    baseline_run_response.status_code == 200
+                ), f"bad response: {baseline_run_response.__dict__}"
+                assert baseline_run_response.json["commit"]["branch"] == "default"
+                successes += 1
+
+        assert successes == 10
+
 
 class TestRunList(_asserts.ListEnforcer):
     url = "/api/runs/"
