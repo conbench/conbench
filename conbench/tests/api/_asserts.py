@@ -66,8 +66,9 @@ class ApiEndpointTest:
 
     def assert_404_not_found(self, r):
         assert r.status_code == 404, r.status_code
-        assert r.content_type == "application/json", r.content_type
-        assert r.json == {"code": 404, "name": "Not Found"}, r.json
+        assert r.content_type == "application/json", r.content_type + " " + r.text
+        assert r.json["code"] == 404
+        assert r.json["name"] == "Not Found"
         errors = ErrorSchema().validate(r.json)
         assert errors == {}, errors
 

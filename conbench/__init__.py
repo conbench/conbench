@@ -17,6 +17,7 @@ import importlib.metadata as importlib_metadata
 import json
 import logging
 import os
+from typing import TYPE_CHECKING
 
 import conbench.logger
 
@@ -29,12 +30,21 @@ except Exception:
 del importlib_metadata
 
 
+if TYPE_CHECKING:
+    # https://stackoverflow.com/a/39757388/145400
+    # Yes one could do `-> "flask.Response"`` but then
+    # https://github.com/PyCQA/pyflakes/issues/340  ¯\_(ツ)_/¯
+    import flask
+    import werkzeug
+    import werkzeug.exceptions
+
+
 # Pre-configure logging before reading user-given configuration.
 conbench.logger.setup(level_stderr="DEBUG", level_file=None, level_sqlalchemy="WARNING")
 log = logging.getLogger(__name__)
 
 
-def create_application(config):
+def create_application(config) -> "flask.Flask":
     import flask as f
 
     import conbench.metrics
@@ -165,16 +175,32 @@ def _init_api_docs(application):
             spec.path(view=view_fn)
 
 
-def _json_http_errors(e):
+def _json_http_errors(exc) -> "werkzeug.wrappers.Response":
+    """
+    Turn an HTTPException object into a JSON response where exception detail
+    is emitted as part of the JSON document.
+    """
+    # Note(JP): I understand this is against cyclic imports, but having this as
+    # part of requently called error handler (even if the import machinery is
+    # fast and cached) is a code smell -- let's see about this.
     import flask as f
 
-    response = e.get_response()
-    data = {"code": e.code, "name": e.name}
-    if e.code == 400:
-        data["description"] = e.description
-    response.data = f.json.dumps(data)
-    response.content_type = "application/json"
-    return response
+    data = {"code": exc.code, "name": exc.name}
+
+    # When for example calling flask.abort(404, foo="bar") then the
+    # resulting HTTPException object has a property "foo".
+    for attr in vars(exc):
+        # denylist or allowlist? Hm.
+        if attr not in ("response", "www_authenticate"):
+            data[attr] = getattr(exc, attr)
+
+    # documented with "Get a response object. If one was passed to the
+    # exception it’s returned directly.""
+    resp = exc.get_response()
+    resp.data = f.json.dumps(data)
+    resp.content_type = "application/json"
+
+    return resp
 
 
 def dict_or_objattrs_to_nonsensitive_string(obj):
