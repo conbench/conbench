@@ -10,7 +10,6 @@ import werkzeug
 
 from .. import __version__
 from ..buildinfo import BUILD_INFO
-
 from ..config import Config
 
 log = logging.getLogger(__name__)
