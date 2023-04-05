@@ -38,9 +38,14 @@ tests: require-env-ghtoken set-build-info
 
 
 # Similar to `make run-app`, but with the `docker-compose.dev.yml` extension
-# That mounts the local checkout into the Conbench container.
+# That mounts the local checkout into the Conbench container. rm virtual
+# network explicitly; after running `run-app-dev` many times I frequently run
+# into a situation where the app container cannot reach the database container
+# (connection timeout). In that state, a `docker network rm conbench_default`
+# seems to help
 .PHONY: run-app-dev
 run-app-dev: set-build-info
+	docker network rm conbench_default || echo "ignore err"
 	rm -rf /tmp/_conbench-promcl-coord-dir && mkdir /tmp/_conbench-promcl-coord-dir
 	export DCOMP_CONBENCH_HOST_PORT=127.0.0.1:5000 && \
 		docker compose down && \
