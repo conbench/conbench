@@ -19,9 +19,6 @@ import logging
 import os
 from typing import TYPE_CHECKING
 
-import werkzeug
-import werkzeug.exceptions
-
 import conbench.logger
 
 try:
@@ -38,6 +35,9 @@ if TYPE_CHECKING:
     # Yes one could do `-> "flask.Response"`` but then
     # https://github.com/PyCQA/pyflakes/issues/340  ¯\_(ツ)_/¯
     import flask
+    import werkzeug
+    import werkzeug.exceptions
+
 
 # Pre-configure logging before reading user-given configuration.
 conbench.logger.setup(level_stderr="DEBUG", level_file=None, level_sqlalchemy="WARNING")
