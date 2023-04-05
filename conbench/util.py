@@ -26,6 +26,40 @@ adapter = HTTPAdapter(max_retries=retry_strategy)
 log = logging.getLogger()
 
 
+def short_commit_msg(msg: str):
+    """
+    Return a string of non-zero length, and with predictable maximum length.
+
+    Substitute multiple whitespace characters with a single space. Overall,
+    truncate at maxlen (see implementation).
+
+    Substitute 40-char hash values with their shortened variant
+
+    If the input is an emtpy string then emit a placeholder message.
+    """
+    # Deal with empty string scenario (not sure if data model allows that),
+    # but it's better to have a definite place holder than putting an empty
+    # string into e.g. HTML.
+    if not msg:
+        return "no-message"
+
+    result = " ".join(msg.split())
+
+    # Shorten what looks like a full-length commit hash.
+    # Might want to use re-based replace, but shrug.
+    for m in re.findall(r"\b[0-9a-f]{40}\b", result):
+        result = result.replace(m, m[:7])
+
+    # Maybe this does not need to be an argument to this function,
+    # then we have consistency across entire code base.
+    maxlen = 150
+
+    if len(result) > maxlen:
+        result = result[:maxlen] + "..."
+
+    return result
+
+
 def tznaive_dt_to_aware_iso8601_for_api(dt: datetime) -> str:
     """We store datetime objects in the database in columns that are configured
     to not track timezone information. By convention, each of those tz-naive
