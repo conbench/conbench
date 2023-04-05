@@ -93,6 +93,7 @@ def create_application(config) -> "flask.Flask":
 def _init_flask_application(app):
     import flask
     import flask_swagger_ui
+    import werkzeug.exceptions
 
     from .api import api
     from .app import app as blueprint_app
