@@ -17,6 +17,8 @@ https://github.com/rycus86/prometheus_flask_exporter/issues/147
 
 import logging
 import os
+import threading
+import time
 
 import flask
 import prometheus_client
@@ -62,6 +64,7 @@ GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING = prometheus_client.Gauge(
     multiprocess_mode="liveall",
 )
 
+gauge_gh_api_rem_set = {"set": False}
 
 # The topic of Gauge initiatlization in the Prometheus ecosystem is confusing.
 # The spec says "Gauges MUST start at 0"
@@ -159,6 +162,34 @@ def http_handler_name(r: flask.Request) -> str:
     return ep
 
 
+def _periodically_set_q_rem() -> None:
+    """
+    GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING is a thread-safe data structure.
+
+    See https://github.com/conbench/conbench/issues/997. Keep setting this
+    gauge explicitly to -1 to try to not have this appear as if it's 0 (which
+    seemingly the receiving end might think when there hasn't been an update
+    for a while? Prometheus gauges are weird, because their initialization
+    state is not so well-defined. For us, 0 is a special allowed value and
+    explicitly _not_ the initialization value.)
+    """
+
+    def func():
+        while True:
+            time.sleep(10)
+            if gauge_gh_api_rem_set["set"] - 1:
+                # This process set an actual, meaningful value.
+                # Stop re-inforcing the init state.
+                return
+            GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING.set(-1)
+
+    # Create a threaddy zombie, no need to join it. It likely terminates
+    # itself. If it doesn't that's OK, too.
+    threading.Thread(target=func).start()
+
+    # This function immediately returns after having spawned the thread.
+
+
 def _inspect_prom_multiproc_dir():
     """
     Log information about the environment variable PROMETHEUS_MULTIPROC_DIR
@@ -174,3 +205,6 @@ def _inspect_prom_multiproc_dir():
         log.info("os.path.isdir('%s'): %s", path, os.path.isdir(path))
     except OSError as exc:
         log.info("os.path.isdir('%s') failed: %s", path, exc)
+
+
+_periodically_set_q_rem()

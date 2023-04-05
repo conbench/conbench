@@ -115,7 +115,7 @@ def generate_benchmarks_data(
         },
         "tags": {
             "compression": "uncompressed1",
-            "cpu_count": None,
+            "cpu_count": 1,
             "dataset": "fanniemae_2016Q4",
             "name": benchmark_name,
             "streaming": "streaming",
@@ -138,7 +138,9 @@ def generate_benchmarks_data(
             f"{benchmark_language}_specific_{key}_field_1": "value-1",
             f"{benchmark_language}_specific_{key}_field_2": f"{benchmark_language}-{key}-value-2",
             f"{key}_field_3": f"{benchmark_language}-{key}-value-3",
-            f"{key}_field_4": None if benchmark_language == "Python" else "value-4",
+            f"{key}_field_4": "sweetvalue"
+            if benchmark_language == "Python"
+            else "value-4",
         }
         data[key].update(fields_set)
         if benchmark_language == "Python":

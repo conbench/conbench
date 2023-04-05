@@ -46,6 +46,7 @@
             "axisColorMode": "series",
             "axisLabel": "",
             "axisPlacement": "auto",
+            "axisSoftMin": 0,
             "barAlignment": 0,
             "drawStyle": "line",
             "fillOpacity": 4,
@@ -56,7 +57,7 @@
               "viz": false
             },
             "lineInterpolation": "linear",
-            "lineWidth": 5,
+            "lineWidth": 2,
             "pointSize": 6,
             "scaleDistribution": {
               "log": 10,
@@ -95,7 +96,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 7,
         "w": 12,
         "x": 0,
         "y": 0
@@ -188,7 +189,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 6,
         "w": 12,
         "x": 12,
         "y": 0
@@ -228,101 +229,6 @@
         }
       ],
       "title": "Flask response generation rate [1/s], $timewindow mean",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "description": "These are attempted HTTP request, i.e. this rate includes failed requests.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "series",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 3,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "log": 2,
-              "type": "symlog"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "hertz"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 5
-      },
-      "id": 9,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_total{namespace=~\"$namespace\"}[$timewindow]))",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "GitHub HTTP API request rate [1/s], $timewindow mean",
       "type": "timeseries"
     },
     {
@@ -389,7 +295,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 7
+        "y": 6
       },
       "id": 3,
       "options": {
@@ -425,7 +331,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "The rate of failed HTTP requests, either after retrying or upon first attempt.",
+      "description": "Based on a counter that is incremented right before attempting to make an HTTP request, i.e. this rate includes failed requests.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -449,7 +355,8 @@
             "lineWidth": 3,
             "pointSize": 5,
             "scaleDistribution": {
-              "type": "linear"
+              "log": 2,
+              "type": "symlog"
             },
             "showPoints": "auto",
             "spanNulls": false,
@@ -483,9 +390,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 13
+        "y": 7
       },
-      "id": 11,
+      "id": 9,
       "options": {
         "legend": {
           "calcs": [],
@@ -505,13 +412,13 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_failed_total{namespace=~\"$namespace\"}[$timewindow]))",
-          "legendFormat": "__auto",
+          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_total{namespace=~\"$namespace\"}[$timewindow]))",
+          "legendFormat": "",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "GitHub HTTP API request error rate [1/s], $timewindow mean",
+      "title": "GitHub HTTP API request rate [1/s], $timewindow mean",
       "type": "timeseries"
     },
     {
@@ -539,7 +446,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 13
       },
       "id": 13,
       "options": {
@@ -607,6 +514,188 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "The rate of failed HTTP requests, either after retrying or upon first attempt.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "series",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 3,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "hertz"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_failed_total{namespace=~\"$namespace\"}[$timewindow]))",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GitHub HTTP API request error rate [1/s], $timewindow mean",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
+      "id": 6,
+      "options": {
+        "calculate": false,
+        "calculation": {
+          "xBuckets": {
+            "mode": "size"
+          },
+          "yBuckets": {
+            "mode": "size"
+          }
+        },
+        "cellGap": 1,
+        "color": {
+          "exponent": 0.5,
+          "fill": "dark-orange",
+          "mode": "scheme",
+          "reverse": false,
+          "scale": "exponential",
+          "scheme": "Spectral",
+          "steps": 99
+        },
+        "exemplars": {
+          "color": "rgba(255,0,255,0.7)"
+        },
+        "filterValues": {
+          "le": 1e-9
+        },
+        "legend": {
+          "show": true
+        },
+        "rowsFrame": {
+          "layout": "auto"
+        },
+        "tooltip": {
+          "show": true,
+          "yHistogram": false
+        },
+        "yAxis": {
+          "axisPlacement": "left",
+          "reverse": false,
+          "unit": "s"
+        }
+      },
+      "pluginVersion": "9.3.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method!=\"GET\",http_handler_name=~\"api.*\"}[$timewindow]))",
+          "format": "heatmap",
+          "legendFormat": "{{le}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "/api non-GET requests: Flask HTTP response generation duration, event rate [1/s]. Observation period: $timewindow",
+      "type": "heatmap"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "The rate of GitHub HTTP API responses received with status code 403. Some of these errors may have been retried.",
       "fieldConfig": {
         "defaults": {
@@ -666,7 +755,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 21
+        "y": 23
       },
       "id": 12,
       "options": {
@@ -696,94 +785,6 @@
       ],
       "title": "GitHub HTTP API 403 error rate [1/s], $timewindow mean",
       "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "scaleDistribution": {
-              "type": "linear"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 12,
-        "x": 12,
-        "y": 22
-      },
-      "id": 6,
-      "options": {
-        "calculate": false,
-        "calculation": {
-          "xBuckets": {
-            "mode": "size"
-          },
-          "yBuckets": {
-            "mode": "size"
-          }
-        },
-        "cellGap": 1,
-        "color": {
-          "exponent": 0.5,
-          "fill": "dark-orange",
-          "mode": "scheme",
-          "reverse": false,
-          "scale": "exponential",
-          "scheme": "Spectral",
-          "steps": 99
-        },
-        "exemplars": {
-          "color": "rgba(255,0,255,0.7)"
-        },
-        "filterValues": {
-          "le": 1e-9
-        },
-        "legend": {
-          "show": true
-        },
-        "rowsFrame": {
-          "layout": "auto"
-        },
-        "tooltip": {
-          "show": true,
-          "yHistogram": false
-        },
-        "yAxis": {
-          "axisPlacement": "left",
-          "reverse": false,
-          "unit": "s"
-        }
-      },
-      "pluginVersion": "9.3.2",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method!=\"GET\",http_handler_name=~\"api/.*\"}[$timewindow]))",
-          "format": "heatmap",
-          "legendFormat": "{{le}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "/api non-GET requests: Flask HTTP response generation duration, event rate [1/s]. Observation period: $timewindow",
-      "type": "heatmap"
     },
     {
       "datasource": {
@@ -851,12 +852,14 @@
         "h": 11,
         "w": 12,
         "x": 0,
-        "y": 29
+        "y": 31
       },
       "id": 10,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "last"
+          ],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -873,7 +876,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "conbench_github_httpapi_quota_remaining{namespace=~\"$namespace\"}",
+          "expr": "conbench_github_httpapi_quota_remaining{namespace=~\"$namespace\"} > 0",
           "legendFormat": "pid:{{pid}}, {{instance}}",
           "range": true,
           "refId": "A"
@@ -907,7 +910,7 @@
         "h": 11,
         "w": 12,
         "x": 12,
-        "y": 33
+        "y": 32
       },
       "id": 5,
       "options": {
