@@ -254,12 +254,14 @@ def get_history_for_cchr(
     return samples
 
 
-def set_z_scores(benchmark_results: List[BenchmarkResult], baseline_commit: Commit):
-    """Set the "z_score" attribute on each given BenchmarkResult, comparing it to the
-    distribution of BenchmarkResults that share the same case/context/hardware/repo, in
-    the git ancestry of the baseline_commit (inclusive).
+def set_z_scores(
+    contender_benchmark_results: List[BenchmarkResult], baseline_commit: Commit
+):
+    """Set the "z_score" attribute on each contender BenchmarkResult, comparing it to
+    the baseline distribution of BenchmarkResults that share the same
+    case/context/hardware/repo, in the git ancestry of the baseline_commit (inclusive).
 
-    The given benchmark_results must all have the same run_id.
+    The given contender_benchmark_results must all have the same run_id.
 
     This function does not affect the database whatsoever. It only populates an
     attribute on the given python objects. This is typically called right before
@@ -270,27 +272,29 @@ def set_z_scores(benchmark_results: List[BenchmarkResult], baseline_commit: Comm
     If we can't find a z-score for some reason, the z_score attribute will be None on
     that BenchmarkResult.
     """
-    run_ids = set(result.run_id for result in benchmark_results)
-    if len(run_ids) != 1:
-        raise ValueError(f"Encountered mixed run_ids in set_z_scores(): {run_ids}")
-    run_id = run_ids.pop()
+    contender_run_ids = set(result.run_id for result in contender_benchmark_results)
+    if len(contender_run_ids) != 1:
+        raise ValueError(
+            f"Encountered mixed run_ids in set_z_scores(): {contender_run_ids}"
+        )
+    contender_run_id = contender_run_ids.pop()
 
-    if len(benchmark_results) == 1:
+    if len(contender_benchmark_results) == 1:
         # performance optimization
-        case_id = benchmark_results[0].case_id
-        context_id = benchmark_results[0].context_id
+        case_id = contender_benchmark_results[0].case_id
+        context_id = contender_benchmark_results[0].context_id
     else:
         case_id = None
         context_id = None
 
-    distribution_stats = _query_distribution_stats_by_run_id(
-        run_id=run_id,
+    distribution_stats = _query_and_calculate_distribution_stats(
+        contender_run_id=contender_run_id,
         baseline_commit=baseline_commit,
         case_id=case_id,
         context_id=context_id,
     )
 
-    for benchmark_result in benchmark_results:
+    for benchmark_result in contender_benchmark_results:
         dist_mean, dist_stddev = distribution_stats.get(
             (benchmark_result.case_id, benchmark_result.context_id), (None, None)
         )
@@ -302,30 +306,40 @@ def set_z_scores(benchmark_results: List[BenchmarkResult], baseline_commit: Comm
         )
 
 
-def _query_distribution_stats_by_run_id(
-    run_id: str,
+def _query_and_calculate_distribution_stats(
+    contender_run_id: str,
     baseline_commit: Commit,
     case_id: Optional[str],
     context_id: Optional[str],
 ) -> Dict[Tuple[str, str], Tuple[Optional[float], Optional[float]]]:
-    """Given a run id and baseline commit, return stats of the distribution of
-    BenchmarkResults matching the run's hardware, in the baseline_commit's ancestry, by
-    case/context. Returns a dict that looks like
+    """Query and calculate rolling stats of the distribution of all BenchmarkResults
+    that:
+
+    - are associated with any of the last DISTRIBUTION_COMMITS commits in the
+      baseline_commit's git ancestry (inclusive)
+    - match the contender run's hardware
+    - have no errors
+
+    The calculations are grouped by case and context, returning a dict that looks like:
 
     ``{(case_id, context_id): (dist_mean, dist_stddev)}``
 
-    If case_id and context_id are given, only return that pair, not all pairs for the
-    run. This saves some time.
+    If case_id and context_id are not given, return all case/context pairs that the
+    contender run has results for. This saves some time compared to returning all
+    case/context pairs in the database.
+
+    If case_id and context_id are given, only return that pair. This saves a lot of
+    time.
 
     For further detail on the stats columns, see the docs of
-    ``_add_rolling_stats_columns_to_history_query()``.
+    ``_add_rolling_stats_columns_to_df()``.
     """
-    run = Run.get(run_id)
+    contender_run = Run.get(contender_run_id)
 
     try:
         commits = baseline_commit.commit_ancestry_query.subquery()
     except CantFindAncestorCommitsError as e:
-        log.debug(f"Couldn't _query_distribution_stats_by_run_id() because {e}")
+        log.debug(f"Couldn't _query_and_calculate_distribution_stats() because {e}")
         return {}
 
     # Get the last DISTRIBUTION_COMMITS ancestor commits of the baseline commit
@@ -352,7 +366,10 @@ def _query_distribution_stats_by_run_id(
         .join(Run, Run.id == BenchmarkResult.run_id)
         .join(Hardware, Hardware.id == Run.hardware_id)
         .join(commits, commits.c.ancestor_id == Run.commit_id)
-        .filter(BenchmarkResult.error.is_(None), Hardware.hash == run.hardware.hash)
+        .filter(
+            BenchmarkResult.error.is_(None),
+            Hardware.hash == contender_run.hardware.hash,
+        )
     )
 
     # Filter to the correct case(s)/context(s)
@@ -366,7 +383,7 @@ def _query_distribution_stats_by_run_id(
         # filter to *any* case/context attached to this Run
         these_cases_and_contexts = (
             Session.query(BenchmarkResult.case_id, BenchmarkResult.context_id)
-            .filter(BenchmarkResult.run_id == run_id)
+            .filter(BenchmarkResult.run_id == contender_run_id)
             .distinct()
             .subquery()
         )

@@ -169,7 +169,8 @@ def test_set_z_scores(
         baseline_commit = get_baseline_func(benchmark_result.run.commit)
         if baseline_commit:
             set_z_scores(
-                benchmark_results=[benchmark_result], baseline_commit=baseline_commit
+                contender_benchmark_results=[benchmark_result],
+                baseline_commit=baseline_commit,
             )
         else:
             benchmark_result.z_score = None
@@ -208,7 +209,8 @@ def test_set_z_scores(
         baseline_commit = get_baseline_func(benchmark_result.run.commit)
         if baseline_commit:
             set_z_scores(
-                benchmark_results=[benchmark_result], baseline_commit=baseline_commit
+                contender_benchmark_results=[benchmark_result],
+                baseline_commit=baseline_commit,
             )
         else:
             benchmark_result.z_score = None
@@ -254,7 +256,8 @@ def test_set_z_scores_with_distribution_change(
         baseline_commit = get_baseline_func(benchmark_result.run.commit)
         if baseline_commit:
             set_z_scores(
-                benchmark_results=[benchmark_result], baseline_commit=baseline_commit
+                contender_benchmark_results=[benchmark_result],
+                baseline_commit=baseline_commit,
             )
         else:
             benchmark_result.z_score = None
