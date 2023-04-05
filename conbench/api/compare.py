@@ -135,7 +135,13 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
 
         baseline_benchmark_result = self._get(baseline_id)
         contender_benchmark_result = self._get(contender_id)
-        set_z_scores([baseline_benchmark_result, contender_benchmark_result])
+        set_z_scores(
+            benchmark_results=[contender_benchmark_result],
+            baseline_commit=baseline_benchmark_result.run.commit,
+        )
+        # TODO: remove baseline-z-score-related keys from this endpoint
+        baseline_benchmark_result.z_score = None
+
         set_display_case_permutation(baseline_benchmark_result)
         set_display_case_permutation(contender_benchmark_result)
         set_display_benchmark_name(baseline_benchmark_result)
@@ -189,7 +195,12 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
 
         baselines = self._get(baseline_id)
         contenders = self._get(contender_id)
-        set_z_scores(baselines + contenders)
+        set_z_scores(
+            benchmark_results=contenders, baseline_commit=baselines[0].run.commit
+        )
+        # TODO: remove baseline-z-score-related keys from this endpoint
+        for baseline in baselines:
+            baseline.z_score = None
 
         baseline_items, contender_items = [], []
         for benchmark_result in baselines:
