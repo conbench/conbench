@@ -9,6 +9,7 @@ from ...tests.helpers import _uuid
 from ._example_benchmarks import (
     CasesBenchmark,
     ExternalBenchmark,
+    ExternalBenchmarkWithWrongName,
     SimpleBenchmark,
     SimpleBenchmarkThatFails,
     SimpleBenchmarkWithClusterInfo,
@@ -221,3 +222,9 @@ def test_runner_null_run_id():
     assert output == 2
     assert result["batch_id"] == batch_id
     assert result["run_id"] is not None
+
+
+def test_runner_wrong_name():
+    benchmark = ExternalBenchmarkWithWrongName()
+    with pytest.raises(ValueError, match="do not match"):
+        next(benchmark.run())

@@ -240,3 +240,24 @@ class SimpleBenchmarkThatFails(conbench.runner.Benchmark):
 
     def _get_benchmark_function(self):
         return lambda: 1 / 0
+
+
+class ExternalBenchmarkWithWrongName(conbench.runner.Benchmark):
+    """Example benchmark that uses a different name in tags than in record()."""
+
+    external = True
+    name = "some_name"
+
+    def run(self, **kwargs):
+        result = {
+            "data": [100, 200, 300],
+            "unit": "i/s",
+            "times": [0.100, 0.200, 0.300],
+            "time_unit": "s",
+        }
+        tags = {"name": "different_name"}
+
+        context = {"benchmark_language": "C++"}
+        yield self.conbench.record(
+            result, self.name, context=context, options=kwargs, output=result, tags=tags
+        )
