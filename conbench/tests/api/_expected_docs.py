@@ -1136,6 +1136,7 @@
                 "type": "object",
             },
             "Error": {
+                "additionalProperties": True,
                 "properties": {
                     "code": {"description": "HTTP error code", "type": "integer"},
                     "name": {"description": "HTTP error name", "type": "string"},
@@ -1144,6 +1145,7 @@
                 "type": "object",
             },
             "ErrorBadRequest": {
+                "additionalProperties": True,
                 "properties": {
                     "code": {"description": "HTTP error code", "type": "integer"},
                     "description": {

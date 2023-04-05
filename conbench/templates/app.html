@@ -86,8 +86,8 @@
         {% if messages %}
             <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
             {% for category, message in messages %}
-            <div class="alert alert-{{ category }}" role="alert">
-                <p class="fs-5"><i class="bi bi-exclamation-diamond-fill"></i> {{ message }}</p>
+            <div class="fs-5 alert alert-{{ category }} text-center" role="alert">
+                <i class="bi bi-info-circle"></i> {{ message }}
             </div>
             {% endfor %}
         {% endif %}

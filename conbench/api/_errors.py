@@ -4,6 +4,11 @@ from ..api._docs import spec
 
 
 class ErrorSchema(marshmallow.Schema):
+    # Allow for additional properties:
+    # https://marshmallow.readthedocs.io/en/stable/quickstart.html#handling-unknown-fields
+    class Meta:
+        unknown = marshmallow.INCLUDE
+
     code = marshmallow.fields.Int(
         metadata={"description": "HTTP error code"}, required=True
     )
