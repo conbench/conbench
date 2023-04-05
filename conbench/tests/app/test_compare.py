@@ -14,13 +14,16 @@ class TestCompareBenchmark(_asserts.GetEnforcer):
     def test_flash_messages(self, client):
         self.authenticate(client)
 
-        response = client.get("/compare/benchmarks/unknown/", follow_redirects=True)
+        response = client.get(
+            "/compare/benchmarks/unknown...unknown2/", follow_redirects=True
+        )
         self.assert_page(response, "Compare Benchmarks")
-        assert b"Invalid contender and baseline." in response.data
+
+        assert "could not do comparison:" in response.text, response.text
 
         response = client.get("/compare/benchmarks/foo...bar/", follow_redirects=True)
         self.assert_page(response, "Compare Benchmarks")
-        assert b"Data is still collecting (or failed)." in response.data
+        assert "could not do comparison:" in response.text
 
 
 class TestCompareBatches(_asserts.GetEnforcer):
@@ -36,13 +39,22 @@ class TestCompareBatches(_asserts.GetEnforcer):
     def test_flash_messages(self, client):
         self.authenticate(client)
 
-        response = client.get("/compare/batches/unknown/", follow_redirects=True)
+        response = client.get(
+            "/compare/batches/unknown...unknown2/", follow_redirects=True
+        )
         self.assert_page(response, "Compare Batches")
-        assert b"Invalid contender and baseline." in response.data
+
+        assert (
+            "no benchmark results found for batch ID: unknown" in response.text
+        ), response.text
 
         response = client.get("/compare/batches/foo...bar/", follow_redirects=True)
+
         self.assert_page(response, "Compare Batches")
-        assert b"Data is still collecting (or failed)." in response.data
+
+        assert (
+            "no benchmark results found for batch ID: foo" in response.text
+        ), response.text
 
 
 class TestCompareRuns(_asserts.GetEnforcer):
@@ -58,10 +70,13 @@ class TestCompareRuns(_asserts.GetEnforcer):
     def test_flash_messages(self, client):
         self.authenticate(client)
 
-        response = client.get("/compare/runs/unknown/", follow_redirects=True)
+        response = client.get(
+            "/compare/runs/unknown3...unknown2/", follow_redirects=True
+        )
         self.assert_page(response, "Compare Runs")
-        assert b"Invalid contender and baseline." in response.data
+        assert "no benchmark results found for run ID: unknown3" in response.text
 
         response = client.get("/compare/runs/foo...bar/", follow_redirects=True)
+
         self.assert_page(response, "Compare Runs")
-        assert b"Data is still collecting (or failed)." in response.data
+        assert "no benchmark results found for run ID: foo" in response.text

@@ -205,7 +205,18 @@ class GetEnforcer(Enforcer):
     def test_unknown(self, client):
         self.authenticate(client)
         unknown_url = self.url.format("unknown")
+
         response = client.get(unknown_url, follow_redirects=True)
+
+        # Special case for the compare API where the parameter
+        # is part of the URL path (not query parameter) and needs to
+        # match a certain pattern. We can make this nicer via UI later,
+        # but for starters a non-matching URL pattern is OK / nice to be
+        # treated as 404 not found (with a hint for the user).
+        if "compare" in unknown_url and response.status_code == 404:
+            if "not found: ellipsis (...) expected as part of URL":
+                return
+
         if getattr(self, "redirect_on_unknown", True):
             assert b"local-dev-conbench - Home" in response.data, response.data
         else:
