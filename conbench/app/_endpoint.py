@@ -156,7 +156,7 @@ class AppEndpoint(flask.views.MethodView):
             "error.html",
             error_message=msg,
             application=Config.APPLICATION_NAME,
-            title=self.title,
+            title=self.title,  # type: ignore
             alert_level=alert_level,
         )
 
