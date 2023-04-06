@@ -1,4 +1,6 @@
 import collections
+import logging
+from typing import List
 
 import flask as f
 
@@ -12,8 +14,14 @@ from ..entities.compare import CompareBenchmarkResultSerializer
 from ..entities.history import set_z_scores
 from ..hacks import set_display_benchmark_name, set_display_case_permutation
 
+log = logging.getLogger(__name__)
 
-def _compare_entity(benchmark_result: BenchmarkResult):
+
+def _result_dict_for_compare_api(benchmark_result: BenchmarkResult):
+    """
+    Return a dictionary representing a benchmark result, but for the compare
+    API, i.e. this is a minimal/special representation of a benchmark result.
+    """
     return {
         "id": benchmark_result.id,
         "batch_id": benchmark_result.batch_id,
@@ -35,6 +43,8 @@ def _compare_entity(benchmark_result: BenchmarkResult):
 
 def _get_pairs(baseline_items, contender_items):
     """
+    TODO: needs concise docstring defining the goals/task of this function.
+
     You should be able to compare any run with any other run, so we can't
     just key by case_id/context_id/hardware_hash, or you couldn't compare runs
     done on different machine, nor could you compare runs done in different
@@ -80,7 +90,30 @@ def _add_pair(pairs, item, kind, simple):
 
 
 class CompareMixin:
-    def get_args(self, compare_ids):
+    def _parse_two_ids_or_abort(self, compare_ids):
+        if "..." not in compare_ids:
+            f.abort(
+                404, description="last URL path segment must be of pattern <id>...<id>"
+            )
+
+        # I think these can be either two run IDs, two batch IDs or two
+        # benchmark result IDs?
+        baseline_id, contender_id = compare_ids.split("...", 1)
+
+        if not baseline_id:
+            f.abort(404, description="empty baseline ID")
+
+        if not contender_id:
+            f.abort(404, description="empty contender ID")
+
+        return baseline_id, contender_id
+
+    def get_query_args_from_request(self):
+        """
+        Attempt to read a specific set of query parameters from request
+        context.
+        """
+        # what is raw supposed to do?
         raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
 
         threshold = f.request.args.get("threshold")
@@ -91,17 +124,22 @@ class CompareMixin:
         if threshold_z is not None:
             threshold_z = float(threshold_z)
 
-        try:
-            baseline_id, contender_id = compare_ids.split("...", 1)
-        except ValueError:
-            self.abort_404_not_found()
+        # I think this expression can never raise ValueError.
+        # The goal here was probably to raise ValueError?
+        # try:
+        #     baseline_id, contender_id = compare_ids.split("...", 1)
+        # except ValueError:
+        #     self.abort_404_not_found()
 
-        return raw, threshold, threshold_z, baseline_id, contender_id
+        return raw, threshold, threshold_z
 
 
 class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
+    def _get_results(self, rid: str) -> List[BenchmarkResult]:
+        raise NotImplementedError
+
     @maybe_login_required
-    def get(self, compare_ids):
+    def get(self, compare_ids) -> f.Response:
         """
         ---
         description: Compare benchmark results.
@@ -130,15 +168,20 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
         tags:
           - Comparisons
         """
-        args = self.get_args(compare_ids)
-        raw, threshold, threshold_z, baseline_id, contender_id = args
 
-        baseline_benchmark_result = self._get(baseline_id)
-        contender_benchmark_result = self._get(contender_id)
+        baseline_id, contender_id = self._parse_two_ids_or_abort(compare_ids)
+
+        args = self.get_query_args_from_request()
+        raw, threshold, threshold_z = args
+
+        baseline_benchmark_result = self._get_results(baseline_id)[0]
+        contender_benchmark_result = self._get_results(contender_id)[0]
+
         set_z_scores(
             contender_benchmark_results=[contender_benchmark_result],
             baseline_commit=baseline_benchmark_result.run.commit,
         )
+
         # TODO: remove baseline-z-score-related keys from this endpoint
         baseline_benchmark_result.z_score = None
 
@@ -147,8 +190,8 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
         set_display_benchmark_name(baseline_benchmark_result)
         set_display_benchmark_name(contender_benchmark_result)
 
-        baseline = _compare_entity(baseline_benchmark_result)
-        contender = _compare_entity(contender_benchmark_result)
+        baseline = _result_dict_for_compare_api(baseline_benchmark_result)
+        contender = _result_dict_for_compare_api(contender_benchmark_result)
         comparator = BenchmarkComparator(
             baseline,
             contender,
@@ -160,8 +203,11 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
 
 
 class CompareListEndpoint(ApiEndpoint, CompareMixin):
+    def _get_results(self, id: str) -> List[BenchmarkResult]:
+        raise NotImplementedError
+
     @maybe_login_required
-    def get(self, compare_ids):
+    def get(self, compare_ids) -> f.Response:
         """
         ---
         description: Compare benchmark results.
@@ -190,32 +236,42 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
         tags:
           - Comparisons
         """
-        args = self.get_args(compare_ids)
-        raw, threshold, threshold_z, baseline_id, contender_id = args
+        # Note(JP): so, the baseline_id and the contender_id may be of various
+        # kinds (run ids, batch ids, .... see sub classes below.).
 
-        baselines = self._get(baseline_id)
-        contenders = self._get(contender_id)
+        baseline_id, contender_id = self._parse_two_ids_or_abort(compare_ids)
+
+        raw, threshold, threshold_z = self.get_query_args_from_request()
+
+        baseline_results = self._get_results(baseline_id)
+        contender_results = self._get_results(contender_id)
+
         set_z_scores(
-            contender_benchmark_results=contenders,
-            baseline_commit=baselines[0].run.commit,
+            contender_benchmark_results=contender_results,
+            baseline_commit=baseline_results[0].run.commit,
         )
+
         # TODO: remove baseline-z-score-related keys from this endpoint
-        for baseline in baselines:
-            baseline.z_score = None
+        for res in baseline_results:
+            res.z_score = None
 
         baseline_items, contender_items = [], []
-        for benchmark_result in baselines:
+
+        for benchmark_result in baseline_results:
             # TODO: define dynamic properties on BenchmarkResult instead of
             # mutating these objects here in-place.
             set_display_benchmark_name(benchmark_result)
             set_display_case_permutation(benchmark_result)
-            baseline_items.append(_compare_entity(benchmark_result))
-        for benchmark_result in contenders:
+
+            baseline_items.append(_result_dict_for_compare_api(benchmark_result))
+
+        for benchmark_result in contender_results:
             set_display_benchmark_name(benchmark_result)
             set_display_case_permutation(benchmark_result)
-            contender_items.append(_compare_entity(benchmark_result))
+            contender_items.append(_result_dict_for_compare_api(benchmark_result))
 
         pairs = _get_pairs(baseline_items, contender_items)
+
         comparator = BenchmarkListComparator(
             pairs,
             threshold,
@@ -227,27 +283,35 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
 
 
 class CompareBenchmarksAPI(CompareEntityEndpoint):
-    def _get(self, benchmark_id):
+    def _get_results(self, benchmark_id) -> List[BenchmarkResult]:
         try:
             benchmark_result = BenchmarkResult.one(id=benchmark_id)
         except NotFound:
-            self.abort_404_not_found()
-        return benchmark_result
+            f.abort(
+                404, description="no benchmark result found with ID: '{benchmark_id}'"
+            )
+        return [benchmark_result]
 
 
 class CompareBatchesAPI(CompareListEndpoint):
-    def _get(self, batch_id):
+    def _get_results(self, batch_id) -> List[BenchmarkResult]:
         benchmark_results = BenchmarkResult.all(batch_id=batch_id)
+
         if not benchmark_results:
-            self.abort_404_not_found()
+            f.abort(
+                404,
+                description=f"no benchmark results found for batch ID: '{batch_id}'",
+            )
         return benchmark_results
 
 
 class CompareRunsAPI(CompareListEndpoint):
-    def _get(self, run_id):
+    def _get_results(self, run_id) -> List[BenchmarkResult]:
         benchmark_results = BenchmarkResult.all(run_id=run_id)
         if not benchmark_results:
-            self.abort_404_not_found()
+            f.abort(
+                404, description=f"no benchmark results found for run ID: '{run_id}'"
+            )
         return benchmark_results
 
 
@@ -275,7 +339,9 @@ class CompareCommitsAPI(CompareListEndpoint):
         try:
             baseline_sha, contender_sha = compare_shas.split("...", 1)
         except ValueError:
+            # Note(JP): this cannot raise ValueError.
             self.abort_404_not_found()
+
         baseline_commit = self._get(baseline_sha)
         contender_commit = self._get(contender_sha)
         return self.serializer.one.dump([baseline_commit, contender_commit])
@@ -284,7 +350,8 @@ class CompareCommitsAPI(CompareListEndpoint):
         try:
             commit = Commit.one(sha=sha)
         except NotFound:
-            self.abort_404_not_found()
+            f.abort(404, description=f"commit hash not found: {sha}")
+
         return commit
 
 
