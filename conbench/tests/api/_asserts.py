@@ -69,6 +69,7 @@ class ApiEndpointTest:
         assert r.content_type == "application/json", r.content_type + " " + r.text
         assert r.json["code"] == 404
         assert r.json["name"] == "Not Found"
+        # allow for additional properties
         errors = ErrorSchema().validate(r.json)
         assert errors == {}, errors
 

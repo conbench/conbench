@@ -357,7 +357,7 @@ def create_benchmarks_data():
         for hardware_type in hardware_types:
             for benchmark_language in benchmark_languages:
                 for benchmark_name in benchmark_names:
-                    run_id = f"{hardware_type}{i+1}"
+                    run_id = f"run-on-{hardware_type}-{i+1}"
                     commit, branch = commits[i], branches[i]
                     mean, reason = means[i], reasons[i]
                     timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
