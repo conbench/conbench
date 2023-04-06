@@ -52,18 +52,7 @@ spec:
         # system by allowing for more containers (replicas). Having one process
         # per container also simplifies log output, removes the preload topic
         # and prom metrics coordination topic from the picture.
-        command: [
-          "gunicorn", "-b", "0.0.0.0:5000",
-          "-w", "5",
-          "-t", "120",
-          "conbench:application",
-          "--access-logfile=-",
-          # Add L specifier to access log, to log request processing duration. Also see
-          # https://github.com/conbench/conbench/issues/810
-          "--access-logformat", '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" (%(L)s s)',
-          "--error-logfile=-",
-          "--preload"
-          ]
+        command: ["gunicorn", "-c", "conbench/gunicorn-conf.py"]
         imagePullPolicy: "Always"
         ports:
           - name: gunicorn-port
