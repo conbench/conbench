@@ -7,6 +7,8 @@ from urllib.parse import urlparse
 import flask
 from sqlalchemy import select
 
+import conbench.util
+
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app.results import RunMixin
@@ -61,7 +63,7 @@ class Index(AppEndpoint, RunMixin):
         for r in runs:
             rd = RunForDisplay(
                 ctime_for_table=r.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"),
-                commit_message_short=short_commit_msg(r.commit.message),
+                commit_message_short=conbench.util.short_commit_msg(r.commit.message),
                 # Temporary band-aid; we cannot fetch all last-1000-run-related
                 # BenchmarkResult objects each time we render the landing page.
                 # See https://github.com/conbench/conbench/issues/977 However,
@@ -111,23 +113,6 @@ class RunForDisplay:
     # auot-completion in a jinja2 template see
     # https://github.com/microsoft/pylance-release/discussions/4090)
     run: Run
-
-
-def short_commit_msg(msg: str):
-    """
-    Substitute multiple whitespace characters with a single space. Overall,
-    truncate at maxlen.
-
-    This may return an empty string.
-    """
-    result = " ".join(msg.split())
-
-    maxlen = 200
-
-    if len(result) > maxlen:
-        result = result[:maxlen] + "..."
-
-    return result
 
 
 view = Index.as_view("index")

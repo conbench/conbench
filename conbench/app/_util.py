@@ -1,5 +1,3 @@
-import re
-
 from ..hacks import set_display_benchmark_name, set_display_case_permutation
 from ..units import formatter_for_unit
 
@@ -57,11 +55,3 @@ def set_display_mean(benchmark):
 def set_display_error(benchmark):
     if not benchmark["error"]:
         benchmark["error"] = ""
-
-
-def display_message(message):
-    # Note(JP): why is that important, useful?
-    # truncate git shas in commit message
-    for m in re.findall(r"\b[0-9a-f]{40}\b", message):
-        message = message.replace(m, m[:7])
-    return message

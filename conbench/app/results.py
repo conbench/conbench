@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import bokeh
 import flask as f
@@ -11,7 +12,7 @@ import conbench.util
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin
-from ..app._util import augment, display_message, display_time
+from ..app._util import augment, display_time
 from ..config import Config
 
 log = logging.getLogger(__name__)
@@ -111,15 +112,20 @@ class BenchmarkResultMixin:
 
 
 class RunMixin:
-    def get_display_run(self, run_id):
+    def get_display_run(self, run_id) -> Optional[dict]:
         run, response = self._get_run(run_id)
 
         if response.status_code == 404:
-            self.flash(f"Run ID unknown: {run_id}", "info")
+            self.flash(f"Run ID unknown: {run_id}", "info")  # type: ignore
             return None
 
         if response.status_code != 200:
-            self.flash("Error getting run.")
+            log.warning(
+                "virtual http request failed. response: %s, %s",
+                response.status_code,
+                response.text,
+            )
+            self.flash(f"Error getting run with ID: {run_id}")  # type: ignore
             return None
 
         self._augment(run)
@@ -128,7 +134,8 @@ class RunMixin:
     def get_display_baseline_run(self, run_url):
         run, response = self._get_run_by_url(run_url)
         if response.status_code != 200:
-            self.flash("Error getting run.")
+            # "RunMixin" has no attribute "flash"
+            self.flash("Error getting run.")  # type: ignore
             return None
 
         self._augment(run)
@@ -137,7 +144,7 @@ class RunMixin:
     def get_display_runs(self):
         runs, response = self._get_runs()
         if response.status_code != 200:
-            self.flash("Error getting runs.")
+            self.flash("Error getting runs.")  # type: ignore
             return []
 
         for run in runs:
@@ -163,27 +170,28 @@ class RunMixin:
 
         run["commit"]["display_repository"] = repository_name
 
-        # Note(JP): does run["commit"]["message"] ever result in KeyError?
-        # I think `display_message()` may be thought of constructing the text
-        # for a URL. But.... shrug. This needs consolidation.
-        commit_message = display_message(run["commit"]["message"])
+        # For HTML template processing make it so that the commit dictionary
+        # _always_ has non-empty string value for all of the following
+        # properties:
+        # - "url"
+        # - "display_message"
+        # - "html_commit_anchor_and_msg"
+        #
+        # Expect the "sha" key to be present as a non-empty strings
 
-        # Note(JP): run.commit.url and run.commit.display_message seem to be
-        # consumed in the HTML template. Here I am a little lost about the
-        # guarantees -- are they always available? We need to resolve this with
-        # proper type annotations and schemata. Until then, do poor-man's
-        # validation to prevent AttributeError and KeyError.
-        # display_message really seems to be name of the link
-        run["commit"]["display_message"] = commit_message
-        if not commit_message:  # None or empty string
-            # Note(JP): I wonder where the "url" ever got set.
-            # Maybe in the _Serializer(EntitySerializer) for Commit?
-            if run["commit"].get("url"):  # be real conservative
-                run["commit"]["display_message"] = run["commit"].get("url")
-            else:
-                # let the template consume these two keys.
-                run["commit"]["url"] = "#"
-                run["commit"]["display_message"] = "not commit info"
+        c = run["commit"]
+        if c.get("url") is None:
+            # non-empty string value for HTML
+            c["url"] = "#"
+
+        # Assume that run["commit"]["message"] never results in KeyError.
+        # (we will see).
+        short_commit_message = conbench.util.short_commit_msg(c["message"])
+        commit_anchor_text = c["sha"][:7]
+        commit_html_anchor_and_msg = f'<a href="{c["url"]}">{commit_anchor_text}</a> <code>({short_commit_message})</code>'
+
+        c["display_message"] = short_commit_message
+        c["html_anchor_and_msg"] = commit_html_anchor_and_msg
 
     def _display_time(self, obj, field):
         timestring = obj[field]
