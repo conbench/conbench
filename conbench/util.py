@@ -18,7 +18,7 @@ try:
     from urllib3.util import Retry
 except ImportError:
     # Legacy around times where requests had version 2.3 something.
-    from requests.packages.urllib3.util.retry import Retry
+    from requests.packages.urllib3.util.retry import Retry  # type: ignore[no-redef]
 
 retry_strategy = Retry(
     total=5,
