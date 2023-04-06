@@ -158,19 +158,19 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         # The API layer will parse `compare_ids` again, but do it here to be
         # able to provide some friendly feedback for common mistakes.
         if "..." not in compare_ids:
-            return self.error_page(
+            return self.error_page(  # type: ignore
                 "Got unexpected URL path pattern. Expected: <id>...<id>"
             )
 
         baseline_id, contender_id = compare_ids.split("...", 1)
 
         if not baseline_id:
-            return self.error_page(
+            return self.error_page(  # type: ignore
                 "No baseline ID was provided. Expected format: <baseline_id>...<contender_id>"
             )
 
         if not contender_id:
-            return self.error_page(
+            return self.error_page(  # type: ignore
                 "No contender ID was provided. Expected format: <baseline-id>...<contender-id>"
             )
 
@@ -182,12 +182,12 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         ) = self._compare(baseline_id=baseline_id, contender_id=contender_id)
 
         if error_string is not None:
-            return self.error_page(
+            return self.error_page(  # type: ignore
                 f"cannot perform comparison: {error_string}", alert_level="info"
             )
 
         if len(comparison_results) == 0:
-            return self.error_page(
+            return self.error_page(  # type: ignore
                 "comparison yielded 0 benchmark results",
                 alert_level="info",
             )
