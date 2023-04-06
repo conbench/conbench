@@ -5,7 +5,3 @@ ignore-paths=^conbench/app/.*$,
              ^conbench/entities/.*$,
              ^conbench/tests/.*$,
 
-
-
-
-
