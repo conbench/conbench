@@ -188,7 +188,7 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
 
         if len(comparison_results) == 0:
             return self.error_page(
-                f"comparison yielded 0 benchmark results",
+                "comparison yielded 0 benchmark results",
                 alert_level="info",
             )
 
