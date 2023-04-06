@@ -61,6 +61,19 @@ lint:
 	flake8
 	isort .
 	black .
+	pylint --errors-only  conbench
+	mypy conbench
+	mypy benchalerts
+
+
+# Run by CI, these commands should not modify files, but only check compliance.
+# and exit with a non-zero status code upon error.
+.PHONY: lint-ci
+lint-ci:
+	flake8
+	isort --check .
+	black --check --diff .
+#	pylint --errors-only  conbench
 	mypy conbench
 	mypy benchalerts
 
@@ -103,16 +116,6 @@ build-docs:
 
 # The targets above this comment have been in use by humans. Change
 # conservatively.
-
-
-# Run by CI, these commands should not modify files, but only check compliance.
-.PHONY: lint-ci
-lint-ci:
-	flake8
-	isort --check .
-	black --check --diff .
-	mypy conbench
-	mypy benchalerts
 
 
 require-env-ghtoken:

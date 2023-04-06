@@ -1,0 +1,7 @@
+[MAIN]
+
+ignore-paths=^conbench/app/.*$,
+             ^conbench/api/.*$,
+             ^conbench/entities/.*$,
+             ^conbench/tests/.*$,
+
