@@ -19,11 +19,11 @@ class TestCompareBenchmark(_asserts.GetEnforcer):
         )
         self.assert_page(response, "Compare Benchmarks")
 
-        assert "could not do comparison:" in response.text, response.text
+        assert "cannot perform comparison:" in response.text, response.text
 
         response = client.get("/compare/benchmarks/foo...bar/", follow_redirects=True)
         self.assert_page(response, "Compare Benchmarks")
-        assert "could not do comparison:" in response.text
+        assert "cannot perform comparison:" in response.text
 
 
 class TestCompareBatches(_asserts.GetEnforcer):
@@ -45,7 +45,7 @@ class TestCompareBatches(_asserts.GetEnforcer):
         self.assert_page(response, "Compare Batches")
 
         assert (
-            "no benchmark results found for batch ID: unknown" in response.text
+            "no benchmark results found for batch ID: 'unknown'" in response.text
         ), response.text
 
         response = client.get("/compare/batches/foo...bar/", follow_redirects=True)
@@ -53,7 +53,7 @@ class TestCompareBatches(_asserts.GetEnforcer):
         self.assert_page(response, "Compare Batches")
 
         assert (
-            "no benchmark results found for batch ID: foo" in response.text
+            "no benchmark results found for batch ID: 'foo'" in response.text
         ), response.text
 
 
@@ -74,9 +74,9 @@ class TestCompareRuns(_asserts.GetEnforcer):
             "/compare/runs/unknown3...unknown2/", follow_redirects=True
         )
         self.assert_page(response, "Compare Runs")
-        assert "no benchmark results found for run ID: unknown3" in response.text
+        assert "no benchmark results found for run ID: 'unknown3'" in response.text
 
         response = client.get("/compare/runs/foo...bar/", follow_redirects=True)
 
         self.assert_page(response, "Compare Runs")
-        assert "no benchmark results found for run ID: foo" in response.text
+        assert "no benchmark results found for run ID: 'foo'" in response.text

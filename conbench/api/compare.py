@@ -236,13 +236,11 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
         tags:
           - Comparisons
         """
-        # Note(JP): so, the baseline_id and the contender_id may be of various
-        # kinds (run ids, batch ids, .... see sub classes below.).
+        # The `baseline_id`` and `contender_id`` may be of various kinds (run
+        # ids, batch ids, .... see sub classes below.).
 
         baseline_id, contender_id = self._parse_two_ids_or_abort(compare_ids)
-
         raw, threshold, threshold_z = self.get_query_args_from_request()
-
         baseline_results = self._get_results(baseline_id)
         contender_results = self._get_results(contender_id)
 

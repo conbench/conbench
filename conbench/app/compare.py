@@ -148,15 +148,26 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         return plot
 
     @authorize_or_terminate
-    def get(self, compare_ids) -> str:
-        # Note that `compare_ids` is an unparsed string. Whether or not it
-        # contains known IDs, is for now only going to be known after having
-        # passed this to the API layer. Note that the two ideas that are
-        # encoded `compare_ids` can be either two run IDs, two batch IDs or two
-        # benchmark result IDs.
+    def get(self, compare_ids: str) -> str:
+        """
+        The argument `compare_ids` is an user-given unvalidated string which is
+        supposed to be of the following shape:
 
-        # The API layer will parse `compare_ids` again, but do it here to be
-        # able to provide some friendly feedback for common mistakes.
+                    <baseline_id>...<contender_id>
+
+        Parse the shape here to provide some friendly UI feedback for common
+        mistakes.
+
+        However, for now rely on the API layer to check if these IDs are
+        'known'.
+
+        The API layer will parse the string `compare_ids` again, but that's OK
+        for now.
+
+        Note that the two IDs that are encoded `compare_ids` can be either two
+        run IDs, two batch IDs or two benchmark result IDs.
+        """
+
         if "..." not in compare_ids:
             return self.error_page(  # type: ignore
                 "Got unexpected URL path pattern. Expected: <id>...<id>"
