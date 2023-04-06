@@ -13,7 +13,12 @@ import requests
 import yaml
 from _pytest.pathlib import import_path
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+
+try:
+    from urllib3.util import Retry
+except ImportError:
+    # Legacy around times where requests had version 2.3 something.
+    from requests.packages.urllib3.util.retry import Retry
 
 retry_strategy = Retry(
     total=5,
@@ -205,7 +210,7 @@ class Connection:
                 self.session.mount("https://", adapter)
             start = time.monotonic()
             response = self.session.post(url, json=data)
-            log.info("Time to POST", url, time.monotonic() - start)
+            log.info("Time to POST %s: %.5f s", url, time.monotonic() - start)
             if response.status_code != expected:
                 self._unexpected_response("POST", response, url)
         except requests.exceptions.ConnectionError:

@@ -73,7 +73,7 @@ lint-ci:
 	flake8
 	isort --check .
 	black --check --diff .
-#	pylint --errors-only  conbench
+	pylint --errors-only  conbench
 	mypy conbench
 	mypy benchalerts
 

@@ -159,6 +159,15 @@ class MixinPython:
 
         try:
             data, output = self._get_timing(f, iterations, timing_options)
+            # It's hard to read what this next function call really does. It
+            # does _not_ publish, but I think it creates a specific data
+            # structure. Should this be in the exception handler? Within
+            # self._get_timing() above we run user-given code, so that is
+            # expected to raise exceptions, and wants to be handled. But which
+            # exceptions is  self.record() expected to raise especially when
+            # _not_ doing HTTP interaction? And why do we handle those
+            # exceptions in the same way as those exceptions that are raised by
+            # user-given code?
             benchmark, _ = self.record(
                 {"data": data, "unit": "s"},
                 name,
@@ -171,7 +180,7 @@ class MixinPython:
                 cluster_info=cluster_info,
                 publish=False,
             )
-        except Exception as e:
+        except Exception as exc:
             error = {"stack_trace": traceback.format_exc()}
             benchmark, _ = self.record(
                 None,
@@ -186,11 +195,13 @@ class MixinPython:
                 error=error,
                 publish=False,
             )
-            raise e
+            raise exc
         finally:
             if publish:
-                self.publish(benchmark)
-
+                # It's a bit unclear -- is `benchmark` defined in _all_ cases
+                # when we arrive here?
+                # https://pylint.readthedocs.io/en/latest/user_guide/messages/error/used-before-assignment.html
+                self.publish(benchmark)  # pylint: disable=used-before-assignment
         return benchmark, output
 
 
