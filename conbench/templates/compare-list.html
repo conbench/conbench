@@ -1,6 +1,13 @@
 {% extends "app.html" %}
 
 {% block app_content %}
+
+<div class="d-flex">
+  <div class="p-0"><h3>Comparison</h3></div>
+</div>
+<hr class="border border-danger border-1 opacity-50">
+
+<!--
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item active">Compare</li>
@@ -17,31 +24,45 @@
         {% elif type == "run" %}
         <li class="breadcrumb-item active">Runs</li>
         <li class="breadcrumb-item active" aria-current="page">
-          <a href="{{ url_for('app.run', run_id=baseline_id) }}">Baseline</a>
+
            ...
           <a href="{{ url_for('app.run', run_id=contender_id) }}">Contender</a>
         </li>
         {% endif %}
       </ol>
     </nav>
+-->
 
-    {% if baseline_run and contender_run %}
-      {% if baseline_run.commit.display_message and contender_run.commit.display_message %}
-    <div class="row">
-      <div class="col-md-12">
-        <ul class="list-group">
-          <li class="list-group-item" align="right" style="border-style:none">
-          Baseline:
-          <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.display_message }}</a>
-          <br/>
-          Contender:
-          <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.display_message }}</a>
-          </li>
-         </ul>
+{% if baseline_run and contender_run %}
+<div class="row row-cols-1 row-cols-md-2 g-4 mt-3 mb-5">
+  <div class="col">
+    <div class="card text-bg-dark mb-3" >
+      <div class="card-header">Contender</div>
+      <div class="card-body">
+        <h5 class="card-title"></h5>
+        <p class="card-text">
+          <a href="{{ url_for('app.run', run_id=contender_id) }}">Run {{ contender_id[:8] + "..."}}</a>
+          for commit {{ contender_run.commit.html_anchor_and_msg|safe }} submitted on  {{ contender_run.timestamp }}.
+        </p>
       </div>
     </div>
-      {% endif %}
-    {% endif %}
+  </div>
+
+  <div class="col">
+    <div class="card text-bg-light mb-3">
+      <div class="card-header">Baseline / Reference</div>
+      <div class="card-body text-dark">
+        <h5 class="card-title"></h5>
+        <p class="card-text">
+          <a href="{{ url_for('app.run', run_id=baseline_id) }}">Run {{ baseline_id[:8] + "..."}}</a>
+          for commit {{ baseline_run.commit.html_anchor_and_msg|safe }} submitted on  {{ baseline_run.timestamp }}.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 
 {% if plot_history %}
 <div class="col-md-12" >

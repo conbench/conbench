@@ -1,5 +1,7 @@
 import copy
 import json
+import logging
+from typing import List, Optional, Tuple
 
 import bokeh
 import flask as f
@@ -11,6 +13,8 @@ from ..app._util import augment
 from ..app.results import BenchmarkResultMixin, RunMixin
 from ..config import Config
 from ..entities.run import commit_hardware_run_map
+
+log = logging.getLogger(__name__)
 
 
 def all_keys(dict1, dict2, attr):
@@ -39,8 +43,10 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             contender_run_id = ids.pop() if ids else None
             compare = f"{baseline_run_id}...{contender_run_id}"
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
+
         elif comparisons and self.type == "run":
             baseline_run_id, contender_run_id = baseline_id, contender_id
+
         elif comparisons and self.type == "benchmark":
             baseline = self.get_display_benchmark(baseline_id)
             contender = self.get_display_benchmark(contender_id)
@@ -142,78 +148,153 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         return plot
 
     @authorize_or_terminate
-    def get(self, compare_ids):
-        threshold = f.request.args.get("threshold")
-        threshold_z = f.request.args.get("threshold_z")
-        params = {"compare_ids": compare_ids}
-        if threshold is not None:
-            params["threshold"] = threshold
-        if threshold_z is not None:
-            params["threshold_z"] = threshold_z
+    def get(self, compare_ids: str) -> str:
+        """
+        The argument `compare_ids` is an user-given unvalidated string which is
+        supposed to be of the following shape:
 
-        try:
-            baseline_id, contender_id = compare_ids.split("...", 1)
-            comparisons, regressions, improvements = self._compare(params)
-            if not comparisons:
-                self.flash("Data is still collecting (or failed).")
-        except ValueError:
-            baseline_id, contender_id = "unknown", "unknown"
-            comparisons, regressions, improvements = [], None, None
-            self.flash("Invalid contender and baseline.")
+                    <baseline_id>...<contender_id>
+
+        Parse the shape here to provide some friendly UI feedback for common
+        mistakes.
+
+        However, for now rely on the API layer to check if these IDs are
+        'known'.
+
+        The API layer will parse the string `compare_ids` again, but that's OK
+        for now.
+
+        Note that the two IDs that are encoded `compare_ids` can be either two
+        run IDs, two batch IDs or two benchmark result IDs.
+        """
+
+        if "..." not in compare_ids:
+            return self.error_page(  # type: ignore
+                "Got unexpected URL path pattern. Expected: <id>...<id>"
+            )
+
+        baseline_id, contender_id = compare_ids.split("...", 1)
+
+        if not baseline_id:
+            return self.error_page(  # type: ignore
+                "No baseline ID was provided. Expected format: <baseline_id>...<contender_id>"
+            )
+
+        if not contender_id:
+            return self.error_page(  # type: ignore
+                "No contender ID was provided. Expected format: <baseline-id>...<contender-id>"
+            )
+
+        (
+            comparison_results,
+            regression_count,
+            improvement_count,
+            error_string,
+        ) = self._compare(baseline_id=baseline_id, contender_id=contender_id)
+
+        if error_string is not None:
+            return self.error_page(  # type: ignore
+                f"cannot perform comparison: {error_string}", alert_level="info"
+            )
+
+        if len(comparison_results) == 0:
+            return self.error_page(  # type: ignore
+                "comparison yielded 0 benchmark results",
+                alert_level="info",
+            )
+
+        # threshold = f.request.args.get("threshold")
+        # threshold_z = f.request.args.get("threshold_z")
+        # params = {"compare_ids": compare_ids}
+        # if threshold is not None:
+        #     params["threshold"] = threshold
+        # if threshold_z is not None:
+        #     params["threshold_z"] = threshold_z
 
         return self.page(
-            comparisons,
-            regressions,
-            improvements,
-            baseline_id,
-            contender_id,
+            comparisons=comparison_results,
+            regressions=regression_count,
+            improvements=improvement_count,
+            baseline_id=baseline_id,
+            contender_id=contender_id,
         )
 
-    def _compare(self, params):
-        response = self.api_get(self.api, **params)
+    def _compare(
+        self, baseline_id: str, contender_id: str
+    ) -> Tuple[List, int, int, Optional[str]]:
+        """
+        Return a 4-tuple.
 
+        If the last item is a string then it is an error message for why
+        the comparison failed. Do not process the first three items then.
+        """
+        # This farms out one of three API endpoints. self.api_endpoint_name is
+        # set in a child class. Re-assemble the stringified input argument for
+        # the virtual API endpoint, carrying both baseline and contender ID
+        params = {"compare_ids": f"{baseline_id}...{contender_id}"}
+        # error: "Compare" has no attribute "api_endpoint_name"  [attr-defined]
+        response = self.api_get(self.api_endpoint_name, **params)  # type: ignore
+
+        if response.status_code != 200:
+            log.error(
+                "processing req to %s -- unexpected response for virtual request: %s, %s",
+                f.request.url,
+                response.status_code,
+                response.text,
+            )
+            # poor-mans error propagation, until we remove the API
+            # layer indirection.
+            errmsg = response.text
+            try:
+                errmsg = response.json["description"]
+            except Exception:
+                pass
+            return [], 0, 0, errmsg
+
+        # below is legacy code, review for bugs and clarity
         comparisons, regressions, improvements = [], 0, 0
-        if response.status_code == 200:
-            comparisons = [response.json]
-            if isinstance(response.json, list):
-                comparisons = response.json
 
-            for c in comparisons:
-                view = "app.compare-benchmarks"
-                compare = f'{c["baseline_id"]}...{c["contender_id"]}'
-                c["compare_benchmarks_url"] = f.url_for(view, compare_ids=compare)
+        comparisons = [response.json]
+        if isinstance(response.json, list):
+            comparisons = response.json
 
-                view = "app.compare-batches"
-                compare = f'{c["baseline_batch_id"]}...{c["contender_batch_id"]}'
-                c["compare_batches_url"] = f.url_for(view, compare_ids=compare)
+        # Mutate comparison objs (dictionaries) on the fly
+        for c in comparisons:
+            view = "app.compare-benchmarks"
+            compare = f'{c["baseline_id"]}...{c["contender_id"]}'
+            c["compare_benchmarks_url"] = f.url_for(view, compare_ids=compare)
 
-                if c["contender_z_regression"]:
-                    regressions += 1
-                if c["contender_z_improvement"]:
-                    improvements += 1
+            view = "app.compare-batches"
+            compare = f'{c["baseline_batch_id"]}...{c["contender_batch_id"]}'
+            c["compare_batches_url"] = f.url_for(view, compare_ids=compare)
 
-        return comparisons, regressions, improvements
+            if c["contender_z_regression"]:
+                regressions += 1
+            if c["contender_z_improvement"]:
+                improvements += 1
+
+        return comparisons, regressions, improvements, None
 
 
 class CompareBenchmarks(Compare):
     type = "benchmark"
     html = "compare-entity.html"
     title = "Compare Benchmarks"
-    api = "api.compare-benchmarks"
+    api_endpoint_name = "api.compare-benchmarks"
 
 
 class CompareBatches(Compare):
     type = "batch"
     html = "compare-list.html"
     title = "Compare Batches"
-    api = "api.compare-batches"
+    api_endpoint_name = "api.compare-batches"
 
 
 class CompareRuns(Compare):
     type = "run"
     html = "compare-list.html"
     title = "Compare Runs"
-    api = "api.compare-runs"
+    api_endpoint_name = "api.compare-runs"
 
 
 rule(
