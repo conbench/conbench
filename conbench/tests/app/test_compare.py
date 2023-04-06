@@ -2,6 +2,19 @@ from ...tests.api import _fixtures
 from ...tests.app import _asserts
 
 
+def _emsg_needle(thing, thingid):
+    """
+    Generate an expected error message.
+
+    The Jinja machinery escapes the single quote (inserts the HTML entity
+    notation &#39;) -- this can be changed via using the |safe operator in the
+    template, but here in this error message we show user-given data so that is
+    the exact case for why the 'sanitization by default' has been built into
+    the templating engine
+    """
+    return f"cannot perform comparison: no benchmark results found for {thing} ID: &#39;{thingid}&#39;"
+
+
 class TestCompareBenchmark(_asserts.GetEnforcer):
     url = "/compare/benchmarks/{}/"
     title = "Compare Benchmarks"
@@ -43,18 +56,10 @@ class TestCompareBatches(_asserts.GetEnforcer):
             "/compare/batches/unknown...unknown2/", follow_redirects=True
         )
         self.assert_page(response, "Compare Batches")
-
-        assert (
-            "no benchmark results found for batch ID: 'unknown'" in response.text
-        ), response.text
-
+        assert _emsg_needle("batch", "unknown"), response.text
         response = client.get("/compare/batches/foo...bar/", follow_redirects=True)
-
         self.assert_page(response, "Compare Batches")
-
-        assert (
-            "no benchmark results found for batch ID: 'foo'" in response.text
-        ), response.text
+        assert _emsg_needle("batch", "foo"), response.text
 
 
 class TestCompareRuns(_asserts.GetEnforcer):
@@ -69,14 +74,11 @@ class TestCompareRuns(_asserts.GetEnforcer):
 
     def test_flash_messages(self, client):
         self.authenticate(client)
-
         response = client.get(
             "/compare/runs/unknown3...unknown2/", follow_redirects=True
         )
         self.assert_page(response, "Compare Runs")
-        assert "no benchmark results found for run ID: 'unknown3'" in response.text
-
+        assert _emsg_needle("run", "unknown3") in response.text
         response = client.get("/compare/runs/foo...bar/", follow_redirects=True)
-
         self.assert_page(response, "Compare Runs")
-        assert "no benchmark results found for run ID: 'foo'" in response.text
+        assert _emsg_needle("run", "foo") in response.text
