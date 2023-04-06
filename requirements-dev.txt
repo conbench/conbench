@@ -5,6 +5,7 @@ flake8
 isort
 lxml
 pytest>=7.0.0
+pylint
 mypy
 myst-parser
 sphinx
