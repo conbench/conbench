@@ -27,8 +27,10 @@ build_and_push() {
 }
 
 deploy_secrets_and_config() {
+
   aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
   kubectl config set-context --current --namespace=${NAMESPACE}
+
   if [ -z "$GOOGLE_CLIENT_ID" ]; then
       cat conbench-secret.yml | sed "\
         s/{{DB_PASSWORD}}/$(echo -n $DB_PASSWORD | base64)/g;\
@@ -52,7 +54,6 @@ deploy_secrets_and_config() {
 
   fi
 
-
   cat conbench-config.yml | sed "\
         s|{{CONBENCH_INTENDED_BASE_URL}}|${CONBENCH_INTENDED_BASE_URL}|g; \
         s/{{APPLICATION_NAME}}/${APPLICATION_NAME}/g;\
@@ -67,8 +68,6 @@ deploy_secrets_and_config() {
 
 run_migrations() {
   set -x
-
-  export IMAGE_SPEC="${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}"
 
   aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
   kubectl config set-context --current --namespace=${NAMESPACE}
