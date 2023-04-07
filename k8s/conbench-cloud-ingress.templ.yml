@@ -32,7 +32,6 @@ metadata:
     # configuration parameter that disallows serving traffic via non-TLS.
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/certificate-arn: <CERTIFICATE_ARN>
-    alb.ingress.kubernetes.io/certificate-arn: {{CERTIFICATE_ARN}}
   labels:
     app: conbench-ingress
 spec:
