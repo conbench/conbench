@@ -16,31 +16,30 @@ metadata:
     # (also spread across multiple k8s namespaces) can configure the _same_ ALB
     # in AWS.
     alb.ingress.kubernetes.io/group.name: cb-alb-group
-    # allow for higher-prio config elsewhere, this can be important for path
-    # evaluation rules.
+    # Allow for higher-priority config elsewhere. This can be important for
+    # path evaluation rules that need to take precedence (injected in another
+    # namespace).
     alb.ingress.kubernetes.io/group.order: "9"
-    # Configure health check against Conbench containers
+    # Configure health check against Conbench containers.
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
     alb.ingress.kubernetes.io/healthcheck-path: /api/ping/
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
     alb.ingress.kubernetes.io/success-codes: '200'
-    # Configure exposure to Internet
+    # Configure exposure to Internet.
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
-    alb.ingress.kubernetes.io/certificate-arn: {{CERTIFICATE_ARN}}
+    # Docs about ssl-redirect: "Once enabled, every HTTP listener will be
+    # configured with a default action which redirects to HTTPS, other rules
+    # will be ignored." That is preclisely what we want, a no-brainer
+    # configuration parameter that disallows serving traffic via non-TLS.
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/certificate-arn: <CERTIFICATE_ARN>
   labels:
     app: conbench-ingress
 spec:
   rules:
-  - http:
+  - host: <CONBENCH_INTENDED_DNS_NAME>
+    http:
       paths:
-      - path: /*
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: ssl-redirect
-            port:
-              name: use-annotation
       - path: /
         pathType: Prefix
         backend:

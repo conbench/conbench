@@ -1,5 +1,22 @@
 #!/bin/bash
 
+# Location of the Conbench web application container image. Note: it seems like
+# FLASK_APP has a static value: "conbench". Maybe we should hard-code this to
+# "conbench-webapp" or something like that.
+export IMAGE_SPEC="${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}"
+
+# This script assumes that secrets have been injected via environment. (`env`
+# file fetched from S3, and sourced automatically on the Buildkite runner
+# before executing this logic). That is, secrets are available here as values
+# of a specific set of 'well-known' environment variables. Not all of these
+# configuration parameters are secrets, thought. Non-sensitive parameter names:
+#
+# CONBENCH_INTENDED_BASE_URL (scheme and DNS name)
+# EKS_CLUSTER (the name of the EKS cluster to operate on)
+# APPLICATION_NAME (shows up in the UI of the deployed web app)
+# NAMESPACE (indicating the k8s namespace to deploy into)
+# ...
+
 build_and_push() {
   set -x
   make set-build-info
@@ -10,8 +27,10 @@ build_and_push() {
 }
 
 deploy_secrets_and_config() {
+
   aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
   kubectl config set-context --current --namespace=${NAMESPACE}
+
   if [ -z "$GOOGLE_CLIENT_ID" ]; then
       cat conbench-secret.yml | sed "\
         s/{{DB_PASSWORD}}/$(echo -n $DB_PASSWORD | base64)/g;\
@@ -35,7 +54,6 @@ deploy_secrets_and_config() {
 
   fi
 
-
   cat conbench-config.yml | sed "\
         s|{{CONBENCH_INTENDED_BASE_URL}}|${CONBENCH_INTENDED_BASE_URL}|g; \
         s/{{APPLICATION_NAME}}/${APPLICATION_NAME}/g;\
@@ -50,8 +68,6 @@ deploy_secrets_and_config() {
 
 run_migrations() {
   set -x
-
-  export IMAGE_SPEC="${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}"
 
   aws eks --region us-east-2 update-kubeconfig --name ${EKS_CLUSTER}
   kubectl config set-context --current --namespace=${NAMESPACE}
@@ -82,10 +98,9 @@ run_migrations() {
 deploy() {
   set -x
 
-  # Note: it seems like FLASK_APP is always just "conbench". Maybe we should
-  # hard-code this to "conbench-webapp", indicating that this is the
-  # web application's container image.
-  export IMAGE_SPEC="${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}"
+  # Extract DNS name from intended base URL (well-defined)
+  # kudos to https://stackoverflow.com/a/11385736/145400
+  export CONBENCH_INTENDED_DNS_NAME=$(echo ${CONBENCH_INTENDED_BASE_URL} | awk -F[/:] '{print $4}')
 
   # Note(JP): This runs as part of a BK pipeline and uses AWS credentials that
   # have the `--group system:masters --username admin` privilege, see:
@@ -105,7 +120,9 @@ deploy() {
   # the ALB then we need to out-of-band update an A record in Route53, because
   # we do not yet use k8s externalDNS features.
   cat k8s/conbench-cloud-ingress.templ.yml | \
-    sed "s/{{CERTIFICATE_ARN}}/${CERTIFICATE_ARN}/g" | kubectl apply -f -
+    sed "s/<CERTIFICATE_ARN>/${CERTIFICATE_ARN}/g" | \
+    sed "s/<CONBENCH_INTENDED_DNS_NAME>/${CONBENCH_INTENDED_DNS_NAME}/g" | \
+      kubectl apply -f -
 
   kubectl apply -f k8s/conbench-service.yml
   kubectl apply -f k8s/conbench-service-monitor.yml
