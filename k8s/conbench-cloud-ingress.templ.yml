@@ -37,7 +37,8 @@ metadata:
     app: conbench-ingress
 spec:
   rules:
-  - http:
+  - host: <CONBENCH_INTENDED_DNS_NAME>
+    http:
       paths:
       - path: /
         pathType: Prefix
