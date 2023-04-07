@@ -98,6 +98,9 @@ run_migrations() {
 deploy() {
   set -x
 
+  # Extract DNS name from intended base URL (well-defined)
+  # kudos to https://stackoverflow.com/a/11385736/145400
+  export CONBENCH_INTENDED_DNS_NAME=$(echo ${CONBENCH_INTENDED_BASE_URL} | awk -F[/:] '{print $4}')
 
   # Note(JP): This runs as part of a BK pipeline and uses AWS credentials that
   # have the `--group system:masters --username admin` privilege, see:
@@ -117,7 +120,9 @@ deploy() {
   # the ALB then we need to out-of-band update an A record in Route53, because
   # we do not yet use k8s externalDNS features.
   cat k8s/conbench-cloud-ingress.templ.yml | \
-    sed "s/{{CERTIFICATE_ARN}}/${CERTIFICATE_ARN}/g" | kubectl apply -f -
+    sed "s/<CERTIFICATE_ARN>/${CERTIFICATE_ARN}/g" | \
+    sed "s/<CONBENCH_INTENDED_DNS_NAME>/${CONBENCH_INTENDED_DNS_NAME}/g" | \
+      kubectl apply -f -
 
   kubectl apply -f k8s/conbench-service.yml
   kubectl apply -f k8s/conbench-service-monitor.yml
