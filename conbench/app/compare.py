@@ -203,14 +203,6 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
                 alert_level="info",
             )
 
-        # threshold = f.request.args.get("threshold")
-        # threshold_z = f.request.args.get("threshold_z")
-        # params = {"compare_ids": compare_ids}
-        # if threshold is not None:
-        #     params["threshold"] = threshold
-        # if threshold_z is not None:
-        #     params["threshold_z"] = threshold_z
-
         return self.page(
             comparisons=comparison_results,
             regressions=regression_count,
