@@ -995,7 +995,7 @@
                         "type": "object",
                     },
                     "error": {
-                        "description": "Details about an error that occured while the benchamrk was running (free-form JSON).",
+                        "description": 'Details about an error that occurred while the benchmark was running (free-form JSON).  You may populate both this field and the "data" field of the "stats" object. In that case, the "data" field measures the metric\'s values before the error occurred. Those values will not be compared to non-errored values in analyses and comparisons.',
                         "type": "object",
                     },
                     "github": {"$ref": "#/components/schemas/GitHubCreate"},
@@ -1051,7 +1051,7 @@
             "BenchmarkResultStats": {
                 "properties": {
                     "data": {
-                        "description": "A list of benchmark results (e.g. durations, throughput). This will be used as the main + only metric for regression and improvement. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`.",
+                        "description": "A list of benchmark results (e.g. durations, throughput). This will be used as the main + only metric for regression and improvement. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`.  You may populate both this field and the \"error\" field in the top level of the benchmark result payload. In that case, this field measures the metric's values before the error occurred. These values will not be compared to non-errored values in analyses and comparisons.",
                         "items": {"nullable": True, "type": "number"},
                         "type": "array",
                     },
@@ -1096,7 +1096,7 @@
                         "type": "string",
                     },
                     "times": {
-                        "description": "A list of benchmark durations. If `data` is a duration measure, this should be a duplicate of that object. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn't complete as `null`.",
+                        "description": 'A list of benchmark durations. If `data` is a duration measure, this should be a duplicate of that object. The values should be ordered in the order the iterations were executed (the first element is the first iteration, the second element is the second iteration, etc.). If an iteration did not complete but others did and you want to send partial data, mark each iteration that didn\'t complete as `null`.  You may populate both this field and the "error" field in the top level of the benchmark result payload. In that case, this field measures how long the benchmark took to run before the error occurred. These values will not be compared to non-errored values in analyses and comparisons.',
                         "items": {"nullable": True, "type": "number"},
                         "type": "array",
                     },
