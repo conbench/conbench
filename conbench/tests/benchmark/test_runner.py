@@ -8,6 +8,7 @@ from ...tests.api import _fixtures
 from ...tests.helpers import _uuid
 from ._example_benchmarks import (
     CasesBenchmark,
+    DataAndErrorBenchmark,
     ExternalBenchmark,
     ExternalBenchmarkWithWrongName,
     SimpleBenchmark,
@@ -154,6 +155,14 @@ def test_runner_external_benchmark():
     assert len(result["stats"]["data"]) == 3
     assert result["context"] == {"benchmark_language": "C++"}
     assert_repo_is_valid(result["github"]["repository"])
+
+
+def test_runner_supplies_both_data_and_error():
+    benchmark = DataAndErrorBenchmark()
+    [(result, _)] = benchmark.run()
+    assert result["stats"]["iterations"] == 3
+    assert len(result["stats"]["data"]) == 3
+    assert result["error"] == {"something": "bad"}
 
 
 def test_runner_can_specify_run_and_batch_id():

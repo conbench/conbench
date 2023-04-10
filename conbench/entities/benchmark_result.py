@@ -399,7 +399,13 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
                 iteration, the second element is the second iteration, etc.).
                 If an iteration did not complete but others did and you want to
                 send partial data, mark each iteration that didn't complete as
-                `null`."""
+                `null`.
+
+                You may populate both this field and the "error" field in the top level
+                of the benchmark result payload. In that case, this field measures
+                the metric's values before the error occurred. These values will not be
+                compared to non-errored values in analyses and comparisons.
+                """
             )
         },
     )
@@ -416,6 +422,12 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
                 second iteration, etc.). If an iteration did not complete but
                 others did and you want to send partial data, mark each
                 iteration that didn't complete as `null`.
+
+                You may populate both this field and the "error" field in the top level
+                of the benchmark result payload. In that case, this field measures
+                how long the benchmark took to run before the error occurred. These
+                values will not be compared to non-errored values in analyses and
+                comparisons.
                 """
             )
         },
@@ -600,7 +612,17 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
     error = marshmallow.fields.Dict(
         required=False,
         metadata={
-            "description": "Details about an error that occured while the benchamrk was running (free-form JSON)."
+            "description": conbench.util.dedent_rejoin(
+                """
+                Details about an error that occurred while the benchmark was running
+                (free-form JSON).
+
+                You may populate both this field and the "data" field of the "stats"
+                object. In that case, the "data" field measures the metric's values
+                before the error occurred. Those values will not be compared to
+                non-errored values in analyses and comparisons.
+                """
+            )
         },
     )
     tags = marshmallow.fields.Dict(

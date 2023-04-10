@@ -136,6 +136,33 @@ class ExternalBenchmark(conbench.runner.Benchmark):
 
 
 @conbench.runner.register_benchmark
+class DataAndErrorBenchmark(conbench.runner.Benchmark):
+    """Example benchmark that supplies both data and an error."""
+
+    external = True
+    name = "data_and_error"
+
+    def run(self, **kwargs):
+        # external results from an API call, command line execution, etc
+        result = {
+            "data": [100, 200, 300],
+            "unit": "i/s",
+            "times": [0.100, 0.200, 0.300],
+            "time_unit": "s",
+        }
+
+        context = {"benchmark_language": "C++"}
+        yield self.conbench.record(
+            result,
+            self.name,
+            error={"something": "bad"},
+            context=context,
+            options=kwargs,
+            output=result,
+        )
+
+
+@conbench.runner.register_benchmark
 class ExternalBenchmarkR(conbench.runner.Benchmark):
     """Example benchmark that records an R benchmark result."""
 

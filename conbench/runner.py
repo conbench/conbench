@@ -308,7 +308,8 @@ class Conbench(Connection, MixinPython, MixinR):
         }
         if error:
             benchmark_result["error"] = error
-        else:
+
+        if result and result["data"]:
             benchmark_result["stats"] = self._stats(
                 result["data"],
                 result["unit"],
