@@ -1,37 +1,10 @@
 {% extends "app.html" %}
-
 {% block app_content %}
 
 <div class="d-flex">
   <div class="p-0"><h3>Comparison</h3></div>
 </div>
 <hr class="border border-danger border-1 opacity-50">
-
-<!--
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item active">Compare</li>
-        {% if type == "batch" %}
-        <li class="breadcrumb-item active">
-          <a href="{{ compare_runs_url }}">Runs</a>
-        </li>
-        <li class="breadcrumb-item active">Batches</li>
-        <li class="breadcrumb-item active" aria-current="page">
-          <a href="{{ url_for('app.batch', batch_id=baseline_id) }}">Baseline</a>
-           ...
-          <a href="{{ url_for('app.batch', batch_id=contender_id) }}">Contender</a>
-        </li>
-        {% elif type == "run" %}
-        <li class="breadcrumb-item active">Runs</li>
-        <li class="breadcrumb-item active" aria-current="page">
-
-           ...
-          <a href="{{ url_for('app.run', run_id=contender_id) }}">Contender</a>
-        </li>
-        {% endif %}
-      </ol>
-    </nav>
--->
 
 {% if baseline_run and contender_run %}
 <div class="row row-cols-1 row-cols-md-2 g-4 mt-3 mb-5">
@@ -218,7 +191,6 @@
     <hr/>
     <h4>Compare current contender run with another run:</h4>
     <br>
-    <br>
 
     <form>
         <div class="form-group">
@@ -253,8 +225,6 @@
 {{super()}}
 
 {{ resources | safe }}
-
-
 
 
 <script type="text/javascript">

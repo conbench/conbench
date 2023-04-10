@@ -100,7 +100,7 @@ deploy() {
 
   # Extract DNS name from intended base URL (well-defined)
   # kudos to https://stackoverflow.com/a/11385736/145400
-  export CONBENCH_INTENDED_DNS_NAME=$(echo ${CONBENCH_INTENDED_BASE_URL} | awk -F[/:] '{print $4}')
+  export CONBENCH_INTENDED_DNS_NAME="$(echo ${CONBENCH_INTENDED_BASE_URL} | awk -F[/:] '{print $4}')"
 
   # Note(JP): This runs as part of a BK pipeline and uses AWS credentials that
   # have the `--group system:masters --username admin` privilege, see:
