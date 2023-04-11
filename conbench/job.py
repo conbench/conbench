@@ -69,6 +69,10 @@ def _fetch_and_cache_most_recent_results(n=0.2 * 10**6) -> None:
 
     t1 = time.monotonic()
 
+    if len(results) == 0:
+        log.debug("BMRT cache: no results (testing mode?)")
+        return
+
     by_id_dict: Dict[str, BenchmarkResult] = {}
     by_name_dict: Dict[str, List[BenchmarkResult]] = defaultdict(list)
     by_case_dict: Dict[str, List[BenchmarkResult]] = defaultdict(list)
