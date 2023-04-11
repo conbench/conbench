@@ -1,19 +1,16 @@
 import dataclasses
 import logging
-import threading
 import signal
+import threading
 import time
 from collections import defaultdict
-
 from typing import Dict, List, TypedDict
 
 from sqlalchemy import select
 
-
 from conbench.db import Session
 from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.hacks import get_case_kvpair_strings
-
 
 """
 This module implements a job which populates and provides a cache for the N
