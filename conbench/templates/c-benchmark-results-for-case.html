@@ -2,14 +2,13 @@
 {% block app_content %}
 
 <div>
-<!--
-<h1 class="display-4">Results</h1>
-<h2>Results</h2>
--->
-<p class="fs-4">
-<strong>{{ benchmark_name }}</strong> <br>
-Results for <code>{{ case.text_id }}</code>
-</p>
+<h3><strong>{{ benchmark_name }}</strong> / case {{ case.id[:7] }}</h3>
+<span class="fs-4"><code>{{ case.text_id }}</code></span>
+
+<p>Based on {{ benchmark_results|length }} results reported in
+    total between {{bmr_cache_meta.oldest_result_time_str}} and
+    {{bmr_cache_meta.newest_result_time_str}}.
+ </p>
 
 <!--<h1>Results for</h1>
 <ul>
@@ -22,7 +21,7 @@ Results for <code>{{ case.text_id }}</code>
 <table class="table table-hover conbench-datatable" style="width:100%; display: none">
 <thead>
     <tr>
-        <th scope="col" style="width: 25%">time</th>
+        <th scope="col" style="width: 21%">time</th>
         <th scope="col">result</th>
         <th scope="col">hardware</th>
         <th scope="col">ctx id</th>
@@ -48,7 +47,7 @@ Results for <code>{{ case.text_id }}</code>
         <a href="{{ url_for('app.benchmark-result', benchmark_result_id=result.id) }}">{{ result.id [:9]}}</a>
     </td>
     <td class="font-monospace">{{ result.ui_hardware_short }}</td>
-    <td class="font-monospace">{{ result.context.id[:7] }}</td>
+    <td class="font-monospace">{{ result.context.id[:8] }}</td>
     <td class="font-monospace">{{ result.ui_non_null_sample_count }}</td>
     <td class="font-monospace">{{ result.ui_mean_and_uncertainty }}</td>
     <td class="font-monospace">{{ result.ui_rel_sem }}</td>
@@ -58,38 +57,36 @@ Results for <code>{{ case.text_id }}</code>
 </table>
 </div>
 
-
 <div class="mt-5">
-    <table class="table table-hover conbench-datatable foob" style="width:100%; display: none">
-    <thead>
-        <tr>
-            <th scope="col" style="width: 15%">hw/ctx</th>
-            <th scope="col" style="width: 25%">samples</th>
-            <th scope="col" style="width: 500px">evolution</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for hwctx, results in results_by_hardware_and_contexts.items() %}
-    <tr>
-        <td class="font-monospace">{{ hwctx }}</td>
-        <td class="font-monospace">
-            {{ results|length}} results
-        </td>
-        <td>
-            <div class="cb-plot-{{ hwctx }}" style="width: 500px"></div>
-        </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-    </table>
-</div>
+    <h4 class="mb-3">Plots
+        <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+        data-bs-title="Benchmark results, grouped by unique (hardware, context) combinations.
+        Time axis: benchmark result start time (associated commit data is not used),
+        ordinate: mean value, if multisample.
+        ">
+    </i>
+    </h4>
 
+    <!-- https://getbootstrap.com/docs/5.2/layout/grid/#row-columns -->
+    <div class="row .row-cols-auto">
+
+        {% for (hwid, ctxid, hwname), results in results_by_hardware_and_context.items() %}
+
+        <!-- with xl-6 I have tested that each plot (fixed width) has enough space -->
+        <div class="col-xl-6 mb-5">
+            <h5 class="mt-2">hardware {{hwid[:4]}} ({{hwname[:22]}}), context {{ctxid[:6]}}: {{ results|length}} results</h5>
+            <div class="cb-plot-{{hwid}}_{{ctxid}}" style="width: 550px"></div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</div>
 
 {% endblock %}
 
 {% block scripts %}
 {{super()}}
-<script type="text/javascript">
+<script>
 
 // let data = [
 //   [1546300800, 1546387200],    // x-values (timestamps)
@@ -97,76 +94,84 @@ Results for <code>{{ case.text_id }}</code>
 //   [        90,         15],    // y-values (series 2)
 // ];
 
-
-let data_by_hwctx = {{ datas_for_plot_json|safe}};
-
+// An Object intended toi
+let plot_info_by_hwctx = {{ infos_for_uplots_json|safe }};
 
 
 $(document).ready(function () {
     let plotopts = {
         title: "",
         class: "cb-uplot",
-        width: 400,
-        height: 500,
+        width: 550,
+        height: 200,
+        cursor: {
+            show: false,
+        },
+        legend: {
+            show: false,
+        },
         series: [
             {},
             {
             sorted: 0,
             show: true,
             spanGaps: false,
-            //value: (self, rawValue) => "$" + rawValue.toFixed(5),
-            stroke: "red",
-            //width: 1,
+            stroke: 'rgb(87, 125, 134)',
+            width: 0.5,
+            // I have been taking greenish colors from this palette:
+            // https://colorhunt.co/palette/b9eddd87cbb9569daa577d86 We can
+            // think about greenifying some graphs, and reddifying others,
+            // based on their properties.
+            fill: "rgba(135, 203, 185, 0.4)",
             //fill: "rgba(255, 0, 0, 0.3)",
             //dash: [10, 5],
-            scale: "s",
+            scale: "y",
             points: {
-                fill: 'black',
-                size: 8,
+                // Without `show: true`, points do not always show.
+                show: true,
+                size: 5,
+                fill: 'rgba(87, 125, 134, 0.7)'
                 }
             }
         ],
         axes: [
             {},
             {
-            show: true,
-            label: "Population",
-            labelSize: 30,
-            labelFont: "bold 12px Arial",
-            font: "12px Arial",
-            gap: 5,
-            size: 50,
-            stroke: "red",
-            grid: {
-                show: true,
-                stroke: "#eee",
-                width: 2,
-                dash: [],
-            },
-            ticks: {
-                show: true,
-                stroke: "#eee",
-                width: 2,
-                dash: [],
-                size: 10,
-            }
+                scale: "y",
+                // give y axis labels some space
+                size: 60,
+                // This is used for y axis formatting. Trade-off:
+                // predictable width, medium precision is sufficient.
+                values: (u, splits) => splits.map((v) => v.toExponential(2)),
             }
         ],
         scales: {
-            "s": {
+
+            "y": {
+                //range: [0, 200000]
                 //auto: false,
-                range:  {
-                    min: {
-                        pad: 0.2,
-                        soft: 0,
-                        mode: 1,
-                    },
-                    max: {
-                        pad: 0.5,
-                        soft: 0,
-                        mode: 1,
-                    },
-                }
+                // range:  {
+                //     min: {
+                //         pad: 0.2,
+                //         soft: 0,
+                //         mode: 1,
+                //     },
+                //     max: {
+                //         pad: 0.5,
+                //         soft: 200000,
+                //         mode: 3,
+                //     }
+                // }
+
+                range: (u, datamin, datamax) => {
+                    // Preparing for all kinds of ranges and orders of
+                    // magnitude, always show the zero for keeping plots most
+                    // meaningful -- if the relative change is very small then
+                    // it will be rather invisible in a plot like this, which
+                    // is the goal.
+                    return [0, datamax * 1.2];
+                },
+
             }
         },
     };
@@ -175,9 +180,9 @@ $(document).ready(function () {
     //     let uplot = new uPlot(plotopts["{{ data_by_hwctx }}"], data, $(this));
     // });
     // use jquery selector, but then get raw element with [0]
-    {% for hwctx, results in results_by_hardware_and_contexts.items() %}
-
-        let uplot_{{ hwctx }} = new uPlot(plotopts, data_by_hwctx["{{ hwctx }}"], $('.cb-plot-{{ hwctx }}')[0]);
+    {% for (hwid, ctxid, _), results in results_by_hardware_and_context.items() %}
+        console.log(plot_info_by_hwctx["{{hwid}}_{{ctxid}}"]["data_for_uplot"]);
+        let uplot_{{hwid}}_{{ctxid}} = new uPlot(plotopts, plot_info_by_hwctx["{{hwid}}_{{ctxid}}"]["data_for_uplot"], $('.cb-plot-{{hwid}}_{{ctxid}}')[0]);
     {% endfor %}
 
     // Enable bootstrap tooltips on this page.
@@ -195,7 +200,7 @@ $(document).ready(function () {
             // the default default seems to be the first item in lengthMenu.
             "lengthMenu": [ 5, 10, 50, 75, 100, 250, 750 ],
             // but when pageLength is also set, then _this_ is the default.
-            "pageLength": 50,
+            "pageLength": 10,
             // Take rather precise control of layouting elements, put bottom elements
             // into a mult-col single row, using BS's grid system.
             "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
