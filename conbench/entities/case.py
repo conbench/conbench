@@ -8,6 +8,7 @@ from ..entities._entity import Base, EntityMixin, NotNull, generate_uuid
 class Case(Base, EntityMixin):
     __tablename__ = "case"
     id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    # The name of the conceptual benchmark (store on BenchmarkResult directly)?
     name: Mapped[str] = NotNull(s.Text)
     tags: Mapped[dict] = NotNull(postgresql.JSONB)
 

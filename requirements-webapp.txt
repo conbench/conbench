@@ -27,5 +27,6 @@ pytest>=7.0.0
 python-dotenv
 PyYAML
 requests
-tenacity
+sigfig
 SQLAlchemy>=2
+tenacity
