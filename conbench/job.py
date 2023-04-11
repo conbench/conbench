@@ -9,6 +9,7 @@ from typing import Dict, List, TypedDict
 from sqlalchemy import select
 
 from conbench.config import Config
+import conbench.metrics
 from conbench.db import Session
 from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.hacks import get_case_kvpair_strings
@@ -103,6 +104,8 @@ def _fetch_and_cache_most_recent_results(n=0.2 * 10**6) -> None:
     )
 
     t2 = time.monotonic()
+
+    conbench.metrics.GAUGE_BMRT_CACHE_LAST_UPDATE_SECONDS.set(t2 - t0)
 
     log.info(
         (

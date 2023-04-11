@@ -22,6 +22,7 @@ import time
 
 import flask
 import prometheus_client
+from prometheus_flask_exporter import NO_PREFIX, PrometheusMetrics
 
 log = logging.getLogger(__name__)
 
@@ -57,6 +58,11 @@ GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING = prometheus_client.Gauge(
     "conbench_github_httpapi_quota_remaining",
     "A gauge that shows the last-observed x-ratelimit-remaining response "
     "header value.",
+)
+
+GAUGE_BMRT_CACHE_LAST_UPDATE_SECONDS = prometheus_client.Gauge(
+    "conbench_bmrt_cache_last_update_seconds",
+    "The time the last iteration of fetch_and_cache_most_recent_results() took",
 )
 
 gauge_gh_api_rem_set = {"set": False}
