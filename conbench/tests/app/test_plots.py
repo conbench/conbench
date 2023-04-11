@@ -412,12 +412,12 @@ def test_simple_source_omit_redundant_labels():
         "parquet-tag=3",
     ]
     assert source.data["y"] == [
-        "100.000",
-        "200.000",
-        "300.000",
+        "100.0",
+        "200.0",
+        "300.0",
     ]
     assert source.data["means"] == [
-        "100.000 s",
-        "200.000 s",
-        "300.000 s",
+        "100.0 s",
+        "200.0 s",
+        "300.0 s",
     ]

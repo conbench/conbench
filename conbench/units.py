@@ -1,4 +1,11 @@
+from typing import Optional
+
+import sigfig
+
+
 def items_per_second_fmt(value, unit):
+    # Note this func probably suffers from truncating small values:
+    # https://github.com/conbench/conbench/issues/683
     if value is None:
         return None
     if value < 1000:
@@ -12,6 +19,8 @@ def items_per_second_fmt(value, unit):
 
 
 def bytes_per_second_fmt(value, unit):
+    # Note this func probably suffers from truncating small values:
+    # https://github.com/conbench/conbench/issues/683
     if value is None:
         return None
     if value < 1024:
@@ -26,8 +35,22 @@ def bytes_per_second_fmt(value, unit):
         return "{:.3f} Ti{}".format(value / 1024**4, unit)
 
 
-def fmt_unit(value, unit):
-    return "{:.3f} {}".format(value, unit) if value is not None else None
+def fmt_unit(value: Optional[float], unit) -> Optional[str]:
+    # Maybe simplify function signature and never allow this to be called
+    # with None.
+    if value is None:
+        return None
+
+    # These stringified values power a Bokeh plot. Ensure that the textual
+    # representation of the numeric value encodes a desired minimum number of
+    # significant digits, to allow for meaningful plotting resolution.
+    # With a fixed "floating point number precision", rather small values
+    # appear trucated: https://github.com/conbench/conbench/issues/683
+
+    # I have seen a KeyError being thrown which I could not reproduce anymore.
+    # sigfig/sigfig.py line 551 does `del number.map[p]` and this resulted in
+    # `KeyError: 0`. It was probably a programming mistake.
+    return f"{sigfig.round(value, sigfigs=4)} {unit}"
 
 
 def formatter_for_unit(unit):

@@ -26,4 +26,8 @@ def test_formatter_for_unit():
     assert formatter_for_unit("s")(None, "s") is None
     assert formatter_for_unit("B/s")(1024, "B/s") == "1.000 KiB/s"
     assert formatter_for_unit("i/s")(1024, "i/s") == "1.024 K i/s"
-    assert formatter_for_unit("s")(1024, "s") == "1024.000 s"
+    assert formatter_for_unit("s")(1024, "s") == "1024 s"
+    # Note: as of today we have precision across four orders
+    # of magnitude in the string-formatted numbers. The following
+    # test encodes that. Does not mean it needs to stay as such.
+    assert formatter_for_unit("s")(10241, "s") == "10240 s"

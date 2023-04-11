@@ -55,7 +55,7 @@ class BenchmarkResult(Base, EntityMixin):
     # performed on demand.
     run: Mapped[Run] = relationship("Run", lazy="select", back_populates="results")
 
-    # These can be emtpy lists. An item in the list is of type float, which
+    # These can be empty lists. An item in the list is of type float, which
     # includes `math.nan` as valid value.
     data: Mapped[Optional[List[float]]] = Nullable(
         postgresql.ARRAY(s.Numeric), default=[]
@@ -71,12 +71,19 @@ class BenchmarkResult(Base, EntityMixin):
     info: Mapped[Info] = relationship("Info", lazy="joined")
     context: Mapped[Context] = relationship("Context", lazy="joined")
 
+    # `unit` is required by schema and currently documented with "The unit of
+    # the data object (e.g. seconds, B/s)". Where do we systematically keep
+    # track of "less is better" or "more is better"?
     unit: Mapped[Optional[str]] = Nullable(s.Text)
     time_unit: Mapped[Optional[str]] = Nullable(s.Text)
+
     batch_id: Mapped[Optional[str]] = Nullable(s.Text)
-    # Do not store timezone information in the DB. Instead, follow timezone
-    # convention: the application code must make sure that what we store is the
-    # user-given time in UTC.
+
+    # User-given 'benchmark start' time. Generally not a great criterion to
+    # sort benchmark results by. Tracking insertion time would be better. Do
+    # not store timezone information in this DB column. Instead, follow
+    # timezone convention: the application code must make sure that what we
+    # store is the user-given timestamp properly translated to UTC.
     timestamp: Mapped[datetime] = NotNull(s.DateTime(timezone=False))
     iterations: Mapped[Optional[int]] = Nullable(s.Integer)
     min: Mapped[Optional[float]] = Nullable(s.Numeric, check("min>=0"))
@@ -166,7 +173,7 @@ class BenchmarkResult(Base, EntityMixin):
                 calculated_result_data = {
                     "data": dat,
                     "times": data["stats"].get("times", []),
-                    "unit": data["stats"]["unit"],
+                    "unit": data["stats"]["unit"],  # seems to be required, good.
                     "time_unit": data["stats"].get("time_unit", "s"),
                     "iterations": len(dat),
                     "mean": mean,
