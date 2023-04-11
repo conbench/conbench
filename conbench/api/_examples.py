@@ -167,7 +167,9 @@ def _api_commit_entity(commit_id, parent_id, links=True):
     return result
 
 
-def _api_compare_entity(benchmark_result_ids, batch_ids, run_ids, batch, benchmark, tags):
+def _api_compare_entity(
+    benchmark_result_ids, batch_ids, run_ids, batch, benchmark, tags
+):
     return {
         "baseline": "0.036 s",
         "baseline_error": None,

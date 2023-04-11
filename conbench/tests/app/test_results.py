@@ -50,7 +50,9 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
         # delete benchmark
         data = {"delete": ["Delete"], "csrf_token": self.get_csrf_token(response)}
         response = client.post(
-            f"/benchmark-results/{benchmark_result_id}/", data=data, follow_redirects=True
+            f"/benchmark-results/{benchmark_result_id}/",
+            data=data,
+            follow_redirects=True,
         )
         self.assert_page(response, "Benchmarks")
         assert re.search(
@@ -71,7 +73,9 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
         self.logout(client)
         data = {"delete": ["Delete"]}
         response = client.post(
-            f"/benchmark-results/{benchmark_result_id}/", data=data, follow_redirects=True
+            f"/benchmark-results/{benchmark_result_id}/",
+            data=data,
+            follow_redirects=True,
         )
         self.assert_login_page(response)
 

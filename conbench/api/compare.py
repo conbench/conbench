@@ -286,7 +286,8 @@ class CompareBenchmarksAPI(CompareEntityEndpoint):
             benchmark_result = BenchmarkResult.one(id=benchmark_result_id)
         except NotFound:
             f.abort(
-                404, description="no benchmark result found with ID: '{benchmark_result_id}'"
+                404,
+                description="no benchmark result found with ID: '{benchmark_result_id}'",
             )
         return [benchmark_result]
 
