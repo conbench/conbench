@@ -159,7 +159,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
     # part of gunicorn's worker process shutdown -- therefore the signal
     # handler-based logic below which injects a shutdown signal into the
     # thread.
-    if Config["TESTING"]:
+    if Config.TESTING:
         log.info("BMRT cache: disabled in TESTING mode")
 
     threading.Thread(target=_run_forever).start()
