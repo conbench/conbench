@@ -177,8 +177,16 @@
 <script type="text/javascript">
 var table = $('#benchmarks').dataTable( {
     "responsive": true,
+    // Take rather precise control of layouting elements, put bottom elements
+    // into a mult-col single row, using BS's grid system.
+    "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
     "order": [[5, 'asc']],
-    "columnDefs": [{ "orderable": false, "targets": [4] }]
+    "columnDefs": [{ "orderable": false, "targets": [4] }],
+    initComplete: function () {
+      var api = this.api();
+      //api.columns.adjust();
+      $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
+    },
 } );
 
 column_search_implementation($('#benchmarks'));
