@@ -380,7 +380,7 @@
                 "content": {
                     "application/json": {
                         "example": {
-                            "baseline": "0.036 s",
+                            "baseline": "0.03637 s",
                             "baseline_batch_id": "some-batch-uuid-1",
                             "baseline_error": None,
                             "baseline_id": "some-benchmark-uuid-1",
@@ -391,7 +391,7 @@
                             "batch": "file-read",
                             "benchmark": "snappy, nyctaxi_sample, parquet, arrow",
                             "change": "0.000%",
-                            "contender": "0.036 s",
+                            "contender": "0.03637 s",
                             "contender_batch_id": "some-batch-uuid-2",
                             "contender_error": None,
                             "contender_id": "some-benchmark-uuid-2",
@@ -424,7 +424,7 @@
                     "application/json": {
                         "example": [
                             {
-                                "baseline": "0.036 s",
+                                "baseline": "0.03637 s",
                                 "baseline_batch_id": "some-batch-uuid-1",
                                 "baseline_error": None,
                                 "baseline_id": "some-benchmark-uuid-1",
@@ -435,7 +435,7 @@
                                 "batch": "file-read",
                                 "benchmark": "snappy, nyctaxi_sample, parquet, arrow",
                                 "change": "0.000%",
-                                "contender": "0.036 s",
+                                "contender": "0.03637 s",
                                 "contender_batch_id": "some-batch-uuid-2",
                                 "contender_error": None,
                                 "contender_id": "some-benchmark-uuid-3",
@@ -460,7 +460,7 @@
                                 "unit": "s",
                             },
                             {
-                                "baseline": "0.036 s",
+                                "baseline": "0.03637 s",
                                 "baseline_batch_id": "some-batch-uuid-1",
                                 "baseline_error": None,
                                 "baseline_id": "some-benchmark-uuid-2",
@@ -471,7 +471,7 @@
                                 "batch": "file-write",
                                 "benchmark": "snappy, nyctaxi_sample, parquet, arrow",
                                 "change": "0.000%",
-                                "contender": "0.036 s",
+                                "contender": "0.03637 s",
                                 "contender_batch_id": "some-batch-uuid-2",
                                 "contender_error": None,
                                 "contender_id": "some-benchmark-uuid-4",
