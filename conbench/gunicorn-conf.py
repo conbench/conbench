@@ -1,3 +1,7 @@
+import os
+import signal
+import sys
+
 """
 Relevant docs:
 
@@ -83,3 +87,13 @@ threads = 10
 # occupied. Keep a large value for now, for the case where all threads in the
 # process process genuine requests (which all take a while to respond to)
 timeout = 120
+
+
+def worker_int(worker):
+    # Motivation to use this hook was to build a simple/robust mechanism for
+    # graceful shutdown of the _run_forever function in the BMRT cache.
+    # https://github.com/benoitc/gunicorn/blob/69c508ac6e4b301045d3ce21acce8b416415d4c5/gunicorn/workers/base.py#L126
+    # https://github.com/benoitc/gunicorn/issues/2706
+    # https://github.com/benoitc/gunicorn/issues/2646
+    sys.stdout.write("\nworker_int hook: send myself SIGTERM\n")
+    os.kill(os.getpid(), signal.SIGTERM)
