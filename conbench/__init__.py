@@ -128,7 +128,6 @@ def _init_flask_application(app):
     app.register_error_handler(werkzeug.exceptions.HTTPException, _json_http_errors)
     _init_api_docs(app)
 
-
     @app.before_request
     def deny_common_bots():
         """
