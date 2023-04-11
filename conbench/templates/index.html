@@ -107,14 +107,17 @@ $(document).ready(function () {
         "order": [[0, 'desc']],
         // https://datatables.net/reference/option/dom
         // put `l` to the bottom to show the "show N entries" menu at bottom
-        "dom": "lfrtip",
+        "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
         "language": {
             "searchPlaceholder": "search across all columns",
         },
         initComplete: function () {
           var api = this.api();
+          // reveal only after DOM modification is complete (reduce loading
+          // layout shift artifacts)
           $('table.cb-runs-table').show();
           api.columns.adjust();
+          $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
         },
       })
     }

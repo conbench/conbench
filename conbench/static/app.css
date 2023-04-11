@@ -20,6 +20,13 @@ table.dataTable thead .sorting_desc {
   background : none;
 }
 
+/* Remove border around and within pagination bar
+   in a datatables presentation */
+.dataTables_paginate .page-link {
+  border: none;
+}
+
+/*
 table.dataTable td {
   font-size: 13.4px;
 }
@@ -28,6 +35,7 @@ table.dataTable td {
   color: #1F77B4;
 }
 
+*/
 [data-href] {
   cursor: pointer;
 }
