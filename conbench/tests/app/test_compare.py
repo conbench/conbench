@@ -39,29 +39,6 @@ class TestCompareBenchmark(_asserts.GetEnforcer):
         assert "cannot perform comparison:" in response.text
 
 
-class TestCompareBatches(_asserts.GetEnforcer):
-    url = "/compare/batches/{}/"
-    title = "Compare Batches"
-    redirect_on_unknown = False
-
-    def _create(self, client):
-        self.create_benchmark(client)
-        batch_id = _fixtures.VALID_PAYLOAD["batch_id"]
-        return f"{batch_id}...{batch_id}"
-
-    def test_flash_messages(self, client):
-        self.authenticate(client)
-
-        response = client.get(
-            "/compare/batches/unknown...unknown2/", follow_redirects=True
-        )
-        self.assert_page(response, "Compare Batches")
-        assert _emsg_needle("batch", "unknown"), response.text
-        response = client.get("/compare/batches/foo...bar/", follow_redirects=True)
-        self.assert_page(response, "Compare Batches")
-        assert _emsg_needle("batch", "foo"), response.text
-
-
 class TestCompareRuns(_asserts.GetEnforcer):
     url = "/compare/runs/{}/"
     title = "Compare Runs"

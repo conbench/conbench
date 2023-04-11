@@ -31,20 +31,11 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, comparisons, regressions, improvements, baseline_id, contender_id):
         unknown = "unknown...unknown"
         compare_runs_url = f.url_for("app.compare-runs", compare_ids=unknown)
-        compare_batches_url = f.url_for("app.compare-batches", compare_ids=unknown)
         baseline, contender, plot, plot_history = None, None, None, None
         baseline_run, contender_run = None, None
         biggest_changes_names, outlier_urls = None, None
 
-        if comparisons and self.type == "batch":
-            ids = {c["baseline_run_id"] for c in comparisons if c["baseline_run_id"]}
-            baseline_run_id = ids.pop() if ids else None
-            ids = {c["contender_run_id"] for c in comparisons if c["contender_run_id"]}
-            contender_run_id = ids.pop() if ids else None
-            compare = f"{baseline_run_id}...{contender_run_id}"
-            compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
-
-        elif comparisons and self.type == "run":
+        if comparisons and self.type == "run":
             baseline_run_id, contender_run_id = baseline_id, contender_id
 
         elif comparisons and self.type == "benchmark":
@@ -55,8 +46,6 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             contender_run_id = contender["run_id"]
             compare = f"{baseline_run_id}...{contender_run_id}"
             compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
-            compare = f'{baseline["batch_id"]}...{contender["batch_id"]}'
-            compare_batches_url = f.url_for("app.compare-batches", compare_ids=compare)
 
         if comparisons:
             baseline_run = self.get_display_run(baseline_run_id)
@@ -69,8 +58,6 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             comparisons_by_id = {c["contender_id"]: c for c in comparisons}
             if self.type == "run":
                 benchmarks, response = self._get_benchmarks(run_id=contender_id)
-            if self.type == "batch":
-                benchmarks, response = self._get_benchmarks(batch_id=contender_id)
             if response.status_code != 200:
                 self.flash("Error getting benchmarks.")
                 return self.redirect("app.index")
@@ -108,7 +95,6 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             baseline_run=baseline_run,
             contender_run=contender_run,
             compare_runs_url=compare_runs_url,
-            compare_batches_url=compare_batches_url,
             outlier_names=biggest_changes_names,
             outlier_urls=outlier_urls,
             search_value=f.request.args.get("search"),
@@ -165,7 +151,7 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         for now.
 
         Note that the two IDs that are encoded `compare_ids` can be either two
-        run IDs, two batch IDs or two benchmark result IDs.
+        run IDs or two benchmark result IDs.
         """
 
         if "..." not in compare_ids:
@@ -262,10 +248,6 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             compare = f'{c["baseline_id"]}...{c["contender_id"]}'
             c["compare_benchmarks_url"] = f.url_for(view, compare_ids=compare)
 
-            view = "app.compare-batches"
-            compare = f'{c["baseline_batch_id"]}...{c["contender_batch_id"]}'
-            c["compare_batches_url"] = f.url_for(view, compare_ids=compare)
-
             if c["contender_z_regression"]:
                 regressions += 1
             if c["contender_z_improvement"]:
@@ -281,13 +263,6 @@ class CompareBenchmarks(Compare):
     api_endpoint_name = "api.compare-benchmarks"
 
 
-class CompareBatches(Compare):
-    type = "batch"
-    html = "compare-list.html"
-    title = "Compare Batches"
-    api_endpoint_name = "api.compare-batches"
-
-
 class CompareRuns(Compare):
     type = "run"
     html = "compare-list.html"
@@ -298,11 +273,6 @@ class CompareRuns(Compare):
 rule(
     "/compare/benchmarks/<compare_ids>/",
     view_func=CompareBenchmarks.as_view("compare-benchmarks"),
-    methods=["GET"],
-)
-rule(
-    "/compare/batches/<compare_ids>/",
-    view_func=CompareBatches.as_view("compare-batches"),
     methods=["GET"],
 )
 rule(
