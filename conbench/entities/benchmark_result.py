@@ -1,6 +1,6 @@
 import math
-from datetime import datetime, timezone
 import statistics
+from datetime import datetime, timezone
 from typing import List, Optional
 
 import flask as f

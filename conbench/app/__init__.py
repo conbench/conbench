@@ -8,6 +8,9 @@ rule: Callable = app.add_url_rule
 
 from .auth import *  # noqa
 from .batches import *  # noqa
+
+# register routes
+from .benchmarks import *  # noqa
 from .compare import *  # noqa
 from .hardware import *  # noqa
 from .index import *  # noqa
@@ -23,6 +26,3 @@ from .runs import *  # noqa
 # "Type[conbench.app.users.User]", local name has type
 # "Type[conbench.entities.user.User]"))
 from .users import *  # type: ignore # noqa
-
-# register routes
-from .benchmarks import *

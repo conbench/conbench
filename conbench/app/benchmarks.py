@@ -1,17 +1,14 @@
-import logging
 import json
+import logging
 from collections import defaultdict
-
 from typing import Dict, List, Tuple, TypedDict
-
 
 import flask
 
 from conbench.app import app
-from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.config import Config
+from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.job import _cache_bmrs
-
 
 log = logging.getLogger(__name__)
 
