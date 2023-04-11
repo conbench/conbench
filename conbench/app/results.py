@@ -59,12 +59,12 @@ class ContextMixin:
 
 
 class BenchmarkResultMixin:
-    def get_display_benchmark(self, benchmark_id):
+    def get_display_benchmark(self, benchmark_result_id):
         # this gets a benchmark _result_, we need more renaming.
-        benchmark, response = self._get_benchmark(benchmark_id)
+        benchmark, response = self._get_benchmark(benchmark_result_id)
 
         if response.status_code == 404:
-            self.flash(f"unknown benchmark result ID: {benchmark_id}", "info")
+            self.flash(f"unknown benchmark result ID: {benchmark_result_id}", "info")
 
         if response.status_code != 200:
             # Note(JP): quick band-aid to at least not swallow err detail, need
@@ -88,11 +88,11 @@ class BenchmarkResultMixin:
         return benchmark
 
     # this gets a benchmark result, we need more renaming.
-    def _get_benchmark(self, benchmark_id):
+    def _get_benchmark(self, benchmark_result_id):
         # TODO: remove re-serialization indirection.
         response = self.api_get(
             "api.benchmark",
-            benchmark_id=benchmark_id,
+            benchmark_id=benchmark_result_id,
         )
         return response.json, response
 
@@ -375,7 +375,7 @@ rule(
 # is overwriting an existing endpoint function: app.benchmark`
 # Context: https://github.com/conbench/conbench/pull/966#issuecomment-1487072612
 rule(
-    "/benchmarks/<benchmark_id>/",
+    "/benchmarks/<benchmark_result_id>/",
     view_func=BenchmarkResult.as_view("benchmark"),
     methods=["GET", "POST"],
 )
