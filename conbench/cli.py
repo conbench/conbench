@@ -8,8 +8,8 @@ from .util import register_benchmarks
 
 register_benchmarks()
 BENCHMARKS = {}
-for benchmark_result in REGISTRY:
-    BENCHMARKS[benchmark_result.name] = benchmark_result
+for benchmark in REGISTRY:
+    BENCHMARKS[benchmark.name] = benchmark
 
 
 if not BENCHMARKS:
@@ -81,15 +81,15 @@ def _to_cli_name(name):
     return f"--{name.replace('_', '-')}"
 
 
-for name, benchmark_result in BENCHMARKS.items():
+for name, benchmark in BENCHMARKS.items():
     params = []
 
-    instance = benchmark_result()
+    instance = benchmark()
     fields, cases = instance.fields, instance.cases
-    options = getattr(benchmark_result, "options", {})
-    arguments = getattr(benchmark_result, "arguments", [])
+    options = getattr(benchmark, "options", {})
+    arguments = getattr(benchmark, "arguments", [])
     tags = [_to_cli_name(tag) for tag in fields]
-    external = getattr(benchmark_result, "external", False)
+    external = getattr(benchmark, "external", False)
 
     for k, v in instance.case_options.items():
         _choice(params, _to_cli_name(k), sorted(v))
@@ -143,7 +143,7 @@ for name, benchmark_result in BENCHMARKS.items():
     def _benchmark(
         show_result,
         show_output,
-        benchmark=benchmark_result,
+        benchmark=benchmark,
         **kwargs,
     ):
         for result, output in benchmark().run(**kwargs):
@@ -166,6 +166,6 @@ for name, benchmark_result in BENCHMARKS.items():
             name,
             params=params,
             callback=_benchmark,
-            help=_help(benchmark_result, name, cases, tags),
+            help=_help(benchmark, name, cases, tags),
         )
     )
