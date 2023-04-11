@@ -17,8 +17,3 @@ data:
   DISTRIBUTION_COMMITS: "100"
   # value does not seem to matter, hard-coded in gunicorn cmd
   FLASK_APP: foobarrofl
-  # For
-  # https://github.com/prometheus/client_python#multiprocess-mode-eg-gunicorn
-  # timing of setting this matters:
-  # https://github.com/rycus86/prometheus_flask_exporter/issues/131
-  PROMETHEUS_MULTIPROC_DIR: /tmp/_conbench-promcl-coord-dir
