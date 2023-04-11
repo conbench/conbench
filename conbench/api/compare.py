@@ -281,12 +281,13 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
 
 
 class CompareBenchmarksAPI(CompareEntityEndpoint):
-    def _get_results(self, benchmark_id) -> List[BenchmarkResult]:
+    def _get_results(self, benchmark_result_id) -> List[BenchmarkResult]:
         try:
-            benchmark_result = BenchmarkResult.one(id=benchmark_id)
+            benchmark_result = BenchmarkResult.one(id=benchmark_result_id)
         except NotFound:
             f.abort(
-                404, description="no benchmark result found with ID: '{benchmark_id}'"
+                404,
+                description="no benchmark result found with ID: '{benchmark_result_id}'",
             )
         return [benchmark_result]
 

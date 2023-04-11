@@ -233,11 +233,11 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
             f"/api/compare/benchmarks/{compare.id}/", query_string=query_string
         )
 
-        benchmark_ids = [e.id for e in new_entities]
+        benchmark_result_ids = [e.id for e in new_entities]
         batch_ids = [e.batch_id for e in new_entities]
         run_ids = [e.run_id for e in new_entities]
         expected = _api_compare_entity(
-            benchmark_ids,
+            benchmark_result_ids,
             batch_ids,
             run_ids,
             name,
@@ -277,11 +277,11 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         )
         response = client.get(f"/api/compare/benchmarks/{compare.id}/")
 
-        benchmark_ids = [e.id for e in new_entities]
+        benchmark_result_ids = [e.id for e in new_entities]
         batch_ids = [e.batch_id for e in new_entities]
         run_ids = [e.run_id for e in new_entities]
         expected = _api_compare_entity(
-            benchmark_ids,
+            benchmark_result_ids,
             batch_ids,
             run_ids,
             name,

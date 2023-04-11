@@ -288,7 +288,7 @@ def post_benchmark_result(data):
             # takes too long. Also see
             # https://github.com/conbench/conbench/issues/555
             res = session.post(url, json=data)
-            benchmark_id = res.json()["id"]
+            benchmark_result_id = res.json()["id"]
             break
         except requests.exceptions.RequestException as exc:
             log.info(
@@ -309,7 +309,7 @@ def post_benchmark_result(data):
     if str(res.status_code).startswith("4"):
         log.info("4xx response body: %s", res.text)
 
-    return benchmark_id
+    return benchmark_result_id
 
 
 def update_run(run_id, data):
@@ -416,7 +416,7 @@ def create_benchmarks_data_with_history():
 
     runs = []
 
-    benchmark_ids = []
+    benchmark_result_ids = []
 
     i = 0
     n = 0
@@ -457,8 +457,8 @@ def create_benchmarks_data_with_history():
                         repo_url="https://github.com/apache/arrow",
                     )
 
-                benchmark_id = post_benchmark_result(benchmark_data)
-                benchmark_ids.append(benchmark_id)
+                benchmark_result_id = post_benchmark_result(benchmark_data)
+                benchmark_result_ids.append(benchmark_result_id)
                 runs.append((run_id, timestamp))
 
 
@@ -476,7 +476,7 @@ def generate_synthetic_benchmark_history(commit_hashes: List[str], repo_url: str
     distribution = statistics.NormalDist(mu=distr_mean, sigma=distr_std)
 
     # Collect benchmark IDs as returned by the Conbench API after submission.
-    benchmark_ids = []
+    benchmark_result_ids = []
 
     def sample_slowdown(s, offset: float):
         # "slowdown" refers to the idea that the individual number has a time
@@ -546,11 +546,11 @@ def generate_synthetic_benchmark_history(commit_hashes: List[str], repo_url: str
             "times": [],
         }
 
-        benchmark_ids.append(post_benchmark_result(bdata))
+        benchmark_result_ids.append(post_benchmark_result(bdata))
 
     log.info("now, emit a benchmark ID on stdout")
     # That benchmark ID is consumed and used by CI.
-    print(benchmark_ids[0])
+    print(benchmark_result_ids[0])
 
 
 """

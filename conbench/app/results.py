@@ -59,12 +59,12 @@ class ContextMixin:
 
 
 class BenchmarkResultMixin:
-    def get_display_benchmark(self, benchmark_id):
+    def get_display_benchmark(self, benchmark_result_id):
         # this gets a benchmark _result_, we need more renaming.
-        benchmark, response = self._get_benchmark(benchmark_id)
+        benchmark, response = self._get_benchmark(benchmark_result_id)
 
         if response.status_code == 404:
-            self.flash(f"unknown benchmark result ID: {benchmark_id}", "info")
+            self.flash(f"unknown benchmark result ID: {benchmark_result_id}", "info")
 
         if response.status_code != 200:
             # Note(JP): quick band-aid to at least not swallow err detail, need
@@ -88,11 +88,11 @@ class BenchmarkResultMixin:
         return benchmark
 
     # this gets a benchmark result, we need more renaming.
-    def _get_benchmark(self, benchmark_id):
+    def _get_benchmark(self, benchmark_result_id):
         # TODO: remove re-serialization indirection.
         response = self.api_get(
             "api.benchmark",
-            benchmark_id=benchmark_id,
+            benchmark_result_id=benchmark_result_id,
         )
         return response.json, response
 
@@ -252,13 +252,13 @@ class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlo
         )
 
     @authorize_or_terminate
-    def get(self, benchmark_id):
-        benchmark, run = self._get_benchmark_and_run(benchmark_id)
+    def get(self, benchmark_result_id):
+        benchmark, run = self._get_benchmark_and_run(benchmark_result_id)
         return self.page(
             benchmark, run, BenchmarkResultDeleteForm(), BenchmarkResultUpdateForm()
         )
 
-    def post(self, benchmark_id):
+    def post(self, benchmark_result_id):
         if not flask_login.current_user.is_authenticated:
             return self.redirect("app.login")
 
@@ -269,25 +269,27 @@ class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlo
             # delete button pressed
             if delete_form.validate_on_submit():
                 delete_response = self.api_delete(
-                    "api.benchmark", benchmark_id=benchmark_id
+                    "api.benchmark", benchmark_result_id=benchmark_result_id
                 )
                 if delete_response.status_code == 204:
-                    self.flash(f"Benchmark result {benchmark_id} deleted.", "info")
+                    self.flash(
+                        f"Benchmark result {benchmark_result_id} deleted.", "info"
+                    )
                     return self.redirect("app.benchmark-results")
 
         elif update_form.validate_on_submit():
             # toggle_distribution_change button pressed
-            benchmark, _ = self._get_benchmark(benchmark_id)
+            benchmark, _ = self._get_benchmark(benchmark_result_id)
             update_form.toggle_distribution_change.data = benchmark[
                 "change_annotations"
             ].get("begins_distribution_change", False)
 
             update_response = self.api_put(
-                "api.benchmark", update_form, benchmark_id=benchmark_id
+                "api.benchmark", update_form, benchmark_result_id=benchmark_result_id
             )
             if update_response.status_code == 200:
                 self.flash("Benchmark updated.")
-                return self.get(benchmark_id=benchmark_id)
+                return self.get(benchmark_result_id=benchmark_result_id)
 
         # If the above API call didn't result in a 2XX, flash possible errors
         if delete_response and not delete_form.errors:
@@ -299,7 +301,7 @@ class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlo
         if delete_form.errors == csrf or update_form.errors == csrf:
             self.flash("The CSRF token is missing.")
 
-        benchmark, run = self._get_benchmark_and_run(benchmark_id)
+        benchmark, run = self._get_benchmark_and_run(benchmark_result_id)
         return self.page(benchmark, run, delete_form, update_form)
 
     def data(self, form: BenchmarkResultUpdateForm):
@@ -309,12 +311,12 @@ class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlo
         else:
             return {"change_annotations": {"begins_distribution_change": True}}
 
-    def _get_benchmark_and_run(self, benchmark_id):
-        benchmark = self.get_display_benchmark(benchmark_id)
+    def _get_benchmark_and_run(self, benchmark_result_id):
+        result = self.get_display_benchmark(benchmark_result_id)
         run = None
-        if benchmark is not None:
-            run = self.get_display_run(benchmark["run_id"])
-        return benchmark, run
+        if result is not None:
+            run = self.get_display_run(result["run_id"])
+        return result, run
 
 
 class BenchmarkResultList(AppEndpoint, ContextMixin):
@@ -356,7 +358,7 @@ rule(
 )
 
 rule(
-    "/benchmark-results/<benchmark_id>/",
+    "/benchmark-results/<benchmark_result_id>/",
     view_func=BenchmarkResult.as_view("benchmark-result"),
     methods=["GET", "POST"],
 )
@@ -373,7 +375,7 @@ rule(
 # is overwriting an existing endpoint function: app.benchmark`
 # Context: https://github.com/conbench/conbench/pull/966#issuecomment-1487072612
 rule(
-    "/benchmarks/<benchmark_id>/",
+    "/benchmarks/<benchmark_result_id>/",
     view_func=BenchmarkResult.as_view("benchmark"),
     methods=["GET", "POST"],
 )

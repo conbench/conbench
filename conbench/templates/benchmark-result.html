@@ -11,7 +11,7 @@
       <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">Batch</a>
     </li>
     <li class="breadcrumb-item active aria-current="page">
-      <a href="{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}">
+      <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
       Benchmark result {{ benchmark.id[:7] }}...</a>
     </li>
   </ol>
@@ -262,7 +262,7 @@
     $("#delete-form").find("#delete").attr("data-bs-toggle", "modal");
     $("#delete-form").find("#delete").attr("data-bs-target", "#confirm-delete");
     $("#delete-form").find("#delete").attr("data-cbcustom-form-id", "#delete-form");
-    $("#delete-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.benchmark', benchmark_id=benchmark.id) }}");
+    $("#delete-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}");
     $("#delete-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete benchmark result: <strong>{{ benchmark.id }}</strong></li></ul>");
   });
 

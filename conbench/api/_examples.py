@@ -167,11 +167,13 @@ def _api_commit_entity(commit_id, parent_id, links=True):
     return result
 
 
-def _api_compare_entity(benchmark_ids, batch_ids, run_ids, batch, benchmark, tags):
+def _api_compare_entity(
+    benchmark_result_ids, batch_ids, run_ids, batch, benchmark, tags
+):
     return {
         "baseline": "0.03637 s",
         "baseline_error": None,
-        "baseline_id": benchmark_ids[0],
+        "baseline_id": benchmark_result_ids[0],
         "baseline_batch_id": batch_ids[0],
         "baseline_run_id": run_ids[0],
         "batch": batch,
@@ -190,7 +192,7 @@ def _api_compare_entity(benchmark_ids, batch_ids, run_ids, batch, benchmark, tag
         "contender_z_improvement": False,
         "contender": "0.03637 s",
         "contender_error": None,
-        "contender_id": benchmark_ids[1],
+        "contender_id": benchmark_result_ids[1],
         "contender_batch_id": batch_ids[1],
         "contender_run_id": run_ids[1],
         "less_is_better": True,
@@ -351,10 +353,10 @@ def _api_context_entity(context_id, links=True):
     return result
 
 
-def _api_history_entity(benchmark_id, case_id, context_id, run_name):
+def _api_history_entity(benchmark_result_id, case_id, context_id, run_name):
     return [
         {
-            "benchmark_result_id": benchmark_id,
+            "benchmark_result_id": benchmark_result_id,
             "case_id": case_id,
             "commit_hash": "02addad336ba19a654f9c857ede546331be7b631",
             "commit_msg": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
