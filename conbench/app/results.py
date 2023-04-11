@@ -252,8 +252,8 @@ class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlo
         )
 
     @authorize_or_terminate
-    def get(self, benchmark_id):
-        benchmark, run = self._get_benchmark_and_run(benchmark_id)
+    def get(self, benchmark_result_id):
+        benchmark, run = self._get_benchmark_and_run(benchmark_result_id)
         return self.page(
             benchmark, run, BenchmarkResultDeleteForm(), BenchmarkResultUpdateForm()
         )
@@ -356,7 +356,7 @@ rule(
 )
 
 rule(
-    "/benchmark-results/<benchmark_id>/",
+    "/benchmark-results/<benchmark_result_id>/",
     view_func=BenchmarkResult.as_view("benchmark-result"),
     methods=["GET", "POST"],
 )

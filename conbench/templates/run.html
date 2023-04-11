@@ -42,7 +42,7 @@
         <div class="item">
         {% endif %}
         <div align="center">
-        <a href="{{ url_for('app.benchmark-result', benchmark_id=outlier_ids[loop.index - 1]) }}">
+        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=outlier_ids[loop.index - 1]) }}">
           {{ outlier_names[loop.index - 1] }}
         </a>
         </div>
@@ -60,7 +60,7 @@
 {% endif %}
 
     <div class="col-md-12">
-        <h4>Benchmarks in run</h4>
+        <h4>Benchmark results in Run</h4>
         <table id="benchmarks" class="table table-hover">
         <!-- does not display right: <caption>Benchmarks{% include 'units-tooltip.html' %}</caption>-->
             <thead>
@@ -84,7 +84,7 @@
                          {{ benchmark.display_bmname }}
                        </a>
                      </td>
-                     <td><a href="{{ url_for('app.benchmark-result', benchmark_id=benchmark.id) }}">
+                     <td><a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
                          {{ benchmark.display_case_perm}}
                      </a></td>
                      <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
@@ -100,7 +100,7 @@
                        <td></td>
                      {% endif %}
                 <td>
-                    {%  if benchmark.error %}<a href="{{ url_for('app.benchmark-result', benchmark_id=benchmark.id) }}">
+                    {%  if benchmark.error %}<a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
                         <i class="glyphicon glyphicon-exclamation-sign text-danger"
                            data-toggle="tooltip" data-placement="top" title="Has error">
                         </i><span>Error</span></a>
