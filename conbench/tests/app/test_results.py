@@ -76,11 +76,13 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
         self.assert_login_page(response)
 
     def test_no_csrf_token(self, client):
-        benchmark_id = self.create_benchmark(client)
+        benchmark_result_id = self.create_benchmark(client)
         self.authenticate(client)
         data = {"delete": ["Delete"]}
         response = client.post(
-            f"/benchmark-results/{benchmark_id}/", data=data, follow_redirects=True
+            f"/benchmark-results/{benchmark_result_id}/",
+            data=data,
+            follow_redirects=True,
         )
         self.assert_page(response, "Benchmark")
         assert b"The CSRF token is missing." in response.data

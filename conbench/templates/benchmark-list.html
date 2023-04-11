@@ -37,7 +37,7 @@
                              <div>{{ benchmark.display_bmname }}</div>
                            </a>
                          </td>
-                         <td><a href="{{ url_for('app.benchmark-result', benchmark_id=benchmark.id) }}">
+                         <td><a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
                               <div>{{ benchmark.display_case_perm }}</div>
                          </a></td>
                          <td>{{ benchmark.display_mean }}</td>
