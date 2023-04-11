@@ -442,9 +442,12 @@ class BenchmarkResult(Base, EntityMixin):
     @property
     def ui_non_null_sample_count(self) -> str:
         """
-        If an individual iteration can report a `null`-like value, then
-        this here is the number of samples.
+        The number of actual data points (with payload, a numeric value). If an
+        individual iteration can report a `null`-like value, then this here is
+        the number of samples.
         """
+        if self.data is None:
+            return "0"
         return str(len([x for x in self.data if x is not None]))
 
     @property

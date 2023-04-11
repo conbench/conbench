@@ -14,7 +14,7 @@ from .benchmarks import *  # noqa
 from .compare import *  # noqa
 from .hardware import *  # noqa
 from .index import *  # noqa
-from .results import *  # noqa
+from .results import *  # type: ignore # noqa
 from .robots import *  # noqa
 from .runs import *  # noqa
 

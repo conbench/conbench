@@ -13,7 +13,7 @@ from conbench.job import _cache_bmrs
 log = logging.getLogger(__name__)
 
 
-@app.route("/c-benchmarks/", methods=["GET"])
+@app.route("/c-benchmarks/", methods=["GET"])  # type: ignore
 def list_benchmarks() -> str:
     return flask.render_template(
         "c-benchmarks.html",
@@ -26,7 +26,7 @@ def list_benchmarks() -> str:
     )
 
 
-@app.route("/c-benchmarks/<bname>", methods=["GET"])
+@app.route("/c-benchmarks/<bname>", methods=["GET"])  # type: ignore
 def show_benchmark_cases(bname: str) -> str:
     try:
         results = _cache_bmrs["by_benchmark_name"][bname]
@@ -70,7 +70,7 @@ class TypeUIPlotInfo(TypedDict):
     data_for_uplot: List[List]
 
 
-@app.route("/c-benchmarks/<bname>/<caseid>", methods=["GET"])
+@app.route("/c-benchmarks/<bname>/<caseid>", methods=["GET"])  # type: ignore
 def show_benchmark_results(bname: str, caseid: str) -> str:
     # First, filter by benchmark name.
     try:
@@ -119,7 +119,7 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
                 [r.timestamp.timestamp() for r in results],
                 # rely on mean to be correct? use all data for
                 # error vis
-                [float(r.mean) for r in results],
+                [float(r.mean) for r in results if r.mean is not None],
             ],
             # Rely on at least one result being in the list.
             "title": "hardware: %s, context: %s"
@@ -136,7 +136,6 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
         results_by_hardware_and_context=results_by_hardware_and_context,
         infos_for_uplots_json=infos_for_uplots_json,
         case=case,
-        benchmark_result_count=len(results),
         application=Config.APPLICATION_NAME,
         title=Config.APPLICATION_NAME,  # type: ignore
     )
