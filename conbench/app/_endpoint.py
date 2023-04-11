@@ -8,8 +8,6 @@ import flask.views
 import flask_login
 import werkzeug
 
-from conbench.app._util import error_page
-
 from .. import __version__
 from ..buildinfo import BUILD_INFO
 
@@ -143,16 +141,6 @@ class AppEndpoint(flask.views.MethodView):
         # inject/overwrite
         kwargs["version_string_footer"] = VERSION_STRING_FOOTER
         return f.render_template(template, **kwargs)
-
-    def error_page(self, msg: str, alert_level="danger") -> str:
-        """
-        Generate HTML text which shows an error page, presenting an error
-        message.
-
-        This is OK to be delivered in a status-200 HTTP response for now.
-        """
-        # add more as desired
-        error_page(msg, alert_level)
 
     def flash(self, *args):
         return f.flash(*args)
