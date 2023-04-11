@@ -271,7 +271,7 @@ class CompareRuns(Compare):
 
 
 rule(
-    "/compare/benchmark-results/<compare_ids>/",
+    "/compare/benchmarks/<compare_ids>/",
     view_func=CompareBenchmarkResults.as_view("compare-benchmark-results"),
     methods=["GET"],
 )

@@ -16,7 +16,7 @@ def _emsg_needle(thing, thingid):
 
 
 class TestCompareBenchmarkResults(_asserts.GetEnforcer):
-    url = "/compare/benchmark-results/{}/"
+    url = "/compare/benchmarks/{}/"
     title = "Compare Benchmark Results"
     redirect_on_unknown = False
 
@@ -28,15 +28,13 @@ class TestCompareBenchmarkResults(_asserts.GetEnforcer):
         self.authenticate(client)
 
         response = client.get(
-            "/compare/benchmark-results/unknown...unknown2/", follow_redirects=True
+            "/compare/benchmarks/unknown...unknown2/", follow_redirects=True
         )
         self.assert_page(response, "Compare Benchmark Results")
 
         assert "cannot perform comparison:" in response.text, response.text
 
-        response = client.get(
-            "/compare/benchmark-results/foo...bar/", follow_redirects=True
-        )
+        response = client.get("/compare/benchmarks/foo...bar/", follow_redirects=True)
         self.assert_page(response, "Compare Benchmark Results")
         assert "cannot perform comparison:" in response.text
 
