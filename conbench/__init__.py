@@ -128,23 +128,6 @@ def _init_flask_application(app):
     app.register_error_handler(werkzeug.exceptions.HTTPException, _json_http_errors)
     _init_api_docs(app)
 
-    def _dated_url_for(endpoint, **values):
-        import flask as f
-
-        # add time to static assets to force browser/proxy cache invalidation
-        if endpoint == "static":
-            filename = values.get("filename", None)
-            if filename:
-                file_path = os.path.join(app.root_path, endpoint, filename)
-                values["q"] = int(os.stat(file_path).st_mtime)
-        return f.url_for(endpoint, **values)
-
-    @app.context_processor
-    def override_url_for():
-        # https://flask.palletsprojects.com/en/2.2.x/templating/#context-processors
-        # Note(JP): this monkey-patches the url_for method with a fancy one
-        return dict(url_for=_dated_url_for)
-
     @app.before_request
     def deny_common_bots():
         """
