@@ -1,5 +1,27 @@
+import flask as f
+
+from ..config import Config
 from ..hacks import set_display_benchmark_name, set_display_case_permutation
 from ..units import formatter_for_unit
+
+
+def error_page(msg: str, alert_level="danger", subtitle="") -> str:
+    """
+    Generate HTML text which shows an error page, presenting an error
+    message.
+
+    This is OK to be delivered in a status-200 HTTP response for now.
+    """
+    # add more as desired
+    assert alert_level in ("info", "danger", "primary", "warning")
+    return f.render_template(
+        "error.html",
+        error_message=msg,
+        application=Config.APPLICATION_NAME,
+        # The (sub)title of the page
+        title=subtitle,
+        alert_level=alert_level,
+    )
 
 
 def augment(benchmark, contexts=None):

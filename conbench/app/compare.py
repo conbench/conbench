@@ -9,7 +9,7 @@ import flask as f
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin, simple_bar_plot
-from ..app._util import augment
+from ..app._util import augment, error_page
 from ..app.results import BenchmarkResultMixin, RunMixin
 from ..config import Config
 from ..entities.run import commit_hardware_run_map
@@ -169,20 +169,23 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         """
 
         if "..." not in compare_ids:
-            return self.error_page(  # type: ignore
-                "Got unexpected URL path pattern. Expected: <id>...<id>"
+            return error_page(
+                "Got unexpected URL path pattern. Expected: <id>...<id>",
+                subtitle=self.title,  # type: ignore
             )
 
         baseline_id, contender_id = compare_ids.split("...", 1)
 
         if not baseline_id:
-            return self.error_page(  # type: ignore
-                "No baseline ID was provided. Expected format: <baseline_id>...<contender_id>"
+            return error_page(
+                "No baseline ID was provided. Expected format: <baseline_id>...<contender_id>",
+                subtitle=self.title,  # type: ignore
             )
 
         if not contender_id:
-            return self.error_page(  # type: ignore
-                "No contender ID was provided. Expected format: <baseline-id>...<contender-id>"
+            return error_page(
+                "No contender ID was provided. Expected format: <baseline-id>...<contender-id>",
+                subtitle=self.title,  # type: ignore
             )
 
         (
@@ -193,14 +196,17 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         ) = self._compare(baseline_id=baseline_id, contender_id=contender_id)
 
         if error_string is not None:
-            return self.error_page(  # type: ignore
-                f"cannot perform comparison: {error_string}", alert_level="info"
+            return error_page(
+                f"cannot perform comparison: {error_string}",
+                alert_level="info",
+                subtitle=self.title,  # type: ignore
             )
 
         if len(comparison_results) == 0:
-            return self.error_page(  # type: ignore
+            return error_page(  # type: ignore
                 "comparison yielded 0 benchmark results",
                 alert_level="info",
+                subtitle=self.title,  # type: ignore
             )
 
         return self.page(
