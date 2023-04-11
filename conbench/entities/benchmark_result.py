@@ -1,10 +1,12 @@
 import math
 from datetime import datetime, timezone
+import statistics
 from typing import List, Optional
 
 import flask as f
 import marshmallow
 import numpy as np
+import sigfig
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
 from sqlalchemy.dialects import postgresql
@@ -372,6 +374,111 @@ class BenchmarkResult(Base, EntityMixin):
                 ),
             },
         }
+
+    @property
+    def ui_timestamp(self) -> str:
+        """
+        Build human-readable timestamp string from `timestamp` property,
+        meant for consumption in UI.
+        """
+        return self.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
+        # tznaive_dt_to_aware_iso8601_for_api(self.timestamp)
+
+    @property
+    def ui_mean_and_uncertainty(self) -> str:
+        """
+        Build human-readable text conveying the data point acquired here.
+
+        If this is a multi-sample data point then return notation like
+        string like '3.1 ± 0.7'.
+
+            mean_unc_str = sigfig.round(mean, uncertainty=stdem)
+
+        It's difficult to write code like this because of
+        https://github.com/conbench/conbench/issues/813
+        and related discussions; I think we should really make it so that
+        each element in self.data is of type float.
+
+        """
+        samples = self.data
+
+        if samples is None:
+            return "no data"
+
+        if len(samples) < 3:
+            # Show each sample with five significant figures.
+            return "; ".join(str(sigfig.round(s, sigfigs=5)) for s in samples)
+
+        # Build sample standard deviation. Maybe we can also use the pre-built
+        # value, but trust needs to be established first.
+        stdev = float(statistics.stdev(samples))
+        mean = float(statistics.mean(samples))
+        # Calculate standard error of the mean for canonical scientific
+        # notation of the result. Make float from Decimal, otherwise
+        # TypeError: unsupported operand type(s) for /: 'decimal.Decimal' and 'float'
+        stdem = stdev / math.sqrt(len(samples))
+
+        # minstr = f"min: {sigfig.round(min, 3)} s"
+        # This generates a string like '3.1 ± 0.7'
+        mean_uncertainty_str = sigfig.round(mean, uncertainty=stdem)
+        return f"({mean_uncertainty_str}) {self.unit}"  # err ~ {rsep_str} %"
+
+    # maybe make this a cached property
+    @property
+    def ui_rel_sem(self) -> str:
+        samples = self.data
+
+        if samples is None:
+            return "no data"
+
+        if len(samples) < 3:
+            return "n/a"
+
+        stdem = float(statistics.stdev(samples)) / math.sqrt(len(samples))
+        # Express relative standard error in percent.
+        rsep = 100 * (stdem / float(statistics.mean(samples)))
+        return f"{sigfig.round(rsep, sigfigs=2)} %"
+
+    @property
+    def ui_non_null_sample_count(self) -> str:
+        """
+        If an individual iteration can report a `null`-like value, then
+        this here is the number of samples.
+        """
+        return str(len([x for x in self.data if x is not None]))
+
+    @property
+    def ui_time_started_at(self) -> str:
+        """
+        Return UI-friendly version of self.timestamp (user-given 'start time').
+        """
+        return self.timestamp.strftime("%Y-%m-%d %H:%M:%S") + " (UTC)"
+
+    @property
+    def ui_hardware_short(self) -> str:
+        """
+        Return hardware-representing short string, including user-given name
+        and ID prefix.
+
+        The indirection here through `self.run` is interesting, might trigger
+        database interaction.
+        """
+
+        # try:
+        #     # Note: is this jinja2 behavior? when this fails with
+        #     # Attribute error like
+        #     # 'BenchmarkResult' object has no attribute 'hardware'
+        #     # then the template does not crash, but shows no value.
+        #     print(type(self.hardware) + "f")
+        # except Exception as exc:
+        #     print("exc:", exc)
+        #     raise exc
+
+        hw = self.run.hardware
+        if len(hw.name) > 15:
+            return f"{hw.id[:4]}: " + hw.name[:15]
+
+        return f"{hw.id[:4]}: " + hw.name
 
 
 s.Index("benchmark_result_run_id_index", BenchmarkResult.run_id)
