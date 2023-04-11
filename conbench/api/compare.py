@@ -52,7 +52,7 @@ def _get_pairs(baseline_items, contender_items):
 
     Assumptions:
         - A run contains exactly one machine.
-        - You are only ever comparing 2 runs or batches.
+        - You are only ever comparing 2 runs.
     """
     pairs = {}
     baseline_items = _dedup_items(baseline_items)
@@ -96,7 +96,7 @@ class CompareMixin:
                 404, description="last URL path segment must be of pattern <id>...<id>"
             )
 
-        # I think these can be either two run IDs, two batch IDs or two
+        # I think these can be either two run IDs or two
         # benchmark result IDs?
         baseline_id, contender_id = compare_ids.split("...", 1)
 
@@ -237,7 +237,7 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
           - Comparisons
         """
         # The `baseline_id`` and `contender_id`` may be of various kinds (run
-        # ids, batch ids, .... see sub classes below.).
+        # ids, .... see sub classes below.).
 
         baseline_id, contender_id = self._parse_two_ids_or_abort(compare_ids)
         raw, threshold, threshold_z = self.get_query_args_from_request()
@@ -292,18 +292,6 @@ class CompareBenchmarksAPI(CompareEntityEndpoint):
         return [benchmark_result]
 
 
-class CompareBatchesAPI(CompareListEndpoint):
-    def _get_results(self, batch_id) -> List[BenchmarkResult]:
-        benchmark_results = BenchmarkResult.all(batch_id=batch_id)
-
-        if not benchmark_results:
-            f.abort(
-                404,
-                description=f"no benchmark results found for batch ID: '{batch_id}'",
-            )
-        return benchmark_results
-
-
 class CompareRunsAPI(CompareListEndpoint):
     def _get_results(self, run_id) -> List[BenchmarkResult]:
         benchmark_results = BenchmarkResult.all(run_id=run_id)
@@ -355,18 +343,12 @@ class CompareCommitsAPI(CompareListEndpoint):
 
 
 compare_benchmarks_view = CompareBenchmarksAPI.as_view("compare-benchmarks")
-compare_batches_view = CompareBatchesAPI.as_view("compare-batches")
 compare_runs_view = CompareRunsAPI.as_view("compare-runs")
 compare_commits_view = CompareCommitsAPI.as_view("compare-commits")
 
 rule(
     "/compare/benchmarks/<compare_ids>/",
     view_func=compare_benchmarks_view,
-    methods=["GET"],
-)
-rule(
-    "/compare/batches/<compare_ids>/",
-    view_func=compare_batches_view,
     methods=["GET"],
 )
 rule(
