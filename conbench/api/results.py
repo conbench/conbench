@@ -30,15 +30,15 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
     serializer = BenchmarkResultSerializer()
     schema = BenchmarkResultFacadeSchema()
 
-    def _get(self, benchmark_id):
+    def _get(self, benchmark_result_id):
         try:
-            benchmark_result = BenchmarkResult.one(id=benchmark_id)
+            benchmark_result = BenchmarkResult.one(id=benchmark_result_id)
         except NotFound:
             self.abort_404_not_found()
         return benchmark_result
 
     @maybe_login_required
-    def get(self, benchmark_id):
+    def get(self, benchmark_result_id):
         """
         ---
         description: |
@@ -57,11 +57,11 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
         tags:
           - Benchmarks
         """
-        benchmark_result = self._get(benchmark_id)
+        benchmark_result = self._get(benchmark_result_id)
         return self.serializer.one.dump(benchmark_result)
 
     @flask_login.login_required
-    def put(self, benchmark_id):
+    def put(self, benchmark_result_id):
         """
         ---
         description: Edit a benchmark result.
@@ -81,13 +81,13 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
         tags:
           - Benchmarks
         """
-        benchmark_result = self._get(benchmark_id)
+        benchmark_result = self._get(benchmark_result_id)
         data = self.validate_benchmark(self.schema.update)
         benchmark_result.update(data)
         return self.serializer.one.dump(benchmark_result)
 
     @flask_login.login_required
-    def delete(self, benchmark_id):
+    def delete(self, benchmark_result_id):
         """
         ---
         description: Delete a benchmark result.
@@ -103,7 +103,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
         tags:
           - Benchmarks
         """
-        benchmark_result = self._get(benchmark_id)
+        benchmark_result = self._get(benchmark_result_id)
         benchmark_result.delete()
         return self.response_204_no_content()
 
@@ -298,7 +298,7 @@ rule(
     methods=["GET", "POST"],
 )
 rule(
-    "/benchmarks/<benchmark_id>/",
+    "/benchmarks/<benchmark_result_id>/",
     view_func=benchmark_entity_view,
     methods=["GET", "DELETE", "PUT"],
 )
