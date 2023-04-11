@@ -31,4 +31,3 @@ def test_formatter_for_unit():
     # of magnitude in the string-formatted numbers. The following
     # test encodes that. Does not mean it needs to stay as such.
     assert formatter_for_unit("s")(10241, "s") == "10240 s"
-
