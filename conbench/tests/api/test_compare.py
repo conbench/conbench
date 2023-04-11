@@ -256,7 +256,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         expected.update(
             {
                 "baseline": "3.000 s",
-                "contender": "20.000 s",
+                "contender": "20.00 s",
                 "change": "-566.667%",
                 "regression": True,
                 "baseline_z_score": None,
@@ -299,7 +299,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
             {
                 "baseline": None,
                 "baseline_error": error,
-                "contender": "20.000 s",
+                "contender": "20.00 s",
                 "change": "0.000%",
                 "regression": False,
                 "baseline_z_score": None,
