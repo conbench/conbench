@@ -2,6 +2,24 @@ from ..hacks import set_display_benchmark_name, set_display_case_permutation
 from ..units import formatter_for_unit
 
 
+def error_page(msg: str, alert_level="danger") -> str:
+    """
+    Generate HTML text which shows an error page, presenting an error
+    message.
+
+    This is OK to be delivered in a status-200 HTTP response for now.
+    """
+    # add more as desired
+    assert alert_level in ("info", "danger", "primary", "warning")
+    return f.render_template(
+        "error.html",
+        error_message=msg,
+        application=Config.APPLICATION_NAME,
+        title=Config.APPLICATION_NAME,  # self.title,  # type: ignore
+        alert_level=alert_level,
+    )
+
+
 def augment(benchmark, contexts=None):
     set_display_benchmark_name(benchmark)
     set_display_time(benchmark)

@@ -12,6 +12,8 @@ from .. import __version__
 from ..buildinfo import BUILD_INFO
 from ..config import Config
 
+from conbench.app._util import error_page
+
 log = logging.getLogger(__name__)
 
 
@@ -151,14 +153,7 @@ class AppEndpoint(flask.views.MethodView):
         This is OK to be delivered in a status-200 HTTP response for now.
         """
         # add more as desired
-        assert alert_level in ("info", "danger", "primary", "warning")
-        return f.render_template(
-            "error.html",
-            error_message=msg,
-            application=Config.APPLICATION_NAME,
-            title=self.title,  # type: ignore
-            alert_level=alert_level,
-        )
+        error_page(msg, alert_level)
 
     def flash(self, *args):
         return f.flash(*args)
