@@ -21,8 +21,8 @@ class TestCompareBenchmark(_asserts.GetEnforcer):
     redirect_on_unknown = False
 
     def _create(self, client):
-        benchmark_id = self.create_benchmark(client)
-        return f"{benchmark_id}...{benchmark_id}"
+        benchmark_result_id = self.create_benchmark(client)
+        return f"{benchmark_result_id}...{benchmark_result_id}"
 
     def test_flash_messages(self, client):
         self.authenticate(client)

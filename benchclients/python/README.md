@@ -59,8 +59,8 @@ log.setLevel(logging.DEBUG)
 
 conbench = ConbenchClient()
 
-benchmark_id = "4e0e569d82724667b3e929dedb730edc"
-res = conbench.get(f"/benchmarks/{benchmark_id}")
+benchmark_result_id = "4e0e569d82724667b3e929dedb730edc"
+res = conbench.get(f"/benchmarks/{benchmark_result_id}")
 #> DEBUG [2023-02-10 12:56:48,492] GET https://conbench.ursa.dev/api/benchmarks/4e0e569d82724667b3e929dedb730edc
 
 res

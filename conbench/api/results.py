@@ -50,7 +50,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
             "401": "401"
             "404": "404"
         parameters:
-          - name: benchmark_id
+          - name: benchmark_result_id
             in: path
             schema:
                 type: string
@@ -70,7 +70,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
             "401": "401"
             "404": "404"
         parameters:
-          - name: benchmark_id
+          - name: benchmark_result_id
             in: path
             schema:
                 type: string
@@ -96,7 +96,7 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
             "401": "401"
             "404": "404"
         parameters:
-          - name: benchmark_id
+          - name: benchmark_result_id
             in: path
             schema:
                 type: string

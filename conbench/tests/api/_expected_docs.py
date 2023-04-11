@@ -1374,13 +1374,13 @@
                 "tags": ["Benchmarks"],
             },
         },
-        "/api/benchmarks/{benchmark_id}/": {
+        "/api/benchmarks/{benchmark_result_id}/": {
             "delete": {
                 "description": "Delete a benchmark result.",
                 "parameters": [
                     {
                         "in": "path",
-                        "name": "benchmark_id",
+                        "name": "benchmark_result_id",
                         "required": True,
                         "schema": {"type": "string"},
                     }
@@ -1397,7 +1397,7 @@
                 "parameters": [
                     {
                         "in": "path",
-                        "name": "benchmark_id",
+                        "name": "benchmark_result_id",
                         "required": True,
                         "schema": {"type": "string"},
                     }
@@ -1414,7 +1414,7 @@
                 "parameters": [
                     {
                         "in": "path",
-                        "name": "benchmark_id",
+                        "name": "benchmark_result_id",
                         "required": True,
                         "schema": {"type": "string"},
                     }
@@ -1642,13 +1642,13 @@
                 "tags": ["Hardware"],
             }
         },
-        "/api/history/{benchmark_id}/": {
+        "/api/history/{benchmark_result_id}/": {
             "get": {
                 "description": "Get benchmark history.",
                 "parameters": [
                     {
                         "in": "path",
-                        "name": "benchmark_id",
+                        "name": "benchmark_result_id",
                         "required": True,
                         "schema": {"type": "string"},
                     }

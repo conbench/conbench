@@ -10,7 +10,7 @@ class HistoryEntityAPI(ApiEndpoint):
     serializer = HistorySerializer()
 
     @maybe_login_required
-    def get(self, benchmark_id):
+    def get(self, benchmark_result_id):
         """
         ---
         description: Get benchmark history.
@@ -19,7 +19,7 @@ class HistoryEntityAPI(ApiEndpoint):
             "401": "401"
             "404": "404"
         parameters:
-          - name: benchmark_id
+          - name: benchmark_result_id
             in: path
             schema:
                 type: string
@@ -30,7 +30,7 @@ class HistoryEntityAPI(ApiEndpoint):
         # happen? If it can happen: which response would we want to emit to the
         # HTTP client? An empty array, or something more convenient?
         try:
-            samples = get_history_for_benchmark(benchmark_result_id=benchmark_id)
+            samples = get_history_for_benchmark(benchmark_result_id=benchmark_result_id)
         except NotFound:
             self.abort_404_not_found()
 
@@ -44,7 +44,7 @@ class HistoryEntityAPI(ApiEndpoint):
 history_entity_view = HistoryEntityAPI.as_view("history")
 
 rule(
-    "/history/<benchmark_id>/",
+    "/history/<benchmark_result_id>/",
     view_func=history_entity_view,
     methods=["GET"],
 )

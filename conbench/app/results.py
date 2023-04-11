@@ -92,7 +92,7 @@ class BenchmarkResultMixin:
         # TODO: remove re-serialization indirection.
         response = self.api_get(
             "api.benchmark",
-            benchmark_id=benchmark_result_id,
+            benchmark_result_id=benchmark_result_id,
         )
         return response.json, response
 

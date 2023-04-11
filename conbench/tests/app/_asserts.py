@@ -81,9 +81,9 @@ class AppEndpointTest:
         self.authenticate(client)
         response = client.post("/api/benchmarks/", json=_fixtures.VALID_PAYLOAD)
         assert response.status_code == 201, response.text
-        benchmark_id = response.json["id"]
+        benchmark_result_id = response.json["id"]
         self.logout(client)
-        return benchmark_id
+        return benchmark_result_id
 
 
 class Enforcer(AppEndpointTest):

@@ -39,18 +39,18 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
 
 class TestBenchmarkDelete(_asserts.DeleteEnforcer):
     def test_authenticated(self, client):
-        benchmark_id = self.create_benchmark(client)
+        benchmark_result_id = self.create_benchmark(client)
 
         # can get benchmark before
         self.authenticate(client)
-        response = client.get(f"/benchmark-results/{benchmark_id}/")
+        response = client.get(f"/benchmark-results/{benchmark_result_id}/")
         self.assert_page(response, "Benchmark")
-        assert f"{benchmark_id[:6]}".encode() in response.data
+        assert f"{benchmark_result_id[:6]}".encode() in response.data
 
         # delete benchmark
         data = {"delete": ["Delete"], "csrf_token": self.get_csrf_token(response)}
         response = client.post(
-            f"/benchmark-results/{benchmark_id}/", data=data, follow_redirects=True
+            f"/benchmark-results/{benchmark_result_id}/", data=data, follow_redirects=True
         )
         self.assert_page(response, "Benchmarks")
         assert re.search(
@@ -59,7 +59,7 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
 
         # cannot get benchmark after
         response = client.get(
-            f"/benchmark-results/{benchmark_id}/", follow_redirects=True
+            f"/benchmark-results/{benchmark_result_id}/", follow_redirects=True
         )
         self.assert_index_page(response)
         assert re.search(
@@ -67,11 +67,11 @@ class TestBenchmarkDelete(_asserts.DeleteEnforcer):
         )
 
     def test_unauthenticated(self, client):
-        benchmark_id = self.create_benchmark(client)
+        benchmark_result_id = self.create_benchmark(client)
         self.logout(client)
         data = {"delete": ["Delete"]}
         response = client.post(
-            f"/benchmark-results/{benchmark_id}/", data=data, follow_redirects=True
+            f"/benchmark-results/{benchmark_result_id}/", data=data, follow_redirects=True
         )
         self.assert_login_page(response)
 

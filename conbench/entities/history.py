@@ -61,7 +61,7 @@ class _Serializer(EntitySerializer):
         # as `times`.
 
         return {
-            "benchmark_id": history.id,
+            "benchmark_result_id": history.id,
             "case_id": history.case_id,
             "context_id": history.context_id,
             "mean": _to_float(history.mean),

@@ -348,7 +348,7 @@ class BenchmarkResult(Base, EntityMixin):
             "links": {
                 "list": f.url_for("api.benchmarks", _external=True),
                 "self": f.url_for(
-                    "api.benchmark", benchmark_id=benchmark_result.id, _external=True
+                    "api.benchmark", benchmark_result_id=benchmark_result.id, _external=True
                 ),
                 "info": f.url_for(
                     "api.info", info_id=benchmark_result.info_id, _external=True

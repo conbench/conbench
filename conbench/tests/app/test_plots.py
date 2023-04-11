@@ -12,7 +12,7 @@ def legacy_dict_to_hs(d: dict) -> HistorySample:
         commit_msg=d["message"],
         commit_timestamp=util.tznaive_iso8601_to_tzaware_dt(d["timestamp"]),
         commit_hash=d["sha"],
-        benchmark_result_id=d["benchmark_id"],
+        benchmark_result_id=d["benchmark_result_id"],
         repository=d["repository"],
         case_id=d["case_id"],
         context_id=d["context_id"],
@@ -35,7 +35,7 @@ def legacy_dict_to_hs(d: dict) -> HistorySample:
 
 legacy_HISTORY = [
     {
-        "benchmark_id": "b4466622481f4e3a927e962008309724",
+        "benchmark_result_id": "b4466622481f4e3a927e962008309724",
         "case_id": "bdca99e75fee41e8aec77c2c1bc220ab",
         "context_id": "a348db873c3641a9a13b57e934984525",
         "distribution_mean": "392130886.117931",
@@ -50,7 +50,7 @@ legacy_HISTORY = [
         "unit": "B/s",
     },
     {
-        "benchmark_id": "de97178de12846c7bd9252f998150bff",
+        "benchmark_result_id": "de97178de12846c7bd9252f998150bff",
         "case_id": "bdca99e75fee41e8aec77c2c1bc220ab",
         "context_id": "a348db873c3641a9a13b57e934984525",
         "distribution_mean": "388236410.822258",
@@ -65,7 +65,7 @@ legacy_HISTORY = [
         "unit": "B/s",
     },
     {
-        "benchmark_id": "27f3b6fda2d64fe4b4cc2af16ccefc00",
+        "benchmark_result_id": "27f3b6fda2d64fe4b4cc2af16ccefc00",
         "case_id": "bdca99e75fee41e8aec77c2c1bc220ab",
         "context_id": "a348db873c3641a9a13b57e934984525",
         "distribution_mean": "386395506.239738",
@@ -80,7 +80,7 @@ legacy_HISTORY = [
         "unit": "B/s",
     },
     {
-        "benchmark_id": "feac4ec1ca014a6bb7b7cb84869cdebb",
+        "benchmark_result_id": "feac4ec1ca014a6bb7b7cb84869cdebb",
         "case_id": "bdca99e75fee41e8aec77c2c1bc220ab",
         "context_id": "a348db873c3641a9a13b57e934984525",
         "distribution_mean": "387124231.233692",
@@ -95,7 +95,7 @@ legacy_HISTORY = [
         "unit": "B/s",
     },
     {
-        "benchmark_id": "eca009ba5ce0427ab32fadeb28d27143",
+        "benchmark_result_id": "eca009ba5ce0427ab32fadeb28d27143",
         "case_id": "bdca99e75fee41e8aec77c2c1bc220ab",
         "context_id": "a348db873c3641a9a13b57e934984525",
         "distribution_mean": "387968509.336751",
