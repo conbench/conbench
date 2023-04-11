@@ -161,6 +161,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
     # thread.
     if Config.TESTING:
         log.info("BMRT cache: disabled in TESTING mode")
+        return
 
     threading.Thread(target=_run_forever).start()
 
