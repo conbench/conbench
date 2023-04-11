@@ -18,6 +18,10 @@ from ..entities.benchmark_result import (
 from ..entities.case import Case
 from ._resp import json_response_for_byte_sequence, resp400
 
+import conbench.job
+
+conbench.job.start_jobs()
+
 log = logging.getLogger(__name__)
 
 
