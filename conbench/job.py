@@ -8,8 +8,8 @@ from typing import Dict, List, TypedDict
 
 from sqlalchemy import select
 
-from conbench.config import Config
 import conbench.metrics
+from conbench.config import Config
 from conbench.db import Session
 from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.hacks import get_case_kvpair_strings

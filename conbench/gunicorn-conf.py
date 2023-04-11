@@ -2,7 +2,6 @@ import os
 import signal
 import sys
 
-
 """
 Gunicorn configuration that applies in testing and prod environments.
 
