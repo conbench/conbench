@@ -95,5 +95,5 @@ def worker_int(worker):
     # https://github.com/benoitc/gunicorn/blob/69c508ac6e4b301045d3ce21acce8b416415d4c5/gunicorn/workers/base.py#L126
     # https://github.com/benoitc/gunicorn/issues/2706
     # https://github.com/benoitc/gunicorn/issues/2646
-    sys.stdout.write("\nworker_int hello, send myself SIGTERM\n")
+    sys.stdout.write("\nworker_int hook: send myself SIGTERM\n")
     os.kill(os.getpid(), signal.SIGTERM)
