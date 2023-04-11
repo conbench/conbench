@@ -1,8 +1,9 @@
 import flask as f
 
+from ..config import Config
 from ..hacks import set_display_benchmark_name, set_display_case_permutation
 from ..units import formatter_for_unit
-from ..config import Config
+
 
 def error_page(msg: str, alert_level="danger") -> str:
     """

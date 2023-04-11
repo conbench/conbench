@@ -8,11 +8,10 @@ import flask.views
 import flask_login
 import werkzeug
 
+from conbench.app._util import error_page
+
 from .. import __version__
 from ..buildinfo import BUILD_INFO
-from ..config import Config
-
-from conbench.app._util import error_page
 
 log = logging.getLogger(__name__)
 
