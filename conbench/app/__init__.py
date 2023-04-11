@@ -23,3 +23,6 @@ from .runs import *  # noqa
 # "Type[conbench.app.users.User]", local name has type
 # "Type[conbench.entities.user.User]"))
 from .users import *  # type: ignore # noqa
+
+# register routes
+from .benchmarks import *
