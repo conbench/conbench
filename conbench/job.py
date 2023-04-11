@@ -8,6 +8,8 @@ from typing import Dict, List, TypedDict
 
 from sqlalchemy import select
 
+
+from conbench.config import Config
 from conbench.db import Session
 from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.hacks import get_case_kvpair_strings
@@ -158,6 +160,9 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
     # part of gunicorn's worker process shutdown -- therefore the signal
     # handler-based logic below which injects a shutdown signal into the
     # thread.
+    if Config["TESTING"]:
+        log.info("BMRT cache: disabled in TESTING mode")
+
     threading.Thread(target=_run_forever).start()
 
 
