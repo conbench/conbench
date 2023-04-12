@@ -63,6 +63,7 @@
         data-bs-title="Benchmark results, grouped by unique (hardware, context) combinations.
         Time axis: benchmark result start time (associated commit data is not used),
         ordinate: mean value, if multisample.
+        A plot is only shown for at least three data points.
         ">
     </i>
     </h4>
@@ -70,12 +71,12 @@
     <!-- https://getbootstrap.com/docs/5.2/layout/grid/#row-columns -->
     <div class="row .row-cols-auto">
 
-        {% for (hwid, ctxid, hwname), results in results_by_hardware_and_context.items() %}
+        {% for hwctx, plotinfo in infos_for_uplots.items() %}
 
         <!-- with xl-6 I have tested that each plot (fixed width) has enough space -->
         <div class="col-xl-6 mb-5">
-            <h5 class="mt-2">hardware {{hwid[:4]}} ({{hwname[:22]}}), context {{ctxid[:6]}}: {{ results|length}} results</h5>
-            <div class="cb-plot-{{hwid}}_{{ctxid}}" style="width: 550px"></div>
+            <h5 class="mt-2">{{ plotinfo.title }}</h5>
+            <div class="cb-plot-{{hwctx}}" style="width: 550px"></div>
         </div>
         {% endfor %}
     </div>
@@ -88,15 +89,8 @@
 {{super()}}
 <script>
 
-// let data = [
-//   [1546300800, 1546387200],    // x-values (timestamps)
-//   [        35,         71],    // y-values (series 1)
-//   [        90,         15],    // y-values (series 2)
-// ];
 
-// An Object intended toi
 let plot_info_by_hwctx = {{ infos_for_uplots_json|safe }};
-
 
 $(document).ready(function () {
     let plotopts = {
@@ -180,9 +174,9 @@ $(document).ready(function () {
     //     let uplot = new uPlot(plotopts["{{ data_by_hwctx }}"], data, $(this));
     // });
     // use jquery selector, but then get raw element with [0]
-    {% for (hwid, ctxid, _), results in results_by_hardware_and_context.items() %}
-        console.log(plot_info_by_hwctx["{{hwid}}_{{ctxid}}"]["data_for_uplot"]);
-        let uplot_{{hwid}}_{{ctxid}} = new uPlot(plotopts, plot_info_by_hwctx["{{hwid}}_{{ctxid}}"]["data_for_uplot"], $('.cb-plot-{{hwid}}_{{ctxid}}')[0]);
+    {% for hwctx, plotinfo in infos_for_uplots.items() %}
+        console.log(plot_info_by_hwctx["{{hwctx}}"]["data_for_uplot"]);
+        let uplot_{{hwctx}} = new uPlot(plotopts, plot_info_by_hwctx["{{hwctx}}"]["data_for_uplot"], $('.cb-plot-{{hwctx}}')[0]);
     {% endfor %}
 
     // Enable bootstrap tooltips on this page.
