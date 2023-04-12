@@ -43,9 +43,12 @@ class BaseClient(abc.ABC):
     def get(self, path: str, params: Optional[dict] = None) -> dict:
         """Make a GET request"""
         url = self.base_url + path
-        log.debug(f"GET {url} {params=}")
+
+        req_string = f"GET {url} {params=}"
+        log.debug(req_string)
+
         res = self.session.get(url=url, params=params, timeout=self.timeout_s)
-        self._maybe_raise(res=res)
+        self._maybe_raise(req_string=req_string, res=res)
 
         return res.json()
 
@@ -54,10 +57,11 @@ class BaseClient(abc.ABC):
         json = json or {}
         url = self.base_url + path
 
-        log.debug(f"POST {url} {dumps(json)}")
+        req_string = f"POST {url} {dumps(json)}"
+        log.debug(req_string)
 
         res = self.session.post(url=url, json=json, timeout=self.timeout_s)
-        self._maybe_raise(res=res)
+        self._maybe_raise(req_string=req_string, res=res)
 
         if res.content:
             return res.json()
@@ -65,15 +69,18 @@ class BaseClient(abc.ABC):
     def put(self, path: str, json: dict) -> Optional[dict]:
         """Make a PUT request"""
         url = self.base_url + path
-        log.debug(f"PUT {url} {dumps(json)}")
+
+        req_string = f"PUT {url} {dumps(json)}"
+        log.debug(req_string)
+
         res = self.session.put(url=url, json=json, timeout=self.timeout_s)
-        self._maybe_raise(res=res)
+        self._maybe_raise(req_string=req_string, res=res)
 
         if res.content:
             return res.json()
 
     @staticmethod
-    def _maybe_raise(res: requests.Response):
+    def _maybe_raise(req_string: str, res: requests.Response):
         try:
             res.raise_for_status()
         except requests.HTTPError as e:
@@ -81,5 +88,6 @@ class BaseClient(abc.ABC):
                 res_content = e.response.content.decode()
             except AttributeError:
                 res_content = e.response.content
+            log.error(f"Failed request: {req_string}")
             log.error(f"Response content: {res_content}")
             raise
