@@ -58,7 +58,7 @@ _shutdown = False
 
 # Fetching one million items from a sample DB takes ~1 minute on my machine
 # (the `results = Session.scalars(....all())` call takes that long.
-def _fetch_and_cache_most_recent_results(n=0.2 * 10**6) -> None:
+def _fetch_and_cache_most_recent_results(n=0.07 * 10**6) -> None:
     log.debug(
         "BMRT cache: keys in cache: %s",
         len(_cache_bmrs["by_id"]),

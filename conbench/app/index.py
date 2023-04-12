@@ -43,7 +43,7 @@ class Index(AppEndpoint, RunMixin):
         )
 
     @authorize_or_terminate
-    def get(self):
+    def get(self) -> str | flask.Response:
         resp = _cloud_lb_health_check_shortcut()
         if resp is not None:
             return resp
@@ -80,12 +80,17 @@ class Index(AppEndpoint, RunMixin):
         # A quick/pragmatic decision for now, not set in stone: get a stable
         # sort order of repositories the way they are listed on that page;
         # do this by sorting alphabetically.
-        reponame_runs_map = dict(sorted(reponame_runs_map.items()))
+        reponame_runs_map_sorted = dict(sorted(reponame_runs_map.items()))
 
-        return self.page(reponame_runs_map)
+        return self.page(reponame_runs_map_sorted)
 
 
-def repo_url_to_display_name(url: str) -> str:
+def repo_url_to_display_name(url: Optional[str]) -> str:
+    if url is None:
+        # For those cases where the repository information stored with a
+        # Commit object in the DB is not a URL
+        return "no repository specified"
+
     try:
         result = urlparse(url)
     except ValueError as exc:
@@ -97,6 +102,7 @@ def repo_url_to_display_name(url: str) -> str:
 
     # See https://github.com/conbench/conbench/issues/1095
     if isinstance(p, bytes):
+        # Note: this case can be hit when `url` is None! Interesting.
         log.info("repo_url_to_display_name led to bytes obj: url: %s", url)
         p = p.decode("utf-8")
 
