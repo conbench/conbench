@@ -167,6 +167,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
 
 
 def start_jobs():
+    log.info("BMRT cache: start job")
     _periodically_fetch_last_n_benchmark_results()
 
 
