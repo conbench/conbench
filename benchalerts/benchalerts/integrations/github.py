@@ -66,8 +66,13 @@ class GitHubAppClient(BaseClient):
         payload = {
             "iss": app_id,
             "iat": datetime.datetime.utcnow() - datetime.timedelta(minutes=1),
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=10),
+            # Expiration time must be no more than 10 minutes, but using exactly 10
+            # minutes may be flaky due to system clock disagreements (see
+            # https://github.com/conbench/conbench/issues/1101). We only need this token
+            # briefly anyway.
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=3),
         }
+        log.debug("Payload to encode for JWT: %s", str(payload))
         encoded_jwt = jwt.encode(payload=payload, key=private_key, algorithm="RS256")
         return encoded_jwt
 
