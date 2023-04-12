@@ -7,6 +7,7 @@ import flask
 import orjson
 
 from conbench.app import app
+from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
 from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.job import _cache_bmrs
@@ -15,6 +16,7 @@ log = logging.getLogger(__name__)
 
 
 @app.route("/c-benchmarks/", methods=["GET"])  # type: ignore
+@authorize_or_terminate
 def list_benchmarks() -> str:
     return flask.render_template(
         "c-benchmarks.html",
@@ -28,6 +30,7 @@ def list_benchmarks() -> str:
 
 
 @app.route("/c-benchmarks/<bname>", methods=["GET"])  # type: ignore
+@authorize_or_terminate
 def show_benchmark_cases(bname: str) -> str:
     try:
         matching_results = _cache_bmrs["by_benchmark_name"][bname]
@@ -76,6 +79,7 @@ class TypeUIPlotInfo(TypedDict):
 
 
 @app.route("/c-benchmarks/<bname>/<caseid>", methods=["GET"])  # type: ignore
+@authorize_or_terminate
 def show_benchmark_results(bname: str, caseid: str) -> str:
     # First, filter by benchmark name.
     try:
