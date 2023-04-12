@@ -85,7 +85,12 @@ class Index(AppEndpoint, RunMixin):
         return self.page(reponame_runs_map)
 
 
-def repo_url_to_display_name(url: str) -> str:
+def repo_url_to_display_name(url: Optional[str]) -> str:
+    if url is None:
+        # For those cases where the repository information stored with a
+        # Commit object in the DB is not a URL
+        return "no repository specified"
+
     try:
         result = urlparse(url)
     except ValueError as exc:
@@ -97,6 +102,7 @@ def repo_url_to_display_name(url: str) -> str:
 
     # See https://github.com/conbench/conbench/issues/1095
     if isinstance(p, bytes):
+        # Note: this case can be hit when `url` is None! Interesting.
         log.info("repo_url_to_display_name led to bytes obj: url: %s", url)
         p = p.decode("utf-8")
 
