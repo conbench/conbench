@@ -12,6 +12,7 @@ import conbench.metrics
 from conbench.config import Config
 from conbench.db import Session
 from conbench.entities.benchmark_result import BenchmarkResult
+from conbench.entities.run import Run
 from conbench.hacks import get_case_kvpair_strings
 
 """
@@ -58,15 +59,20 @@ _shutdown = False
 
 # Fetching one million items from a sample DB takes ~1 minute on my machine
 # (the `results = Session.scalars(....all())` call takes that long.
-def _fetch_and_cache_most_recent_results(n=0.07 * 10**6) -> None:
+def _fetch_and_cache_most_recent_results(n=0.06 * 10**6) -> None:
     log.debug(
         "BMRT cache: keys in cache: %s",
         len(_cache_bmrs["by_id"]),
     )
     t0 = time.monotonic()
 
+    # Also fetch hardware from associated Run, so that result.run is in cache,
+    # too, and so that result.run.hardware is a quick lookup.
     results = Session.scalars(
-        select(BenchmarkResult).order_by(BenchmarkResult.timestamp.desc()).limit(n)
+        select(BenchmarkResult)
+        .join(Run)
+        .order_by(BenchmarkResult.timestamp.desc())
+        .limit(n)
     ).all()
 
     t1 = time.monotonic()
@@ -80,6 +86,8 @@ def _fetch_and_cache_most_recent_results(n=0.07 * 10**6) -> None:
     by_case_dict: Dict[str, List[BenchmarkResult]] = defaultdict(list)
     for result in results:
         by_id_dict[result.id] = result
+        # Add property _hardware on result obj, from Run.
+        result._hardware = result.run.hardware
         # point of confusion: `result.case.name` is the benchmark name
         by_name_dict[result.case.name].append(result)
         # Add a property on the Case object, on the fly.
