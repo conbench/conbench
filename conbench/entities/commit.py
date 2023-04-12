@@ -53,8 +53,10 @@ class Commit(Base, EntityMixin):
     parent: Mapped[Optional[str]] = Nullable(s.String(50))
 
     # This is meant to be the URL to the repository without trailing slash.
-    # Should be renamed to repo_url
+    # Should be renamed to repo_url. Seemingly this can be an empty string,
+    # too. We should transition to a state where this is known to be a URL.
     repository: Mapped[str] = NotNull(s.String(300))
+
     message: Mapped[str] = NotNull(s.String(250))
     author_name: Mapped[str] = NotNull(s.String(100))
     author_login: Mapped[Optional[str]] = Nullable(s.String(50))
@@ -79,11 +81,11 @@ class Commit(Base, EntityMixin):
     @property
     def repo_url(self) -> Optional[str]:
         """
-        Return a URL string or None. The returned string is guaranteed to start
-        with 'http' and is guanrateed to not have a trailing slash.
+        Return a URL (string) or None. The returned string is guaranteed to
+        start with 'http' and is guaranteed to not have a trailing slash.
 
-        The `None` case is here because I think the database may contain emtpy
-        strings.
+        The `None` case is here because I think the database may contain other
+        (non-URL) value types; and we need to phase those out.
         """
         u = self.repository
         if u.startswith("http"):
