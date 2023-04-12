@@ -1,0 +1,232 @@
+{% extends "app.html" %}
+{% block app_content %}
+
+<div>
+<h3><strong>{{ benchmark_name }}</strong> / case {{ case.id[:7] }}</h3>
+<span class="fs-4"><code>{{ case.text_id }}</code></span>
+
+<p>Based on {{ benchmark_results|length }} results reported in
+    total between {{bmr_cache_meta.oldest_result_time_str}} and
+    {{bmr_cache_meta.newest_result_time_str}}.
+ </p>
+
+<!--<h1>Results for</h1>
+<ul>
+    <li>Benchmark name: <code>{{ benchmark_name }}</code></li>
+    <li>Case: <code>{{ case.text_id }}</code></li>
+</ul>
+<p>Found {{ benchmark_result_count }} result(s).</p>
+-->
+<div class="mt-5">
+<table class="table table-hover conbench-datatable" style="width:100%; display: none">
+<thead>
+    <tr>
+        <th scope="col" style="width: 21%">time</th>
+        <th scope="col">result</th>
+        <th scope="col">hardware</th>
+        <th scope="col">ctx id</th>
+        <th scope="col" style="width: 10%"># samples</th>
+        <th scope="col" style="width: 20%">data</th>
+        <th scope="col" style="width: 10%">
+            rel err
+            <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                data-bs-title="
+                Relative standard error: standard error
+                of the mean in relationship to the mean value. Only built
+                when at least three samples are reported by this result.
+                ">
+            </i>
+        </th>
+    </tr>
+</thead>
+<tbody>
+{% for result in benchmark_results %}
+<tr>
+    <td class="font-monospace">{{ result.ui_timestamp }}</td>
+    <td class="font-monospace">
+        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=result.id) }}">{{ result.id [:9]}}</a>
+    </td>
+    <td class="font-monospace">{{ result.ui_hardware_short }}</td>
+    <td class="font-monospace">{{ result.context.id[:8] }}</td>
+    <td class="font-monospace">{{ result.ui_non_null_sample_count }}</td>
+    <td class="font-monospace">{{ result.ui_mean_and_uncertainty }}</td>
+    <td class="font-monospace">{{ result.ui_rel_sem }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<div class="mt-5">
+    <h4 class="mb-3">Plots
+        <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+        data-bs-title="Benchmark results, grouped by unique (hardware, context) combinations.
+        Time axis: benchmark result start time (associated commit data is not used),
+        ordinate: mean value, if multisample.
+        ">
+    </i>
+    </h4>
+
+    <!-- https://getbootstrap.com/docs/5.2/layout/grid/#row-columns -->
+    <div class="row .row-cols-auto">
+
+        {% for (hwid, ctxid, hwname), results in results_by_hardware_and_context.items() %}
+
+        <!-- with xl-6 I have tested that each plot (fixed width) has enough space -->
+        <div class="col-xl-6 mb-5">
+            <h5 class="mt-2">hardware {{hwid[:4]}} ({{hwname[:22]}}), context {{ctxid[:6]}}: {{ results|length}} results</h5>
+            <div class="cb-plot-{{hwid}}_{{ctxid}}" style="width: 550px"></div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+<script>
+
+// let data = [
+//   [1546300800, 1546387200],    // x-values (timestamps)
+//   [        35,         71],    // y-values (series 1)
+//   [        90,         15],    // y-values (series 2)
+// ];
+
+// An Object intended toi
+let plot_info_by_hwctx = {{ infos_for_uplots_json|safe }};
+
+
+$(document).ready(function () {
+    let plotopts = {
+        title: "",
+        class: "cb-uplot",
+        width: 550,
+        height: 200,
+        cursor: {
+            show: false,
+        },
+        legend: {
+            show: false,
+        },
+        series: [
+            {},
+            {
+            sorted: 0,
+            show: true,
+            spanGaps: false,
+            stroke: 'rgb(87, 125, 134)',
+            width: 0.5,
+            // I have been taking greenish colors from this palette:
+            // https://colorhunt.co/palette/b9eddd87cbb9569daa577d86 We can
+            // think about greenifying some graphs, and reddifying others,
+            // based on their properties.
+            fill: "rgba(135, 203, 185, 0.4)",
+            //fill: "rgba(255, 0, 0, 0.3)",
+            //dash: [10, 5],
+            scale: "y",
+            points: {
+                // Without `show: true`, points do not always show.
+                show: true,
+                size: 5,
+                fill: 'rgba(87, 125, 134, 0.7)'
+                }
+            }
+        ],
+        axes: [
+            {},
+            {
+                scale: "y",
+                // give y axis labels some space
+                size: 60,
+                // This is used for y axis formatting. Trade-off:
+                // predictable width, medium precision is sufficient.
+                values: (u, splits) => splits.map((v) => v.toExponential(2)),
+            }
+        ],
+        scales: {
+
+            "y": {
+                //range: [0, 200000]
+                //auto: false,
+                // range:  {
+                //     min: {
+                //         pad: 0.2,
+                //         soft: 0,
+                //         mode: 1,
+                //     },
+                //     max: {
+                //         pad: 0.5,
+                //         soft: 200000,
+                //         mode: 3,
+                //     }
+                // }
+
+                range: (u, datamin, datamax) => {
+                    // Preparing for all kinds of ranges and orders of
+                    // magnitude, always show the zero for keeping plots most
+                    // meaningful -- if the relative change is very small then
+                    // it will be rather invisible in a plot like this, which
+                    // is the goal.
+                    return [0, datamax * 1.2];
+                },
+
+            }
+        },
+    };
+
+    // $('table.conbench-datatable').each(function() {
+    //     let uplot = new uPlot(plotopts["{{ data_by_hwctx }}"], data, $(this));
+    // });
+    // use jquery selector, but then get raw element with [0]
+    {% for (hwid, ctxid, _), results in results_by_hardware_and_context.items() %}
+        console.log(plot_info_by_hwctx["{{hwid}}_{{ctxid}}"]["data_for_uplot"]);
+        let uplot_{{hwid}}_{{ctxid}} = new uPlot(plotopts, plot_info_by_hwctx["{{hwid}}_{{ctxid}}"]["data_for_uplot"], $('.cb-plot-{{hwid}}_{{ctxid}}')[0]);
+    {% endfor %}
+
+    // Enable bootstrap tooltips on this page.
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+    $('table.conbench-datatable').each(function() {
+        $(this).DataTable({
+            // Note(JP): this enables a special, simple plugin called
+            // `conditionalPaging` which must be included, e.g. via the dist URLs
+            // published in https://cdn.datatables.net/plug-ins/1.13.3/features/.
+            // kudos to https://stackoverflow.com/a/29639664/145400
+            "conditionalPaging": true,
+            "responsive": true,
+            // the default default seems to be the first item in lengthMenu.
+            "lengthMenu": [ 5, 10, 50, 75, 100, 250, 750 ],
+            // but when pageLength is also set, then _this_ is the default.
+            "pageLength": 10,
+            // Take rather precise control of layouting elements, put bottom elements
+            // into a mult-col single row, using BS's grid system.
+            "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
+            "order": [[0, 'desc']],
+            "columnDefs": [{ "orderable": true }],
+            initComplete: function () {
+                var api = this.api();
+                // reveal only after DOM modification is complete (reduce loading
+                // layout shift artifacts)
+                $('table.conbench-datatable').show();
+                api.columns.adjust();
+                $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
+            },
+        });
+    });
+});
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+

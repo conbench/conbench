@@ -1,0 +1,20 @@
+{% extends "app.html" %}
+{% block app_content %}
+
+
+
+
+<h4>Benchmarks (by name)</h4>
+<p>Based on {{ benchmark_result_count }} results reported in
+    total between {{bmr_cache_meta.oldest_result_time_str}} and
+    {{bmr_cache_meta.newest_result_time_str}}.
+ </p>
+
+<br>
+{% for benchmark_name, results in benchmarks_by_name.items() %}
+<a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a>
+    ({{ results|length }} results)<br>
+{% endfor %}
+
+
+{% endblock %}
