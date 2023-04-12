@@ -25,3 +25,13 @@ class TestIndex(_asserts.ListEnforcer):
         response = client.get("/index/")
         self.assert_index_page(response)
         assert run_id.encode() in response.data
+
+
+class TestCBenchmarks(_asserts.AppEndpointTest):
+    url = "/c-benchmarks"
+
+    def test_public_data_off(self, client, monkeypatch):
+        monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "off")
+        self.logout(client)
+        response = client.get(self.url, follow_redirects=True)
+        assert b"Sign In" in response.data, response.data
