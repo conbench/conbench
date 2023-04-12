@@ -80,9 +80,9 @@ class Index(AppEndpoint, RunMixin):
         # A quick/pragmatic decision for now, not set in stone: get a stable
         # sort order of repositories the way they are listed on that page;
         # do this by sorting alphabetically.
-        reponame_runs_map = dict(sorted(reponame_runs_map.items()))
+        reponame_runs_map_sorted = dict(sorted(reponame_runs_map.items()))
 
-        return self.page(reponame_runs_map)
+        return self.page(reponame_runs_map_sorted)
 
 
 def repo_url_to_display_name(url: Optional[str]) -> str:
