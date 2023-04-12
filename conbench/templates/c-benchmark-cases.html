@@ -67,7 +67,8 @@ $(document).ready(function () {
             // Take rather precise control of layouting elements, put bottom elements
             // into a mult-col single row, using BS's grid system.
             "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
-            "order": [[0, 'desc']],
+            // default sort order: by result count, highest first
+            "order": [[2, 'desc']],
             "columnDefs": [{ "orderable": true }],
             initComplete: function () {
                 var api = this.api();
