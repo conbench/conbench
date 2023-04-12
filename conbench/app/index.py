@@ -43,7 +43,7 @@ class Index(AppEndpoint, RunMixin):
         )
 
     @authorize_or_terminate
-    def get(self):
+    def get(self) -> str | flask.Response:
         resp = _cloud_lb_health_check_shortcut()
         if resp is not None:
             return resp
