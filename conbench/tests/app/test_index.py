@@ -1,5 +1,3 @@
-import pytest
-
 from ...tests.api import _fixtures
 from ...tests.app import _asserts
 
