@@ -93,14 +93,21 @@ def repo_url_to_display_name(url: str) -> str:
         # In this case, don't care about cosmetics: display the 'raw' data.
         return url
 
-    if result.path == "":
+    p = result.path
+
+    # See https://github.com/conbench/conbench/issues/1095
+    if isinstance(p, bytes):
+        log.info("repo_url_to_display_name led to bytes obj: url: %s", url)
+        p = p.decode("utf-8")
+
+    if p == "":
         # In this case, don't care about cosmetics: display the 'raw' data.
         return url
 
     # A common case is that there now is a leading slash. Remove that. Note
     # that `strip()` also operates on the trailing end. I think there shouldn't
     # be a trailing slash, but if it's there, remove it, too.
-    return result.path.strip("/")
+    return p.strip("/")
 
 
 @dataclass
