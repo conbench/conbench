@@ -13,5 +13,3 @@ data:
   DB_PORT: "{{DB_PORT}}"
   FLASK_APP: "{{FLASK_APP}}"
   DISTRIBUTION_COMMITS: "{{DISTRIBUTION_COMMITS}}"
-  # Hardcoding this for now. We can always make it configurable in the future.
-  PROMETHEUS_MULTIPROC_DIR: /tmp/_conbench-promcl-coord-dir

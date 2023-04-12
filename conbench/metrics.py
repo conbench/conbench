@@ -22,8 +22,7 @@ import time
 
 import flask
 import prometheus_client
-from prometheus_flask_exporter import NO_PREFIX
-from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
+from prometheus_flask_exporter import NO_PREFIX, PrometheusMetrics
 
 log = logging.getLogger(__name__)
 
@@ -59,9 +58,11 @@ GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING = prometheus_client.Gauge(
     "conbench_github_httpapi_quota_remaining",
     "A gauge that shows the last-observed x-ratelimit-remaining response "
     "header value.",
-    # multiprocess mode gauges are tricky!
-    # https://github.com/prometheus/client_python#multiprocess-mode-eg-gunicorn
-    multiprocess_mode="liveall",
+)
+
+GAUGE_BMRT_CACHE_LAST_UPDATE_SECONDS = prometheus_client.Gauge(
+    "conbench_bmrt_cache_last_update_seconds",
+    "The time the last iteration of fetch_and_cache_most_recent_results() took",
 )
 
 gauge_gh_api_rem_set = {"set": False}
@@ -95,11 +96,7 @@ def decorate_flask_app_with_metrics(app) -> None:
     if epn:
         default_labels["envpodname"] = epn
 
-    # Use `GunicornPrometheusMetrics` when spawning a separate HTTP server for
-    # the metrics scrape endpoint. This needs PROMETHEUS_MULTIPROC_DIR to be
-    # set to a path to a directory.
-    _inspect_prom_multiproc_dir()
-    GunicornInternalPrometheusMetrics(
+    PrometheusMetrics(
         app=app,
         # See https://github.com/conbench/conbench/issues/1006
         # We will have to maybe iterate on those endpoint names,
@@ -188,23 +185,6 @@ def _periodically_set_q_rem() -> None:
     threading.Thread(target=func).start()
 
     # This function immediately returns after having spawned the thread.
-
-
-def _inspect_prom_multiproc_dir():
-    """
-    Log information about the environment variable PROMETHEUS_MULTIPROC_DIR
-    and about the path it points to. This is helpful for debugging bad state.
-    """
-    path = os.environ.get("PROMETHEUS_MULTIPROC_DIR")
-    log.info("env PROMETHEUS_MULTIPROC_DIR: `%s`", path)
-
-    if not path:
-        return
-
-    try:
-        log.info("os.path.isdir('%s'): %s", path, os.path.isdir(path))
-    except OSError as exc:
-        log.info("os.path.isdir('%s') failed: %s", path, exc)
 
 
 _periodically_set_q_rem()
