@@ -38,7 +38,7 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         if comparisons and self.type == "run":
             baseline_run_id, contender_run_id = baseline_id, contender_id
 
-        elif comparisons and self.type == "benchmark":
+        elif comparisons and self.type == "benchmark-result":
             baseline = self.get_display_benchmark(baseline_id)
             contender = self.get_display_benchmark(contender_id)
             plot = self._get_plot(baseline, contender)
@@ -51,15 +51,15 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             baseline_run = self.get_display_run(baseline_run_id)
             contender_run = self.get_display_run(contender_run_id)
 
-        if comparisons and self.type == "benchmark":
+        if comparisons and self.type == "benchmark-result":
             plot_history = self.get_history_plot(contender, contender_run)
 
-        if comparisons and self.type != "benchmark":
+        if comparisons and self.type != "benchmark-result":
             comparisons_by_id = {c["contender_id"]: c for c in comparisons}
             if self.type == "run":
                 benchmarks, response = self._get_benchmarks(run_id=contender_id)
             if response.status_code != 200:
-                self.flash("Error getting benchmarks.")
+                self.flash("Error getting benchmark results.")
                 return self.redirect("app.index")
             for benchmark in benchmarks:
                 augment(benchmark)
@@ -244,7 +244,7 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
 
         # Mutate comparison objs (dictionaries) on the fly
         for c in comparisons:
-            view = "app.compare-benchmarks"
+            view = "app.compare-benchmark-results"
             compare = f'{c["baseline_id"]}...{c["contender_id"]}'
             c["compare_benchmarks_url"] = f.url_for(view, compare_ids=compare)
 
@@ -256,11 +256,11 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         return comparisons, regressions, improvements, None
 
 
-class CompareBenchmarks(Compare):
-    type = "benchmark"
+class CompareBenchmarkResults(Compare):
+    type = "benchmark-result"
     html = "compare-entity.html"
-    title = "Compare Benchmarks"
-    api_endpoint_name = "api.compare-benchmarks"
+    title = "Compare Benchmark Results"
+    api_endpoint_name = "api.compare-benchmark-results"
 
 
 class CompareRuns(Compare):
@@ -272,7 +272,7 @@ class CompareRuns(Compare):
 
 rule(
     "/compare/benchmarks/<compare_ids>/",
-    view_func=CompareBenchmarks.as_view("compare-benchmarks"),
+    view_func=CompareBenchmarkResults.as_view("compare-benchmark-results"),
     methods=["GET"],
 )
 rule(

@@ -15,9 +15,9 @@ def _emsg_needle(thing, thingid):
     return f"cannot perform comparison: no benchmark results found for {thing} ID: &#39;{thingid}&#39;"
 
 
-class TestCompareBenchmark(_asserts.GetEnforcer):
+class TestCompareBenchmarkResults(_asserts.GetEnforcer):
     url = "/compare/benchmarks/{}/"
-    title = "Compare Benchmarks"
+    title = "Compare Benchmark Results"
     redirect_on_unknown = False
 
     def _create(self, client):
@@ -30,12 +30,12 @@ class TestCompareBenchmark(_asserts.GetEnforcer):
         response = client.get(
             "/compare/benchmarks/unknown...unknown2/", follow_redirects=True
         )
-        self.assert_page(response, "Compare Benchmarks")
+        self.assert_page(response, "Compare Benchmark Results")
 
         assert "cannot perform comparison:" in response.text, response.text
 
         response = client.get("/compare/benchmarks/foo...bar/", follow_redirects=True)
-        self.assert_page(response, "Compare Benchmarks")
+        self.assert_page(response, "Compare Benchmark Results")
         assert "cannot perform comparison:" in response.text
 
 

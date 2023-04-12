@@ -64,7 +64,7 @@ class BenchmarkResult:
         self.z_score = float(z_score) if z_score is not None else None
 
 
-class BenchmarkComparator:
+class BenchmarkResultComparator:
     def __init__(self, baseline, contender, threshold=None, threshold_z=None):
         self.baseline = BenchmarkResult(**baseline) if baseline else None
         self.contender = BenchmarkResult(**contender) if contender else None
@@ -243,7 +243,7 @@ class BenchmarkComparator:
         }
 
 
-class BenchmarkListComparator:
+class BenchmarkResultListComparator:
     def __init__(self, pairs, threshold=None, threshold_z=None):
         self.pairs = pairs
         self.threshold = float(threshold) if threshold is not None else CHANGE
@@ -252,7 +252,7 @@ class BenchmarkListComparator:
     def formatted(self):
         for pair in self.pairs.values():
             baseline, contender = pair.get("baseline"), pair.get("contender")
-            yield BenchmarkComparator(
+            yield BenchmarkResultComparator(
                 baseline,
                 contender,
                 self.threshold,
@@ -262,7 +262,7 @@ class BenchmarkListComparator:
     def compare(self):
         for pair in self.pairs.values():
             baseline, contender = pair.get("baseline"), pair.get("contender")
-            yield BenchmarkComparator(
+            yield BenchmarkResultComparator(
                 baseline,
                 contender,
                 self.threshold,

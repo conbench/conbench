@@ -6,7 +6,10 @@ import flask as f
 
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
-from ..entities._comparator import BenchmarkComparator, BenchmarkListComparator
+from ..entities._comparator import (
+    BenchmarkResultComparator,
+    BenchmarkResultListComparator,
+)
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
@@ -192,7 +195,7 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
 
         baseline = _result_dict_for_compare_api(baseline_benchmark_result)
         contender = _result_dict_for_compare_api(contender_benchmark_result)
-        comparator = BenchmarkComparator(
+        comparator = BenchmarkResultComparator(
             baseline,
             contender,
             threshold,
@@ -270,7 +273,7 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
 
         pairs = _get_pairs(baseline_items, contender_items)
 
-        comparator = BenchmarkListComparator(
+        comparator = BenchmarkResultListComparator(
             pairs,
             threshold,
             threshold_z,
@@ -280,7 +283,7 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
         return f.jsonify(list(result))
 
 
-class CompareBenchmarksAPI(CompareEntityEndpoint):
+class CompareBenchmarkResultsAPI(CompareEntityEndpoint):
     def _get_results(self, benchmark_result_id) -> List[BenchmarkResult]:
         try:
             benchmark_result = BenchmarkResult.one(id=benchmark_result_id)
@@ -342,13 +345,15 @@ class CompareCommitsAPI(CompareListEndpoint):
         return commit
 
 
-compare_benchmarks_view = CompareBenchmarksAPI.as_view("compare-benchmarks")
+compare_benchmark_results_view = CompareBenchmarkResultsAPI.as_view(
+    "compare-benchmark-results"
+)
 compare_runs_view = CompareRunsAPI.as_view("compare-runs")
 compare_commits_view = CompareCommitsAPI.as_view("compare-commits")
 
 rule(
-    "/compare/benchmarks/<compare_ids>/",
-    view_func=compare_benchmarks_view,
+    "/compare/benchmark-results/<compare_ids>/",
+    view_func=compare_benchmark_results_view,
     methods=["GET"],
 )
 rule(

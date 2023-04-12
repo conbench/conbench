@@ -1465,7 +1465,7 @@
                 "tags": ["Commits"],
             }
         },
-        "/api/compare/benchmarks/{compare_ids}/": {
+        "/api/compare/benchmark-results/{compare_ids}/": {
             "get": {
                 "description": "Compare benchmark results.",
                 "parameters": [

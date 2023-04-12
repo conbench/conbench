@@ -1,4 +1,7 @@
-from ...entities._comparator import BenchmarkComparator, BenchmarkListComparator
+from ...entities._comparator import (
+    BenchmarkResultComparator,
+    BenchmarkResultListComparator,
+)
 
 
 def test_compare_no_change():
@@ -29,8 +32,8 @@ def test_compare_no_change():
         "z_score": "0.0",
     }
 
-    result = BenchmarkComparator(baseline, contender).compare()
-    formatted = BenchmarkComparator(baseline, contender).formatted()
+    result = BenchmarkResultComparator(baseline, contender).compare()
+    formatted = BenchmarkResultComparator(baseline, contender).formatted()
 
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -120,8 +123,8 @@ def test_compare_regression():
         "z_score": "-6.0",
     }
 
-    result = BenchmarkComparator(baseline, contender).compare()
-    formatted = BenchmarkComparator(baseline, contender).formatted()
+    result = BenchmarkResultComparator(baseline, contender).compare()
+    formatted = BenchmarkResultComparator(baseline, contender).formatted()
 
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -211,8 +214,8 @@ def test_compare_regression_less_is_better():
         "z_score": "-6.0",
     }
 
-    result = BenchmarkComparator(baseline, contender).compare()
-    formatted = BenchmarkComparator(baseline, contender).formatted()
+    result = BenchmarkResultComparator(baseline, contender).compare()
+    formatted = BenchmarkResultComparator(baseline, contender).formatted()
 
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -302,8 +305,8 @@ def test_compare_regression_but_under_threshold():
         "z_score": "-5.0",
     }
 
-    result = BenchmarkComparator(baseline, contender).compare()
-    formatted = BenchmarkComparator(baseline, contender).formatted()
+    result = BenchmarkResultComparator(baseline, contender).compare()
+    formatted = BenchmarkResultComparator(baseline, contender).formatted()
 
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -394,8 +397,10 @@ def test_compare_regression_custom_threshold_and_threshold_z():
     }
 
     threshold, threshold_z = 4, 1
-    result = BenchmarkComparator(baseline, contender, threshold, threshold_z).compare()
-    formatted = BenchmarkComparator(
+    result = BenchmarkResultComparator(
+        baseline, contender, threshold, threshold_z
+    ).compare()
+    formatted = BenchmarkResultComparator(
         baseline, contender, threshold, threshold_z
     ).formatted()
 
@@ -487,8 +492,8 @@ def test_compare_improvement():
         "z_score": "6.0",
     }
 
-    result = BenchmarkComparator(baseline, contender).compare()
-    formatted = BenchmarkComparator(baseline, contender).formatted()
+    result = BenchmarkResultComparator(baseline, contender).compare()
+    formatted = BenchmarkResultComparator(baseline, contender).formatted()
 
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -578,8 +583,8 @@ def test_compare_improvement_less_is_better():
         "z_score": "6.0",
     }
 
-    result = BenchmarkComparator(baseline, contender).compare()
-    formatted = BenchmarkComparator(baseline, contender).formatted()
+    result = BenchmarkResultComparator(baseline, contender).compare()
+    formatted = BenchmarkResultComparator(baseline, contender).formatted()
 
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -670,8 +675,10 @@ def test_compare_improvement_but_under_threshold():
     }
 
     threshold, threshold_z = 4, 1
-    result = BenchmarkComparator(baseline, contender, threshold, threshold_z).compare()
-    formatted = BenchmarkComparator(
+    result = BenchmarkResultComparator(
+        baseline, contender, threshold, threshold_z
+    ).compare()
+    formatted = BenchmarkResultComparator(
         baseline, contender, threshold, threshold_z
     ).formatted()
 
@@ -763,8 +770,8 @@ def test_compare_improvement_custom_threshold_and_threshold_z():
         "z_score": "5.0",
     }
 
-    result = BenchmarkComparator(baseline, contender).compare()
-    formatted = BenchmarkComparator(baseline, contender).formatted()
+    result = BenchmarkResultComparator(baseline, contender).compare()
+    formatted = BenchmarkResultComparator(baseline, contender).formatted()
 
     assert result == {
         "batch": "arrow-compute-scalar-cast-benchmark",
@@ -886,8 +893,8 @@ def test_compare_list():
         },
     }
 
-    result = BenchmarkListComparator(pairs).compare()
-    formatted = BenchmarkListComparator(pairs).formatted()
+    result = BenchmarkResultListComparator(pairs).compare()
+    formatted = BenchmarkResultListComparator(pairs).formatted()
 
     assert list(result) == [
         {
@@ -1058,8 +1065,8 @@ def test_compare_list_missing_contender():
         },
     }
 
-    result = BenchmarkListComparator(pairs).compare()
-    formatted = BenchmarkListComparator(pairs).formatted()
+    result = BenchmarkResultListComparator(pairs).compare()
+    formatted = BenchmarkResultListComparator(pairs).formatted()
 
     assert list(result) == [
         {
@@ -1231,8 +1238,8 @@ def test_compare_list_empty_contender():
         },
     }
 
-    result = BenchmarkListComparator(pairs).compare()
-    formatted = BenchmarkListComparator(pairs).formatted()
+    result = BenchmarkResultListComparator(pairs).compare()
+    formatted = BenchmarkResultListComparator(pairs).formatted()
 
     assert list(result) == [
         {
@@ -1403,8 +1410,8 @@ def test_compare_list_missing_baseline():
         },
     }
 
-    result = BenchmarkListComparator(pairs).compare()
-    formatted = BenchmarkListComparator(pairs).formatted()
+    result = BenchmarkResultListComparator(pairs).compare()
+    formatted = BenchmarkResultListComparator(pairs).formatted()
 
     assert list(result) == [
         {
@@ -1576,8 +1583,8 @@ def test_compare_list_empty_baseline():
         },
     }
 
-    result = BenchmarkListComparator(pairs).compare()
-    formatted = BenchmarkListComparator(pairs).formatted()
+    result = BenchmarkResultListComparator(pairs).compare()
+    formatted = BenchmarkResultListComparator(pairs).formatted()
 
     assert list(result) == [
         {
@@ -1713,8 +1720,8 @@ def test_compare_list_empty_pair():
         },
     }
 
-    result = BenchmarkListComparator(pairs).compare()
-    formatted = BenchmarkListComparator(pairs).formatted()
+    result = BenchmarkResultListComparator(pairs).compare()
+    formatted = BenchmarkResultListComparator(pairs).formatted()
 
     assert list(result) == [
         {

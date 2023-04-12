@@ -173,8 +173,8 @@ class TestGetPairs:
         assert pairs["case 1-context 2"]["contender"] is None
 
 
-class TestCompareBenchmarksGet(_asserts.GetEnforcer):
-    url = "/api/compare/benchmarks/{}/"
+class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
+    url = "/api/compare/benchmark-results/{}/"
     public = True
 
     def _create(self, name=None, verbose=False):
@@ -230,7 +230,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         new_entities, compare = self._create(name, verbose=True)
         query_string = {"threshold_z": threshold_z} if threshold_z else None
         response = client.get(
-            f"/api/compare/benchmarks/{compare.id}/", query_string=query_string
+            f"/api/compare/benchmark-results/{compare.id}/", query_string=query_string
         )
 
         benchmark_result_ids = [e.id for e in new_entities]
@@ -275,7 +275,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         new_entities, compare = self._create_with_error(
             name, baseline_error=error, verbose=True
         )
-        response = client.get(f"/api/compare/benchmarks/{compare.id}/")
+        response = client.get(f"/api/compare/benchmark-results/{compare.id}/")
 
         benchmark_result_ids = [e.id for e in new_entities]
         batch_ids = [e.batch_id for e in new_entities]
@@ -312,7 +312,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
 
     def test_compare_unknown_compare_ids(self, client):
         self.authenticate(client)
-        response = client.get("/api/compare/benchmarks/foo...bar/")
+        response = client.get("/api/compare/benchmark-results/foo...bar/")
         self.assert_404_not_found(response)
 
     @pytest.mark.parametrize(
@@ -334,7 +334,7 @@ class TestCompareBenchmarksGet(_asserts.GetEnforcer):
         contender_result = benchmark_results[7]  # on a PR branch
         baseline_result = benchmark_results[baseline_result_id]
         response = client.get(
-            f"/api/compare/benchmarks/{baseline_result.id}...{contender_result.id}/"
+            f"/api/compare/benchmark-results/{baseline_result.id}...{contender_result.id}/"
         )
         assert response.status_code == 200, response.status_code
         assert response.json["contender_z_score"] == expected_z_score
