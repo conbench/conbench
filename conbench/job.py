@@ -158,6 +158,14 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
             delay_s = max(min_delay_between_runs_seconds, 5 * last_call_duration_s)
             log.info("BMRT cache: trigger next fetch in %.3f s", delay_s)
 
+    if not Config.CREATE_ALL_TABLES:
+        # This needs to be done more cleanly -- when running the DB migration,
+        # the app should not even initialize so far.
+        log.info(
+            "BMRT cache: CREATE_ALL_TABLES is false, assume migration; disable cache job"
+        )
+        return
+
     # Do not attempt to explicitly join thread. Terminate thread cleanly as
     # part of gunicorn's worker process shutdown -- therefore the signal
     # handler-based logic below which injects a shutdown signal into the
@@ -170,6 +178,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
 
 
 def start_jobs():
+    log.info("BMRT cache: start job")
     _periodically_fetch_last_n_benchmark_results()
 
 
