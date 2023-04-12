@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from collections import defaultdict
 from typing import Dict, List, Tuple, TypedDict
 
@@ -29,21 +30,23 @@ def list_benchmarks() -> str:
 @app.route("/c-benchmarks/<bname>", methods=["GET"])  # type: ignore
 def show_benchmark_cases(bname: str) -> str:
     try:
-        results = _cache_bmrs["by_benchmark_name"][bname]
+        matching_results = _cache_bmrs["by_benchmark_name"][bname]
     except KeyError:
         return f"benchmark name not known: `{bname}`"
 
     # cases = set(bmr.case for bmr in results)
 
     results_by_case = defaultdict(list)
-    for r in results:
+    for r in matching_results:
         results_by_case[r.case].append(r)
 
+    t0 = time.monotonic()
     hardware_count_per_case = {}
     for case in results_by_case.keys():
         # The indirection through `.run` here is an architecture / DB schema
         # smell I think. This might fetch run dynamically from the DB>
-        hardware_count_per_case[case] = len(set([r.run.hardware for r in results]))
+        hardware_count_per_case[case] = len(set([r._hardware for r in results]))
+    log.info("building hardware_count_per_case took %.3f s", time.monotonic() - t0)
 
     context_count_per_case = {}
     for case, results in results_by_case.items():
@@ -59,7 +62,7 @@ def show_benchmark_cases(bname: str) -> str:
         hardware_count_per_case=hardware_count_per_case,
         context_count_per_case=context_count_per_case,
         # cases=cases,
-        benchmark_result_count=len(results),
+        benchmark_result_count=len(matching_results),
         application=Config.APPLICATION_NAME,
         title=Config.APPLICATION_NAME,  # type: ignore
     )
