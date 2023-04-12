@@ -5,6 +5,7 @@ from collections import defaultdict
 from typing import Dict, List, Tuple, TypedDict
 
 import flask
+import orjson
 
 from conbench.app import app
 from conbench.config import Config
@@ -106,7 +107,7 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
         list
     )
 
-    # Build up timeseries of results (group results, don't sort them yet)
+    # Build up timeseries of results (group results, don't sort them yet).
     for result in matching_results:
         # The indirection through `result.run.hardware` here is an architecture
         # / DB schema smell I think. This might fetch run dynamically from the
@@ -124,6 +125,14 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
             reverse=True,
         )
     )
+
+    # In the table show at most ~3000 results (for now, it's not really OK
+    # to render it for 10000 results)
+    results_for_table = []
+    for _, results in results_by_hardware_and_context_sorted.items():
+        results_for_table.extend(results[:3000])
+        if len(results_for_table) >= 3000:
+            break
 
     # This is going to be the data structure that the individual plots are
     # based on, also JSON-serialized and then accessed by JavaScript.
@@ -147,12 +156,14 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
             % (results[0].ui_hardware_short, ctxid[:7], len(results)),
         }
 
-    infos_for_uplots_json = json.dumps(infos_for_uplots, indent=2)
+    # Need to find a way to put bytes straight into jinja template.
+    # still is still a tiny bit faster than using stdlib json.dumps()
+    infos_for_uplots_json = orjson.dumps(infos_for_uplots).decode("utf-8")
 
     return flask.render_template(
         "c-benchmark-results-for-case.html",
-        # benchmarks_by_name=benchmarks_by_name,
-        benchmark_results=matching_results,
+        matching_benchmark_result_count=len(matching_results),
+        benchmark_results_for_table=results_for_table,
         benchmark_name=bname,
         bmr_cache_meta=_cache_bmrs["meta"],
         infos_for_uplots=infos_for_uplots,

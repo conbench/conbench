@@ -5,18 +5,15 @@
 <h3><strong>{{ benchmark_name }}</strong> / case {{ case.id[:7] }}</h3>
 <span class="fs-4"><code>{{ case.text_id }}</code></span>
 
-<p>Based on {{ benchmark_results|length }} results reported in
+<p>Identified {{ matching_benchmark_result_count }} result(s) matching this case permutation.
+    Based on {{ bmr_cache_meta.n_results }} results reported in
     total between {{bmr_cache_meta.oldest_result_time_str}} and
     {{bmr_cache_meta.newest_result_time_str}}.
- </p>
+</p>
 
-<!--<h1>Results for</h1>
-<ul>
-    <li>Benchmark name: <code>{{ benchmark_name }}</code></li>
-    <li>Case: <code>{{ case.text_id }}</code></li>
-</ul>
-<p>Found {{ benchmark_result_count }} result(s).</p>
--->
+
+
+<p> Showing {{ benchmark_results_for_table|length}} of {{ matching_benchmark_result_count }} results:</p>
 <div class="mt-5">
 <table class="table table-hover conbench-datatable" style="width:100%; display: none">
 <thead>
@@ -40,12 +37,10 @@
     </tr>
 </thead>
 <tbody>
-{% for result in benchmark_results %}
+{% for result in benchmark_results_for_table %}
 <tr>
     <td class="font-monospace">{{ result.ui_timestamp }}</td>
-    <td class="font-monospace">
-        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=result.id) }}">{{ result.id [:9]}}</a>
-    </td>
+    <td class="font-monospace"><a href="{{ url_for('app.benchmark-result', benchmark_result_id=result.id) }}">{{ result.id [:9]}}</a></td>
     <td class="font-monospace">{{ result.ui_hardware_short }}</td>
     <td class="font-monospace">{{ result.context.id[:8] }}</td>
     <td class="font-monospace">{{ result.ui_non_null_sample_count }}</td>
@@ -142,21 +137,6 @@ $(document).ready(function () {
         scales: {
 
             "y": {
-                //range: [0, 200000]
-                //auto: false,
-                // range:  {
-                //     min: {
-                //         pad: 0.2,
-                //         soft: 0,
-                //         mode: 1,
-                //     },
-                //     max: {
-                //         pad: 0.5,
-                //         soft: 200000,
-                //         mode: 3,
-                //     }
-                // }
-
                 range: (u, datamin, datamax) => {
                     // Preparing for all kinds of ranges and orders of
                     // magnitude, always show the zero for keeping plots most
@@ -170,12 +150,7 @@ $(document).ready(function () {
         },
     };
 
-    // $('table.conbench-datatable').each(function() {
-    //     let uplot = new uPlot(plotopts["{{ data_by_hwctx }}"], data, $(this));
-    // });
-    // use jquery selector, but then get raw element with [0]
     {% for hwctx, plotinfo in infos_for_uplots.items() %}
-        console.log(plot_info_by_hwctx["{{hwctx}}"]["data_for_uplot"]);
         let uplot_{{hwctx}} = new uPlot(plotopts, plot_info_by_hwctx["{{hwctx}}"]["data_for_uplot"], $('.cb-plot-{{hwctx}}')[0]);
     {% endfor %}
 
