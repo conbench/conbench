@@ -57,7 +57,7 @@ def show_benchmark_cases(bname: str) -> str:
     context_count_per_case = {}
     for case, results in results_by_case.items():
         context_count_per_case[case] = len(set([r.context for r in results]))
-        last_run_per_case[case] = max(r.ui_time_started_at for r in results)
+        last_run_per_case[case] = max(results, key=lambda r: r.timestamp)
 
     return flask.render_template(
         "c-benchmark-cases.html",

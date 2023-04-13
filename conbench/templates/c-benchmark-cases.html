@@ -32,7 +32,7 @@
             <a href="{{ url_for('app.show_benchmark_results', bname=benchmark_name, caseid=case.id) }}">{{ case.id[:10] }}</a>
         </td>
         <td class="font-monospace">{{ case.text_id }}</td>
-        <td class="font-monospace">{{ last_run_per_case[case] }}</td>
+        <td class="font-monospace">{{ last_run_per_case[case].ui_time_started_at }}</td>
         <td class="font-monospace">{{ results|length }}</td>
         <td class="font-monospace">{{ hardware_count_per_case[case] }}</td>
         <td class="font-monospace">{{ context_count_per_case[case] }}</td>
