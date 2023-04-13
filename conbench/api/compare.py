@@ -34,10 +34,8 @@ def _result_dict_for_compare_api(benchmark_result: BenchmarkResult):
         "value": benchmark_result.mean,
         "error": benchmark_result.error,
         "unit": benchmark_result.unit,
-        # TODO: change this property name to reflect the idea of 'case permutation'
-        "benchmark": benchmark_result.display_case_perm,
-        # TODO: change this property name to reflect the idea of 'benchmark name'
-        "batch": benchmark_result.display_bmname,
+        "case_permutation": benchmark_result.display_case_perm,
+        "benchmark_name": benchmark_result.display_bmname,
         "language": benchmark_result.context.tags.get("benchmark_language", "unknown"),
         "tags": benchmark_result.case.tags,
         "z_score": benchmark_result.z_score,
@@ -116,9 +114,6 @@ class CompareMixin:
         Attempt to read a specific set of query parameters from request
         context.
         """
-        # what is raw supposed to do?
-        raw = f.request.args.get("raw", "false").lower() in ["true", "1"]
-
         threshold = f.request.args.get("threshold")
         if threshold is not None:
             threshold = float(threshold)
@@ -134,7 +129,7 @@ class CompareMixin:
         # except ValueError:
         #     self.abort_404_not_found()
 
-        return raw, threshold, threshold_z
+        return threshold, threshold_z
 
 
 class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
@@ -157,10 +152,6 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
                 type: string
             example: <baseline_id>...<contender_id>
           - in: query
-            name: raw
-            schema:
-              type: boolean
-          - in: query
             name: threshold
             schema:
               type: number
@@ -175,7 +166,7 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
         baseline_id, contender_id = self._parse_two_ids_or_abort(compare_ids)
 
         args = self.get_query_args_from_request()
-        raw, threshold, threshold_z = args
+        threshold, threshold_z = args
 
         baseline_benchmark_result = self._get_results(baseline_id)[0]
         contender_benchmark_result = self._get_results(contender_id)[0]
@@ -202,7 +193,7 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
             threshold_z,
         )
 
-        return comparator.compare() if raw else comparator.formatted()
+        return comparator.compare()
 
 
 class CompareListEndpoint(ApiEndpoint, CompareMixin):
@@ -225,10 +216,6 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
                 type: string
             example: <baseline_id>...<contender_id>
           - in: query
-            name: raw
-            schema:
-              type: boolean
-          - in: query
             name: threshold
             schema:
               type: number
@@ -243,7 +230,7 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
         # ids, .... see sub classes below.).
 
         baseline_id, contender_id = self._parse_two_ids_or_abort(compare_ids)
-        raw, threshold, threshold_z = self.get_query_args_from_request()
+        threshold, threshold_z = self.get_query_args_from_request()
         baseline_results = self._get_results(baseline_id)
         contender_results = self._get_results(contender_id)
 
@@ -279,7 +266,7 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
             threshold_z,
         )
 
-        result = comparator.compare() if raw else comparator.formatted()
+        result = comparator.compare()
         return f.jsonify(list(result))
 
 

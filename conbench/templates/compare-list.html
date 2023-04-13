@@ -1,311 +1,275 @@
 {% extends "app.html" %}
 {% block app_content %}
-  <div class="d-flex">
-    <div class="p-0">
-      <h3>Comparison</h3>
+<div class="d-flex">
+  <div class="p-0">
+    <h3>Comparison</h3>
+  </div>
+</div>
+<hr class="border border-danger border-1 opacity-50">
+{% if baseline_run and contender_run %}
+<div class="row row-cols-1 row-cols-md-2 g-4 mt-3 mb-5">
+  <div class="col">
+    <div class="card text-bg-dark mb-3">
+      <div class="card-header">Contender</div>
+      <div class="card-body">
+        <h5 class="card-title"></h5>
+        <p class="card-text">
+          <a href="{{ url_for('app.run', run_id=contender_id) }}">Run {{ contender_id[:8] + "..." }}</a>
+          for commit {{ contender_run.commit.html_anchor_and_msg|safe }} submitted on {{ contender_run.timestamp }}.
+        </p>
+      </div>
     </div>
   </div>
-  <hr class="border border-danger border-1 opacity-50">
-  {% if baseline_run and contender_run %}
-    <div class="row row-cols-1 row-cols-md-2 g-4 mt-3 mb-5">
-      <div class="col">
-        <div class="card text-bg-dark mb-3">
-          <div class="card-header">Contender</div>
-          <div class="card-body">
-            <h5 class="card-title"></h5>
-            <p class="card-text">
-              <a href="{{ url_for('app.run', run_id=contender_id) }}">Run {{ contender_id[:8] + "..." }}</a>
-              for commit {{ contender_run.commit.html_anchor_and_msg|safe }} submitted on  {{ contender_run.timestamp }}.
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="col">
-        <div class="card text-bg-light mb-3">
-          <div class="card-header">Baseline / Reference</div>
-          <div class="card-body text-dark">
-            <h5 class="card-title"></h5>
-            <p class="card-text">
-              <a href="{{ url_for('app.run', run_id=baseline_id) }}">Run {{ baseline_id[:8] + "..." }}</a>
-              for commit {{ baseline_run.commit.html_anchor_and_msg|safe }} submitted on  {{ baseline_run.timestamp }}.
-            </p>
-          </div>
-        </div>
+  <div class="col">
+    <div class="card text-bg-light mb-3">
+      <div class="card-header">Baseline / Reference</div>
+      <div class="card-body text-dark">
+        <h5 class="card-title"></h5>
+        <p class="card-text">
+          <a href="{{ url_for('app.run', run_id=baseline_id) }}">Run {{ baseline_id[:8] + "..." }}</a>
+          for commit {{ baseline_run.commit.html_anchor_and_msg|safe }} submitted on {{ baseline_run.timestamp }}.
+        </p>
       </div>
     </div>
-  {% endif %}
-  {% if plot_history %}
-    <div class="col-md-12">
-      <h6>Top Outliers</h6>
-      <div id="bokeh-carousel"
-           style="visibility: hidden"
-           class="carousel slide"
-           data-ride="carousel">
-        <div class="carousel-inner" role="listbox">
-          <ol class="carousel-indicators">
-            {% if plot_history|length > 1 %}
-              {% for plot in plot_history %}
-                {% if loop.index == 1 %}
-                  <li data-target="#bokeh-carousel" data-slide-to="0" class="active"></li>
-                {% else %}
-                  <li data-target="#bokeh-carousel" data-slide-to="{{ loop.index - 1 }}"></li>
-                {% endif %}
-              {% endfor %}
-            {% endif %}
-          </ol>
-          {% for plot in plot_history %}
-            <div class="item  {% if loop.index == 1 %}active{% endif %} ">
-              <div align="center">
-                <a href="{{ outlier_urls[loop.index - 1] }}">{{ outlier_names[loop.index - 1] }}</a>
-              </div>
-              <div id="plot-history-{{ loop.index - 1 }}" align="center"></div>
-            </div>
-          {% endfor %}
-          {% if plot_history|length > 1 %}
-            <br>
-            <br>
-            <br>
-          {% endif %}
+  </div>
+</div>
+{% endif %}
+{% if plot_history %}
+<div class="col-md-12">
+  <h6>Top Outliers</h6>
+  <div id="bokeh-carousel" style="visibility: hidden" class="carousel slide" data-ride="carousel">
+    <div class="carousel-inner" role="listbox">
+      <ol class="carousel-indicators">
+        {% if plot_history|length > 1 %}
+        {% for plot in plot_history %}
+        {% if loop.index == 1 %}
+        <li data-target="#bokeh-carousel" data-slide-to="0" class="active"></li>
+        {% else %}
+        <li data-target="#bokeh-carousel" data-slide-to="{{ loop.index - 1 }}"></li>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+      </ol>
+      {% for plot in plot_history %}
+      <div class="item  {% if loop.index == 1 %}active{% endif %} ">
+        <div align="center">
+          <a href="{{ outlier_urls[loop.index - 1] }}">{{ outlier_names[loop.index - 1] }}</a>
         </div>
+        <div id="plot-history-{{ loop.index - 1 }}" align="center"></div>
       </div>
-    </div>
-  {% endif %}
-  <div class="row">
-    <div class="col-md-12">
-      <table id="benchmarks"
-             class="table table-striped table-bordered table-hover">
-        <caption>
-          {% if comparisons %}
-            <span id="comparisons-tooltip"
-                  data-toggle="tooltip"
-                  data-html="true"
-                  data-placement="bottom"
-                  title=" Based on the z-score, {{ regressions }} of these {{ comparisons|length }} benchmarks were regressions, and {{ improvements }} were improvements.">
-              Comparisons
-              <span class="glyphicon glyphicon-arrow-down"></span> <b>{{ (100 * regressions / comparisons|length) | round(2) }}%</b>
-              <span class="glyphicon glyphicon-arrow-up"></span> <b>{{ (100 * improvements / comparisons|length) | round(2) }}%</b>
-            </span>
-          {% else %}
-            Comparisons
-          {% endif %}
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col" style="white-space: nowrap;">Z-Score</th>
-            <th scope="col">Change</th>
-            <th scope="col">Lang</th>
-            <th scope="col">Batch</th>
-            <th scope="col">Benchmark</th>
-            <th scope="col">Baseline</th>
-            <th scope="col">Contender</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for c in comparisons %}
-            {% if (c.contender is not none or c.contender_error) and (c.baseline is not none or c.baseline_error) %}
-              <tr>
-                {% if c.contender_z_score is not none %}
-                  {% if c.contender_z_regression %}
-                    <td style="color: #ff7c43;">{{ "%.3f"|format(c.contender_z_score) }}</td>
-                  {% elif c.contender_z_improvement %}
-                    <td style="color: #61B329;">{{ "%.3f"|format(c.contender_z_score) }}</td>
-                  {% else %}
-                    <td>{{ "%.3f"|format(c.contender_z_score) }}</td>
-                  {% endif %}
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if c.contender is not none and c.baseline is not none %}
-                  <td>{{ c.change }}</td>
-                {% else %}
-                  <td>
-                  </td>
-                {% endif %}
-                <td>
-                  {{ c.language }}
-                </td>
-                <td>
-                  {% if type == "batch" %}
-                    <div>
-                      {{ c.batch }}
-                    </div>
-                  {% else %}
-                    {% if c.contender is not none and c.baseline is not none %}
-                      <a href="{{ c.compare_batches_url }}">
-                        <div>
-                          {{ c.batch }}
-                        </div>
-                      </a>
-                    {% else %}
-                      <div>
-                        {{ c.batch }}
-                      </div>
-                    {% endif %}
-                  {% endif %}
-                </td>
-                <td>
-                  {% if (c.contender is not none or c.contender_error) and (c.baseline is not none or c.baseline_error) %}
-                    <a href="{{ c.compare_benchmarks_url }}">
-                      <div>
-                        {{ c.benchmark }}
-                      </div>
-                    </a>
-                  {% else %}
-                    <div>
-                      {{ c.benchmark }}
-                    </div>
-                  {% endif %}
-                </td>
-                {% if c.baseline_error is not none %}
-                  <td>
-                    <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.baseline_id) }}">
-                      <i class="glyphicon glyphicon-exclamation-sign text-danger"
-                         data-toggle="tooltip"
-                         data-placement="top"
-                         title="Has error">
-                      </i></a>
-                    </td>
-                  {% elif c.baseline is none %}
-                    <td>
-                    </td>
-                  {% else %}
-                    <td style="white-space: nowrap;">
-                      {{ c.baseline }}
-                    </td>
-                  {% endif %}
-                  {% if c.contender_error is not none %}
-                    <td>
-                      <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.contender_id) }}">
-                        <i class="glyphicon glyphicon-exclamation-sign text-danger"
-                           data-toggle="tooltip"
-                           data-placement="top"
-                           title="Has error">
-                        </i></a>
-                      </td>
-                    {% elif c.contender is none %}
-                      <td>
-                      </td>
-                    {% else %}
-                      <td style="white-space: nowrap;">
-                        {{ c.contender }}
-                      </td>
-                    {% endif %}
-                  </tr>
-                {% endif %}
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <hr />
-      <h4>
-        Compare current contender run with another run:
-      </h4>
+      {% endfor %}
+      {% if plot_history|length > 1 %}
       <br>
-      <form>
-        <div class="form-group">
-          <label for="commit-date">
-            Baseline Commit Date
-          </label>
-          <input type="date" id="commit-date" name="commit-date" value="">
-        </div>
-        <div class="form-group">
-          <label for="baseline-commit">
-            Baseline Commit
-          </label>
-          <select class="custom-select" name="baseline-commit" id="baseline-commit">
-            <option value="" selected="selected">
-              Please select baseline commit date
-            </option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="hardware">
-            Hardware
-          </label>
-          <select class="custom-select" name="hardware" id="hardware">
-            <option value="" selected="selected">
-              Please select baseline commit first
-            </option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="run-name">
-            Run Name
-          </label>
-          <select class="custom-select" name="run-name" id="run-name">
-            <option value="" selected="selected">
-              Please select hardware first
-            </option>
-          </select>
-        </div>
-      </form>
-      <form name="compare-runs" id="compare-runs"  method="get" action="">
-        <button type="submit" class="btn btn-primary">
-          Submit
-        </button>
-      </form>
-    {% endblock %}
-    {% block scripts %}
-      {{ super() }}
-      {{ resources | safe }}
-      <script type="text/javascript">
-    var table = $('#benchmarks').dataTable( {
-      "responsive": true,
-      "order": [[0, 'asc']],
-      "columnDefs": [{ "orderable": false, "targets": [5, 6] }]
-    });
+      <br>
+      <br>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+<div class="row">
+  <div class="col-md-12">
+    <table id="benchmarks" class="table table-striped table-bordered table-hover">
+      <caption>
+        {% if comparisons %}
+        <span id="comparisons-tooltip" data-toggle="tooltip" data-html="true" data-placement="bottom"
+          title=" Based on the z-score, {{ regressions }} of these {{ comparisons|length }} benchmarks were regressions, and {{ improvements }} were improvements.">
+          Comparisons
+          <span class="glyphicon glyphicon-arrow-down"></span> <b>{{ (100 * regressions / comparisons|length) | round(2)
+            }}%</b>
+          <span class="glyphicon glyphicon-arrow-up"></span> <b>{{ (100 * improvements / comparisons|length) | round(2)
+            }}%</b>
+        </span>
+        {% else %}
+        Comparisons
+        {% endif %}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col" style="white-space: nowrap;">Z-Score</th>
+          <th scope="col">Change</th>
+          <th scope="col">Lang</th>
+          <th scope="col">Batch</th>
+          <th scope="col">Benchmark</th>
+          <th scope="col">Baseline</th>
+          <th scope="col">Contender</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in comparisons %}
+        {% if (c.contender is not none) and (c.baseline is not none) %}
+        <tr>
+          {% if c.analysis.lookback_z_score.z_score is not none %}
+          {% if c.analysis.lookback_z_regression_indicated %}
+          <td style="color: #ff7c43;">{{ c.analysis.lookback_z_score.z_score }}</td>
+          {% elif c.contender_z_improvement %}
+          <td style="color: #61B329;">{{ c.analysis.lookback_z_score.z_score }}</td>
+          {% else %}
+          <td>{{ c.analysis.lookback_z_score.z_score }}</td>
+          {% endif %}
+          {% else %}
+          <td></td>
+          {% endif %}
+
+          {% if (c.contender.value is not none) and (c.baseline.value is not none) %}
+          <td>{{ c.analysis.pairwise.percent_change }}%</td>
+          {% else %}
+          <td></td>
+          {% endif %}
+
+          <td>{{ c.baseline.language }}</td>
+
+          <td>
+            <div>{{ c.baseline.benchmark_name }}</div>
+          </td>
+
+          <td>
+            {% if (c.contender.value is not none or c.contender_error) and (c.baseline.value is not none or
+            c.baseline_error) %}
+            <a href="{{ c.compare_benchmarks_url }}">
+              <div>{{ c.baseline.case_permutation }}</div>
+            </a>
+            {% else %}
+            <div></div>
+            {% endif %}
+          </td>
+
+          {% if c.baseline.error is not none %}
+          <td><a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.baseline.benchmark_result_id) }}">
+              <i class="glyphicon glyphicon-exclamation-sign text-danger" data-toggle="tooltip" data-placement="top"
+                title="Has error">
+              </i></a>
+          </td>
+          {% else %}
+          <td style="white-space: nowrap;">{{ c.baseline.value }} {{ c.unit }}</td>
+          {% endif %}
+
+          {% if c.contender.error is not none %}
+          <td><a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.contender.benchmark_result_id) }}">
+              <i class="glyphicon glyphicon-exclamation-sign text-danger" data-toggle="tooltip" data-placement="top"
+                title="Has error">
+              </i></a>
+          </td>
+          {% else %}
+          <td style="white-space: nowrap;">{{ c.contender.value }} {{ c.unit }}</td>
+          {% endif %}
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<hr />
+<h4>
+  Compare current contender run with another run:
+</h4>
+<br>
+<form>
+  <div class="form-group">
+    <label for="commit-date">
+      Baseline Commit Date
+    </label>
+    <input type="date" id="commit-date" name="commit-date" value="">
+  </div>
+  <div class="form-group">
+    <label for="baseline-commit">
+      Baseline Commit
+    </label>
+    <select class="custom-select" name="baseline-commit" id="baseline-commit">
+      <option value="" selected="selected">
+        Please select baseline commit date
+      </option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="hardware">
+      Hardware
+    </label>
+    <select class="custom-select" name="hardware" id="hardware">
+      <option value="" selected="selected">
+        Please select baseline commit first
+      </option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="run-name">
+      Run Name
+    </label>
+    <select class="custom-select" name="run-name" id="run-name">
+      <option value="" selected="selected">
+        Please select hardware first
+      </option>
+    </select>
+  </div>
+</form>
+<form name="compare-runs" id="compare-runs" method="get" action="">
+  <button type="submit" class="btn btn-primary">
+    Submit
+  </button>
+</form>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+{{ resources | safe }}
+<script type="text/javascript">
+  var table = $('#benchmarks').dataTable({
+    "responsive": true,
+    "order": [[0, 'asc']],
+    "columnDefs": [{ "orderable": false, "targets": [5, 6] }]
+  });
 
 
-    $(document).ready(function() {
-      $('#comparisons-tooltip').tooltip()
-    });
+  $(document).ready(function () {
+    $('#comparisons-tooltip').tooltip()
+  });
 
-    {% if plot_history %}
-      $(document).ready(function() {
-        {% for plot in plot_history %}Bokeh.embed.embed_item({{ plot | safe }});{% endfor %}
-        document.getElementById("bokeh-carousel").style.visibility = "visible";
+  {% if plot_history %}
+  $(document).ready(function () {
+    {% for plot in plot_history %} Bokeh.embed.embed_item({{ plot | safe }}); {% endfor %}
+  document.getElementById("bokeh-carousel").style.visibility = "visible";
       });
-    {% endif %}
+  {% endif %}
 
 
-    window.onload = function () {
-      var commitHardwareRunMap = {{ commit_hardware_run_map|tojson|safe }};
-      var commitDate = document.getElementById("commit-date");
-      var baselineCommit = document.getElementById("baseline-commit");
-      var hardware = document.getElementById("hardware");
-      var runName = document.getElementById("run-name");
+  window.onload = function () {
+    var commitHardwareRunMap = {{ commit_hardware_run_map| tojson | safe
+  }};
+  var commitDate = document.getElementById("commit-date");
+  var baselineCommit = document.getElementById("baseline-commit");
+  var hardware = document.getElementById("hardware");
+  var runName = document.getElementById("run-name");
 
-      commitDate.onchange = function () {
-        runName.length = 1;
-        hardware.length = 1;
-        baselineCommit.length = 1
-        for (var commit in commitHardwareRunMap) {
-          if (commitHardwareRunMap[commit]["date"] == commitDate.value) {
-            baselineCommit.options[baselineCommit.options.length] = new Option(commit, commit);
-          }
-        }
-      }
-
-      baselineCommit.onchange = function () {
-        runName.length = 1;
-        hardware.length = 1;
-        for (var hardware_name in commitHardwareRunMap[this.value]["hardware"]) {
-          hardware.options[hardware.options.length] = new Option(hardware_name, hardware_name);
-        }
-      }
-      hardware.onchange = function () {
-        runName.length = 1;
-        var runs = commitHardwareRunMap[baselineCommit.value]["hardware"][this.value];
-        for (var i = 0; i < runs.length; i++) {
-          runName.options[runName.options.length] = new Option(runs[i][0], runs[i][1]);
-        }
+  commitDate.onchange = function () {
+    runName.length = 1;
+    hardware.length = 1;
+    baselineCommit.length = 1
+    for (var commit in commitHardwareRunMap) {
+      if (commitHardwareRunMap[commit]["date"] == commitDate.value) {
+        baselineCommit.options[baselineCommit.options.length] = new Option(commit, commit);
       }
     }
+  }
 
-    document.getElementById('run-name').onchange = function () {
-      var action = window.location.protocol + "//" + window.location.host + "/compare/runs/" + this.value + "..." + "{{ contender_run.id }}";
-      document.getElementById('compare-runs').action = action;
-    };
-      </script>
-    {% endblock %}
+  baselineCommit.onchange = function () {
+    runName.length = 1;
+    hardware.length = 1;
+    for (var hardware_name in commitHardwareRunMap[this.value]["hardware"]) {
+      hardware.options[hardware.options.length] = new Option(hardware_name, hardware_name);
+    }
+  }
+  hardware.onchange = function () {
+    runName.length = 1;
+    var runs = commitHardwareRunMap[baselineCommit.value]["hardware"][this.value];
+    for (var i = 0; i < runs.length; i++) {
+      runName.options[runName.options.length] = new Option(runs[i][0], runs[i][1]);
+    }
+  }
+    }
+
+  document.getElementById('run-name').onchange = function () {
+    var action = window.location.protocol + "//" + window.location.host + "/compare/runs/" + this.value + "..." + "{{ contender_run.id }}";
+    document.getElementById('compare-runs').action = action;
+  };
+</script>
+{% endblock %}

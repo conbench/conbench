@@ -106,7 +106,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         )
         if not has_errors:
             for result in res:
-                result["contender_error"] = None
+                result["contender"]["error"] = None
         return res
 
     benchmark_results = _response("GET_conbench_benchmarks_run_id_contender_wo_base")

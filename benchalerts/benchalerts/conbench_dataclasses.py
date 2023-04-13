@@ -62,10 +62,26 @@ class RunComparisonInfo:
             assert self.compare_link
             return [
                 BenchmarkResultInfo(
-                    name=benchmark_result["benchmark"],
-                    link=self.benchmark_result_link(benchmark_result["contender_id"]),
-                    has_error=bool(benchmark_result["contender_error"]),
-                    has_z_regression=bool(benchmark_result["contender_z_regression"]),
+                    name=benchmark_result["contender"]["case_permutation"]
+                    if "analysis" in benchmark_result
+                    else benchmark_result["benchmark"],
+                    link=self.benchmark_result_link(
+                        benchmark_result["contender"]["benchmark_result_id"]
+                        if "analysis" in benchmark_result
+                        else benchmark_result["contender_id"]
+                    ),
+                    has_error=bool(
+                        benchmark_result["contender"]["error"]
+                        if "analysis" in benchmark_result
+                        else benchmark_result["contender_error"]
+                    ),
+                    has_z_regression=bool(
+                        benchmark_result["analysis"]["lookback_z_score"][
+                            "regression_indicated"
+                        ]
+                        if "analysis" in benchmark_result
+                        else benchmark_result["contender_z_regression"]
+                    ),
                     run_id=self.contender_id,
                     run_reason=self.contender_reason,
                     run_time=self.contender_datetime,
@@ -233,7 +249,9 @@ class FullComparisonInfo:
     def z_score_threshold(self) -> float:
         """The z-score threshold used in this analysis."""
         z_score_thresholds = set(
-            comparison.compare_results[0]["threshold_z"]
+            comparison.compare_results[0]["analysis"]["lookback_z_score"]["z_threshold"]
+            if "analysis" in comparison.compare_results[0]
+            else comparison.compare_results[0]["threshold_z"]
             for comparison in self.run_comparisons
             if comparison.compare_results
         )
