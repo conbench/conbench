@@ -39,7 +39,7 @@
 <tbody>
 {% for result in benchmark_results_for_table %}
 <tr>
-    <td class="font-monospace">{{ result.ui_timestamp }}</td>
+    <td class="font-monospace">{{ result.ui_time_started_at }}</td>
     <td class="font-monospace"><a href="{{ url_for('app.benchmark-result', benchmark_result_id=result.id) }}">{{ result.id [:9]}}</a></td>
     <td class="font-monospace">{{ result.ui_hardware_short }}</td>
     <td class="font-monospace">{{ result.context.id[:8] }}</td>

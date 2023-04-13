@@ -376,15 +376,6 @@ class BenchmarkResult(Base, EntityMixin):
         }
 
     @property
-    def ui_timestamp(self) -> str:
-        """
-        Build human-readable timestamp string from `timestamp` property,
-        meant for consumption in UI.
-        """
-        return self.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
-        # tznaive_dt_to_aware_iso8601_for_api(self.timestamp)
-
-    @property
     def ui_mean_and_uncertainty(self) -> str:
         """
         Build human-readable text conveying the data point acquired here.
