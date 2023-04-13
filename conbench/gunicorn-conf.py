@@ -46,9 +46,9 @@ timeout = 120
 
 
 def post_worker_init(worker):
-    # Starting the BMRT cache / job machinery in this hook mean that it is not
+    # Starting the BMRT cache job machinery in this hook means that it is not
     # automatically started as a side-effect by creating / importing the
-    # WSGI/Flask application object
+    # WSGI/Flask application object.
     import conbench
 
     worker.log.info("gunicorn post_worker_init hook: conbench.job.start_jobs()")

@@ -207,7 +207,11 @@ def shutdown_handler(sig, frame):
 # ourselves a SIGTERM sinal. Don't worry, I don't generally hurt myself.
 signal.signal(signal.SIGTERM, shutdown_handler)
 
-# For interactive sessions
+# For interactive sessions (such as when running make run-app-dev)
 signal.signal(signal.SIGINT, shutdown_handler)
 
+# There is no clear purpose for this yet; I wonder which mechanism docker
+# compose really uses to signal its containers a graceful shutdown -- so far I
+# need to send SIGINT twice, and I think then it immediately sends SIGKILL to
+# containerized processes.
 signal.signal(signal.SIGQUIT, shutdown_handler)
