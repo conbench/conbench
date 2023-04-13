@@ -396,6 +396,10 @@ class BenchmarkResult(Base, EntityMixin):
         if samples is None:
             return "no data"
 
+        # otherwise: `TypeError: can't convert type 'NoneType' to numerator/denominator`
+        # in statistics.stdev(samples)
+        samples = [s for s in samples if s is not None]
+
         if len(samples) < 3:
             # Show each sample with five significant figures.
             return "; ".join(str(sigfig.round(s, sigfigs=5)) for s in samples)
@@ -421,6 +425,10 @@ class BenchmarkResult(Base, EntityMixin):
 
         if samples is None:
             return "no data"
+
+        # otherwise: `TypeError: can't convert type 'NoneType' to numerator/denominator`
+        # in statistics.stdev(samples)
+        samples = [s for s in samples if s is not None]
 
         if len(samples) < 3:
             return "n/a"
