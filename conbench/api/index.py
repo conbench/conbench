@@ -36,7 +36,6 @@ def docs():
     # dictionary may be different for each application startup. Sort keys
     # alphabetically to get a stable outcome.
     for schemaname in sorted(spec.components.schemas.keys()):
-        print(schemaname)
         mdchunks.append(
             f"## {schemaname}\n"
             f'<SchemaDefinition schemaRef="#/components/schemas/{schemaname}" />\n'

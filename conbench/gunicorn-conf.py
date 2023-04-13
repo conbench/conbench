@@ -45,6 +45,16 @@ threads = 10
 timeout = 120
 
 
+def post_worker_init(worker):
+    # Starting the BMRT cache job machinery in this hook means that it is not
+    # automatically started as a side-effect by creating / importing the
+    # WSGI/Flask application object.
+    import conbench
+
+    worker.log.info("gunicorn post_worker_init hook: conbench.job.start_jobs()")
+    conbench.job.start_jobs()
+
+
 def worker_int(worker):
     # Motivation to use this hook was to build a simple/robust mechanism for
     # graceful shutdown of the _run_forever function in the BMRT cache.
