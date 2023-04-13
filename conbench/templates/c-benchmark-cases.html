@@ -20,6 +20,7 @@
             <th scope="col">case id</th>
             <th scope="col" style="width: 60%">case permutation</th>
             <th scope="col" style="width: 7%"># results</th>
+            <th scope="col" style="width: 7%">last run</th>
             <th scope="col" style="width: 9%"># hardwares</th>
             <th scope="col" style="width: 8%"># contexts</th>
         </tr>
@@ -32,6 +33,7 @@
         </td>
         <td class="font-monospace">{{ case.text_id }}</td>
         <td class="font-monospace">{{ results|length }}</td>
+        <td class="font-monospace">{{ last_run_per_case[case] }}</td>
         <td class="font-monospace">{{ hardware_count_per_case[case] }}</td>
         <td class="font-monospace">{{ context_count_per_case[case] }}</td>
     </tr>
