@@ -116,16 +116,21 @@ deploy() {
   cat k8s/conbench-deployment.templ.yml | \
     sed "s|{{CONBENCH_WEBAPP_IMAGE_SPEC}}|${IMAGE_SPEC}|g" | kubectl apply -f -
 
-  # (Re-)apply ALB ingress config. Note(JP): if this results in re-creation of
-  # the ALB then we need to out-of-band update an A record in Route53, because
-  # we do not yet use k8s externalDNS features.
-  cat k8s/conbench-cloud-ingress.templ.yml | \
-    sed "s/<CERTIFICATE_ARN>/${CERTIFICATE_ARN}/g" | \
-    sed "s/<CONBENCH_INTENDED_DNS_NAME>/${CONBENCH_INTENDED_DNS_NAME}/g" | \
-      kubectl apply -f -
 
-  kubectl apply -f k8s/conbench-service.yml
-  kubectl apply -f k8s/conbench-service-monitor.yml
+  if [[ "$EKS_CLUSTER" == "vd-2" ]]; then
+    # (Re-)apply ALB ingress config. Note(JP): if this results in re-creation
+    # of the ALB then we need to out-of-band update an A record in Route53,
+    # because we do not yet use k8s externalDNS features.
+    cat k8s/conbench-cloud-ingress.templ.yml | \
+      sed "s/<CERTIFICATE_ARN>/${CERTIFICATE_ARN}/g" | \
+      sed "s/<CONBENCH_INTENDED_DNS_NAME>/${CONBENCH_INTENDED_DNS_NAME}/g" | \
+        kubectl apply -f -
+
+    kubectl apply -f k8s/conbench-service.yml
+    kubectl apply -f k8s/conbench-service-monitor.yml
+  else
+    echo "non-vd-2: skip k8s ingress and service patch (rely on name to still match: 'conbench-service')"
+  fi
 
   # Note(JP); this might be nonobvious, but `rollout status` waits for
   # progressDeadlineSeconds (see deployment manifast) before it exits non-zero.
@@ -133,9 +138,10 @@ deploy() {
   # https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#failed-deployment
   kubectl rollout status deployment/conbench-deployment
 
-  # Towards https://github.com/conbench/conbench/issues/993.
-  # The current working directory, I hope, is the Conbench checkout.
-  make jsonnet-kube-prom-manifests || echo "ouch, but ignore for now"
+  if [[ "$EKS_CLUSTER" != "vd-2" ]]; then
+    echo "non-vd-2: skip kube-prometheus deploy/update"
+    return 0
+  fi
 
   # Note(JP): let's do a bit of magic. In the special case of working against
   # vd-2 (specific EKS cluster in a specific AWS account, powering two specific
@@ -148,11 +154,10 @@ deploy() {
   # `k8s/kube-prometheus/deploy-or-update.sh` itself is tested in Conbench repo
   # CI as part of the minikube flow.
   set +x
-  if [[ "$EKS_CLUSTER" == "vd-2" ]]; then
-    echo "vd-2: run k8s/kube-prometheus/deploy-or-update.sh, and pray that this does not impede the robustness of our deploy pipeline"
-    export CONBENCH_REPO_ROOT_DIR="$(pwd)"
-    bash k8s/kube-prometheus/deploy-or-update.sh
-  fi
+  make jsonnet-kube-prom-manifests
+  echo "vd-2: run k8s/kube-prometheus/deploy-or-update.sh, and pray that this does not impede the robustness of our deploy pipeline"
+  export CONBENCH_REPO_ROOT_DIR="$(pwd)"
+  bash k8s/kube-prometheus/deploy-or-update.sh
 }
 
 rollback() {
