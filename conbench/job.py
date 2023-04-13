@@ -24,6 +24,9 @@ Central cache data structure are Python dictionaries (with thread-safe(atomic)
 set/get operations).
 """
 
+original_sigint_handler = signal.getsignal(signal.SIGINT)
+original_sigquit_handler = signal.getsignal(signal.SIGQUIT)
+
 log = logging.getLogger(__name__)
 
 
@@ -54,7 +57,8 @@ _cache_bmrs: CacheDict = {
     ),
 }
 
-_shutdown = False
+_SHUTDOWN = False
+_STARTED = False
 
 
 # Fetching one million items from a sample DB takes ~1 minute on my machine
@@ -134,15 +138,17 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
     min_delay_between_runs_seconds = 120
 
     def _run_forever():
-        global _shutdown
+        global _SHUTDOWN
+        global _STARTED
+        _STARTED = True
 
         delay_s = first_sleep_seconds
 
         while True:
-            # Build responsive sleep loop that inspects _shutdown often.
+            # Build responsive sleep loop that inspects _SHUTDOWN often.
             deadline = time.monotonic() + delay_s
             while time.monotonic() < deadline:
-                if _shutdown:
+                if _SHUTDOWN:
                     log.debug("_run_forever: shut down")
                     return
 
@@ -174,15 +180,11 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
         )
         return
 
+    threading.Thread(target=_run_forever).start()
     # Do not attempt to explicitly join thread. Terminate thread cleanly as
     # part of gunicorn's worker process shutdown -- therefore the signal
     # handler-based logic below which injects a shutdown signal into the
     # thread.
-    if Config.TESTING:
-        log.info("BMRT cache: disabled in TESTING mode")
-        return
-
-    threading.Thread(target=_run_forever).start()
 
 
 def start_jobs():
@@ -191,13 +193,21 @@ def start_jobs():
 
 
 def shutdown_handler(sig, frame):
-    log.info("BMRT cache: saw signal %s, shutdown", sig)
-    global _shutdown
-    _shutdown = True
+    log.info(
+        "BMRT cache job (started: %s): saw signal %s, set shutdown flag", _STARTED, sig
+    )
+    global _SHUTDOWN
+    _SHUTDOWN = True
+    if sig == signal.SIGINT:
+        original_sigint_handler(sig, frame)
 
 
-# Handle the common signals that instruct us to racefully shut down. We have
+# Handle the common signals that instruct us to gracefully shut down. We have
 # installed custom logic in the gunicorn worker_interrupt hook where we send
 # ourselves a SIGTERM sinal. Don't worry, I don't generally hurt myself.
 signal.signal(signal.SIGTERM, shutdown_handler)
+
+# For interactive sessions
 signal.signal(signal.SIGINT, shutdown_handler)
+
+signal.signal(signal.SIGQUIT, shutdown_handler)
