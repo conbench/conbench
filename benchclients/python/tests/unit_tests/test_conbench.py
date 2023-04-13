@@ -35,6 +35,8 @@ class TestConbenchClient:
         with pytest.raises(requests.HTTPError, match="404"):
             self.cb.get(path)
 
+        assert f"Failed request: GET {self.cb.base_url}{path}" in caplog.text
+
         if path == "/error_with_content":
             assert 'Response content: {"code":' in caplog.text
         else:
