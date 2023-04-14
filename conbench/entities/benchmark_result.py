@@ -1,6 +1,8 @@
+import logging
 import math
 import statistics
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import List, Optional
 
 import flask as f
@@ -29,6 +31,48 @@ from ..entities.context import Context
 from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info
 from ..entities.run import GitHubCreate, Run
+
+log = logging.getLogger(__name__)
+
+
+class BenchmarkResultValidationError(Exception):
+    pass
+
+
+def do_iteration_samples_look_like_error(data: list[Optional[Decimal]]) -> bool:
+    """
+    Inspect user-given numerical values for individual iteration results.
+
+    Input is a list of either `None` or `Decimal` objects (currently enforced
+    via marshmallow schema). Example: [Decimal('0.099094'), None,
+    Decimal('0.036381')]
+
+    Consider this multi-sample result as 'good' only when there is at least one
+    numerical value and when _all_ values are numerical values.
+
+    From https://github.com/conbench/conbench/issues/813: If stats.data
+    contains at least one null value then the BenchmarkResult is considered
+    failed. If no error information was provided by the user, then a dummy
+    error message "not all iterations completed" is automatically set by
+    Conbench upon DB insert.
+
+    See https://github.com/conbench/conbench/pull/811#discussion_r1129144143
+    """
+    if len(data) == 0:
+        return True
+
+    for sample in data:
+        if sample is None:
+            return True
+
+    return False
+
+
+def validate_stats_usergiven_or_raise(stats_usergiven):
+    """
+    TODO: validate `data` against `times`, etc.
+    """
+    ...
 
 
 class BenchmarkResult(Base, EntityMixin):
@@ -67,9 +111,14 @@ class BenchmarkResult(Base, EntityMixin):
     )
 
     case: Mapped[Case] = relationship("Case", lazy="joined")
-    # optional info at the benchmark level (i.e. information that isn't a tag that should create a separate case, but information that's good to hold around like links to logs)
+    # optional info at the benchmark level (i.e. information that isn't a tag
+    # that should create a separate case, but information that's good to hold
+    # around like links to logs)
     optional_benchmark_info: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
-    # this info should probably be called something like context-info it's details about the context that are optional | we believe won't impact performance
+
+    # this info should probably be called something like context-info it's
+    # details about the context that are optional | we believe won't impact
+    # performance
     info: Mapped[Info] = relationship("Info", lazy="joined")
     context: Mapped[Context] = relationship("Context", lazy="joined")
 
@@ -87,6 +136,7 @@ class BenchmarkResult(Base, EntityMixin):
     # timezone convention: the application code must make sure that what we
     # store is the user-given timestamp properly translated to UTC.
     timestamp: Mapped[datetime] = NotNull(s.DateTime(timezone=False))
+
     iterations: Mapped[Optional[int]] = Nullable(s.Integer)
     min: Mapped[Optional[float]] = Nullable(s.Numeric, check("min>=0"))
     max: Mapped[Optional[float]] = Nullable(s.Numeric, check("max>=0"))
@@ -108,174 +158,259 @@ class BenchmarkResult(Base, EntityMixin):
     # marshmallow schema. Maybe this would be a strong reason to move to using
     # pydantic -- I believe when defining a schema with pydantic, the
     # corresponding type information can be used for mypy automatically.
-    def create(data):
-        """Create BenchmarkResult and write to database."""
-        tags = data["tags"]
-        has_error = "error" in data
-        has_stats = "stats" in data
+    def create(userres):
+        """
+        Perform further validation on user-given data, and perform data
+        mutation / augmentation.
 
-        # defaults
-        benchmark_result_data = {}
+        Attempt to write result to database.
 
-        # Note(JP): if no data was provided, should this stay `True`?
-        # We will see. https://github.com/conbench/conbench/issues/803.
-        any_errored_iteration = True
+        Create associated Run, Case, Context, Info entities in DB if required.
 
-        if has_stats:
-            # Note(JP): this is the result of marshmallow
-            # deserializaiton/validation against the `BenchmarkResultCreate`
-            # schema below. This needs better naming. Most importantly, we
-            # should make use of typing information derived from the schema.
-            benchmark_result_data = data["stats"].copy()
+        Raises BenchmarkResultValidationError, exc message is expected to be
+        emitted to the HTTP client in a Bad Request response.
+        """
+        # See: https://github.com/conbench/conbench/issues/935
+        if "name" not in userres["tags"]:
+            raise BenchmarkResultValidationError(
+                "`name` property must be present in `tags` "
+                "(the name of the conceptual benchmark)"
+            )
 
-            # Note(JP): I think we may want to emit a Bad Request response when
-            # benchmark_result_data['data'] does not contain any non-null
-            # value. An empty list would then also be rejected right away. `if
-            # benchmark_result_data.get("data")` is probably supposed to catch
-            # the case where an empty list was provided.
+        if "stats" not in userres:
+            if "error" not in userres:
+                raise BenchmarkResultValidationError(
+                    "`error` property required when `stats` property not present"
+                )
 
-            # calculate any missing stats if data available
-            if benchmark_result_data.get("data"):
-                # Note(JP): looks like `benchmark_result_data["data"]` is a
-                # list of either `None` or `Decimal` objects (currently
-                # enforced via marshmallow schema). Example:
-                #
-                # [Decimal('0.099094'), None, Decimal('0.036381')]
-                #
-                # TODO: let's lock this in with type annotations so that this
-                # is known _here_. Transform `None` to `math.nan` and `Decimal``
-                # to `float`` for subsequent calculations.
-                dat = [
-                    float(x) if x is not None else math.nan
-                    for x in benchmark_result_data["data"]
-                ]
+        run = Run.first(id=userres["run_id"])
+        if run is not None:
+            if userres.get("github") is not None:
+                chrun = run.commit.hash
+                chresult = userres["github"]["commit"]
+                if chrun != chresult:
+                    raise BenchmarkResultValidationError(
+                        f"result refers to commit hash {chresult}, but Run {run.id} "
+                        f"refers to commit hash {chrun}."
+                    )
 
-                q1 = q3 = mean = median = min = max = stdev = iqr = None
+        # result_data_for_db = {}
 
-                # calculate stats only if the data is complete. Note(JP): why?
-                # maybe we want to calculate that always if there are at least
-                # N (3?) data points.
-                any_errored_iteration = any([x is math.nan for x in dat])
+        result_error_for_db = None
 
-                if not any_errored_iteration:
-                    # Note(JP): do we really want to populate all of the below
-                    # except for stddev if the sample size is 1? In that case,
-                    # all of max, min, mean, q1 share the same value. I'd say
-                    # it makes more sense to calculate these statistics only if
-                    # three or more samples have been provided.
-                    q1, q3 = np.percentile(dat, [25, 75])
-                    mean = np.mean(dat)
-                    median = np.median(dat)
-                    min = np.min(dat)
-                    max = np.max(dat)
-                    # review this: https://github.com/conbench/conbench/issues/802
-                    stdev = np.std(dat) if len(dat) > 2 else 0
-                    iqr = q3 - q1
+        # Handle 'error' scenarios.
+        # Obvious: user-given error object set.
+        if "error" in userres:
+            # `data["error"]` is a JSON object.
+            result_error_for_db = userres["error"]
 
-                calculated_result_data = {
-                    "data": dat,
-                    "times": data["stats"].get("times", []),
-                    "unit": data["stats"]["unit"],  # seems to be required, good.
-                    "time_unit": data["stats"].get("time_unit", "s"),
-                    "iterations": len(dat),
-                    "mean": mean,
-                    "median": median,
-                    "min": min,
-                    "max": max,
-                    "stdev": stdev,
-                    "q1": q1,
-                    "q3": q3,
-                    "iqr": iqr,
+        # Now, check for a more subtle error condition, based on the per-
+        # iteration samples. Rely on `stats` key to exist (see checks above).
+        if "stats" in userres and do_iteration_samples_look_like_error(
+            userres["stats"]
+        ):
+            if "error" not in userres:
+                # User did not set `error`, but the number sequence indicates
+                # that this result is to be considered 'errored'. Set a generic
+                # error message.
+                result_error_for_db = {
+                    "status": "Partial result: not all iterations completed"
                 }
 
-                for field in calculated_result_data:
-                    # explicit `is None` because `stdev` is often 0
-                    if benchmark_result_data.get(field) is None:
-                        benchmark_result_data[field] = calculated_result_data[field]
+        # This is the result of marshmallow deserialization/validation
+        # against the `BenchmarkResultStatsSchema` schema below. We should
+        # make use of typing information derived from the schema.
+        stats_usergiven = userres["stats"].copy()
 
-        if has_error:
-            benchmark_result_data["error"] = data["error"]
+        validate_stats_usergiven_or_raise(stats_usergiven)
 
-        # If there was no explicit error *and* at least one iteration failed aren't complete, we should add an error
-        if (
-            benchmark_result_data.get("error", None) is None
-            and any_errored_iteration is True
-        ):
-            benchmark_result_data["error"] = {
-                "status": "Partial result: not all iterations completed"
+        # Note: here we should switch to a different code branch and do the
+        # 'error result insertion'.
+
+        # From here, certain invariants are met: samples is all numbers, at
+        # least one.
+
+        # We look at this benchmark result as a potential
+        # "multi-sample" result. If more than on iteration was
+        # performed, their corresponding 'sub results are assumed to be
+        # directly comparable to each other.
+        samples = [float(s) for s in stats_usergiven["data"]]
+        assert samples
+
+        # First copy the entire stats data structure (this includes times, data,
+        # ...), later selectively overwrite/augment.
+        result_data_for_db = stats_usergiven.copy()
+        result_data_for_db["error"] = result_error_for_db
+
+        if len(samples) > 1:
+            # There is a special case where for one sample the iteration count
+            # may be larger than one, see below.
+            if stats_usergiven["iterations"] != len(samples):
+                raise BenchmarkResultValidationError(
+                    f'iterations count ({ stats_usergiven["iterations"] }) does '
+                    f"not match sample count ({len(samples)})"
+                )
+
+        if len(samples) >= 3:
+            # See https://github.com/conbench/conbench/issues/802 and
+            # https://github.com/conbench/conbench/issues/1118
+            q1, q3 = np.percentile(samples, [25, 75])
+            aggregates = {
+                "q1": q1,
+                "q3": q3,
+                "mean": np.mean(samples),
+                "median": np.median(samples),
+                "min": np.min(samples),
+                "max": np.max(samples),
+                # https://numpy.org/doc/stable/reference/generated/numpy.std.html
+                # This has N in the divisor (ddof=0)
+                "stdev": np.std(samples),
+                "iqr": q3 - q1,
             }
 
-        # Note(JP): this implicitly introduces a requirement for `name` to be
-        # set: https://github.com/conbench/conbench/issues/935
-        # Also note: this pulls the `name=xx` key/value pair out of tags.
-        name = tags.pop("name")
+            # Now, overwrite with self-derived aggregates:
+            for key, value in aggregates.items():
+                result_data_for_db[key] = sigfig.round(value, sigfigs=5)
 
-        # create if not exists
-        c = {"name": name, "tags": tags}
-        case = Case.first(**c)
+                # Log upon conflict. Lett the automatically derived value win,
+                # to achieve consistency between the provided samples and the
+                # aggregates.
+                if key in stats_usergiven:
+                    if stats_usergiven[key] != value:
+                        log.warning(
+                            "key %s, user-given val %s vs. calculated %s",
+                            key,
+                            stats_usergiven[key],
+                            value,
+                        )
+
+        if len(samples) == 1:
+            if stats_usergiven["iterations"] == 1:
+                # If user provides aggregates, then it's unclear what they
+                # mean.
+                for k in ("q1", "q2", "mean", "median", "min", "max", "stdev", "iqr"):
+                    if stats_usergiven.get(k) is not None:
+                        raise BenchmarkResultValidationError(
+                            f"one data point from one iteration: property `{k}` "
+                            "is unexpected"
+                        )
+
+            if stats_usergiven["iterations"] > 1:
+                # Note(JP): I think that this here is precisely the one way to
+                # report the result of a microbenchmark with cross-repetition
+                # stats: data: length 1 (the duration of running many
+                # repetitions), and iterations: a number larger than 1, while
+                # mean, max, are now set (then these can be assumed to be
+                # derived from _within_ the microbenchmark. Note that this is a
+                # very special condition). The mean time for a single
+                # repetition now is sample/iterations.
+                log.info("")
+
+        if len(samples) == 2:
+            # If user provides aggregates, then it's unclear what they mean.
+            for k in ("q1", "q2", "mean", "median", "min", "max", "stdev", "iqr"):
+                if stats_usergiven.get(k) is not None:
+                    raise BenchmarkResultValidationError(
+                        f"with two provided data points, the property `{k}` "
+                        "is unexpected"
+                    )
+
+        # Create if it does not yet exist.
+        # Mutate dict: pull the `name=xx` key/value pair out.
+        benchmark_name = userres["tags"].pop("name")
+        case_dict = {"name": benchmark_name, "tags": userres["tags"]}
+        case = Case.first(**case_dict)
         if not case:
             # Note(JP): there is a race condition here, expect this to collide
-            case = Case.create(c)
+            try:
+                case = Case.create(case_dict)
+            except s.exc.IntegrityError as exc:
+                if "unique constraint" in str(exc):
+                    # Someone created this in the meantime, repeat get.
+                    case = Case.first(**case_dict)
+                else:
+                    raise
 
-        # create if not exists
-        if "context" not in data:
-            data["context"] = {}
-        context = Context.first(tags=data["context"])
+        # Create context if it does not yet exist.
+        # Special case: empty context?
+        context_dict = userres.get("context", {})
+        context = Context.first(tags=context_dict)
         if not context:
-            context = Context.create({"tags": data["context"]})
+            try:
+                context = Context.create({"tags": context_dict})
+            except s.exc.IntegrityError as exc:
+                if "unique constraint" in str(exc):
+                    # Someone created this in the meantime, repeat get.
+                    context = Context.first(tags=context_dict)
+                else:
+                    raise
 
-        # create if not exists
-        if "info" not in data:
-            data["info"] = {}
-        info = Info.first(tags=data["info"])
+        # Create info object if it does not yet exist.
+        info_dict = userres.get("info", {})
+        info = Info.first(tags=info_dict)
         if not info:
-            info = Info.create({"tags": data["info"]})
+            try:
+                info = Info.create({"tags": info_dict})
+            except s.exc.IntegrityError as exc:
+                if "unique constraint" in str(exc):
+                    # Someone created this in the meantime, repeat get.
+                    info = Info.first(tags=info_dict)
+                else:
+                    raise
+
+        # Update Run object to reflect 'errored' state.
+        if "error" in result_data_for_db:
+            if run is not None:
+                run.has_errors = True
+                run.save()
 
         # Create a corresponding `run` entity in the database if it doesn't
         # exist yet. Use the user-given `id` (string) as primary key. If the
         # Run is already known in the database then only update the
         # `has_errors` property, if necessary. All other run-specific
-        # properties provided as part of this BenchmarkResultCreate structure (like
-        # `machine_info` and `run_name`) get silently ignored.
-        run = Run.first(id=data["run_id"])
-        if run:
-            if has_error:
-                run.has_errors = True
-                run.save()
-        else:
-            hardware_info_field = (
-                "machine_info" if "machine_info" in data else "cluster_info"
-            )
-            Run.create(
-                {
-                    "id": data["run_id"],
-                    "name": data.pop("run_name", None),
-                    "reason": data.pop("run_reason", None),
-                    "github": data.pop("github", None),
-                    hardware_info_field: data.pop(hardware_info_field),
-                    "has_errors": has_error,
-                }
-            )
-
-        benchmark_result_data["run_id"] = data["run_id"]
-        benchmark_result_data["batch_id"] = data["batch_id"]
-
-        # At this point `data["timestamp"]` is expected to be a tz-aware
-        # datetime object in UTC.
-        benchmark_result_data["timestamp"] = data["timestamp"]
-        benchmark_result_data["validation"] = data.get("validation")
-        benchmark_result_data["change_annotations"] = {
-            key: value
-            for key, value in data.get("change_annotations", {}).items()
-            if value is not None
-        }
-        benchmark_result_data["case_id"] = case.id
-        benchmark_result_data["optional_benchmark_info"] = data.get(
-            "optional_benchmark_info"
+        # properties provided as part of this BenchmarkResultCreate structure
+        # (like `machine_info` and `run_name`) get silently ignored (for now,
+        # let's enforce consistency soon).
+        hardware_info_field = (
+            "machine_info" if "machine_info" in userres else "cluster_info"
         )
-        benchmark_result_data["info_id"] = info.id
-        benchmark_result_data["context_id"] = context.id
-        benchmark_result = BenchmarkResult(**benchmark_result_data)
+        run_create_dict = {
+            "id": userres["run_id"],
+            "name": userres.pop("run_name", None),
+            "reason": userres.pop("run_reason", None),
+            "github": userres.pop("github", None),
+            hardware_info_field: userres.pop(hardware_info_field),
+            "has_errors": "error" in result_data_for_db,
+        }
+        if run is None:
+            try:
+                Run.create(run_create_dict)
+            except s.exc.IntegrityError as exc:
+                if "unique constraint" in str(exc):
+                    pass
+                else:
+                    raise
+
+        # Merge two dictionaries via PEP 584 method.
+        bmr = result_data_for_db | {
+            "run_id": userres["run_id"],
+            "batch_id": userres["batch_id"],
+            # At this point `data["timestamp"]` is expected to be a tz-aware
+            # datetime object in UTC.
+            "timestamp": userres["timestamp"],
+            "validation": userres.get("validation"),
+            "change_annotations": {
+                key: value
+                for key, value in userres.get("change_annotations", {}).items()
+                if value is not None
+            },
+            "case_id": case.id,
+            "optional_benchmark_info": userres.get("optional_benchmark_info"),
+            "info_id": info.id,
+            "context_id": context.id,
+        }
+
+        benchmark_result = BenchmarkResult(**bmr)
         benchmark_result.save()
 
         return benchmark_result

@@ -14,6 +14,7 @@ from ..entities.benchmark_result import (
     BenchmarkResult,
     BenchmarkResultFacadeSchema,
     BenchmarkResultSerializer,
+    BenchmarkResultValidationError,
 )
 from ..entities.case import Case
 from ._resp import json_response_for_byte_sequence, resp400
@@ -284,7 +285,10 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
 
         # Note(JP): in the future this will also raise further validation
         # errors that are to be exposed via a 400 response to the HTTP client
-        benchmark_result = BenchmarkResult.create(data)
+        try:
+            benchmark_result = BenchmarkResult.create(data)
+        except BenchmarkResultValidationError as exc:
+            return resp400(str(exc))
 
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 
