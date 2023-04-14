@@ -96,7 +96,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 3,
         "w": 12,
         "x": 0,
         "y": 0
@@ -200,7 +200,7 @@
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": false
+          "showLegend": true
         },
         "tooltip": {
           "mode": "single",
@@ -229,6 +229,97 @@
         }
       ],
       "title": "Flask response generation rate [1/s], $timewindow mean",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Based on a counter that is incremented right before attempting to make an HTTP request, i.e. this rate includes failed requests.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "series",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "hertz"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 3
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(conbench_github_httpapi_requests_total{namespace=~\"$namespace\"}[$timewindow]))",
+          "legendFormat": "",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GitHub HTTP API request rate [1/s], $timewindow mean",
       "type": "timeseries"
     },
     {
@@ -292,7 +383,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 6,
         "w": 12,
         "x": 12,
         "y": 6
@@ -352,11 +443,10 @@
               "viz": false
             },
             "lineInterpolation": "linear",
-            "lineWidth": 3,
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
-              "log": 2,
-              "type": "symlog"
+              "type": "linear"
             },
             "showPoints": "auto",
             "spanNulls": false,
@@ -387,12 +477,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 12,
         "x": 0,
-        "y": 7
+        "y": 11
       },
-      "id": 9,
+      "id": 11,
       "options": {
         "legend": {
           "calcs": [],
@@ -443,10 +533,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 12,
-        "y": 13
+        "y": 12
       },
       "id": 13,
       "options": {
@@ -569,12 +659,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 12,
         "x": 0,
-        "y": 15
+        "y": 17
       },
-      "id": 11,
+      "id": 12,
       "options": {
         "legend": {
           "calcs": [],
@@ -625,10 +715,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 11,
+        "h": 8,
         "w": 12,
         "x": 12,
-        "y": 21
+        "y": 19
       },
       "id": 6,
       "options": {
@@ -696,101 +786,6 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "The rate of GitHub HTTP API responses received with status code 403. Some of these errors may have been retried.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "semi-dark-red",
-            "mode": "fixed"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "series",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 3,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "hertz"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 23
-      },
-      "id": 12,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (instance)(rate(conbench_github_httpapi_403responses_total[$timewindow]))",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "GitHub HTTP API 403 error rate [1/s], $timewindow mean",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
       "description": "This is a gauge. Last update wins. -1 means: not seen an HTTP response yet carrying the x-ratelimit-remaining header. Each process reports this. Processes might die.",
       "fieldConfig": {
         "defaults": {
@@ -802,6 +797,7 @@
             "axisColorMode": "series",
             "axisLabel": "",
             "axisPlacement": "auto",
+            "axisSoftMax": 6000,
             "axisSoftMin": -1,
             "barAlignment": 0,
             "drawStyle": "line",
@@ -849,10 +845,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 11,
+        "h": 9,
         "w": 12,
         "x": 0,
-        "y": 31
+        "y": 23
       },
       "id": 10,
       "options": {
@@ -877,7 +873,7 @@
           },
           "editorMode": "code",
           "expr": "conbench_github_httpapi_quota_remaining{namespace=~\"$namespace\"} > 0",
-          "legendFormat": "pid:{{pid}}, {{instance}}",
+          "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
         }
@@ -1037,8 +1033,8 @@
       {
         "current": {
           "selected": true,
-          "text": ".*",
-          "value": ".*"
+          "text": "staging",
+          "value": "staging"
         },
         "hide": 0,
         "includeAll": false,
@@ -1047,7 +1043,7 @@
         "name": "namespace",
         "options": [
           {
-            "selected": false,
+            "selected": true,
             "text": "staging",
             "value": "staging"
           },
@@ -1057,7 +1053,7 @@
             "value": "default"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": ".*",
             "value": ".*"
           }
@@ -1070,7 +1066,7 @@
     ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-2d",
     "to": "now"
   },
   "timepicker": {},
