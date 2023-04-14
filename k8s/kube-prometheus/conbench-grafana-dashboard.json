@@ -214,7 +214,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(http_request_total{namespace=~\"$namespace\"}[$timewindow]))",
+          "expr": "sum(rate(http_request_total{namespace=~\"$namespace\",container=\"conbench\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -408,13 +408,13 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (status) (rate(http_request_total{namespace=~\"$namespace\"}[$timewindow]))",
+          "expr": "sum by (status) (rate(http_request_total{namespace=~\"$namespace\",container=\"conbench\",status!=\"200\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Flask response generation rate by status code [1/s], $timewindow mean",
+      "title": "webapp response generation rate by status code, non-200 [1/s], $timewindow mean",
       "type": "timeseries"
     },
     {
@@ -422,11 +422,12 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Based on a counter that is incremented right before attempting to make an HTTP request, i.e. this rate includes failed requests.",
+      "description": "The rate of failed HTTP requests, either after retrying or upon first attempt.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "fixedColor": "semi-dark-red",
+            "mode": "fixed"
           },
           "custom": {
             "axisCenteredZero": false,
@@ -502,13 +503,13 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_total{namespace=~\"$namespace\"}[$timewindow]))",
-          "legendFormat": "",
+          "expr": "sum(rate(conbench_github_httpapi_requests_failed_total{namespace=~\"$namespace\"}[$timewindow]))",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "GitHub HTTP API request rate [1/s], $timewindow mean",
+      "title": "GitHub HTTP API request error rate [1/s], $timewindow mean",
       "type": "timeseries"
     },
     {
@@ -604,11 +605,12 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "The rate of failed HTTP requests, either after retrying or upon first attempt.",
+      "description": "The rate of GitHub HTTP API responses received with status code 403. Some of these errors may have been retried.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "fixedColor": "semi-dark-red",
+            "mode": "fixed"
           },
           "custom": {
             "axisCenteredZero": false,
@@ -684,13 +686,13 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (instance)(rate(conbench_github_httpapi_requests_failed_total{namespace=~\"$namespace\"}[$timewindow]))",
+          "expr": "sum(rate(conbench_github_httpapi_403responses_total[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "GitHub HTTP API request error rate [1/s], $timewindow mean",
+      "title": "GitHub HTTP API 403 error rate [1/s], $timewindow mean",
       "type": "timeseries"
     },
     {
@@ -903,10 +905,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 11,
+        "h": 8,
         "w": 12,
         "x": 12,
-        "y": 32
+        "y": 27
       },
       "id": 5,
       "options": {
