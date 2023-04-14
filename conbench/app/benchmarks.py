@@ -39,7 +39,7 @@ def show_benchmark_cases(bname: str) -> str:
 
     # cases = set(bmr.case for bmr in results)
 
-    results_by_case = defaultdict(list)
+    results_by_case: Dict[str, List[BenchmarkResult]] = defaultdict(list)
     for r in matching_results:
         results_by_case[r.case].append(r)
 
@@ -53,9 +53,11 @@ def show_benchmark_cases(bname: str) -> str:
 
     log.info("building hardware_count_per_case took %.3f s", time.monotonic() - t0)
 
+    last_result_per_case: Dict[str, BenchmarkResult] = {}
     context_count_per_case = {}
     for case, results in results_by_case.items():
         context_count_per_case[case] = len(set([r.context for r in results]))
+        last_result_per_case[case] = max(results, key=lambda r: r.timestamp)
 
     return flask.render_template(
         "c-benchmark-cases.html",
@@ -65,6 +67,7 @@ def show_benchmark_cases(bname: str) -> str:
         bmr_cache_meta=_cache_bmrs["meta"],
         results_by_case=results_by_case,
         hardware_count_per_case=hardware_count_per_case,
+        last_result_per_case=last_result_per_case,
         context_count_per_case=context_count_per_case,
         # cases=cases,
         benchmark_result_count=len(matching_results),

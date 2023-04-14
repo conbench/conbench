@@ -376,15 +376,6 @@ class BenchmarkResult(Base, EntityMixin):
         }
 
     @property
-    def ui_timestamp(self) -> str:
-        """
-        Build human-readable timestamp string from `timestamp` property,
-        meant for consumption in UI.
-        """
-        return self.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
-        # tznaive_dt_to_aware_iso8601_for_api(self.timestamp)
-
-    @property
     def ui_mean_and_uncertainty(self) -> str:
         """
         Build human-readable text conveying the data point acquired here.
@@ -404,6 +395,10 @@ class BenchmarkResult(Base, EntityMixin):
 
         if samples is None:
             return "no data"
+
+        # otherwise: `TypeError: can't convert type 'NoneType' to numerator/denominator`
+        # in statistics.stdev(samples)
+        samples = [s for s in samples if s is not None]
 
         if len(samples) < 3:
             # Show each sample with five significant figures.
@@ -430,6 +425,10 @@ class BenchmarkResult(Base, EntityMixin):
 
         if samples is None:
             return "no data"
+
+        # otherwise: `TypeError: can't convert type 'NoneType' to numerator/denominator`
+        # in statistics.stdev(samples)
+        samples = [s for s in samples if s is not None]
 
         if len(samples) < 3:
             return "n/a"

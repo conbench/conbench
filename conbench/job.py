@@ -137,6 +137,10 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
     first_sleep_seconds = 10
     min_delay_between_runs_seconds = 120
 
+    if Config.TESTING:
+        first_sleep_seconds = 2
+        min_delay_between_runs_seconds = 20
+
     def _run_forever():
         global _SHUTDOWN
         global _STARTED

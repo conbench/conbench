@@ -17,11 +17,12 @@
     <table class="table table-hover conbench-datatable" style="width:100%; display: none">
     <thead>
         <tr>
-            <th scope="col">case id</th>
-            <th scope="col" style="width: 60%">case permutation</th>
-            <th scope="col" style="width: 7%"># results</th>
-            <th scope="col" style="width: 9%"># hardwares</th>
-            <th scope="col" style="width: 8%"># contexts</th>
+            <th scope="col" style="width: 7%">case id</th>
+            <th scope="col" style="width: 35%">case permutation</th>
+            <th scope="col" style="width: 13%">last result</th>
+            <th scope="col" style="width: 6%"># results</th>
+            <th scope="col" style="width: 8%"># hardwares</th>
+            <th scope="col" style="width: 6%"># contexts</th>
         </tr>
     </thead>
     <tbody>
@@ -31,6 +32,7 @@
             <a href="{{ url_for('app.show_benchmark_results', bname=benchmark_name, caseid=case.id) }}">{{ case.id[:10] }}</a>
         </td>
         <td class="font-monospace">{{ case.text_id }}</td>
+        <td class="font-monospace">{{ last_result_per_case[case].ui_time_started_at }}</td>
         <td class="font-monospace">{{ results|length }}</td>
         <td class="font-monospace">{{ hardware_count_per_case[case] }}</td>
         <td class="font-monospace">{{ context_count_per_case[case] }}</td>
