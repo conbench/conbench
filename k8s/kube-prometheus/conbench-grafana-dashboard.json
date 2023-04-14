@@ -160,7 +160,7 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
+            "showPoints": "never",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -214,7 +214,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(http_request_total{namespace=~\"$namespace\",container=\"conbench\"}[$timewindow]))",
+          "expr": "sum(rate(http_request_total{namespace=~\"$namespace\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -348,13 +348,13 @@
               "viz": false
             },
             "lineInterpolation": "linear",
-            "lineWidth": 2,
+            "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
               "log": 10,
               "type": "symlog"
             },
-            "showPoints": "auto",
+            "showPoints": "never",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -383,7 +383,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 11,
         "w": 12,
         "x": 12,
         "y": 6
@@ -408,8 +408,8 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (status) (rate(http_request_total{namespace=~\"$namespace\",container=\"conbench\",status!=\"200\"}[$timewindow]))",
-          "legendFormat": "__auto",
+          "expr": "sum by (status) (rate(http_request_total{namespace=~\"$namespace\",status!=\"200\"}[$timewindow]))",
+          "legendFormat": "{{status}}",
           "range": true,
           "refId": "A"
         }
@@ -517,94 +517,6 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "path / and response status code 200",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "scaleDistribution": {
-              "type": "linear"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 12
-      },
-      "id": 13,
-      "options": {
-        "calculate": false,
-        "calculation": {
-          "xBuckets": {
-            "mode": "size"
-          },
-          "yBuckets": {
-            "mode": "size"
-          }
-        },
-        "cellGap": 1,
-        "color": {
-          "exponent": 0.5,
-          "fill": "dark-orange",
-          "mode": "scheme",
-          "reverse": false,
-          "scale": "exponential",
-          "scheme": "Spectral",
-          "steps": 99
-        },
-        "exemplars": {
-          "color": "rgba(255,0,255,0.7)"
-        },
-        "filterValues": {
-          "le": 1e-9
-        },
-        "legend": {
-          "show": true
-        },
-        "rowsFrame": {
-          "layout": "auto"
-        },
-        "tooltip": {
-          "show": true,
-          "yHistogram": false
-        },
-        "yAxis": {
-          "axisPlacement": "left",
-          "reverse": false,
-          "unit": "s"
-        }
-      },
-      "pluginVersion": "9.3.2",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method=\"GET\",http_handler_name=\"app.index\",status=\"200\"}[$timewindow]))",
-          "format": "heatmap",
-          "legendFormat": "{{le}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "UI landing page: response generation duration, event rate [1/s]. Observation period: $timewindow",
-      "type": "heatmap"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
       "description": "The rate of GitHub HTTP API responses received with status code 403. Some of these errors may have been retried.",
       "fieldConfig": {
         "defaults": {
@@ -700,7 +612,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "",
+      "description": "path / and response status code 200",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -717,12 +629,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 12,
-        "y": 19
+        "y": 17
       },
-      "id": 6,
+      "id": 13,
       "options": {
         "calculate": false,
         "calculation": {
@@ -773,14 +685,14 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method!=\"GET\",http_handler_name=~\"api.*\"}[$timewindow]))",
+          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method=\"GET\",http_handler_name=\"app.index\",status=\"200\"}[$timewindow]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "/api non-GET requests: Flask HTTP response generation duration, event rate [1/s]. Observation period: $timewindow",
+      "title": "UI landing page: response generation duration, event rate [1/s]. Observation period: $timewindow",
       "type": "heatmap"
     },
     {
@@ -888,7 +800,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "This shows data only for those requests to /api/*\nRequests to /api/ping are excluded.\nRedirect responses are excluded.\n",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -908,9 +820,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 27
+        "y": 24
       },
-      "id": 5,
+      "id": 6,
       "options": {
         "calculate": false,
         "calculation": {
@@ -961,14 +873,14 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method=\"GET\",http_handler_name=~\"api.*\",http_handler_name!=\"api.ping\",status!~\"3..\"}[$timewindow]))",
+          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method!=\"GET\",http_handler_name=~\"api.*\"}[$timewindow]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "/api GET requests: response generation duration, event rate [1/s]. Observation period: $timewindow",
+      "title": "/api non-GET requests: Flask HTTP response generation duration, event rate [1/s]. Observation period: $timewindow",
       "type": "heatmap"
     },
     {
@@ -1068,10 +980,98 @@
       ],
       "title": "BMRT cache, duration of last update (seconds)",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "This shows data only for those requests to /api/*\nRequests to /api/ping are excluded.\nRedirect responses are excluded.\n",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 5,
+      "options": {
+        "calculate": false,
+        "calculation": {
+          "xBuckets": {
+            "mode": "size"
+          },
+          "yBuckets": {
+            "mode": "size"
+          }
+        },
+        "cellGap": 1,
+        "color": {
+          "exponent": 0.5,
+          "fill": "dark-orange",
+          "mode": "scheme",
+          "reverse": false,
+          "scale": "exponential",
+          "scheme": "Spectral",
+          "steps": 99
+        },
+        "exemplars": {
+          "color": "rgba(255,0,255,0.7)"
+        },
+        "filterValues": {
+          "le": 1e-9
+        },
+        "legend": {
+          "show": true
+        },
+        "rowsFrame": {
+          "layout": "auto"
+        },
+        "tooltip": {
+          "show": true,
+          "yHistogram": false
+        },
+        "yAxis": {
+          "axisPlacement": "left",
+          "reverse": false,
+          "unit": "s"
+        }
+      },
+      "pluginVersion": "9.5.0-cloud.4.a016665c",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method=\"GET\",http_handler_name=~\"api.*\",http_handler_name!=\"api.ping\",status!~\"3..\"}[$timewindow]))",
+          "format": "heatmap",
+          "legendFormat": "{{le}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "/api GET requests: response generation duration, event rate [1/s]. Observation period: $timewindow",
+      "type": "heatmap"
     }
   ],
   "refresh": "30s",
-  "schemaVersion": 37,
+  "schemaVersion": 38,
   "style": "dark",
   "tags": [
     "conbench"
@@ -1166,7 +1166,7 @@
     ]
   },
   "time": {
-    "from": "now-2d",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
