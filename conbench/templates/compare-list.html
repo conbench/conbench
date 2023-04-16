@@ -54,17 +54,13 @@
                         {% endif %}
                     </ol>
                     {% for plot in plot_history %}
-                        {% if loop.index == 1 %}
-                            <div class="item active">
-                            {% else %}
-                                <div class="item">
-                                {% endif %}
-                                <div align="center">
-                                    <a href="{{ outlier_urls[loop.index - 1] }}">{{ outlier_names[loop.index - 1] }}</a>
-                                </div>
-                                <div id="plot-history-{{ loop.index - 1 }}" align="center"></div>
+                        <div class="item  {% if loop.index == 1 %} active {% endif %} ">
+                            <div align="center">
+                                <a href="{{ outlier_urls[loop.index - 1] }}">{{ outlier_names[loop.index - 1] }}</a>
                             </div>
-                        {% endfor %}
+                            <div id="plot-history-{{ loop.index - 1 }}" align="center"></div>
+                        </div>
+                    {% endfor %}
                         {% if plot_history|length > 1 %}
                             <br>
                             <br>
