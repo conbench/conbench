@@ -6,9 +6,9 @@
       <h4>Recent runs for {{ reponame }}</h4>
     </div>
     <hr class="border border-danger border-1 opacity-50">
-        <!-- https://getbootstrap.com/docs/5.2/content/tables/#responsive-tables -->
+    <!-- https://getbootstrap.com/docs/5.2/content/tables/#responsive-tables -->
     <div class="table-responsive" style="margin-bottom: 50px">
-            <!-- wow, the width:100% on the table below is really important, otherwise
+      <!-- wow, the width:100% on the table below is really important, otherwise
      datatables might miscalculate the column widths, but only when using
      colspan in the header. I got that pointer in this thread:
      https://datatables.net/forums/discussion/comment/144435/#Comment_144435
@@ -19,13 +19,13 @@
              style="width:100%;
                     display: none">
         <thead>
-                    {# https://datatables.net/examples/basic_init/complex_header.html #}
+          {# https://datatables.net/examples/basic_init/complex_header.html #}
           <tr>
             <th scope="colgroup" colspan="3">Run</th>
             <th scope="colgroup" colspan="3">Commit</th>
           </tr>
           <tr>
-                        <!-- add tooltip, saying that this is DB insertion time -->
+            <!-- add tooltip, saying that this is DB insertion time -->
             <th scope="col" style="width: 180px">insertion time</th>
             <th scope="col">results</th>
             <th scope="col" class="reason-col">reason</th>
@@ -74,10 +74,10 @@
                 {% if r.run.commit.commit_url is not none %}
                   <a href="{{ r.run.commit.commit_url }}">{{ r.run.commit.hash[:7] }}</a>
                 {% else %}
-                                    {# is this a valid scenario? when there's a hash, but no url? #}
+                  {# is this a valid scenario? when there's a hash, but no url? #}
                   {{ r.run.commit.hash[:7] }}
                 {% endif %}
-                                <!--NOTE: enable full commit has search while maintaining partial hash display -->
+                <!--NOTE: enable full commit has search while maintaining partial hash display -->
                 <p style="display:none">{{ r.run.commit.hash }}</p>
               </td>
               <td>{{ r.commit_message_short }}</td>

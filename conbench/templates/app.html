@@ -34,7 +34,7 @@
       <body>
         {% block body -%}
           {% block navbar %}
-                        <!-- Note(JP): based on navbarTogglerDemo02 bootstrap 5.2 docs demo -->
+            <!-- Note(JP): based on navbarTogglerDemo02 bootstrap 5.2 docs demo -->
             <nav class="navbar navbar-expand-lg bg-light">
               <div class="container">
                 <a class="navbar-brand" href="{{ url_for('app.index') }}">{{ application }}</a>
@@ -49,14 +49,14 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarToggler">
                   {% if current_user.is_anonymous %}
-                                        <!-- ms-auto for right alignment -->
+                    <!-- ms-auto for right alignment -->
                     <ul class="nav navbar-nav ms-auto">
                       <li class="nav-item">
                         <a class="btn btn-outline-dark" href="{{ url_for('app.login') }}">Login</a>
                       </li>
                     </ul>
                   {% else %}
-                                        <!-- ms-auto for right alignment -->
+                    <!-- ms-auto for right alignment -->
                     <ul class="nav navbar-nav ms-auto">
                       <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('app.users') }}">Users</a>
@@ -72,7 +72,7 @@
                 </div>
               </div>
             </nav>
-                        <!-- modal hidden by default, used for confirming deletion -->
+            <!-- modal hidden by default, used for confirming deletion -->
             <div class="modal fade"
                  id="confirm-delete"
                  tabindex="-1"
@@ -105,10 +105,10 @@
           {% block content %}
             <div class="container">
               <br>
-                            <!-- https://flask.palletsprojects.com/en/2.2.x/patterns/flashing/#flashing-with-categories -->
+              <!-- https://flask.palletsprojects.com/en/2.2.x/patterns/flashing/#flashing-with-categories -->
               {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                                    <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+                  <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
                   {% for category, message in messages %}
                     <div class="fs-5 alert alert-{{ category }} text-center" role="alert">
                       <i class="bi bi-info-circle"></i> {{ message }}
@@ -116,7 +116,7 @@
                   {% endfor %}
                 {% endif %}
               {% endwith %}
-                            {# application content needs to be provided in the app_content block #}
+              {# application content needs to be provided in the app_content block #}
               <div style="margin-top: 30px"></div>
               {% block app_content %}{% endblock %}
               <br>
@@ -132,7 +132,7 @@
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
                     integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
                     crossorigin="anonymous"></script>
-                        <!--
+            <!--
     Note(JP): I think the datatables responsive plugin (included as version
     2.4.0 via the special link below) is in conflict with Boostrap 5's
     responsiveness of tables. Testing this for a bit without r-2.4.0. To

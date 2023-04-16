@@ -11,7 +11,7 @@
       </li>
       <li class="breadcrumb-item active" aria-current="page">
         <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
-          Benchmark result {{ benchmark.id[:7] }}...</a>
+        Benchmark result {{ benchmark.id[:7] }}...</a>
       </li>
     </ol>
   </nav>
@@ -19,7 +19,7 @@
   {% if history_plot_info.jsondoc is not none %}
     <h3>History plot for benchmark '{{ benchmark.display_bmname }}'</h3>
     <p class="fst-italic fw-light">For a specific case permutation and hardware/context (see below)</p>
-        <!-- <div>{{ benchmark.display_case_perm }}</div> -->
+    <!-- <div>{{ benchmark.display_case_perm }}</div> -->
     <div class="mt-4" id="plot-history-0" align="center"></div>
     <div class="row">
       <div class="col-md-12" style="padding-top: 10px;">

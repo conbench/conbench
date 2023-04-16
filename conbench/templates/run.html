@@ -53,7 +53,7 @@
   <div class="col-md-12">
     <h4>Benchmark results in Run</h4>
     <table id="benchmarks" class="table table-hover">
-            <!-- does not display right: <caption>Benchmarks{% include 'units-tooltip.html' %}</caption>-->
+      <!-- does not display right: <caption>Benchmarks{% include 'units-tooltip.html' %}</caption>-->
       <thead>
         <tr>
           <th scope="col">Date</th>
@@ -96,91 +96,91 @@
                      data-placement="top"
                      title="Has error">
                   </i><span>Error</span></a>
-              {% endif %}
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% if run %}
-    <br />
-    <form method="post" id="run-form">
-      {{ form.hidden_tag() }}
-      <input class="btn btn-danger"
-             id="delete"
-             name="delete"
-             type="button"
-             value="Delete Run" />
-    </form>
-    <br />
-    <div class="col-md-12">
-      <ul class="list-group">
-        <li class="list-group-item list-group-item-secondary">
-          Run details:
-        </li>
-        <li class="list-group-item">
-          Commit:
-          <div align="right" style="display:inline-block; float: right;">
-            <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
-          </div>
-        </li>
-        <li class="list-group-item" style="overflow-y: auto;">
-          Timestamp:
-          <div align="right" style="display:inline-block; float: right;">
-            {{ run.timestamp }}
-          </div>
-        </li>
-        <li class="list-group-item" style="overflow-y: auto;">
-          Finished Timestamp:
-          <div align="right" style="display:inline-block; float: right;">
-            {{ run.finished_timestamp }}
-          </div>
-        </li>
-        <li class="list-group-item" style="overflow-y: auto;">
-          Error Type:
-          <div align="right" style="display:inline-block; float: right;">
-            {{ run.error_type }}
-          </div>
-        </li>
-        {% if run.error_info %}
-          <li class="list-group-item active">
-            Error Info
-          </li>
-          {% for k,v in run.error_info.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              {% if v is not none %}
-                <div align="right" style="display:inline-block; float: right;">
-                  {{ v }}
-                </div>
-              {% endif %}
-            </li>
+                {% endif %}
+              </td>
+            </tr>
           {% endfor %}
-        {% endif %}
-        {% if run.info %}
-          <li class="list-group-item active">
-            Info
-          </li>
-          {% for k,v in run.info.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              {% if v is not none %}
-                <div align="right" style="display:inline-block; float: right;">
-                  {{ v }}
-                </div>
-              {% endif %}
-            </li>
-          {% endfor %}
-        {% endif %}
-      </ul>
+        </tbody>
+      </table>
     </div>
-  {% endif %}
-{% endblock %}
-{% block scripts %}
-  {{ super() }}
-  {{ resources | safe }}
-  <script type="text/javascript">
+    {% if run %}
+      <br />
+      <form method="post" id="run-form">
+        {{ form.hidden_tag() }}
+        <input class="btn btn-danger"
+               id="delete"
+               name="delete"
+               type="button"
+               value="Delete Run" />
+      </form>
+      <br />
+      <div class="col-md-12">
+        <ul class="list-group">
+          <li class="list-group-item list-group-item-secondary">
+            Run details:
+          </li>
+          <li class="list-group-item">
+            Commit:
+            <div align="right" style="display:inline-block; float: right;">
+              <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
+            </div>
+          </li>
+          <li class="list-group-item" style="overflow-y: auto;">
+            Timestamp:
+            <div align="right" style="display:inline-block; float: right;">
+              {{ run.timestamp }}
+            </div>
+          </li>
+          <li class="list-group-item" style="overflow-y: auto;">
+            Finished Timestamp:
+            <div align="right" style="display:inline-block; float: right;">
+              {{ run.finished_timestamp }}
+            </div>
+          </li>
+          <li class="list-group-item" style="overflow-y: auto;">
+            Error Type:
+            <div align="right" style="display:inline-block; float: right;">
+              {{ run.error_type }}
+            </div>
+          </li>
+          {% if run.error_info %}
+            <li class="list-group-item active">
+              Error Info
+            </li>
+            {% for k,v in run.error_info.items() %}
+              <li class="list-group-item" style="overflow-y: auto;">
+                <b>{{ k }}</b>
+                {% if v is not none %}
+                  <div align="right" style="display:inline-block; float: right;">
+                    {{ v }}
+                  </div>
+                {% endif %}
+              </li>
+            {% endfor %}
+          {% endif %}
+          {% if run.info %}
+            <li class="list-group-item active">
+              Info
+            </li>
+            {% for k,v in run.info.items() %}
+              <li class="list-group-item" style="overflow-y: auto;">
+                <b>{{ k }}</b>
+                {% if v is not none %}
+                  <div align="right" style="display:inline-block; float: right;">
+                    {{ v }}
+                  </div>
+                {% endif %}
+              </li>
+            {% endfor %}
+          {% endif %}
+        </ul>
+      </div>
+    {% endif %}
+  {% endblock %}
+  {% block scripts %}
+    {{ super() }}
+    {{ resources | safe }}
+    <script type="text/javascript">
     var table = $('#benchmarks').dataTable( {
       "responsive": true,
     // Take rather precise control of layouting elements, put bottom elements
@@ -213,5 +213,5 @@
       {% for plot in plot_history %}Bokeh.embed.embed_item({{ plot | safe }});{% endfor %}
       document.getElementById("bokeh-carousel").style.visibility = "visible";
     });
-  </script>
-{% endblock %}
+    </script>
+  {% endblock %}

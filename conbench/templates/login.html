@@ -2,7 +2,7 @@
 {% block app_content %}
   <div class="row">
     <div class="col-md-4"></div>
-        <!-- center column, also see
+    <!-- center column, also see
      https://getbootstrap.com/docs/5.2/examples/grid/#containers
 -->
     <div class="col-md-4">
@@ -25,7 +25,7 @@
       </p>
       {% if sso %}
         <hr>
-                {# Dynamically add `target` URL query parameter. `url_for()` is documented
+        {# Dynamically add `target` URL query parameter. `url_for()` is documented
   with "unknown keys are appended as query string arguments". I think
   that url_for() automatically performs URL-encoding. #}
         {% if target_url_after_login %}

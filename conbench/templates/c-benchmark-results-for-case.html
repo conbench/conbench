@@ -58,10 +58,10 @@
            data-bs-title="Benchmark results, grouped by unique (hardware, context) combinations. Time axis: benchmark result start time (associated commit data is not used), ordinate: mean value, if multisample. A plot is only shown for at least three data points. ">
         </i>
       </h4>
-            <!-- https://getbootstrap.com/docs/5.2/layout/grid/#row-columns -->
+      <!-- https://getbootstrap.com/docs/5.2/layout/grid/#row-columns -->
       <div class="row .row-cols-auto">
         {% for hwctx, plotinfo in infos_for_uplots.items() %}
-                    <!-- with xl-6 I have tested that each plot (fixed width) has enough space -->
+          <!-- with xl-6 I have tested that each plot (fixed width) has enough space -->
           <div class="col-xl-6 mb-5">
             <h5 class="mt-2">{{ plotinfo.title }}</h5>
             <div class="cb-plot-{{ hwctx }}" style="width: 550px"></div>
