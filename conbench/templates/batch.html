@@ -23,14 +23,10 @@
                  data-ride="carousel">
                 <div class="carousel-inner" role="listbox">
                     {% for plot in plots %}
-                        {% if loop.index == 1 %}
-                            <div class="item active">
-                            {% else %}
-                                <div class="item">
-                                {% endif %}
-                                <div id="plot{{ loop.index }}" align="center"></div>
-                            </div>
-                        {% endfor %}
+                      <div class="item {% if loop.index == 1 %} active {% endif %}">
+                        <div id="plot{{ loop.index }}" align="center"></div>
+                      </div>
+                    {% endfor %}
                     </div>
                     {% if plots|length > 1 %}
                         <a class="left carousel-control"
