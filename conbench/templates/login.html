@@ -1,44 +1,40 @@
 {% extends "app.html" %}
 {% block app_content %}
-
-<div class="row">
-<div class="col-md-4"></div>
-
-<!-- center column, also see
+    <div class="row">
+        <div class="col-md-4"></div>
+        <!-- center column, also see
      https://getbootstrap.com/docs/5.2/examples/grid/#containers
 -->
-<div class="col-md-4">
-<h4>Sign in</h4>
-<form method="post" novalidate>
-  {{ form.hidden_tag() }}
-  <div class="mb-3">
-    {{ form.email.label }}
-    {{ form.email(class_="form-control", size=80) }}
-  </div>
-  <div class="mb-3">
-      {{ form.password.label }}
-      {{ form.password(class_="form-control", size=80) }}
-  </div>
-  <button type="submit" class="btn btn-primary">Sign in</button>
-</form>
-
-<br>
-<p>New user? <a href="{{ url_for('app.register') }}">Sign Up</a></p>
-{% if sso %}
-<hr>
-  {# Dynamically add `target` URL query parameter. `url_for()` is documented
+        <div class="col-md-4">
+            <h4>Sign in</h4>
+            <form method="post" novalidate>
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ form.email.label }}
+                    {{ form.email(class_="form-control", size=80) }}
+                </div>
+                <div class="mb-3">
+                    {{ form.password.label }}
+                    {{ form.password(class_="form-control", size=80) }}
+                </div>
+                <button type="submit" class="btn btn-primary">Sign in</button>
+            </form>
+            <br>
+            <p>
+                New user? <a href="{{ url_for('app.register') }}">Sign Up</a>
+            </p>
+            {% if sso %}
+                <hr>
+                {# Dynamically add `target` URL query parameter. `url_for()` is documented
   with "unknown keys are appended as query string arguments". I think
   that url_for() automatically performs URL-encoding. #}
-  {% if target_url_after_login %}
-  <a href="{{ url_for('api.google', target=target_url_after_login) }}">Google Login</a>
-  {% else %}
-  <a href="{{ url_for('api.google' ) }}">Google Login</a>
-  {% endif %}
-{% endif %}
-
-</div>
-<div class="col-md-4"></div>
-</div>
-
-
+                {% if target_url_after_login %}
+                    <a href="{{ url_for('api.google', target=target_url_after_login) }}">Google Login</a>
+                {% else %}
+                    <a href="{{ url_for('api.google' ) }}">Google Login</a>
+                {% endif %}
+            {% endif %}
+        </div>
+        <div class="col-md-4"></div>
+    </div>
 {% endblock %}

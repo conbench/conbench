@@ -1,58 +1,61 @@
 {% extends "app.html" %}
-
 {% block app_content %}
     <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        {% if benchmarks %}
-        <li class="breadcrumb-item active">
-          <!-- Note(jp): the benchmark results don't necessarily have the same
+        <ol class="breadcrumb">
+            {% if benchmarks %}
+                <li class="breadcrumb-item active">
+                    <!-- Note(jp): the benchmark results don't necessarily have the same
                run in common, so this hierarchy might be misleading.
                see https://github.com/conbench/conbench/issues/873
           -->
-          <a href="{{ url_for('app.run', run_id=benchmarks[0].run_id) }}">Run</a>
-        </li>
-        {% endif %}
-        <li class="breadcrumb-item active">Batch {{requested_batch_id}}</li>
-      </ol>
+                    <a href="{{ url_for('app.run', run_id=benchmarks[0].run_id) }}">Run</a>
+                </li>
+            {% endif %}
+            <li class="breadcrumb-item active">Batch {{ requested_batch_id }}</li>
+        </ol>
     </nav>
-
-{% if plots %}
-<div class="col-md-2"></div>
-<div class="col-md-8" >
-  <div id="bokeh-carousel" style="visibility: hidden;" class="carousel slide" data-ride="carousel">
-    <div class="carousel-inner" role="listbox">
-      {% for plot in plots %}
-        {% if loop.index == 1 %}
-        <div class="item active">
-        {% else %}
-        <div class="item">
+    {% if plots %}
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+            <div id="bokeh-carousel"
+                 style="visibility: hidden"
+                 class="carousel slide"
+                 data-ride="carousel">
+                <div class="carousel-inner" role="listbox">
+                    {% for plot in plots %}
+                        {% if loop.index == 1 %}
+                            <div class="item active">
+                            {% else %}
+                                <div class="item">
+                                {% endif %}
+                                <div id="plot{{ loop.index }}" align="center"></div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if plots|length > 1 %}
+                        <a class="left carousel-control"
+                           href="#bokeh-carousel"
+                           role="button"
+                           data-slide="prev">
+                            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="right carousel-control"
+                           href="#bokeh-carousel"
+                           role="button"
+                           data-slide="next">
+                            <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    {% endif %}
+                </div>
+                <br>
+                <br>
+            </div>
+            <div class="col-md-2"></div>
         {% endif %}
-        <div id="plot{{ loop.index }}" align="center"></div>
-        </div>
-      {% endfor %}
-    </div>
-    {% if plots|length > 1 %}
-    <a class="left carousel-control" href="#bokeh-carousel" role="button" data-slide="prev">
-      <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
-      <span class="sr-only">Previous</span>
-    </a>
-    <a class="right carousel-control" href="#bokeh-carousel" role="button" data-slide="next">
-      <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
-      <span class="sr-only">Next</span>
-    </a>
-    {% endif %}
-  </div>
-  <br>
-  <br>
-</div>
-<div class="col-md-2"></div>
-{% endif %}
-
-
-<h3>Benchmark results with given batch ID</h3>
-
+        <h3>Benchmark results with given batch ID</h3>
         <table id="benchmarks" class="table table-hover">
-
             <thead>
                 <tr>
                     <th scope="col">Date</th>
@@ -65,45 +68,40 @@
             </thead>
             <tbody>
                 {% for benchmark in benchmarks %}
-                <tr>
-                     <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
-                     <td>{{ benchmark.display_language }}</td>
-                     <td>
-                         <div>{{ benchmark.display_bmname }}</div>
-                     </td>
-                     <td><a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
-                         <div>{{ benchmark.display_case_perm }}</div>
-                     </a></td>
-                     <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
-                     {% if benchmark.stats.z_score is not none %}
-                       {% if benchmark.stats.z_regression %}
-                         <td style="color: #ff7c43;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
-                       {% elif benchmark.stats.z_improvement %}
-                         <td style="color: #61B329;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
-                       {% else %}
-                         <td>{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
-                       {% endif %}
-                     {% else %}
-                       <td></td>
-                     {% endif %}
-                </tr>
+                    <tr>
+                        <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
+                        <td>{{ benchmark.display_language }}</td>
+                        <td>
+                            <div>{{ benchmark.display_bmname }}</div>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
+                                <div>{{ benchmark.display_case_perm }}</div>
+                            </a>
+                        </td>
+                        <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
+                        {% if benchmark.stats.z_score is not none %}
+                            {% if benchmark.stats.z_regression %}
+                                <td style="color: #ff7c43;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
+                            {% elif benchmark.stats.z_improvement %}
+                                <td style="color: #61B329;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
+                            {% else %}
+                                <td>{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
+                            {% endif %}
+                        {% else %}
+                            <td></td>
+                        {% endif %}
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
-
-
-{% endblock %}
-
-{% block scripts %}
-{{super()}}
-
-{{ resources | safe }}
-
-<script type="text/javascript">
+    {% endblock %}
+    {% block scripts %}
+        {{ super() }}
+        {{ resources | safe }}
+        <script type="text/javascript">
 $(document).ready(function() {
-    {% for plot in plots %}
-        Bokeh.embed.embed_item({{ plot | safe }});
-    {% endfor %}
+    {% for plot in plots %}Bokeh.embed.embed_item({{ plot | safe }});{% endfor %}
     document.getElementById("bokeh-carousel").style.visibility = "visible";
 });
 
@@ -117,5 +115,5 @@ var table = $('#benchmarks').dataTable( {
 $(document).ready(function() {
     $('#unit-tooltip').tooltip()
    });
-</script>
-{% endblock %}
+        </script>
+    {% endblock %}

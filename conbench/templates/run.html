@@ -1,180 +1,191 @@
 {% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
-
 {% block app_content %}
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item active">Run</li>
-    {% if run_id %}
-    <li class="breadcrumb-item active" aria-current="page">{{ run_id }}</li>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item active">Run</li>
+            {% if run_id %}<li class="breadcrumb-item active" aria-current="page">{{ run_id }}</li>{% endif %}
+        </ol>
+    </nav>
+    {% if compare_runs_url %}
+        <p class="fs-5">
+            <i class="bi bi-file-diff"></i> <a href="{{ compare_runs_url }}">compare to baseline</a>
+        </p>
     {% endif %}
-  </ol>
-</nav>
-
-{% if compare_runs_url %}
-<p class="fs-5">
-  <i class="bi bi-file-diff"></i> <a href="{{ compare_runs_url }}">compare to baseline</a>
-</p>
-
-{% endif %}
-
-
-{% if plot_history %}
-<div class="col-md-12" >
-<h6>Top Outliers</h6>
-  <div id="bokeh-carousel" style="visibility: hidden;" class="carousel slide" data-ride="carousel">
-    <div class="carousel-inner" role="listbox">
-	  <ol class="carousel-indicators">
-	  {% if plot_history|length > 1 %}
-        {% for plot in plot_history %}
-          {% if loop.index == 1 %}
-          <li data-target="#bokeh-carousel" data-slide-to="0" class="active"></li>
-          {% else %}
-	      <li data-target="#bokeh-carousel" data-slide-to="{{ loop.index - 1}}"></li>
-          {% endif %}
-        {% endfor %}
-      {% endif %}
-	  </ol>
-      {% for plot in plot_history %}
-        {% if loop.index == 1 %}
-        <div class="item active">
-        {% else %}
-        <div class="item">
+    {% if plot_history %}
+        <div class="col-md-12">
+            <h6>Top Outliers</h6>
+            <div id="bokeh-carousel"
+                 style="visibility: hidden"
+                 class="carousel slide"
+                 data-ride="carousel">
+                <div class="carousel-inner" role="listbox">
+                    <ol class="carousel-indicators">
+                        {% if plot_history|length > 1 %}
+                            {% for plot in plot_history %}
+                                {% if loop.index == 1 %}
+                                    <li data-target="#bokeh-carousel" data-slide-to="0" class="active"></li>
+                                {% else %}
+                                    <li data-target="#bokeh-carousel" data-slide-to="{{ loop.index - 1 }}"></li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </ol>
+                    {% for plot in plot_history %}
+                        {% if loop.index == 1 %}
+                            <div class="item active">
+                            {% else %}
+                                <div class="item">
+                                {% endif %}
+                                <div align="center">
+                                    <a href="{{ url_for('app.benchmark-result', benchmark_result_id=outlier_ids[loop.index - 1]) }}">
+                                        {{ outlier_names[loop.index - 1] }}
+                                    </a>
+                                </div>
+                                <div id="plot-history-{{ loop.index - 1 }}" align="center"></div>
+                            </div>
+                        {% endfor %}
+                        {% if plot_history|length > 1 %}
+                            <br>
+                            <br>
+                            <br>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         {% endif %}
-        <div align="center">
-        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=outlier_ids[loop.index - 1]) }}">
-          {{ outlier_names[loop.index - 1] }}
-        </a>
-        </div>
-        <div id="plot-history-{{ loop.index - 1}}" align="center"></div>
-        </div>
-      {% endfor %}
-	  {% if plot_history|length > 1 %}
-        <br>
-        <br>
-        <br>
-      {% endif %}
-    </div>
-  </div>
-</div>
-{% endif %}
-
-    <div class="col-md-12">
-        <h4>Benchmark results in Run</h4>
-        <table id="benchmarks" class="table table-hover">
-        <!-- does not display right: <caption>Benchmarks{% include 'units-tooltip.html' %}</caption>-->
-            <thead>
-                <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col" style="width: 80px">Lang</th>
-                    <th scope="col" style="width: 80px">Benchmark name</th>
-                    <th scope="col">Case permutation</th>
-                    <th scope="col" style="width: 55px">Mean</th>
-                    <th scope="col" style="width: 55px">Z-Score</th>
-                    <th scope="col" style="width: 55px">Error</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for benchmark in benchmarks %}
-                <tr>
-                     <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
-                     <td>{{ benchmark.display_language }}</td>
-                     <td>
-                       <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">
-                         {{ benchmark.display_bmname }}
-                       </a>
-                     </td>
-                     <td><a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
-                         {{ benchmark.display_case_perm}}
-                     </a></td>
-                     <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
-                     {% if benchmark.stats.z_score is not none %}
-                       {% if benchmark.stats.z_regression %}
-                         <td style="color: #ff7c43;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
-                       {% elif benchmark.stats.z_improvement %}
-                         <td style="color: #61B329;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
-                       {% else %}
-                         <td>{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
-                       {% endif %}
-                     {% else %}
-                       <td></td>
-                     {% endif %}
-                <td>
-                    {%  if benchmark.error %}<a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
-                        <i class="glyphicon glyphicon-exclamation-sign text-danger"
-                           data-toggle="tooltip" data-placement="top" title="Has error">
-                        </i><span>Error</span></a>
+        <div class="col-md-12">
+            <h4>Benchmark results in Run</h4>
+            <table id="benchmarks" class="table table-hover">
+                <!-- does not display right: <caption>Benchmarks{% include 'units-tooltip.html' %}</caption>-->
+                <thead>
+                    <tr>
+                        <th scope="col">Date</th>
+                        <th scope="col" style="width: 80px">Lang</th>
+                        <th scope="col" style="width: 80px">Benchmark name</th>
+                        <th scope="col">Case permutation</th>
+                        <th scope="col" style="width: 55px">Mean</th>
+                        <th scope="col" style="width: 55px">Z-Score</th>
+                        <th scope="col" style="width: 55px">Error</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for benchmark in benchmarks %}
+                        <tr>
+                            <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
+                            <td>{{ benchmark.display_language }}</td>
+                            <td>
+                                <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">{{ benchmark.display_bmname }}</a>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">{{ benchmark.display_case_perm }}</a>
+                            </td>
+                            <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
+                            {% if benchmark.stats.z_score is not none %}
+                                {% if benchmark.stats.z_regression %}
+                                    <td style="color: #ff7c43;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
+                                {% elif benchmark.stats.z_improvement %}
+                                    <td style="color: #61B329;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
+                                {% else %}
+                                    <td>{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
+                                {% endif %}
+                            {% else %}
+                                <td></td>
+                            {% endif %}
+                            <td>
+                                {%  if benchmark.error %}
+                                    <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
+                                        <i class="glyphicon glyphicon-exclamation-sign text-danger"
+                                           data-toggle="tooltip"
+                                           data-placement="top"
+                                           title="Has error">
+                                        </i><span>Error</span></a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if run %}
+                <br />
+                <form method="post" id="run-form">
+                    {{ form.hidden_tag() }}
+                    <input class="btn btn-danger"
+                           id="delete"
+                           name="delete"
+                           type="button"
+                           value="Delete Run">
+                </input>
+            </form>
+            <br />
+            <div class="col-md-12">
+                <ul class="list-group">
+                    <li class="list-group-item list-group-item-secondary">
+                        Run details:
+                    </li>
+                    <li class="list-group-item">
+                        Commit:
+                        <div align="right" style="display:inline-block; float: right;">
+                            <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
+                        </div>
+                    </li>
+                    <li class="list-group-item" style="overflow-y: auto;">
+                        Timestamp:
+                        <div align="right" style="display:inline-block; float: right;">
+                            {{ run.timestamp }}
+                        </div>
+                    </li>
+                    <li class="list-group-item" style="overflow-y: auto;">
+                        Finished Timestamp:
+                        <div align="right" style="display:inline-block; float: right;">
+                            {{ run.finished_timestamp }}
+                        </div>
+                    </li>
+                    <li class="list-group-item" style="overflow-y: auto;">
+                        Error Type:
+                        <div align="right" style="display:inline-block; float: right;">
+                            {{ run.error_type }}
+                        </div>
+                    </li>
+                    {% if run.error_info %}
+                        <li class="list-group-item active">
+                            Error Info
+                        </li>
+                        {% for k,v in run.error_info.items() %}
+                            <li class="list-group-item" style="overflow-y: auto;">
+                                <b>{{ k }}</b>
+                                {% if v is not none %}
+                                    <div align="right" style="display:inline-block; float: right;">
+                                        {{ v }}
+                                    </div>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
                     {% endif %}
-                </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    {% if run %}
-    <br />
-    <form method="post" id="run-form">
-      {{ form.hidden_tag() }}
-      <input class="btn btn-danger" id="delete" name="delete" type="button" value="Delete Run"></input>
-    </form>
-    <br />
-    <div class="col-md-12">
-        <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary">Run details:</li>
-
-            <li class="list-group-item">
-              Commit:
-              <div align="right" style="display:inline-block; float: right;"><a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a></div>
-            </li>
-
-            <li class="list-group-item" style="overflow-y: auto;">
-                Timestamp:
-                <div align="right" style="display:inline-block; float: right;">{{ run.timestamp }}</div>
-            </li>
-            <li class="list-group-item" style="overflow-y: auto;">
-                Finished Timestamp:
-                <div align="right" style="display:inline-block; float: right;">{{ run.finished_timestamp }}</div>
-            </li>
-            <li class="list-group-item" style="overflow-y: auto;">
-                Error Type:
-                <div align="right" style="display:inline-block; float: right;">{{ run.error_type }}</div>
-            </li>
-            {% if run.error_info %}
-                <li class="list-group-item active">Error Info</li>
-                {% for k,v in run.error_info.items() %}
-                    <li class="list-group-item" style="overflow-y: auto;">
-                        <b>{{ k }}</b>
-                        {% if v is not none %}
-                            <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            {% endif %}
-            {% if run.info %}
-                <li class="list-group-item active">Info</li>
-                {% for k,v in run.info.items() %}
-                    <li class="list-group-item" style="overflow-y: auto;">
-                        <b>{{ k }}</b>
-                        {% if v is not none %}
-                            <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            {% endif %}
-        </ul>
-    </div>
-    {% endif %}
-
-
-{% endblock %}
-
-{% block scripts %}
-{{super()}}
-
-{{ resources | safe }}
-
-<script type="text/javascript">
+                    {% if run.info %}
+                        <li class="list-group-item active">
+                            Info
+                        </li>
+                        {% for k,v in run.info.items() %}
+                            <li class="list-group-item" style="overflow-y: auto;">
+                                <b>{{ k }}</b>
+                                {% if v is not none %}
+                                    <div align="right" style="display:inline-block; float: right;">
+                                        {{ v }}
+                                    </div>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+            </div>
+        {% endif %}
+    {% endblock %}
+    {% block scripts %}
+        {{ super() }}
+        {{ resources | safe }}
+        <script type="text/javascript">
 var table = $('#benchmarks').dataTable( {
     "responsive": true,
     // Take rather precise control of layouting elements, put bottom elements
@@ -204,10 +215,8 @@ $(document).ready(function() {
 });
 
 $(document).ready(function() {
-    {% for plot in plot_history %}
-        Bokeh.embed.embed_item({{ plot | safe }});
-    {% endfor %}
+    {% for plot in plot_history %}Bokeh.embed.embed_item({{ plot | safe }});{% endfor %}
     document.getElementById("bokeh-carousel").style.visibility = "visible";
 });
-</script>
-{% endblock %}
+        </script>
+    {% endblock %}

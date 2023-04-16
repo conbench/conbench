@@ -1,338 +1,340 @@
 {% extends "app.html" %}
-
 {# This macro displays Tags, Hardware, Context and Info fields in comparative view so
 matching fields between baseline and contender are aligned and mismatched fields and/or values are highlighted in red #}
 {% macro attribute_fields(fields, baseline_dict, contender_dict, dict_to_display) %}
     {% for field in fields %}
-      {% if field != "id" and (field not in baseline_dict or field not in contender_dict or baseline_dict[field] != contender_dict[field]) %}
-        <li class="list-group-item list-group-item-danger" style="overflow-y: auto;">
-      {% else %}
-        <li class="list-group-item" style="overflow-y: auto;">
-      {% endif %}
-      {% if field in dict_to_display %}
-        <b>{{ field }}</b>
-        {% if dict_to_display[field] is not none %}
-          <div align="right" style="display:inline-block; float: right;">{{ dict_to_display[field] }}</div>
+        {% if field != "id" and (field not in baseline_dict or field not in contender_dict or baseline_dict[field] != contender_dict[field]) %}
+            <li class="list-group-item list-group-item-danger"
+                style="overflow-y: auto">
+            {% else %}
+                <li class="list-group-item" style="overflow-y: auto;">
+                {% endif %}
+                {% if field in dict_to_display %}
+                    <b>{{ field }}</b>
+                    {% if dict_to_display[field] is not none %}
+                        <div align="right" style="display:inline-block; float: right;">{{ dict_to_display[field] }}</div>
+                    {% endif %}
+                {% else %}
+                    <div class="invisible">*</div>
+                {% endif %}
+            </li>
+        {% endfor %}
+    {% endmacro %}
+    {# This macro displays Tags, Hardware, Context and Info sections for either baseline or contender #}
+    {% macro sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display, run_to_display) %}
+        <li class="list-group-item active">Tags</li>
+        {{ attribute_fields(tags_fields, baseline.tags, contender.tags, dict_to_display=benchmark_to_display.tags) }}
+        <li class="list-group-item active">Hardware</li>
+        {{ attribute_fields(hardware_fields, baseline_run.hardware, contender_run.hardware, dict_to_display=run_to_display.hardware) }}
+        <li class="list-group-item active">Context</li>
+        {{ attribute_fields(context_fields, baseline.context, contender.context, dict_to_display=benchmark_to_display.context) }}
+        {% if benchmark_to_display.info and benchmark_to_display.info|length > 1 %}
+            <li class="list-group-item active">Additional Information</li>
+            {{ attribute_fields(info_fields, baseline.info, contender.info, dict_to_display=benchmark_to_display.info) }}
         {% endif %}
-      {% else %}
-        <div class="invisible">*</div>
-      {% endif %}
-        </li>
-    {% endfor %}
-{% endmacro %}
-
-{# This macro displays Tags, Hardware, Context and Info sections for either baseline or contender #}
-{% macro sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display, run_to_display) %}
-    <li class="list-group-item active">Tags</li>
-    {{ attribute_fields(tags_fields, baseline.tags, contender.tags, dict_to_display=benchmark_to_display.tags) }}
-    <li class="list-group-item active">Hardware</li>
-    {{ attribute_fields(hardware_fields, baseline_run.hardware, contender_run.hardware, dict_to_display=run_to_display.hardware) }}
-    <li class="list-group-item active">Context</li>
-    {{ attribute_fields(context_fields, baseline.context, contender.context, dict_to_display=benchmark_to_display.context) }}
-    {% if benchmark_to_display.info and benchmark_to_display.info|length > 1 %}
-      <li class="list-group-item active">Additional Information</li>
-      {{ attribute_fields(info_fields, baseline.info, contender.info, dict_to_display=benchmark_to_display.info) }}
-    {% endif %}
-{% endmacro %}
-
-{% block app_content %}
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item active">Compare</li>
-        <li class="breadcrumb-item active">
-          <a href="{{ compare_runs_url }}">Runs</a>
-        </li>
-        <li class="breadcrumb-item active">
-          <a href="{{ compare_batches_url }}">Batches</a>
-        </li>
-        <li class="breadcrumb-item active">Benchmarks</li>
-        <li class="breadcrumb-item active" aria-current="page">
-          <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline_id) }}">Baseline</a>
-           ...
-          <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender_id) }}">Contender</a>
-        </li>
-      </ol>
-    </nav>
-
-
+    {% endmacro %}
+    {% block app_content %}
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active">Compare</li>
+                <li class="breadcrumb-item active">
+                    <a href="{{ compare_runs_url }}">Runs</a>
+                </li>
+                <li class="breadcrumb-item active">
+                    <a href="{{ compare_batches_url }}">Batches</a>
+                </li>
+                <li class="breadcrumb-item active">Benchmarks</li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline_id) }}">Baseline</a>
+                    ...
+                    <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender_id) }}">Contender</a>
+                </li>
+            </ol>
+        </nav>
+        <div class="row">
+            <div class="col-md-6">
+                <div id="plot" align="center"></div>
+                <br />
+            </div>
+            {% if comparisons %}
+                <div class="col-md-5">
+                    <table id="benchmarks"
+                           class="table table-striped table-bordered table-hover">
+                        <caption>
+                            {% include 'units-tooltip.html' %}
+                        </caption>
+                        <thead>
+                            <tr>
+                                <th width="25%" scope="col">Z-Score</th>
+                                <th width="25%" scope="col">Change</th>
+                                <th width="25%" scope="col">Baseline</th>
+                                <th width="25%" scope="col">Contender</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in comparisons %}
+                                <tr>
+                                    <td>
+                                        {% if c.contender_z_score %}
+                                            {{ "%.3f"|format(c.contender_z_score) }} z
+                                        {% endif %}
+                                        {% if c.contender_z_regression %}<span class="glyphicon glyphicon-arrow-down"></span></b>{% endif %}
+                                    {% if c.contender_z_improvement %}<span class="glyphicon glyphicon-arrow-up"></span></b>{% endif %}
+                            </td>
+                            <td>
+                                {{ c.change }}
+                                {% if c.regression %}<span class="glyphicon glyphicon-arrow-down"></span></b>{% endif %}
+                            {% if c.improvement %}<span class="glyphicon glyphicon-arrow-up"></span></b>{% endif %}
+                    </td>
+                    <td>{{ c.baseline }}</td>
+                    <td>{{ c.contender }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+</div>
+<div align="center">{{ baseline.display_bmname }}, {{ baseline.display_case_perm }}</div>
+<div id="plot-history-0" align="center"></div>
+<br />
+{% if baseline %}
     <div class="row">
-
-      <div class="col-md-6" >
-        <div id="plot" align="center"></div>
-        <br/>
-      </div>
-
-        {% if comparisons %}
-        <div class="col-md-5">
-            <table id="benchmarks" class="table table-striped table-bordered table-hover">
-            <caption>{% include 'units-tooltip.html' %}</caption>
-                <thead>
-                    <tr>
-                        <th width="25%" scope="col">Z-Score</th>
-                        <th width="25%" scope="col">Change</th>
-                        <th width="25%" scope="col">Baseline</th>
-                        <th width="25%" scope="col">Contender</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for c in comparisons %}
-                    <tr>
-                         <td>
-                           {% if c.contender_z_score %}
-                             {{ "%.3f"|format(c.contender_z_score) }} z
-                           {% endif %}
-                           {% if c.contender_z_regression %}
-                           <span class="glyphicon glyphicon-arrow-down"></span></b>
-                           {% endif %}
-                           {% if c.contender_z_improvement %}
-                           <span class="glyphicon glyphicon-arrow-up"></span></b>
-                           {% endif %}
-                         </td>
-                         <td>
-                           {{ c.change }}
-                           {% if c.regression %}
-                           <span class="glyphicon glyphicon-arrow-down"></span></b>
-                           {% endif %}
-                           {% if c.improvement %}
-                           <span class="glyphicon glyphicon-arrow-up"></span></b>
-                           {% endif %}
-                         </td>
-                         <td>{{ c.baseline }}</td>
-                         <td>{{ c.contender }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="col-md-6">
+            <ul class="list-group">
+                <li class="list-group-item active">Baseline</li>
+                <li class="list-group-item" style="overflow-y: auto;">
+                    <b>run</b>
+                    <div align="right" style="display:inline-block; float: right;">
+                        <a href="{{ url_for('app.run', run_id=baseline.run_id) }}">{{ baseline.run_id }}</a>
+                    </div>
+                </li>
+                <li class="list-group-item" style="overflow-y: auto;">
+                    <b>batch</b>
+                    <div align="right" style="display:inline-block; float: right;">
+                        <a href="{{ url_for('app.batch', batch_id=baseline.batch_id ) }}">{{ baseline.display_bmname }}</a>
+                    </div>
+                </li>
+                <li class="list-group-item" style="overflow-y: auto;">
+                    <b>benchmark</b>
+                    <div align="right" style="display:inline-block; float: right;">
+                        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline.id) }}">{{ baseline.display_case_perm }}</a>
+                    </div>
+                </li>
+                {% if baseline_run %}
+                    {% if baseline_run.commit.url %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                            <b>commit</b>
+                            <div class="ellipsis-500"
+                                 align="right"
+                                 style="display:inline-block;
+                                        float: right">
+                                {% if baseline_run.commit.display_message %}
+                                    <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.display_message }}</a>
+                                {% else %}
+                                    <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.sha }}</a>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endif %}
+                    {% if baseline_run.commit.display_timestamp %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                            <b>date</b>
+                            <div align="right" style="display:inline-block; float: right;">
+                                {{ baseline_run.commit.display_timestamp }}
+                            </div>
+                        </li>
+                    {% endif %}
+                    {% if baseline_run.commit.author_name %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                            <b>author</b>
+                            <div align="right" style="display:inline-block; float: right;">
+                                {{ baseline_run.commit.author_name }}
+                                {% if baseline_run.commit.author_avatar %}
+                                    &nbsp;
+                                    <image src="{{ baseline_run.commit.author_avatar }}"
+                                           height="30"
+                                           style="border-radius: 50%">
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endif %}
+                    {% if baseline_run.commit.display_repository %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                            <b>repository</b>
+                            <div align="right" style="display:inline-block; float: right;">
+                                <a href="{{ baseline_run.commit.repository }}">{{ baseline_run.commit.display_repository }}</a>
+                            </div>
+                        </li>
+                    {% endif %}
+                    {% if baseline_run.commit.branch %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                            <b>branch</b>
+                            <div align="right" style="display:inline-block; float: right;">
+                                {{ baseline_run.commit.branch }}
+                            </div>
+                        </li>
+                    {% endif %}
+                    {% if baseline_run.commit.fork_point_sha %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                            <b>forked from default at</b>
+                            <div align="right" style="display:inline-block; float: right;">
+                                {{ baseline_run.commit.fork_point_sha }}
+                            </div>
+                        </li>
+                    {% endif %}
+                    <li class="list-group-item" style="overflow-y: auto;">
+                        <b>hardware</b>
+                        <div align="right" style="display:inline-block; float: right;">
+                            {{ baseline_run.hardware.name }}
+                        </div>
+                    </li>
+                {% endif %}
+                <li class="list-group-item active">
+                    Result
+                </li>
+                <li class="list-group-item" style="overflow-y: auto;">
+                    <b>timestamp</b>
+                    <div align="right" style="display:inline-block; float: right;">
+                        {{ baseline.display_timestamp }}
+                    </div>
+                </li>
+                {% for k,v in baseline.stats.items() %}
+                    <li class="list-group-item" style="overflow-y: auto;">
+                        <b>{{ k }}</b>
+                        {% if v is not none %}
+                            <div align="right" style="display:inline-block; float: right;">
+                                {{ v }}
+                            </div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+                {{ sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display=baseline, run_to_display=baseline_run) }}
+            </ul>
         </div>
-        {% endif %}
-
-    </div>
-
-	<div align="center">{{ baseline.display_bmname }}, {{ baseline.display_case_perm }}</div>
-    <div id="plot-history-0" align="center"></div>
-    <br/>
-
-    {% if baseline %}
-    <div class="row">
-      <div class="col-md-6">
-        <ul class="list-group">
-          <li class="list-group-item active">Baseline</li>
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>run</b>
-              <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.run', run_id=baseline.run_id) }}">{{ baseline.run_id }}</a>
-              </div>
-            </li>
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>batch</b>
-              <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.batch', batch_id=baseline.batch_id ) }}">{{ baseline.display_bmname }}</a>
-              </div>
-            </li>
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>benchmark</b>
-              <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline.id) }}">{{ baseline.display_case_perm }}</a>
-              </div>
-            </li>
-            {% if baseline_run %}
-            {% if baseline_run.commit.url %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>commit</b>
-              <div class="ellipsis-500" align="right" style="display:inline-block; float: right;">
-                {% if baseline_run.commit.display_message %}
-                  <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.display_message }}</a>
-                {% else %}
-                  <a href="{{ baseline_run.commit.url }}">{{ baseline_run.commit.sha }}</a>
+    {% endif %}
+    {% if contender %}
+        <div class="col-md-6">
+            <ul class="list-group">
+                <li class="list-group-item active">
+                    Contender
+                </li>
+                <li class="list-group-item" style="overflow-y: auto;">
+                    <b>run</b>
+                    <div align="right" style="display:inline-block; float: right;">
+                        <a href="{{ url_for('app.run', run_id=contender.run_id) }}">{{ contender.run_id }}</a>
+                    </div>
+                </li>
+                <li class="list-group-item" style="overflow-y: auto;">
+                    <b>batch</b>
+                    <div align="right" style="display:inline-block; float: right;">
+                        <a href="{{ url_for('app.batch', batch_id=contender.batch_id ) }}">{{ contender.display_bmname }}</a>
+                    </div>
+                </li>
+                <li class="list-group-item" style="overflow-y: auto;">
+                    <b>benchmark</b>
+                    <div align="right" style="display:inline-block; float: right;">
+                        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender.id) }}">{{ contender.display_case_perm }}</a>
+                    </div>
+                </li>
+                {% if contender_run %}
+                    {% if contender_run.commit.url %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                            <b>commit</b>
+                            <div class="ellipsis-500"
+                                 align="right"
+                                 style="display:inline-block;
+                                        float: right">
+                                {% if contender_run.commit.display_message %}
+                                    <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.display_message }}</a>
+                                {% else %}
+                                    <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.sha }}</a>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endif %}
+                    {% if contender_run.commit.display_timestamp %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                            <b>date</b>
+                            <div align="right" style="display:inline-block; float: right;">
+                                {{ contender_run.commit.display_timestamp }}
+                            </div>
+                        </li>
+                    {% endif %}
+                    {% if contender_run.commit.author_name %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                            <b>author</b>
+                            <div align="right" style="display:inline-block; float: right;">
+                                {{ contender_run.commit.author_name }}
+                                {% if contender_run.commit.author_avatar %}
+                                    &nbsp;
+                                    <image src="{{ contender_run.commit.author_avatar }}"
+                                           height="30"
+                                           style="border-radius: 50%">
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endif %}
+                    {% if contender_run.commit.display_repository %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                            <b>repository</b>
+                            <div align="right" style="display:inline-block; float: right;">
+                                <a href="{{ contender_run.commit.repository }}">{{ contender_run.commit.display_repository }}</a>
+                            </div>
+                        </li>
+                    {% endif %}
+                    {% if contender_run.commit.branch %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                            <b>branch</b>
+                            <div align="right" style="display:inline-block; float: right;">
+                                {{ contender_run.commit.branch }}
+                            </div>
+                        </li>
+                    {% endif %}
+                    {% if contender_run.commit.fork_point_sha %}
+                        <li class="list-group-item" style="overflow-y: auto;">
+                            <b>forked from default at</b>
+                            <div align="right" style="display:inline-block; float: right;">
+                                {{ contender_run.commit.fork_point_sha }}
+                            </div>
+                        </li>
+                    {% endif %}
+                    <li class="list-group-item" style="overflow-y: auto;">
+                        <b>hardware</b>
+                        <div align="right" style="display:inline-block; float: right;">
+                            {{ contender_run.hardware.name }}
+                        </div>
+                    </li>
                 {% endif %}
-              </div>
-            </li>
-            {% endif %}
-            {% if baseline_run.commit.display_timestamp %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>date</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ baseline_run.commit.display_timestamp }}
-              </div>
-            </li>
-            {% endif %}
-            {% if baseline_run.commit.author_name %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>author</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ baseline_run.commit.author_name }}
-                {% if baseline_run.commit.author_avatar %}
-                  &nbsp; <image src="{{ baseline_run.commit.author_avatar }}" height="30" style="border-radius: 50%;">
-                {% endif %}
-              </div>
-            </li>
-            {% endif %}
-            {% if baseline_run.commit.display_repository %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>repository</b>
-              <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ baseline_run.commit.repository }}">{{ baseline_run.commit.display_repository }}</a>
-              </div>
-            </li>
-            {% endif %}
-            {% if baseline_run.commit.branch %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>branch</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ baseline_run.commit.branch }}
-              </div>
-            </li>
-            {% endif %}
-            {% if baseline_run.commit.fork_point_sha %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>forked from default at</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ baseline_run.commit.fork_point_sha }}
-              </div>
-            </li>
-            {% endif %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>hardware</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ baseline_run.hardware.name }}
-              </div>
-            </li>
-            {% endif %}
-          <li class="list-group-item active">Result</li>
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>timestamp</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ baseline.display_timestamp }}
-              </div>
-            </li>
-          {% for k,v in baseline.stats.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              {% if v is not none %}
-                <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-              {% endif %}
-            </li>
-          {% endfor %}
-          {{ sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display=baseline, run_to_display=baseline_run) }}
-        </ul>
-      </div>
-      {% endif %}
-
-      {% if contender %}
-      <div class="col-md-6">
-        <ul class="list-group">
-          <li class="list-group-item active">Contender</li>
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>run</b>
-              <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.run', run_id=contender.run_id) }}">{{ contender.run_id }}</a>
-              </div>
-            </li>
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>batch</b>
-              <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.batch', batch_id=contender.batch_id ) }}">{{ contender.display_bmname }}</a>
-              </div>
-            </li>
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>benchmark</b>
-              <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender.id) }}">{{ contender.display_case_perm }}</a>
-              </div>
-            </li>
-            {% if contender_run %}
-            {% if contender_run.commit.url %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>commit</b>
-              <div class="ellipsis-500" align="right" style="display:inline-block; float: right;">
-                {% if contender_run.commit.display_message %}
-                  <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.display_message }}</a>
-                {% else %}
-                  <a href="{{ contender_run.commit.url }}">{{ contender_run.commit.sha }}</a>
-                {% endif %}
-              </div>
-            </li>
-            {% endif %}
-            {% if contender_run.commit.display_timestamp %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>date</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ contender_run.commit.display_timestamp }}
-              </div>
-            </li>
-            {% endif %}
-            {% if contender_run.commit.author_name %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>author</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ contender_run.commit.author_name }}
-                {% if contender_run.commit.author_avatar %}
-                  &nbsp; <image src="{{ contender_run.commit.author_avatar }}" height="30" style="border-radius: 50%;">
-                {% endif %}
-              </div>
-            </li>
-            {% endif %}
-            {% if contender_run.commit.display_repository %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>repository</b>
-              <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ contender_run.commit.repository }}">{{ contender_run.commit.display_repository }}</a>
-              </div>
-            </li>
-            {% endif %}
-            {% if contender_run.commit.branch %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>branch</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ contender_run.commit.branch }}
-              </div>
-            </li>
-            {% endif %}
-            {% if contender_run.commit.fork_point_sha %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>forked from default at</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ contender_run.commit.fork_point_sha }}
-              </div>
-            </li>
-            {% endif %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>hardware</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ contender_run.hardware.name }}
-              </div>
-            </li>
-            {% endif %}
-          <li class="list-group-item active">Result</li>
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>timestamp</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ contender.display_timestamp }}
-              </div>
-            </li>
-          {% for k,v in contender.stats.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              {% if v is not none %}
-                <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-              {% endif %}
-            </li>
-          {% endfor %}
-          {{ sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display=contender, run_to_display=contender_run) }}
-        </ul>
-      </div>
-      {% endif %}
-
-    </div>
-
+                <li class="list-group-item active">
+                    Result
+                </li>
+                <li class="list-group-item" style="overflow-y: auto;">
+                    <b>timestamp</b>
+                    <div align="right" style="display:inline-block; float: right;">
+                        {{ contender.display_timestamp }}
+                    </div>
+                </li>
+                {% for k,v in contender.stats.items() %}
+                    <li class="list-group-item" style="overflow-y: auto;">
+                        <b>{{ k }}</b>
+                        {% if v is not none %}
+                            <div align="right" style="display:inline-block; float: right;">
+                                {{ v }}
+                            </div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+                {{ sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display=contender, run_to_display=contender_run) }}
+            </ul>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}
-
 {% block scripts %}
-{{super()}}
-
-{{ resources | safe }}
-
-<script type="text/javascript">
+    {{ super() }}
+    {{ resources | safe }}
+    <script type="text/javascript">
 $(document).ready(function() {
     Bokeh.embed.embed_item({{ plot | safe }});
 });
@@ -346,6 +348,5 @@ $(document).ready(function() {
 $(document).ready(function() {
     $('#unit-tooltip').tooltip()
    });
-</script>
-
+    </script>
 {% endblock %}

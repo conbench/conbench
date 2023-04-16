@@ -1,62 +1,60 @@
 {% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
-
 {% block app_content %}
-
-
-<!-- recipe taken from https://getbootstrap.com/docs/5.0/utilities/flex/#auto-margins -->
-<div class="d-flex">
-    <div class="p-0"><h3>Users</h3></div>
-    <div class="ms-auto p-0">
-        <a role="button" class="btn btn-outline-dark btn-lg" href="{{ url_for('app.user-create') }}">
-            <i class="bi bi-person-plus-fill"></i>
-        </a>
+    <!-- recipe taken from https://getbootstrap.com/docs/5.0/utilities/flex/#auto-margins -->
+    <div class="d-flex">
+        <div class="p-0">
+            <h3>Users</h3>
+        </div>
+        <div class="ms-auto p-0">
+            <a role="button"
+               class="btn btn-outline-dark btn-lg"
+               href="{{ url_for('app.user-create') }}">
+                <i class="bi bi-person-plus-fill"></i>
+            </a>
+        </div>
     </div>
-</div>
-
-<hr class="border border-danger border-1 opacity-50">
-
-<!-- note(jp): this form is not displayed, but must be there for the individual
+    <hr class="border border-danger border-1 opacity-50">
+    <!-- note(jp): this form is not displayed, but must be there for the individual
     trash icons in the table to work
  -->
-<div style="display: none;">{{ wtf.quick_form(delete_user_form, id="delete-user-form") }}</div>
-<table id="users" class="table table-hover">
-    <thead>
-        <tr>
-            <th scope="col" style="width: 25%">User ID</th>
-            <th scope="col">Name</th>
-            <th scope="col">Email</th>
-            <th scope="col" style="width: 5%">Edit</th>
-            <th scope="col" style="width: 5%">Delete</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for user in users %}
-        <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.name }}</td>
-                <td>{{ user.email }}</td>
-                <td><a href="{{ url_for('app.user', user_id=user.id) }}">
-                    edit
-                </a></td>
-                <td data-cbcustom-href="{{ url_for('app.user', user_id=user.id) }}"
-                    data-bs-toggle="modal"
-                    data-bs-target="#confirm-delete"
-                    data-cbcustom-form-id="#delete-user-form"
-                    data-cbcustom-message="<ul><li>Delete user: <strong>{{ user.email }}</strong></li></ul>">
-                    <i class="bi bi-trash3"></i>
-                </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-
+    <div style="display: none;">{{ wtf.quick_form(delete_user_form, id="delete-user-form") }}</div>
+    <table id="users" class="table table-hover">
+        <thead>
+            <tr>
+                <th scope="col" style="width: 25%">User ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col" style="width: 5%">Edit</th>
+                <th scope="col" style="width: 5%">Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        <a href="{{ url_for('app.user', user_id=user.id) }}">edit</a>
+                    </td>
+                    <td data-cbcustom-href="{{ url_for('app.user', user_id=user.id) }}" data-bs-toggle="modal" data-bs-target="#confirm-delete" data-cbcustom-form-id="#delete-user-form" data-cbcustom-message="
+                        <ul>
+                            <li>
+                                Delete user: <strong>{{ user.email }}</strong>
+                            </li>
+                        </ul>
+                        ">
+                        <i class="bi bi-trash3"></i>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}
-
 {% block scripts %}
-{{super()}}
-<script type="text/javascript">
+    {{ super() }}
+    <script type="text/javascript">
 var table = $('#users').DataTable( {
     // Note(JP): this enables a special, simple plugin called
     // `conditionalPaging` which must be included, e.g. via the dist URLs
@@ -73,5 +71,5 @@ var table = $('#users').DataTable( {
 
 //enable_search_query_string('#users');
 
-</script>
+    </script>
 {% endblock %}
