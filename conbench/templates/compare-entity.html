@@ -3,12 +3,8 @@
 matching fields between baseline and contender are aligned and mismatched fields and/or values are highlighted in red #}
 {% macro attribute_fields(fields, baseline_dict, contender_dict, dict_to_display) %}
     {% for field in fields %}
-        {% if field != "id" and (field not in baseline_dict or field not in contender_dict or baseline_dict[field] != contender_dict[field]) %}
-            <li class="list-group-item list-group-item-danger"
+            <li class="list-group-item {% if field != "id" and (field not in baseline_dict or field not in contender_dict or baseline_dict[field] != contender_dict[field]) %} list-group-item-danger {% endif %}"
                 style="overflow-y: auto">
-            {% else %}
-                <li class="list-group-item" style="overflow-y: auto;">
-                {% endif %}
                 {% if field in dict_to_display %}
                     <b>{{ field }}</b>
                     {% if dict_to_display[field] is not none %}
@@ -78,13 +74,13 @@ matching fields between baseline and contender are aligned and mismatched fields
                                         {% if c.contender_z_score %}
                                             {{ "%.3f"|format(c.contender_z_score) }} z
                                         {% endif %}
-                                        {% if c.contender_z_regression %}<span class="glyphicon glyphicon-arrow-down"></span></b>{% endif %}
-                                    {% if c.contender_z_improvement %}<span class="glyphicon glyphicon-arrow-up"></span></b>{% endif %}
+                                        {% if c.contender_z_regression %} <span class="glyphicon glyphicon-arrow-down"></span> {% endif %}
+                                    {% if c.contender_z_improvement %} <span class="glyphicon glyphicon-arrow-up"></span> {% endif %}
                             </td>
                             <td>
                                 {{ c.change }}
-                                {% if c.regression %}<span class="glyphicon glyphicon-arrow-down"></span></b>{% endif %}
-                            {% if c.improvement %}<span class="glyphicon glyphicon-arrow-up"></span></b>{% endif %}
+                                {% if c.regression %} <span class="glyphicon glyphicon-arrow-down"></span> {% endif %}
+                            {% if c.improvement %} <span class="glyphicon glyphicon-arrow-up"></span> {% endif %}
                     </td>
                     <td>{{ c.baseline }}</td>
                     <td>{{ c.contender }}</td>
@@ -98,8 +94,8 @@ matching fields between baseline and contender are aligned and mismatched fields
 <div align="center">{{ baseline.display_bmname }}, {{ baseline.display_case_perm }}</div>
 <div id="plot-history-0" align="center"></div>
 <br />
+<div class="row">
 {% if baseline %}
-    <div class="row">
         <div class="col-md-6">
             <ul class="list-group">
                 <li class="list-group-item active">Baseline</li>
@@ -151,10 +147,7 @@ matching fields between baseline and contender are aligned and mismatched fields
                             <div align="right" style="display:inline-block; float: right;">
                                 {{ baseline_run.commit.author_name }}
                                 {% if baseline_run.commit.author_avatar %}
-                                    &nbsp;
-                                    <image src="{{ baseline_run.commit.author_avatar }}"
-                                           height="30"
-                                           style="border-radius: 50%">
+                                    <image src="{{ baseline_run.commit.author_avatar }}" height="30" style="border-radius: 50%" />
                                 {% endif %}
                             </div>
                         </li>
@@ -212,8 +205,8 @@ matching fields between baseline and contender are aligned and mismatched fields
                 {{ sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display=baseline, run_to_display=baseline_run) }}
             </ul>
         </div>
-    {% endif %}
-    {% if contender %}
+{% endif %}
+{% if contender %}
         <div class="col-md-6">
             <ul class="list-group">
                 <li class="list-group-item active">
@@ -267,10 +260,7 @@ matching fields between baseline and contender are aligned and mismatched fields
                             <div align="right" style="display:inline-block; float: right;">
                                 {{ contender_run.commit.author_name }}
                                 {% if contender_run.commit.author_avatar %}
-                                    &nbsp;
-                                    <image src="{{ contender_run.commit.author_avatar }}"
-                                           height="30"
-                                           style="border-radius: 50%">
+                                    <image src="{{ contender_run.commit.author_avatar }}" height="30" style="border-radius: 50%" />
                                 {% endif %}
                             </div>
                         </li>
@@ -328,7 +318,7 @@ matching fields between baseline and contender are aligned and mismatched fields
                 {{ sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display=contender, run_to_display=contender_run) }}
             </ul>
         </div>
-    {% endif %}
+{% endif %}
 </div>
 {% endblock %}
 {% block scripts %}
