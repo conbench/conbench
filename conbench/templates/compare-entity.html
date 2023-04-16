@@ -56,9 +56,6 @@ matching fields between baseline and contender are aligned and mismatched fields
                 <div class="col-md-5">
                     <table id="benchmarks"
                            class="table table-striped table-bordered table-hover">
-                        <caption>
-                            {% include 'units-tooltip.html' %}
-                        </caption>
                         <thead>
                             <tr>
                                 <th width="25%" scope="col">Z-Score</th>
@@ -335,8 +332,6 @@ $(document).ready(function() {
 });
 {% endif %}
 
-$(document).ready(function() {
-    $('#unit-tooltip').tooltip()
-   });
-    </script>
+
+</script>
 {% endblock %}
