@@ -32,7 +32,7 @@
                         {% endif %}
                     </ol>
                     {% for plot in plot_history %}
-                        <div class="item {% if loop.index == 1 %} active {% endif %}">
+                        <div class="item {% if loop.index == 1 %}active{% endif %}">
                             <div align="center">
                                 <a href="{{ url_for('app.benchmark-result', benchmark_result_id=outlier_ids[loop.index - 1]) }}">
                                     {{ outlier_names[loop.index - 1] }}
@@ -41,77 +41,77 @@
                             <div id="plot-history-{{ loop.index - 1 }}" align="center"></div>
                         </div>
                     {% endfor %}
-                        {% if plot_history|length > 1 %}
-                            <br>
-                            <br>
-                            <br>
-                        {% endif %}
-                    </div>
+                    {% if plot_history|length > 1 %}
+                        <br>
+                        <br>
+                        <br>
+                    {% endif %}
                 </div>
             </div>
-        {% endif %}
-        <div class="col-md-12">
-            <h4>Benchmark results in Run</h4>
-            <table id="benchmarks" class="table table-hover">
-                <!-- does not display right: <caption>Benchmarks{% include 'units-tooltip.html' %}</caption>-->
-                <thead>
+        </div>
+    {% endif %}
+    <div class="col-md-12">
+        <h4>Benchmark results in Run</h4>
+        <table id="benchmarks" class="table table-hover">
+            <!-- does not display right: <caption>Benchmarks{% include 'units-tooltip.html' %}</caption>-->
+            <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col" style="width: 80px">Lang</th>
+                    <th scope="col" style="width: 80px">Benchmark name</th>
+                    <th scope="col">Case permutation</th>
+                    <th scope="col" style="width: 55px">Mean</th>
+                    <th scope="col" style="width: 55px">Z-Score</th>
+                    <th scope="col" style="width: 55px">Error</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for benchmark in benchmarks %}
                     <tr>
-                        <th scope="col">Date</th>
-                        <th scope="col" style="width: 80px">Lang</th>
-                        <th scope="col" style="width: 80px">Benchmark name</th>
-                        <th scope="col">Case permutation</th>
-                        <th scope="col" style="width: 55px">Mean</th>
-                        <th scope="col" style="width: 55px">Z-Score</th>
-                        <th scope="col" style="width: 55px">Error</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for benchmark in benchmarks %}
-                        <tr>
-                            <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
-                            <td>{{ benchmark.display_language }}</td>
-                            <td>
-                                <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">{{ benchmark.display_bmname }}</a>
-                            </td>
-                            <td>
-                                <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">{{ benchmark.display_case_perm }}</a>
-                            </td>
-                            <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
-                            {% if benchmark.stats.z_score is not none %}
-                                {% if benchmark.stats.z_regression %}
-                                    <td style="color: #ff7c43;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
-                                {% elif benchmark.stats.z_improvement %}
-                                    <td style="color: #61B329;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
-                                {% else %}
-                                    <td>{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
-                                {% endif %}
+                        <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
+                        <td>{{ benchmark.display_language }}</td>
+                        <td>
+                            <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">{{ benchmark.display_bmname }}</a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">{{ benchmark.display_case_perm }}</a>
+                        </td>
+                        <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
+                        {% if benchmark.stats.z_score is not none %}
+                            {% if benchmark.stats.z_regression %}
+                                <td style="color: #ff7c43;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
+                            {% elif benchmark.stats.z_improvement %}
+                                <td style="color: #61B329;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
                             {% else %}
-                                <td></td>
+                                <td>{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
                             {% endif %}
-                            <td>
-                                {%  if benchmark.error %}
-                                    <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
-                                        <i class="glyphicon glyphicon-exclamation-sign text-danger"
-                                           data-toggle="tooltip"
-                                           data-placement="top"
-                                           title="Has error">
-                                        </i><span>Error</span></a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% if run %}
-                <br />
-                <form method="post" id="run-form">
-                    {{ form.hidden_tag() }}
-                    <input class="btn btn-danger"
-                           id="delete"
-                           name="delete"
-                           type="button"
-                           value="Delete Run" />
+                        {% else %}
+                            <td></td>
+                        {% endif %}
+                        <td>
+                            {%  if benchmark.error %}
+                                <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
+                                    <i class="glyphicon glyphicon-exclamation-sign text-danger"
+                                       data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="Has error">
+                                    </i><span>Error</span></a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if run %}
+            <br />
+            <form method="post" id="run-form">
+                {{ form.hidden_tag() }}
+                <input class="btn btn-danger"
+                       id="delete"
+                       name="delete"
+                       type="button"
+                       value="Delete Run" />
             </form>
             <br />
             <div class="col-md-12">

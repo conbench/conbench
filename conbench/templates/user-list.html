@@ -38,7 +38,11 @@
                     <td>
                         <a href="{{ url_for('app.user', user_id=user.id) }}">edit</a>
                     </td>
-                    <td data-cbcustom-href="{{ url_for('app.user', user_id=user.id) }}" data-bs-toggle="modal" data-bs-target="#confirm-delete" data-cbcustom-form-id="#delete-user-form" data-cbcustom-message="Delete user: {{ user.email }}">
+                    <td data-cbcustom-href="{{ url_for('app.user', user_id=user.id) }}"
+                        data-bs-toggle="modal"
+                        data-bs-target="#confirm-delete"
+                        data-cbcustom-form-id="#delete-user-form"
+                        data-cbcustom-message="Delete user: {{ user.email }}">
                         <i class="bi bi-trash3"></i>
                     </td>
                 </tr>

@@ -240,7 +240,11 @@
     <div class="row mt-5">
         <form method="post" id="delete-form">
             {{ delete_form.hidden_tag() }}
-            <input class="btn btn-danger" id="delete" name="delete" type="button" value="Delete benchmark result" />
+            <input class="btn btn-danger"
+                   id="delete"
+                   name="delete"
+                   type="button"
+                   value="Delete benchmark result" />
         </form>
     </div>
 {% endblock %}

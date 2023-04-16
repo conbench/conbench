@@ -54,202 +54,202 @@
                         {% endif %}
                     </ol>
                     {% for plot in plot_history %}
-                        <div class="item  {% if loop.index == 1 %} active {% endif %} ">
+                        <div class="item  {% if loop.index == 1 %}active{% endif %} ">
                             <div align="center">
                                 <a href="{{ outlier_urls[loop.index - 1] }}">{{ outlier_names[loop.index - 1] }}</a>
                             </div>
                             <div id="plot-history-{{ loop.index - 1 }}" align="center"></div>
                         </div>
                     {% endfor %}
-                        {% if plot_history|length > 1 %}
-                            <br>
-                            <br>
-                            <br>
-                        {% endif %}
-                    </div>
+                    {% if plot_history|length > 1 %}
+                        <br>
+                        <br>
+                        <br>
+                    {% endif %}
                 </div>
             </div>
-        {% endif %}
-        <div class="row">
-            <div class="col-md-12">
-                <table id="benchmarks"
-                       class="table table-striped table-bordered table-hover">
-                    <caption>
-                        {% if comparisons %}
-                            <span id="comparisons-tooltip"
-                                  data-toggle="tooltip"
-                                  data-html="true"
-                                  data-placement="bottom"
-                                  title=" Based on the z-score, {{ regressions }} of these {{ comparisons|length }} benchmarks were regressions, and {{ improvements }} were improvements.">
-                                Comparisons
-                                <span class="glyphicon glyphicon-arrow-down"></span> <b>{{ (100 * regressions / comparisons|length) | round(2) }}%</b>
-                                <span class="glyphicon glyphicon-arrow-up"></span> <b>{{ (100 * improvements / comparisons|length) | round(2) }}%</b>
-                            </span>
-                        {% else %}
+        </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-md-12">
+            <table id="benchmarks"
+                   class="table table-striped table-bordered table-hover">
+                <caption>
+                    {% if comparisons %}
+                        <span id="comparisons-tooltip"
+                              data-toggle="tooltip"
+                              data-html="true"
+                              data-placement="bottom"
+                              title=" Based on the z-score, {{ regressions }} of these {{ comparisons|length }} benchmarks were regressions, and {{ improvements }} were improvements.">
                             Comparisons
-                        {% endif %}
-                    </caption>
-                    <thead>
-                        <tr>
-                            <th scope="col" style="white-space: nowrap;">Z-Score</th>
-                            <th scope="col">Change</th>
-                            <th scope="col">Lang</th>
-                            <th scope="col">Batch</th>
-                            <th scope="col">Benchmark</th>
-                            <th scope="col">Baseline</th>
-                            <th scope="col">Contender</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for c in comparisons %}
-                            {% if (c.contender is not none or c.contender_error) and (c.baseline is not none or c.baseline_error) %}
-                                <tr>
-                                    {% if c.contender_z_score is not none %}
-                                        {% if c.contender_z_regression %}
-                                            <td style="color: #ff7c43;">{{ "%.3f"|format(c.contender_z_score) }}</td>
-                                        {% elif c.contender_z_improvement %}
-                                            <td style="color: #61B329;">{{ "%.3f"|format(c.contender_z_score) }}</td>
-                                        {% else %}
-                                            <td>{{ "%.3f"|format(c.contender_z_score) }}</td>
-                                        {% endif %}
+                            <span class="glyphicon glyphicon-arrow-down"></span> <b>{{ (100 * regressions / comparisons|length) | round(2) }}%</b>
+                            <span class="glyphicon glyphicon-arrow-up"></span> <b>{{ (100 * improvements / comparisons|length) | round(2) }}%</b>
+                        </span>
+                    {% else %}
+                        Comparisons
+                    {% endif %}
+                </caption>
+                <thead>
+                    <tr>
+                        <th scope="col" style="white-space: nowrap;">Z-Score</th>
+                        <th scope="col">Change</th>
+                        <th scope="col">Lang</th>
+                        <th scope="col">Batch</th>
+                        <th scope="col">Benchmark</th>
+                        <th scope="col">Baseline</th>
+                        <th scope="col">Contender</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in comparisons %}
+                        {% if (c.contender is not none or c.contender_error) and (c.baseline is not none or c.baseline_error) %}
+                            <tr>
+                                {% if c.contender_z_score is not none %}
+                                    {% if c.contender_z_regression %}
+                                        <td style="color: #ff7c43;">{{ "%.3f"|format(c.contender_z_score) }}</td>
+                                    {% elif c.contender_z_improvement %}
+                                        <td style="color: #61B329;">{{ "%.3f"|format(c.contender_z_score) }}</td>
                                     {% else %}
-                                        <td></td>
+                                        <td>{{ "%.3f"|format(c.contender_z_score) }}</td>
                                     {% endif %}
-                                    {% if c.contender is not none and c.baseline is not none %}
-                                        <td>{{ c.change }}</td>
-                                    {% else %}
-                                        <td>
-                                        </td>
-                                    {% endif %}
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
+                                {% if c.contender is not none and c.baseline is not none %}
+                                    <td>{{ c.change }}</td>
+                                {% else %}
                                     <td>
-                                        {{ c.language }}
                                     </td>
-                                    <td>
-                                        {% if type == "batch" %}
-                                            <div>
-                                                {{ c.batch }}
-                                            </div>
-                                        {% else %}
-                                            {% if c.contender is not none and c.baseline is not none %}
-                                                <a href="{{ c.compare_batches_url }}">
-                                                    <div>
-                                                        {{ c.batch }}
-                                                    </div>
-                                                </a>
-                                            {% else %}
+                                {% endif %}
+                                <td>
+                                    {{ c.language }}
+                                </td>
+                                <td>
+                                    {% if type == "batch" %}
+                                        <div>
+                                            {{ c.batch }}
+                                        </div>
+                                    {% else %}
+                                        {% if c.contender is not none and c.baseline is not none %}
+                                            <a href="{{ c.compare_batches_url }}">
                                                 <div>
                                                     {{ c.batch }}
-                                                </div>
-                                            {% endif %}
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if (c.contender is not none or c.contender_error) and (c.baseline is not none or c.baseline_error) %}
-                                            <a href="{{ c.compare_benchmarks_url }}">
-                                                <div>
-                                                    {{ c.benchmark }}
                                                 </div>
                                             </a>
                                         {% else %}
                                             <div>
-                                                {{ c.benchmark }}
+                                                {{ c.batch }}
                                             </div>
                                         {% endif %}
-                                    </td>
-                                    {% if c.baseline_error is not none %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if (c.contender is not none or c.contender_error) and (c.baseline is not none or c.baseline_error) %}
+                                        <a href="{{ c.compare_benchmarks_url }}">
+                                            <div>
+                                                {{ c.benchmark }}
+                                            </div>
+                                        </a>
+                                    {% else %}
+                                        <div>
+                                            {{ c.benchmark }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                {% if c.baseline_error is not none %}
+                                    <td>
+                                        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.baseline_id) }}">
+                                            <i class="glyphicon glyphicon-exclamation-sign text-danger"
+                                               data-toggle="tooltip"
+                                               data-placement="top"
+                                               title="Has error">
+                                            </i></a>
+                                        </td>
+                                    {% elif c.baseline is none %}
                                         <td>
-                                            <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.baseline_id) }}">
+                                        </td>
+                                    {% else %}
+                                        <td style="white-space: nowrap;">
+                                            {{ c.baseline }}
+                                        </td>
+                                    {% endif %}
+                                    {% if c.contender_error is not none %}
+                                        <td>
+                                            <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.contender_id) }}">
                                                 <i class="glyphicon glyphicon-exclamation-sign text-danger"
                                                    data-toggle="tooltip"
                                                    data-placement="top"
                                                    title="Has error">
                                                 </i></a>
                                             </td>
-                                        {% elif c.baseline is none %}
+                                        {% elif c.contender is none %}
                                             <td>
                                             </td>
                                         {% else %}
                                             <td style="white-space: nowrap;">
-                                                {{ c.baseline }}
+                                                {{ c.contender }}
                                             </td>
                                         {% endif %}
-                                        {% if c.contender_error is not none %}
-                                            <td>
-                                                <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.contender_id) }}">
-                                                    <i class="glyphicon glyphicon-exclamation-sign text-danger"
-                                                       data-toggle="tooltip"
-                                                       data-placement="top"
-                                                       title="Has error">
-                                                    </i></a>
-                                                </td>
-                                            {% elif c.contender is none %}
-                                                <td>
-                                                </td>
-                                            {% else %}
-                                                <td style="white-space: nowrap;">
-                                                    {{ c.contender }}
-                                                </td>
-                                            {% endif %}
-                                        </tr>
-                                    {% endif %}
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <hr />
-                <h4>
-                    Compare current contender run with another run:
-                </h4>
-                <br>
-                <form>
-                    <div class="form-group">
-                        <label for="commit-date">
-                            Baseline Commit Date
-                        </label>
-                        <input type="date" id="commit-date" name="commit-date" value="">
-                    </div>
-                    <div class="form-group">
-                        <label for="baseline-commit">
-                            Baseline Commit
-                        </label>
-                        <select class="custom-select" name="baseline-commit" id="baseline-commit">
-                            <option value="" selected="selected">
-                                Please select baseline commit date
-                            </option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="hardware">
-                            Hardware
-                        </label>
-                        <select class="custom-select" name="hardware" id="hardware">
-                            <option value="" selected="selected">
-                                Please select baseline commit first
-                            </option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="run-name">
-                            Run Name
-                        </label>
-                        <select class="custom-select" name="run-name" id="run-name">
-                            <option value="" selected="selected">
-                                Please select hardware first
-                            </option>
-                        </select>
-                    </div>
-                </form>
-                <form name="compare-runs" id="compare-runs"  method="get" action="">
-                    <button type="submit" class="btn btn-primary">
-                        Submit
-                    </button>
-                </form>
-            {% endblock %}
-            {% block scripts %}
-                {{ super() }}
-                {{ resources | safe }}
-                <script type="text/javascript">
+            </div>
+            <hr />
+            <h4>
+                Compare current contender run with another run:
+            </h4>
+            <br>
+            <form>
+                <div class="form-group">
+                    <label for="commit-date">
+                        Baseline Commit Date
+                    </label>
+                    <input type="date" id="commit-date" name="commit-date" value="">
+                </div>
+                <div class="form-group">
+                    <label for="baseline-commit">
+                        Baseline Commit
+                    </label>
+                    <select class="custom-select" name="baseline-commit" id="baseline-commit">
+                        <option value="" selected="selected">
+                            Please select baseline commit date
+                        </option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="hardware">
+                        Hardware
+                    </label>
+                    <select class="custom-select" name="hardware" id="hardware">
+                        <option value="" selected="selected">
+                            Please select baseline commit first
+                        </option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="run-name">
+                        Run Name
+                    </label>
+                    <select class="custom-select" name="run-name" id="run-name">
+                        <option value="" selected="selected">
+                            Please select hardware first
+                        </option>
+                    </select>
+                </div>
+            </form>
+            <form name="compare-runs" id="compare-runs"  method="get" action="">
+                <button type="submit" class="btn btn-primary">
+                    Submit
+                </button>
+            </form>
+        {% endblock %}
+        {% block scripts %}
+            {{ super() }}
+            {{ resources | safe }}
+            <script type="text/javascript">
 var table = $('#benchmarks').dataTable( {
      "responsive": true,
      "order": [[0, 'asc']],
@@ -307,5 +307,5 @@ document.getElementById('run-name').onchange = function () {
     var action = window.location.protocol + "//" + window.location.host + "/compare/runs/" + this.value + "..." + "{{ contender_run.id }}";
     document.getElementById('compare-runs').action = action;
 };
-                </script>
-            {% endblock %}
+            </script>
+        {% endblock %}
