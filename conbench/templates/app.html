@@ -1,137 +1,137 @@
 {% block doc -%}
-    <!DOCTYPE html>
-    <html lang="en">
-        {%- block html %}
-            <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <meta name="robots" content="noindex">
-                {% block styles %}
-                    <link rel="shortcut icon"
-                          href="{{ url_for('static', filename='favicon.ico') }}">
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
-                          rel="stylesheet"
-                          integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
-                          crossorigin="anonymous">
-                    <link href="https://cdn.datatables.net/v/bs5/dt-1.13.3/r-2.4.0/datatables.min.css"
-                          rel="stylesheet">
-                    <link rel="stylesheet"
-                          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
-                    <link href="{{ url_for('static', filename='app.css') }}" rel=stylesheet type=text/css>
-                    <link rel="stylesheet"
-                          href="https://cdn.jsdelivr.net/npm/uplot@1.6.24/dist/uPlot.min.css">
-                {% endblock %}
-                <title>
-                    {% block title %}
-                        {% if title %}
-                            {{ application }} - {{ title }}
-                        {% else %}
-                            {{ application }}
-                        {% endif %}
-                    {% endblock %}
-                </title>
-            </head>
-            <body>
-                {% block body -%}
-                    {% block navbar %}
+  <!DOCTYPE html>
+  <html lang="en">
+    {%- block html %}
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex">
+        {% block styles %}
+          <link rel="shortcut icon"
+                href="{{ url_for('static', filename='favicon.ico') }}">
+          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+                rel="stylesheet"
+                integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+                crossorigin="anonymous">
+          <link href="https://cdn.datatables.net/v/bs5/dt-1.13.3/r-2.4.0/datatables.min.css"
+                rel="stylesheet">
+          <link rel="stylesheet"
+                href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+          <link href="{{ url_for('static', filename='app.css') }}" rel=stylesheet type=text/css>
+          <link rel="stylesheet"
+                href="https://cdn.jsdelivr.net/npm/uplot@1.6.24/dist/uPlot.min.css">
+        {% endblock %}
+        <title>
+          {% block title %}
+            {% if title %}
+              {{ application }} - {{ title }}
+            {% else %}
+              {{ application }}
+            {% endif %}
+          {% endblock %}
+        </title>
+      </head>
+      <body>
+        {% block body -%}
+          {% block navbar %}
                         <!-- Note(JP): based on navbarTogglerDemo02 bootstrap 5.2 docs demo -->
-                        <nav class="navbar navbar-expand-lg bg-light">
-                            <div class="container">
-                                <a class="navbar-brand" href="{{ url_for('app.index') }}">{{ application }}</a>
-                                <button class="navbar-toggler"
-                                        type="button"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#navbarToggler"
-                                        aria-controls="navbarToggler"
-                                        aria-expanded="false"
-                                        aria-label="Toggle navigation">
-                                    <span class="navbar-toggler-icon"></span>
-                                </button>
-                                <div class="collapse navbar-collapse" id="navbarToggler">
-                                    {% if current_user.is_anonymous %}
+            <nav class="navbar navbar-expand-lg bg-light">
+              <div class="container">
+                <a class="navbar-brand" href="{{ url_for('app.index') }}">{{ application }}</a>
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbarToggler"
+                        aria-controls="navbarToggler"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarToggler">
+                  {% if current_user.is_anonymous %}
                                         <!-- ms-auto for right alignment -->
-                                        <ul class="nav navbar-nav ms-auto">
-                                            <li class="nav-item">
-                                                <a class="btn btn-outline-dark" href="{{ url_for('app.login') }}">Login</a>
-                                            </li>
-                                        </ul>
-                                    {% else %}
+                    <ul class="nav navbar-nav ms-auto">
+                      <li class="nav-item">
+                        <a class="btn btn-outline-dark" href="{{ url_for('app.login') }}">Login</a>
+                      </li>
+                    </ul>
+                  {% else %}
                                         <!-- ms-auto for right alignment -->
-                                        <ul class="nav navbar-nav ms-auto">
-                                            <li class="nav-item">
-                                                <a class="nav-link" href="{{ url_for('app.users') }}">Users</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link" href="{{ url_for('app.hardwares') }}">Hardware</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link" href="{{ url_for('app.logout') }}">Logout ({{ current_user.email }})</a>
-                                            </li>
-                                        </ul>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </nav>
+                    <ul class="nav navbar-nav ms-auto">
+                      <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('app.users') }}">Users</a>
+                      </li>
+                      <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('app.hardwares') }}">Hardware</a>
+                      </li>
+                      <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('app.logout') }}">Logout ({{ current_user.email }})</a>
+                      </li>
+                    </ul>
+                  {% endif %}
+                </div>
+              </div>
+            </nav>
                         <!-- modal hidden by default, used for confirming deletion -->
-                        <div class="modal fade"
-                             id="confirm-delete"
-                             tabindex="-1"
-                             role="dialog"
-                             aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h4 class="modal-title">
-                                            <i class="bi bi-trash3-fill"></i>
-                                        </h4>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p>Are you sure?</p>
-                                        <p id="confirm-delete-message"></p>
-                                        <input id="delete-form-id" type="hidden" value="">
-                                        <input id="delete-form-action" type="hidden" value="">
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                        <button id="confirm-delete-button"
-                                                type="button"
-                                                class="btn btn-danger"
-                                                data-dismiss="modal">Delete</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endblock %}
-                    {% block content %}
-                        <div class="container">
-                            <br>
+            <div class="modal fade"
+                 id="confirm-delete"
+                 tabindex="-1"
+                 role="dialog"
+                 aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h4 class="modal-title">
+                      <i class="bi bi-trash3-fill"></i>
+                    </h4>
+                  </div>
+                  <div class="modal-body">
+                    <p>Are you sure?</p>
+                    <p id="confirm-delete-message"></p>
+                    <input id="delete-form-id" type="hidden" value="">
+                    <input id="delete-form-action" type="hidden" value="">
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="confirm-delete-button"
+                            type="button"
+                            class="btn btn-danger"
+                            data-dismiss="modal">Delete</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endblock %}
+          {% block content %}
+            <div class="container">
+              <br>
                             <!-- https://flask.palletsprojects.com/en/2.2.x/patterns/flashing/#flashing-with-categories -->
-                            {% with messages = get_flashed_messages(with_categories=true) %}
-                                {% if messages %}
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
                                     <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
-                                    {% for category, message in messages %}
-                                        <div class="fs-5 alert alert-{{ category }} text-center" role="alert">
-                                            <i class="bi bi-info-circle"></i> {{ message }}
-                                        </div>
-                                    {% endfor %}
-                                {% endif %}
-                            {% endwith %}
+                  {% for category, message in messages %}
+                    <div class="fs-5 alert alert-{{ category }} text-center" role="alert">
+                      <i class="bi bi-info-circle"></i> {{ message }}
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              {% endwith %}
                             {# application content needs to be provided in the app_content block #}
-                            <div style="margin-top: 30px"></div>
-                            {% block app_content %}{% endblock %}
-                            <br>
-                            <hr>
-                            <div style="display:inline-block; float: right; color: #918d8c;">
-                                Conbench {{ version_string_footer }} | <a href="https://github.com/conbench/conbench" target="_blank">github</a> | <a href="/api/docs" target="_blank">api docs</a>
-                            </div>
-                        </div>
-                    {% endblock %}
-                    {% block scripts %}
-                        <script src="https://code.jquery.com/jquery-3.6.4.js"></script>
-                        <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.24/dist/uPlot.iife.min.js"></script>
-                        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-                                integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
-                                crossorigin="anonymous"></script>
+              <div style="margin-top: 30px"></div>
+              {% block app_content %}{% endblock %}
+              <br>
+              <hr>
+              <div style="display:inline-block; float: right; color: #918d8c;">
+                Conbench {{ version_string_footer }} | <a href="https://github.com/conbench/conbench" target="_blank">github</a> | <a href="/api/docs" target="_blank">api docs</a>
+              </div>
+            </div>
+          {% endblock %}
+          {% block scripts %}
+            <script src="https://code.jquery.com/jquery-3.6.4.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.24/dist/uPlot.iife.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+                    integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+                    crossorigin="anonymous"></script>
                         <!--
     Note(JP): I think the datatables responsive plugin (included as version
     2.4.0 via the special link below) is in conflict with Boostrap 5's
@@ -139,14 +139,14 @@
     see what we really need and why.
     <script src="https://cdn.datatables.net/v/bs5/dt-1.13.3/r-2.4.0/datatables.min.js"></script>
 -->
-                        <script src="https://cdn.datatables.net/v/bs5/dt-1.13.4/datatables.min.js"></script>
-                        <script src="https://cdn.datatables.net/plug-ins/1.13.3/features/conditionalPaging/dataTables.conditionalPaging.min.js"></script>
-                        <script>
-$(document).ready(function() {
-    setTimeout(function() {
-        $(".flash-message").fadeOut("slow");
-    }, 2000); // <-- time in milliseconds
-});
+            <script src="https://cdn.datatables.net/v/bs5/dt-1.13.4/datatables.min.js"></script>
+            <script src="https://cdn.datatables.net/plug-ins/1.13.3/features/conditionalPaging/dataTables.conditionalPaging.min.js"></script>
+            <script>
+              $(document).ready(function() {
+                setTimeout(function() {
+                  $(".flash-message").fadeOut("slow");
+                }, 2000); // <-- time in milliseconds
+              });
 
 
 /*
@@ -160,56 +160,56 @@ INPUTS:
  data_table_id: string
  column_indexes: array
  */
-function dropdown_column_search(data_table_id, column_indexes) {
-    $(document).ready(function() {
-        var table = $(data_table_id).DataTable();
-        table.columns(column_indexes).every(function() {
-            var that = this;
-            var reset = ""
-            var mySelectList = $("<select class='custom-search-box'></select>")
+              function dropdown_column_search(data_table_id, column_indexes) {
+                $(document).ready(function() {
+                  var table = $(data_table_id).DataTable();
+                  table.columns(column_indexes).every(function() {
+                    var that = this;
+                    var reset = ""
+                    var mySelectList = $("<select class='custom-search-box'></select>")
                 //stops ordering event trigger when clicked on a menu selection
-                .on("click", function (e){
-                    e.stopImmediatePropagation()
-                })
-                .appendTo(this.header())
-                .on("change", function() {
-                    currentValue = $(this).val()
+                      .on("click", function (e){
+                        e.stopImmediatePropagation()
+                      })
+                      .appendTo(this.header())
+                      .on("change", function() {
+                        currentValue = $(this).val()
                     //search for empty string value for the selected column
-                    if(currentValue === ""){
-                        that.search('^$', true, false).draw();
-                    }
+                        if(currentValue === ""){
+                          that.search('^$', true, false).draw();
+                        }
                     //reset search for the selected column
-                    else if(currentValue == "All"){
-                        that.search('').draw();
-                    }
+                        else if(currentValue == "All"){
+                          that.search('').draw();
+                        }
                     // select for non-empty values
-                    else{
-                        that.search(currentValue).draw();
-                    }
-                    console.log(currentValue)
-                });
-            mySelectList.append(
-                $(`<option value="All">${reset}</option>`)
-            );
-            this.cache("search").unique().sort().each(function(param) {
+                        else{
+                          that.search(currentValue).draw();
+                        }
+                        console.log(currentValue)
+                      });
+                    mySelectList.append(
+                      $(`<option value="All">${reset}</option>`)
+                    );
+                    this.cache("search").unique().sort().each(function(param) {
                 //trim the whitespaces (setting to empty string) before appending to drop-down list
-                param = param.trim()
+                      param = param.trim()
                 // check for empty string
                 // if false update the non-empty values to the drop-down list
                 // else append string (Empty)
-                if (param !== "") {
-                    mySelectList.append(
-                        $(`<option value="${param}">${param}</option>`)
-                    );
-                } else {
-                    mySelectList.append(
-                        $(`<option value="${param}">(Empty)</option>`)
-                    );
-                }
-            });
-        });
-    });
-}
+                      if (param !== "") {
+                        mySelectList.append(
+                          $(`<option value="${param}">${param}</option>`)
+                        );
+                      } else {
+                        mySelectList.append(
+                          $(`<option value="${param}">(Empty)</option>`)
+                        );
+                      }
+                    });
+                  });
+                });
+              }
 
 /*
 INFO:
@@ -220,23 +220,23 @@ INPUTS:
  data_table_elem: DOM element for the <table>
  column_indexes: array
  */
-function free_text_column_search(data_table_elem, column_indexes) {
-    $(document).ready(function() {
-        var table = data_table_elem.DataTable();
-        table.columns(column_indexes).every(function() {
-            var that = this;
-            var title = this.header().textContent;
-            $(`<br /><input class="custom-input-text custom-search-box" type="text" placeholder="🔍 filter"
+              function free_text_column_search(data_table_elem, column_indexes) {
+                $(document).ready(function() {
+                  var table = data_table_elem.DataTable();
+                  table.columns(column_indexes).every(function() {
+                    var that = this;
+                    var title = this.header().textContent;
+                    $(`<br /><input class="custom-input-text custom-search-box" type="text" placeholder="🔍 filter"
                 onClick="if(event.stopPropagation!==undefined){event.preventDefault(); event.stopPropagation();}event.cancelBubble=true;"/>`)
-                .appendTo(this.header())
-                .on('keyup change clear', function() { //column search/sorting triggered on keypress
-                            that
-                            .search(this.value)
-                            .draw();
-            });
-        });
-    })
-}
+                      .appendTo(this.header())
+                      .on('keyup change clear', function() { //column search/sorting triggered on keypress
+                        that
+                          .search(this.value)
+                          .draw();
+                      });
+                  });
+                })
+              }
 
 /*
 INFO:
@@ -248,53 +248,53 @@ INFO:
 INPUT:
     data_table_elem: DOM element for the <table>
  */
-function column_search_implementation(data_table_elem) {
-    $(document).ready(function() {
-        var table = data_table_elem.DataTable();
-        var unique_count = [];
-        table.columns().every( function () {
-            var current = this;
+              function column_search_implementation(data_table_elem) {
+                $(document).ready(function() {
+                  var table = data_table_elem.DataTable();
+                  var unique_count = [];
+                  table.columns().every( function () {
+                    var current = this;
             //array of unique count for data points within each column
-            unique_count.push(current.data().unique().count())
-        });
-        console.log(unique_count)
-        unique_count.forEach(function (item, index) {
-            if (item < 10 && item > 1) {
-                dropdown_column_search(data_table_elem, index)
-            }
-            else if (item >= 10){
-                free_text_column_search(data_table_elem, index)
-            }
-            else if (item == 1) {
-                console.log("Search isn't enabled with one/null data point")
+                    unique_count.push(current.data().unique().count())
+                  });
+                  console.log(unique_count)
+                  unique_count.forEach(function (item, index) {
+                    if (item < 10 && item > 1) {
+                      dropdown_column_search(data_table_elem, index)
+                    }
+                    else if (item >= 10){
+                      free_text_column_search(data_table_elem, index)
+                    }
+                    else if (item == 1) {
+                      console.log("Search isn't enabled with one/null data point")
                 // keeping this placeholder for future addition of a message/note
-                $(`<p></p>`).appendTo(
-                    table.columns([index]).header())
-            }
-            else{
-                console.log("Unidentified value encountered")
-            }
-        });
-    })
-}
+                      $(`<p></p>`).appendTo(
+                        table.columns([index]).header())
+                    }
+                    else{
+                      console.log("Unidentified value encountered")
+                    }
+                  });
+                })
+              }
 
-$("#confirm-delete").on("show.bs.modal", function(e) {
+              $("#confirm-delete").on("show.bs.modal", function(e) {
     // using cbcustom- prefix to indicate that this is introduced and used by
     // conbench. for example, bootstrap 5 uses the bs- prefix
-    $(this).find("#confirm-delete-message").html($(e.relatedTarget).data("cbcustom-message"));
-    $(this).find("#delete-form-id").attr("value", $(e.relatedTarget).data("cbcustom-form-id"));
-    $(this).find("#delete-form-action").attr("value", $(e.relatedTarget).data("cbcustom-href"));
-});
+                $(this).find("#confirm-delete-message").html($(e.relatedTarget).data("cbcustom-message"));
+                $(this).find("#delete-form-id").attr("value", $(e.relatedTarget).data("cbcustom-form-id"));
+                $(this).find("#delete-form-action").attr("value", $(e.relatedTarget).data("cbcustom-href"));
+              });
 
-$("#confirm-delete-button").click(function(e){
-    $($("#delete-form-id").attr("value")).find("#delete").attr("type", "submit");
-    $($("#delete-form-id").attr("value")).attr("action", $("#delete-form-action").attr("value"));
-    $("#delete").click();
-});
-                        </script>
-                    {% endblock %}
-                {%- endblock body %}
-            </body>
-        {%- endblock html %}
-    </html>
+              $("#confirm-delete-button").click(function(e){
+                $($("#delete-form-id").attr("value")).find("#delete").attr("type", "submit");
+                $($("#delete-form-id").attr("value")).attr("action", $("#delete-form-action").attr("value"));
+                $("#delete").click();
+              });
+            </script>
+          {% endblock %}
+        {%- endblock body %}
+      </body>
+    {%- endblock html %}
+  </html>
 {% endblock doc -%}

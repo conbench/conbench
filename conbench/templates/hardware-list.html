@@ -2,44 +2,44 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
     <!-- recipe taken from https://getbootstrap.com/docs/5.0/utilities/flex/#auto-margins -->
-    <div class="d-flex">
-        <div class="p-0">
-            <h3>Hardware list</h3>
-        </div>
+  <div class="d-flex">
+    <div class="p-0">
+      <h3>Hardware list</h3>
     </div>
-    <hr class="border border-danger border-1 opacity-50">
-    <table id="hardwares" class="table table-hover">
-        <thead>
-            <tr>
-                <th scope="col" style="width: 25%">Hardware ID</th>
-                <th scope="col">Name</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for hardware in hardwares %}
-                <tr>
-                    <td>{{ hardware.id }}</td>
-                    <td>
-                        <a href="{{ url_for('app.hardware', hardware_id=hardware.id) }}">
-                            <div>{{ hardware.name }}</div>
-                        </a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  </div>
+  <hr class="border border-danger border-1 opacity-50">
+  <table id="hardwares" class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col" style="width: 25%">Hardware ID</th>
+        <th scope="col">Name</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for hardware in hardwares %}
+        <tr>
+          <td>{{ hardware.id }}</td>
+          <td>
+            <a href="{{ url_for('app.hardware', hardware_id=hardware.id) }}">
+              <div>{{ hardware.name }}</div>
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 {% endblock %}
 {% block scripts %}
-    {{ super() }}
-    <script type="text/javascript">
-var table = $('#hardwares').dataTable( {
-    "conditionalPaging": true,
-    "pageLenth": 50,
-    "lengthChange": false, // not needed in this case (number of rows per page)
-    "info": false,
-    "searching": false,
-    "order": [[1, 'desc']],
-} );
+  {{ super() }}
+  <script type="text/javascript">
+    var table = $('#hardwares').dataTable( {
+      "conditionalPaging": true,
+      "pageLenth": 50,
+      "lengthChange": false, // not needed in this case (number of rows per page)
+      "info": false,
+      "searching": false,
+      "order": [[1, 'desc']],
+    } );
 
-    </script>
+  </script>
 {% endblock %}

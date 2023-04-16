@@ -1,271 +1,271 @@
 {% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item active">
-                <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">Run</a>
-            </li>
-            <li class="breadcrumb-item active">
-                <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">Batch</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">
-                <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
-                Benchmark result {{ benchmark.id[:7] }}...</a>
-            </li>
-        </ol>
-    </nav>
-    <br />
-    {% if history_plot_info.jsondoc is not none %}
-        <h3>History plot for benchmark '{{ benchmark.display_bmname }}'</h3>
-        <p class="fst-italic fw-light">For a specific case permutation and hardware/context (see below)</p>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item active">
+        <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">Run</a>
+      </li>
+      <li class="breadcrumb-item active">
+        <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">Batch</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">
+        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
+          Benchmark result {{ benchmark.id[:7] }}...</a>
+      </li>
+    </ol>
+  </nav>
+  <br />
+  {% if history_plot_info.jsondoc is not none %}
+    <h3>History plot for benchmark '{{ benchmark.display_bmname }}'</h3>
+    <p class="fst-italic fw-light">For a specific case permutation and hardware/context (see below)</p>
         <!-- <div>{{ benchmark.display_case_perm }}</div> -->
-        <div class="mt-4" id="plot-history-0" align="center"></div>
-        <div class="row">
-            <div class="col-md-12" style="padding-top: 10px;">
-                Click on a benchmark result (grey point) in the plot to see a corresponding benchmark result summary.
-                <div class="conbench-histplot-run-details" style="display: none;">
-                    <br />
-                    <div class="panel panel-success">
-                        <div class="panel-heading">Summary for selected benchmark (green data point in plot)</div>
-                        <div class="panel-body">
-                            <ul class="ul-histplot-run-details">
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+    <div class="mt-4" id="plot-history-0" align="center"></div>
+    <div class="row">
+      <div class="col-md-12" style="padding-top: 10px;">
+        Click on a benchmark result (grey point) in the plot to see a corresponding benchmark result summary.
+        <div class="conbench-histplot-run-details" style="display: none;">
+          <br />
+          <div class="panel panel-success">
+            <div class="panel-heading">Summary for selected benchmark (green data point in plot)</div>
+            <div class="panel-body">
+              <ul class="ul-histplot-run-details">
+              </ul>
             </div>
+          </div>
         </div>
-    {% else %}
-        <div class="alert alert-info" role="alert">
-            Cannot display history plot for this benchmark result: {{ history_plot_info.reason_why_no_plot }}
-        </div>
-    {% endif %}
-    <br />
-    <div class="row">
-        <div class="col-md-8">
-            {{ wtf.quick_form(update_form, id="update-form", button_map={'toggle_distribution_change': update_button_color}) }}
-        </div>
+      </div>
     </div>
-    <br />
-    <div class="row">
-        <div class="col-md-6">
-            <ul class="list-group">
-                <li class="list-group-item list-group-item-primary">Benchmark details</li>
-                <li class="list-group-item" style="overflow-y: auto;">
-                    <b>Benchmark name</b>
-                    <div align="right" style="display:inline-block; float: right;">
-                        <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id ) }}">{{ benchmark.display_bmname }}</a>
-                    </div>
-                </li>
-                <li class="list-group-item" style="overflow-y: auto;">
-                    <b>Benchmark case permutation</b>
-                    <div align="right" style="display:inline-block; float: right;">{{ benchmark.display_case_perm }}</div>
-                </li>
-                <li class="list-group-item" style="overflow-y: auto;">
-                    <b>Run ID</b>
-                    <div align="right" style="display:inline-block; float: right;">
-                        <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">{{ benchmark.run_id }}</a>
-                    </div>
-                </li>
-                <li class="list-group-item" style="overflow-y: auto;">
-                    <b>Run name</b>
-                    <div align="right" style="display:inline-block; float: right;">
-                        {% if run.name %}{{ run.name }}{% endif %}
-                    </div>
-                </li>
-                <li class="list-group-item" style="overflow-y: auto;">
-                    <b>Run reason</b>
-                    <div align="right" style="display:inline-block; float: right;">
-                        {% if run.reason %}{{ run.reason }}{% endif %}
-                    </div>
-                </li>
-                {% if benchmark.error %}
-                    <li class="list-group-item list-group-item-primary">Error</li>
-                    <li class="list-group-item" style="overflow-y: auto;">
-                        <b>timestamp</b>
-                        <div align="right" style="display:inline-block; float: right;">{{ benchmark.display_timestamp }}</div>
-                    </li>
-                    {% for k,v in benchmark.error.items() %}
-                        <li class="list-group-item" style="overflow-y: auto;">
-                            <b>{{ k }}</b>
-                            <br>
-                            <br />
-                            <div align="left"
-                                 style="display:inline-block;
-                                        white-space: pre;
-                                        float: center">
-                                {{ v | urlize(target="_blank")
-                                }}
-                            </div>
-                        </li>
-                    {% endfor %}
-                {% endif %}
-                {% if benchmark.stats %}
-                    <li class="list-group-item list-group-item-primary">Result</li>
-                    <li class="list-group-item" style="overflow-y: auto;">
-                        <b>timestamp (start time)</b>
-                        <div align="right" style="display:inline-block; float: right;">{{ benchmark.display_timestamp }}</div>
-                    </li>
-                    {% for k,v in benchmark.stats.items() %}
-                        <li class="list-group-item" style="overflow-y: auto;">
-                            <b>{{ k }}</b>
-                            {% if v is not none %}<div align="right" style="display:inline-block; float: right;">{{ v }}</div>{% endif %}
-                        </li>
-                    {% endfor %}
-                {% endif %}
-                <li class="list-group-item list-group-item-primary">Tags</li>
-                {% for k,v in benchmark.tags.items() %}
-                    <li class="list-group-item" style="overflow-y: auto;">
-                        <b>{{ k }}</b>
-                        <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-                    </li>
-                {% endfor %}
-                {% if benchmark.optional_benchmark_info %}
-                    <li class="list-group-item list-group-item-primary">Additional Benchmark Details</li>
-                    {% for k,v in benchmark.optional_benchmark_info.items() %}
-                        <li class="list-group-item" style="overflow-y: auto;">
-                            <b>{{ k }}</b>
-                            {% if v is not none %}
-                                <div align="right" style="display:inline-block; float: right;">{{ v | urlize(target="_blank") }}</div>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                {% endif %}
-                {% if benchmark.validation %}
-                    <li class="list-group-item list-group-item-primary">Validation</li>
-                    {% for k,v in benchmark.validation.items() %}
-                        <li class="list-group-item" style="overflow-y: auto;">
-                            <b>{{ k }}</b>
-                            {% if v is not none %}<div align="right" style="display:inline-block; float: right;">{{ v }}</div>{% endif %}
-                        </li>
-                    {% endfor %}
-                {% endif %}
-            </ul>
-        </div>
-        <div class="col-md-6">
-            <ul class="list-group">
-                {% if run and run.commit.url %}
-                    <li class="list-group-item list-group-item-primary">Commit</li>
-                    <li class="list-group-item" style="overflow-y: auto;">
-                        <b>commit</b>
-                        <div class="ellipsis-500"
-                             align="right"
-                             style="display:inline-block;
-                                    float: right">
-                            {% if run.commit.display_message %}
-                                <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
-                            {% else %}
-                                <a href="{{ run.commit.url }}">{{ run.commit.sha }}</a>
-                            {% endif %}
-                        </div>
-                    </li>
-                    {% if run.commit.display_timestamp %}
-                        <li class="list-group-item" style="overflow-y: auto;">
-                            <b>date</b>
-                            <div align="right" style="display:inline-block; float: right;">
-                                {{ run.commit.display_timestamp }}
-                            </div>
-                        </li>
-                    {% endif %}
-                    {% if run.commit.display_message %}
-                        <li class="list-group-item" style="overflow-y: auto;">
-                            <b>author</b>
-                            <div align="right" style="display:inline-block; float: right;">
-                                {{ run.commit.author_name }}
-                            </div>
-                        </li>
-                    {% endif %}
-                    <li class="list-group-item" style="overflow-y: auto;">
-                        <b>repository</b>
-                        <div align="right" style="display:inline-block; float: right;">
-                            <a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a>
-                        </div>
-                    </li>
-                    {% if run.commit.branch %}
-                        <li class="list-group-item" style="overflow-y: auto;">
-                            <b>branch</b>
-                            <div align="right" style="display:inline-block; float: right;">
-                                {{ run.commit.branch }}
-                            </div>
-                        </li>
-                    {% endif %}
-                    {% if run.commit.fork_point_sha %}
-                        <li class="list-group-item" style="overflow-y: auto;">
-                            <b>forked from default at</b>
-                            <div align="right" style="display:inline-block; float: right;">
-                                {{ run.commit.fork_point_sha }}
-                            </div>
-                        </li>
-                    {% endif %}
-                {% endif %}
-                <li class="list-group-item list-group-item-primary">
-                    Hardware
-                </li>
-                {% for k,v in run.hardware.items() %}
-                    <li class="list-group-item" style="overflow-y: auto;">
-                        <b>{{ k }}</b>
-                        <div align="right" style="display:inline-block; float: right;">
-                            {{ v }}
-                        </div>
-                    </li>
-                {% endfor %}
-                <li class="list-group-item list-group-item-primary">
-                    Context
-                </li>
-                {% for k,v in benchmark.context.items() %}
-                    <li class="list-group-item" style="overflow-y: auto;">
-                        <b>{{ k }}</b>
-                        <div align="right" style="display:inline-block; float: right;">
-                            {{ v }}
-                        </div>
-                    </li>
-                {% endfor %}
-                {% if benchmark.info and benchmark.info|length > 1 %}
-                    <li class="list-group-item list-group-item-primary">
-                        Additional Context Details
-                    </li>
-                    {% for k,v in benchmark.info.items() %}
-                        <li class="list-group-item" style="overflow-y: auto;">
-                            <b>{{ k }}</b>
-                            <div align="right" style="display:inline-block; float: right;">
-                                {{ v | urlize(target="_blank") }}
-                            </div>
-                        </li>
-                    {% endfor %}
-                {% endif %}
-            </ul>
-        </div>
+  {% else %}
+    <div class="alert alert-info" role="alert">
+      Cannot display history plot for this benchmark result: {{ history_plot_info.reason_why_no_plot }}
     </div>
-    <div class="row mt-5">
-        <form method="post" id="delete-form">
-            {{ delete_form.hidden_tag() }}
-            <input class="btn btn-danger"
-                   id="delete"
-                   name="delete"
-                   type="button"
-                   value="Delete benchmark result" />
-        </form>
+  {% endif %}
+  <br />
+  <div class="row">
+    <div class="col-md-8">
+      {{ wtf.quick_form(update_form, id="update-form", button_map={'toggle_distribution_change': update_button_color}) }}
     </div>
+  </div>
+  <br />
+  <div class="row">
+    <div class="col-md-6">
+      <ul class="list-group">
+        <li class="list-group-item list-group-item-primary">Benchmark details</li>
+        <li class="list-group-item" style="overflow-y: auto;">
+          <b>Benchmark name</b>
+          <div align="right" style="display:inline-block; float: right;">
+            <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id ) }}">{{ benchmark.display_bmname }}</a>
+          </div>
+        </li>
+        <li class="list-group-item" style="overflow-y: auto;">
+          <b>Benchmark case permutation</b>
+          <div align="right" style="display:inline-block; float: right;">{{ benchmark.display_case_perm }}</div>
+        </li>
+        <li class="list-group-item" style="overflow-y: auto;">
+          <b>Run ID</b>
+          <div align="right" style="display:inline-block; float: right;">
+            <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">{{ benchmark.run_id }}</a>
+          </div>
+        </li>
+        <li class="list-group-item" style="overflow-y: auto;">
+          <b>Run name</b>
+          <div align="right" style="display:inline-block; float: right;">
+            {% if run.name %}{{ run.name }}{% endif %}
+          </div>
+        </li>
+        <li class="list-group-item" style="overflow-y: auto;">
+          <b>Run reason</b>
+          <div align="right" style="display:inline-block; float: right;">
+            {% if run.reason %}{{ run.reason }}{% endif %}
+          </div>
+        </li>
+        {% if benchmark.error %}
+          <li class="list-group-item list-group-item-primary">Error</li>
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>timestamp</b>
+            <div align="right" style="display:inline-block; float: right;">{{ benchmark.display_timestamp }}</div>
+          </li>
+          {% for k,v in benchmark.error.items() %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>{{ k }}</b>
+              <br>
+              <br />
+              <div align="left"
+                   style="display:inline-block;
+                          white-space: pre;
+                          float: center">
+                {{ v | urlize(target="_blank")
+                }}
+              </div>
+            </li>
+          {% endfor %}
+        {% endif %}
+        {% if benchmark.stats %}
+          <li class="list-group-item list-group-item-primary">Result</li>
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>timestamp (start time)</b>
+            <div align="right" style="display:inline-block; float: right;">{{ benchmark.display_timestamp }}</div>
+          </li>
+          {% for k,v in benchmark.stats.items() %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>{{ k }}</b>
+              {% if v is not none %}<div align="right" style="display:inline-block; float: right;">{{ v }}</div>{% endif %}
+            </li>
+          {% endfor %}
+        {% endif %}
+        <li class="list-group-item list-group-item-primary">Tags</li>
+        {% for k,v in benchmark.tags.items() %}
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>{{ k }}</b>
+            <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+          </li>
+        {% endfor %}
+        {% if benchmark.optional_benchmark_info %}
+          <li class="list-group-item list-group-item-primary">Additional Benchmark Details</li>
+          {% for k,v in benchmark.optional_benchmark_info.items() %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>{{ k }}</b>
+              {% if v is not none %}
+                <div align="right" style="display:inline-block; float: right;">{{ v | urlize(target="_blank") }}</div>
+              {% endif %}
+            </li>
+          {% endfor %}
+        {% endif %}
+        {% if benchmark.validation %}
+          <li class="list-group-item list-group-item-primary">Validation</li>
+          {% for k,v in benchmark.validation.items() %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>{{ k }}</b>
+              {% if v is not none %}<div align="right" style="display:inline-block; float: right;">{{ v }}</div>{% endif %}
+            </li>
+          {% endfor %}
+        {% endif %}
+      </ul>
+    </div>
+    <div class="col-md-6">
+      <ul class="list-group">
+        {% if run and run.commit.url %}
+          <li class="list-group-item list-group-item-primary">Commit</li>
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>commit</b>
+            <div class="ellipsis-500"
+                 align="right"
+                 style="display:inline-block;
+                        float: right">
+              {% if run.commit.display_message %}
+                <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
+              {% else %}
+                <a href="{{ run.commit.url }}">{{ run.commit.sha }}</a>
+              {% endif %}
+            </div>
+          </li>
+          {% if run.commit.display_timestamp %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>date</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ run.commit.display_timestamp }}
+              </div>
+            </li>
+          {% endif %}
+          {% if run.commit.display_message %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>author</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ run.commit.author_name }}
+              </div>
+            </li>
+          {% endif %}
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>repository</b>
+            <div align="right" style="display:inline-block; float: right;">
+              <a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a>
+            </div>
+          </li>
+          {% if run.commit.branch %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>branch</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ run.commit.branch }}
+              </div>
+            </li>
+          {% endif %}
+          {% if run.commit.fork_point_sha %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>forked from default at</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ run.commit.fork_point_sha }}
+              </div>
+            </li>
+          {% endif %}
+        {% endif %}
+        <li class="list-group-item list-group-item-primary">
+          Hardware
+        </li>
+        {% for k,v in run.hardware.items() %}
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>{{ k }}</b>
+            <div align="right" style="display:inline-block; float: right;">
+              {{ v }}
+            </div>
+          </li>
+        {% endfor %}
+        <li class="list-group-item list-group-item-primary">
+          Context
+        </li>
+        {% for k,v in benchmark.context.items() %}
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>{{ k }}</b>
+            <div align="right" style="display:inline-block; float: right;">
+              {{ v }}
+            </div>
+          </li>
+        {% endfor %}
+        {% if benchmark.info and benchmark.info|length > 1 %}
+          <li class="list-group-item list-group-item-primary">
+            Additional Context Details
+          </li>
+          {% for k,v in benchmark.info.items() %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>{{ k }}</b>
+              <div align="right" style="display:inline-block; float: right;">
+                {{ v | urlize(target="_blank") }}
+              </div>
+            </li>
+          {% endfor %}
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+  <div class="row mt-5">
+    <form method="post" id="delete-form">
+      {{ delete_form.hidden_tag() }}
+      <input class="btn btn-danger"
+             id="delete"
+             name="delete"
+             type="button"
+             value="Delete benchmark result" />
+    </form>
+  </div>
 {% endblock %}
 {% block scripts %}
-    {{ super() }}
-    {{ resources | safe }}
-    <script type="text/javascript">
-  $(document).ready(function ($) {
-    $("#delete-form").find("#delete").attr("type", "button");
-    $("#delete-form").find("#delete").attr("data-bs-toggle", "modal");
-    $("#delete-form").find("#delete").attr("data-bs-target", "#confirm-delete");
-    $("#delete-form").find("#delete").attr("data-cbcustom-form-id", "#delete-form");
-    $("#delete-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}");
-    $("#delete-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete benchmark result: <strong>{{ benchmark.id }}</strong></li></ul>");
-  });
+  {{ super() }}
+  {{ resources | safe }}
+  <script type="text/javascript">
+    $(document).ready(function ($) {
+      $("#delete-form").find("#delete").attr("type", "button");
+      $("#delete-form").find("#delete").attr("data-bs-toggle", "modal");
+      $("#delete-form").find("#delete").attr("data-bs-target", "#confirm-delete");
+      $("#delete-form").find("#delete").attr("data-cbcustom-form-id", "#delete-form");
+      $("#delete-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}");
+      $("#delete-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete benchmark result: <strong>{{ benchmark.id }}</strong></li></ul>");
+    });
 
-  {% if history_plot_info.jsondoc %}
-  $(document).ready(function () {
-    Bokeh.embed.embed_item({{ history_plot_info.jsondoc | safe }});
-  });
-  {% endif %}
+    {% if history_plot_info.jsondoc %}
+      $(document).ready(function () {
+        Bokeh.embed.embed_item({{ history_plot_info.jsondoc | safe }});
+      });
+    {% endif %}
 
-    </script>
+  </script>
 {% endblock %}
