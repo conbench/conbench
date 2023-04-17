@@ -176,23 +176,16 @@ class BenchmarkResult(Base, EntityMixin):
         # keys being non-empty strings, and values being non-empty strings.
         tags = data["tags"]
         has_error = "error" in data
-        has_stats = "stats" in data
 
-        if has_stats:
+        if "stats" in data:
             # Note(JP): this is the result of marshmallow
-            # deserializaiton/validation against the `BenchmarkResultCreate`
+            # deserialization/validation against the `BenchmarkResultCreate`
             # schema below. This needs better naming. Most importantly, we
             # should make use of typing information derived from the schema.
+
             # Merge this on top of the above-defined benchmark_result_data.
             benchmark_result_data = benchmark_result_data | data["stats"].copy()
 
-            # Note(JP): I think we may want to emit a Bad Request response when
-            # benchmark_result_data['data'] does not contain any non-null
-            # value. An empty list would then also be rejected right away. `if
-            # benchmark_result_data.get("data")` is probably supposed to catch
-            # the case where an empty list was provided.
-
-            # calculate any missing stats if data available
             if benchmark_result_data.get("data"):
                 # Note(JP): looks like `benchmark_result_data["data"]` is a
                 # list of either `None` or `Decimal` objects (currently
