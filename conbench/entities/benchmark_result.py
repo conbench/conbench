@@ -470,9 +470,9 @@ def process_samples_build_agg(stats_usergiven: Any):
     # Encode invariants.
     samples = stats_usergiven["data"]
     assert len(samples) > 0
-    for s in samples:
-        assert s is not None
-        assert s != math.nan
+    for sa in samples:
+        assert sa is not None
+        assert sa != math.nan
 
     # Proceed with float type.
     samples = [float(s) for s in samples]
