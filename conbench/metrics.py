@@ -85,6 +85,10 @@ COUNTER_BENCHMARK_RESULTS_INGESTED = prometheus_client.Counter(
     "conbench_benchmark_results_ingested",
     "The total number of individual benchmark results successfully inserted "
     "into the database",
+    # Keep track of the benchmarked repository for which this result was
+    # inserted (this is expected to be a _small_ number of values per Conbench
+    # deployment, smaller than 10, typically 1 or 2).
+    labelnames=["repourl"],
 )
 
 

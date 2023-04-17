@@ -288,8 +288,11 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         # errors that are to be exposed via a 400 response to the HTTP client
         benchmark_result = BenchmarkResult.create(data)
 
-        conbench.metrics.COUNTER_BENCHMARK_RESULTS_INGESTED.inc()
-
+        # Rely on the idea that the lookup
+        # `benchmark_result.run.commit.repo_url` always succeeds
+        conbench.metrics.COUNTER_BENCHMARK_RESULTS_INGESTED.labels(
+            repourl=str(benchmark_result.run.commit.repo_url)
+        ).inc()
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 
 
