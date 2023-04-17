@@ -12,8 +12,6 @@ from ..entities._comparator import (
 )
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import BenchmarkResult
-from ..entities.commit import Commit
-from ..entities.compare import CompareBenchmarkResultSerializer
 from ..entities.history import set_z_scores
 from ..hacks import set_display_benchmark_name, set_display_case_permutation
 
@@ -292,51 +290,10 @@ class CompareRunsAPI(CompareListEndpoint):
         return benchmark_results
 
 
-class CompareCommitsAPI(CompareListEndpoint):
-    serializer = CompareBenchmarkResultSerializer()
-
-    @maybe_login_required
-    def get(self, compare_shas):
-        """
-        ---
-        description: Compare benchmark results.
-        responses:
-            "200": "CompareBenchmarkResult"
-            "401": "401"
-            "404": "404"
-        parameters:
-          - name: compare_shas
-            in: path
-            schema:
-                type: string
-            example: <baseline_sha>...<contender_sha>
-        tags:
-          - Comparisons
-        """
-        try:
-            baseline_sha, contender_sha = compare_shas.split("...", 1)
-        except ValueError:
-            # Note(JP): this cannot raise ValueError.
-            self.abort_404_not_found()
-
-        baseline_commit = self._get(baseline_sha)
-        contender_commit = self._get(contender_sha)
-        return self.serializer.one.dump([baseline_commit, contender_commit])
-
-    def _get(self, sha):
-        try:
-            commit = Commit.one(sha=sha)
-        except NotFound:
-            f.abort(404, description=f"commit hash not found: {sha}")
-
-        return commit
-
-
 compare_benchmark_results_view = CompareBenchmarkResultsAPI.as_view(
     "compare-benchmark-results"
 )
 compare_runs_view = CompareRunsAPI.as_view("compare-runs")
-compare_commits_view = CompareCommitsAPI.as_view("compare-commits")
 
 rule(
     "/compare/benchmark-results/<compare_ids>/",
@@ -346,10 +303,5 @@ rule(
 rule(
     "/compare/runs/<compare_ids>/",
     view_func=compare_runs_view,
-    methods=["GET"],
-)
-rule(
-    "/compare/commits/<compare_shas>/",
-    view_func=compare_commits_view,
     methods=["GET"],
 )
