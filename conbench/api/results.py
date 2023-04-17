@@ -5,6 +5,8 @@ import flask_login
 import orjson
 from sqlalchemy import select
 
+import conbench.metrics
+
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
@@ -285,6 +287,8 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         # Note(JP): in the future this will also raise further validation
         # errors that are to be exposed via a 400 response to the HTTP client
         benchmark_result = BenchmarkResult.create(data)
+
+        conbench.metrics.COUNTER_BENCHMARK_RESULTS_INGESTED.inc()
 
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 
