@@ -708,6 +708,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         self.assert_400_bad_request(response, message)
 
     def _assert_none_commit(self, response):
+        assert response.status_code == 201, (response.status_code, response.text)
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
         assert benchmark_result.run.commit.sha == ""
