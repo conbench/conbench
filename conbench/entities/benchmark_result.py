@@ -1,7 +1,9 @@
+import logging
 import math
 import statistics
 from datetime import datetime, timezone
-from typing import List, Optional
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 import flask as f
 import marshmallow
@@ -31,6 +33,8 @@ from ..entities.context import Context, get_context_or_create
 from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info, get_info_or_create
 from ..entities.run import GitHubCreate, Run
+
+log = logging.getLogger(__name__)
 
 
 class BenchmarkResultValidationError(Exception):
@@ -130,70 +134,58 @@ class BenchmarkResult(Base, EntityMixin):
         Raises BenchmarkResultValidationError, exc message is expected to be
         emitted to the HTTP client in a Bad Request response.
         """
-        # See: https://github.com/conbench/conbench/issues/935
-        if "name" not in userres["tags"]:
-            raise BenchmarkResultValidationError(
-                "`name` property must be present in `tags` "
-                "(the name of the conceptual benchmark)"
-            )
 
-        run = Session.scalars(select(Run).where(Run.id == userres["run_id"])).first()
+        validate_and_augment_result_tags(userres)
+        validate_run_result_consistency(userres)
 
-        if run is not None:
-            # TODO: specification -- if userres.get("github") is None and if
-            # the Run has associated commit information -- then consider this
-            # as a conflict or not? what about branch name and PR number?
+        result_error_for_db: Optional[Dict] = None
 
-            # The property should not be called "github", this confuses me each
-            # time I deal with that.
-            if userres.get("github") is not None:
-                chrun = run.commit.hash
-                chresult = userres["github"]["commit"]
-                if chrun != chresult:
-                    raise BenchmarkResultValidationError(
-                        f"Result refers to commit hash '{chresult}', but Run '{run.id}' "
-                        f"refers to commit hash '{chrun}'"
-                    )
+        # Handle 'error' scenarios. Obvious: user-given error object set.
+        if "error" in userres:
+            # `data["error"]` is a JSON object.
+            result_error_for_db = userres["error"]
 
-                # Cannot do this yet, this is too complicated as of None/empty
-                # string confusion repo_url_run = run.commit.repo_url
-                # repo_url_result = userres["github"]["repository"] if
-                # repo_url_run != repo_url_result: raise
-                #     BenchmarkResultValidationError( f"Result refers to
-                #         repository URL '{repo_url_result}', but Run
-                #         '{run.id}' " f"refers to repository URL
-                #     '{repo_url_run}'" )
+        # Now, check for a more subtle error condition, based on the per-
+        # iteration samples. Rely on `stats` key to exist (see checks above).
+        elif "stats" in userres and do_iteration_samples_look_like_error(
+            userres["stats"]["data"]
+        ):
+            # User did not set `error`, but the number sequence indicates
+            # that this result is to be considered 'errored'. Set a generic
+            # error message.
+            result_error_for_db = {
+                "status": "Partial result: not all iterations completed"
+            }
+
+        # This is going to be the structure based on which we will do
+        # DB insertion.
+        benchmark_result_data = {}
+        # Only insert `error` key if there is an error object. In JSON, error:
+        # null still means that the benchmark is errored (at least some
+        # business logic treat it as such.)
+        if result_error_for_db is not None:
+            benchmark_result_data["error"] = result_error_for_db
 
         # Temporary: keep name `data` -- it's unfortunate that we have the name
         # `data` here while also having key(s) in the dict(s) that are called
         # `data`. Assign a recognizable name to the big, outest, user-given
         # object: userres is not ideal, but a start.
         data = userres
+
+        # At this point, assume that data["tags"] is a flat dictionary with
+        # keys being non-empty strings, and values being non-empty strings.
         tags = data["tags"]
         has_error = "error" in data
-        has_stats = "stats" in data
 
-        # defaults
-        benchmark_result_data = {}
-
-        # Note(JP): if no data was provided, should this stay `True`?
-        # We will see. https://github.com/conbench/conbench/issues/803.
-        any_errored_iteration = True
-
-        if has_stats:
+        if "stats" in data:
             # Note(JP): this is the result of marshmallow
-            # deserializaiton/validation against the `BenchmarkResultCreate`
+            # deserialization/validation against the `BenchmarkResultCreate`
             # schema below. This needs better naming. Most importantly, we
             # should make use of typing information derived from the schema.
-            benchmark_result_data = data["stats"].copy()
 
-            # Note(JP): I think we may want to emit a Bad Request response when
-            # benchmark_result_data['data'] does not contain any non-null
-            # value. An empty list would then also be rejected right away. `if
-            # benchmark_result_data.get("data")` is probably supposed to catch
-            # the case where an empty list was provided.
+            # Merge this on top of the above-defined benchmark_result_data.
+            benchmark_result_data = benchmark_result_data | data["stats"].copy()
 
-            # calculate any missing stats if data available
             if benchmark_result_data.get("data"):
                 # Note(JP): looks like `benchmark_result_data["data"]` is a
                 # list of either `None` or `Decimal` objects (currently
@@ -252,24 +244,10 @@ class BenchmarkResult(Base, EntityMixin):
                     if benchmark_result_data.get(field) is None:
                         benchmark_result_data[field] = calculated_result_data[field]
 
-        if has_error:
-            benchmark_result_data["error"] = data["error"]
-
-        # If there was no explicit error *and* at least one iteration failed aren't complete, we should add an error
-        if (
-            benchmark_result_data.get("error", None) is None
-            and any_errored_iteration is True
-        ):
-            benchmark_result_data["error"] = {
-                "status": "Partial result: not all iterations completed"
-            }
-
-        # Note(JP): this implicitly introduces a requirement for `name` to be
-        # set: https://github.com/conbench/conbench/issues/935
-        # Also note: this pulls the `name=xx` key/value pair out of tags.
-        name = tags.pop("name")
-
-        case = get_case_or_create({"name": name, "tags": tags})
+        # See https://github.com/conbench/conbench/issues/935,
+        # name is guaranteed to be set.
+        benchmark_name = tags.pop("name")
+        case = get_case_or_create({"name": benchmark_name, "tags": tags})
         context = get_context_or_create({"tags": data["context"]})
         info = get_info_or_create({"tags": data["info"]})
 
@@ -298,6 +276,10 @@ class BenchmarkResult(Base, EntityMixin):
                     "has_errors": has_error,
                 }
             )
+            # The above's `create()` might fail (race condition), in which case
+            # we can re-read, but then we also have to call
+            # `validate_run_result_consistency(userres)` one more time (because
+            # _we_ are not the ones who created the Run).
 
         benchmark_result_data["run_id"] = data["run_id"]
         benchmark_result_data["batch_id"] = data["batch_id"]
@@ -523,6 +505,142 @@ class BenchmarkResult(Base, EntityMixin):
             return f"{hw.id[:4]}: " + hw.name[:15]
 
         return f"{hw.id[:4]}: " + hw.name
+
+
+def do_iteration_samples_look_like_error(data: list[Optional[Decimal]]) -> bool:
+    """
+    Inspect user-given numerical values for individual iteration results.
+    Input is a list of either `None` or `Decimal` objects (currently enforced
+    via marshmallow schema). Example: [Decimal('0.099094'), None,
+    Decimal('0.036381')]
+    Consider this multi-sample result as 'good' only when there is at least one
+    numerical value and when _all_ values are numerical values.
+    From https://github.com/conbench/conbench/issues/813: If stats.data
+    contains at least one null value then the BenchmarkResult is considered
+    failed. If no error information was provided by the user, then a dummy
+    error message "not all iterations completed" is automatically set by
+    Conbench upon DB insert.
+    See https://github.com/conbench/conbench/pull/811#discussion_r1129144143
+    """
+    if len(data) == 0:
+        return True
+
+    for sample in data:
+        if sample is None:
+            return True
+
+    return False
+
+
+def validate_and_augment_result_tags(userres: Any):
+    """
+    Inspect and mutate userres['tags']. After that, all keys are non-empty
+    strings, and all values are non-empty strings.
+
+    See https://github.com/conbench/conbench/pull/948#discussion_r1149090197
+    for background.
+
+    Summary of current desired behavior: primitive value types are accepted
+    (string, boolean, float, int; non-string values are converted to string
+    before DB insertion). Other value types (array -> list, object -> dict)
+    lead to request rejection.
+    """
+
+    tags = userres["tags"]
+
+    # See: https://github.com/conbench/conbench/issues/935
+    if "name" not in tags:
+        raise BenchmarkResultValidationError(
+            "`name` property must be present in `tags` "
+            "(the name of the conceptual benchmark)"
+        )
+
+    # Iterate over a copy of key/value pairs.
+    for key, value in list(tags.items()):
+        # In JSON, a key is always of type string. We rely on this, codify
+        # this invariant.
+        assert isinstance(key, str)
+
+        # An empty string is a valid JSON key. Do not allow this.
+        if len(key) == 0:
+            raise BenchmarkResultValidationError(
+                "tags: zero-length string as key is not allowed"
+            )
+
+        # For now, be liberal in what we accept. Do not consider empty
+        # string or None values for the case permutation (do not store
+        # those in the DB, drop these key/value pairs). This is documented
+        # in the API spec. Maybe in the future we want to reject such
+        # requests with a Bad Request response.
+        if value == "" or value is None:
+            log.warning("drop tag key/value pair: `%s`, `%s`", key, value)
+            # Remove current key/value pair, proceed with next key. This
+            # mutates the dictionary `data["tags"]`; for keeping this a
+            # sane operation the loop iterates over a copy of key/value
+            # pairs.
+            del tags[key]
+            continue
+
+        # Note(JP): this code path should go away after we adjust our
+        # client tooling to not send numeric values anymore.
+        if isinstance(value, (int, float, bool)):
+            # I think we first want to adjust some client tooling before
+            # enabling this log line:
+            # log.warning("stringify case parameter value: `%s`, `%s`", key, value)
+            # Replace value, proceed with next key.
+            tags[key] = str(value)
+            continue
+
+        # This should be logically equivalent with the value being either
+        # of type dict or of type list.
+        if not isinstance(value, str):
+            # Emit Bad Request response..
+            raise BenchmarkResultValidationError(
+                "tags: bad value type for key `{key}`, JSON object and array is not allowed`"
+            )
+
+
+def validate_run_result_consistency(userres: Any) -> None:
+    """
+    Read Run from database, based on userres["run_id"].
+
+    Check for consistency between Result data and Run data.
+
+    Raise BenchmarkResultValidationError in case there is a mismatch.
+
+    This is a noop if the Run does not exist yet.
+
+    Be sure to call this (latest) right before writing a BenchmarkResult object
+    into the database, and after having created the Run object in the database.
+    """
+    run = Session.scalars(select(Run).where(Run.id == userres["run_id"])).first()
+
+    if run is None:
+        return
+
+    # TODO: specification -- if userres.get("github") is None and if the Run
+    # has associated commit information -- then consider this as a conflict or
+    # not? what about branch name and PR number?
+
+    # The property should not be called "github", this confuses me each
+    # time I deal with that.
+    if userres.get("github") is not None:
+        chrun = run.commit.hash
+        chresult = userres["github"]["commit"]
+        if chrun != chresult:
+            raise BenchmarkResultValidationError(
+                f"Result refers to commit hash '{chresult}', but Run '{run.id}' "
+                f"refers to commit hash '{chrun}'"
+            )
+
+        # Cannot do this yet, this is too complicated as of None/empty
+        # string confusion repo_url_run = run.commit.repo_url
+        # repo_url_result = userres["github"]["repository"] if
+        # repo_url_run != repo_url_result: raise
+        #     BenchmarkResultValidationError( f"Result refers to
+        #         repository URL '{repo_url_result}', but Run
+        #         '{run.id}' " f"refers to repository URL
+        #     '{repo_url_run}'" )
 
 
 s.Index("benchmark_result_run_id_index", BenchmarkResult.run_id)

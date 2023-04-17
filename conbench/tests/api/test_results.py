@@ -562,6 +562,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
 
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
+
         location = "http://localhost/api/benchmarks/%s/" % new_id
         stats = self.valid_payload_with_iteration_error["stats"]
         stats["data"] = [float(x) if x is not None else None for x in stats["data"]]
