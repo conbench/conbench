@@ -8,11 +8,12 @@ import marshmallow
 import numpy as np
 import sigfig
 import sqlalchemy as s
-from sqlalchemy import CheckConstraint as check
+from sqlalchemy import select, CheckConstraint as check
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, relationship
 
 import conbench.util
+from conbench.db import Session
 
 from ..entities._comparator import z_improvement, z_regression
 from ..entities._entity import (
@@ -141,7 +142,8 @@ class BenchmarkResult(Base, EntityMixin):
                     "`error` property required when `stats` property not present"
                 )
 
-        run = Run.first(id=userres["run_id"])
+        run = Session.scalars(select(Run).where(Run.id == userres["run_id"])).first()
+
         if run is not None:
             # The property should not be called "github", this confuses me each
             # time I deal with that.
