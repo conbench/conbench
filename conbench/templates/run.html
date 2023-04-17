@@ -53,7 +53,6 @@
   <div class="col-md-12">
     <h4>Benchmark results in Run</h4>
     <table id="benchmarks" class="table table-hover">
-      <!-- does not display right: <caption>Benchmarks{% include 'units-tooltip.html' %}</caption>-->
       <thead>
         <tr>
           <th scope="col">Date</th>
@@ -198,7 +197,6 @@
     column_search_implementation($('#benchmarks'));
 
     $(document).ready(function() {
-      $('#unit-tooltip').tooltip()
       {% if run_id %}
         $("#run-form").find("#delete").attr("type", "button");
         $("#run-form").find("#delete").attr("data-bs-toggle", "modal");
