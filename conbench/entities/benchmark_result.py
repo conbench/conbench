@@ -138,32 +138,6 @@ class BenchmarkResult(Base, EntityMixin):
             )
 
         validate_and_augment_result_tags(userres)
-        run = Session.scalars(select(Run).where(Run.id == userres["run_id"])).first()
-
-        if run is not None:
-            # TODO: specification -- if userres.get("github") is None and if
-            # the Run has associated commit information -- then consider this
-            # as a conflict or not? what about branch name and PR number?
-
-            # The property should not be called "github", this confuses me each
-            # time I deal with that.
-            if userres.get("github") is not None:
-                chrun = run.commit.hash
-                chresult = userres["github"]["commit"]
-                if chrun != chresult:
-                    raise BenchmarkResultValidationError(
-                        f"Result refers to commit hash '{chresult}', but Run '{run.id}' "
-                        f"refers to commit hash '{chrun}'"
-                    )
-
-                # Cannot do this yet, this is too complicated as of None/empty
-                # string confusion repo_url_run = run.commit.repo_url
-                # repo_url_result = userres["github"]["repository"] if
-                # repo_url_run != repo_url_result: raise
-                #     BenchmarkResultValidationError( f"Result refers to
-                #         repository URL '{repo_url_result}', but Run
-                #         '{run.id}' " f"refers to repository URL
-                #     '{repo_url_run}'" )
 
         # Temporary: keep name `data` -- it's unfortunate that we have the name
         # `data` here while also having key(s) in the dict(s) that are called
@@ -592,6 +566,49 @@ def validate_and_augment_result_tags(userres: Any):
             raise BenchmarkResultValidationError(
                 "tags: bad value type for key `{key}`, JSON object and array is not allowed`"
             )
+
+
+def validate_run_result_consistency(userres: Any) -> None:
+    """
+    Read Run from database, based on userres["run_id"].
+
+    Check for consistency between Result data and Run data.
+
+    Raise BenchmarkResultValidationError in case there is a mismatch.
+
+    This is a noop if the Run does not exist yet.
+
+    Be sure to call this (latest) right before writing a BenchmarkResult object
+    into the database, and after having created the Run object in the database.
+    """
+    run = Session.scalars(select(Run).where(Run.id == userres["run_id"])).first()
+
+    if run is None:
+        return
+
+    # TODO: specification -- if userres.get("github") is None and if the Run
+    # has associated commit information -- then consider this as a conflict or
+    # not? what about branch name and PR number?
+
+    # The property should not be called "github", this confuses me each
+    # time I deal with that.
+    if userres.get("github") is not None:
+        chrun = run.commit.hash
+        chresult = userres["github"]["commit"]
+        if chrun != chresult:
+            raise BenchmarkResultValidationError(
+                f"Result refers to commit hash '{chresult}', but Run '{run.id}' "
+                f"refers to commit hash '{chrun}'"
+            )
+
+        # Cannot do this yet, this is too complicated as of None/empty
+        # string confusion repo_url_run = run.commit.repo_url
+        # repo_url_result = userres["github"]["repository"] if
+        # repo_url_run != repo_url_result: raise
+        #     BenchmarkResultValidationError( f"Result refers to
+        #         repository URL '{repo_url_result}', but Run
+        #         '{run.id}' " f"refers to repository URL
+        #     '{repo_url_run}'" )
 
 
 s.Index("benchmark_result_run_id_index", BenchmarkResult.run_id)
