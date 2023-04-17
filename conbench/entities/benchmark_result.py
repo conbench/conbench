@@ -130,12 +130,6 @@ class BenchmarkResult(Base, EntityMixin):
         Raises BenchmarkResultValidationError, exc message is expected to be
         emitted to the HTTP client in a Bad Request response.
         """
-        # See: https://github.com/conbench/conbench/issues/935
-        if "name" not in userres["tags"]:
-            raise BenchmarkResultValidationError(
-                "`name` property must be present in `tags` "
-                "(the name of the conceptual benchmark)"
-            )
 
         validate_and_augment_result_tags(userres)
 
