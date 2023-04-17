@@ -1,7 +1,9 @@
+import logging
 import math
 import statistics
 from datetime import datetime, timezone
-from typing import List, Optional
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 import flask as f
 import marshmallow
@@ -156,22 +158,22 @@ class BenchmarkResult(Base, EntityMixin):
                     "status": "Partial result: not all iterations completed"
                 }
 
+        # This is going to be the structure based on which we will do
+        # DB insertion.
+        benchmark_result_data = {}
+        benchmark_result_data["error"] = result_error_for_db
 
         # Temporary: keep name `data` -- it's unfortunate that we have the name
         # `data` here while also having key(s) in the dict(s) that are called
         # `data`. Assign a recognizable name to the big, outest, user-given
         # object: userres is not ideal, but a start.
         data = userres
+
+        # At this point, assume that data["tags"] is a flat dictionary with
+        # keys being non-empty strings, and values being non-empty strings.
         tags = data["tags"]
         has_error = "error" in data
         has_stats = "stats" in data
-
-        # defaults
-        benchmark_result_data = {}
-
-        # Note(JP): if no data was provided, should this stay `True`?
-        # We will see. https://github.com/conbench/conbench/issues/803.
-        any_errored_iteration = True
 
         if has_stats:
             # Note(JP): this is the result of marshmallow
@@ -245,18 +247,6 @@ class BenchmarkResult(Base, EntityMixin):
                     if benchmark_result_data.get(field) is None:
                         benchmark_result_data[field] = calculated_result_data[field]
 
-        if has_error:
-            benchmark_result_data["error"] = data["error"]
-
-        # If there was no explicit error *and* at least one iteration failed aren't complete, we should add an error
-        if (
-            benchmark_result_data.get("error", None) is None
-            and any_errored_iteration is True
-        ):
-            benchmark_result_data["error"] = {
-                "status": "Partial result: not all iterations completed"
-            }
-
         # See https://github.com/conbench/conbench/issues/935,
         # name is guaranteed to be set.
         benchmark_name = tags.pop("name")
@@ -289,6 +279,10 @@ class BenchmarkResult(Base, EntityMixin):
                     "has_errors": has_error,
                 }
             )
+            # The above's `create()` might fail (race condition), in which case
+            # we can re-read, but then we also have to call
+            # `validate_run_result_consistency(userres)` one more time (because
+            # _we_ are not the ones who created the Run).
 
         benchmark_result_data["run_id"] = data["run_id"]
         benchmark_result_data["batch_id"] = data["batch_id"]
@@ -309,6 +303,7 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_result_data["info_id"] = info.id
         benchmark_result_data["context_id"] = context.id
         benchmark_result = BenchmarkResult(**benchmark_result_data)
+
         benchmark_result.save()
 
         return benchmark_result
