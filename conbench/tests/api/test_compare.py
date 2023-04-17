@@ -6,6 +6,7 @@ from ...api._examples import (
     _api_compare_list,
 )
 from ...api.compare import _get_pairs
+from ...entities._comparator import _round
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
@@ -27,8 +28,8 @@ def _fake_compare_entity(benchmark_result_id, case_id, context_id, error=None):
         "value": "some_value",
         "error": error,
         "unit": "some_unit",
-        "benchmark": "some_benchmark",
-        "batch": "some_batch",
+        "case_permutation": "some_benchmark",
+        "benchmark_name": "some_batch",
         "language": "some_language",
         "tags": "some_tags",
         "z_score": "some_zscore",
@@ -253,19 +254,16 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
                 "name": name,
             },
         )
-        expected.update(
-            {
-                "baseline": "3.000 s",
-                "contender": "20.00 s",
-                "change": "-566.667%",
-                "regression": True,
-                "baseline_z_score": None,
-                "contender_z_score": -_fixtures.Z_SCORE_UP,
-                "contender_z_regression": True,
-            }
+        expected["baseline"].update({"value": 3.0})
+        expected["contender"].update({"value": 20.0})
+        expected["analysis"]["pairwise"].update(
+            {"percent_change": -566.7, "regression_indicated": True}
+        )
+        expected["analysis"]["lookback_z_score"].update(
+            {"z_score": _round(-_fixtures.Z_SCORE_UP), "regression_indicated": True}
         )
         if threshold_z:
-            expected["threshold_z"] = float(threshold_z)
+            expected["analysis"]["lookback_z_score"]["z_threshold"] = float(threshold_z)
         self.assert_200_ok(response, expected)
 
     def test_compare_with_error(self, client):
@@ -295,17 +293,14 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
                 "name": name,
             },
         )
-        expected.update(
-            {
-                "baseline": None,
-                "baseline_error": error,
-                "contender": "20.00 s",
-                "change": "0.000%",
-                "regression": False,
-                "baseline_z_score": None,
-                "contender_z_score": None,
-                "contender_z_regression": False,
-            }
+
+        expected["baseline"].update({"value": None, "error": error})
+        expected["contender"].update({"value": 20.0})
+        expected["analysis"]["pairwise"].update(
+            {"percent_change": 0.0, "regression_indicated": False}
+        )
+        expected["analysis"]["lookback_z_score"].update(
+            {"z_score": None, "regression_indicated": False}
         )
 
         self.assert_200_ok(response, expected)
@@ -319,11 +314,11 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
         ["baseline_result_id", "expected_z_score"],
         [
             # result on the fork point commit
-            (5, -2.1857497724635935),
+            (5, -2.186),
             # result on the parent commit
-            (6, -2.8246140882627757),
+            (6, -2.825),
             # result on the head commit of the default branch
-            (8, 0.12045310863100521),
+            (8, 0.1205),
         ],
     )
     def test_compare_different_baselines(
@@ -337,7 +332,9 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
             f"/api/compare/benchmark-results/{baseline_result.id}...{contender_result.id}/"
         )
         assert response.status_code == 200, response.status_code
-        assert response.json["contender_z_score"] == expected_z_score
+        assert (
+            response.json["analysis"]["lookback_z_score"]["z_score"] == expected_z_score
+        )
 
 
 class TestCompareRunsGet(_asserts.GetEnforcer):
@@ -430,8 +427,9 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             ],
         )
         for e in expected:
+            e["analysis"]["lookback_z_score"]["z_score"] = None
             if threshold_z:
-                e["threshold_z"] = float(threshold_z)
+                e["analysis"]["lookback_z_score"]["z_threshold"] = float(threshold_z)
 
         self.assert_200_ok(response, None, contains=expected[0])
         self.assert_200_ok(response, None, contains=expected[1])
@@ -480,19 +478,15 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                 },
             ],
         )
-        expected[1].update(
-            {
-                "baseline": None,
-                "baseline_error": error,
-                "contender": None,
-                "contender_error": error,
-                "change": "0.000%",
-                "regression": False,
-                "baseline_z_score": None,
-                "contender_z_score": None,
-                "contender_z_regression": False,
-                "unit": "unknown",
-            }
+        expected[0]["analysis"]["lookback_z_score"]["z_score"] = None
+        expected[1]["unit"] = "unknown"
+        expected[1]["baseline"].update({"value": None, "error": error})
+        expected[1]["contender"].update({"value": None, "error": error})
+        expected[1]["analysis"]["pairwise"].update(
+            {"percent_change": 0.0, "regression_indicated": False}
+        )
+        expected[1]["analysis"]["lookback_z_score"].update(
+            {"z_score": None, "regression_indicated": False}
         )
         self.assert_200_ok(response, None, contains=expected[0])
         self.assert_200_ok(response, None, contains=expected[1])
@@ -506,11 +500,11 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         ["baseline_result_id", "expected_z_score"],
         [
             # result on the fork point commit
-            (5, -2.1857497724635935),
+            (5, -2.186),
             # result on the parent commit
-            (6, -2.8246140882627757),
+            (6, -2.825),
             # result on the head commit of the default branch
-            (8, 0.12045310863100521),
+            (8, 0.1205),
         ],
     )
     def test_compare_different_baselines(
@@ -524,7 +518,10 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             f"/api/compare/runs/{baseline_run_id}...{contender_run_id}/"
         )
         assert response.status_code == 200, response.status_code
-        assert response.json[0]["contender_z_score"] == expected_z_score
+        assert (
+            response.json[0]["analysis"]["lookback_z_score"]["z_score"]
+            == expected_z_score
+        )
 
 
 class TestCompareCommitsGet(_asserts.GetEnforcer):

@@ -68,19 +68,21 @@ matching fields between baseline and contender are aligned and mismatched fields
             {% for c in comparisons %}
               <tr>
                 <td>
-                  {% if c.contender_z_score %}
-                    {{ "%.3f"|format(c.contender_z_score) }} z
+                  {% if c.analysis.lookback_z_score.z_score %}{{ c.analysis.lookback_z_score.z_score }} z{% endif %}
+                  {% if c.analysis.lookback_z_score.regression_indicated %}
+                    <span class="glyphicon glyphicon-arrow-down"></span>
                   {% endif %}
-                  {% if c.contender_z_regression %}<span class="glyphicon glyphicon-arrow-down"></span>{% endif %}
-                  {% if c.contender_z_improvement %}<span class="glyphicon glyphicon-arrow-up"></span>{% endif %}
+                  {% if c.analysis.lookback_z_score.improvement_indicated %}
+                    <span class="glyphicon glyphicon-arrow-up"></span>
+                  {% endif %}
                 </td>
                 <td>
-                  {{ c.change }}
-                  {% if c.regression %}<span class="glyphicon glyphicon-arrow-down"></span>{% endif %}
-                  {% if c.improvement %}<span class="glyphicon glyphicon-arrow-up"></span>{% endif %}
+                  {{ c.analysis.pairwise.percent_change }}%
+                  {% if c.analysis.pairwise.regression_indicated %}<span class="glyphicon glyphicon-arrow-down"></span>{% endif %}
+                  {% if c.analysis.pairwise.improvement_indicated %}<span class="glyphicon glyphicon-arrow-up"></span>{% endif %}
                 </td>
-                <td>{{ c.baseline }}</td>
-                <td>{{ c.contender }}</td>
+                <td>{{ c.baseline.value }} {{ c.unit }}</td>
+                <td>{{ c.contender.value }} {{ c.unit }}</td>
               </tr>
             {% endfor %}
           </tbody>

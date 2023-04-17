@@ -2,81 +2,117 @@
     "status_code": 200,
     "data": [
         {
-            "baseline": "0.03637 s",
-            "baseline_batch_id": "some-batch-uuid-1",
-            "baseline_error": null,
-            "baseline_id": "some-benchmark-uuid-1",
-            "baseline_run_id": "some-run-uuid-1",
-            "baseline_z_improvement": false,
-            "baseline_z_regression": false,
-            "baseline_z_score": null,
-            "batch": "file-read",
-            "benchmark": "snappy, nyctaxi_sample, parquet, arrow",
-            "change": "0.000%",
-            "contender": "0.03637 s",
-            "contender_batch_id": "some-batch-uuid-2",
-            "contender_error": null,
-            "contender_id": "some-benchmark-uuid-3",
-            "contender_run_id": "some-run-uuid-2",
-            "contender_z_improvement": false,
-            "contender_z_regression": true,
-            "contender_z_score": null,
-            "improvement": false,
-            "language": "Python",
+            "unit": "s",
             "less_is_better": true,
-            "regression": true,
-            "tags": {
-                "compression": "snappy",
-                "cpu_count": 2,
-                "dataset": "nyctaxi_sample",
-                "file_type": "parquet",
-                "input_type": "arrow",
-                "name": "file-read"
+            "baseline": {
+                "benchmark_name": "file-read",
+                "case_permutation": "snappy, nyctaxi_sample, parquet, arrow",
+                "language": "Python",
+                "value": 0.03637,
+                "error": null,
+                "benchmark_result_id": "some-benchmark-uuid-1",
+                "batch_id": "some-batch-uuid-1",
+                "run_id": "some-run-uuid-1",
+                "tags": {
+                    "compression": "snappy",
+                    "cpu_count": 2,
+                    "dataset": "nyctaxi_sample",
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "name": "file-read"
+                }
             },
-            "threshold": "5.000%",
-            "threshold_z": 5,
-            "unit": "s"
+            "contender": {
+                "benchmark_name": "file-read",
+                "case_permutation": "snappy, nyctaxi_sample, parquet, arrow",
+                "language": "Python",
+                "value": 0.03637,
+                "error": null,
+                "benchmark_result_id": "some-benchmark-uuid-3",
+                "batch_id": "some-batch-uuid-2",
+                "run_id": "some-run-uuid-2",
+                "tags": {
+                    "compression": "snappy",
+                    "cpu_count": 2,
+                    "dataset": "nyctaxi_sample",
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "name": "file-read"
+                }
+            },
+            "analysis": {
+                "pairwise": {
+                    "percent_change": 0.0,
+                    "percent_threshold": 5.0,
+                    "regression_indicated": true,
+                    "improvement_indicated": false
+                },
+                "lookback_z_score": {
+                    "z_threshold": 5,
+                    "z_score": null,
+                    "regression_indicated": true,
+                    "improvement_indicated": false
+                }
+            }
         },
         {
-            "baseline": "0.03637 s",
-            "baseline_batch_id": "some-batch-uuid-1",
-            "baseline_error": null,
-            "baseline_id": "some-benchmark-uuid-2",
-            "baseline_run_id": "some-run-uuid-1",
-            "baseline_z_improvement": false,
-            "baseline_z_regression": false,
-            "baseline_z_score": null,
-            "batch": "file-write",
-            "benchmark": "snappy, nyctaxi_sample, csv, arrow",
-            "change": "0.000%",
-            "contender": "0.03637 s",
-            "contender_batch_id": "some-batch-uuid-2",
-            "contender_error": {
-                "fatal": true,
-                "message": "Something went wrong",
-                "regression": false,
-                "stack_trace": "Traceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\nAssertionError"
-            },
-            "contender_id": "some-benchmark-uuid-4",
-            "contender_run_id": "some-run-uuid-2",
-            "contender_z_improvement": false,
-            "contender_z_regression": false,
-            "contender_z_score": null,
-            "improvement": false,
-            "language": "Python",
+            "unit": "s",
             "less_is_better": true,
-            "regression": false,
-            "tags": {
-                "compression": "snappy",
-                "cpu_count": 2,
-                "dataset": "nyctaxi_sample",
-                "file_type": "parquet",
-                "input_type": "arrow",
-                "name": "file-write"
+            "baseline": {
+                "benchmark_name": "file-write",
+                "case_permutation": "snappy, nyctaxi_sample, csv, arrow",
+                "language": "Python",
+                "value": 0.03637,
+                "error": null,
+                "benchmark_result_id": "some-benchmark-uuid-2",
+                "batch_id": "some-batch-uuid-1",
+                "run_id": "some-run-uuid-1",
+                "tags": {
+                    "compression": "snappy",
+                    "cpu_count": 2,
+                    "dataset": "nyctaxi_sample",
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "name": "file-write"
+                }
             },
-            "threshold": "5.000%",
-            "threshold_z": 5,
-            "unit": "s"
+            "contender": {
+                "benchmark_name": "file-write",
+                "case_permutation": "snappy, nyctaxi_sample, csv, arrow",
+                "language": "Python",
+                "value": 0.03637,
+                "error": {
+                    "fatal": true,
+                    "message": "Something went wrong",
+                    "regression": false,
+                    "stack_trace": "Traceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\nAssertionError"
+                },
+                "benchmark_result_id": "some-benchmark-uuid-4",
+                "batch_id": "some-batch-uuid-2",
+                "run_id": "some-run-uuid-2",
+                "tags": {
+                    "compression": "snappy",
+                    "cpu_count": 2,
+                    "dataset": "nyctaxi_sample",
+                    "file_type": "parquet",
+                    "input_type": "arrow",
+                    "name": "file-write"
+                }
+            },
+            "analysis": {
+                "pairwise": {
+                    "percent_change": 0.0,
+                    "percent_threshold": 5.0,
+                    "regression_indicated": false,
+                    "improvement_indicated": false
+                },
+                "lookback_z_score": {
+                    "z_threshold": 5,
+                    "z_score": null,
+                    "regression_indicated": false,
+                    "improvement_indicated": false
+                }
+            }
         }
     ]
 }

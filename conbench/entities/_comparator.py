@@ -1,18 +1,16 @@
 import decimal
+from typing import Optional
+
+import sigfig
 
 from ..entities._entity import to_float
-from ..units import formatter_for_unit
 
 CHANGE = 5.0  # percent changed threshold
 Z_SCORE = 5.0  # z-score threshold
 
 
-def fmt(value):
-    return "{:.3f}".format(value) if value is not None else None
-
-
-def change_fmt(value):
-    return "{:.3%}".format(value)
+def _round(value: Optional[float]) -> Optional[float]:
+    return sigfig.round(value, sigfigs=4, warn=False) if value is not None else None
 
 
 def _less_is_better(unit):
@@ -44,8 +42,8 @@ class BenchmarkResult:
         unit,
         value,
         error,
-        batch,
-        benchmark,
+        benchmark_name,
+        case_permutation,
         language,
         tags,
         z_score,
@@ -55,8 +53,8 @@ class BenchmarkResult:
         self.batch_id = batch_id
         self.run_id = run_id
         self.unit = unit
-        self.batch = batch
-        self.benchmark = benchmark
+        self.benchmark_name = benchmark_name
+        self.case_permutation = case_permutation
         self.value = decimal.Decimal(value) if value else None
         self.error = error
         self.tags = tags
@@ -72,19 +70,19 @@ class BenchmarkResultComparator:
         self.threshold_z = float(threshold_z) if threshold_z is not None else Z_SCORE
 
     @property
-    def batch(self):
+    def benchmark_name(self):
         if self.baseline is not None:
-            return self.baseline.batch
+            return self.baseline.benchmark_name
         if self.contender is not None:
-            return self.contender.batch
+            return self.contender.benchmark_name
         return "unknown"
 
     @property
-    def benchmark(self):
+    def case_permutation(self):
         if self.baseline is not None:
-            return self.baseline.benchmark
+            return self.baseline.case_permutation
         if self.contender is not None:
-            return self.contender.benchmark
+            return self.contender.case_permutation
         return "unknown"
 
     @property
@@ -175,71 +173,54 @@ class BenchmarkResultComparator:
             return self.contender.tags
         return "unknown"
 
-    def formatted(self):
-        fmt_unit = formatter_for_unit(self.unit)
-        baseline = self.baseline.value if self.baseline else None
-        contender = self.contender.value if self.contender else None
-        return {
-            "batch": self.batch,
-            "benchmark": self.benchmark,
-            "language": self.language,
-            "change": change_fmt(self.change),
-            "threshold": fmt(self.threshold) + "%",
-            "regression": self.regression,
-            "improvement": self.improvement,
-            "threshold_z": to_float(self.threshold_z),
-            "baseline_z_score": to_float(self.baseline_z_score),
-            "contender_z_score": to_float(self.contender_z_score),
-            "baseline_z_regression": self.baseline_z_regression,
-            "baseline_z_improvement": self.baseline_z_improvement,
-            "contender_z_regression": self.contender_z_regression,
-            "contender_z_improvement": self.contender_z_improvement,
-            "baseline": fmt_unit(baseline, self.unit),
-            "contender": fmt_unit(contender, self.unit),
-            "baseline_error": self.baseline.error if self.baseline else None,
-            "contender_error": self.contender.error if self.contender else None,
-            "baseline_id": self.baseline.id if self.baseline else None,
-            "contender_id": self.contender.id if self.contender else None,
-            "baseline_batch_id": self.baseline.batch_id if self.baseline else None,
-            "contender_batch_id": self.contender.batch_id if self.contender else None,
-            "baseline_run_id": self.baseline.run_id if self.baseline else None,
-            "contender_run_id": self.contender.run_id if self.contender else None,
-            "unit": self.unit,
-            "less_is_better": self.less_is_better,
-            "tags": self.tags,
-        }
-
     def compare(self):
         baseline = self.baseline.value if self.baseline else None
         contender = self.contender.value if self.contender else None
         return {
-            "batch": self.batch,
-            "benchmark": self.benchmark,
-            "language": self.language,
-            "change": fmt(self.change * 100),
-            "threshold": fmt(self.threshold),
-            "regression": self.regression,
-            "improvement": self.improvement,
-            "threshold_z": to_float(self.threshold_z),
-            "baseline_z_score": to_float(self.baseline_z_score),
-            "contender_z_score": to_float(self.contender_z_score),
-            "baseline_z_regression": self.baseline_z_regression,
-            "baseline_z_improvement": self.baseline_z_improvement,
-            "contender_z_regression": self.contender_z_regression,
-            "contender_z_improvement": self.contender_z_improvement,
-            "baseline": fmt(baseline),
-            "contender": fmt(contender),
-            "baseline_error": self.baseline.error if self.baseline else None,
-            "contender_error": self.contender.error if self.contender else None,
-            "baseline_id": self.baseline.id if self.baseline else None,
-            "contender_id": self.contender.id if self.contender else None,
-            "baseline_batch_id": self.baseline.batch_id if self.baseline else None,
-            "contender_batch_id": self.contender.batch_id if self.contender else None,
-            "baseline_run_id": self.baseline.run_id if self.baseline else None,
-            "contender_run_id": self.contender.run_id if self.contender else None,
             "unit": self.unit,
             "less_is_better": self.less_is_better,
-            "tags": self.tags,
+            "baseline": {
+                "benchmark_name": self.baseline.benchmark_name,
+                "case_permutation": self.baseline.case_permutation,
+                "language": self.baseline.language,
+                "value": _round(to_float(baseline)),
+                "error": self.baseline.error,
+                "benchmark_result_id": self.baseline.id,
+                "batch_id": self.baseline.batch_id,
+                "run_id": self.baseline.run_id,
+                "tags": self.baseline.tags,
+            }
+            if self.baseline
+            else None,
+            "contender": {
+                "benchmark_name": self.contender.benchmark_name,
+                "case_permutation": self.contender.case_permutation,
+                "language": self.contender.language,
+                "value": _round(to_float(contender)),
+                "error": self.contender.error,
+                "benchmark_result_id": self.contender.id,
+                "batch_id": self.contender.batch_id,
+                "run_id": self.contender.run_id,
+                "tags": self.contender.tags,
+            }
+            if self.contender
+            else None,
+            "analysis": {
+                "pairwise": {
+                    "percent_change": _round(to_float(self.change * 100)),
+                    "percent_threshold": to_float(self.threshold),
+                    "regression_indicated": self.regression,
+                    "improvement_indicated": self.improvement,
+                },
+                "lookback_z_score": {
+                    "z_threshold": to_float(self.threshold_z),
+                    "z_score": _round(to_float(self.contender.z_score))
+                    if self.contender
+                    else None,
+                    "regression_indicated": self.contender_z_regression,
+                    "improvement_indicated": self.contender_z_improvement,
+                },
+            },
         }
 
 
@@ -248,16 +229,6 @@ class BenchmarkResultListComparator:
         self.pairs = pairs
         self.threshold = float(threshold) if threshold is not None else CHANGE
         self.threshold_z = float(threshold_z) if threshold_z is not None else Z_SCORE
-
-    def formatted(self):
-        for pair in self.pairs.values():
-            baseline, contender = pair.get("baseline"), pair.get("contender")
-            yield BenchmarkResultComparator(
-                baseline,
-                contender,
-                self.threshold,
-                self.threshold_z,
-            ).formatted()
 
     def compare(self):
         for pair in self.pairs.values():

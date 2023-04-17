@@ -102,92 +102,71 @@
         </thead>
         <tbody>
           {% for c in comparisons %}
-            {% if (c.contender is not none or c.contender_error) and (c.baseline is not none or c.baseline_error) %}
+            {% if (c.contender is not none) and (c.baseline is not none) %}
               <tr>
-                {% if c.contender_z_score is not none %}
-                  {% if c.contender_z_regression %}
-                    <td style="color: #ff7c43;">{{ "%.3f"|format(c.contender_z_score) }}</td>
+                {% if c.analysis.lookback_z_score.z_score is not none %}
+                  {% if c.analysis.lookback_z_regression_indicated %}
+                    <td style="color: #ff7c43;">{{ c.analysis.lookback_z_score.z_score }}</td>
                   {% elif c.contender_z_improvement %}
-                    <td style="color: #61B329;">{{ "%.3f"|format(c.contender_z_score) }}</td>
+                    <td style="color: #61B329;">{{ c.analysis.lookback_z_score.z_score }}</td>
                   {% else %}
-                    <td>{{ "%.3f"|format(c.contender_z_score) }}</td>
+                    <td>{{ c.analysis.lookback_z_score.z_score }}</td>
                   {% endif %}
                 {% else %}
                   <td></td>
                 {% endif %}
-                {% if c.contender is not none and c.baseline is not none %}
-                  <td>{{ c.change }}</td>
+                {% if (c.contender.value is not none) and (c.baseline.value is not none) %}
+                  <td>{{ c.analysis.pairwise.percent_change }}%</td>
                 {% else %}
                   <td>
                   </td>
                 {% endif %}
                 <td>
-                  {{ c.language }}
+                  {{ c.baseline.language }}
                 </td>
                 <td>
-                  {% if type == "batch" %}
-                    <div>
-                      {{ c.batch }}
-                    </div>
-                  {% else %}
-                    {% if c.contender is not none and c.baseline is not none %}
-                      <a href="{{ c.compare_batches_url }}">
-                        <div>
-                          {{ c.batch }}
-                        </div>
-                      </a>
-                    {% else %}
-                      <div>
-                        {{ c.batch }}
-                      </div>
-                    {% endif %}
-                  {% endif %}
+                  <div>
+                    {{ c.baseline.benchmark_name }}
+                  </div>
                 </td>
                 <td>
-                  {% if (c.contender is not none or c.contender_error) and (c.baseline is not none or c.baseline_error) %}
+                  {% if (c.contender.value is not none or c.contender_error) and (c.baseline.value is not none or c.baseline_error) %}
                     <a href="{{ c.compare_benchmarks_url }}">
                       <div>
-                        {{ c.benchmark }}
+                        {{ c.baseline.case_permutation }}
                       </div>
                     </a>
                   {% else %}
                     <div>
-                      {{ c.benchmark }}
                     </div>
                   {% endif %}
                 </td>
-                {% if c.baseline_error is not none %}
+                {% if c.baseline.error is not none %}
                   <td>
-                    <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.baseline_id) }}">
+                    <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.baseline.benchmark_result_id) }}">
                       <i class="glyphicon glyphicon-exclamation-sign text-danger"
                          data-toggle="tooltip"
                          data-placement="top"
                          title="Has error">
                       </i></a>
                     </td>
-                  {% elif c.baseline is none %}
-                    <td>
-                    </td>
                   {% else %}
                     <td style="white-space: nowrap;">
-                      {{ c.baseline }}
+                      {{ c.baseline.value }} {{ c.unit }}
                     </td>
                   {% endif %}
-                  {% if c.contender_error is not none %}
+                  {% if c.contender.error is not none %}
                     <td>
-                      <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.contender_id) }}">
+                      <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.contender.benchmark_result_id) }}">
                         <i class="glyphicon glyphicon-exclamation-sign text-danger"
                            data-toggle="tooltip"
                            data-placement="top"
                            title="Has error">
                         </i></a>
                       </td>
-                    {% elif c.contender is none %}
-                      <td>
-                      </td>
                     {% else %}
                       <td style="white-space: nowrap;">
-                        {{ c.contender }}
+                        {{ c.contender.value }} {{ c.unit }}
                       </td>
                     {% endif %}
                   </tr>
