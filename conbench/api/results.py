@@ -294,6 +294,8 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
 benchmark_entity_view = BenchmarkEntityAPI.as_view("benchmark")
 benchmark_list_view = BenchmarkListAPI.as_view("benchmarks")
 
+# Phase these out, at some point.
+# https://github.com/conbench/conbench/issues/972
 rule(
     "/benchmarks/",
     view_func=benchmark_list_view,
@@ -301,6 +303,19 @@ rule(
 )
 rule(
     "/benchmarks/<benchmark_result_id>/",
+    view_func=benchmark_entity_view,
+    methods=["GET", "DELETE", "PUT"],
+)
+
+# Towards the more explicit route path naming":
+# https://github.com/conbench/conbench/issues/972
+rule(
+    "/benchmark-results/",
+    view_func=benchmark_list_view,
+    methods=["GET", "POST"],
+)
+rule(
+    "/benchmark=results/<benchmark_result_id>/",
     view_func=benchmark_entity_view,
     methods=["GET", "DELETE", "PUT"],
 )
