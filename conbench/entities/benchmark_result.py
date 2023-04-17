@@ -238,7 +238,10 @@ class BenchmarkResult(Base, EntityMixin):
         # Also note: this pulls the `name=xx` key/value pair out of tags.
         name = tags.pop("name")
 
-        case = get_case_or_create({"name": name, "tags": tags})
+        # See https://github.com/conbench/conbench/issues/935,
+        # name is guaranteed to be set.
+        benchmark_name = tags.pop("name")
+        case = get_case_or_create({"name": benchmark_name, "tags": tags})
         context = get_context_or_create({"tags": data["context"]})
         info = get_info_or_create({"tags": data["info"]})
 
