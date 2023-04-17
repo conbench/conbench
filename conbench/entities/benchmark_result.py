@@ -143,51 +143,58 @@ class BenchmarkResult(Base, EntityMixin):
         validate_and_augment_result_tags(userres)
         validate_run_result_consistency(userres)
 
+        # Start populating the dict that is used for DB insertion later.
+        result_data_for_db: Dict = {}
+
         result_error_for_db: Optional[Dict] = None
-
-        # Handle 'error' scenarios. Obvious: user-given error object set.
-        if "error" in userres:
-            # `data["error"]` is a JSON object.
-            result_error_for_db = userres["error"]
-
-        # Now, check for a more subtle error condition, based on the per-
-        # iteration samples. Rely on `stats` key to exist (see checks above).
-        elif "stats" in userres and do_iteration_samples_look_like_error(
-            userres["stats"]["data"]
-        ):
-            # User did not set `error`, but the number sequence indicates
-            # that this result is to be considered 'errored'. Set a generic
-            # error message.
-            result_error_for_db = {
-                "status": "Partial result: not all iterations completed"
-            }
 
         # The dictionary based on which the DB insert will be performed.
         benchmark_result_data: Dict = {}
 
-        # Only insert `error` key if there is an error object. In JSON, error:
-        # null still means that the benchmark is errored (at least some
-        # business logic treat it as such.)
-        if result_error_for_db is not None:
-            benchmark_result_data["error"] = result_error_for_db
+        # Handle 'error' scenarios. Obvious: user-given error object set.
+        if "error" in userres:
+            # Only insert `error` key if there is an error object. In JSON,
+            # error: null still means that the benchmark is errored (at least
+            # some business logic treat it as such.)
+            # This is a JSON object (schema-enforced).
+            benchmark_result_data["error"] = userres["error"]
 
-        # Temporary: keep name `data` -- it's unfortunate that we have the name
-        # `data` here while also having key(s) in the dict(s) that are called
-        # `data`. Assign a recognizable name to the big, outest, user-given
-        # object: userres is not ideal, but a start.
-        # data = userres
+        # Check for a more subtle error condition based on the per-iteration
+        # samples. Rely if "error" is not present then "stats" is present as a
+        # key in this dictionary -- this is schema-enforced.
+        elif do_iteration_samples_look_like_error(userres["stats"]["data"]):
+            # User did not set `error`, but the number sequence indicates
+            # that this result is to be considered 'errored'. Set a generic
+            # error message.
+            benchmark_result_data["error"] = {
+                "status": "Partial result: not all iterations completed"
+            }
+            # Copy the entire user-given `stats` object. Maybe the data is
+            # helpful for debugging. In `error` state, the benchmark result is
+            # not used for any kind of analysis, which is why it's probably ok
+            # to store the user-given 'stats' object w/o deeper validation.
+            benchmark_result_data.update(userres["stats"])
+        else:
+            # This makes sure that we call process_samples_build_agg() only
+            # do_iteration_samples_look_like_error() returned False. The
+            #  deepcopy is just a matter of caution here.
+            result_stats_data_for_db = process_samples_build_agg(
+                copy.deepcopy(userres["stats"])
+            )
 
+            # The iterations samples looked good. We validated them, and we
+            # potentially did rebuild aggregates. Merge dict
+            # `result_stats_data_for_db` on top of dicht
+            # `benchmark_result_data`, overwriting upon conflict.
+            result_data_for_db = result_data_for_db | result_stats_data_for_db
+
+        # tmp rename
+        benchmark_result_data = result_data_for_db
+
+        # See https://github.com/conbench/conbench/issues/935,
         # At this point, assume that data["tags"] is a flat dictionary with
         # keys being non-empty strings, and values being non-empty strings.
         tags = userres["tags"]
-
-        # The deepcopy is just a matter of caution here.
-        user_given_stats_obj = copy.deepcopy(userres["stats"])
-        result_stats_data_for_db = process_samples_build_agg(user_given_stats_obj)
-        benchmark_result_data = benchmark_result_data | result_stats_data_for_db
-
-        # See https://github.com/conbench/conbench/issues/935,
-        # name is guaranteed to be set.
         benchmark_name = tags.pop("name")
         case = get_case_or_create({"name": benchmark_name, "tags": tags})
         context = get_context_or_create({"tags": userres["context"]})
@@ -451,6 +458,8 @@ class BenchmarkResult(Base, EntityMixin):
 
 def process_samples_build_agg(stats_usergiven: Any):
     """
+    Raises BenchmarkResultValidationError upon logical inconsistencies.
+
     Only run this for the 'success' case, i.e. when the input is a list longer
     than zero, and each item is a number (not math.nan).
 
@@ -469,7 +478,7 @@ def process_samples_build_agg(stats_usergiven: Any):
     samples = [float(s) for s in samples]
 
     # First copy the entire stats data structure (this includes times, data,
-    # ...), later selectively overwrite/augment.
+    # mean, min, ...). Later: selectively overwrite/augment.
     result_data_for_db = stats_usergiven.copy()
 
     if len(samples) > 1:
@@ -507,7 +516,7 @@ def process_samples_build_agg(stats_usergiven: Any):
             # to achieve consistency between the provided samples and the
             # aggregates.
             if key in stats_usergiven:
-                if stats_usergiven[key] != value:
+                if not floatcomp(stats_usergiven[key], value):
                     log.warning(
                         "key %s, user-given val %s vs. calculated %s",
                         key,
@@ -547,6 +556,12 @@ def process_samples_build_agg(stats_usergiven: Any):
                 )
 
     return result_data_for_db
+
+
+def floatcomp(v1, v2, sigfigs=5):
+    v1s = sigfig.round(v1, sigfigs=sigfigs)
+    v2s = sigfig.round(v2, sigfigs=sigfigs)
+    return abs(float(v1s) - float(v2s)) < 10**-10
 
 
 def do_iteration_samples_look_like_error(samples: list[Optional[Decimal]]) -> bool:
