@@ -137,6 +137,7 @@ class BenchmarkResult(Base, EntityMixin):
                 "(the name of the conceptual benchmark)"
             )
 
+        validate_and_augment_result_tags(userres)
         run = Session.scalars(select(Run).where(Run.id == userres["run_id"])).first()
 
         if run is not None:
@@ -523,6 +524,74 @@ class BenchmarkResult(Base, EntityMixin):
             return f"{hw.id[:4]}: " + hw.name[:15]
 
         return f"{hw.id[:4]}: " + hw.name
+
+
+def validate_and_augment_result_tags(userres: Any):
+    """
+    Inspect and mutate userres['tags']. After that, all keys are non-empty
+    strings, and all values are non-empty strings.
+
+    See https://github.com/conbench/conbench/pull/948#discussion_r1149090197
+    for background.
+
+    Summary of current desired behavior: primitive value types are accepted
+    (string, boolean, float, int; non-string values are converted to string
+    before DB insertion). Other value types (array -> list, object -> dict)
+    lead to request rejection.
+    """
+
+    tags = userres["tags"]
+
+    # See: https://github.com/conbench/conbench/issues/935
+    if "name" not in tags:
+        raise BenchmarkResultValidationError(
+            "`name` property must be present in `tags` "
+            "(the name of the conceptual benchmark)"
+        )
+
+    # Iterate over a copy of key/value pairs.
+    for key, value in list(tags.items()):
+        # In JSON, a key is always of type string. We rely on this, codify
+        # this invariant.
+        assert isinstance(key, str)
+
+        # An empty string is a valid JSON key. Do not allow this.
+        if len(key) == 0:
+            raise BenchmarkResultValidationError(
+                "tags: zero-length string as key is not allowed"
+            )
+
+        # For now, be liberal in what we accept. Do not consider empty
+        # string or None values for the case permutation (do not store
+        # those in the DB, drop these key/value pairs). This is documented
+        # in the API spec. Maybe in the future we want to reject such
+        # requests with a Bad Request response.
+        if value == "" or value is None:
+            log.warning("drop tag key/value pair: `%s`, `%s`", key, value)
+            # Remove current key/value pair, proceed with next key. This
+            # mutates the dictionary `data["tags"]`; for keeping this a
+            # sane operation the loop iterates over a copy of key/value
+            # pairs.
+            del tags[key]
+            continue
+
+        # Note(JP): this code path should go away after we adjust our
+        # client tooling to not send numeric values anymore.
+        if isinstance(value, (int, float, bool)):
+            # I think we first want to adjust some client tooling before
+            # enabling this log line:
+            # log.warning("stringify case parameter value: `%s`, `%s`", key, value)
+            # Replace value, proceed with next key.
+            tags[key] = str(value)
+            continue
+
+        # This should be logically equivalent with the value being either
+        # of type dict or of type list.
+        if not isinstance(value, str):
+            # Emit Bad Request response..
+            raise BenchmarkResultValidationError(
+                "tags: bad value type for key `{key}`, JSON object and array is not allowed`"
+            )
 
 
 s.Index("benchmark_result_run_id_index", BenchmarkResult.run_id)
