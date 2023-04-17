@@ -9,4 +9,4 @@ class TestBatch(_asserts.GetEnforcer):
 
     def _create(self, client):
         self.create_benchmark(client)
-        return _fixtures.VALID_PAYLOAD["batch_id"]
+        return _fixtures.VALID_RESULT_PAYLOAD["batch_id"]

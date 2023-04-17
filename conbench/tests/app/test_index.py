@@ -8,7 +8,7 @@ class TestIndex(_asserts.ListEnforcer):
 
     def _create(self, client):
         self.create_benchmark(client)
-        return _fixtures.VALID_PAYLOAD["run_id"]
+        return _fixtures.VALID_RESULT_PAYLOAD["run_id"]
 
     def test_unknown_route(self, client):
         response = client.get("/foo/")

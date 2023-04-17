@@ -46,7 +46,7 @@ class TestCompareRuns(_asserts.GetEnforcer):
 
     def _create(self, client):
         self.create_benchmark(client)
-        run_id = _fixtures.VALID_PAYLOAD["run_id"]
+        run_id = _fixtures.VALID_RESULT_PAYLOAD["run_id"]
         return f"{run_id}...{run_id}"
 
     def test_flash_messages(self, client):
