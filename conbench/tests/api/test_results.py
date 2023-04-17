@@ -1112,15 +1112,16 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         # schema validation.
         assert "Either stats or error field is required" in resp.text
 
-    def test_create_result_no_stdev(self, client):
+    @pytest.mark.parametrize(
+        "samples",
+        [(1,), (3, 5), (3, 5, 7)],
+    )
+    def test_create_result_no_stdev(self, client, samples):
         self.authenticate(client)
 
         result = _fixtures.VALID_RESULT_PAYLOAD.copy()
         result["stats"] = {
-            "data": [
-                "3",
-                "5",
-            ],
+            "data": samples,
             "times": [],  # key must be there as of now, validate more, change this.
             "unit": "s",
             "time_unit": "s",
@@ -1132,7 +1133,12 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         resp = client.post("/api/benchmark-results/", json=result)
         assert resp.status_code == 201, resp.text
 
-        # This currently encodes bug
-        # https://github.com/conbench/conbench/issues/802
-        assert resp.json["stats"]["stdev"] == 0.0
-        assert resp.json["stats"]["iqr"] > 0
+        # prepare for testing
+        # https://github.com/conbench/conbench/issues/1118
+        if len(samples) >= 3:
+            assert resp.json["stats"]["stdev"] > 0
+        else:
+            # This currently encodes bug
+            # https://github.com/conbench/conbench/issues/802
+            assert resp.json["stats"]["stdev"] == 0.0
+            # assert resp.json["stats"]["iqr"] == 0
