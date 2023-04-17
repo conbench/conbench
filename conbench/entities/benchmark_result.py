@@ -470,6 +470,8 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     top-level for BenchmarkResult.
     """
 
+    agg_keys = ("q1", "q3", "mean", "median", "min", "max", "stdev", "iqr")
+
     # Encode invariants.
     samples = stats_usergiven["data"]
     assert len(samples) > 0
@@ -484,7 +486,12 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     # mean, min, ...). Later: selectively overwrite/augment.
     result_data_for_db = stats_usergiven.copy()
 
-    if len(samples) > 1:
+    # Initialize all aggregate values explicitly to None -- values set below
+    # must be meaningful.
+    for k in agg_keys:
+        result_data_for_db[k] = None
+
+    if len(samples) >= 2:
         # There is a special case where for one sample the iteration count
         # may be larger than one, see below.
         if stats_usergiven["iterations"] != len(samples):
@@ -531,7 +538,7 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
         if stats_usergiven["iterations"] == 1:
             # If user provides aggregates, then it's unclear what they
             # mean.
-            for k in ("q1", "q2", "mean", "median", "min", "max", "stdev", "iqr"):
+            for k in agg_keys:
                 if stats_usergiven.get(k) is not None:
                     raise BenchmarkResultValidationError(
                         f"one data point from one iteration: property `{k}` "
@@ -551,7 +558,7 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
 
     if len(samples) == 2:
         # If user provides aggregates, then it's unclear what they mean.
-        for k in ("q1", "q2", "mean", "median", "min", "max", "stdev", "iqr"):
+        for k in agg_keys:
             if stats_usergiven.get(k) is not None:
                 raise BenchmarkResultValidationError(
                     f"with two provided data points, the property `{k}` "
