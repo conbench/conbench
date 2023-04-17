@@ -3,6 +3,7 @@ import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped
 
+from conbench.db import Session
 from ..entities._entity import (
     Base,
     EntityMixin,
@@ -12,6 +13,8 @@ from ..entities._entity import (
 )
 
 
+# Maybe EntityMixin should be a generic class
+# https://mypy.readthedocs.io/en/latest/generics.html#defining-subclasses-of-generic-classes
 class Context(Base, EntityMixin):
     __tablename__ = "context"
     id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
@@ -29,11 +32,13 @@ def get_context_or_create(ctx_dict) -> Context:
     try:
         return Context.create(ctx_dict)
     except s.exc.IntegrityError as exc:
-        if "unique constraint" in str(exc):
-            c = Context.first(**ctx_dict)
-            assert c is not None
-            return c
-        raise
+        if "violates unique constraint" not in str(exc):
+            raise
+
+    Session.rollback()
+    c = Context.first(**ctx_dict)
+    assert c is not None
+    return c
 
 
 s.Index("context_index", Context.tags, unique=True)

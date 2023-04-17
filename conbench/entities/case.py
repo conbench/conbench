@@ -2,6 +2,8 @@ import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped
 
+from conbench.db import Session
+
 from ..entities._entity import Base, EntityMixin, NotNull, generate_uuid
 
 
@@ -24,12 +26,13 @@ def get_case_or_create(case_dict) -> Case:
     try:
         return Case.create(case_dict)
     except s.exc.IntegrityError as exc:
-        if "unique constraint" in str(exc):
-            # It is known that it exists, otherwise conflict is not precise.
-            c = Case.first(**case_dict)
-            assert c is not None
-            return c
-        raise
+        if "violates unique constraint" not in str(exc):
+            raise
+
+    Session.rollback()
+    c = Case.first(**case_dict)
+    assert c is not None
+    return c
 
 
 s.Index("case_index", Case.name, Case.tags, unique=True)

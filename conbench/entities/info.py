@@ -3,6 +3,8 @@ import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped
 
+from conbench.db import Session
+
 from ..entities._entity import (
     Base,
     EntityMixin,
@@ -18,7 +20,7 @@ class Info(Base, EntityMixin):
     tags: Mapped[dict] = NotNull(postgresql.JSONB)
 
 
-def get_info_or_create(ctx_dict) -> Info:
+def get_info_or_create(info_dict) -> Info:
     """
     Try to create, but expect conflict (work with unique constraint on
     name/tags).
@@ -27,13 +29,15 @@ def get_info_or_create(ctx_dict) -> Info:
     exception.
     """
     try:
-        return Info.create(ctx_dict)
+        return Info.create(info_dict)
     except s.exc.IntegrityError as exc:
-        if "unique constraint" in str(exc):
-            i = Info.first(**ctx_dict)
-            assert i is not None
-            return i
-        raise
+        if "violates unique constraint" not in str(exc):
+            raise
+
+    Session.rollback()
+    i = Info.first(**info_dict)
+    assert i is not None
+    return i
 
 
 s.Index("info_index", Info.tags, unique=True)
