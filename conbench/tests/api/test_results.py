@@ -530,8 +530,18 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
         assert Run.one(id=run_payload["id"]).has_errors is True
 
-    def test_create_benchmark_with_one_iteration_error(self, client):
+    @pytest.mark.parametrize("with_error_property", [True, False])
+    def test_create_benchmark_with_one_iteration_error(
+        self, client, with_error_property
+    ):
         self.authenticate(client)
+
+        bmr = copy.deepcopy(self.valid_payload_with_iteration_error)
+        if not with_error_property:
+            # Either `error` or failed iteration mark a result as "errored",
+            # see https://github.com/conbench/conbench/issues/813
+            del bmr["error"]
+
         response = client.post(
             "/api/benchmarks/", json=self.valid_payload_with_iteration_error
         )
