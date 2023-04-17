@@ -143,59 +143,62 @@ class BenchmarkResult(Base, EntityMixin):
         validate_and_augment_result_tags(userres)
         validate_run_result_consistency(userres)
 
-        # Start populating the dict that is used for DB insertion later.
+        # The dict that is used for DB insertion later, populated below.
         result_data_for_db: Dict = {}
 
-        result_error_for_db: Optional[Dict] = None
+        if "stats" in userres:
+            # First things first: use the complete user-given `stats` object
+            # for potential DB insertion down below. In `error` state, do not
+            # perform deeper validation of the user-given stats object (the
+            # benchmark result is not used for any kind of analysis, which is
+            # why it's probably ok to store the user-given 'stats' object w/o
+            # deeper validation, maybe the data is helpful for debugging). Note
+            # that what the user delivers under the `stats` key as a sub object
+            # (in the result JSON object) is mapped directly on top-level
+            # properties in the Python BenchmarkResult object. That is a bit of
+            # an annoying asymmetry between DB object and JSON representation.
+            result_data_for_db |= userres["stats"]  # PEP 584 update
 
-        # The dictionary based on which the DB insert will be performed.
-        benchmark_result_data: Dict = {}
-
-        # Handle 'error' scenarios. Obvious: user-given error object set.
+        # User indicated error with variant A: user-given error object set.
         if "error" in userres:
-            # Only insert `error` key if there is an error object. In JSON,
-            # error: null still means that the benchmark is errored (at least
-            # some business logic treat it as such.)
-            # This is a JSON object (schema-enforced).
-            benchmark_result_data["error"] = userres["error"]
+            # We have business logic elsewhere that checks only for presence of
+            # the `error` key (ignores its value, a value of `None` might
+            # elsewhere be interpreted as error -- this did cost me 30 minutes
+            # of debugging).
+            result_data_for_db["error"] = userres["error"]
 
         # Check for a more subtle error condition based on the per-iteration
-        # samples. Rely if "error" is not present then "stats" is present as a
-        # key in this dictionary -- this is schema-enforced.
+        # samples. Invariant: if "error" is not present then "stats" is present
+        # as a key in this dictionary -- this is schema-enforced. he `stats`
+        # object is guaranteed to have a `data` key.
         elif do_iteration_samples_look_like_error(userres["stats"]["data"]):
-            # User did not set `error`, but the number sequence indicates
-            # that this result is to be considered 'errored'. Set a generic
-            # error message.
-            benchmark_result_data["error"] = {
+            # User indicated error with variant B: missing or incomplete data.
+            # User unfortunately did not set `error` explicitly, but we err on
+            # the side auf caution here and treat the result as 'errored'. This
+            # is documented. Set generic error detail.
+            result_data_for_db["error"] = {
+                # Maybe tune this error message to be more generic.
                 "status": "Partial result: not all iterations completed"
             }
-            # Copy the entire user-given `stats` object. Maybe the data is
-            # helpful for debugging. In `error` state, the benchmark result is
-            # not used for any kind of analysis, which is why it's probably ok
-            # to store the user-given 'stats' object w/o deeper validation.
-            benchmark_result_data.update(userres["stats"])
+
         else:
-            # This makes sure that we call process_samples_build_agg() only
-            # do_iteration_samples_look_like_error() returned False. The
-            #  deepcopy is just a matter of caution here.
-            result_stats_data_for_db = process_samples_build_agg(
-                copy.deepcopy(userres["stats"])
-            )
+            # process_samples_build_agg() must only be called if
+            # do_iteration_samples_look_like_error() returned False. That's
+            # the case here.
+            result_data_from_stats = validate_and_aggregate_samples(userres["stats"])
 
-            # The iterations samples looked good. We validated them, and we
-            # potentially did rebuild aggregates. Merge dict
-            # `result_stats_data_for_db` on top of dicht
-            # `benchmark_result_data`, overwriting upon conflict.
-            result_data_for_db = result_data_for_db | result_stats_data_for_db
-
-        # tmp rename
-        benchmark_result_data = result_data_for_db
+            # Per-iteration samples looked good, and we did (potentially)
+            # rebuild aggregates. Merge dict `result_stats_data_for_db` on top
+            # of dict `benchmark_result_data`, overwriting upon conflict.
+            result_data_for_db |= result_data_from_stats  # PEP 584 update
 
         # See https://github.com/conbench/conbench/issues/935,
         # At this point, assume that data["tags"] is a flat dictionary with
         # keys being non-empty strings, and values being non-empty strings.
         tags = userres["tags"]
+
         benchmark_name = tags.pop("name")
+
         # Create related DB entities if they do not exist yet.
         case = get_case_or_create({"name": benchmark_name, "tags": tags})
         context = get_context_or_create({"tags": userres["context"]})
@@ -457,7 +460,7 @@ class BenchmarkResult(Base, EntityMixin):
         return f"{hw.id[:4]}: " + hw.name
 
 
-def process_samples_build_agg(stats_usergiven: Any):
+def validate_and_aggregate_samples(stats_usergiven: Any):
     """
     Raises BenchmarkResultValidationError upon logical inconsistencies.
 
