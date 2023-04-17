@@ -145,6 +145,10 @@ class BenchmarkResult(Base, EntityMixin):
         run = Session.scalars(select(Run).where(Run.id == userres["run_id"])).first()
 
         if run is not None:
+            # TODO: specification -- if userres.get("github") is None and if
+            # the Run has associated commit information -- then consider this
+            # as a conflict or not? what about branch name and PR number?
+
             # The property should not be called "github", this confuses me each
             # time I deal with that.
             if userres.get("github") is not None:
@@ -152,9 +156,18 @@ class BenchmarkResult(Base, EntityMixin):
                 chresult = userres["github"]["commit"]
                 if chrun != chresult:
                     raise BenchmarkResultValidationError(
-                        f"result refers to commit hash {chresult}, but Run {run.id} "
-                        f"refers to commit hash {chrun}."
+                        f"Result refers to commit hash '{chresult}', but Run '{run.id}' "
+                        f"refers to commit hash '{chrun}'"
                     )
+
+                # Cannot do this yet, this is too complicated as of None/empty
+                # string confusion repo_url_run = run.commit.repo_url
+                # repo_url_result = userres["github"]["repository"] if
+                # repo_url_run != repo_url_result: raise
+                #     BenchmarkResultValidationError( f"Result refers to
+                #         repository URL '{repo_url_result}', but Run
+                #         '{run.id}' " f"refers to repository URL
+                #     '{repo_url_run}'" )
 
         # Temporary: keep name `data` -- it's unfortunate that we have the name
         # `data` here while also having key(s) in the dict(s) that are called

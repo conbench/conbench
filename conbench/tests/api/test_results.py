@@ -734,6 +734,12 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
+    # Note(JP): what does this help with, which use case does this enable? It
+    # creates quite a bit of work to support empty string values throughout the
+    # code base -- does that mean the same like not providing the data at all?
+    # Also see https://github.com/conbench/conbench/pull/889
+    # https://github.com/conbench/conbench/issues/817
+    # https://github.com/conbench/conbench/issues/818
     def test_create_empty_commit_context(self, client):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
@@ -1062,3 +1068,27 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         assert resp.status_code == 200, resp.text
 
         assert resp.json["timestamp"] == timeoutput
+
+    def test_create_result_mismatch_run_commit_hash(self, client):
+        self.authenticate(client)
+
+        run = _fixtures.VALID_RUN_PAYLOAD.copy()
+        result = _fixtures.VALID_RESULT_PAYLOAD.copy()
+
+        resp = client.post("/api/runs/", json=run)
+        assert resp.status_code == 201, resp.text
+
+        run_commit_hash = run["github"]["commit"]
+
+        # Make result point to run:
+        result["run_id"] = run["id"]
+
+        # Make result refer to a different commit hash:
+        badhash = run_commit_hash[:-4] + "aaaa"
+        result["github"]["commit"] = badhash
+        resp = client.post("/api/benchmark-results/", json=result)
+        assert resp.status_code == 400, resp.text
+        assert f"Result refers to commit hash '{badhash}'" in resp.text
+        assert (
+            f"Run '{run['id']}' refers to commit hash '{run_commit_hash}'" in resp.text
+        )
