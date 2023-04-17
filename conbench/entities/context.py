@@ -4,6 +4,7 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped
 
 from conbench.db import Session
+
 from ..entities._entity import (
     Base,
     EntityMixin,
