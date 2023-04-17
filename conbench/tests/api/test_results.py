@@ -1111,3 +1111,28 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         # This is currently the error message emitted by marshmallow
         # schema validation.
         assert "Either stats or error field is required" in resp.text
+
+    def test_create_result_no_stdev(self, client):
+        self.authenticate(client)
+
+        result = _fixtures.VALID_RESULT_PAYLOAD.copy()
+        result["stats"] = {
+            "data": [
+                "3",
+                "5",
+            ],
+            "times": [],  # key must be there as of now, validate more, change this.
+            "unit": "s",
+            "time_unit": "s",
+            # also see https://github.com/conbench/conbench/issues/813
+            # https://github.com/conbench/conbench/issues/533
+            "iterations": 3,  # number not yet validated, change this
+        }
+
+        resp = client.post("/api/benchmark-results/", json=result)
+        assert resp.status_code == 201, resp.text
+
+        # This currently encodes bug
+        # https://github.com/conbench/conbench/issues/802
+        assert resp.json["stats"]["stdev"] == 0.0
+        assert resp.json["stats"]["iqr"] > 0
