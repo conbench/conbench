@@ -106,7 +106,7 @@ class EntityMixin:
             raise NotFound()
 
     @classmethod
-    def first(cls, **kwargs):
+    def first(cls, **kwargs) -> cls:
         return Session.scalars(select(cls).filter_by(**kwargs)).first()
 
     @classmethod
