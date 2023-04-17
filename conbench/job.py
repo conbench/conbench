@@ -192,8 +192,10 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
 
 
 def start_jobs():
-    log.info("BMRT cache: start job")
+    log.info("start job: periodic BMRT cache population")
     _periodically_fetch_last_n_benchmark_results()
+    log.info("start job: metrics.periodically_set_q_rem()")
+    conbench.metrics.periodically_set_q_rem()
 
 
 def shutdown_handler(sig, frame):

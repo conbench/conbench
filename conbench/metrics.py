@@ -175,7 +175,7 @@ def http_handler_name(r: flask.Request) -> str:
 gauge_gh_api_rem_set = {"set": False}
 
 
-def _periodically_set_q_rem() -> None:
+def periodically_set_q_rem() -> None:
     """
     This function immediately returns after having spawned a thread.
 
@@ -204,6 +204,3 @@ def _periodically_set_q_rem() -> None:
     # Create a threaddy zombie, no need to join it. It likely terminates
     # itself. If it doesn't that's OK, too.
     threading.Thread(target=func).start()
-
-
-_periodically_set_q_rem()
