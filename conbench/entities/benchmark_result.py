@@ -112,8 +112,53 @@ class BenchmarkResult(Base, EntityMixin):
     # marshmallow schema. Maybe this would be a strong reason to move to using
     # pydantic -- I believe when defining a schema with pydantic, the
     # corresponding type information can be used for mypy automatically.
-    def create(data):
-        """Create BenchmarkResult and write to database."""
+    # Also see https://stackoverflow.com/q/75662696/145400.
+    def create(userres):
+        """
+        `userres`: user-given Benchmark Result object, after JSON
+        deserialization.
+
+        Perform further validation on user-given data, and perform data
+        mutation / augmentation.
+
+        Attempt to write result to database.
+
+        Create associated Run, Case, Context, Info entities in DB if required.
+
+        Raises BenchmarkResultValidationError, exc message is expected to be
+        emitted to the HTTP client in a Bad Request response.
+        """
+        # See: https://github.com/conbench/conbench/issues/935
+        if "name" not in userres["tags"]:
+            raise BenchmarkResultValidationError(
+                "`name` property must be present in `tags` "
+                "(the name of the conceptual benchmark)"
+            )
+
+        if "stats" not in userres:
+            if "error" not in userres:
+                raise BenchmarkResultValidationError(
+                    "`error` property required when `stats` property not present"
+                )
+
+        run = Run.first(id=userres["run_id"])
+        if run is not None:
+            # The property should not be called "github", this confuses me each
+            # time I deal with that.
+            if userres.get("github") is not None:
+                chrun = run.commit.hash
+                chresult = userres["github"]["commit"]
+                if chrun != chresult:
+                    raise BenchmarkResultValidationError(
+                        f"result refers to commit hash {chresult}, but Run {run.id} "
+                        f"refers to commit hash {chrun}."
+                    )
+
+        # Temporary: keep name `data` -- it's unfortunate that we have the name
+        # `data` here while also having key(s) in the dict(s) that are called
+        # `data`. Assign a recognizable name to the big, outest, user-given
+        # object: userres is not ideal, but a start.
+        data = userres
         tags = data["tags"]
         has_error = "error" in data
         has_stats = "stats" in data
