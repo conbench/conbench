@@ -31,6 +31,10 @@ from ..entities.info import Info
 from ..entities.run import GitHubCreate, Run
 
 
+class BenchmarkResultValidationError(Exception):
+    pass
+
+
 class BenchmarkResult(Base, EntityMixin):
     __tablename__ = "benchmark_result"
     id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
