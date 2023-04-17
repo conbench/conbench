@@ -8,7 +8,8 @@ import marshmallow
 import numpy as np
 import sigfig
 import sqlalchemy as s
-from sqlalchemy import select, CheckConstraint as check
+from sqlalchemy import CheckConstraint as check
+from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, relationship
 
