@@ -147,16 +147,15 @@ class BenchmarkResult(Base, EntityMixin):
 
         # Now, check for a more subtle error condition, based on the per-
         # iteration samples. Rely on `stats` key to exist (see checks above).
-        if "stats" in userres and do_iteration_samples_look_like_error(
+        elif "stats" in userres and do_iteration_samples_look_like_error(
             userres["stats"]["data"]
         ):
-            if "error" not in userres:
-                # User did not set `error`, but the number sequence indicates
-                # that this result is to be considered 'errored'. Set a generic
-                # error message.
-                result_error_for_db = {
-                    "status": "Partial result: not all iterations completed"
-                }
+            # User did not set `error`, but the number sequence indicates
+            # that this result is to be considered 'errored'. Set a generic
+            # error message.
+            result_error_for_db = {
+                "status": "Partial result: not all iterations completed"
+            }
 
         # This is going to be the structure based on which we will do
         # DB insertion.
