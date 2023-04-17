@@ -160,7 +160,11 @@ class BenchmarkResult(Base, EntityMixin):
         # This is going to be the structure based on which we will do
         # DB insertion.
         benchmark_result_data = {}
-        benchmark_result_data["error"] = result_error_for_db
+        # Only insert `error` key if there is an error object. In JSON, error:
+        # null still means that the benchmark is errored (at least some
+        # business logic treat it as such.)
+        if result_error_for_db is not None:
+            benchmark_result_data["error"] = result_error_for_db
 
         # Temporary: keep name `data` -- it's unfortunate that we have the name
         # `data` here while also having key(s) in the dict(s) that are called
