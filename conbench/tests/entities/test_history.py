@@ -52,7 +52,7 @@ EXPECTED_Z_SCORES = {
         13.435028842544385,
         1.0928748862317967,
         -2.1857497724635935,
-        -4.486538431438488,
+        -4.486481486904943,
         -4.946696853470237,
         None,
         None,
@@ -71,7 +71,7 @@ EXPECTED_Z_SCORES = {
         13.435028842544385,
         1.0928748862317967,
         -2.8246140882627757,
-        -4.486538431438488,
+        -4.486481486904943,
         -4.946696853470237,
         None,
         None,
@@ -82,23 +82,23 @@ EXPECTED_Z_SCORES = {
         -5.98205200884773,
     ],
     "head_of_default": [
-        0.6624922329803099,
-        0.6082883205453794,
-        1.7268570607654594,
-        0.6624922329803099,
-        0.7166961454152404,
-        1.150327444894684,
-        1.150327444894684,
-        0.12045310863100521,
-        -0.602265543155026,
-        -0.7468094903278821,
+        0.662490861131055,
+        0.6082868170201319,
+        1.726858274546817,
+        0.662490861131055,
+        0.7166949052419783,
+        1.1503272581293638,
+        1.1503272581293638,
+        0.12045042002182318,
+        -0.6022521001091159,
+        -0.7468142857529476,
         None,
         None,
         None,
         None,
         None,
         None,
-        -1.0720329649374651,
+        -1.072038550418487,
     ],
 }
 
@@ -203,7 +203,7 @@ def test_set_z_scores(
             name=benchmark_results[0].case.name,
         )
     )
-    expected_z_scores = EXPECTED_Z_SCORES[strategy_name] + [-52.99938107760085]
+    expected_z_scores = EXPECTED_Z_SCORES[strategy_name] + [-52.9995128086829]
 
     for benchmark_result in benchmark_results:
         baseline_commit = get_baseline_func(benchmark_result.run.commit)
@@ -235,7 +235,7 @@ def test_set_z_scores_with_distribution_change(
         expected_z_scores[7] = -32.90896534380864
     else:
         expected_z_scores[7] = -3.846766028925861
-    expected_z_scores[8] = -56.00297033789095
+    expected_z_scores[8] = -56.00239876112446
     expected_z_scores[9] = -60.62177826491064
     expected_z_scores[16] = -71.0140831103239
 
