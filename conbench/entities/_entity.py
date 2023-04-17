@@ -3,7 +3,7 @@ import uuid
 from typing import List
 
 import flask as f
-from sqlalchemy import distinct
+from sqlalchemy import distinct, select
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.orm import declarative_base, mapped_column
 from sqlalchemy.orm.exc import NoResultFound
@@ -107,7 +107,7 @@ class EntityMixin:
 
     @classmethod
     def first(cls, **kwargs):
-        return Session.query(cls).filter_by(**kwargs).first()
+        return Session.scalars(select(cls).filter_by(**kwargs)).first()
 
     @classmethod
     def delete_all(cls):
