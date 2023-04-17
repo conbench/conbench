@@ -354,12 +354,14 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         self.assert_200_ok(response, contains=_expected_entity(benchmark_result_2))
 
 
-class TestBenchmarkPost(_asserts.PostEnforcer):
+class TestBenchmarkResultPost(_asserts.PostEnforcer):
     url = "/api/benchmarks/"
-    valid_payload = _fixtures.VALID_PAYLOAD
-    valid_payload_for_cluster = _fixtures.VALID_PAYLOAD_FOR_CLUSTER
-    valid_payload_with_error = _fixtures.VALID_PAYLOAD_WITH_ERROR
-    valid_payload_with_iteration_error = _fixtures.VALID_PAYLOAD_WITH_ITERATION_ERROR
+    valid_payload = _fixtures.VALID_RESULT_PAYLOAD
+    valid_payload_for_cluster = _fixtures.VALID_RESULT_PAYLOAD_FOR_CLUSTER
+    valid_payload_with_error = _fixtures.VALID_RESULT_PAYLOAD_WITH_ERROR
+    valid_payload_with_iteration_error = (
+        _fixtures.VALID_RESULT_PAYLOAD_WITH_ITERATION_ERROR
+    )
     required_fields = [
         "batch_id",
         "context",
@@ -929,7 +931,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
     def test_create_benchmark_context_missing(self, client):
         self.authenticate(client)
-        payload = _fixtures.VALID_PAYLOAD.copy()
+        payload = _fixtures.VALID_RESULT_PAYLOAD.copy()
         del payload["context"]
         resp = client.post(self.url, json=payload)
         assert resp.status_code == 400, f"unexpected response: {resp.text}"
@@ -937,13 +939,12 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
     def test_create_benchmark_name_missing(self, client):
         self.authenticate(client)
-        payload = copy.deepcopy(_fixtures.VALID_PAYLOAD)
+        payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
         del payload["tags"]["name"]
-        with pytest.raises(KeyError):
-            client.post(self.url, json=payload)
-            # TODO: https://github.com/conbench/conbench/issues/935
-            # This here just quickly checks that there is a failure at all,
-            # that 'name' is required.
+        # https://github.com/conbench/conbench/issues/935
+        resp = client.post(self.url, json=payload)
+        assert resp.status_code == 400, resp.text
+        assert "`name` property must be present in `tags" in resp.text
 
     @pytest.mark.parametrize(
         "tagdict",
@@ -958,7 +959,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
     )
     def test_create_benchmark_bad_tags(self, client, tagdict):
         self.authenticate(client)
-        payload = copy.deepcopy(_fixtures.VALID_PAYLOAD)
+        payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
         payload["tags"] = tagdict.copy()
         resp = client.post(self.url, json=payload)
         assert resp.status_code == 400
@@ -988,7 +989,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
     )
     def test_create_benchmark_good_tags(self, client, tagdict):
         self.authenticate(client)
-        payload = copy.deepcopy(_fixtures.VALID_PAYLOAD)
+        payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
         payload["tags"] = tagdict.copy()
         resp = client.post(self.url, json=payload)
         assert resp.status_code == 201
@@ -1005,7 +1006,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         this scenario.
         """
         self.authenticate(client)
-        payload = _fixtures.VALID_PAYLOAD.copy()
+        payload = _fixtures.VALID_RESULT_PAYLOAD.copy()
         payload["run_id"] = _uuid()
         payload["batch_id"] = _uuid()
 
