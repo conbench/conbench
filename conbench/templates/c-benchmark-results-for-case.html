@@ -1,107 +1,96 @@
 {% extends "app.html" %}
 {% block app_content %}
-
-<div>
-<h3><strong>{{ benchmark_name }}</strong> / case {{ case.id[:7] }}</h3>
-<span class="fs-4"><code>{{ case.text_id }}</code></span>
-
-<p>Identified {{ matching_benchmark_result_count }} result(s) matching this case permutation.
-    Based on {{ bmr_cache_meta.n_results }} results reported in
-    total between {{bmr_cache_meta.oldest_result_time_str}} and
-    {{bmr_cache_meta.newest_result_time_str}}.
-</p>
-
-
-
-<p> Showing {{ benchmark_results_for_table|length}} of {{ matching_benchmark_result_count }} results:</p>
-<div class="mt-5">
-<table class="table table-hover conbench-datatable" style="width:100%; display: none">
-<thead>
-    <tr>
-        <th scope="col" style="width: 21%">time</th>
-        <th scope="col">result</th>
-        <th scope="col">hardware</th>
-        <th scope="col">ctx id</th>
-        <th scope="col" style="width: 10%"># samples</th>
-        <th scope="col" style="width: 20%">data</th>
-        <th scope="col" style="width: 10%">
-            rel err
-            <i class="bi bi-info-circle" data-bs-toggle="tooltip"
-                data-bs-title="
-                Relative standard error: standard error
-                of the mean in relationship to the mean value. Only built
-                when at least three samples are reported by this result.
-                ">
-            </i>
-        </th>
-    </tr>
-</thead>
-<tbody>
-{% for result in benchmark_results_for_table %}
-<tr>
-    <td class="font-monospace">{{ result.ui_time_started_at }}</td>
-    <td class="font-monospace"><a href="{{ url_for('app.benchmark-result', benchmark_result_id=result.id) }}">{{ result.id [:9]}}</a></td>
-    <td class="font-monospace">{{ result.ui_hardware_short }}</td>
-    <td class="font-monospace">{{ result.context.id[:8] }}</td>
-    <td class="font-monospace">{{ result.ui_non_null_sample_count }}</td>
-    <td class="font-monospace">{{ result.ui_mean_and_uncertainty }}</td>
-    <td class="font-monospace">{{ result.ui_rel_sem }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-
-<div class="mt-5">
-    <h4 class="mb-3">Plots
-        <i class="bi bi-info-circle" data-bs-toggle="tooltip"
-        data-bs-title="Benchmark results, grouped by unique (hardware, context) combinations.
-        Time axis: benchmark result start time (associated commit data is not used),
-        ordinate: mean value, if multisample.
-        A plot is only shown for at least three data points.
-        ">
-    </i>
-    </h4>
-
-    <!-- https://getbootstrap.com/docs/5.2/layout/grid/#row-columns -->
-    <div class="row .row-cols-auto">
-
-        {% for hwctx, plotinfo in infos_for_uplots.items() %}
-
-        <!-- with xl-6 I have tested that each plot (fixed width) has enough space -->
-        <div class="col-xl-6 mb-5">
-            <h5 class="mt-2">{{ plotinfo.title }}</h5>
-            <div class="cb-plot-{{hwctx}}" style="width: 550px"></div>
-        </div>
-        {% endfor %}
+  <div>
+    <h3>
+      <strong>{{ benchmark_name }}</strong> / case {{ case.id[:7] }}
+    </h3>
+    <span class="fs-4"><code>{{ case.text_id }}</code></span>
+    <p>
+      Identified {{ matching_benchmark_result_count }} result(s) matching this case permutation.
+      Based on {{ bmr_cache_meta.n_results }} results reported in
+      total between {{ bmr_cache_meta.oldest_result_time_str }} and
+      {{ bmr_cache_meta.newest_result_time_str }}.
+    </p>
+    <p>Showing {{ benchmark_results_for_table|length }} of {{ matching_benchmark_result_count }} results:</p>
+    <div class="mt-5">
+      <table class="table table-hover conbench-datatable"
+             style="width:100%;
+                    display: none">
+        <thead>
+          <tr>
+            <th scope="col" style="width: 21%">time</th>
+            <th scope="col">result</th>
+            <th scope="col">hardware</th>
+            <th scope="col">ctx id</th>
+            <th scope="col" style="width: 10%"># samples</th>
+            <th scope="col" style="width: 20%">data</th>
+            <th scope="col" style="width: 10%">
+              rel err
+              <i class="bi bi-info-circle"
+                 data-bs-toggle="tooltip"
+                 data-bs-title=" Relative standard error: standard error of the mean in relationship to the mean value. Only built when at least three samples are reported by this result. ">
+              </i>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for result in benchmark_results_for_table %}
+            <tr>
+              <td class="font-monospace">{{ result.ui_time_started_at }}</td>
+              <td class="font-monospace">
+                <a href="{{ url_for('app.benchmark-result', benchmark_result_id=result.id) }}">{{ result.id [:9] }}</a>
+              </td>
+              <td class="font-monospace">{{ result.ui_hardware_short }}</td>
+              <td class="font-monospace">{{ result.context.id[:8] }}</td>
+              <td class="font-monospace">{{ result.ui_non_null_sample_count }}</td>
+              <td class="font-monospace">{{ result.ui_mean_and_uncertainty }}</td>
+              <td class="font-monospace">{{ result.ui_rel_sem }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-</div>
-</div>
-
+    <div class="mt-5">
+      <h4 class="mb-3">
+        Plots
+        <i class="bi bi-info-circle"
+           data-bs-toggle="tooltip"
+           data-bs-title="Benchmark results, grouped by unique (hardware, context) combinations. Time axis: benchmark result start time (associated commit data is not used), ordinate: mean value, if multisample. A plot is only shown for at least three data points. ">
+        </i>
+      </h4>
+      <!-- https://getbootstrap.com/docs/5.2/layout/grid/#row-columns -->
+      <div class="row .row-cols-auto">
+        {% for hwctx, plotinfo in infos_for_uplots.items() %}
+          <!-- with xl-6 I have tested that each plot (fixed width) has enough space -->
+          <div class="col-xl-6 mb-5">
+            <h5 class="mt-2">{{ plotinfo.title }}</h5>
+            <div class="cb-plot-{{ hwctx }}" style="width: 550px"></div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
 {% endblock %}
-
 {% block scripts %}
-{{super()}}
-<script>
+  {{ super() }}
+  <script>
+    let plot_info_by_hwctx = {{ infos_for_uplots_json|safe }};
 
-
-let plot_info_by_hwctx = {{ infos_for_uplots_json|safe }};
-
-$(document).ready(function () {
-    let plotopts = {
+    $(document).ready(function () {
+      let plotopts = {
         title: "",
         class: "cb-uplot",
         width: 550,
         height: 200,
         cursor: {
-            show: false,
+          show: false,
         },
         legend: {
-            show: false,
+          show: false,
         },
         series: [
-            {},
-            {
+          {},
+          {
             sorted: 0,
             show: true,
             spanGaps: false,
@@ -117,85 +106,74 @@ $(document).ready(function () {
             scale: "y",
             points: {
                 // Without `show: true`, points do not always show.
-                show: true,
-                size: 5,
-                fill: 'rgba(87, 125, 134, 0.7)'
-                }
+              show: true,
+              size: 5,
+              fill: 'rgba(87, 125, 134, 0.7)'
             }
+          }
         ],
         axes: [
-            {},
-            {
-                scale: "y",
+          {},
+          {
+            scale: "y",
                 // give y axis labels some space
-                size: 60,
+            size: 60,
                 // This is used for y axis formatting. Trade-off:
                 // predictable width, medium precision is sufficient.
-                values: (u, splits) => splits.map((v) => v.toExponential(2)),
-            }
+            values: (u, splits) => splits.map((v) => v.toExponential(2)),
+          }
         ],
         scales: {
 
-            "y": {
-                range: (u, datamin, datamax) => {
+          "y": {
+            range: (u, datamin, datamax) => {
                     // Preparing for all kinds of ranges and orders of
                     // magnitude, always show the zero for keeping plots most
                     // meaningful -- if the relative change is very small then
                     // it will be rather invisible in a plot like this, which
                     // is the goal.
-                    return [0, datamax * 1.2];
-                },
+              return [0, datamax * 1.2];
+            },
 
-            }
+          }
         },
-    };
+      };
 
-    {% for hwctx, plotinfo in infos_for_uplots.items() %}
+      {% for hwctx, plotinfo in infos_for_uplots.items() %}
         let uplot_{{hwctx}} = new uPlot(plotopts, plot_info_by_hwctx["{{hwctx}}"]["data_for_uplot"], $('.cb-plot-{{hwctx}}')[0]);
-    {% endfor %}
+      {% endfor %}
 
     // Enable bootstrap tooltips on this page.
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
-    $('table.conbench-datatable').each(function() {
+      $('table.conbench-datatable').each(function() {
         $(this).DataTable({
             // Note(JP): this enables a special, simple plugin called
             // `conditionalPaging` which must be included, e.g. via the dist URLs
             // published in https://cdn.datatables.net/plug-ins/1.13.3/features/.
             // kudos to https://stackoverflow.com/a/29639664/145400
-            "conditionalPaging": true,
-            "responsive": true,
+          "conditionalPaging": true,
+          "responsive": true,
             // the default default seems to be the first item in lengthMenu.
-            "lengthMenu": [ 5, 10, 50, 75, 100, 250, 750 ],
+          "lengthMenu": [ 5, 10, 50, 75, 100, 250, 750 ],
             // but when pageLength is also set, then _this_ is the default.
-            "pageLength": 10,
+          "pageLength": 10,
             // Take rather precise control of layouting elements, put bottom elements
             // into a mult-col single row, using BS's grid system.
-            "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
-            "order": [[0, 'desc']],
-            "columnDefs": [{ "orderable": true }],
-            initComplete: function () {
-                var api = this.api();
+          "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
+          "order": [[0, 'desc']],
+          "columnDefs": [{ "orderable": true }],
+          initComplete: function () {
+            var api = this.api();
                 // reveal only after DOM modification is complete (reduce loading
                 // layout shift artifacts)
-                $('table.conbench-datatable').show();
-                api.columns.adjust();
-                $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
-            },
+            $('table.conbench-datatable').show();
+            api.columns.adjust();
+            $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
+          },
         });
+      });
     });
-});
-</script>
+  </script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-

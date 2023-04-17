@@ -64,6 +64,8 @@ lint:
 	pylint --errors-only  conbench
 	mypy conbench
 	mypy benchalerts
+	curlylint conbench/templates/
+	djlint . --extension=html.j2 --reformat --indent=2 conbench/templates/*html
 
 
 # Run by CI, these commands should not modify files, but only check compliance.
@@ -76,6 +78,8 @@ lint-ci:
 	pylint --errors-only  conbench
 	mypy conbench
 	mypy benchalerts
+	curlylint conbench/templates/
+	djlint . --extension=html.j2 --check --indent=2 conbench/templates/*html
 
 
 .PHONY: rebuild-expected-api-docs

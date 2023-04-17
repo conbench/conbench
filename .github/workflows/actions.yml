@@ -26,6 +26,8 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install linting dependencies
+        # For now, ignorantly add `requirements-webapp` so that mypy can use
+        # all modules for type inspection.
         run: pip install -r requirements-dev.txt -r requirements-webapp.txt
       - name: lint
         run: make lint-ci

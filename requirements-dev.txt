@@ -1,6 +1,8 @@
 black
 bs4
+curlylint==0.13.1
 coveralls
+djlint==1.23.0
 flake8
 isort
 lxml

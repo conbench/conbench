@@ -1,78 +1,77 @@
 {% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
-
 {% block app_content %}
-<!-- recipe taken from https://getbootstrap.com/docs/5.0/utilities/flex/#auto-margins -->
-<div class="d-flex">
-  <div class="p-2"><h3>Recent benchmark results</h3></div>
-</div>
-
-<hr class="border border-danger border-2 opacity-50">
-
-<!-- note(jp): this form is not displayed, but must be there for the individual
+  <!-- recipe taken from https://getbootstrap.com/docs/5.0/utilities/flex/#auto-margins -->
+  <div class="d-flex">
+    <div class="p-2">
+      <h3>Recent benchmark results</h3>
+    </div>
+  </div>
+  <hr class="border border-danger border-2 opacity-50">
+  <!-- note(jp): this form is not displayed, but must be there for the individual
   trash icons in the table to work
 -->
-<div style="display: none;">{{ wtf.quick_form(delete_benchmark_form, id="delete-benchmark-form") }}</div>
-<table id="users" class="table table-hover">
-            <table id="benchmarks" class="table table-hover">
-                <thead>
-                    <tr>
-                        <th scope="col">Timestamp</th>
-                        <th scope="col">Lang</th>
-                        <th scope="col">Batch</th>
-                        <th scope="col">Benchmark</th>
-                        <th scope="col" style="width: 10%">Mean</th>
-                        {% if not current_user.is_anonymous %}
-                        <th scope="col" style="width: 5%">Delete</th>
-                        {% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for benchmark in benchmarks %}
-                    <tr>
-                         <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
-                         <td style="white-space: nowrap;">{{ benchmark.display_language }}</td>
-                         <td style="white-space: nowrap;">
-                           <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">
-                             <div>{{ benchmark.display_bmname }}</div>
-                           </a>
-                         </td>
-                         <td><a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
-                              <div>{{ benchmark.display_case_perm }}</div>
-                         </a></td>
-                         <td>{{ benchmark.display_mean }}</td>
-                         {% if not current_user.is_anonymous %}
-                         <td data-cbcustom-href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}"
-                             data-bs-toggle="modal"
-                             data-bs-target="#confirm-delete"
-                             data-cbcustom-form-id="#delete-benchmark-form"
-                             data-cbcustom-message="<ul><li>Delete benchmark result: <strong>{{ benchmark.id }}</strong></li></ul>">
-                             <i class="bi bi-trash3"></i>
-                         </td>
-                         {% endif %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+  <div style="display: none;">{{ wtf.quick_form(delete_benchmark_form, id="delete-benchmark-form") }}</div>
+  <table id="benchmarks" class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">Timestamp</th>
+        <th scope="col">Lang</th>
+        <th scope="col">Batch</th>
+        <th scope="col">Benchmark</th>
+        <th scope="col" style="width: 10%">Mean</th>
+        {% if not current_user.is_anonymous %}
+          <th scope="col" style="width: 5%">Delete</th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for benchmark in benchmarks %}
+        <tr>
+          <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
+          <td style="white-space: nowrap;">{{ benchmark.display_language }}</td>
+          <td style="white-space: nowrap;">
+            <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">
+              <div>{{ benchmark.display_bmname }}</div>
+            </a>
+          </td>
+          <td>
+            <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
+              <div>{{ benchmark.display_case_perm }}</div>
+            </a>
+          </td>
+          <td>{{ benchmark.display_mean }}</td>
+          {% if not current_user.is_anonymous %}
+            <td data-cbcustom-href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}"
+                data-bs-toggle="modal"
+                data-bs-target="#confirm-delete"
+                data-cbcustom-form-id="#delete-benchmark-form"
+                data-cbcustom-message="Delete benchmark result: {{ benchmark.id }}">
+              <i class="bi bi-trash3"></i>
+            </td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 {% endblock %}
-
 {% block scripts %}
-{{super()}}
-<script type="text/javascript">
-{% if current_user.is_anonymous %}
-  var table =  $('#benchmarks').dataTable( {
-    "responsive": true,
-    "order": [[0, 'desc']],
-    "columnDefs": [{ "orderable": false, "targets": [3] }]
-  } );
-{% else %}
-  var table = $('#benchmarks').dataTable( {
-    "responsive": true,
-    "order": [[0, 'desc']],
-    "columnDefs": [{ "orderable": false, "targets": [4, 5] }]
-  } );
-{% endif %}
+  {{ super() }}
+  <script type="text/javascript">
+    {% if current_user.is_anonymous %}
+      var table =  $('#benchmarks').dataTable( {
+        "responsive": true,
+        "order": [[0, 'desc']],
+        "columnDefs": [{ "orderable": false, "targets": [3] }]
+      } );
+    {% else %}
+      var table = $('#benchmarks').dataTable( {
+        "responsive": true,
+        "order": [[0, 'desc']],
+        "columnDefs": [{ "orderable": false, "targets": [4, 5] }]
+      } );
+    {% endif %}
 
 
-</script>
+  </script>
 {% endblock %}
