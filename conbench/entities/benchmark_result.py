@@ -26,10 +26,10 @@ from ..entities._entity import (
     generate_uuid,
     to_float,
 )
-from ..entities.case import Case
-from ..entities.context import Context
+from ..entities.case import Case, get_case_or_create
+from ..entities.context import Context, get_context_or_create
 from ..entities.hardware import ClusterSchema, MachineSchema
-from ..entities.info import Info
+from ..entities.info import Info, get_info_or_create
 from ..entities.run import GitHubCreate, Run
 
 
@@ -269,26 +269,9 @@ class BenchmarkResult(Base, EntityMixin):
         # Also note: this pulls the `name=xx` key/value pair out of tags.
         name = tags.pop("name")
 
-        # create if not exists
-        c = {"name": name, "tags": tags}
-        case = Case.first(**c)
-        if not case:
-            # Note(JP): there is a race condition here, expect this to collide
-            case = Case.create(c)
-
-        # create if not exists
-        if "context" not in data:
-            data["context"] = {}
-        context = Context.first(tags=data["context"])
-        if not context:
-            context = Context.create({"tags": data["context"]})
-
-        # create if not exists
-        if "info" not in data:
-            data["info"] = {}
-        info = Info.first(tags=data["info"])
-        if not info:
-            info = Info.create({"tags": data["info"]})
+        case = get_case_or_create({"name": name, "tags": tags})
+        context = get_context_or_create({"tags": data["context"]})
+        info = get_info_or_create({"tags": data["info"]})
 
         # Create a corresponding `run` entity in the database if it doesn't
         # exist yet. Use the user-given `id` (string) as primary key. If the

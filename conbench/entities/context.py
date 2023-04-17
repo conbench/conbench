@@ -18,6 +18,24 @@ class Context(Base, EntityMixin):
     tags: Mapped[dict] = NotNull(postgresql.JSONB)
 
 
+def get_context_or_create(ctx_dict) -> Context:
+    """
+    Try to create, but expect conflict (work with unique constraint on
+    name/tags).
+
+    Return (newly created, or previously existing) object, or raise an
+    exception.
+    """
+    try:
+        return Context.create(ctx_dict)
+    except s.exc.IntegrityError as exc:
+        if "unique constraint" in str(exc):
+            c = Context.first(**ctx_dict)
+            assert c is not None
+            return c
+        raise
+
+
 s.Index("context_index", Context.tags, unique=True)
 
 

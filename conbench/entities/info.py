@@ -18,6 +18,24 @@ class Info(Base, EntityMixin):
     tags: Mapped[dict] = NotNull(postgresql.JSONB)
 
 
+def get_info_or_create(ctx_dict) -> Info:
+    """
+    Try to create, but expect conflict (work with unique constraint on
+    name/tags).
+
+    Return (newly created, or previously existing) object, or raise an
+    exception.
+    """
+    try:
+        return Info.create(ctx_dict)
+    except s.exc.IntegrityError as exc:
+        if "unique constraint" in str(exc):
+            i = Info.first(**ctx_dict)
+            assert i is not None
+            return i
+        raise
+
+
 s.Index("info_index", Info.tags, unique=True)
 
 
