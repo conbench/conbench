@@ -196,16 +196,17 @@ class BenchmarkResult(Base, EntityMixin):
         # keys being non-empty strings, and values being non-empty strings.
         tags = userres["tags"]
         benchmark_name = tags.pop("name")
+        # Create related DB entities if they do not exist yet.
         case = get_case_or_create({"name": benchmark_name, "tags": tags})
         context = get_context_or_create({"tags": userres["context"]})
         info = get_info_or_create({"tags": userres["info"]})
 
-        # Create a corresponding `run` entity in the database if it doesn't
+        # Create a corresponding `Run` entity in the database if it doesn't
         # exist yet. Use the user-given `id` (string) as primary key. If the
         # Run is already known in the database then only update the
         # `has_errors` property, if necessary. All other run-specific
-        # properties provided as part of this BenchmarkResultCreate structure (like
-        # `machine_info` and `run_name`) get silently ignored.
+        # properties provided as part of this BenchmarkResultCreate structure
+        # (like `machine_info` and `run_name`) get silently ignored.
         run = Run.first(id=userres["run_id"])
         if run:
             if "error" in userres:
@@ -230,25 +231,25 @@ class BenchmarkResult(Base, EntityMixin):
             # `validate_run_result_consistency(userres)` one more time (because
             # _we_ are not the ones who created the Run).
 
-        benchmark_result_data["run_id"] = userres["run_id"]
-        benchmark_result_data["batch_id"] = userres["batch_id"]
+        result_data_for_db["run_id"] = userres["run_id"]
+        result_data_for_db["batch_id"] = userres["batch_id"]
 
         # At this point `data["timestamp"]` is expected to be a tz-aware
         # datetime object in UTC.
-        benchmark_result_data["timestamp"] = userres["timestamp"]
-        benchmark_result_data["validation"] = userres.get("validation")
-        benchmark_result_data["change_annotations"] = {
+        result_data_for_db["timestamp"] = userres["timestamp"]
+        result_data_for_db["validation"] = userres.get("validation")
+        result_data_for_db["change_annotations"] = {
             key: value
             for key, value in userres.get("change_annotations", {}).items()
             if value is not None
         }
-        benchmark_result_data["case_id"] = case.id
-        benchmark_result_data["optional_benchmark_info"] = userres.get(
+        result_data_for_db["case_id"] = case.id
+        result_data_for_db["optional_benchmark_info"] = userres.get(
             "optional_benchmark_info"
         )
-        benchmark_result_data["info_id"] = info.id
-        benchmark_result_data["context_id"] = context.id
-        benchmark_result = BenchmarkResult(**benchmark_result_data)
+        result_data_for_db["info_id"] = info.id
+        result_data_for_db["context_id"] = context.id
+        benchmark_result = BenchmarkResult(**result_data_for_db)
         benchmark_result.save()
 
         return benchmark_result
