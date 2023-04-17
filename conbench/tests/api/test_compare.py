@@ -1,9 +1,6 @@
 import pytest
 
-from ...api._examples import (
-    _api_compare_entity,
-    _api_compare_list,
-)
+from ...api._examples import _api_compare_entity, _api_compare_list
 from ...api.compare import _get_pairs
 from ...entities._comparator import _round
 from ...tests.api import _asserts, _fixtures
