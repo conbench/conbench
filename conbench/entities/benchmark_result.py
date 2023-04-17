@@ -148,7 +148,7 @@ class BenchmarkResult(Base, EntityMixin):
         # Now, check for a more subtle error condition, based on the per-
         # iteration samples. Rely on `stats` key to exist (see checks above).
         if "stats" in userres and do_iteration_samples_look_like_error(
-            userres["stats"]
+            userres["stats"]["data"]
         ):
             if "error" not in userres:
                 # User did not set `error`, but the number sequence indicates
@@ -180,7 +180,8 @@ class BenchmarkResult(Base, EntityMixin):
             # deserializaiton/validation against the `BenchmarkResultCreate`
             # schema below. This needs better naming. Most importantly, we
             # should make use of typing information derived from the schema.
-            benchmark_result_data = data["stats"].copy()
+            # Merge this on top of the above-defined benchmark_result_data.
+            benchmark_result_data = benchmark_result_data | data["stats"].copy()
 
             # Note(JP): I think we may want to emit a Bad Request response when
             # benchmark_result_data['data'] does not contain any non-null
@@ -303,7 +304,6 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_result_data["info_id"] = info.id
         benchmark_result_data["context_id"] = context.id
         benchmark_result = BenchmarkResult(**benchmark_result_data)
-
         benchmark_result.save()
 
         return benchmark_result
