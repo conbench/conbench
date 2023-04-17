@@ -65,7 +65,6 @@ GAUGE_BMRT_CACHE_LAST_UPDATE_SECONDS = prometheus_client.Gauge(
     "The time the last iteration of fetch_and_cache_most_recent_results() took",
 )
 
-gauge_gh_api_rem_set = {"set": False}
 
 # The topic of Gauge initiatlization in the Prometheus ecosystem is confusing.
 # The spec says "Gauges MUST start at 0"
@@ -80,6 +79,17 @@ gauge_gh_api_rem_set = {"set": False}
 # initialized'. That is, if this ever shows a positive value or 0 then the
 # value was communciated within an HTTP Response.
 GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING.set(-1)
+
+
+COUNTER_BENCHMARK_RESULTS_INGESTED = prometheus_client.Counter(
+    "conbench_benchmark_results_ingested",
+    "The total number of individual benchmark results successfully inserted "
+    "into the database",
+    # Keep track of the benchmarked repository for which this result was
+    # inserted (this is expected to be a _small_ number of values per Conbench
+    # deployment, smaller than 10, typically 1 or 2).
+    labelnames=["repourl"],
+)
 
 
 def decorate_flask_app_with_metrics(app) -> None:
@@ -159,32 +169,38 @@ def http_handler_name(r: flask.Request) -> str:
     return ep
 
 
-def _periodically_set_q_rem() -> None:
+# This is a dictionary which can be mutated (from the outside, it's part of the
+# interface of this module) by other threads, to indicate when a meaningful
+# gauge value was set (see impl of _periodically_set_q_rem()).
+gauge_gh_api_rem_set = {"set": False}
+
+
+def periodically_set_q_rem() -> None:
     """
+    This function immediately returns after having spawned a thread.
+
     GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING is a thread-safe data structure.
 
     See https://github.com/conbench/conbench/issues/997. Keep setting this
     gauge explicitly to -1 to try to not have this appear as if it's 0 (which
     seemingly the receiving end might think when there hasn't been an update
-    for a while? Prometheus gauges are weird, because their initialization
-    state is not so well-defined. For us, 0 is a special allowed value and
-    explicitly _not_ the initialization value.)
+    for a while? Prometheus gauges are somewhat difficult to understand with
+    respect to their initialization state. For us, 0 is a special, allowed
+    value and explicitly _not_ the initialization value.)
     """
 
     def func():
         while True:
             time.sleep(10)
-            if gauge_gh_api_rem_set["set"] - 1:
-                # This process set an actual, meaningful value.
-                # Stop re-inforcing the init state.
+
+            if gauge_gh_api_rem_set["set"]:
+                # This process set an actual, meaningful value. Stop
+                # reinforcing the initial state.
+                log.info("_periodically_set_q_rem(): terminate thread")
                 return
+
             GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING.set(-1)
 
     # Create a threaddy zombie, no need to join it. It likely terminates
     # itself. If it doesn't that's OK, too.
     threading.Thread(target=func).start()
-
-    # This function immediately returns after having spawned the thread.
-
-
-_periodically_set_q_rem()

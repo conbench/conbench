@@ -5,6 +5,8 @@ import flask_login
 import orjson
 from sqlalchemy import select
 
+import conbench.metrics
+
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
@@ -288,6 +290,11 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         except BenchmarkResultValidationError as exc:
             return resp400(str(exc))
 
+        # Rely on the idea that the lookup
+        # `benchmark_result.run.commit.repo_url` always succeeds
+        conbench.metrics.COUNTER_BENCHMARK_RESULTS_INGESTED.labels(
+            repourl=str(benchmark_result.run.commit.repo_url)
+        ).inc()
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 
 
