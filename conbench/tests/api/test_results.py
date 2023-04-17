@@ -1073,8 +1073,8 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
     def test_create_result_mismatch_run_commit_hash(self, client):
         self.authenticate(client)
 
-        run = _fixtures.VALID_RUN_PAYLOAD.copy()
-        result = _fixtures.VALID_RESULT_PAYLOAD.copy()
+        run = copy.deepcopy(_fixtures.VALID_RUN_PAYLOAD)
+        result = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
 
         resp = client.post("/api/runs/", json=run)
         assert resp.status_code == 201, resp.text
