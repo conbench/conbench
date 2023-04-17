@@ -136,12 +136,6 @@ class BenchmarkResult(Base, EntityMixin):
                 "(the name of the conceptual benchmark)"
             )
 
-        if "stats" not in userres:
-            if "error" not in userres:
-                raise BenchmarkResultValidationError(
-                    "`error` property required when `stats` property not present"
-                )
-
         run = Session.scalars(select(Run).where(Run.id == userres["run_id"])).first()
 
         if run is not None:

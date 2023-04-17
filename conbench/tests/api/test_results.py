@@ -1093,3 +1093,20 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         assert (
             f"Run '{run['id']}' refers to commit hash '{run_commit_hash}'" in resp.text
         )
+
+    def test_create_result_missing_stats_and_error(self, client):
+        self.authenticate(client)
+        result = _fixtures.VALID_RESULT_PAYLOAD.copy()
+        del result["stats"]
+        try:
+            del result["error"]
+        except KeyError:
+            # if it wasn't set before, that's good, too.
+            pass
+
+        resp = client.post("/api/benchmark-results/", json=result)
+        assert resp.status_code == 400, resp.text
+
+        # This is currently the error message emitted by marshmallow
+        # schema validation.
+        assert "Either stats or error field is required" in resp.text
