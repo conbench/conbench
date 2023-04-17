@@ -9,10 +9,12 @@ import numpy as np
 import sigfig
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
+from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, relationship
 
 import conbench.util
+from conbench.db import Session
 
 from ..entities._comparator import z_improvement, z_regression
 from ..entities._entity import (
@@ -29,6 +31,10 @@ from ..entities.context import Context
 from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info
 from ..entities.run import GitHubCreate, Run
+
+
+class BenchmarkResultValidationError(Exception):
+    pass
 
 
 class BenchmarkResult(Base, EntityMixin):
@@ -108,8 +114,61 @@ class BenchmarkResult(Base, EntityMixin):
     # marshmallow schema. Maybe this would be a strong reason to move to using
     # pydantic -- I believe when defining a schema with pydantic, the
     # corresponding type information can be used for mypy automatically.
-    def create(data):
-        """Create BenchmarkResult and write to database."""
+    # Also see https://stackoverflow.com/q/75662696/145400.
+    def create(userres):
+        """
+        `userres`: user-given Benchmark Result object, after JSON
+        deserialization.
+
+        Perform further validation on user-given data, and perform data
+        mutation / augmentation.
+
+        Attempt to write result to database.
+
+        Create associated Run, Case, Context, Info entities in DB if required.
+
+        Raises BenchmarkResultValidationError, exc message is expected to be
+        emitted to the HTTP client in a Bad Request response.
+        """
+        # See: https://github.com/conbench/conbench/issues/935
+        if "name" not in userres["tags"]:
+            raise BenchmarkResultValidationError(
+                "`name` property must be present in `tags` "
+                "(the name of the conceptual benchmark)"
+            )
+
+        run = Session.scalars(select(Run).where(Run.id == userres["run_id"])).first()
+
+        if run is not None:
+            # TODO: specification -- if userres.get("github") is None and if
+            # the Run has associated commit information -- then consider this
+            # as a conflict or not? what about branch name and PR number?
+
+            # The property should not be called "github", this confuses me each
+            # time I deal with that.
+            if userres.get("github") is not None:
+                chrun = run.commit.hash
+                chresult = userres["github"]["commit"]
+                if chrun != chresult:
+                    raise BenchmarkResultValidationError(
+                        f"Result refers to commit hash '{chresult}', but Run '{run.id}' "
+                        f"refers to commit hash '{chrun}'"
+                    )
+
+                # Cannot do this yet, this is too complicated as of None/empty
+                # string confusion repo_url_run = run.commit.repo_url
+                # repo_url_result = userres["github"]["repository"] if
+                # repo_url_run != repo_url_result: raise
+                #     BenchmarkResultValidationError( f"Result refers to
+                #         repository URL '{repo_url_result}', but Run
+                #         '{run.id}' " f"refers to repository URL
+                #     '{repo_url_run}'" )
+
+        # Temporary: keep name `data` -- it's unfortunate that we have the name
+        # `data` here while also having key(s) in the dict(s) that are called
+        # `data`. Assign a recognizable name to the big, outest, user-given
+        # object: userres is not ideal, but a start.
+        data = userres
         tags = data["tags"]
         has_error = "error" in data
         has_stats = "stats" in data

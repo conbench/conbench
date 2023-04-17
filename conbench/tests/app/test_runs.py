@@ -11,13 +11,13 @@ class TestRunGet(_asserts.GetEnforcer):
 
     def _create(self, client):
         self.create_benchmark(client)
-        return _fixtures.VALID_PAYLOAD["run_id"]
+        return _fixtures.VALID_RESULT_PAYLOAD["run_id"]
 
 
 class TestRunDelete(_asserts.DeleteEnforcer):
     def test_authenticated(self, client):
         self.create_benchmark(client)
-        run_id = _fixtures.VALID_PAYLOAD["run_id"]
+        run_id = _fixtures.VALID_RESULT_PAYLOAD["run_id"]
         self.authenticate(client)
         response = client.get(f"/runs/{run_id}/")
         self.assert_page(response, "Run")
@@ -34,7 +34,7 @@ class TestRunDelete(_asserts.DeleteEnforcer):
 
     def test_unauthenticated(self, client):
         self.create_benchmark(client)
-        run_id = _fixtures.VALID_PAYLOAD["run_id"]
+        run_id = _fixtures.VALID_RESULT_PAYLOAD["run_id"]
         self.logout(client)
         data = {"delete": ["Delete"]}
         response = client.post(f"/runs/{run_id}/", data=data, follow_redirects=True)
@@ -42,7 +42,7 @@ class TestRunDelete(_asserts.DeleteEnforcer):
 
     def test_no_csrf_token(self, client):
         self.create_benchmark(client)
-        run_id = _fixtures.VALID_PAYLOAD["run_id"]
+        run_id = _fixtures.VALID_RESULT_PAYLOAD["run_id"]
         self.authenticate(client)
         data = {"delete": ["Delete"]}
         response = client.post(f"/runs/{run_id}/", data=data, follow_redirects=True)

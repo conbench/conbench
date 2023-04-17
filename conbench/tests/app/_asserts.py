@@ -79,7 +79,7 @@ class AppEndpointTest:
 
     def create_benchmark(self, client):
         self.authenticate(client)
-        response = client.post("/api/benchmarks/", json=_fixtures.VALID_PAYLOAD)
+        response = client.post("/api/benchmarks/", json=_fixtures.VALID_RESULT_PAYLOAD)
         assert response.status_code == 201, response.text
         benchmark_result_id = response.json["id"]
         self.logout(client)

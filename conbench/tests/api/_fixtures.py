@@ -44,7 +44,7 @@ MACHINE_INFO = {
     "gpu_product_names": ["Tesla T4", "GeForce GTX 1060 3GB"],
 }
 
-VALID_PAYLOAD = {
+VALID_RESULT_PAYLOAD = {
     "run_id": "2a5709d179f349cba69ed242be3e6321",
     "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
     "run_reason": "commit",
@@ -116,22 +116,22 @@ VALID_PAYLOAD = {
     },
 }
 
-VALID_PAYLOAD_WITH_ERROR = dict(
+VALID_RESULT_PAYLOAD_WITH_ERROR = dict(
     run_id="ya5709d179f349cba69ed242be3e6323",
     error={"stack_trace": "some trace", "command": "ls"},
     **{
         key: value
-        for key, value in VALID_PAYLOAD.items()
+        for key, value in VALID_RESULT_PAYLOAD.items()
         if key not in ("stats", "run_id")
     },
 )
 
-VALID_PAYLOAD_WITH_ITERATION_ERROR = dict(
+VALID_RESULT_PAYLOAD_WITH_ITERATION_ERROR = dict(
     run_id="ya5709d179f349cba69ed242be3e6323",
     error={"stack_trace": "some trace", "command": "ls"},
     **{
         key: value
-        for key, value in VALID_PAYLOAD.items()
+        for key, value in VALID_RESULT_PAYLOAD.items()
         if key not in ("stats", "run_id")
     },
     stats={
@@ -165,12 +165,12 @@ VALID_PAYLOAD_WITH_ITERATION_ERROR = dict(
     },
 )
 
-VALID_PAYLOAD_FOR_CLUSTER = dict(
+VALID_RESULT_PAYLOAD_FOR_CLUSTER = dict(
     run_id="3a5709d179f349cba69ed242be3e6323",
     cluster_info=CLUSTER_INFO,
     **{
         key: value
-        for key, value in VALID_PAYLOAD.items()
+        for key, value in VALID_RESULT_PAYLOAD.items()
         if key not in ("machine_info", "run_id")
     },
 )
@@ -228,7 +228,7 @@ def benchmark_result(
 ):
     """Create BenchmarkResult and write to database."""
 
-    data = copy.deepcopy(VALID_PAYLOAD)
+    data = copy.deepcopy(VALID_RESULT_PAYLOAD)
     data["run_name"] = f"commit: {_uuid()}"
     data["run_reason"] = reason if reason else "commit"
     data["run_id"] = run_id if run_id else _uuid()

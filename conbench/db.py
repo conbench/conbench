@@ -1,5 +1,6 @@
 import functools
 import logging
+import sys
 
 import psycopg2
 import sqlalchemy.exc
@@ -20,10 +21,16 @@ log = logging.getLogger(__name__)
 log.info("psycopg2.__libpq_version__: %s", psycopg2.__libpq_version__)
 
 
+# Pick less log verbosity when
+logfunc = log.info
+if "pytest" in sys.modules:
+    logfunc = log.debug
+
+
 def configure_engine(url):
     global engine, session_maker, Session
 
-    log.info("create sqlalchemy DB engine")
+    logfunc("create sqlalchemy DB engine")
     engine = create_engine(
         url,
         future=True,
@@ -50,7 +57,7 @@ def configure_engine(url):
             "connect_timeout": 3,  # unit: seconds
         },
     )
-    log.info("bind engine to session")
+    logfunc("bind engine to session")
     session_maker.configure(bind=engine)
 
 
@@ -142,7 +149,7 @@ def create_all():
         else:
             raise
 
-    log.info("create_all(engine) returned. dispose()")
+    logfunc("create_all(engine) returned. dispose()")
     engine.dispose()
 
 

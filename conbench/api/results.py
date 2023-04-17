@@ -14,6 +14,7 @@ from ..entities.benchmark_result import (
     BenchmarkResult,
     BenchmarkResultFacadeSchema,
     BenchmarkResultSerializer,
+    BenchmarkResultValidationError,
 )
 from ..entities.case import Case
 from ._resp import json_response_for_byte_sequence, resp400
@@ -282,9 +283,10 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         # At this point, assume that data["tags"] is a flat dictionary with
         # keys being non-empty strings, and values being non-empty strings.
 
-        # Note(JP): in the future this will also raise further validation
-        # errors that are to be exposed via a 400 response to the HTTP client
-        benchmark_result = BenchmarkResult.create(data)
+        try:
+            benchmark_result = BenchmarkResult.create(data)
+        except BenchmarkResultValidationError as exc:
+            return resp400(str(exc))
 
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 
@@ -292,6 +294,8 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
 benchmark_entity_view = BenchmarkEntityAPI.as_view("benchmark")
 benchmark_list_view = BenchmarkListAPI.as_view("benchmarks")
 
+# Phase these out, at some point.
+# https://github.com/conbench/conbench/issues/972
 rule(
     "/benchmarks/",
     view_func=benchmark_list_view,
@@ -299,6 +303,19 @@ rule(
 )
 rule(
     "/benchmarks/<benchmark_result_id>/",
+    view_func=benchmark_entity_view,
+    methods=["GET", "DELETE", "PUT"],
+)
+
+# Towards the more explicit route path naming":
+# https://github.com/conbench/conbench/issues/972
+rule(
+    "/benchmark-results/",
+    view_func=benchmark_list_view,
+    methods=["GET", "POST"],
+)
+rule(
+    "/benchmark=results/<benchmark_result_id>/",
     view_func=benchmark_entity_view,
     methods=["GET", "DELETE", "PUT"],
 )

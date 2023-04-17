@@ -9,7 +9,7 @@ class TestHardwares(_asserts.AppEndpointTest):
         self.authenticate(client)
         response = client.get("/hardware/")
         self.assert_page(response, "Hardware")
-        machine_name = _fixtures.VALID_PAYLOAD["machine_info"]["name"]
+        machine_name = _fixtures.VALID_RESULT_PAYLOAD["machine_info"]["name"]
         assert f"<div>{machine_name}</div>".encode() in response.data
 
     def test_hardware_list_unauthenticated(self, client):
@@ -20,7 +20,7 @@ class TestHardwares(_asserts.AppEndpointTest):
 class TestHardware(_asserts.AppEndpointTest):
     def test_hardware_get_authenticated(self, client):
         self.create_benchmark(client)
-        run_id = _fixtures.VALID_PAYLOAD["run_id"]
+        run_id = _fixtures.VALID_RESULT_PAYLOAD["run_id"]
         response = client.get(f"/api/runs/{run_id}/")
         hardware_id = response.json["hardware"]["id"]
 
@@ -30,7 +30,7 @@ class TestHardware(_asserts.AppEndpointTest):
 
     def test_hardware_get_unauthenticated(self, client):
         self.create_benchmark(client)
-        run_id = _fixtures.VALID_PAYLOAD["run_id"]
+        run_id = _fixtures.VALID_RESULT_PAYLOAD["run_id"]
         response = client.get(f"/api/runs/{run_id}/")
         hardware_id = response.json["hardware"]["id"]
 

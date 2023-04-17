@@ -354,12 +354,14 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         self.assert_200_ok(response, contains=_expected_entity(benchmark_result_2))
 
 
-class TestBenchmarkPost(_asserts.PostEnforcer):
+class TestBenchmarkResultPost(_asserts.PostEnforcer):
     url = "/api/benchmarks/"
-    valid_payload = _fixtures.VALID_PAYLOAD
-    valid_payload_for_cluster = _fixtures.VALID_PAYLOAD_FOR_CLUSTER
-    valid_payload_with_error = _fixtures.VALID_PAYLOAD_WITH_ERROR
-    valid_payload_with_iteration_error = _fixtures.VALID_PAYLOAD_WITH_ITERATION_ERROR
+    valid_payload = _fixtures.VALID_RESULT_PAYLOAD
+    valid_payload_for_cluster = _fixtures.VALID_RESULT_PAYLOAD_FOR_CLUSTER
+    valid_payload_with_error = _fixtures.VALID_RESULT_PAYLOAD_WITH_ERROR
+    valid_payload_with_iteration_error = (
+        _fixtures.VALID_RESULT_PAYLOAD_WITH_ITERATION_ERROR
+    )
     required_fields = [
         "batch_id",
         "context",
@@ -706,6 +708,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         self.assert_400_bad_request(response, message)
 
     def _assert_none_commit(self, response):
+        assert response.status_code == 201, (response.status_code, response.text)
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
         assert benchmark_result.run.commit.sha == ""
@@ -732,6 +735,12 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
+    # Note(JP): what does this help with, which use case does this enable? It
+    # creates quite a bit of work to support empty string values throughout the
+    # code base -- does that mean the same like not providing the data at all?
+    # Also see https://github.com/conbench/conbench/pull/889
+    # https://github.com/conbench/conbench/issues/817
+    # https://github.com/conbench/conbench/issues/818
     def test_create_empty_commit_context(self, client):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
@@ -929,7 +938,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
     def test_create_benchmark_context_missing(self, client):
         self.authenticate(client)
-        payload = _fixtures.VALID_PAYLOAD.copy()
+        payload = _fixtures.VALID_RESULT_PAYLOAD.copy()
         del payload["context"]
         resp = client.post(self.url, json=payload)
         assert resp.status_code == 400, f"unexpected response: {resp.text}"
@@ -937,13 +946,12 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
 
     def test_create_benchmark_name_missing(self, client):
         self.authenticate(client)
-        payload = copy.deepcopy(_fixtures.VALID_PAYLOAD)
+        payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
         del payload["tags"]["name"]
-        with pytest.raises(KeyError):
-            client.post(self.url, json=payload)
-            # TODO: https://github.com/conbench/conbench/issues/935
-            # This here just quickly checks that there is a failure at all,
-            # that 'name' is required.
+        # https://github.com/conbench/conbench/issues/935
+        resp = client.post(self.url, json=payload)
+        assert resp.status_code == 400, resp.text
+        assert "`name` property must be present in `tags" in resp.text
 
     @pytest.mark.parametrize(
         "tagdict",
@@ -958,7 +966,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
     )
     def test_create_benchmark_bad_tags(self, client, tagdict):
         self.authenticate(client)
-        payload = copy.deepcopy(_fixtures.VALID_PAYLOAD)
+        payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
         payload["tags"] = tagdict.copy()
         resp = client.post(self.url, json=payload)
         assert resp.status_code == 400
@@ -988,7 +996,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
     )
     def test_create_benchmark_good_tags(self, client, tagdict):
         self.authenticate(client)
-        payload = copy.deepcopy(_fixtures.VALID_PAYLOAD)
+        payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
         payload["tags"] = tagdict.copy()
         resp = client.post(self.url, json=payload)
         assert resp.status_code == 201
@@ -1005,7 +1013,7 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         this scenario.
         """
         self.authenticate(client)
-        payload = _fixtures.VALID_PAYLOAD.copy()
+        payload = _fixtures.VALID_RESULT_PAYLOAD.copy()
         payload["run_id"] = _uuid()
         payload["batch_id"] = _uuid()
 
@@ -1061,3 +1069,44 @@ class TestBenchmarkPost(_asserts.PostEnforcer):
         assert resp.status_code == 200, resp.text
 
         assert resp.json["timestamp"] == timeoutput
+
+    def test_create_result_mismatch_run_commit_hash(self, client):
+        self.authenticate(client)
+
+        run = copy.deepcopy(_fixtures.VALID_RUN_PAYLOAD)
+        result = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
+
+        resp = client.post("/api/runs/", json=run)
+        assert resp.status_code == 201, resp.text
+
+        run_commit_hash = run["github"]["commit"]
+
+        # Make result point to run:
+        result["run_id"] = run["id"]
+
+        # Make result refer to a different commit hash:
+        badhash = run_commit_hash[:-4] + "aaaa"
+        result["github"]["commit"] = badhash
+        resp = client.post("/api/benchmark-results/", json=result)
+        assert resp.status_code == 400, resp.text
+        assert f"Result refers to commit hash '{badhash}'" in resp.text
+        assert (
+            f"Run '{run['id']}' refers to commit hash '{run_commit_hash}'" in resp.text
+        )
+
+    def test_create_result_missing_stats_and_error(self, client):
+        self.authenticate(client)
+        result = _fixtures.VALID_RESULT_PAYLOAD.copy()
+        del result["stats"]
+        try:
+            del result["error"]
+        except KeyError:
+            # if it wasn't set before, that's good, too.
+            pass
+
+        resp = client.post("/api/benchmark-results/", json=result)
+        assert resp.status_code == 400, resp.text
+
+        # This is currently the error message emitted by marshmallow
+        # schema validation.
+        assert "Either stats or error field is required" in resp.text
