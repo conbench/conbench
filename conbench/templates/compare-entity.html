@@ -66,32 +66,26 @@ matching fields between baseline and contender are aligned and mismatched fields
           </thead>
           <tbody>
             {% for c in comparisons %}
-            <tr>
-              <td>
-                {% if c.analysis.lookback_z_score.z_score %}
-                  {{ c.analysis.lookback_z_score.z_score }} z
-                {% endif %}
-                {% if c.analysis.lookback_z_score.regression_indicated %}
-                  <span class="glyphicon glyphicon-arrow-down"></span>
-                {% endif %}
-                {% if c.analysis.lookback_z_score.improvement_indicated %}
-                  <span class="glyphicon glyphicon-arrow-up"></span>
-                {% endif %}
-              </td>
-              <td>
-                {{ c.analysis.pairwise.percent_change }}%
-                {% if c.analysis.pairwise.regression_indicated %}
-                  <span class="glyphicon glyphicon-arrow-down"></span>
-                {% endif %}
-                {% if c.analysis.pairwise.improvement_indicated %}
-                  <span class="glyphicon glyphicon-arrow-up"></span>
-                {% endif %}
-              </td>
-              <td>{{ c.baseline.value }} {{ c.unit }}</td>
-              <td>{{ c.contender.value }} {{ c.unit }}</td>
-            </tr>
+              <tr>
+                <td>
+                  {% if c.analysis.lookback_z_score.z_score %}{{ c.analysis.lookback_z_score.z_score }} z{% endif %}
+                  {% if c.analysis.lookback_z_score.regression_indicated %}
+                    <span class="glyphicon glyphicon-arrow-down"></span>
+                  {% endif %}
+                  {% if c.analysis.lookback_z_score.improvement_indicated %}
+                    <span class="glyphicon glyphicon-arrow-up"></span>
+                  {% endif %}
+                </td>
+                <td>
+                  {{ c.analysis.pairwise.percent_change }}%
+                  {% if c.analysis.pairwise.regression_indicated %}<span class="glyphicon glyphicon-arrow-down"></span>{% endif %}
+                  {% if c.analysis.pairwise.improvement_indicated %}<span class="glyphicon glyphicon-arrow-up"></span>{% endif %}
+                </td>
+                <td>{{ c.baseline.value }} {{ c.unit }}</td>
+                <td>{{ c.contender.value }} {{ c.unit }}</td>
+              </tr>
             {% endfor %}
-        </tbody>
+          </tbody>
         </table>
       </div>
     {% endif %}
