@@ -257,11 +257,6 @@ class BenchmarkResult(Base, EntityMixin):
                 "status": "Partial result: not all iterations completed"
             }
 
-        # Note(JP): this implicitly introduces a requirement for `name` to be
-        # set: https://github.com/conbench/conbench/issues/935
-        # Also note: this pulls the `name=xx` key/value pair out of tags.
-        name = tags.pop("name")
-
         # See https://github.com/conbench/conbench/issues/935,
         # name is guaranteed to be set.
         benchmark_name = tags.pop("name")
