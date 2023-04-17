@@ -32,6 +32,8 @@ from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info, get_info_or_create
 from ..entities.run import GitHubCreate, Run
 
+log = logging.getLogger(__name__)
+
 
 class BenchmarkResultValidationError(Exception):
     pass
@@ -132,6 +134,28 @@ class BenchmarkResult(Base, EntityMixin):
         """
 
         validate_and_augment_result_tags(userres)
+        validate_run_result_consistency(userres)
+
+        result_error_for_db: Optional[Dict] = None
+
+        # Handle 'error' scenarios. Obvious: user-given error object set.
+        if "error" in userres:
+            # `data["error"]` is a JSON object.
+            result_error_for_db = userres["error"]
+
+        # Now, check for a more subtle error condition, based on the per-
+        # iteration samples. Rely on `stats` key to exist (see checks above).
+        if "stats" in userres and do_iteration_samples_look_like_error(
+            userres["stats"]
+        ):
+            if "error" not in userres:
+                # User did not set `error`, but the number sequence indicates
+                # that this result is to be considered 'errored'. Set a generic
+                # error message.
+                result_error_for_db = {
+                    "status": "Partial result: not all iterations completed"
+                }
+
 
         # Temporary: keep name `data` -- it's unfortunate that we have the name
         # `data` here while also having key(s) in the dict(s) that are called
@@ -495,6 +519,31 @@ class BenchmarkResult(Base, EntityMixin):
             return f"{hw.id[:4]}: " + hw.name[:15]
 
         return f"{hw.id[:4]}: " + hw.name
+
+
+def do_iteration_samples_look_like_error(data: list[Optional[Decimal]]) -> bool:
+    """
+    Inspect user-given numerical values for individual iteration results.
+    Input is a list of either `None` or `Decimal` objects (currently enforced
+    via marshmallow schema). Example: [Decimal('0.099094'), None,
+    Decimal('0.036381')]
+    Consider this multi-sample result as 'good' only when there is at least one
+    numerical value and when _all_ values are numerical values.
+    From https://github.com/conbench/conbench/issues/813: If stats.data
+    contains at least one null value then the BenchmarkResult is considered
+    failed. If no error information was provided by the user, then a dummy
+    error message "not all iterations completed" is automatically set by
+    Conbench upon DB insert.
+    See https://github.com/conbench/conbench/pull/811#discussion_r1129144143
+    """
+    if len(data) == 0:
+        return True
+
+    for sample in data:
+        if sample is None:
+            return True
+
+    return False
 
 
 def validate_and_augment_result_tags(userres: Any):
