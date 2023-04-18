@@ -98,13 +98,13 @@ VALID_RESULT_PAYLOAD = {
         "time_unit": "s",
         "iqr": "0.030442",
         "iterations": 10,
-        "max": "0.148896",
+        "max": "0.1489",
         "mean": "0.036369",
-        "median": "0.008988",
+        "median": "0.0089875",
         "min": "0.004733",
-        "q1": "0.006500",
+        "q1": "0.0065005",
         "q3": "0.036942",
-        "stdev": "0.049194",
+        "stdev": "0.046669",
     },
     "tags": {
         "compression": "snappy",
@@ -128,6 +128,9 @@ VALID_RESULT_PAYLOAD_WITH_ERROR = dict(
 
 VALID_RESULT_PAYLOAD_WITH_ITERATION_ERROR = dict(
     run_id="ya5709d179f349cba69ed242be3e6323",
+    # It's interesting that this has both, the `error` property set and
+    # missing iteration data. Either is sufficient for marking a result as
+    # "errored".
     error={"stack_trace": "some trace", "command": "ls"},
     **{
         key: value

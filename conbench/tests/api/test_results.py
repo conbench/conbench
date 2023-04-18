@@ -82,7 +82,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "min": 1.0,
                 "q1": 1.5,
                 "q3": 2.5,
-                "stdev": 1.0,
+                "stdev": 0.8165,
                 "times": [],
                 "z_score": None,
                 "z_regression": False,
@@ -129,7 +129,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "min": 10.0,
                 "q1": 15.0,
                 "q3": 25.0,
-                "stdev": 10.0,
+                "stdev": 8.165,
                 "times": [],
                 "z_score": None,
                 "z_regression": False,
@@ -175,7 +175,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "min": 10.0,
                 "q1": 15.0,
                 "q3": 25.0,
-                "stdev": 10.0,
+                "stdev": 8.165,
                 "times": [],
                 "z_score": None,
                 "z_improvement": False,
@@ -222,7 +222,7 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "min": 1.0,
                 "q1": 1.5,
                 "q3": 2.5,
-                "stdev": 1.0,
+                "stdev": 0.8165,
                 "times": [],
                 "z_score": None,
                 "z_improvement": False,
@@ -530,8 +530,18 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
         assert Run.one(id=run_payload["id"]).has_errors is True
 
-    def test_create_benchmark_with_one_iteration_error(self, client):
+    @pytest.mark.parametrize("with_error_property", [True, False])
+    def test_create_benchmark_with_one_iteration_error(
+        self, client, with_error_property
+    ):
         self.authenticate(client)
+
+        bmr = copy.deepcopy(self.valid_payload_with_iteration_error)
+        if not with_error_property:
+            # Either `error` or failed iteration mark a result as "errored",
+            # see https://github.com/conbench/conbench/issues/813
+            del bmr["error"]
+
         response = client.post(
             "/api/benchmarks/", json=self.valid_payload_with_iteration_error
         )
@@ -1112,11 +1122,29 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         # schema validation.
         assert "Either stats or error field is required" in resp.text
 
+    def test_create_result_bad_iter_count(self, client):
+        self.authenticate(client)
+        result = _fixtures.VALID_RESULT_PAYLOAD.copy()
+
+        result["stats"] = {
+            "data": (3, 5),
+            "times": [],  # key must be there as of now, validate more, change this.
+            "unit": "s",
+            "time_unit": "s",
+            # also see https://github.com/conbench/conbench/issues/813
+            # https://github.com/conbench/conbench/issues/533
+            "iterations": 3,  # number not yet validated, change this
+        }
+
+        resp = client.post("/api/benchmark-results/", json=result)
+        assert resp.status_code == 400, resp.text
+        assert "iterations count (3) does not match sample count (2)" in resp.text
+
     @pytest.mark.parametrize(
         "samples",
         [(1,), (3, 5), (3, 5, 7)],
     )
-    def test_create_result_no_stdev(self, client, samples):
+    def test_create_result_no_agg_before_three(self, client, samples):
         self.authenticate(client)
 
         result = _fixtures.VALID_RESULT_PAYLOAD.copy()
@@ -1127,7 +1155,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
             "time_unit": "s",
             # also see https://github.com/conbench/conbench/issues/813
             # https://github.com/conbench/conbench/issues/533
-            "iterations": 3,  # number not yet validated, change this
+            "iterations": len(samples),
         }
 
         resp = client.post("/api/benchmark-results/", json=result)
@@ -1138,7 +1166,5 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         if len(samples) >= 3:
             assert resp.json["stats"]["stdev"] > 0
         else:
-            # This currently encodes bug
-            # https://github.com/conbench/conbench/issues/802
-            assert resp.json["stats"]["stdev"] == 0.0
-            # assert resp.json["stats"]["iqr"] == 0
+            for k in ("q1", "q3", "mean", "median", "min", "max", "stdev", "iqr"):
+                assert resp.json["stats"][k] is None

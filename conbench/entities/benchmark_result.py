@@ -124,6 +124,10 @@ class BenchmarkResult(Base, EntityMixin):
         `userres`: user-given Benchmark Result object, after JSON
         deserialization.
 
+        This is the result of marshmallow deserialization/validation against
+        the `BenchmarkResultCreate` schema below. We should make use of typing
+        information derived from the schema.
+
         Perform further validation on user-given data, and perform data
         mutation / augmentation.
 
@@ -138,142 +142,90 @@ class BenchmarkResult(Base, EntityMixin):
         validate_and_augment_result_tags(userres)
         validate_run_result_consistency(userres)
 
-        result_error_for_db: Optional[Dict] = None
+        # The dict that is used for DB insertion later, populated below.
+        result_data_for_db: Dict = {}
 
-        # Handle 'error' scenarios. Obvious: user-given error object set.
+        if "stats" in userres:
+            # First things first: use the complete user-given `stats` object
+            # for potential DB insertion down below. In `error` state, do not
+            # perform deeper validation of the user-given stats object (the
+            # benchmark result is not used for any kind of analysis, which is
+            # why it's probably ok to store the user-given 'stats' object w/o
+            # deeper validation, maybe the data is helpful for debugging). Note
+            # that what the user delivers under the `stats` key as a sub object
+            # (in the result JSON object) is mapped directly on top-level
+            # properties in the Python BenchmarkResult object. That is a bit of
+            # an annoying asymmetry between DB object and JSON representation.
+            result_data_for_db |= userres["stats"]  # PEP 584 update
+
+        # User indicated error with variant A: user-given error object set.
         if "error" in userres:
-            # `data["error"]` is a JSON object.
-            result_error_for_db = userres["error"]
+            # We have business logic elsewhere that checks only for presence of
+            # the `error` key (ignores its value, a value of `None` might
+            # elsewhere be interpreted as error -- this did cost me 30 minutes
+            # of debugging).
+            result_data_for_db["error"] = userres["error"]
 
-        # Now, check for a more subtle error condition, based on the per-
-        # iteration samples. Rely on `stats` key to exist (see checks above).
-        elif "stats" in userres and do_iteration_samples_look_like_error(
-            userres["stats"]["data"]
-        ):
-            # User did not set `error`, but the number sequence indicates
-            # that this result is to be considered 'errored'. Set a generic
-            # error message.
-            result_error_for_db = {
+        # Check for a more subtle error condition based on the per-iteration
+        # samples. Invariant: if "error" is not present then "stats" is present
+        # as a key in this dictionary -- this is schema-enforced. he `stats`
+        # object is guaranteed to have a `data` key.
+        elif do_iteration_samples_look_like_error(userres["stats"]["data"]):
+            # User indicated error with variant B: missing or incomplete data.
+            # User unfortunately did not set `error` explicitly, but we err on
+            # the side auf caution here and treat the result as 'errored'. This
+            # is documented. Set generic error detail.
+            result_data_for_db["error"] = {
+                # Maybe tune this error message to be more generic.
                 "status": "Partial result: not all iterations completed"
             }
 
-        # This is going to be the structure based on which we will do
-        # DB insertion.
-        benchmark_result_data = {}
-        # Only insert `error` key if there is an error object. In JSON, error:
-        # null still means that the benchmark is errored (at least some
-        # business logic treat it as such.)
-        if result_error_for_db is not None:
-            benchmark_result_data["error"] = result_error_for_db
+        else:
+            # process_samples_build_agg() must only be called if
+            # do_iteration_samples_look_like_error() returned False. That's
+            # the case here.
+            result_data_from_stats = validate_and_aggregate_samples(userres["stats"])
 
-        # Temporary: keep name `data` -- it's unfortunate that we have the name
-        # `data` here while also having key(s) in the dict(s) that are called
-        # `data`. Assign a recognizable name to the big, outest, user-given
-        # object: userres is not ideal, but a start.
-        data = userres
-
-        # At this point, assume that data["tags"] is a flat dictionary with
-        # keys being non-empty strings, and values being non-empty strings.
-        tags = data["tags"]
-        has_error = "error" in data
-
-        if "stats" in data:
-            # Note(JP): this is the result of marshmallow
-            # deserialization/validation against the `BenchmarkResultCreate`
-            # schema below. This needs better naming. Most importantly, we
-            # should make use of typing information derived from the schema.
-
-            # Merge this on top of the above-defined benchmark_result_data.
-            benchmark_result_data = benchmark_result_data | data["stats"].copy()
-
-            if benchmark_result_data.get("data"):
-                # Note(JP): looks like `benchmark_result_data["data"]` is a
-                # list of either `None` or `Decimal` objects (currently
-                # enforced via marshmallow schema). Example:
-                #
-                # [Decimal('0.099094'), None, Decimal('0.036381')]
-                #
-                # TODO: let's lock this in with type annotations so that this
-                # is known _here_. Transform `None` to `math.nan` and `Decimal``
-                # to `float`` for subsequent calculations.
-                dat = [
-                    float(x) if x is not None else math.nan
-                    for x in benchmark_result_data["data"]
-                ]
-
-                q1 = q3 = mean = median = min = max = stdev = iqr = None
-
-                # calculate stats only if the data is complete. Note(JP): why?
-                # maybe we want to calculate that always if there are at least
-                # N (3?) data points.
-                any_errored_iteration = any([x is math.nan for x in dat])
-
-                if not any_errored_iteration:
-                    # Note(JP): do we really want to populate all of the below
-                    # except for stddev if the sample size is 1? In that case,
-                    # all of max, min, mean, q1 share the same value. I'd say
-                    # it makes more sense to calculate these statistics only if
-                    # three or more samples have been provided.
-                    q1, q3 = np.percentile(dat, [25, 75])
-                    mean = np.mean(dat)
-                    median = np.median(dat)
-                    min = np.min(dat)
-                    max = np.max(dat)
-                    # review this: https://github.com/conbench/conbench/issues/802
-                    stdev = np.std(dat) if len(dat) > 2 else 0
-                    iqr = q3 - q1
-
-                calculated_result_data = {
-                    "data": dat,
-                    "times": data["stats"].get("times", []),
-                    "unit": data["stats"]["unit"],  # seems to be required, good.
-                    "time_unit": data["stats"].get("time_unit", "s"),
-                    "iterations": len(dat),
-                    "mean": mean,
-                    "median": median,
-                    "min": min,
-                    "max": max,
-                    "stdev": stdev,
-                    "q1": q1,
-                    "q3": q3,
-                    "iqr": iqr,
-                }
-
-                for field in calculated_result_data:
-                    # explicit `is None` because `stdev` is often 0
-                    if benchmark_result_data.get(field) is None:
-                        benchmark_result_data[field] = calculated_result_data[field]
+            # Per-iteration samples looked good, and we did (potentially)
+            # rebuild aggregates. Merge dict `result_stats_data_for_db` on top
+            # of dict `benchmark_result_data`, overwriting upon conflict.
+            result_data_for_db |= result_data_from_stats  # PEP 584 update
 
         # See https://github.com/conbench/conbench/issues/935,
-        # name is guaranteed to be set.
-        benchmark_name = tags.pop("name")
-        case = get_case_or_create({"name": benchmark_name, "tags": tags})
-        context = get_context_or_create({"tags": data["context"]})
-        info = get_info_or_create({"tags": data["info"]})
+        # At this point, assume that data["tags"] is a flat dictionary with
+        # keys being non-empty strings, and values being non-empty strings.
+        tags = userres["tags"]
 
-        # Create a corresponding `run` entity in the database if it doesn't
+        benchmark_name = tags.pop("name")
+
+        # Create related DB entities if they do not exist yet.
+        case = get_case_or_create({"name": benchmark_name, "tags": tags})
+        context = get_context_or_create({"tags": userres["context"]})
+        info = get_info_or_create({"tags": userres["info"]})
+
+        # Create a corresponding `Run` entity in the database if it doesn't
         # exist yet. Use the user-given `id` (string) as primary key. If the
         # Run is already known in the database then only update the
         # `has_errors` property, if necessary. All other run-specific
-        # properties provided as part of this BenchmarkResultCreate structure (like
-        # `machine_info` and `run_name`) get silently ignored.
-        run = Run.first(id=data["run_id"])
+        # properties provided as part of this BenchmarkResultCreate structure
+        # (like `machine_info` and `run_name`) get silently ignored.
+        run = Run.first(id=userres["run_id"])
         if run:
-            if has_error:
+            if "error" in userres:
                 run.has_errors = True
                 run.save()
         else:
             hardware_info_field = (
-                "machine_info" if "machine_info" in data else "cluster_info"
+                "machine_info" if "machine_info" in userres else "cluster_info"
             )
             Run.create(
                 {
-                    "id": data["run_id"],
-                    "name": data.pop("run_name", None),
-                    "reason": data.pop("run_reason", None),
-                    "github": data.pop("github", None),
-                    hardware_info_field: data.pop(hardware_info_field),
-                    "has_errors": has_error,
+                    "id": userres["run_id"],
+                    "name": userres.pop("run_name", None),
+                    "reason": userres.pop("run_reason", None),
+                    "github": userres.pop("github", None),
+                    hardware_info_field: userres.pop(hardware_info_field),
+                    "has_errors": "error" in userres,
                 }
             )
             # The above's `create()` might fail (race condition), in which case
@@ -281,25 +233,25 @@ class BenchmarkResult(Base, EntityMixin):
             # `validate_run_result_consistency(userres)` one more time (because
             # _we_ are not the ones who created the Run).
 
-        benchmark_result_data["run_id"] = data["run_id"]
-        benchmark_result_data["batch_id"] = data["batch_id"]
+        result_data_for_db["run_id"] = userres["run_id"]
+        result_data_for_db["batch_id"] = userres["batch_id"]
 
         # At this point `data["timestamp"]` is expected to be a tz-aware
         # datetime object in UTC.
-        benchmark_result_data["timestamp"] = data["timestamp"]
-        benchmark_result_data["validation"] = data.get("validation")
-        benchmark_result_data["change_annotations"] = {
+        result_data_for_db["timestamp"] = userres["timestamp"]
+        result_data_for_db["validation"] = userres.get("validation")
+        result_data_for_db["change_annotations"] = {
             key: value
-            for key, value in data.get("change_annotations", {}).items()
+            for key, value in userres.get("change_annotations", {}).items()
             if value is not None
         }
-        benchmark_result_data["case_id"] = case.id
-        benchmark_result_data["optional_benchmark_info"] = data.get(
+        result_data_for_db["case_id"] = case.id
+        result_data_for_db["optional_benchmark_info"] = userres.get(
             "optional_benchmark_info"
         )
-        benchmark_result_data["info_id"] = info.id
-        benchmark_result_data["context_id"] = context.id
-        benchmark_result = BenchmarkResult(**benchmark_result_data)
+        result_data_for_db["info_id"] = info.id
+        result_data_for_db["context_id"] = context.id
+        benchmark_result = BenchmarkResult(**result_data_for_db)
         benchmark_result.save()
 
         return benchmark_result
@@ -507,7 +459,122 @@ class BenchmarkResult(Base, EntityMixin):
         return f"{hw.id[:4]}: " + hw.name
 
 
-def do_iteration_samples_look_like_error(data: list[Optional[Decimal]]) -> bool:
+def validate_and_aggregate_samples(stats_usergiven: Any):
+    """
+    Raises BenchmarkResultValidationError upon logical inconsistencies.
+
+    Only run this for the 'success' case, i.e. when the input is a list longer
+    than zero, and each item is a number (not math.nan).
+
+    This returns a dictionary with key/value pairs meant for DB insertion,
+    top-level for BenchmarkResult.
+    """
+
+    agg_keys = ("q1", "q3", "mean", "median", "min", "max", "stdev", "iqr")
+
+    # Encode invariants.
+    samples = stats_usergiven["data"]
+    assert len(samples) > 0
+    for sa in samples:
+        assert sa is not None
+        assert sa != math.nan
+
+    # Proceed with float type.
+    samples = [float(s) for s in samples]
+
+    # First copy the entire stats data structure (this includes times, data,
+    # mean, min, ...). Later: selectively overwrite/augment.
+    result_data_for_db = stats_usergiven.copy()
+
+    # Initialize all aggregate values explicitly to None -- values set below
+    # must be meaningful.
+    for k in agg_keys:
+        result_data_for_db[k] = None
+
+    if len(samples) >= 2:
+        # There is a special case where for one sample the iteration count
+        # may be larger than one, see below.
+        if stats_usergiven["iterations"] != len(samples):
+            raise BenchmarkResultValidationError(
+                f'iterations count ({ stats_usergiven["iterations"] }) does '
+                f"not match sample count ({len(samples)})"
+            )
+
+    if len(samples) >= 3:
+        # See https://github.com/conbench/conbench/issues/802 and
+        # https://github.com/conbench/conbench/issues/1118
+        q1, q3 = np.percentile(samples, [25, 75])
+
+        aggregates = {
+            "q1": q1,
+            "q3": q3,
+            "mean": np.mean(samples),
+            "median": np.median(samples),
+            "min": np.min(samples),
+            "max": np.max(samples),
+            # https://numpy.org/doc/stable/reference/generated/numpy.std.html
+            # This has N in the divisor (ddof=0)
+            "stdev": np.std(samples),
+            "iqr": q3 - q1,
+        }
+
+        # Now, overwrite with self-derived aggregates:
+        for key, value in aggregates.items():
+            result_data_for_db[key] = sigfig.round(value, sigfigs=5)
+
+            # Log upon conflict. Lett the automatically derived value win,
+            # to achieve consistency between the provided samples and the
+            # aggregates.
+            if key in stats_usergiven:
+                if not floatcomp(stats_usergiven[key], value):
+                    log.warning(
+                        "key %s, user-given val %s vs. calculated %s",
+                        key,
+                        stats_usergiven[key],
+                        value,
+                    )
+
+    if len(samples) == 1:
+        if stats_usergiven["iterations"] == 1:
+            # If user provides aggregates, then it's unclear what they
+            # mean.
+            for k in agg_keys:
+                if stats_usergiven.get(k) is not None:
+                    raise BenchmarkResultValidationError(
+                        f"one data point from one iteration: property `{k}` "
+                        "is unexpected"
+                    )
+
+        if stats_usergiven["iterations"] > 1:
+            # Note(JP): Do not yet handle this in a special way, but I think
+            # that this here is precisely the one way to report the result of a
+            # microbenchmark with cross-repetition stats: data: length 1 (the
+            # duration of running many repetitions), and iterations: a number
+            # larger than 1, while mean, max, are now set (then these can be
+            # assumed to be derived from _within_ the microbenchmark. Note that
+            # this is a very special condition). The mean time for a single
+            # repetition now is sample/iterations.
+            ...
+
+    if len(samples) == 2:
+        # If user provides aggregates, then it's unclear what they mean.
+        for k in agg_keys:
+            if stats_usergiven.get(k) is not None:
+                raise BenchmarkResultValidationError(
+                    f"with two provided data points, the property `{k}` "
+                    "is unexpected"
+                )
+
+    return result_data_for_db
+
+
+def floatcomp(v1, v2, sigfigs=5):
+    v1s = sigfig.round(v1, sigfigs=sigfigs)
+    v2s = sigfig.round(v2, sigfigs=sigfigs)
+    return abs(float(v1s) - float(v2s)) < 10**-10
+
+
+def do_iteration_samples_look_like_error(samples: list[Optional[Decimal]]) -> bool:
     """
     Inspect user-given numerical values for individual iteration results.
     Input is a list of either `None` or `Decimal` objects (currently enforced
@@ -522,10 +589,10 @@ def do_iteration_samples_look_like_error(data: list[Optional[Decimal]]) -> bool:
     Conbench upon DB insert.
     See https://github.com/conbench/conbench/pull/811#discussion_r1129144143
     """
-    if len(data) == 0:
+    if len(samples) == 0:
         return True
 
-    for sample in data:
+    for sample in samples:
         if sample is None:
             return True
 
