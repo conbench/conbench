@@ -272,7 +272,8 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
         gh_commit_metadata_dict = None
         try:
             # get_github_commit_metadata() may raise all those exceptions that can
-            # happen during an HTTP request cycle.
+            # happen during an HTTP request cycle. The repository might
+            # for example not exist: Unexpected GitHub HTTP API response: <Response [404]
             gh_commit_metadata_dict = get_github_commit_metadata(cinfo)
         except Exception as exc:
             log.info(
@@ -300,14 +301,12 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
                     exc,
                 )
                 raise
-
             return dbcommit
 
         # Fetching metadata from GitHub failed. Store most important bits in
         # database.
-
         dbcommit = Commit.create_unknown_context(
-            cinfo["commit_hash"], cinfo["repo_url"]
+            commit_hash=cinfo["commit_hash"], repo_url=cinfo["repo_url"]
         )
         return dbcommit
 
