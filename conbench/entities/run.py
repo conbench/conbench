@@ -66,8 +66,16 @@ class Run(Base, EntityMixin):
     info: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
     error_info: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
     error_type: Mapped[Optional[str]] = Nullable(s.String(250))
-    commit_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("commit.id"))
-    commit: Mapped[Commit] = relationship("Commit", lazy="joined")
+
+    # The type annotation makes this a nullable many-to-one relationship.
+    # https://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#nullable-many-to-one
+    # A nullable many-to-one relationship between Commit (one) and potentially
+    # many Runs, but a run can also _not_ point to a commit.
+    commit_id: Mapped[Optional[str]] = mapped_column(s.ForeignKey("commit.id"))
+    commit: Mapped[Optional[Commit]] = relationship(
+        "Commit", lazy="joined", back_populates="runs"
+    )
+
     has_errors: Mapped[bool] = NotNull(s.Boolean, default=False)
     hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
     hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
