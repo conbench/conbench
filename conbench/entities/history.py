@@ -155,7 +155,7 @@ def get_history_for_benchmark(benchmark_result_id: str):
 
 
 def get_history_for_cchr(
-    case_id: str, context_id: str, hardware_hash: str, repo: str
+    case_id: str, context_id: str, hardware_hash: str, repo_url: str
 ) -> List[HistorySample]:
     """
     Given a case/context/hardware/repo, return all non-errored BenchmarkResults
@@ -199,8 +199,12 @@ def get_history_for_cchr(
             BenchmarkResult.case_id == case_id,
             BenchmarkResult.context_id == context_id,
             BenchmarkResult.error.is_(None),
+            # This `sha == Commit.fork_point_sha` cannot be satisfied for
+            # results with an unknown commit context where commit parent/child
+            # and branch information is not available. Consequence is to not
+            # allow for history endpoint result for 'unknown context'.
             Commit.sha == Commit.fork_point_sha,  # on default branch
-            Commit.repository == repo,
+            Commit.repository == repo_url,
             Hardware.hash == hardware_hash,
         )
     )
