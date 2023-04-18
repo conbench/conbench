@@ -12,7 +12,7 @@ from ...entities.commit import (
     Commit,
     GitHubHTTPApiClient,
     backfill_default_branch_commits,
-    get_github_commit,
+    get_github_commit_metadata,
     repository_to_name,
     repository_to_url,
 )
@@ -139,18 +139,18 @@ def test_repository_to_url():
     assert repository_to_url("git@github.com:apache/arrow") == expected
 
 
-def test_get_github_commit_none():
+def test_get_github_commit_metadata_none():
     repo = "https://github.com/apache/arrow"
     sha = "3decc46119d583df56c7c66c77cf2803441c4458"
     branch = "some_user_or_org:some_branch"
     pr_number = 123
 
-    assert get_github_commit(None, None, None, None) == {}
-    assert get_github_commit("", "", "", "") == {}
-    assert get_github_commit(repo, None, None, None) == {}
-    assert get_github_commit(None, pr_number, None, None) == {}
-    assert get_github_commit(None, None, branch, None) == {}
-    assert get_github_commit(None, None, None, sha) == {}
+    assert get_github_commit_metadata(None, None, None, None) == {}
+    assert get_github_commit_metadata("", "", "", "") == {}
+    assert get_github_commit_metadata(repo, None, None, None) == {}
+    assert get_github_commit_metadata(None, pr_number, None, None) == {}
+    assert get_github_commit_metadata(None, None, branch, None) == {}
+    assert get_github_commit_metadata(None, None, None, sha) == {}
 
 
 @pytest.mark.parametrize(
@@ -164,7 +164,7 @@ def test_get_github_commit_none():
         "apache:main",
     ],
 )
-def test_get_github_commit_and_fork_point_sha(branch):
+def test_get_github_commit_metadata_and_fork_point_sha(branch):
     # NOTE: This integration test intentionally hits GitHub.
     if not os.getenv("GITHUB_API_TOKEN"):
         pytest.skip("No GITHUB_API_TOKEN given so we won't hit the GitHub API")
@@ -184,9 +184,11 @@ def test_get_github_commit_and_fork_point_sha(branch):
         "fork_point_sha": sha,
     }
     try:
-        result = get_github_commit(repo, branch=branch, sha=sha, pr_number=None)
+        result = get_github_commit_metadata(
+            repo, branch=branch, sha=sha, pr_number=None
+        )
     except Exception as exc:
-        log.info("exc during get_github_commit(): %s", exc)
+        log.info("exc during get_github_commit_metadata(): %s", exc)
         if "403 Client Error" in str(exc):
             pytest.skip("GitHub API rate limit seen, skip test")
         else:
@@ -206,7 +208,7 @@ def test_get_github_commit_and_fork_point_sha(branch):
         ("dianaclarke:ARROW-13266", None),
     ],
 )
-def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
+def test_get_github_commit_metadata_and_fork_point_sha_pull_request(branch, pr_number):
     # NOTE: This integration test intentionally hits GitHub.
     if not os.getenv("GITHUB_API_TOKEN"):
         pytest.skip("No GITHUB_API_TOKEN given so we won't hit the GitHub API")
@@ -225,9 +227,11 @@ def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
         "fork_point_sha": "780e95c512d63bbea1e040af0eb44a0bf63c4d72",
     }
     try:
-        result = get_github_commit(repo, branch=branch, sha=sha, pr_number=pr_number)
+        result = get_github_commit_metadata(
+            repo, branch=branch, sha=sha, pr_number=pr_number
+        )
     except Exception as exc:
-        log.info("exc during get_github_commit(): %s", exc)
+        log.info("exc during get_github_commit_metadata(): %s", exc)
         if "403 Client Error" in str(exc):
             pytest.skip("GitHub API rate limit seen, skip test")
         else:
