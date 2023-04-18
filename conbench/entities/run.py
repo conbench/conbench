@@ -25,8 +25,8 @@ from ..entities.commit import (
     Commit,
     CommitSerializer,
     backfill_default_branch_commits,
-    get_github_commit,
-    repository_to_url,
+    get_github_commit_metadata,
+    TypeCommitInfoGitHub,
 )
 from ..entities.hardware import (
     Cluster,
@@ -98,66 +98,22 @@ class Run(Base, EntityMixin):
         )
         hardware = hardware_type.upsert(**data.pop(field_name))
 
-        # Work towards a state where these are guaranteed to be either None or
-        # non-zerolength strings.
-        repo_url: Optional[str] = None
-        branch: Optional[str] = None
-        commit_hash: Optional[str] = None
+        commit_data_github = data.pop("github", None)
 
-        pr_number: Optional[int] = None
+        commit_for_run = None
+        if commit_data_github is not None:
+            # Rename / retype for sanity.
+            # Should do this as part of schema deserialization.
+            cinfo: TypeCommitInfoGitHub = {
+                "repo_url": commit_data_github["repository"],
+                "commit_hash": commit_data_github["commit"],
+                "pr_number": commit_data_github["pr_number"],
+                "branch": commit_data_github["branch"],
+            }
 
-        if github_data := data.pop("github", None):
-            # Note(JP): this should ensure that the `repository` Column in the
-            # Commit table holds a URL. However, it seems that after schema
-            # validation `github_data["repository"]` can be an empty string.
-            # In that case, repository_to_url() seems to return an empty
-            # string, too, and the `Commit.repository` field in the database
-            # would be populated with an empty string.
-            repo_url = repository_to_url(github_data["repository"])
-            if not repo_url.startswith("http"):
-                # GitHub data was provided, and that means that there _is_
-                # a URL/repo specifier that the user _could have_ provided.
-                # We should error out here and reject the reject the request.
-                log.warning(
-                    "Run.create(): bad repo info: `%s`, repo_url: `%s`",
-                    github_data["repository"],
-                    repo_url,
-                )
+            commit_for_run = commit_fetch_info_and_create_in_db_if_not_exists(cinfo)
 
-                # Do some type normalization again.
-                if repo_url == "":
-                    repo_url = None
-
-            # Note(JP): this string may be zerolength as of today, does that
-            # make sense? Also see https://github.com/conbench/conbench/issues/817
-            # It doesn't. Only set to non-None when non-empty string.
-            if github_data["commit"]:
-                commit_hash = github_data["commit"]
-            else:
-                # Note(JP): we should error out. Again, the user provided a
-                # `github` structure and that by definition means that there is
-                # a repository context, and there is a commit to refer to.
-                log.warning("Run.create(): zero-length string github_data['commit']")
-
-            if github_data.get("branch"):
-                # Only set to non-None when non-empty string.
-                branch = github_data.get("branch")
-
-            # This assignment is expected to retain the Optional[int] type.
-            pr_number = github_data.get("pr_number")
-
-        # Before DB insertion its good to have clarity.
-        for testitem in (commit_hash, repo_url, branch):
-            assert testitem is None or len(testitem) > 0, github_data
-
-        commit_id = commit_fetch_info_and_create_in_db_if_not_exists(
-            commit_hash=commit_hash,
-            repo_url=repo_url,
-            pr_number=pr_number,
-            branch=branch,
-        )
-
-        run = Run(**data, commit_id=commit_id, hardware_id=hardware.id)
+        run = Run(**data, commit=commit_for_run, hardware_id=hardware.id)
         try:
             run.save()
         except s.exc.IntegrityError as exc:
