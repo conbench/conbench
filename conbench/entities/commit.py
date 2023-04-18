@@ -340,7 +340,8 @@ this_dir = os.path.abspath(os.path.dirname(__file__))
 
 def repository_to_name(repository: str) -> str:
     """
-    Normalize user-given repository information into an org/repo notation.
+    Normalize user-given repository information into an org/repo notation,
+    typically transforms from URL notation to org/repo notation.
 
     (I try to document this in hindsight)
 
@@ -386,15 +387,13 @@ def repository_to_url(repository: str) -> str:
             "repository_to_url() about to create invalid URL, name is: %s", name
         )
 
-    # Note(JP): the `lower()` appears to be dangerous. URLs are case-sensitive.
-    # We should trust user-given input in that regard, or at least think this
-    # through a little further. Also see
-    # https://github.com/conbench/conbench/issues/818
-    return f"https://github.com/{name.lower()}"
+    return f"https://github.com/{name}"
 
 
-def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) -> dict:
+def get_github_commit_metadata(cinfo: TypeCommitInfoGitHub) -> Dict:
     """
+    Fetch metadata for commit.
+
     This function interacts with the GitHub HTTP API. Exceptions related to API
     interaction errors are not handled here (and should be expected and handled
     in the caller). Expected error sources are among the following :
@@ -409,25 +408,27 @@ def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) ->
     requests.exceptions.RequestException.
 
     """
-    if not repository or not sha:
-        return {}
+    # repospec: in org/repo notation.
 
-    name = repository_to_name(repository)
+    repospec = repository_to_name(cinfo["repo_url"])
 
     # `github.get_commit()` below may raise an exception if the GitHub
     # GitHub HTTP API failed, e.g. with a 4xx rate limiting response.
-    commit = _github.get_commit(name, sha)
+    commit = _github.get_commit_info(repospec, cinfo["commit_hash"])
 
-    if branch:
-        commit["branch"] = branch
-    elif pr_number:
+    # Seemingly, branch takes precedence over PR number.
+    if cinfo["branch"]:
+        commit["branch"] = info["branch"]
+    elif cinfo["pr_number"]:
         commit["branch"] = _github.get_branch_from_pr_number(
-            name=name, pr_number=pr_number
+            name=repospec, pr_number=cinfo["pr_number"]
         )
     else:
-        commit["branch"] = _github.get_default_branch(name=name)
+        commit["branch"] = _github.get_default_branch(name=repospec)
 
-    commit["fork_point_sha"] = _github.get_fork_point_sha(name=name, sha=sha)
+    commit["fork_point_sha"] = _github.get_fork_point_sha(
+        name=repospec, sha=cinfo["commit_hash"]
+    )
 
     return commit
 
@@ -643,7 +644,7 @@ class GitHubHTTPApiClient:
 
         return f"{org}:{branch}"
 
-    def get_commit(self, name, sha):
+    def get_commit_info(self, name, sha):
         # Pragmatic method for testing.
         if sha in self.test_commits:
             return self._parse_commit(self._mocked_get_response(sha))
