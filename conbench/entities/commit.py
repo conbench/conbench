@@ -40,6 +40,16 @@ class CantFindAncestorCommitsError(Exception):
 _tloc = threading.local()
 
 
+class TypeCommitInfoGitHub(TypedDict):
+    # Guarantee: non-empty. A URL.
+    repo_url: str
+    # Guarantee: Non-empty.
+    commit_hash: str
+    pr_number: Optional[int]
+    # Guarantee: non-empty or None
+    branch: Optional[str]
+
+
 class Commit(Base, EntityMixin):
     __tablename__ = "commit"
     id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
