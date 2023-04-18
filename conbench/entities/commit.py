@@ -418,7 +418,7 @@ def get_github_commit_metadata(cinfo: TypeCommitInfoGitHub) -> Dict:
 
     # Seemingly, branch takes precedence over PR number.
     if cinfo["branch"]:
-        commit["branch"] = info["branch"]
+        commit["branch"] = cinfo["branch"]
     elif cinfo["pr_number"]:
         commit["branch"] = _github.get_branch_from_pr_number(
             name=repospec, pr_number=cinfo["pr_number"]
