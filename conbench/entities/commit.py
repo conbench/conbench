@@ -233,23 +233,6 @@ class Commit(Base, EntityMixin):
         return query
 
     @staticmethod
-    def create_no_context():
-        # Special commit row, a singleton that call results can relate to (in
-        # DB, via forgeign key) that have _no_ commit information set. But: is
-        # that needed? Why have that relation at all then?
-        commit = Commit.first(sha="", repository="")
-        if not commit:
-            commit = Commit.create(
-                {
-                    "sha": "",
-                    "repository": "",
-                    "parent": None,
-                    "timestamp": None,
-                    "message": "",
-                    "author_name": "",
-                }
-            )
-        return commit
 
     @staticmethod
     def create_unknown_context(hash: str, repo_url: str) -> "Commit":
