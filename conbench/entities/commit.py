@@ -961,7 +961,8 @@ class GitHubHTTPApiClient:
         # Non-retryable error.
         metrics.COUNTER_GITHUB_HTTP_API_REQUEST_FAILURES.inc()
         raise Exception(
-            f"Unexpected GitHub HTTP API response: {resp}",
+            "Unexpected GitHub HTTP API response for URL "
+            f"{url}: {resp}. Leading bytes of body: '{resp.text[:150]} ...'"
         )
 
 
