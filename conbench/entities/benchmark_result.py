@@ -1042,7 +1042,7 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
             "description": "Benchmark results validation metadata (e.g., errors, validation types)."
         },
     )
-    github = marshmallow.fields.Nested(GitHubCreate(), required=False)
+    github = marshmallow.fields.Nested(SchemaGitHubCreate(), required=False)
     change_annotations = marshmallow.fields.Dict(
         required=False, metadata={"description": CHANGE_ANNOTATIONS_DESC}
     )
