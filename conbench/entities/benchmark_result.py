@@ -695,7 +695,7 @@ def validate_run_result_consistency(userres: Any) -> None:
 
     gh_commit_info: Optional[TypeCommitInfoGitHub] = userres.get("github")
     if gh_commit_info is not None:
-        chrun = run.commit.hash
+        chrun = run.commit.hash if run.commit else None
         chresult = gh_commit_info["commit_hash"]
         if chrun != chresult:
             raise BenchmarkResultValidationError(
