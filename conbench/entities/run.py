@@ -463,7 +463,16 @@ class GitHubCreate(marshmallow.Schema):
     commit = marshmallow.fields.String(
         required=True,
         metadata={
-            "description": "The 40-character commit hash of the repo being benchmarked"
+            "description": conbench.util.dedent_rejoin(
+                """
+                The commit hash of the benchmarked code.
+
+                Must not be an empty string.
+
+                Expected to be a known commit in the repository as specified
+                by the `repository` URL property below.
+                """
+            )
         },
     )
     repository = marshmallow.fields.String(
@@ -473,8 +482,26 @@ class GitHubCreate(marshmallow.Schema):
         # https://github.com/marshmallow-code/marshmallow/issues/76#issuecomment-1473348472
         required=True,
         metadata={
-            "description": "The repository name (in the format `org/repo`) or the URL "
-            "(in the format `https://github.com/org/repo`)"
+            "description": conbench.util.dedent_rejoin(
+                """
+                URL pointing to the benchmarked GitHub repository.
+
+                Must be provided in the format https://github.com/org/repo.
+
+                Trailing slashes are stripped off before database insertion.
+
+                As of the time of writing, only URLs starting with
+                "https://github.com" are allowed. Conbench interacts with the
+                GitHub HTTP API in order to fetch information about the
+                benchmarked repository. The Conbench user/operator is expected
+                to ensure that Conbench is configured with a GitHub HTTP API
+                authentication token that is privileged to read commit
+                information for the repository specified here.
+
+                Support for non-GitHub repositories (e.g. GitLab) or auxiliary
+                repositories is interesting, but not yet well specified.
+                """
+            )
         },
     )
     pr_number = marshmallow.fields.Integer(
