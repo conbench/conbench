@@ -518,7 +518,7 @@ class SchemaGitHubCreate(marshmallow.Schema):
             )
 
         if not len(data["commit"]):
-            raise marshmallow.ValidationError(f"'commit' must be a non-empty string")
+            raise marshmallow.ValidationError("'commit' must be a non-empty string")
 
     @marshmallow.post_load
     def remove_trailing_slashes(self, data, **kwargs):
