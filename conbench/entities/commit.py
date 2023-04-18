@@ -5,12 +5,12 @@ import os
 import threading
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TypedDict
 
 import flask as f
 import requests
 import sqlalchemy as s
-from sqlalchemy.orm import Mapped, Query
+from sqlalchemy.orm import Mapped, Query, relationship
 
 from conbench import metrics, util
 
