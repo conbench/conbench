@@ -147,6 +147,11 @@ class Run(Base, EntityMixin):
         """
         from ..entities.benchmark_result import BenchmarkResult
 
+        if self.commit is None:
+            # No associated repo/commit information. Raise an exception
+            # instead?
+            return None
+
         this_commit: Commit = self.commit
         try:
             ancestor_commits = this_commit.commit_ancestry_query.subquery()

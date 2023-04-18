@@ -138,6 +138,14 @@ def get_history_for_benchmark(benchmark_result_id: str):
     # exception.
 
     benchmark_result: BenchmarkResult = BenchmarkResult.one(id=benchmark_result_id)
+
+    if benchmark_result.run.commit is None:
+        # Alternatively, raise an exception here -- allowing to inform the
+        # user that conceptually there will never be history for this
+        # benchmark result, because it's not associated with repo/commit
+        # information
+        return []
+
     return get_history_for_cchr(
         benchmark_result.case_id,
         benchmark_result.context_id,
