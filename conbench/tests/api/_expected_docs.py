@@ -1545,26 +1545,6 @@
                 "tags": ["Comparisons"],
             }
         },
-        "/api/compare/commits/{compare_shas}/": {
-            "get": {
-                "description": "Compare benchmark results.",
-                "parameters": [
-                    {
-                        "example": "<baseline_sha>...<contender_sha>",
-                        "in": "path",
-                        "name": "compare_shas",
-                        "required": True,
-                        "schema": {"type": "string"},
-                    }
-                ],
-                "responses": {
-                    "200": {"$ref": "#/components/responses/CompareBenchmarkResult"},
-                    "401": {"$ref": "#/components/responses/401"},
-                    "404": {"$ref": "#/components/responses/404"},
-                },
-                "tags": ["Comparisons"],
-            }
-        },
         "/api/compare/runs/{compare_ids}/": {
             "get": {
                 "description": "Compare benchmark results.",

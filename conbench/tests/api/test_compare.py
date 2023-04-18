@@ -1,10 +1,6 @@
 import pytest
 
-from ...api._examples import (
-    _api_compare_benchmark_result,
-    _api_compare_entity,
-    _api_compare_list,
-)
+from ...api._examples import _api_compare_entity, _api_compare_list
 from ...api.compare import _get_pairs
 from ...entities._comparator import _round
 from ...tests.api import _asserts, _fixtures
@@ -522,47 +518,3 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             response.json[0]["analysis"]["lookback_z_score"]["z_score"]
             == expected_z_score
         )
-
-
-class TestCompareCommitsGet(_asserts.GetEnforcer):
-    url = "/api/compare/commits/{}/"
-    public = True
-
-    def _create(self, verbose=False):
-        name = _uuid()
-        contender = _fixtures.benchmark_result(
-            name=name,
-            sha=_fixtures.CHILD,
-        )
-        baseline = _fixtures.benchmark_result(
-            name=name,
-            sha=_fixtures.PARENT,
-        )
-        baseline_sha = baseline.run.commit.sha
-        contender_sha = contender.run.commit.sha
-        entity = FakeEntity(f"{baseline_sha}...{contender_sha}")
-
-        if verbose:
-            return [baseline.run, contender.run], entity
-        return entity
-
-    def test_compare(self, client):
-        self.authenticate(client)
-        [baseline, contender], compare = self._create(verbose=True)
-        response = client.get(f"/api/compare/commits/{compare.id}/")
-        expected = _api_compare_benchmark_result(
-            baseline.commit.id,
-            contender.commit.id,
-            baseline.id,
-            baseline.name,
-            baseline.timestamp.isoformat(),
-            contender.id,
-            contender.name,
-            contender.timestamp.isoformat(),
-        )
-        self.assert_200_ok(response, expected)
-
-    def test_compare_unknown_compare_ids(self, client):
-        self.authenticate(client)
-        response = client.get("/api/compare/commits/foo...bar/")
-        self.assert_404_not_found(response)
