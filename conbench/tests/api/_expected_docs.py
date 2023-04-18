@@ -1052,7 +1052,7 @@
                         "description": 'Details about an error that occurred while the benchmark was running (free-form JSON).  You may populate both this field and the "data" field of the "stats" object. In that case, the "data" field measures the metric\'s values before the error occurred. Those values will not be compared to non-errored values in analyses and comparisons.',
                         "type": "object",
                     },
-                    "github": {"$ref": "#/components/schemas/GitHubCreate"},
+                    "github": {"$ref": "#/components/schemas/SchemaGitHubCreate"},
                     "info": {
                         "description": "Additional information about the context the benchmark was run in that is not expected to have an impact on benchmark performance (e.g. benchmark language version, compiler version). This information is expected to be the same across a number of benchmarks. (free-form JSON)",
                         "type": "object",
@@ -1226,30 +1226,6 @@
                 },
                 "type": "object",
             },
-            "GitHubCreate": {
-                "properties": {
-                    "branch": {
-                        "description": "[not recommended] Instead of supplying `pr_number` you may supply this, the branch name in the form `org:branch`. Only do so if you know exactly what you're doing.",
-                        "nullable": True,
-                        "type": "string",
-                    },
-                    "commit": {
-                        "description": "The 40-character commit hash of the repo being benchmarked",
-                        "type": "string",
-                    },
-                    "pr_number": {
-                        "description": "[recommended] The number of the GitHub pull request that is running this benchmark, or `null` if it's a run on the default branch",
-                        "nullable": True,
-                        "type": "integer",
-                    },
-                    "repository": {
-                        "description": "The repository name (in the format `org/repo`) or the URL (in the format `https://github.com/org/repo`)",
-                        "type": "string",
-                    },
-                },
-                "required": ["commit", "repository"],
-                "type": "object",
-            },
             "Login": {
                 "properties": {
                     "email": {"format": "email", "type": "string"},
@@ -1334,7 +1310,10 @@
                         "format": "date-time",
                         "type": "string",
                     },
-                    "github": {"$ref": "#/components/schemas/GitHubCreate"},
+                    "github": {
+                        "allOf": [{"$ref": "#/components/schemas/SchemaGitHubCreate"}],
+                        "description": "Use this object to tell Conbench with which commit the Run/BenchmarkResult is associated.  This field can be left out for testing purposes. Note however that commit information is required for powering valuable Conbench capabilities.",
+                    },
                     "id": {"type": "string"},
                     "info": {"description": "Run's metadata", "type": "object"},
                     "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
@@ -1361,6 +1340,30 @@
                     },
                     "info": {"description": "Run's metadata", "type": "object"},
                 },
+                "type": "object",
+            },
+            "SchemaGitHubCreate": {
+                "properties": {
+                    "branch": {
+                        "description": "[not recommended] Instead of supplying `pr_number` you may supply this, the branch name in the form `org:branch`. Only do so if you know exactly what you're doing.",
+                        "nullable": True,
+                        "type": "string",
+                    },
+                    "commit": {
+                        "description": "The commit hash of the benchmarked code.  Must not be an empty string.  Expected to be a known commit in the repository as specified by the `repository` URL property below.",
+                        "type": "string",
+                    },
+                    "pr_number": {
+                        "description": "[recommended] The number of the GitHub pull request that is running this benchmark, or `null` if it's a run on the default branch",
+                        "nullable": True,
+                        "type": "integer",
+                    },
+                    "repository": {
+                        "description": 'URL pointing to the benchmarked GitHub repository.  Must be provided in the format https://github.com/org/repo.  Trailing slashes are stripped off before database insertion.  As of the time of writing, only URLs starting with "https://github.com" are allowed. Conbench interacts with the GitHub HTTP API in order to fetch information about the benchmarked repository. The Conbench user/operator is expected to ensure that Conbench is configured with a GitHub HTTP API authentication token that is privileged to read commit information for the repository specified here.  Support for non-GitHub repositories (e.g. GitLab) or auxiliary repositories is interesting, but not yet well specified.',
+                        "type": "string",
+                    },
+                },
+                "required": ["commit", "repository"],
                 "type": "object",
             },
             "UserCreate": {
@@ -1935,7 +1938,7 @@
         {"description": "Benchmark runs", "name": "Runs"},
         {"description": "Monitor status", "name": "Ping"},
         {
-            "description": '## BenchmarkResultCreate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultCreate" />\n\n## BenchmarkResultStats\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultStats" />\n\n## BenchmarkResultUpdate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultUpdate" />\n\n## ClusterCreate\n<SchemaDefinition schemaRef="#/components/schemas/ClusterCreate" />\n\n## Error\n<SchemaDefinition schemaRef="#/components/schemas/Error" />\n\n## ErrorBadRequest\n<SchemaDefinition schemaRef="#/components/schemas/ErrorBadRequest" />\n\n## ErrorValidation\n<SchemaDefinition schemaRef="#/components/schemas/ErrorValidation" />\n\n## GitHubCreate\n<SchemaDefinition schemaRef="#/components/schemas/GitHubCreate" />\n\n## Login\n<SchemaDefinition schemaRef="#/components/schemas/Login" />\n\n## MachineCreate\n<SchemaDefinition schemaRef="#/components/schemas/MachineCreate" />\n\n## Ping\n<SchemaDefinition schemaRef="#/components/schemas/Ping" />\n\n## Register\n<SchemaDefinition schemaRef="#/components/schemas/Register" />\n\n## RunCreate\n<SchemaDefinition schemaRef="#/components/schemas/RunCreate" />\n\n## RunUpdate\n<SchemaDefinition schemaRef="#/components/schemas/RunUpdate" />\n\n## UserCreate\n<SchemaDefinition schemaRef="#/components/schemas/UserCreate" />\n\n## UserUpdate\n<SchemaDefinition schemaRef="#/components/schemas/UserUpdate" />\n',
+            "description": '## BenchmarkResultCreate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultCreate" />\n\n## BenchmarkResultStats\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultStats" />\n\n## BenchmarkResultUpdate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultUpdate" />\n\n## ClusterCreate\n<SchemaDefinition schemaRef="#/components/schemas/ClusterCreate" />\n\n## Error\n<SchemaDefinition schemaRef="#/components/schemas/Error" />\n\n## ErrorBadRequest\n<SchemaDefinition schemaRef="#/components/schemas/ErrorBadRequest" />\n\n## ErrorValidation\n<SchemaDefinition schemaRef="#/components/schemas/ErrorValidation" />\n\n## Login\n<SchemaDefinition schemaRef="#/components/schemas/Login" />\n\n## MachineCreate\n<SchemaDefinition schemaRef="#/components/schemas/MachineCreate" />\n\n## Ping\n<SchemaDefinition schemaRef="#/components/schemas/Ping" />\n\n## Register\n<SchemaDefinition schemaRef="#/components/schemas/Register" />\n\n## RunCreate\n<SchemaDefinition schemaRef="#/components/schemas/RunCreate" />\n\n## RunUpdate\n<SchemaDefinition schemaRef="#/components/schemas/RunUpdate" />\n\n## SchemaGitHubCreate\n<SchemaDefinition schemaRef="#/components/schemas/SchemaGitHubCreate" />\n\n## UserCreate\n<SchemaDefinition schemaRef="#/components/schemas/UserCreate" />\n\n## UserUpdate\n<SchemaDefinition schemaRef="#/components/schemas/UserUpdate" />\n',
             "name": "Models",
             "x-displayName": "Object models",
         },
