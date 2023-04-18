@@ -104,7 +104,7 @@ VALID_RESULT_PAYLOAD = {
         "min": "0.004733",
         "q1": "0.0065005",
         "q3": "0.036942",
-        "stdev": "0.046669",
+        "stdev": "0.049194",
     },
     "tags": {
         "compression": "snappy",

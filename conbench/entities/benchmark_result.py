@@ -512,9 +512,11 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
             "median": np.median(samples),
             "min": np.min(samples),
             "max": np.max(samples),
-            # https://numpy.org/doc/stable/reference/generated/numpy.std.html
-            # This has N in the divisor (ddof=0)
-            "stdev": np.std(samples),
+            # With ddof=1 this is Bessel's correction, has N-1 in the divisor.
+            # This is the same behavior as
+            # statistics.stdev() and the same behavior as
+            # scipy.stats.tstd([1.0, 2, 3])
+            "stdev": np.std(samples, ddof=1),
             "iqr": q3 - q1,
         }
 
