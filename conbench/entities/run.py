@@ -531,9 +531,29 @@ class SchemaGitHubCreate(marshmallow.Schema):
             raise marshmallow.ValidationError("'commit' must be a non-empty string")
 
     @marshmallow.post_load
-    def remove_trailing_slashes(self, data, **kwargs):
-        data["repository"] = data["repository"].rstrip("/")
-        return data
+    def turn_into_predictable_return_type(self, data, **kwargs) -> TypeCommitInfoGitHub:
+        """
+        We really have to look into schema-inferred tight types, this here is a
+        quick workaround for the rest of the code base to be able to work with
+        `TypeCommitInfoGitHub`.
+        """
+
+        url: str = data["repository"].rstrip("/")
+        commit_hash: str = data["commit"]
+        # If we do not re-add this here as `None` then this property is _not_
+        # part of the output dictionary if the user left this key out of
+        # their JSON object
+        pr_number: Optional[int] = data.get("pr_number")
+        branch: Optional[str] = data.get("branch")
+
+        result: TypeCommitInfoGitHub = {
+            "repo_url": url,
+            "commit_hash": commit_hash,
+            "pr_number": pr_number,
+            "branch": branch,
+        }
+
+        return result
 
 
 field_descriptions = {
