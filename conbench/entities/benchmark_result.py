@@ -30,6 +30,7 @@ from ..entities._entity import (
 )
 from ..entities.case import Case, get_case_or_create
 from ..entities.context import Context, get_context_or_create
+from ..entities.commit import TypeCommitInfoGitHub
 from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info, get_info_or_create
 from ..entities.run import SchemaGitHubCreate, Run
@@ -692,10 +693,12 @@ def validate_run_result_consistency(userres: Any) -> None:
     # not? what about branch name and PR number?
 
     # The property should not be called "github", this confuses me each
-    # time I deal with that.
-    if userres.get("github") is not None:
+    # time I deal with that. This is the "github-flavored commit info".
+
+    gh_commit_info: Optional[TypeCommitInfoGitHub] = userres.get("github")
+    if gh_commit_info is not None:
         chrun = run.commit.hash
-        chresult = userres["github"]["commit"]
+        chresult = gh_commit_info["commit_hash"]
         if chrun != chresult:
             raise BenchmarkResultValidationError(
                 f"Result refers to commit hash '{chresult}', but Run '{run.id}' "
