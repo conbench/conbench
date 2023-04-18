@@ -88,8 +88,8 @@ class Commit(Base, EntityMixin):
         Return a URL (string) or None. The returned string is guaranteed to
         start with 'http' and is guaranteed to not have a trailing slash.
 
-        The `None` case is here because I think the database may contain other
-        (non-URL) value types; and we need to phase those out.
+        The `None` case is here because I think that legacy databases may
+        contain other (non-URL) value types; and we need to phase those out.
         """
         u = self.repository
         if u.startswith("http"):
@@ -233,20 +233,18 @@ class Commit(Base, EntityMixin):
         return query
 
     @staticmethod
-
-    @staticmethod
-    def create_unknown_context(hash: str, repo_url: str) -> "Commit":
+    def create_unknown_context(commit_hash: str, repo_url: str) -> "Commit":
         # Note(JP): I think this means "could not verify, could not get further
         # info from remote API" -- but we _do_ have a commit hash, and a
         # repository URL specifier -- insert that into the database. Also see
         # https://github.com/conbench/conbench/issues/817
-        assert hash is not None
-        assert len(hash)
+        assert commit_hash is not None
+        assert len(commit_hash)
         assert repo_url.startswith("http")
 
         return Commit.create(
             {
-                "sha": hash,
+                "sha": commit_hash,
                 "repository": repo_url,
                 "parent": None,
                 "timestamp": None,
