@@ -323,7 +323,10 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
 
         # Look up the Commit entity again because this function must return the
         # commit ID (DB primary key).
-        commit = Commit.first(sha=commit_hash, repository=repo_url)
+        Session.rollback()
+        commit = Commit.first(
+            sha=ghcommit["commit_hash"], repository=ghcommit["repo_url"]
+        )
 
         # After IntegrityError we assume that Commit exists in DB. Encode
         # assumption, for easier debugging.
