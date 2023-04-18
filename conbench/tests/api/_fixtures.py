@@ -295,7 +295,7 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
     """Populate the database with fake Commits and BenchmarkResults to use when testing
     most of the entities.
 
-    Return a dict of commits (keyed by SHA) and list of BenchmarkResults.
+    Return a dict of commits (keyed by hash) and list of BenchmarkResults.
     """
     # Manually post all the Commits to the database first, so that upon posting
     # BenchmarkResults, the server doesn't hit the GitHub API for more commit information.
@@ -370,8 +370,6 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
     commits["sha"] = Commit.create_unknown_context(
         commit_hash="sha", repo_url="https://github.com/org/something_else_entirely"
     )
-    # What is this empty string key?
-    commits[""] = None
 
     # Now populate a variety of different BenchmarkResults
     benchmark_results: List[BenchmarkResult] = []
@@ -404,8 +402,6 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
         ({"error": "bad"}, "abcde"),
         # some-context commit
         ([20.0, 20.1, 20.2], "sha"),
-        # no-context commit
-        ([10.0, 10.1, 10.2], ""),
     ]:
         commit = commits[commit_sha]
         if isinstance(data_or_error, list):

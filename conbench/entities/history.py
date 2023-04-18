@@ -159,6 +159,13 @@ def get_history_for_cchr(
     For further detail on the stats columns, see the docs of
     ``_add_rolling_stats_columns_to_history_query()``.
     """
+
+    # Do not support history logic for results that are not associated with
+    # 'commit context'. Here, we could/should inspect `repo` to not be an empty
+    # string for example (there may be stray "no context" objects in the
+    # database that have the repo set to an empty string, i.e. the filter for
+    # repo=="" might even yield something).
+
     history = (
         Session.query(
             BenchmarkResult.id,

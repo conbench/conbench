@@ -106,23 +106,22 @@ EXPECTED_Z_SCORES = {
 def test_get_history():
     _, benchmark_results = _fixtures.gen_fake_data()
     all_expected_benchmark_results_ixs = [
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
         [],  # only errors in the building
         [],  # no branch information
-        [],  # no branch information
+        [12],
         [13],
         [14],
-        [15],
-        [0, 1, 5, 8, 9, 16],
+        [0, 1, 5, 8, 9, 15],
     ]
     assert len(benchmark_results) == len(
         all_expected_benchmark_results_ixs
