@@ -8,11 +8,11 @@ from ..api import _fixtures
     [
         (
             False,
-            [None, 0, 1, 1, 1, 1, 5, 5, 5, 5, None, None, None, None, None, None, 5],
+            [None, 0, 1, 1, 1, 1, 5, 5, 5, 5, None, None, None, None, None, 5],
         ),
         (
             True,
-            [None, 0, 1, 1, 1, 1, 5, 5, 5, 5, None, None, None, None, None, None, 5],
+            [None, 0, 1, 1, 1, 1, 5, 5, 5, 5, None, None, None, None, None, 5],
         ),
     ],
 )
