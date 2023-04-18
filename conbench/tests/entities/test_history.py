@@ -59,7 +59,6 @@ EXPECTED_Z_SCORES = {
         None,
         None,
         None,
-        None,
         -5.98205200884773,
     ],
     "parent": [
@@ -78,7 +77,6 @@ EXPECTED_Z_SCORES = {
         None,
         None,
         None,
-        None,
         -5.98205200884773,
     ],
     "head_of_default": [
@@ -92,7 +90,6 @@ EXPECTED_Z_SCORES = {
         0.12045042002182318,
         -0.6022521001091159,
         -0.7468142857529476,
-        None,
         None,
         None,
         None,
@@ -236,7 +233,7 @@ def test_set_z_scores_with_distribution_change(
         expected_z_scores[7] = -3.846766028925861
     expected_z_scores[8] = -56.00239876112446
     expected_z_scores[9] = -60.62177826491064
-    expected_z_scores[16] = -71.0140831103239
+    expected_z_scores[15] = -71.0140831103239
 
     _, benchmark_results = _fixtures.gen_fake_data()
 
