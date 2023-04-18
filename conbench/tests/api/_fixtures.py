@@ -368,9 +368,10 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
 
     # commits with less context
     commits["sha"] = Commit.create_unknown_context(
-        hash="sha", repo_url="https://github.com/org/something_else_entirely"
+        commit_hash="sha", repo_url="https://github.com/org/something_else_entirely"
     )
-    commits[""] = Commit.create_no_context()
+    # What is this empty string key?
+    commits[""] = None
 
     # Now populate a variety of different BenchmarkResults
     benchmark_results: List[BenchmarkResult] = []
@@ -413,7 +414,7 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
                     results=data_or_error,
                     commit=commit,
                     name=name,
-                    pull_request=commit.branch == "branch",
+                    pull_request=commit.branch == "branch" if commit else False,
                 )
             )
         else:
@@ -422,7 +423,7 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
                     error=data_or_error,
                     commit=commit,
                     name=name,
-                    pull_request=commit.branch == "branch",
+                    pull_request=commit.branch == "branch" if commit else False,
                 )
             )
 
