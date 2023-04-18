@@ -432,9 +432,19 @@ def commit_hardware_run_map():
 
 class SchemaGitHubCreate(marshmallow.Schema):
     @marshmallow.pre_load
-    def change_empty_branch_to_none(self, data, **kwargs):
-        if data.get("branch") == "":
-            data["branch"] = None
+    def change_empty_string_to_none(self, data, **kwargs):
+        """For the specific situation of empty string being provided,
+        treat this a None, _before_ schema validation.
+
+        This for example alles the client to set pr_number to an empty string
+        and this has the same meaning as setting it to `null` in the JSON doc.
+
+        Otherwise, an empty string results in 'Not a valid integer' (for
+        pr_number, at least).
+        """
+        for k in ("pr_number", "branch"):
+            if data.get(k) == "":
+                data[k] = None
 
         return data
 
