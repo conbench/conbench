@@ -120,7 +120,7 @@ class BenchmarkResult(Base, EntityMixin):
     # pydantic -- I believe when defining a schema with pydantic, the
     # corresponding type information can be used for mypy automatically.
     # Also see https://stackoverflow.com/q/75662696/145400.
-    def create(userres):
+    def create(userres) -> "BenchmarkResult":
         """
         `userres`: user-given Benchmark Result object, after JSON
         deserialization.

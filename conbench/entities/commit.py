@@ -421,7 +421,7 @@ def get_github_commit_metadata(cinfo: TypeCommitInfoGitHub) -> Dict:
         commit["branch"] = cinfo["branch"]
     elif cinfo["pr_number"]:
         commit["branch"] = _github.get_branch_from_pr_number(
-            name=repospec, pr_number=cinfo["pr_number"]
+            name=repospec, pr_number=str(cinfo["pr_number"])
         )
     else:
         commit["branch"] = _github.get_default_branch(name=repospec)
