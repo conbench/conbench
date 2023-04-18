@@ -276,7 +276,8 @@ def benchmark_result(
 
     # do at least a bit of what the HTTP path would do; this ensures that the
     # output type is TypeCommitInfoGitHub
-    data["github"] = _github_commit_info_schema.load(data["github"])
+    if "github" in data:
+        data["github"] = _github_commit_info_schema.load(data["github"])
 
     if results is not None:
         unit = unit if unit else "s"
