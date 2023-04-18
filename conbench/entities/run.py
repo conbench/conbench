@@ -427,6 +427,10 @@ def commit_hardware_run_map():
 
 
 class SchemaGitHubCreate(marshmallow.Schema):
+    """
+    GitHub-flavored commit info object
+    """
+
     @marshmallow.pre_load
     def change_empty_string_to_none(self, data, **kwargs):
         """For the specific situation of empty string being provided,
@@ -586,7 +590,22 @@ class _RunFacadeSchemaCreate(marshmallow.Schema):
     error_type = marshmallow.fields.String(
         required=False, metadata={"description": field_descriptions["error_type"]}
     )
-    github = marshmallow.fields.Nested(SchemaGitHubCreate(), required=False)
+    github = marshmallow.fields.Nested(
+        SchemaGitHubCreate(),
+        required=False,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                Use this object to tell Conbench with which commit the
+                Run/BenchmarkResult is associated.
+
+                This field can be left out for testing purposes. Note however
+                that commit information is required for powering valuable
+                Conbench capabilities.
+                """
+            )
+        },
+    )
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
     cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
 
