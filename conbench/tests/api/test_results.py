@@ -756,8 +756,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
         data["run_id"] = _uuid()
-        data["github"]["commit"] = ""
-        data["github"]["repository"] = ""
+        del data["github"]
 
         # create benchmark without commit context
         response = client.post("/api/benchmarks/", json=data)
