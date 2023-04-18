@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple
 
 from ...entities.benchmark_result import BenchmarkResult
+from ...entities.run import SchemaGitHubCreate
 from ...entities.commit import Commit
 from ...runner import Conbench
 from ...tests.helpers import _uuid
@@ -212,6 +213,8 @@ VALID_RUN_PAYLOAD_WITH_ERROR = dict(
     **{key: value for key, value in VALID_RUN_PAYLOAD.items() if key not in ("id")},
 )
 
+_github_commit_info_schema = SchemaGitHubCreate()
+
 
 def benchmark_result(
     name=None,
@@ -229,7 +232,26 @@ def benchmark_result(
     empty_results=False,
     reason=None,
 ):
-    """Create BenchmarkResult and write to database."""
+    """Create BenchmarkResult and directly write to database.
+
+    This is done by going straight to the database, surpassing the HTTP
+    interface. This is an architectural smell, diminishing the efficacy of this
+    test suite.
+
+    It would be tidier and less nerve-wrecking if the common approach would be
+    to populate the database through the HTTP interface, because that includes
+    potentially many subtle or brutal mechanisms, all resulting in certain
+    shape/properties of data in the database (schema validation, and object
+    augmentation, ...). Taking a _different_ interface for populating the
+    database than our users would use creates a massive blind spot.
+
+    Sometimes it may be useful to place a carefully crafted object into the
+    database for testing a special case (like, a legacy database state).
+
+    However, in general, this approach might divert the test suite form
+    real-world relevance: our users cannot directly write to the database,
+    either.
+    """
 
     data = copy.deepcopy(VALID_RESULT_PAYLOAD)
     data["run_name"] = f"commit: {_uuid()}"
@@ -251,6 +273,10 @@ def benchmark_result(
         data["github"]["commit"] = commit.sha
         data["github"]["repository"] = commit.repository
         data["github"]["branch"] = commit.branch
+
+    # do at least a bit of what the HTTP path would do; this ensures that the
+    # output type is TypeCommitInfoGitHub
+    data["github"] = _github_commit_info_schema.load(data["github"])
 
     if results is not None:
         unit = unit if unit else "s"
