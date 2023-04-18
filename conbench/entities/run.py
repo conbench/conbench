@@ -1,7 +1,7 @@
 import logging
 import time
 from datetime import datetime, timezone
-from typing import List, Optional, TypedDict
+from typing import List, Optional
 
 from urllib.parse import urlparse
 
@@ -100,20 +100,16 @@ class Run(Base, EntityMixin):
         )
         hardware = hardware_type.upsert(**data.pop(field_name))
 
-        commit_data_github = data.pop("github", None)
+        user_given_commit_info: Optional[TypeCommitInfoGitHub] = data.pop(
+            "github", None
+        )
 
         commit_for_run = None
-        if commit_data_github is not None:
-            # Rename / retype for sanity.
-            # Should do this as part of schema deserialization.
-            cinfo: TypeCommitInfoGitHub = {
-                "repo_url": commit_data_github["repository"],
-                "commit_hash": commit_data_github["commit"],
-                "pr_number": commit_data_github["pr_number"],
-                "branch": commit_data_github["branch"],
-            }
-
-            commit_for_run = commit_fetch_info_and_create_in_db_if_not_exists(cinfo)
+        if user_given_commit_info is not None:
+            log.info(user_given_commit_info)
+            commit_for_run = commit_fetch_info_and_create_in_db_if_not_exists(
+                user_given_commit_info
+            )
 
         run = Run(**data, commit=commit_for_run, hardware_id=hardware.id)
         try:
