@@ -462,9 +462,9 @@ def commit_hardware_run_map():
 
 class GitHubCreate(marshmallow.Schema):
     @marshmallow.pre_load
-    def change_pr_number_empty_string_to_none(self, data, **kwargs):
-        if "pr_number" in data:
-            data["pr_number"] = data["pr_number"] or None
+    def change_empty_branch_to_none(self, data, **kwargs):
+        if data.get("branch") == "":
+            data["branch"] = None
 
         return data
 
@@ -531,6 +531,29 @@ class GitHubCreate(marshmallow.Schema):
             "know exactly what you're doing."
         },
     )
+
+    @marshmallow.validates_schema
+    def validate_props(self, data, **kwargs):
+        url = data["repository"]
+        if not url.startswith("https://github.com"):
+            raise marshmallow.ValidationError(
+                f"'repository' must be a URL, starting with 'https://github.com', got `{url}`"
+            )
+
+        try:
+            urlparse(url)
+        except ValueError as exc:
+            raise marshmallow.ValidationError(
+                f"'repository' failed URL validation: `{exc}`"
+            )
+
+        if not len(data["commit"]):
+            raise marshmallow.ValidationError(f"'commit' must be a non-empty string")
+
+    @marshmallow.post_load
+    def remove_trailing_slashes(self, data, **kwargs):
+        data["repository"] = data["repository"].rstrip("/")
+        return data
 
 
 field_descriptions = {
