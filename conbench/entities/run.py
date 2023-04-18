@@ -2,14 +2,13 @@ import logging
 import time
 from datetime import datetime, timezone
 from typing import List, Optional
-
 from urllib.parse import urlparse
 
 import flask as f
 import marshmallow
 import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import Mapped, relationship, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 import conbench.util
 
@@ -26,9 +25,9 @@ from ..entities.commit import (
     CantFindAncestorCommitsError,
     Commit,
     CommitSerializer,
+    TypeCommitInfoGitHub,
     backfill_default_branch_commits,
     get_github_commit_metadata,
-    TypeCommitInfoGitHub,
 )
 from ..entities.hardware import (
     Cluster,
