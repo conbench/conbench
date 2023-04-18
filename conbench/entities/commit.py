@@ -421,7 +421,7 @@ def get_github_commit_metadata(cinfo: TypeCommitInfoGitHub) -> Dict:
         commit["branch"] = cinfo["branch"]
     elif cinfo["pr_number"]:
         commit["branch"] = _github.get_branch_from_pr_number(
-            name=repospec, pr_number=str(cinfo["pr_number"])
+            name=repospec, pr_number=cinfo["pr_number"]
         )
     else:
         commit["branch"] = _github.get_default_branch(name=repospec)
@@ -739,9 +739,14 @@ class GitHubHTTPApiClient:
         fork_point_sha = response["merge_base_commit"]["sha"]
         return fork_point_sha
 
-    def get_branch_from_pr_number(self, name: str, pr_number: str) -> Optional[str]:
+    def get_branch_from_pr_number(self, name: str, pr_number: int) -> Optional[str]:
+        log.info("type of pr_number: %s", type(pr_number))
+
+        # Warning, here be dragons. For our test suite, do not hit the GitHub
+        # HTTP API. Use a special PR number to trigger this magic. This was a
+        # bit mean:
+        # https://github.com/conbench/conbench/pull/1134#issuecomment-1513237729
         if pr_number == 12345678:
-            # test case
             return "some_user_or_org:some_branch"
 
         if not name or not pr_number:
