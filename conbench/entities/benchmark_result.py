@@ -32,7 +32,7 @@ from ..entities.case import Case, get_case_or_create
 from ..entities.context import Context, get_context_or_create
 from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info, get_info_or_create
-from ..entities.run import GitHubCreate, Run
+from ..entities.run import SchemaGitHubCreate, Run
 
 log = logging.getLogger(__name__)
 

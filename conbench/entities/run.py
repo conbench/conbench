@@ -430,7 +430,7 @@ def commit_hardware_run_map():
     return results
 
 
-class GitHubCreate(marshmallow.Schema):
+class SchemaGitHubCreate(marshmallow.Schema):
     @marshmallow.pre_load
     def change_empty_branch_to_none(self, data, **kwargs):
         if data.get("branch") == "":
@@ -560,7 +560,7 @@ class _RunFacadeSchemaCreate(marshmallow.Schema):
     error_type = marshmallow.fields.String(
         required=False, metadata={"description": field_descriptions["error_type"]}
     )
-    github = marshmallow.fields.Nested(GitHubCreate(), required=False)
+    github = marshmallow.fields.Nested(SchemaGitHubCreate(), required=False)
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
     cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
 
