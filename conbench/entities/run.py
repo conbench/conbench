@@ -1,13 +1,15 @@
 import logging
 import time
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, TypedDict
+
+from urllib.parse import urlparse
 
 import flask as f
 import marshmallow
 import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 import conbench.util
 
@@ -333,16 +335,14 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
         assert commit is not None
 
     d_seconds = time.monotonic() - t0
+
     log.info(
-        "commit_fetch_info_and_create_in_db_if_not_exists(%s, %s, %s, %s) took %.3f s",
-        commit_hash,
-        repo_url,
-        pr_number,
-        branch,
+        "commit_fetch_info_and_create_in_db_if_not_exists(%s) took %.3f s",
+        ghcommit,
         d_seconds,
     )
 
-    return commit.id
+    return commit
 
 
 class _Serializer(EntitySerializer):
