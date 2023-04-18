@@ -722,9 +722,8 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         assert response.status_code == 201, (response.status_code, response.text)
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
-        assert benchmark_result.run.commit.sha == ""
-        assert benchmark_result.run.commit.repository == ""
-        assert benchmark_result.run.commit.parent is None
+        assert benchmark_result.run.commit is None
+        assert benchmark_result.run.associated_commit_repo_url == "n/a"
         return benchmark_result, new_id
 
     def test_create_no_commit_context(self, client):
