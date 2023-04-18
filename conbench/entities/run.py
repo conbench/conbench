@@ -261,6 +261,22 @@ class Run(Base, EntityMixin):
         run = self.get_default_baseline_run()
         return run.id if run else None
 
+    @property
+    def associated_commit_repo_url(self) -> str:
+        """
+        Always return a string. Return URL or "n/a".
+
+        This is for those consumers that absolutely need to have a string type
+        representation.
+        """
+        if self.commit and self.commit.repo_url is not None:
+            return self.commit.repo_url
+
+        # This means that the Run is not associated with any commit, or it is
+        # associated with a legacy/invalid commit object in the database, one
+        # that does not have a repository URL set.
+        return "n/a"
+
 
 def commit_fetch_info_and_create_in_db_if_not_exists(
     commit_hash, repo_url, pr_number, branch
