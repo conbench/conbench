@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import Dict, List, Tuple
 
 from ...entities.benchmark_result import BenchmarkResult
-from ...entities.run import SchemaGitHubCreate
 from ...entities.commit import Commit
+from ...entities.run import SchemaGitHubCreate
 from ...runner import Conbench
 from ...tests.helpers import _uuid
 

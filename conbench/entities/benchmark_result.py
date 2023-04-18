@@ -29,11 +29,11 @@ from ..entities._entity import (
     to_float,
 )
 from ..entities.case import Case, get_case_or_create
-from ..entities.context import Context, get_context_or_create
 from ..entities.commit import TypeCommitInfoGitHub
+from ..entities.context import Context, get_context_or_create
 from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info, get_info_or_create
-from ..entities.run import SchemaGitHubCreate, Run
+from ..entities.run import Run, SchemaGitHubCreate
 
 log = logging.getLogger(__name__)
 

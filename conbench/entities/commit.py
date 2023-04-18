@@ -80,7 +80,7 @@ class Commit(Base, EntityMixin):
 
     # Form a one-to-many relationship between Commit (one) and potentially
     # many Runs.
-    runs: Mapped[List["Run"]] = relationship(back_populates="commit")  # type: ignore
+    runs: Mapped[List["Run"]] = relationship(back_populates="commit")  # noqa
 
     def get_parent_commit(self):
         # Hm -- should this not be done with a foreign key relationship?
