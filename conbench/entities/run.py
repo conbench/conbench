@@ -235,8 +235,8 @@ class Run(Base, EntityMixin):
 
 
 def commit_fetch_info_and_create_in_db_if_not_exists(
-    commit_hash, repo_url, pr_number, branch
-) -> str:
+    ghcommit: TypeCommitInfoGitHub,
+) -> Commit:
     """
     Insert new Commit entity into database if required.
 
@@ -252,7 +252,7 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
     API.
     """
 
-    def _guts(commit_hash, repo_url, pr_number, branch) -> Commit:
+    def _guts(cinfo: TypeCommitInfoGitHub) -> Commit:
         """
         Return a Commit object or raise `sqlalchemy.exc.IntegrityError`.
         """
@@ -260,34 +260,34 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
         # not needlessly interact with the GitHub HTTP API in case the commit
         # is already in the database. first(): "Return the first result of this
         # Query or None if the result doesn’t contain any row.""
-        commit: Optional[Commit] = Commit.first(sha=commit_hash, repository=repo_url)
+        dbcommit = Commit.first(sha=cinfo["commit_hash"], repository=cinfo["repo_url"])
 
-        if commit is not None:
-            return commit
+        if dbcommit is not None:
+            return dbcommit
 
         # Try to fetch metadata for commit via GitHub HTTP API. Fall back
         # gracefully if that does not work.
-
-        gh_commit_dict = None
+        gh_commit_metadata_dict = None
         try:
-            # get_github_commit() may raise all those exceptions that can
+            # get_github_commit_metadata() may raise all those exceptions that can
             # happen during an HTTP request cycle.
-            gh_commit_dict = get_github_commit(
-                repository=repo_url, pr_number=pr_number, branch=branch, sha=commit_hash
-            )
+            gh_commit_metadata_dict = get_github_commit_metadata(cinfo)
         except Exception as exc:
             log.info(
-                "treat as unknown commit: error during get_github_commit(): %s", exc
+                "treat as unknown context: error during get_github_commit_metadata(): %s",
+                exc,
             )
 
-        if gh_commit_dict:
+        if gh_commit_metadata_dict:
             # We got data from GitHub. Insert into database.
-            commit = Commit.create_github_context(commit_hash, repo_url, gh_commit_dict)
+            dbcommit = Commit.create_github_context(
+                cinfo["commit_hash"], cinfo["repo_url"], gh_commit_metadata_dict
+            )
 
             # The commit is known to GitHub. Fetch more data from GitHub.
-            # Gracefully degradate if that does not work.
+            # Gracefully degrade if that does not work.
             try:
-                backfill_default_branch_commits(repo_url, commit)
+                backfill_default_branch_commits(cinfo["repo_url"], dbcommit)
             except Exception as exc:
                 # Any error during this backfilling operation should not fail
                 # the HTTP request processing (we're right now in the middle of
@@ -297,29 +297,24 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
                     "during backfill_default_branch_commits():  %s",
                     exc,
                 )
+                raise
 
-        elif commit_hash is not None and repo_url is not None:
-            # As of input schema validation this means that both, commit has
-            # and repository specifier are set. Also the database schema as of
-            # the time of writing this comment requires both commit commit_hash and
-            # repo specifier to be non-null. Empty string values seem to be
-            # allowed. I think we may want to have all Commit records in the
-            # database to have a repo and commit commit_hash set. See
-            # https://github.com/conbench/conbench/issues/817
-            commit = Commit.create_unknown_context(commit_hash, repo_url)
-        else:
-            # Note(JP): this creates a special commit object I think with no
-            # information.
-            commit = Commit.create_no_context()
+            return dbcommit
 
-        return commit
+        # Fetching metadata from GitHub failed. Store most important bits in
+        # database.
+
+        dbcommit = Commit.create_unknown_context(
+            cinfo["commit_hash"], cinfo["repo_url"]
+        )
+        return dbcommit
 
     t0 = time.monotonic()
     try:
         # `_guts()` is expected to raise IntegrityError when a concurrent racer
         # did insert the Commit object by now. This can happen, also see
         # https://github.com/conbench/conbench/issues/809
-        commit = _guts(commit_hash, repo_url, pr_number, branch)
+        commit = _guts(ghcommit)
     except s.exc.IntegrityError as exc:
         # Expected error example:
         #  sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) \
