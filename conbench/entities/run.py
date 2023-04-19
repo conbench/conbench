@@ -547,9 +547,9 @@ class SchemaGitHubCreate(marshmallow.Schema):
         # because this requirement came a little late and all we want to do is
         # prevent "short commit hashes" from entering the system, choose a bit
         # of a middle ground.
-        if len(data["commit"]) < 20:
+        if len(data["commit"]) < 19:
             raise marshmallow.ValidationError(
-                "'commit' must be the full-length commit hash"
+                f"'commit' must be the full-length commit hash, got `{data['commit']}`"
             )
 
     @marshmallow.post_load

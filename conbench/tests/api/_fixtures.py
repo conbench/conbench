@@ -304,12 +304,12 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
 
     # Populate default branch commits. No holes because they should always be backfilled.
     for sha, timestamp, parent in [
-        ("11111", datetime(2022, 1, 1), None),
-        ("22222", datetime(2022, 1, 2), "11111"),
-        ("33333", datetime(2022, 1, 3), "22222"),
-        ("44444", datetime(2022, 1, 4), "33333"),
-        ("55555", datetime(2022, 1, 5), "44444"),
-        ("66666", datetime(2022, 1, 6), "55555"),
+        ("11111" * 5, datetime(2022, 1, 1), None),
+        ("22222" * 5, datetime(2022, 1, 2), "11111" * 5),
+        ("33333" * 5, datetime(2022, 1, 3), "22222" * 5),
+        ("44444" * 5, datetime(2022, 1, 4), "33333" * 5),
+        ("55555" * 5, datetime(2022, 1, 5), "44444" * 5),
+        ("66666" * 5, datetime(2022, 1, 6), "55555" * 5),
     ]:
         commits[sha] = Commit.create(
             {
@@ -329,16 +329,16 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
     # parent graph, but the same timestamp.)
     for sha, timestamp, parent, fork_point_sha in [
         # start at 22222
-        ("aaaaa", datetime(2022, 1, 2, 10), "22222", "22222"),
-        ("bbbbb", datetime(2022, 1, 3, 10), "aaaaa", "22222"),
+        ("aaaaa" * 5, datetime(2022, 1, 2, 10), "22222" * 5, "22222" * 5),
+        ("bbbbb" * 5, datetime(2022, 1, 3, 10), "aaaaa" * 5, "22222" * 5),
         # rebase to 33333
-        ("ccccc", datetime(2022, 1, 2, 10), "33333", "33333"),
-        ("ddddd", datetime(2022, 1, 3, 10), "ccccc", "33333"),
+        ("ccccc" * 5, datetime(2022, 1, 2, 10), "33333" * 5, "33333" * 5),
+        ("ddddd" * 5, datetime(2022, 1, 3, 10), "ccccc" * 5, "33333" * 5),
         # rebase to 44444
-        ("eeeee", datetime(2022, 1, 2, 10), "44444", "44444"),
-        ("fffff", datetime(2022, 1, 3, 10), "eeeee", "44444"),
+        ("eeeee" * 5, datetime(2022, 1, 2, 10), "44444" * 5, "44444" * 5),
+        ("fffff" * 5, datetime(2022, 1, 3, 10), "eeeee" * 5, "44444" * 5),
         # new commit on the branch
-        ("00000", datetime(2022, 1, 4, 10), "fffff", "44444"),
+        ("00000" * 5, datetime(2022, 1, 4, 10), "fffff" * 5, "44444" * 5),
     ]:
         commits[sha] = Commit.create(
             {
@@ -354,12 +354,12 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
         )
 
     # now a commit to a different repo
-    commits["abcde"] = Commit.create(
+    commits["abcde" * 5] = Commit.create(
         {
-            "sha": "abcde",
+            "sha": "abcde" * 5,
             "branch": "default",
-            "fork_point_sha": "abcde",
-            "parent": "12345",
+            "fork_point_sha": "abcde" * 5,
+            "parent": "12345" * 5,
             "repository": "https://github.com/org/something_else",
             "message": "message",
             "author_name": "author_name",
@@ -368,8 +368,9 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
     )
 
     # commits with less context
-    commits["sha"] = Commit.create_unknown_context(
-        commit_hash="sha", repo_url="https://github.com/org/something_else_entirely"
+    commits["shaaa" * 5] = Commit.create_unknown_context(
+        commit_hash="shaaa" * 5,
+        repo_url="https://github.com/org/something_else_entirely",
     )
 
     # Now populate a variety of different BenchmarkResults
@@ -378,31 +379,31 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
 
     for data_or_error, commit_sha in [
         # first commit
-        ([2.1, 2.0, 1.9], "11111"),
+        ([2.1, 2.0, 1.9], "11111" * 5),
         # stayed the sameish
-        ([2.2, 2.0, 2.1], "22222"),
+        ([2.2, 2.0, 2.1], "22222" * 5),
         # failed on PR
-        ({"stack_trace": "..."}, "aaaaa"),
+        ({"stack_trace": "..."}, "aaaaa" * 5),
         # fixed the PR
-        ([2.0, 2.1, 1.9], "bbbbb"),
+        ([2.0, 2.1, 1.9], "bbbbb" * 5),
         # 33333 failed in CI and never reported any results :(
         # rebased the PR onto 33333 (ccccc wasn't measured)
-        ([1.9, 2.0, 1.8], "ddddd"),
+        ([1.9, 2.0, 1.8], "ddddd" * 5),
         # a different change made the default branch better
-        ([1.2, 1.1, 1.0], "44444"),
+        ([1.2, 1.1, 1.0], "44444" * 5),
         # rebased the PR (eeeee wasn't measured)
-        ([1.0, 1.2, 1.1], "fffff"),
+        ([1.0, 1.2, 1.1], "fffff" * 5),
         # PR got worse
-        ([3.1, 3.0, 2.9], "00000"),
+        ([3.1, 3.0, 2.9], "00000" * 5),
         # 55555 failed in CI and never reported any results :(
         # 66666 got even worse
-        ([4.1, 4.0, 4.9], "66666"),
+        ([4.1, 4.0, 4.9], "66666" * 5),
         # another run on 66666 (note: one more with different reason below)
-        ([4.5, 4.6, 4.7], "66666"),
+        ([4.5, 4.6, 4.7], "66666" * 5),
         # on a different repo
-        ({"error": "bad"}, "abcde"),
+        ({"error": "bad"}, "abcde" * 5),
         # some-context commit
-        ([20.0, 20.1, 20.2], "sha"),
+        ([20.0, 20.1, 20.2], "shaaa" * 5),
     ]:
         commit = commits[commit_sha]
         if isinstance(data_or_error, list):
@@ -439,7 +440,7 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
         benchmark_results.append(
             benchmark_result(
                 results=[5.1, 5.2, 5.3],
-                commit=commits["66666"],
+                commit=commits["66666" * 5],
                 name=this_name,
                 **kwargs,
             )
