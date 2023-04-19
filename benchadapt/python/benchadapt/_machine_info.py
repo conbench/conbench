@@ -97,7 +97,7 @@ def github_info():
     return gh_info
 
 
-def detect_github_info():
+def detect_commit_info_from_local_git():
     """Attempts to inspect a locally cloned repository for git information that can be
     posted to the "github" key when creating a run.
 
@@ -109,7 +109,7 @@ def detect_github_info():
     commit = _exec_command(["git", "rev-parse", "HEAD"])
     if not commit:
         warnings.warn(
-            "error in github_info(): probably not in a git repo; returning {}",
+            "error in detect_commit_info_from_local_git(): probably not in a git repo; returning {}",
             GitParseWarning,
         )
         return {}
@@ -119,7 +119,7 @@ def detect_github_info():
         remote = "origin"
         branch = "<DETATCHED BRANCH>"
         warnings.warn(
-            f"error in github_info(): detached HEAD; returning {branch=}",
+            f"error in detect_commit_info_from_local_git(): detached HEAD; returning {branch=}",
             GitParseWarning,
         )
 
@@ -130,7 +130,7 @@ def detect_github_info():
             remote = "origin"
             branch = _exec_command(["git", "branch", "--show-current"])
             warnings.warn(
-                f"error in github_info(): untracked branch; returning {branch=}",
+                f"error in detect_commit_info_from_local_git(): untracked branch; returning {branch=}",
                 GitParseWarning,
             )
         else:

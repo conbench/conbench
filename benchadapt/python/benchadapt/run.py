@@ -110,7 +110,7 @@ class BenchmarkRun:
     @_github_property.setter
     def _github_property(self, value: Optional[dict]):
         if value is None:
-            value = _machine_info.detect_github_info()
+            value = _machine_info.detect_commit_info_from_local_git()
         self._github_cache = value
         self._maybe_set_name()
 
