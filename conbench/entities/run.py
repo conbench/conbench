@@ -105,7 +105,6 @@ class Run(Base, EntityMixin):
 
         commit_for_run = None
         if user_given_commit_info is not None:
-            log.info(user_given_commit_info)
             commit_for_run = commit_fetch_info_and_create_in_db_if_not_exists(
                 user_given_commit_info
             )
