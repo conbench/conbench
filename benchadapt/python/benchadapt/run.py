@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Optional
 
 from . import _machine_info
+from .result import validate_or_remove_github_commit_key
 
 
 @dataclass
@@ -135,15 +136,7 @@ class BenchmarkRun:
                 "Run not publishable! `machine_info` xor `cluster_info` must be specified"
             )
 
-        if not (
-            res_dict["github"].get("repository") and res_dict["github"].get("commit")
-        ):
-            raise ValueError(
-                "Run not publishable! `github.repository` and `github.commit` must be populated. "
-                "You may pass github metadata via CONBENCH_PROJECT_REPOSITORY, CONBENCH_PROJECT_COMMIT, "
-                "and CONBENCH_PR_NUMBER environment variables. "
-                f"\ngithub: {res_dict['github']}"
-            )
+        validate_or_remove_github_commit_key(res_dict)
 
         for attr in [
             "name",
