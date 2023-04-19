@@ -187,15 +187,7 @@ class BenchmarkResult:
                 "Result not publishable! `stats` and/or `error` must be be specified"
             )
 
-        if not (
-            res_dict["github"].get("repository") and res_dict["github"].get("commit")
-        ):
-            warnings.warn(
-                "Result not publishable! `github.repository` and `github.commit` must be populated. "
-                "You may pass github metadata via CONBENCH_PROJECT_REPOSITORY, CONBENCH_PROJECT_COMMIT, "
-                "and CONBENCH_PR_NUMBER environment variables. "
-                f"\ngithub: {res_dict['github']}"
-            )
+        validate_or_remove_github_commit_key(res_dict)
 
         for attr in [
             "run_name",
@@ -210,6 +202,31 @@ class BenchmarkResult:
                 res_dict.pop(attr)
 
         return res_dict
+
+
+def validate_or_remove_github_commit_key(res_dict: Dict):
+    """
+    Mutate dictionary in-place.
+    """
+    # For now, the decision is to send the result out, signaling to the
+    # Conbench API that this result has no repo/commit context.
+    if "github" in res_dict:
+        for checkkey in ("repository", "commit"):
+            if checkkey not in res_dict["github"]:
+                warnings.warn(
+                    "Result not publishable! `github.repository` and `github.commit` must be populated. "
+                    "You may pass github metadata via CONBENCH_PROJECT_REPOSITORY, CONBENCH_PROJECT_COMMIT, "
+                    "and CONBENCH_PR_NUMBER environment variables. "
+                    f"\ngithub: {res_dict['github']}"
+                )
+
+                # Not providing the `github` key in result dictionary tells
+                # Conbench that this result is commit context-less
+                # (recording it in Conbench might be useful for debugging
+                # and testing purposes, but generally we should make clear
+                # that this implies missing out on critical
+                # features/purpose).
+                del res_dict["github"]
 
 
 # Ugly, but per https://stackoverflow.com/a/61480946 lets us keep defaults and order
