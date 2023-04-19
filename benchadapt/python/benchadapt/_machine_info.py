@@ -161,11 +161,11 @@ def detect_commit_info_from_local_git():
     remote_url = _exec_command(["git", "remote", "get-url", remote])
     fork = re.search("(?<=.com[/:])([^/]*?)(?=/)", remote_url).group(0)
 
+    # Assumed to be all str values of non-zero length.
     return {
         "commit": commit,
         "repository": remote_url.rsplit(".git")[0],
         "branch": f"{fork}:{branch}",
-        "pr_number": None,
     }
 
 
