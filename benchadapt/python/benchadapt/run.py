@@ -85,7 +85,9 @@ class BenchmarkRun:
     info: Dict[str, Any] = field(default_factory=dict)
     machine_info: Dict[str, Any] = field(default_factory=_machine_info.machine_info)
     cluster_info: Dict[str, Any] = None
-    github: Dict[str, Any] = field(default_factory=_machine_info.github_info)
+    github: Dict[str, Any] = field(
+        default_factory=_machine_info.gh_commit_info_from_env
+    )
     finished_timestamp: str = None
     error_type: str = None
     error_info: Dict[str, Any] = None

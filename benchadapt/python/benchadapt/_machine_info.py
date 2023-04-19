@@ -79,7 +79,7 @@ class GitParseWarning(RuntimeWarning):
     pass
 
 
-def github_info():
+def gh_commit_info_from_env() -> Dict[str, str]:
     """Get github metadata from environment variables"""
     repo = os.environ.get("CONBENCH_PROJECT_REPOSITORY")
     pr_number = os.environ.get("CONBENCH_PROJECT_PR_NUMBER") or os.environ.get(
