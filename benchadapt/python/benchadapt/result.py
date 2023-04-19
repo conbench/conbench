@@ -173,10 +173,20 @@ class BenchmarkResult:
             self.machine_info = None
         self._cluster_info_cache = value
 
-    def to_publishable_dict(self):
-        """Returns a dict suitable for sending to conbench"""
+    def to_publishable_dict(self) -> Dict:
+        """
+        Return a dictionary representing the benchmark result.
+
+        After JSON-serialization, that dictionary is expected to validate
+        against the JSON schema that the Conbench API expects on the endpoint
+        for benchmark result submission.
+        """
+
         res_dict = asdict(self)
 
+        # We should discuss why we don't exit with an error here (publish this
+        # although it's not publishable? who consumes the warning? should the
+        # warning be re-worded to be more user-friendly?)
         if bool(res_dict.get("machine_info")) != bool(not res_dict["cluster_info"]):
             warnings.warn(
                 "Result not publishable! `machine_info` xor `cluster_info` must be specified"
