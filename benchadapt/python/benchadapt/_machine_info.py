@@ -1,3 +1,4 @@
+import logging
 import os
 import platform
 import re
@@ -9,6 +10,8 @@ from typing import Optional
 def _sysctl(stat):
     return ["sysctl", "-n", stat]
 
+
+log = logging.getLogger(__name__)
 
 MUST_BE_INTS = [
     "cpu_core_count",
@@ -364,4 +367,15 @@ def _has_missing(info, mapping):
 
 def _exec_command(command):
     result = subprocess.run(command, capture_output=True)
+
+    # Some of these failures are expected, i.e. the command not executing isn't
+    # supposed to be fatal to this program here. However, it makes sense to log
+    # information about how exactly the child process invocation failed.
+    if result.returncode != 0:
+        log.info(
+            "child process returned with code %s, stderr prefix:\n %s",
+            result.returncode,
+            result.stderr.decode("utf-8").strip()[:500],
+        )
+
     return result.stdout.decode("utf-8").strip()
