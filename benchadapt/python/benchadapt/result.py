@@ -135,7 +135,7 @@ class BenchmarkResult:
     machine_info: Dict[str, Any] = field(default_factory=_machine_info.machine_info)
     cluster_info: Dict[str, Any] = None
     context: Dict[str, Any] = field(default_factory=dict)
-    github: Dict[str, Any] = field(
+    github: Dict[str, str] = field(
         default_factory=_machine_info.gh_commit_info_from_env
     )
 
