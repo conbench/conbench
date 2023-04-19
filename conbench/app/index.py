@@ -63,7 +63,9 @@ class Index(AppEndpoint, RunMixin):
         for r in runs:
             rd = RunForDisplay(
                 ctime_for_table=r.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"),
-                commit_message_short=conbench.util.short_commit_msg(r.commit.message),
+                commit_message_short=conbench.util.short_commit_msg(
+                    r.commit.message if r.commit else ""
+                ),
                 # Temporary band-aid; we cannot fetch all last-1000-run-related
                 # BenchmarkResult objects each time we render the landing page.
                 # See https://github.com/conbench/conbench/issues/977 However,
@@ -74,7 +76,7 @@ class Index(AppEndpoint, RunMixin):
                 run=r,
             )
 
-            rname = repo_url_to_display_name(r.commit.repo_url)
+            rname = repo_url_to_display_name(r.associated_commit_repo_url)
             reponame_runs_map[rname].append(rd)
 
         # A quick/pragmatic decision for now, not set in stone: get a stable

@@ -5,12 +5,12 @@ import os
 import threading
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TypedDict
 
 import flask as f
 import requests
 import sqlalchemy as s
-from sqlalchemy.orm import Mapped, Query
+from sqlalchemy.orm import Mapped, Query, relationship
 
 from conbench import metrics, util
 
@@ -38,6 +38,16 @@ class CantFindAncestorCommitsError(Exception):
 # process worker. If we were to transition to thread workers, this should be a
 # threadlocal. Prepare for that (there is no downside attached).
 _tloc = threading.local()
+
+
+class TypeCommitInfoGitHub(TypedDict):
+    # Guarantee: non-empty. A URL.
+    repo_url: str
+    # Guarantee: Non-empty.
+    commit_hash: str
+    pr_number: Optional[int]
+    # Guarantee: non-empty or None
+    branch: Optional[str]
 
 
 class Commit(Base, EntityMixin):
@@ -68,6 +78,10 @@ class Commit(Base, EntityMixin):
     # further down we use `.label()` which seems to be sqlalchemy-specific
     timestamp: Mapped[Optional[datetime]] = Nullable(s.DateTime(timezone=False))
 
+    # Form a one-to-many relationship between Commit (one) and potentially
+    # many Runs.
+    runs: Mapped[List["Run"]] = relationship(back_populates="commit")  # type: ignore  # noqa
+
     def get_parent_commit(self):
         # Hm -- should this not be done with a foreign key relationship?
         return Commit.first(sha=self.parent, repository=self.repository)
@@ -84,8 +98,8 @@ class Commit(Base, EntityMixin):
         Return a URL (string) or None. The returned string is guaranteed to
         start with 'http' and is guaranteed to not have a trailing slash.
 
-        The `None` case is here because I think the database may contain other
-        (non-URL) value types; and we need to phase those out.
+        The `None` case is here because I think that legacy databases may
+        contain other (non-URL) value types; and we need to phase those out.
         """
         u = self.repository
         if u.startswith("http"):
@@ -229,37 +243,18 @@ class Commit(Base, EntityMixin):
         return query
 
     @staticmethod
-    def create_no_context():
-        # Special commit row, a singleton that call results can relate to (in
-        # DB, via forgeign key) that have _no_ commit information set. But: is
-        # that needed? Why have that relation at all then?
-        commit = Commit.first(sha="", repository="")
-        if not commit:
-            commit = Commit.create(
-                {
-                    "sha": "",
-                    "repository": "",
-                    "parent": None,
-                    "timestamp": None,
-                    "message": "",
-                    "author_name": "",
-                }
-            )
-        return commit
-
-    @staticmethod
-    def create_unknown_context(hash: str, repo_url: str) -> "Commit":
+    def create_unknown_context(commit_hash: str, repo_url: str) -> "Commit":
         # Note(JP): I think this means "could not verify, could not get further
         # info from remote API" -- but we _do_ have a commit hash, and a
         # repository URL specifier -- insert that into the database. Also see
         # https://github.com/conbench/conbench/issues/817
-        assert hash is not None
-        assert len(hash)
+        assert commit_hash is not None
+        assert len(commit_hash)
         assert repo_url.startswith("http")
 
         return Commit.create(
             {
-                "sha": hash,
+                "sha": commit_hash,
                 "repository": repo_url,
                 "parent": None,
                 "timestamp": None,
@@ -345,7 +340,8 @@ this_dir = os.path.abspath(os.path.dirname(__file__))
 
 def repository_to_name(repository: str) -> str:
     """
-    Normalize user-given repository information into an org/repo notation.
+    Normalize user-given repository information into an org/repo notation,
+    typically transforms from URL notation to org/repo notation.
 
     (I try to document this in hindsight)
 
@@ -391,15 +387,13 @@ def repository_to_url(repository: str) -> str:
             "repository_to_url() about to create invalid URL, name is: %s", name
         )
 
-    # Note(JP): the `lower()` appears to be dangerous. URLs are case-sensitive.
-    # We should trust user-given input in that regard, or at least think this
-    # through a little further. Also see
-    # https://github.com/conbench/conbench/issues/818
-    return f"https://github.com/{name.lower()}"
+    return f"https://github.com/{name}"
 
 
-def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) -> dict:
+def get_github_commit_metadata(cinfo: TypeCommitInfoGitHub) -> Dict:
     """
+    Fetch metadata for commit.
+
     This function interacts with the GitHub HTTP API. Exceptions related to API
     interaction errors are not handled here (and should be expected and handled
     in the caller). Expected error sources are among the following :
@@ -414,25 +408,27 @@ def get_github_commit(repository: str, pr_number: str, branch: str, sha: str) ->
     requests.exceptions.RequestException.
 
     """
-    if not repository or not sha:
-        return {}
+    # repospec: in org/repo notation.
 
-    name = repository_to_name(repository)
+    repospec = repository_to_name(cinfo["repo_url"])
 
     # `github.get_commit()` below may raise an exception if the GitHub
     # GitHub HTTP API failed, e.g. with a 4xx rate limiting response.
-    commit = _github.get_commit(name, sha)
+    commit = _github.get_commit_info(repospec, cinfo["commit_hash"])
 
-    if branch:
-        commit["branch"] = branch
-    elif pr_number:
+    # Seemingly, branch takes precedence over PR number.
+    if cinfo["branch"]:
+        commit["branch"] = cinfo["branch"]
+    elif cinfo["pr_number"]:
         commit["branch"] = _github.get_branch_from_pr_number(
-            name=name, pr_number=pr_number
+            name=repospec, pr_number=cinfo["pr_number"]
         )
     else:
-        commit["branch"] = _github.get_default_branch(name=name)
+        commit["branch"] = _github.get_default_branch(name=repospec)
 
-    commit["fork_point_sha"] = _github.get_fork_point_sha(name=name, sha=sha)
+    commit["fork_point_sha"] = _github.get_fork_point_sha(
+        name=repospec, sha=cinfo["commit_hash"]
+    )
 
     return commit
 
@@ -648,7 +644,7 @@ class GitHubHTTPApiClient:
 
         return f"{org}:{branch}"
 
-    def get_commit(self, name, sha):
+    def get_commit_info(self, name, sha):
         # Pragmatic method for testing.
         if sha in self.test_commits:
             return self._parse_commit(self._mocked_get_response(sha))
@@ -743,9 +739,14 @@ class GitHubHTTPApiClient:
         fork_point_sha = response["merge_base_commit"]["sha"]
         return fork_point_sha
 
-    def get_branch_from_pr_number(self, name: str, pr_number: str) -> Optional[str]:
+    def get_branch_from_pr_number(self, name: str, pr_number: int) -> Optional[str]:
+        log.info("type of pr_number: %s", type(pr_number))
+
+        # Warning, here be dragons. For our test suite, do not hit the GitHub
+        # HTTP API. Use a special PR number to trigger this magic. This was a
+        # bit mean:
+        # https://github.com/conbench/conbench/pull/1134#issuecomment-1513237729
         if pr_number == 12345678:
-            # test case
             return "some_user_or_org:some_branch"
 
         if not name or not pr_number:
@@ -960,7 +961,8 @@ class GitHubHTTPApiClient:
         # Non-retryable error.
         metrics.COUNTER_GITHUB_HTTP_API_REQUEST_FAILURES.inc()
         raise Exception(
-            f"Unexpected GitHub HTTP API response: {resp}",
+            "Unexpected GitHub HTTP API response for URL "
+            f"{url}: {resp}. Leading bytes of body: '{resp.text[:150]} ...'"
         )
 
 

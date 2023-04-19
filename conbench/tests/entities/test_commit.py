@@ -12,7 +12,7 @@ from ...entities.commit import (
     Commit,
     GitHubHTTPApiClient,
     backfill_default_branch_commits,
-    get_github_commit,
+    get_github_commit_metadata,
     repository_to_name,
     repository_to_url,
 )
@@ -129,28 +129,23 @@ def test_repository_to_name():
 
 
 def test_repository_to_url():
+    """'
+    Currently, repository_to_url() has too many features. We are actively
+    narrowing down the input parameter space.
+    """
     expected = "https://github.com/apache/arrow"
     assert repository_to_url(None) == ""
     assert repository_to_url("") == ""
     assert repository_to_url("blah blah") == "https://github.com/blah blah"
     assert repository_to_url("apache/arrow") == expected
-    assert repository_to_url("https://github.com/apache/Arrow") == expected
+    # Note(JP): this test did confirm that we did some lowering magic, but that
+    # is not wise, also see https://github.com/conbench/conbench/issues/887
+    assert (
+        repository_to_url("https://github.com/apache/Arrow")
+        == "https://github.com/apache/Arrow"
+    )
     assert repository_to_url("https://github.com/apache/arrow") == expected
     assert repository_to_url("git@github.com:apache/arrow") == expected
-
-
-def test_get_github_commit_none():
-    repo = "https://github.com/apache/arrow"
-    sha = "3decc46119d583df56c7c66c77cf2803441c4458"
-    branch = "some_user_or_org:some_branch"
-    pr_number = 123
-
-    assert get_github_commit(None, None, None, None) == {}
-    assert get_github_commit("", "", "", "") == {}
-    assert get_github_commit(repo, None, None, None) == {}
-    assert get_github_commit(None, pr_number, None, None) == {}
-    assert get_github_commit(None, None, branch, None) == {}
-    assert get_github_commit(None, None, None, sha) == {}
 
 
 @pytest.mark.parametrize(
@@ -164,7 +159,7 @@ def test_get_github_commit_none():
         "apache:main",
     ],
 )
-def test_get_github_commit_and_fork_point_sha(branch):
+def test_get_github_commit_metadata_and_fork_point_sha(branch):
     # NOTE: This integration test intentionally hits GitHub.
     if not os.getenv("GITHUB_API_TOKEN"):
         pytest.skip("No GITHUB_API_TOKEN given so we won't hit the GitHub API")
@@ -184,9 +179,11 @@ def test_get_github_commit_and_fork_point_sha(branch):
         "fork_point_sha": sha,
     }
     try:
-        result = get_github_commit(repo, branch=branch, sha=sha, pr_number=None)
+        result = get_github_commit_metadata(
+            {"repo_url": repo, "branch": branch, "commit_hash": sha, "pr_number": None}
+        )
     except Exception as exc:
-        log.info("exc during get_github_commit(): %s", exc)
+        log.info("exc during get_github_commit_metadata(): %s", exc)
         if "403 Client Error" in str(exc):
             pytest.skip("GitHub API rate limit seen, skip test")
         else:
@@ -206,7 +203,7 @@ def test_get_github_commit_and_fork_point_sha(branch):
         ("dianaclarke:ARROW-13266", None),
     ],
 )
-def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
+def test_get_github_commit_metadata_and_fork_point_sha_pull_request(branch, pr_number):
     # NOTE: This integration test intentionally hits GitHub.
     if not os.getenv("GITHUB_API_TOKEN"):
         pytest.skip("No GITHUB_API_TOKEN given so we won't hit the GitHub API")
@@ -225,9 +222,16 @@ def test_get_github_commit_and_fork_point_sha_pull_request(branch, pr_number):
         "fork_point_sha": "780e95c512d63bbea1e040af0eb44a0bf63c4d72",
     }
     try:
-        result = get_github_commit(repo, branch=branch, sha=sha, pr_number=pr_number)
+        result = get_github_commit_metadata(
+            {
+                "repo_url": repo,
+                "branch": branch,
+                "commit_hash": sha,
+                "pr_number": pr_number,
+            }
+        )
     except Exception as exc:
-        log.info("exc during get_github_commit(): %s", exc)
+        log.info("exc during get_github_commit_metadata(): %s", exc)
         if "403 Client Error" in str(exc):
             pytest.skip("GitHub API rate limit seen, skip test")
         else:

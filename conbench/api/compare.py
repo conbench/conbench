@@ -169,6 +169,10 @@ class CompareEntityEndpoint(ApiEndpoint, CompareMixin):
         baseline_benchmark_result = self._get_results(baseline_id)[0]
         contender_benchmark_result = self._get_results(contender_id)[0]
 
+        if baseline_benchmark_result.run.commit is None:
+            # TODO: emit a useful HTTP response
+            raise Exception("baseline commit unknown")
+
         set_z_scores(
             contender_benchmark_results=[contender_benchmark_result],
             baseline_commit=baseline_benchmark_result.run.commit,
@@ -231,6 +235,10 @@ class CompareListEndpoint(ApiEndpoint, CompareMixin):
         threshold, threshold_z = self.get_query_args_from_request()
         baseline_results = self._get_results(baseline_id)
         contender_results = self._get_results(contender_id)
+
+        if baseline_results[0].run.commit is None:
+            # TODO: emit a useful HTTP response
+            raise Exception("baseline commit unknown")
 
         set_z_scores(
             contender_benchmark_results=contender_results,

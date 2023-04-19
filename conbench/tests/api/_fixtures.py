@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 
 from ...entities.benchmark_result import BenchmarkResult
 from ...entities.commit import Commit
+from ...entities.run import SchemaGitHubCreate
 from ...runner import Conbench
 from ...tests.helpers import _uuid
 
@@ -212,6 +213,8 @@ VALID_RUN_PAYLOAD_WITH_ERROR = dict(
     **{key: value for key, value in VALID_RUN_PAYLOAD.items() if key not in ("id")},
 )
 
+_github_commit_info_schema = SchemaGitHubCreate()
+
 
 def benchmark_result(
     name=None,
@@ -229,7 +232,26 @@ def benchmark_result(
     empty_results=False,
     reason=None,
 ):
-    """Create BenchmarkResult and write to database."""
+    """Create BenchmarkResult and directly write to database.
+
+    This is done by going straight to the database, surpassing the HTTP
+    interface. This is an architectural smell, diminishing the efficacy of this
+    test suite.
+
+    It would be tidier and less nerve-wrecking if the common approach would be
+    to populate the database through the HTTP interface, because that includes
+    potentially many subtle or brutal mechanisms, all resulting in certain
+    shape/properties of data in the database (schema validation, and object
+    augmentation, ...). Taking a _different_ interface for populating the
+    database than our users would use creates a massive blind spot.
+
+    Sometimes it may be useful to place a carefully crafted object into the
+    database for testing a special case (like, a legacy database state).
+
+    However, in general, this approach might divert the test suite form
+    real-world relevance: our users cannot directly write to the database,
+    either.
+    """
 
     data = copy.deepcopy(VALID_RESULT_PAYLOAD)
     data["run_name"] = f"commit: {_uuid()}"
@@ -252,6 +274,11 @@ def benchmark_result(
         data["github"]["repository"] = commit.repository
         data["github"]["branch"] = commit.branch
 
+    # do at least a bit of what the HTTP path would do; this ensures that the
+    # output type is TypeCommitInfoGitHub
+    if "github" in data:
+        data["github"] = _github_commit_info_schema.load(data["github"])
+
     if results is not None:
         unit = unit if unit else "s"
         data["stats"] = Conbench._stats(results, unit, [], "s")
@@ -269,7 +296,7 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
     """Populate the database with fake Commits and BenchmarkResults to use when testing
     most of the entities.
 
-    Return a dict of commits (keyed by SHA) and list of BenchmarkResults.
+    Return a dict of commits (keyed by hash) and list of BenchmarkResults.
     """
     # Manually post all the Commits to the database first, so that upon posting
     # BenchmarkResults, the server doesn't hit the GitHub API for more commit information.
@@ -342,9 +369,8 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
 
     # commits with less context
     commits["sha"] = Commit.create_unknown_context(
-        hash="sha", repo_url="https://github.com/org/something_else_entirely"
+        commit_hash="sha", repo_url="https://github.com/org/something_else_entirely"
     )
-    commits[""] = Commit.create_no_context()
 
     # Now populate a variety of different BenchmarkResults
     benchmark_results: List[BenchmarkResult] = []
@@ -377,8 +403,6 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
         ({"error": "bad"}, "abcde"),
         # some-context commit
         ([20.0, 20.1, 20.2], "sha"),
-        # no-context commit
-        ([10.0, 10.1, 10.2], ""),
     ]:
         commit = commits[commit_sha]
         if isinstance(data_or_error, list):
@@ -387,7 +411,7 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
                     results=data_or_error,
                     commit=commit,
                     name=name,
-                    pull_request=commit.branch == "branch",
+                    pull_request=commit.branch == "branch" if commit else False,
                 )
             )
         else:
@@ -396,7 +420,7 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
                     error=data_or_error,
                     commit=commit,
                     name=name,
-                    pull_request=commit.branch == "branch",
+                    pull_request=commit.branch == "branch" if commit else False,
                 )
             )
 

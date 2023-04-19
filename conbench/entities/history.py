@@ -138,6 +138,14 @@ def get_history_for_benchmark(benchmark_result_id: str):
     # exception.
 
     benchmark_result: BenchmarkResult = BenchmarkResult.one(id=benchmark_result_id)
+
+    if benchmark_result.run.commit is None:
+        # Alternatively, raise an exception here -- allowing to inform the
+        # user that conceptually there will never be history for this
+        # benchmark result, because it's not associated with repo/commit
+        # information
+        return []
+
     return get_history_for_cchr(
         benchmark_result.case_id,
         benchmark_result.context_id,
@@ -147,7 +155,7 @@ def get_history_for_benchmark(benchmark_result_id: str):
 
 
 def get_history_for_cchr(
-    case_id: str, context_id: str, hardware_hash: str, repo: str
+    case_id: str, context_id: str, hardware_hash: str, repo_url: str
 ) -> List[HistorySample]:
     """
     Given a case/context/hardware/repo, return all non-errored BenchmarkResults
@@ -159,6 +167,13 @@ def get_history_for_cchr(
     For further detail on the stats columns, see the docs of
     ``_add_rolling_stats_columns_to_history_query()``.
     """
+
+    # Do not support history logic for results that are not associated with
+    # 'commit context'. Here, we could/should inspect `repo` to not be an empty
+    # string for example (there may be stray "no context" objects in the
+    # database that have the repo set to an empty string, i.e. the filter for
+    # repo=="" might even yield something).
+
     history = (
         Session.query(
             BenchmarkResult.id,
@@ -184,8 +199,12 @@ def get_history_for_cchr(
             BenchmarkResult.case_id == case_id,
             BenchmarkResult.context_id == context_id,
             BenchmarkResult.error.is_(None),
+            # This `sha == Commit.fork_point_sha` cannot be satisfied for
+            # results with an unknown commit context where commit parent/child
+            # and branch information is not available. Consequence is to not
+            # allow for history endpoint result for 'unknown context'.
             Commit.sha == Commit.fork_point_sha,  # on default branch
-            Commit.repository == repo,
+            Commit.repository == repo_url,
             Hardware.hash == hardware_hash,
         )
     )

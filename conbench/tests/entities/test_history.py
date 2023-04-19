@@ -59,7 +59,6 @@ EXPECTED_Z_SCORES = {
         None,
         None,
         None,
-        None,
         -5.98205200884773,
     ],
     "parent": [
@@ -73,7 +72,6 @@ EXPECTED_Z_SCORES = {
         -2.8246140882627757,
         -4.486481486904943,
         -4.946696853470237,
-        None,
         None,
         None,
         None,
@@ -97,7 +95,6 @@ EXPECTED_Z_SCORES = {
         None,
         None,
         None,
-        None,
         -1.072038550418487,
     ],
 }
@@ -106,23 +103,22 @@ EXPECTED_Z_SCORES = {
 def test_get_history():
     _, benchmark_results = _fixtures.gen_fake_data()
     all_expected_benchmark_results_ixs = [
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
-        [0, 1, 5, 8, 9, 16],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
+        [0, 1, 5, 8, 9, 15],
         [],  # only errors in the building
         [],  # no branch information
-        [],  # no branch information
+        [12],
         [13],
         [14],
-        [15],
-        [0, 1, 5, 8, 9, 16],
+        [0, 1, 5, 8, 9, 15],
     ]
     assert len(benchmark_results) == len(
         all_expected_benchmark_results_ixs
@@ -237,7 +233,7 @@ def test_set_z_scores_with_distribution_change(
         expected_z_scores[7] = -3.846766028925861
     expected_z_scores[8] = -56.00239876112446
     expected_z_scores[9] = -60.62177826491064
-    expected_z_scores[16] = -71.0140831103239
+    expected_z_scores[15] = -71.0140831103239
 
     _, benchmark_results = _fixtures.gen_fake_data()
 

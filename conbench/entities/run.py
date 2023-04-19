@@ -2,12 +2,13 @@ import logging
 import time
 from datetime import datetime, timezone
 from typing import List, Optional
+from urllib.parse import urlparse
 
 import flask as f
 import marshmallow
 import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 import conbench.util
 
@@ -24,9 +25,9 @@ from ..entities.commit import (
     CantFindAncestorCommitsError,
     Commit,
     CommitSerializer,
+    TypeCommitInfoGitHub,
     backfill_default_branch_commits,
-    get_github_commit,
-    repository_to_url,
+    get_github_commit_metadata,
 )
 from ..entities.hardware import (
     Cluster,
@@ -66,8 +67,16 @@ class Run(Base, EntityMixin):
     info: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
     error_info: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
     error_type: Mapped[Optional[str]] = Nullable(s.String(250))
-    commit_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("commit.id"))
-    commit: Mapped[Commit] = relationship("Commit", lazy="joined")
+
+    # The type annotation makes this a nullable many-to-one relationship.
+    # https://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#nullable-many-to-one
+    # A nullable many-to-one relationship between Commit (one) and potentially
+    # many Runs, but a run can also _not_ point to a commit.
+    commit_id: Mapped[Optional[str]] = mapped_column(s.ForeignKey("commit.id"))
+    commit: Mapped[Optional[Commit]] = relationship(
+        "Commit", lazy="joined", back_populates="runs"
+    )
+
     has_errors: Mapped[bool] = NotNull(s.Boolean, default=False)
     hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
     hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
@@ -90,66 +99,17 @@ class Run(Base, EntityMixin):
         )
         hardware = hardware_type.upsert(**data.pop(field_name))
 
-        # Work towards a state where these are guaranteed to be either None or
-        # non-zerolength strings.
-        repo_url: Optional[str] = None
-        branch: Optional[str] = None
-        commit_hash: Optional[str] = None
-
-        pr_number: Optional[int] = None
-
-        if github_data := data.pop("github", None):
-            # Note(JP): this should ensure that the `repository` Column in the
-            # Commit table holds a URL. However, it seems that after schema
-            # validation `github_data["repository"]` can be an empty string.
-            # In that case, repository_to_url() seems to return an empty
-            # string, too, and the `Commit.repository` field in the database
-            # would be populated with an empty string.
-            repo_url = repository_to_url(github_data["repository"])
-            if not repo_url.startswith("http"):
-                # GitHub data was provided, and that means that there _is_
-                # a URL/repo specifier that the user _could have_ provided.
-                # We should error out here and reject the reject the request.
-                log.warning(
-                    "Run.create(): bad repo info: `%s`, repo_url: `%s`",
-                    github_data["repository"],
-                    repo_url,
-                )
-
-                # Do some type normalization again.
-                if repo_url == "":
-                    repo_url = None
-
-            # Note(JP): this string may be zerolength as of today, does that
-            # make sense? Also see https://github.com/conbench/conbench/issues/817
-            # It doesn't. Only set to non-None when non-empty string.
-            if github_data["commit"]:
-                commit_hash = github_data["commit"]
-            else:
-                # Note(JP): we should error out. Again, the user provided a
-                # `github` structure and that by definition means that there is
-                # a repository context, and there is a commit to refer to.
-                log.warning("Run.create(): zero-length string github_data['commit']")
-
-            if github_data.get("branch"):
-                # Only set to non-None when non-empty string.
-                branch = github_data.get("branch")
-
-            # This assignment is expected to retain the Optional[int] type.
-            pr_number = github_data.get("pr_number")
-
-        # Before DB insertion its good to have clarity.
-        for testitem in (commit_hash, repo_url, branch):
-            assert testitem is None or len(testitem) > 0, github_data
-
-        commit_id = commit_fetch_info_and_create_in_db_if_not_exists(
-            commit_hash=commit_hash,
-            repo_url=repo_url,
-            pr_number=pr_number,
-            branch=branch,
+        user_given_commit_info: Optional[TypeCommitInfoGitHub] = data.pop(
+            "github", None
         )
 
-        run = Run(**data, commit_id=commit_id, hardware_id=hardware.id)
+        commit_for_run = None
+        if user_given_commit_info is not None:
+            commit_for_run = commit_fetch_info_and_create_in_db_if_not_exists(
+                user_given_commit_info
+            )
+
+        run = Run(**data, commit=commit_for_run, hardware_id=hardware.id)
         try:
             run.save()
         except s.exc.IntegrityError as exc:
@@ -185,6 +145,11 @@ class Run(Base, EntityMixin):
         and then find the latest commit, finally tiebreaking by latest Run.timestamp.
         """
         from ..entities.benchmark_result import BenchmarkResult
+
+        if self.commit is None:
+            # No associated repo/commit information. Raise an exception
+            # instead?
+            return None
 
         this_commit: Commit = self.commit
         try:
@@ -253,10 +218,26 @@ class Run(Base, EntityMixin):
         run = self.get_default_baseline_run()
         return run.id if run else None
 
+    @property
+    def associated_commit_repo_url(self) -> str:
+        """
+        Always return a string. Return URL or "n/a".
+
+        This is for those consumers that absolutely need to have a string type
+        representation.
+        """
+        if self.commit and self.commit.repo_url is not None:
+            return self.commit.repo_url
+
+        # This means that the Run is not associated with any commit, or it is
+        # associated with a legacy/invalid commit object in the database, one
+        # that does not have a repository URL set.
+        return "n/a"
+
 
 def commit_fetch_info_and_create_in_db_if_not_exists(
-    commit_hash, repo_url, pr_number, branch
-) -> str:
+    ghcommit: TypeCommitInfoGitHub,
+) -> Commit:
     """
     Insert new Commit entity into database if required.
 
@@ -272,7 +253,7 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
     API.
     """
 
-    def _guts(commit_hash, repo_url, pr_number, branch) -> Commit:
+    def _guts(cinfo: TypeCommitInfoGitHub) -> Commit:
         """
         Return a Commit object or raise `sqlalchemy.exc.IntegrityError`.
         """
@@ -280,34 +261,35 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
         # not needlessly interact with the GitHub HTTP API in case the commit
         # is already in the database. first(): "Return the first result of this
         # Query or None if the result doesn’t contain any row.""
-        commit: Optional[Commit] = Commit.first(sha=commit_hash, repository=repo_url)
+        dbcommit = Commit.first(sha=cinfo["commit_hash"], repository=cinfo["repo_url"])
 
-        if commit is not None:
-            return commit
+        if dbcommit is not None:
+            return dbcommit
 
         # Try to fetch metadata for commit via GitHub HTTP API. Fall back
         # gracefully if that does not work.
-
-        gh_commit_dict = None
+        gh_commit_metadata_dict = None
         try:
-            # get_github_commit() may raise all those exceptions that can
-            # happen during an HTTP request cycle.
-            gh_commit_dict = get_github_commit(
-                repository=repo_url, pr_number=pr_number, branch=branch, sha=commit_hash
-            )
+            # get_github_commit_metadata() may raise all those exceptions that can
+            # happen during an HTTP request cycle. The repository might
+            # for example not exist: Unexpected GitHub HTTP API response: <Response [404]
+            gh_commit_metadata_dict = get_github_commit_metadata(cinfo)
         except Exception as exc:
             log.info(
-                "treat as unknown commit: error during get_github_commit(): %s", exc
+                "treat as unknown context: error during get_github_commit_metadata(): %s",
+                exc,
             )
 
-        if gh_commit_dict:
+        if gh_commit_metadata_dict:
             # We got data from GitHub. Insert into database.
-            commit = Commit.create_github_context(commit_hash, repo_url, gh_commit_dict)
+            dbcommit = Commit.create_github_context(
+                cinfo["commit_hash"], cinfo["repo_url"], gh_commit_metadata_dict
+            )
 
             # The commit is known to GitHub. Fetch more data from GitHub.
-            # Gracefully degradate if that does not work.
+            # Gracefully degrade if that does not work.
             try:
-                backfill_default_branch_commits(repo_url, commit)
+                backfill_default_branch_commits(cinfo["repo_url"], dbcommit)
             except Exception as exc:
                 # Any error during this backfilling operation should not fail
                 # the HTTP request processing (we're right now in the middle of
@@ -317,29 +299,22 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
                     "during backfill_default_branch_commits():  %s",
                     exc,
                 )
+                raise
+            return dbcommit
 
-        elif commit_hash is not None and repo_url is not None:
-            # As of input schema validation this means that both, commit has
-            # and repository specifier are set. Also the database schema as of
-            # the time of writing this comment requires both commit commit_hash and
-            # repo specifier to be non-null. Empty string values seem to be
-            # allowed. I think we may want to have all Commit records in the
-            # database to have a repo and commit commit_hash set. See
-            # https://github.com/conbench/conbench/issues/817
-            commit = Commit.create_unknown_context(commit_hash, repo_url)
-        else:
-            # Note(JP): this creates a special commit object I think with no
-            # information.
-            commit = Commit.create_no_context()
-
-        return commit
+        # Fetching metadata from GitHub failed. Store most important bits in
+        # database.
+        dbcommit = Commit.create_unknown_context(
+            commit_hash=cinfo["commit_hash"], repo_url=cinfo["repo_url"]
+        )
+        return dbcommit
 
     t0 = time.monotonic()
     try:
         # `_guts()` is expected to raise IntegrityError when a concurrent racer
         # did insert the Commit object by now. This can happen, also see
         # https://github.com/conbench/conbench/issues/809
-        commit = _guts(commit_hash, repo_url, pr_number, branch)
+        commit = _guts(ghcommit)
     except s.exc.IntegrityError as exc:
         # Expected error example:
         #  sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) \
@@ -348,23 +323,24 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
 
         # Look up the Commit entity again because this function must return the
         # commit ID (DB primary key).
-        commit = Commit.first(sha=commit_hash, repository=repo_url)
+        Session.rollback()
+        commit = Commit.first(
+            sha=ghcommit["commit_hash"], repository=ghcommit["repo_url"]
+        )
 
         # After IntegrityError we assume that Commit exists in DB. Encode
         # assumption, for easier debugging.
         assert commit is not None
 
     d_seconds = time.monotonic() - t0
+
     log.info(
-        "commit_fetch_info_and_create_in_db_if_not_exists(%s, %s, %s, %s) took %.3f s",
-        commit_hash,
-        repo_url,
-        pr_number,
-        branch,
+        "commit_fetch_info_and_create_in_db_if_not_exists(%s) took %.3f s",
+        ghcommit,
         d_seconds,
     )
 
-    return commit.id
+    return commit
 
 
 class _Serializer(EntitySerializer):
@@ -452,18 +428,41 @@ def commit_hardware_run_map():
     return results
 
 
-class GitHubCreate(marshmallow.Schema):
+class SchemaGitHubCreate(marshmallow.Schema):
+    """
+    GitHub-flavored commit info object
+    """
+
     @marshmallow.pre_load
-    def change_pr_number_empty_string_to_none(self, data, **kwargs):
-        if "pr_number" in data:
-            data["pr_number"] = data["pr_number"] or None
+    def change_empty_string_to_none(self, data, **kwargs):
+        """For the specific situation of empty string being provided,
+        treat this a None, _before_ schema validation.
+
+        This for example alles the client to set pr_number to an empty string
+        and this has the same meaning as setting it to `null` in the JSON doc.
+
+        Otherwise, an empty string results in 'Not a valid integer' (for
+        pr_number, at least).
+        """
+        for k in ("pr_number", "branch"):
+            if data.get(k) == "":
+                data[k] = None
 
         return data
 
     commit = marshmallow.fields.String(
         required=True,
         metadata={
-            "description": "The 40-character commit hash of the repo being benchmarked"
+            "description": conbench.util.dedent_rejoin(
+                """
+                The commit hash of the benchmarked code.
+
+                Must not be an empty string.
+
+                Expected to be a known commit in the repository as specified
+                by the `repository` URL property below.
+                """
+            )
         },
     )
     repository = marshmallow.fields.String(
@@ -473,8 +472,26 @@ class GitHubCreate(marshmallow.Schema):
         # https://github.com/marshmallow-code/marshmallow/issues/76#issuecomment-1473348472
         required=True,
         metadata={
-            "description": "The repository name (in the format `org/repo`) or the URL "
-            "(in the format `https://github.com/org/repo`)"
+            "description": conbench.util.dedent_rejoin(
+                """
+                URL pointing to the benchmarked GitHub repository.
+
+                Must be provided in the format https://github.com/org/repo.
+
+                Trailing slashes are stripped off before database insertion.
+
+                As of the time of writing, only URLs starting with
+                "https://github.com" are allowed. Conbench interacts with the
+                GitHub HTTP API in order to fetch information about the
+                benchmarked repository. The Conbench user/operator is expected
+                to ensure that Conbench is configured with a GitHub HTTP API
+                authentication token that is privileged to read commit
+                information for the repository specified here.
+
+                Support for non-GitHub repositories (e.g. GitLab) or auxiliary
+                repositories is interesting, but not yet well specified.
+                """
+            )
         },
     )
     pr_number = marshmallow.fields.Integer(
@@ -496,6 +513,57 @@ class GitHubCreate(marshmallow.Schema):
             "know exactly what you're doing."
         },
     )
+
+    @marshmallow.validates_schema
+    def validate_props(self, data, **kwargs):
+        url = data["repository"]
+
+        # Undocumented: transparently rewrite git@ to https:// URL -- let's
+        # drop this in the future. Context:
+        # https://github.com/conbench/conbench/pull/1134#discussion_r1170222541
+        if url.startswith("git@github.com:"):
+            url = url.replace("git@github.com:", "https://github.com/")
+            data["repository"] = url
+
+        if not url.startswith("https://github.com"):
+            raise marshmallow.ValidationError(
+                f"'repository' must be a URL, starting with 'https://github.com', got `{url}`"
+            )
+
+        try:
+            urlparse(url)
+        except ValueError as exc:
+            raise marshmallow.ValidationError(
+                f"'repository' failed URL validation: `{exc}`"
+            )
+
+        if not len(data["commit"]):
+            raise marshmallow.ValidationError("'commit' must be a non-empty string")
+
+    @marshmallow.post_load
+    def turn_into_predictable_return_type(self, data, **kwargs) -> TypeCommitInfoGitHub:
+        """
+        We really have to look into schema-inferred tight types, this here is a
+        quick workaround for the rest of the code base to be able to work with
+        `TypeCommitInfoGitHub`.
+        """
+
+        url: str = data["repository"].rstrip("/")
+        commit_hash: str = data["commit"]
+        # If we do not re-add this here as `None` then this property is _not_
+        # part of the output dictionary if the user left this key out of
+        # their JSON object
+        pr_number: Optional[int] = data.get("pr_number")
+        branch: Optional[str] = data.get("branch")
+
+        result: TypeCommitInfoGitHub = {
+            "repo_url": url,
+            "commit_hash": commit_hash,
+            "pr_number": pr_number,
+            "branch": branch,
+        }
+
+        return result
 
 
 field_descriptions = {
@@ -532,7 +600,22 @@ class _RunFacadeSchemaCreate(marshmallow.Schema):
     error_type = marshmallow.fields.String(
         required=False, metadata={"description": field_descriptions["error_type"]}
     )
-    github = marshmallow.fields.Nested(GitHubCreate(), required=False)
+    github = marshmallow.fields.Nested(
+        SchemaGitHubCreate(),
+        required=False,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                Use this object to tell Conbench with which commit the
+                Run/BenchmarkResult is associated.
+
+                This field can be left out for testing purposes. Note however
+                that commit information is required for powering valuable
+                Conbench capabilities.
+                """
+            )
+        },
+    )
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
     cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)
 

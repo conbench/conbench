@@ -29,10 +29,11 @@ from ..entities._entity import (
     to_float,
 )
 from ..entities.case import Case, get_case_or_create
+from ..entities.commit import TypeCommitInfoGitHub
 from ..entities.context import Context, get_context_or_create
 from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info, get_info_or_create
-from ..entities.run import GitHubCreate, Run
+from ..entities.run import Run, SchemaGitHubCreate
 
 log = logging.getLogger(__name__)
 
@@ -119,7 +120,7 @@ class BenchmarkResult(Base, EntityMixin):
     # pydantic -- I believe when defining a schema with pydantic, the
     # corresponding type information can be used for mypy automatically.
     # Also see https://stackoverflow.com/q/75662696/145400.
-    def create(userres):
+    def create(userres) -> "BenchmarkResult":
         """
         `userres`: user-given Benchmark Result object, after JSON
         deserialization.
@@ -692,10 +693,12 @@ def validate_run_result_consistency(userres: Any) -> None:
     # not? what about branch name and PR number?
 
     # The property should not be called "github", this confuses me each
-    # time I deal with that.
-    if userres.get("github") is not None:
-        chrun = run.commit.hash
-        chresult = userres["github"]["commit"]
+    # time I deal with that. This is the "github-flavored commit info".
+
+    gh_commit_info: Optional[TypeCommitInfoGitHub] = userres.get("github")
+    if gh_commit_info is not None:
+        chrun = run.commit.hash if run.commit else None
+        chresult = gh_commit_info["commit_hash"]
         if chrun != chresult:
             raise BenchmarkResultValidationError(
                 f"Result refers to commit hash '{chresult}', but Run '{run.id}' "
@@ -1044,7 +1047,7 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
             "description": "Benchmark results validation metadata (e.g., errors, validation types)."
         },
     )
-    github = marshmallow.fields.Nested(GitHubCreate(), required=False)
+    github = marshmallow.fields.Nested(SchemaGitHubCreate(), required=False)
     change_annotations = marshmallow.fields.Dict(
         required=False, metadata={"description": CHANGE_ANNOTATIONS_DESC}
     )

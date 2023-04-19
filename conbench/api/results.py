@@ -239,7 +239,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         # Rely on the idea that the lookup
         # `benchmark_result.run.commit.repo_url` always succeeds
         conbench.metrics.COUNTER_BENCHMARK_RESULTS_INGESTED.labels(
-            repourl=str(benchmark_result.run.commit.repo_url)
+            repourl=benchmark_result.run.associated_commit_repo_url
         ).inc()
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 
