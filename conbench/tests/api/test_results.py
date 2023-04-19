@@ -1,4 +1,5 @@
 import copy
+from uuid import uuid4
 
 import pytest
 
@@ -352,6 +353,17 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         response = client.get(f"/api/benchmarks/?run_id={run_id_1},{run_id_2}")
         self.assert_200_ok(response, contains=_expected_entity(benchmark_result_1))
         self.assert_200_ok(response, contains=_expected_entity(benchmark_result_2))
+
+    def test_benchmark_results_for_run_ids_too_many(self, client):
+        self.authenticate(client)
+        comma_separated_run_ids = ",".join(uuid4().hex[-5:] for _ in range(5))
+        resp = client.get(f"/api/benchmark-results/?run_id={comma_separated_run_ids}")
+        assert resp.status_code == 200, resp.text
+
+        comma_separated_run_ids = ",".join(uuid4().hex[-5:] for _ in range(6))
+        resp = client.get(f"/api/benchmark-results/?run_id={comma_separated_run_ids}")
+        assert resp.status_code == 400, resp.text
+        assert "currently not allowed to set more than five" in resp.text
 
 
 class TestBenchmarkResultPost(_asserts.PostEnforcer):
