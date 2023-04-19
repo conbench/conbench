@@ -68,7 +68,7 @@ class TestBenchmarkRun:
 
         with pytest.raises(
             ValueError,
-            match="Run not publishable! `github.repository` and `github.commit` must be populated",
+            match="Entity not publishable! `github.repository` and `github.commit` must be populated",
         ):
             BenchmarkRun().to_publishable_dict()
 

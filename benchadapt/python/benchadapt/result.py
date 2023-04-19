@@ -227,7 +227,7 @@ def validate_or_remove_github_commit_key(res_dict: Dict, strict=False):
 
     def _warn_or_raise():
         msg = (
-            "Result not publishable! `github.repository` and `github.commit` "
+            "Entity not publishable! `github.repository` and `github.commit` "
             "must be populated. You may pass github metadata via "
             "CONBENCH_PROJECT_REPOSITORY, CONBENCH_PROJECT_COMMIT, "
             "and CONBENCH_PR_NUMBER environment variables. "

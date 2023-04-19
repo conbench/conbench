@@ -94,7 +94,7 @@ class TestBenchmarkResult:
 
         with pytest.warns(
             UserWarning,
-            match="Result not publishable! `github.repository` and `github.commit` must be populated",
+            match="Entity not publishable! `github.repository` and `github.commit` must be populated",
         ):
             BenchmarkResult().to_publishable_dict()
 
