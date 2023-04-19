@@ -75,13 +75,13 @@ def test_ancestor_commit_query():
         # the other fake commits don't have enough information to find ancestors
     ]:
         query_result = (
-            commits[commit_sha]
+            commits[commit_sha * 5]
             .commit_ancestry_query.order_by(s.desc("commit_order"))
             .all()
         )
         actual_ancestor_ids = [row[0] for row in query_result]
         expected_ancestor_ids = [
-            commits[name].id for name in expected_ancestor_commit_shas
+            commits[name * 5].id for name in expected_ancestor_commit_shas
         ]
         assert actual_ancestor_ids == expected_ancestor_ids
 
