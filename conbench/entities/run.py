@@ -455,9 +455,11 @@ class SchemaGitHubCreate(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                The commit hash of the benchmarked code.
+                The full-length commit hash of the benchmarked code.
 
                 Must not be an empty string.
+
+                Must be at least 40 characters long.
 
                 Expected to be a known commit in the repository as specified
                 by the `repository` URL property below.
@@ -539,6 +541,16 @@ class SchemaGitHubCreate(marshmallow.Schema):
 
         if not len(data["commit"]):
             raise marshmallow.ValidationError("'commit' must be a non-empty string")
+
+        # Maybe we should require this to be precisely 40 characters long, or
+        # towards a more modern git world require at least 40 characters. But
+        # because this requirement came a little late and all we want to do is
+        # prevent "short commit hashes" from entering the system, choose a bit
+        # of a middle ground.
+        if len(data["commit"]) < 20:
+            raise marshmallow.ValidationError(
+                "'commit' must be the full-length commit hash"
+            )
 
     @marshmallow.post_load
     def turn_into_predictable_return_type(self, data, **kwargs) -> TypeCommitInfoGitHub:
