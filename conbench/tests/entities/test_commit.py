@@ -148,22 +148,6 @@ def test_repository_to_url():
     assert repository_to_url("git@github.com:apache/arrow") == expected
 
 
-# def test_get_github_commit_metadata_none():
-#     repo = "https://github.com/apache/arrow"
-#     sha = "3decc46119d583df56c7c66c77cf2803441c4458"
-#     branch = "some_user_or_org:some_branch"
-#     pr_number = 123
-
-#     # What was this supposed to confirm? That indeed all detail needs
-#     # to be provided?
-#     assert get_github_commit_metadata(None, None, None, None) == {}
-#     assert get_github_commit_metadata("", "", "", "") == {}
-#     assert get_github_commit_metadata(repo, None, None, None) == {}
-#     assert get_github_commit_metadata(None, pr_number, None, None) == {}
-#     assert get_github_commit_metadata(None, None, branch, None) == {}
-#     assert get_github_commit_metadata(None, None, None, sha) == {}
-
-
 @pytest.mark.parametrize(
     "branch",
     [
