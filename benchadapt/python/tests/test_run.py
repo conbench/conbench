@@ -88,7 +88,11 @@ class TestBenchmarkRun:
 
         run = BenchmarkRun(reason=run_json["reason"])
 
-        assert run.github == {"commit": None, "repository": None, "pr_number": None}
+        # This indicates that "no commit/repo context is provided for this
+        # result". And we really need to work on re-naming this key towards
+        # "commit_info" or so.
+        assert "github" not in run
+
         assert run.name is None
         run.github = run_json["github"]
         assert run.name == f"{run_json['reason']}: {run_json['github']['commit']}"
