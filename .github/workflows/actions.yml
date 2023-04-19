@@ -58,7 +58,7 @@ jobs:
       - name: Build docs, exiting non-zero on warnings (which can be very bad)
         run: make build-docs SPHINXOPTS='-W --keep-going'
 
-  This is to confirm that commonly used developer commands still work.
+  # This is to confirm that commonly used developer commands still work.
   dev-cmds:
     runs-on: ubuntu-latest
     steps:
