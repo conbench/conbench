@@ -136,7 +136,7 @@ class BenchmarkRun:
                 "Run not publishable! `machine_info` xor `cluster_info` must be specified"
             )
 
-        validate_or_remove_github_commit_key(res_dict)
+        validate_or_remove_github_commit_key(res_dict, strict=True)
 
         for attr in [
             "name",

@@ -214,7 +214,7 @@ class BenchmarkResult:
         return res_dict
 
 
-def validate_or_remove_github_commit_key(res_dict: Dict):
+def validate_or_remove_github_commit_key(res_dict: Dict, strict=False):
     """
     Mutate BenchmarkResult dictionary in-place to make its `github` key
     property be compliant with the Conbench HTTP API.
@@ -225,13 +225,18 @@ def validate_or_remove_github_commit_key(res_dict: Dict):
     clear that this implies missing out on critical features/purpose).
     """
 
-    def _warn():
-        warnings.warn(
-            "Result not publishable! `github.repository` and `github.commit` must be populated. "
-            "You may pass github metadata via CONBENCH_PROJECT_REPOSITORY, CONBENCH_PROJECT_COMMIT, "
+    def _warn_or_raise():
+        msg = (
+            "Result not publishable! `github.repository` and `github.commit` "
+            "must be populated. You may pass github metadata via "
+            "CONBENCH_PROJECT_REPOSITORY, CONBENCH_PROJECT_COMMIT, "
             "and CONBENCH_PR_NUMBER environment variables. "
             f"\ngithub: {res_dict['github']}"
         )
+        if strict:
+            raise ValueError(msg)
+
+        warnings.warn(msg)
 
     # For now, the decision is to send the result out, signaling to the
     # Conbench API that this result has no repo/commit context. Maybe we should
@@ -239,12 +244,12 @@ def validate_or_remove_github_commit_key(res_dict: Dict):
     if "github" not in res_dict:
         # API-wise, that's a valid state, signaling "no commit information
         # present"
-        _warn()
+        _warn_or_raise()
         return
 
     for checkkey in ("repository", "commit"):
         if checkkey not in res_dict["github"]:
-            _warn()
+            _warn_or_raise()
             # Normalize this state into the recommended, single way to say "no
             # commit info": remove the key from the BenchmarkResult dict..
             del res_dict["github"]
