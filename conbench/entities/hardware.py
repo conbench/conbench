@@ -14,13 +14,13 @@ from ..entities._entity import (
     EntitySerializer,
     NotNull,
     Nullable,
-    generate_uuid,
+    genprimkey,
 )
 
 
 class Hardware(Base, EntityMixin):
     __tablename__ = "hardware"
-    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=genprimkey)
     name: Mapped[str] = NotNull(s.Text)
     type: Mapped[str] = NotNull(s.String(50))
     hash: Mapped[str] = NotNull(s.String(1000))

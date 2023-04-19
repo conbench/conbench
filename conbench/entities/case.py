@@ -4,12 +4,12 @@ from sqlalchemy.orm import Mapped
 
 from conbench.db import Session
 
-from ..entities._entity import Base, EntityMixin, NotNull, generate_uuid
+from ..entities._entity import Base, EntityMixin, NotNull, genprimkey
 
 
 class Case(Base, EntityMixin):
     __tablename__ = "case"
-    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=genprimkey)
     # The name of the conceptual benchmark (store on BenchmarkResult directly)?
     name: Mapped[str] = NotNull(s.Text)
     tags: Mapped[dict] = NotNull(postgresql.JSONB)

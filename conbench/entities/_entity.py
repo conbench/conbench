@@ -1,5 +1,4 @@
 import functools
-import uuid
 from typing import List
 
 import flask as f
@@ -8,7 +7,11 @@ from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.orm import declarative_base, mapped_column
 from sqlalchemy.orm.exc import NoResultFound
 
-from ..db import Session
+# Use stdlib once that's there:
+# https://github.com/python/cpython/issues/102461
+from uuid_extensions import uuid7
+
+from conbench.db import Session
 
 Base = declarative_base()
 NotNull = functools.partial(mapped_column, nullable=False)
@@ -31,10 +34,29 @@ class EntityExists(Exception):
     pass
 
 
-def generate_uuid():
-    # Consider using xid or UUID7 or something comparable so that primary
-    # key reflects insertion order.
-    return uuid.uuid4().hex
+def genprimkey():
+    """
+    Return a UUID type 7 as a 32-character lowercase hexadecimal string.
+
+    The main purpose is that that the primary key used for DB entities
+    can be used to sort by insertion time.
+
+    See https://github.com/conbench/conbench/issues/789.
+
+    https://uuid.ramsey.dev/en/stable/rfc4122/version7.html
+
+    'Version 7 UUIDs are binary-compatible with ULIDs (universally unique
+    lexicographically-sortable identifiers).'
+
+    'Version 7 UUIDs combine random data (like version 4 UUIDs) with a
+    timestamp (in milliseconds since the Unix Epoch, i.e., 1970-01-01 00:00:00
+    UTC) to create a monotonically increasing, sortable UUID that doesn’t have
+    any privacy concerns, since it doesn’t include a MAC address.'
+
+    Note(JP): maybe we still allow user-given data to be used as primary key,
+    that of course undermines the idea expressed above. Step by step.
+    """
+    return uuid7().hex
 
 
 def to_float(value):

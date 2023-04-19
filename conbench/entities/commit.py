@@ -22,7 +22,7 @@ from ..entities._entity import (
     EntitySerializer,
     NotNull,
     Nullable,
-    generate_uuid,
+    genprimkey,
 )
 
 log = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class TypeCommitInfoGitHub(TypedDict):
 
 class Commit(Base, EntityMixin):
     __tablename__ = "commit"
-    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=genprimkey)
     sha: Mapped[str] = NotNull(s.String(50))
     branch: Mapped[Optional[str]] = Nullable(s.String(510))
     fork_point_sha: Mapped[Optional[str]] = Nullable(s.String(50))

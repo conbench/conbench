@@ -5,20 +5,14 @@ from sqlalchemy.orm import Mapped
 
 from conbench.db import Session
 
-from ..entities._entity import (
-    Base,
-    EntityMixin,
-    EntitySerializer,
-    NotNull,
-    generate_uuid,
-)
+from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, genprimkey
 
 
 # Maybe EntityMixin should be a generic class
 # https://mypy.readthedocs.io/en/latest/generics.html#defining-subclasses-of-generic-classes
 class Context(Base, EntityMixin):
     __tablename__ = "context"
-    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=genprimkey)
     tags: Mapped[dict] = NotNull(postgresql.JSONB)
 
 
