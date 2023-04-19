@@ -87,11 +87,7 @@ class TestBenchmarkRun:
         monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
 
         run = BenchmarkRun(reason=run_json["reason"])
-
-        # This indicates that "no commit/repo context is provided for this
-        # result". And we really need to work on re-naming this key towards
-        # "commit_info" or so.
-        assert "github" not in run
+        assert run.github == {}
 
         assert run.name is None
         run.github = run_json["github"]
