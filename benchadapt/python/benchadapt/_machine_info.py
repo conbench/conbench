@@ -4,7 +4,7 @@ import platform
 import re
 import subprocess
 import warnings
-from typing import Optional
+from typing import Dict, Optional
 
 
 def _sysctl(stat):
@@ -80,21 +80,42 @@ class GitParseWarning(RuntimeWarning):
 
 
 def gh_commit_info_from_env() -> Dict[str, str]:
-    """Get github metadata from environment variables"""
-    repo = os.environ.get("CONBENCH_PROJECT_REPOSITORY")
-    pr_number = os.environ.get("CONBENCH_PROJECT_PR_NUMBER") or os.environ.get(
-        "BENCHMARKABLE_PR_NUMBER"
-    )
-    commit = os.environ.get("CONBENCH_PROJECT_COMMIT")
+    """
+    Attempt to read a specific set of environment variables expected to carry
+    GitHub-flavored information about the commit/checkout state of the
+    benchmarked repository.
 
-    gh_info = {
-        "commit": commit,
-        "repository": repo,
-        # "branch": None,
-        "pr_number": pr_number,
+    The returned dictionary is guaranteed to have both keys and values of type
+    str, all of length greater zero.
+
+    The returned dictionary may be empty.
+    """
+
+    varmap = {
+        "CONBENCH_PROJECT_REPOSITORY": "repo",
+        "CONBENCH_PROJECT_COMMIT": "commit",
+        "BENCHMARKABLE_PR_NUMBER": "pr_number",
+        "CONBENCH_PROJECT_PR_NUMBER": "pr_number",  # later entry takes precedence
     }
 
-    return gh_info
+    result = {}
+
+    for evarname, dictkey in varmap.items():
+        val = os.environ.get(evarname)
+        if val is not None:
+            stripval = val.strip()
+
+            if len(stripval) > 0:
+                result[dictkey] = stripval
+                continue
+
+            log.warning(
+                "ignoring environment variable %s with whitespace value: `%s`",
+                evarname,
+                repr(val),
+            )
+
+    return result
 
 
 def detect_commit_info_from_local_git():
