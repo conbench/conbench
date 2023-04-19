@@ -798,16 +798,21 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
-    def test_create_different_git_repo_format(self, client):
+    def test_create_different_git_repo_format_at(self, client):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
         data["run_id"] = _uuid()
         data["github"]["commit"] = "testing repository with git@g"
         data["github"]["repository"] = "git@github.com:apache/arrow"
-
         resp = client.post("/api/benchmarks/", json=data)
-        assert resp.status_code == 400, resp.text
-        assert "must be a URL, starting with 'https://github.com'" in resp.text
+        assert resp.status_code == 201, resp.text
+        print(resp.text)
+
+        # In the future I don't think we want client tooling to send this.
+        # Phase this out, remove complexity. See
+        # https://github.com/conbench/conbench/pull/1134
+        # assert resp.status_code == 400, resp.text
+        # assert "must be a URL, starting with 'https://github.com'" in resp.text
 
     def test_create_repo_not_full_url(self, client):
         self.authenticate(client)

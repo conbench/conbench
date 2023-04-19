@@ -518,6 +518,14 @@ class SchemaGitHubCreate(marshmallow.Schema):
     @marshmallow.validates_schema
     def validate_props(self, data, **kwargs):
         url = data["repository"]
+
+        # Undocumented: transparently rewrite git@ to https:// URL -- let's
+        # drop this in the future. Context:
+        # https://github.com/conbench/conbench/pull/1134#discussion_r1170222541
+        if url.startswith("git@github.com:"):
+            url = url.replace("git@github.com:", "https://github.com/")
+            data["repository"] = url
+
         if not url.startswith("https://github.com"):
             raise marshmallow.ValidationError(
                 f"'repository' must be a URL, starting with 'https://github.com', got `{url}`"
