@@ -92,7 +92,7 @@ def gh_commit_info_from_env() -> Dict[str, str]:
     """
 
     varmap = {
-        "CONBENCH_PROJECT_REPOSITORY": "repo",
+        "CONBENCH_PROJECT_REPOSITORY": "repository",
         "CONBENCH_PROJECT_COMMIT": "commit",
         "BENCHMARKABLE_PR_NUMBER": "pr_number",
         "CONBENCH_PROJECT_PR_NUMBER": "pr_number",  # later entry takes precedence
