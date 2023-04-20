@@ -5,13 +5,7 @@ import sqlalchemy as s
 import werkzeug.security
 from sqlalchemy.orm import Mapped
 
-from ..entities._entity import (
-    Base,
-    EntityMixin,
-    EntitySerializer,
-    NotNull,
-    generate_uuid,
-)
+from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, genprimkey
 from ..extensions import login_manager
 
 
@@ -22,7 +16,7 @@ def load_user(user_id):
 
 class User(flask_login.UserMixin, Base, EntityMixin):
     __tablename__ = "user"
-    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=genprimkey)
     email: Mapped[str] = NotNull(s.String(120), index=True, unique=True)
     name: Mapped[str] = NotNull(s.String(120))
     password: Mapped[str] = NotNull(s.String(128))

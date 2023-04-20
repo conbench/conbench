@@ -43,6 +43,7 @@ log = logging.getLogger(__name__)
 
 class Run(Base, EntityMixin):
     __tablename__ = "run"
+    # TODO: use default uuid7 primary key
     id: Mapped[str] = NotNull(s.String(50), primary_key=True)
     name: Mapped[Optional[str]] = Nullable(s.String(250))
     reason: Mapped[Optional[str]] = Nullable(s.String(250))

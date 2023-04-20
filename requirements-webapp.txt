@@ -30,3 +30,4 @@ requests
 sigfig
 SQLAlchemy>=2
 tenacity
+uuid7

@@ -5,18 +5,12 @@ from sqlalchemy.orm import Mapped
 
 from conbench.db import Session
 
-from ..entities._entity import (
-    Base,
-    EntityMixin,
-    EntitySerializer,
-    NotNull,
-    generate_uuid,
-)
+from ..entities._entity import Base, EntityMixin, EntitySerializer, NotNull, genprimkey
 
 
 class Info(Base, EntityMixin):
     __tablename__ = "info"
-    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=genprimkey)
     tags: Mapped[dict] = NotNull(postgresql.JSONB)
 
 

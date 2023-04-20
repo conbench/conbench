@@ -25,7 +25,7 @@ from ..entities._entity import (
     EntitySerializer,
     NotNull,
     Nullable,
-    generate_uuid,
+    genprimkey,
     to_float,
 )
 from ..entities.case import Case, get_case_or_create
@@ -44,7 +44,7 @@ class BenchmarkResultValidationError(Exception):
 
 class BenchmarkResult(Base, EntityMixin):
     __tablename__ = "benchmark_result"
-    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=genprimkey)
     case_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("case.id"))
     info_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("info.id"))
     context_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("context.id"))
