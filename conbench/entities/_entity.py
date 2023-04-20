@@ -1,7 +1,8 @@
 import functools
-from typing import List
+from typing import List, Dict, TypeVar, Generic, Type
 
 import flask as f
+import sqlalchemy
 from sqlalchemy import distinct, select
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.orm import declarative_base, mapped_column
@@ -63,7 +64,12 @@ def to_float(value):
     return float(value) if value is not None else None
 
 
-class EntityMixin:
+T = TypeVar("T")
+
+
+class EntityMixin(Generic[T]):
+    """ """
+
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.id}>"
 
@@ -166,6 +172,40 @@ class EntityMixin:
     def delete(self):
         Session.delete(self)
         Session.commit()
+
+    @classmethod
+    def get_or_create(cls: Type[T], props: Dict) -> T:
+        """
+        Try to create, but expect conflict (work with unique constraint on
+        name/tags).
+
+        Return (newly created, or previously existing) object, or raise an
+        exception.
+        """
+
+        def _fetch_first():
+            return Session.scalars(select(cls).filter_by(**props)).first()
+
+        result = _fetch_first()
+        if result is not None:
+            return result
+
+        obj = cls(**props)
+        Session.add(obj)
+        try:
+            Session.commit()
+            return obj
+        except sqlalchemy.exc.IntegrityError as exc:
+            if "violates unique constraint" not in str(exc):
+                raise
+
+        # When we end up here it means that a unique key constraint was
+        # violated. We did hit a narrow race condition: query failed, creation
+        # failed. Query again.
+        Session.rollback()
+        result = _fetch_first()
+        assert result is not None
+        return result
 
 
 class EntitySerializer:
