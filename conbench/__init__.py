@@ -19,8 +19,6 @@ import logging
 import os
 from typing import TYPE_CHECKING
 
-import flask_compress
-
 import conbench.logger
 
 try:
@@ -48,6 +46,7 @@ log = logging.getLogger(__name__)
 
 def create_application(config) -> "flask.Flask":
     import flask as f
+    import flask_compress
 
     import conbench.metrics
 
