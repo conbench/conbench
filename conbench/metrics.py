@@ -172,7 +172,7 @@ def http_handler_name(r: flask.Request) -> str:
 # This is a dictionary which can be mutated (from the outside, it's part of the
 # interface of this module) by other threads, to indicate when a meaningful
 # gauge value was set (see impl of _periodically_set_q_rem()).
-gauge_gh_api_rem_set = {"set": False}
+gauge_gh_api_rem_set = {"first_value_seen": False}
 
 
 def periodically_set_q_rem() -> None:
@@ -190,13 +190,14 @@ def periodically_set_q_rem() -> None:
     """
 
     def func():
+        log.info("periodically_set_q_rem(): initiate")
         while True:
-            time.sleep(10)
+            time.sleep(1)
 
-            if gauge_gh_api_rem_set["set"]:
+            if gauge_gh_api_rem_set["first_value_seen"]:
                 # This process set an actual, meaningful value. Stop
                 # reinforcing the initial state.
-                log.info("_periodically_set_q_rem(): terminate thread")
+                log.info("periodically_set_q_rem(): terminate thread")
                 return
 
             GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING.set(-1)

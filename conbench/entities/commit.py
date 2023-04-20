@@ -895,8 +895,9 @@ class GitHubHTTPApiClient:
             # Expect the value to always be int-convertible.
             reqquota = int(resp.headers["x-ratelimit-remaining"])
             metrics.GAUGE_GITHUB_HTTP_API_QUOTA_REMAINING.set(reqquota)
-            # Temporary workaround, see metrics._periodically_set_q_rem()
-            metrics.gauge_gh_api_rem_set["set"] = False
+            # Setting this to `True` stops a thread from periodically setting
+            # this to -1, see metrics.periodically_set_q_rem()
+            metrics.gauge_gh_api_rem_set["first_value_seen"] = True
 
         # In the code block below `resp` reflects an actual HTTP response.
         if resp.status_code == 200:
