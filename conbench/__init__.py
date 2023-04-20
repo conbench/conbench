@@ -19,6 +19,8 @@ import logging
 import os
 from typing import TYPE_CHECKING
 
+import flask_compress
+
 import conbench.logger
 
 try:
@@ -86,6 +88,13 @@ def create_application(config) -> "flask.Flask":
 
     # This mutates `app` in-place.
     conbench.metrics.decorate_flask_app_with_metrics(app)
+
+    # This also mutates the app in-place, sets up
+    # https://github.com/colour-science/flask-compress for deployments that do
+    # not run an HTTP reverse proxy with proper response compression in front
+    # of Conbench. Conbench amy emit large JSON and HTML responses, and simple
+    # gzip compression yields huge value.
+    flask_compress.Compress().init_app(app)
 
     return app
 
