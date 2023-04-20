@@ -28,11 +28,11 @@ from ..entities._entity import (
     genprimkey,
     to_float,
 )
-from ..entities.case import Case, get_case_or_create
+from ..entities.case import Case
 from ..entities.commit import TypeCommitInfoGitHub
-from ..entities.context import Context, get_context_or_create
+from ..entities.context import Context
 from ..entities.hardware import ClusterSchema, MachineSchema
-from ..entities.info import Info, get_info_or_create
+from ..entities.info import Info
 from ..entities.run import Run, SchemaGitHubCreate
 
 log = logging.getLogger(__name__)
@@ -200,9 +200,9 @@ class BenchmarkResult(Base, EntityMixin):
         benchmark_name = tags.pop("name")
 
         # Create related DB entities if they do not exist yet.
-        case = get_case_or_create({"name": benchmark_name, "tags": tags})
-        context = get_context_or_create({"tags": userres["context"]})
-        info = get_info_or_create({"tags": userres["info"]})
+        case = Case.get_or_create({"name": benchmark_name, "tags": tags})
+        context = Context.get_or_create({"tags": userres["context"]})
+        info = Info.get_or_create({"tags": userres["info"]})
 
         # Create a corresponding `Run` entity in the database if it doesn't
         # exist yet. Use the user-given `id` (string) as primary key. If the

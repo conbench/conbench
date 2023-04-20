@@ -1,5 +1,5 @@
 import functools
-from typing import List, Dict, TypeVar, Generic, Type
+from typing import Dict, Generic, List, Type, TypeVar
 
 import flask as f
 import sqlalchemy
