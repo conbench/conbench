@@ -174,14 +174,12 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             )
 
         elif run_id_arg := f.request.args.get("run_id"):
-            # Note(JP): https://github.com/conbench/conbench/issues/978 Given
-            # Conbench's data model we want to limit the number of run_ids that
-            # can be provided here. Maybe to 1, maybe to 5. Querying results
-            # for 100 runs (seen in practice) is for now difficult to support.
             run_ids = run_id_arg.split(",")
             if len(run_ids) > 5:
-                log.warning(
-                    "suspicious query /api/benchmarks for many run_ids -- see conbench/conbench/issues/978"
+                return resp400(
+                    "it is currently not allowed to set more than five "
+                    "run_id values; consider making separate requests (see "
+                    "issue 978)"
                 )
 
             benchmark_results = Session.scalars(
