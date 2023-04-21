@@ -13,12 +13,9 @@
 # limitations under the License.
 
 import pytest
-import requests
-from _pytest.logging import LogCaptureFixture
+from benchclients.conbench import ConbenchClientException
 
 from benchclients import ConbenchClient
-
-from benchclients.conbench import ConbenchClientException
 
 from .mocks import MockAdapter
 

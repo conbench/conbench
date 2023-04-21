@@ -1,14 +1,12 @@
 import os
-import logging
 
 import pytest
-import requests
+from benchclients.conbench import ConbenchClientException
+from benchclients.http import RetryingHTTPClientDeadlineReached
 from pytest_httpserver import HTTPServer
 from werkzeug.wrappers import Response
 
 from benchclients import ConbenchClient
-from benchclients.conbench import ConbenchClientException
-from benchclients.http import RetryingHTTPClientDeadlineReached
 
 
 def set_cb_base_url(h: HTTPServer):
