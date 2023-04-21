@@ -407,8 +407,8 @@ class RetryingHTTPClient(ABC):
         # automatically by requests' logic).
 
         msg = (
-            f"{method} request to {url}: unexpected HTTP response with code "
-            f"{resp.status_code}. Leading bytes of body: <{resp.text[:150]} ...>"
+            f"{method} request to {url}: unexpected HTTP response. Expected code "
+            f"{expected_status_code}, got {resp.status_code}. Leading bytes of body: <{resp.text[:150]} ...>"
         )
 
         raise RetryingHTTPClientNonRetryableResponse(message=msg, error_response=resp)
