@@ -2,11 +2,13 @@
 
 from typing import Any, Dict, Optional
 
-from benchclients.conbench import ConbenchClient
+from benchclients.conbench import LegacyConbenchClient
 from benchclients.logging import fatal_and_log, log
 
 from ..alert_pipeline import AlertPipelineStep
 from ..conbench_dataclasses import FullComparisonInfo, RunComparisonInfo
+
+ConbenchClient = LegacyConbenchClient
 
 
 class GetConbenchZComparisonStep(AlertPipelineStep):

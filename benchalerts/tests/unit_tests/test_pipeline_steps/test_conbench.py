@@ -1,9 +1,11 @@
 import pytest
+from benchclients.conbench import LegacyConbenchClient
 
 from benchalerts.pipeline_steps.conbench import GetConbenchZComparisonStep
-from benchclients import ConbenchClient
 
 from ..mocks import MockAdapter
+
+ConbenchClient = LegacyConbenchClient
 
 
 def test_GetConbenchZComparisonStep(conbench_env):
