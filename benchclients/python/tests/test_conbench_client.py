@@ -7,6 +7,7 @@ from pytest_httpserver import HTTPServer
 from werkzeug.wrappers import Response
 
 from benchclients import ConbenchClient
+from benchclients.conbench import ConbenchClientException
 from benchclients.http import RetryingHTTPClientDeadlineReached
 
 
@@ -38,14 +39,6 @@ def test_cc_get_qparm(httpserver: HTTPServer):
     assert c.get("/bonjour", params={"whats": "up"}) == [2]
 
 
-def test_cc_get_500(httpserver: HTTPServer):
-    set_cb_base_url(httpserver)
-    c = ConbenchClient(default_retry_for_seconds=15)
-    httpserver.expect_request("/api/foobar").respond_with_response(Response(500))
-    with pytest.raises(RetryingHTTPClientDeadlineReached, match="giving up after"):
-        assert c.get("/foobar") == [1, 2]
-
-
 @pytest.mark.parametrize("respjson", [[1, 2], {"1": "2"}])
 def test_cc_post(httpserver: HTTPServer, respjson):
     set_cb_base_url(httpserver)
@@ -71,7 +64,7 @@ def test_cc_post_expect_empty_body(httpserver: HTTPServer):
     c = ConbenchClient()
     httpserver.expect_request(
         "/api/test", method="POST", json={"ql": "biz"}
-    ).respond_with_data("", 200)
+    ).respond_with_data("", 201)
     assert c.post("/test", json={"ql": "biz"}) is None
 
 
@@ -80,16 +73,22 @@ def test_cc_put_expect_empty_body(httpserver: HTTPServer):
     c = ConbenchClient()
     httpserver.expect_request(
         "/api/test", method="PUT", json={"ql": "biz"}
-    ).respond_with_data("", 200)
+    ).respond_with_data("", 201)
     assert c.put("/test", json={"ql": "biz"}) is None
 
 
 def test_cc_get_401(httpserver: HTTPServer):
     set_cb_base_url(httpserver)
     c = ConbenchClient()
-    with pytest.raises(requests.exceptions.HTTPError, match="401 Client Error"):
+
+    # This confirms that indeed one request was made, and that initiated the
+    # machinery for triggering login. The login request is never sent.
+    with pytest.raises(
+        ConbenchClientException, match="credentials not set via environment"
+    ):
         httpserver.expect_request("/api/test").respond_with_data("", 401)
         c.get("/test")
+        assert len(httpserver.log) == 1
 
 
 def test_cc_performs_login_when_env_is_set(
@@ -105,12 +104,21 @@ def test_cc_performs_login_when_env_is_set(
     }
 
     httpserver.expect_oneshot_request(
-        "/api/login/", method="POST", json=creds
-    ).respond_with_json([2])
+        "/api/login", method="POST", json=creds
+    ).respond_with_data("", status=204)
 
     # This confirms that the initialization of this object performs an HTTP
     # request.
-    ConbenchClient()
+    ConbenchClient(default_retry_for_seconds=15)
 
     # https://github.com/csernazs/pytest-httpserver/issues/35#issuecomment-1517903020
     assert len(httpserver.log) == 1
+
+
+def test_cc_get_500(httpserver: HTTPServer):
+    set_cb_base_url(httpserver)
+    c = ConbenchClient(default_retry_for_seconds=15)
+    # This test is expected to take ~15 seconds.
+    httpserver.expect_request("/api/foobar").respond_with_response(Response(500))
+    with pytest.raises(RetryingHTTPClientDeadlineReached, match="giving up after"):
+        assert c.get("/foobar") == [1, 2]
