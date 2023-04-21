@@ -105,6 +105,10 @@ def test_cc_performs_login_when_env_is_set(
     httpserver.expect_oneshot_request(
         "/api/login/", method="POST", json=creds
     ).respond_with_json([2])
+
+    # This confirms that the initialization of this object performs an HTTP
+    # request.
     ConbenchClient()
+
     # https://github.com/csernazs/pytest-httpserver/issues/35#issuecomment-1517903020
     assert len(httpserver.log) == 1
