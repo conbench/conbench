@@ -88,3 +88,27 @@ def test_cc_get_401(httpserver: HTTPServer):
     with pytest.raises(requests.exceptions.HTTPError, match="401 Client Error"):
         httpserver.expect_request("/api/test").respond_with_data("", 401)
         c.get("/test")
+
+
+def test_cc_performs_login_when_env_is_set(
+    monkeypatch: pytest.MonkeyPatch, httpserver: HTTPServer
+):
+    set_cb_base_url(httpserver)
+    monkeypatch.setenv("CONBENCH_EMAIL", "email")
+    monkeypatch.setenv("CONBENCH_PASSWORD", "password")
+
+    creds = {
+        "email": os.getenv("CONBENCH_EMAIL"),
+        "password": os.getenv("CONBENCH_PASSWORD"),
+    }
+
+    httpserver.expect_oneshot_request(
+        "/api/login/", method="POST", json=creds
+    ).respond_with_json([2])
+
+    # This confirms that the initialization of this object performs an HTTP
+    # request.
+    ConbenchClient()
+
+    # https://github.com/csernazs/pytest-httpserver/issues/35#issuecomment-1517903020
+    assert len(httpserver.log) == 1
