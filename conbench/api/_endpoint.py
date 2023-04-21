@@ -70,8 +70,8 @@ class ApiEndpoint(flask.views.MethodView):
     def response_204_no_content(self):
         return "", 204
 
-    def response_202_accepted(self):
-        return "", 202
+    # def response_202_accepted(self):
+    #     return "", 202
 
     def response_201_created(self, body):
         headers = {
