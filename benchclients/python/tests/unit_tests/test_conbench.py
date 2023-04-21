@@ -18,6 +18,8 @@ from _pytest.logging import LogCaptureFixture
 
 from benchclients import ConbenchClient
 
+from benchclients.conbench import ConbenchClientException
+
 from .mocks import MockAdapter
 
 
@@ -27,7 +29,7 @@ class TestConbenchClient:
         return ConbenchClient(adapter=MockAdapter())
 
     def test_conbench_fails_missing_env(self, missing_conbench_env):
-        with pytest.raises(ValueError, match="CONBENCH_URL"):
+        with pytest.raises(ConbenchClientException, match="CONBENCH_URL"):
             self.cb
 
     @pytest.mark.parametrize("path", ["/error_with_content", "/error_without_content"])
