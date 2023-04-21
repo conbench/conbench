@@ -1,10 +1,8 @@
 import logging
 import time
-
-from json import dumps as jsondumps
-
 from abc import ABC, abstractmethod
-from typing import Literal, Optional, Tuple, Union, Dict, List
+from json import dumps as jsondumps
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 import requests
 
