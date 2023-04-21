@@ -74,16 +74,15 @@ class ConbenchClient(RetryingHTTPClient):
             # Let's phase this out.
             log.info("ignoring adapter: %s", adapter)
 
+        # Construct the HTTP API base URL without a trailing slash, something
+        # like https://conbench.ursa.dev/api
+        self._url = url + "/api"
+
         super().__init__()
 
         if default_retry_for_seconds:
             assert isinstance(default_retry_for_seconds, (float, int))
             self.default_retry_for_seconds = default_retry_for_seconds
-
-        # Construct the HTTP API base URL without a trailing slash, something
-        # like https://conbench.ursa.dev/api
-        self._url = url.rstrip("/") + "/api"
-        # self.default_retry_for_seconds = default_retry_for_seconds
 
         if "CONBENCH_EMAIL" in os.environ:
             # The logic would attempt to perform login automatically after
@@ -102,6 +101,9 @@ class ConbenchClient(RetryingHTTPClient):
         return self._url
 
     def _read_base_url_from_env_or_raise(self) -> str:
+        """
+        The return value is guaranteed to not have a trailing slash.
+        """
         # Maybe rename to CONBENCH_BASE_URL.
         url = os.getenv("CONBENCH_URL")
         if url:
@@ -112,6 +114,8 @@ class ConbenchClient(RetryingHTTPClient):
             raise ConbenchClientException(
                 "Environment variable CONBENCH_URL not set or empty"
             )
+
+        url = url.rstrip("/")
 
         # Try to catch a common user error.
         if url.endswith("/api"):

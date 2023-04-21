@@ -64,15 +64,6 @@ class RetryingHTTPClient(ABC):
     timeout_login_request: Tuple[float, float]
     timeout_long_running_requests: Tuple[float, float]
 
-    # timeout_connect_seconds = 3.5
-    # Note(JP): I have bumped this from 10 to 75 seconds to err on side of
-    # caution (remove stress from DB, at the cost of potentially longer-running
-    # jobs, and at the cost of time-between-useful-logmsgs). This needs more
-    # context-specific timeout constants, also see
-    # https://github.com/conbench/conbench/issues/801 and
-    # https://github.com/conbench/conbench/issues/806
-    # timeout_recv_seconds = 120
-
     def __init__(self) -> None:
         # This is to retain state across request, mainly authentication state.
         # self._login_or_raise() has to persist its authentication state here,
@@ -322,21 +313,10 @@ class RetryingHTTPClient(ABC):
         response was obtained reflecting a non-retryable error.
         """
 
-        # request_args = {
-        #     "method": method,
-        #     "url": url,
-        #     "timeout":
-        # }
-
-        # timeout = (self.timeout_connect_seconds, self.timeout_recv_seconds)
-
         if "timeout" not in kwargs:
             # Default to longer timeout constants.
             # timeout = self.timeout_long_running_requests
             kwargs["timeout"] = self.timeout_long_running_requests
-
-        # Add further keyword arguments.
-        # request_args |= kwargs
 
         t0 = time.monotonic()
 
