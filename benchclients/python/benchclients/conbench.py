@@ -154,7 +154,12 @@ class ConbenchClient(RetryingHTTPClient):
 
         login_result = self._make_request_retry_until_deadline(
             method="POST",
-            url=self._base_url + "/login",
+            # Trailing slash is important so that we do not get redirected.
+            # Some systems might redirect a POST to GET here.
+            # Interesting topic:
+            # https://github.com/galaxyproject/bioblend/pull/336
+            # https://github.com/aio-libs/aiohttp/issues/6764
+            url=self._base_url + "/login/",
             json=creds,
             expected_status_code=204,
             timeout=self.timeout_login_request,
