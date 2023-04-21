@@ -34,7 +34,7 @@ class ApiEndpointTest:
         assert r.status_code == 201, r.status_code
         assert r.content_type == "application/json", r.content_type
         assert r.location == location, r.location
-        assert r.json == expected, r.json
+        assert r.json == expected
 
     def assert_202_accepted(self, r):
         assert r.status_code == 202, r.status_code

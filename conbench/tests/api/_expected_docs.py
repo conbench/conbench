@@ -833,7 +833,6 @@
                             "id": "some-run-uuid-1",
                             "info": None,
                             "links": {
-                                "baseline": "http://localhost/api/runs/some-run-uuid-0/",
                                 "commit": "http://localhost/api/commits/some-commit-uuid-1/",
                                 "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
                                 "list": "http://localhost/api/runs/",
@@ -847,7 +846,87 @@
                 },
                 "description": "Created \n\n The resulting entity URL is returned in the Location header.",
             },
-            "RunEntity": {
+            "RunEntityWithBaselines": {
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "candidate_baseline_runs": {
+                                "fork_point": {
+                                    "baseline_run_id": None,
+                                    "commits_skipped": None,
+                                    "error": "the contender run is on the default branch",
+                                },
+                                "head_of_default": {
+                                    "baseline_run_id": None,
+                                    "commits_skipped": None,
+                                    "error": "the contender run is on the default branch",
+                                },
+                                "parent": {
+                                    "baseline_run_id": "598b44a1a3c94c63a4b17330c82c899e",
+                                    "commits_skipped": [
+                                        "7376b33c03298f273b9120ad83dd05da3d0c3bef"
+                                    ],
+                                    "error": None,
+                                },
+                            },
+                            "commit": {
+                                "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                "author_login": "dianaclarke",
+                                "author_name": "Diana Clarke",
+                                "branch": "some_user_or_org:some_branch",
+                                "fork_point_sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                "id": "some-commit-uuid-1",
+                                "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                "repository": "https://github.com/org/repo",
+                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                "timestamp": "2021-02-25T01:02:51",
+                                "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
+                            },
+                            "error_info": None,
+                            "error_type": None,
+                            "finished_timestamp": None,
+                            "hardware": {
+                                "architecture_name": "x86_64",
+                                "cpu_core_count": 2,
+                                "cpu_frequency_max_hz": 3500000000,
+                                "cpu_l1d_cache_bytes": 32768,
+                                "cpu_l1i_cache_bytes": 32768,
+                                "cpu_l2_cache_bytes": 262144,
+                                "cpu_l3_cache_bytes": 4194304,
+                                "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                "cpu_thread_count": 4,
+                                "gpu_count": 2,
+                                "gpu_product_names": [
+                                    "Tesla T4",
+                                    "GeForce GTX 1060 3GB",
+                                ],
+                                "id": "some-machine-uuid-1",
+                                "kernel_name": "19.6.0",
+                                "memory_bytes": 17179869184,
+                                "name": "some-machine-name",
+                                "os_name": "macOS",
+                                "os_version": "10.15.7",
+                                "type": "machine",
+                            },
+                            "has_errors": False,
+                            "id": "some-run-uuid-1",
+                            "info": None,
+                            "links": {
+                                "commit": "http://localhost/api/commits/some-commit-uuid-1/",
+                                "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
+                                "list": "http://localhost/api/runs/",
+                                "self": "http://localhost/api/runs/some-run-uuid-1/",
+                            },
+                            "name": "some run name",
+                            "reason": "some run reason",
+                            "timestamp": "2021-02-04T17:22:05.225583",
+                        }
+                    }
+                },
+                "description": "OK",
+            },
+            "RunEntityWithoutBaselines": {
                 "content": {
                     "application/json": {
                         "example": {
@@ -895,7 +974,6 @@
                             "id": "some-run-uuid-1",
                             "info": None,
                             "links": {
-                                "baseline": "http://localhost/api/runs/some-run-uuid-0/",
                                 "commit": "http://localhost/api/commits/some-commit-uuid-1/",
                                 "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
                                 "list": "http://localhost/api/runs/",
@@ -1795,7 +1873,7 @@
                 "tags": ["Runs"],
             },
             "get": {
-                "description": "Get a run.",
+                "description": 'Get a run and information about its candidate baseline runs.\n\nThe `"candidate_baseline_runs"` key in the response contains information\nabout up to three candidate baseline runs. Each baseline run corresponds to\na different candidate baseline commit, detailed below. If a baseline run is\nnot found for that commit, the response will detail why in the `"error"`\nkey. If a baseline run is found, its ID will be returned in the\n`"baseline_run_id"` key.\n\nThe three candidate baseline commits are:\n\n- the parent commit of the contender run\'s commit (`"parent"`)\n- if the contender run is on a PR branch, the default-branch commit that the\n  PR branch forked from (`"fork_point"`)\n- if the contender run is on a PR branch, the latest commit on the default\n  branch that has benchmark results (`"latest_default"`)\n\nWhen searching for a baseline run, each matching baseline run must:\n\n- be on the respective baseline commit, or in its git ancestry\n- match the contender run\'s hardware\n- have a benchmark result with the `case_id`/`context_id` of any of the\n  contender run\'s benchmark results\n\nIf there are multiple matches, prefer a baseline run with the same reason as\nthe contender run, and then use the baseline run with the most-recent\ncommit, finally tiebreaking by choosing the baseline run with the latest run\ntimestamp.\n\nIf any commits in the git ancestry were skipped to find a matching baseline\nrun, those commit hashes will be returned in the `"commits_skipped"` key.\n',
                 "parameters": [
                     {
                         "in": "path",
@@ -1805,7 +1883,7 @@
                     }
                 ],
                 "responses": {
-                    "200": {"$ref": "#/components/responses/RunEntity"},
+                    "200": {"$ref": "#/components/responses/RunEntityWithBaselines"},
                     "401": {"$ref": "#/components/responses/401"},
                     "404": {"$ref": "#/components/responses/404"},
                 },
@@ -1829,7 +1907,7 @@
                     }
                 },
                 "responses": {
-                    "200": {"$ref": "#/components/responses/RunEntity"},
+                    "200": {"$ref": "#/components/responses/RunEntityWithoutBaselines"},
                     "401": {"$ref": "#/components/responses/401"},
                     "404": {"$ref": "#/components/responses/404"},
                 },

@@ -1,3 +1,6 @@
+import copy
+
+
 class FakeUser1:
     id = "some-user-uuid-1"
     name = "Gwen Clarke"
@@ -487,8 +490,6 @@ def _api_run_entity(
     hardware_name,
     hardware_type,
     now,
-    baseline_id,
-    include_baseline=True,
     has_errors=False,
     finished_timestamp=None,
     info=None,
@@ -515,12 +516,24 @@ def _api_run_entity(
             "commit": "http://localhost/api/commits/%s/" % commit_id,
             "hardware": "http://localhost/api/hardware/%s/" % hardware_id,
         },
+        "candidate_baseline_runs": {
+            "fork_point": {
+                "baseline_run_id": None,
+                "commits_skipped": None,
+                "error": "the contender run is on the default branch",
+            },
+            "head_of_default": {
+                "baseline_run_id": None,
+                "commits_skipped": None,
+                "error": "the contender run is on the default branch",
+            },
+            "parent": {
+                "baseline_run_id": "598b44a1a3c94c63a4b17330c82c899e",
+                "commits_skipped": ["7376b33c03298f273b9120ad83dd05da3d0c3bef"],
+                "error": None,
+            },
+        },
     }
-    baseline_url = None
-    if baseline_id:
-        baseline_url = "http://localhost/api/runs/%s/" % baseline_id
-    if include_baseline:
-        result["links"]["baseline"] = baseline_url
     return result
 
 
@@ -599,7 +612,7 @@ HISTORY_ENTITY = _api_history_entity(
 )
 INFO_ENTITY = _api_info_entity("some-info-uuid-1")
 HARDWARE_ENTITY = _api_hardware_entity("some-machine-uuid-1", "some-machine-name")
-RUN_ENTITY = _api_run_entity(
+RUN_ENTITY_WITH_BASELINES = _api_run_entity(
     "some-run-uuid-1",
     "some run name",
     "some run reason",
@@ -609,23 +622,11 @@ RUN_ENTITY = _api_run_entity(
     "some-machine-name",
     "machine",
     "2021-02-04T17:22:05.225583",
-    "some-run-uuid-0",
 )
-RUN_LIST = [
-    _api_run_entity(
-        "some-run-uuid-1",
-        "some run name",
-        "some run reason",
-        "some-commit-uuid-1",
-        "some-parent-commit-uuid-1",
-        "some-machine-uuid-1",
-        "some-machine-name",
-        "machine",
-        "2021-02-04T17:22:05.225583",
-        None,
-        include_baseline=False,
-    ),
-]
+RUN_ENTITY_WITHOUT_BASELINES = copy.deepcopy(RUN_ENTITY_WITH_BASELINES)
+del RUN_ENTITY_WITHOUT_BASELINES["candidate_baseline_runs"]
+RUN_LIST = [RUN_ENTITY_WITHOUT_BASELINES]
+
 USER_ENTITY = _api_user_entity(FakeUser1())
 USER_LIST = [
     _api_user_entity(FakeUser1()),
