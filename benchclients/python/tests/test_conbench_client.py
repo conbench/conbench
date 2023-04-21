@@ -1,4 +1,5 @@
 import os
+import logging
 
 import pytest
 import requests
@@ -6,6 +7,7 @@ from pytest_httpserver import HTTPServer
 from werkzeug.wrappers import Response
 
 from benchclients import ConbenchClient
+from benchclients.http import RetryingHTTPClientDeadlineReached
 
 
 def set_cb_base_url(h: HTTPServer):
@@ -16,7 +18,7 @@ def set_cb_base_url(h: HTTPServer):
 def test_cc_init_and_base_url(httpserver: HTTPServer):
     set_cb_base_url(httpserver)
     c = ConbenchClient()
-    assert c.base_url == httpserver.url_for("/").rstrip("/") + "//api"
+    assert c._base_url == httpserver.url_for("/").rstrip("/") + "/api"
 
 
 @pytest.mark.parametrize("respjson", [[1, 2], {"1": "2"}])
@@ -38,9 +40,9 @@ def test_cc_get_qparm(httpserver: HTTPServer):
 
 def test_cc_get_500(httpserver: HTTPServer):
     set_cb_base_url(httpserver)
-    c = ConbenchClient()
+    c = ConbenchClient(default_retry_for_seconds=15)
     httpserver.expect_request("/api/foobar").respond_with_response(Response(500))
-    with pytest.raises(requests.exceptions.HTTPError, match="500 Server Error"):
+    with pytest.raises(RetryingHTTPClientDeadlineReached, match="giving up after"):
         assert c.get("/foobar") == [1, 2]
 
 
@@ -50,7 +52,7 @@ def test_cc_post(httpserver: HTTPServer, respjson):
     c = ConbenchClient()
     httpserver.expect_ordered_request(
         "/api/foobar", method="POST", json={"ql": "biz"}
-    ).respond_with_json(respjson)
+    ).respond_with_json(respjson, status=201)
     assert c.post("/foobar", json={"ql": "biz"}) == respjson
 
 
@@ -60,7 +62,7 @@ def test_cc_put(httpserver: HTTPServer, respjson):
     c = ConbenchClient()
     httpserver.expect_ordered_request(
         "/api/foobar", method="PUT", json={"ql": "biz"}
-    ).respond_with_json(respjson)
+    ).respond_with_json(respjson, status=201)
     assert c.put("/foobar", json={"ql": "biz"}) == respjson
 
 
