@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import pytest
+from benchclients.conbench import LegacyConbenchClient
 
 from benchalerts.pipeline_steps.conbench import GetConbenchZComparisonStep
-from benchclients import ConbenchClient
+
+ConbenchClient = LegacyConbenchClient
 
 
 @pytest.mark.parametrize(

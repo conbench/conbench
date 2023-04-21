@@ -1,11 +1,13 @@
 import pytest
+from benchclients.conbench import LegacyConbenchClient
 
 import benchalerts.pipeline_steps as steps
 from benchalerts import AlertPipeline
 from benchalerts.integrations.github import GitHubRepoClient
-from benchclients import ConbenchClient
 
 from .mocks import MockAdapter
+
+ConbenchClient = LegacyConbenchClient
 
 
 @pytest.mark.parametrize("github_auth", ["app"], indirect=True)
@@ -14,7 +16,9 @@ def test_reasonable_pipeline(conbench_env, github_auth):
     repo = "some/repo"
     build_url = "https://google.com"
 
-    conbench_client = ConbenchClient(adapter=MockAdapter())
+    conbench_client = ConbenchClient(
+        adapter=MockAdapter(),
+    )
     github_client = GitHubRepoClient(repo=repo, adapter=MockAdapter())
 
     pipeline = AlertPipeline(

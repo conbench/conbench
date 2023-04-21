@@ -2,11 +2,13 @@
 
 from typing import Any, Dict, Optional
 
-from benchclients.conbench import ConbenchClient
+from benchclients.conbench import LegacyConbenchClient
 from benchclients.logging import fatal_and_log, log
 
 from ..alert_pipeline import AlertPipelineStep
 from ..conbench_dataclasses import FullComparisonInfo, RunComparisonInfo
+
+ConbenchClient = LegacyConbenchClient
 
 
 class GetConbenchZComparisonStep(AlertPipelineStep):
@@ -56,7 +58,7 @@ class GetConbenchZComparisonStep(AlertPipelineStep):
         self,
         commit_hash: str,
         z_score_threshold: Optional[float] = None,
-        conbench_client: Optional[ConbenchClient] = None,
+        conbench_client: Optional[LegacyConbenchClient] = None,
         step_name: Optional[str] = None,
     ) -> None:
         super().__init__(step_name)
