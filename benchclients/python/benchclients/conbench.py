@@ -40,7 +40,7 @@ class ConbenchClient(RetryingHTTPClient):
     timeout_login_request = (10, 3.5)
     timeout_long_running_requests = (120, 3.5)
 
-    def __init__(self, adapter=None):
+    def __init__(self, default_retry_for_seconds=None, adapter=None):
         # If this library is embedded into a Python program that has stdlib
         # logging not set up yet (no root logger configured) then this call
         # sets up a root logger with handlers. This is a noop if the calling
@@ -58,6 +58,10 @@ class ConbenchClient(RetryingHTTPClient):
             log.info("ignoring adapter: %s", adapter)
 
         super().__init__()
+
+        if default_retry_for_seconds:
+            assert isinstance(default_retry_for_seconds, (float, int))
+            self.default_retry_for_seconds = default_retry_for_seconds
 
         # Construct the HTTP API base URL without a trailing slash, something
         # like https://conbench.ursa.dev/api
