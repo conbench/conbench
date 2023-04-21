@@ -36,9 +36,23 @@ class ConbenchClient(RetryingHTTPClient):
     mode' API server.
     """
 
-    default_retry_for_seconds = 3 * 60
-    timeout_login_request = (10, 3.5)
+    # We want each request to be retried for up to ~30 minutes, also
+    # see https://github.com/conbench/conbench/issues/800
+    default_retry_for_seconds = 30 * 60
+
+    # Note(JP): we bumped the recv timeout from 10 to 75 seconds to err on side
+    # of caution (remove stress from DB, at the cost of potentially
+    # longer-running jobs, and at the cost of time-between-useful-logmsgs). Now
+    # bumped further to adjust to newer timeout constants in API
+    # implementation. Generally, this this needs more context-specific timeout
+    # constants, also see https://github.com/conbench/conbench/issues/801 and
+    # https://github.com/conbench/conbench/issues/806. One such
+    # context-specific timeout constant is for a login request, see below.
+    # Note: for now, this `timeout_long_running_requests` timeout constant
+    # applies to all requests unless specified otherwise.
     timeout_long_running_requests = (120, 3.5)
+
+    timeout_login_request = (10, 3.5)
 
     def __init__(self, default_retry_for_seconds=None, adapter=None):
         # If this library is embedded into a Python program that has stdlib
