@@ -102,7 +102,7 @@ def test_cc_performs_login_when_env_is_set(
     }
 
     httpserver.expect_oneshot_request(
-        "/api/login", method="POST", json=creds
+        "/api/login/", method="POST", json=creds
     ).respond_with_data("", status=204)
 
     # This confirms that the initialization of this object performs an HTTP
