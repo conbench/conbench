@@ -34,7 +34,7 @@ backlog = 300
 # core is after all serving requests).
 # https://github.com/conbench/conbench/issues/1018
 workers = 1
-threads = 10
+threads = 15
 
 # This is the worker timeout; an observer process will terminate the observed
 # worker process if the observed process hasn't responded within that
@@ -48,6 +48,10 @@ timeout = 120
 # that's longer than 60 (some cloud load balancers default to this). but it's
 # shorter than nginx' default of 75 seconds.
 keepalive = 70
+
+# Reduce this from the default (1000), and have gunicorn reject further
+# TCP connections. This makes sense in terms of back-pressure.
+worker_connections = 400
 
 
 def post_worker_init(worker):
