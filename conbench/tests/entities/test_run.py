@@ -1,5 +1,6 @@
 import logging
 
+from ...entities.run import Run
 from ..api import _fixtures
 
 log = logging.getLogger(__name__)
@@ -10,6 +11,16 @@ DEFAULT_BRANCH_PLACEHOLDER = {
     "baseline_run_id": None,
     "commits_skipped": None,
 }
+
+
+def get_baseline_run_dict(run: Run) -> dict:
+    """Given a run, return the "candidate_baseline_runs" dict that would be returned if
+    you hit GET /api/runs/{run_id} for that run and deserialized the JSON response.
+    """
+    return {
+        candidate_type: candidate._dict_for_api_json()
+        for candidate_type, candidate in run.get_candidate_baseline_runs().items()
+    }
 
 
 def test_get_candidate_baseline_runs():
@@ -232,10 +243,7 @@ def test_get_candidate_baseline_runs():
     for ix, (run, expected_baseline_run_dict) in enumerate(
         zip(runs, expected_baseline_run_dicts)
     ):
-        actual_baseline_run_dict = {
-            candidate_type: candidate._dict_for_api_json()
-            for candidate_type, candidate in run.get_candidate_baseline_runs().items()
-        }
+        actual_baseline_run_dict = get_baseline_run_dict(run)
         if actual_baseline_run_dict != expected_baseline_run_dict:
             failures.append(ix)
             log.info(
@@ -248,25 +256,48 @@ def test_get_candidate_baseline_runs():
 
     # create one more nightly on 44444 and hope that we pick it up in the last test case
     # (which should also have a nightly reason)
-    new_one = _fixtures.benchmark_result(
+    new_benchmark_result = _fixtures.benchmark_result(
         name=benchmark_results[-1].case.name,
         results=[1, 2, 3],
         reason="nightly",
         commit=commits["44444"],
     )
-    actual_baseline_run_dict = {
-        candidate_type: candidate._dict_for_api_json()
-        for candidate_type, candidate in runs[-1].get_candidate_baseline_runs().items()
-    }
-    log.info(actual_baseline_run_dict)
+    actual_baseline_run_dict = get_baseline_run_dict(runs[-1])
     assert actual_baseline_run_dict == {
         "parent": {
             "error": None,
-            "baseline_run_id": new_one.run.id,
+            "baseline_run_id": new_benchmark_result.run.id,
             "commits_skipped": ["55555"],
         },
         "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
         "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
     }
 
-    # TODO: test run with no commit
+    # test a run with no commit that can still find a latest_default baseline
+    benchmark_result_missing_commit = _fixtures.benchmark_result(
+        name=benchmark_results[1].case.name,
+        results=[1, 2, 3],
+        no_github=True,
+    )
+    assert benchmark_result_missing_commit.run.commit is None
+    actual_baseline_run_dict = get_baseline_run_dict(
+        benchmark_result_missing_commit.run
+    )
+    log.info([(ix, r.id) for ix, r in enumerate(runs)])
+    assert actual_baseline_run_dict == {
+        "parent": {
+            "error": "the contender run is not connected to the git graph",
+            "baseline_run_id": None,
+            "commits_skipped": None,
+        },
+        "fork_point": {
+            "error": "the contender run is not connected to the git graph",
+            "baseline_run_id": None,
+            "commits_skipped": None,
+        },
+        "latest_default": {
+            "error": None,
+            "baseline_run_id": runs[9].id,  # latest with same reason (commit)
+            "commits_skipped": [],
+        },
+    }

@@ -10,9 +10,8 @@ from ...entities.run import Run
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
-
 DEFAULT_BRANCH_PLACEHOLDER = {
-    "error": "the contender run is on the default branch",
+    "error": "the contender run is already on the default branch",
     "baseline_run_id": None,
     "commits_skipped": None,
 }
@@ -43,6 +42,7 @@ def _expected_entity(run, candidate_baseline_runs=None):
         entity["candidate_baseline_runs"] = candidate_baseline_runs
     else:
         del entity["candidate_baseline_runs"]
+    return entity
 
 
 class TestRunGet(_asserts.GetEnforcer):

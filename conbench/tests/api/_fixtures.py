@@ -232,6 +232,7 @@ def benchmark_result(
     empty_results=False,
     reason=None,
     one_sample_no_mean=False,
+    no_github=False,
 ):
     """Create BenchmarkResult and directly write to database.
 
@@ -274,6 +275,8 @@ def benchmark_result(
         data["github"]["commit"] = commit.sha
         data["github"]["repository"] = commit.repository
         data["github"]["branch"] = commit.branch
+    if no_github:
+        del data["github"]
 
     # do at least a bit of what the HTTP path would do; this ensures that the
     # output type is TypeCommitInfoGitHub
