@@ -1,9 +1,12 @@
 import re
 
+import pytest
+
+from ...tests.api import _fixtures
 from ...tests.app import _asserts
 
 
-class TestBenchmarkList(_asserts.ListEnforcer):
+class TestBenchmarkResultList(_asserts.ListEnforcer):
     url = "/benchmark-results/"
     title = "Benchmarks"
 
@@ -11,7 +14,7 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         return self.create_benchmark(client)
 
 
-class TestBenchmarkGet(_asserts.GetEnforcer):
+class TestBenchmarkResultGet(_asserts.GetEnforcer):
     url = "/benchmark-results/{}/"
     title = "Benchmark result"
 
@@ -36,8 +39,46 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
             r"unknown benchmark result ID: \w+", response.text, flags=re.ASCII
         )
 
+    @pytest.mark.parametrize(
+        "samples",
+        [(1,), (3, 5), (3, 5, 7)],
+    )
+    def test_display_result_no_mean(self, client, samples):
+        # Test that benchmark result view/page loads fine for the results that
+        # have one or two multisamples only, i.e. all aggregates are undefined.
+        self.authenticate(client)
 
-class TestBenchmarkDelete(_asserts.DeleteEnforcer):
+        result = _fixtures.VALID_RESULT_PAYLOAD.copy()
+        result["stats"] = {
+            "data": samples,
+            "times": [],  # key must be there as of now, validate more, change this.
+            "unit": "s",
+            "time_unit": "s",
+            # also see https://github.com/conbench/conbench/issues/813
+            # https://github.com/conbench/conbench/issues/533
+            "iterations": len(samples),
+        }
+
+        resp = client.post("/api/benchmark-results/", json=result)
+        assert resp.status_code == 201, resp.text
+        bmr_id = resp.json["id"]
+        resp = client.get(f"benchmark-results/{bmr_id}/")
+        assert resp.status_code == 200, resp.text
+
+    def test_display_result_no_mean_in_history(self, client):
+        # Main goal of this test is to reproduce
+        # https://github.com/conbench/conbench/issues/1155
+        # before testing
+        # https://github.com/conbench/conbench/pull/1167
+        self.authenticate(client)
+        _, bmresults = _fixtures.gen_fake_data(one_sample_no_mean=True)
+        bmr_id = bmresults[3].id
+        with pytest.raises(ValueError, match="invalid input Character"):
+            resp = client.get(f"benchmark-results/{bmr_id}/")
+            assert resp.status_code == 200, resp.text
+
+
+class TestBenchmarkResultDelete(_asserts.DeleteEnforcer):
     def test_authenticated(self, client):
         benchmark_result_id = self.create_benchmark(client)
 

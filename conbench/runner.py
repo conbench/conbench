@@ -418,7 +418,7 @@ class Conbench(Connection, MixinPython, MixinR):
         }
 
     @staticmethod
-    def _stats(data, unit, times, time_unit):
+    def _stats(data, unit, times, time_unit, one_sample_no_mean=False):
         fmt = "{:.6f}"
 
         def _format(f, data, min_length=0):
@@ -444,5 +444,16 @@ class Conbench(Connection, MixinPython, MixinR):
             "q3": fmt.format(q3),
             "iqr": fmt.format(q3 - q1),
         }
+
+        if one_sample_no_mean:
+            # Brutal way to create a BenchmarkResult in a history that
+            # has no aggregates, in particular no mean value.
+            agg_keys = ("q1", "q3", "mean", "median", "min", "max", "stdev", "iqr")
+
+            result["data"] = [result["data"][0]]
+            result["times"] = [result["times"][0]] if result["times"] else []
+            result["iterations"] = 1
+            for k in agg_keys:
+                del result[k]
 
         return result

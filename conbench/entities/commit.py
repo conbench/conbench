@@ -740,8 +740,6 @@ class GitHubHTTPApiClient:
         return fork_point_sha
 
     def get_branch_from_pr_number(self, name: str, pr_number: int) -> Optional[str]:
-        log.info("type of pr_number: %s", type(pr_number))
-
         # Warning, here be dragons. For our test suite, do not hit the GitHub
         # HTTP API. Use a special PR number to trigger this magic. This was a
         # bit mean:
