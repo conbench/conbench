@@ -144,14 +144,21 @@ class HistorySample:
         Downstream code relies on a float(y) value to be returned, which
         includes `math.nan`.
         """
-        if self.mean is not None:
+        if self.mean is not None and self.mean is not math.nan:
             # Want to be sure I understand what's happening. Context:
             # https://github.com/conbench/conbench/issues/1155
             assert isinstance(self.mean, float)
+            # This is a numeric, floaty value (not `math.nan`).
             return self.mean
 
+        # Mean value isn't set. That should imply that there are less than
+        # three data points. Do a sanity check.
         if len(self.data) not in (1, 2):
-            log.warning("bad history sample: mean is none, data length unexpected")
+            log.warning(
+                "bad history sample: mean is %s, data length is %s",
+                self.mean,
+                len(self.data),
+            )
             return math.nan
 
         # Assume there is at least one data point, at most two data points. See
@@ -159,7 +166,7 @@ class HistorySample:
         # rationale, for now return one of both data points. If these are two
         # values and they have vastly different values, then this is non-ideal
         # situation anyway.
-        return self.data[1]
+        return self.data[0]
 
 
 def get_history_for_benchmark(benchmark_result_id: str):

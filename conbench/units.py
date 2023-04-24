@@ -65,7 +65,11 @@ def fmt_unit(value: Optional[float], unit) -> Optional[str]:
     # I have seen a KeyError being thrown which I could not reproduce anymore.
     # sigfig/sigfig.py line 551 does `del number.map[p]` and this resulted in
     # `KeyError: 0`. It was probably a programming mistake.
-    return f"{sigfig.round(value, sigfigs=4)} {unit}"
+    try:
+        return f"{sigfig.round(value, sigfigs=4)} {unit}"
+    except ValueError as exc:
+        log.warning("fmt_unit(): got unexpected value `%s`, exc: %s", repr(value), exc)
+        return None
 
 
 def formatter_for_unit(unit):
