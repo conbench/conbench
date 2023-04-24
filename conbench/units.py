@@ -1,7 +1,10 @@
+import logging
 import math
 from typing import Optional
 
 import sigfig
+
+log = logging.getLogger(__name__)
 
 
 def items_per_second_fmt(value, unit):
@@ -42,9 +45,15 @@ def fmt_unit(value: Optional[float], unit) -> Optional[str]:
     if value is None:
         return None
 
-    if value == math.nan:
+    if value is math.nan:
         # Must not call sigfig.round() with math.nan, see
         # https://github.com/conbench/conbench/issues/1155
+        return None
+
+    if value == "null":
+        # sigfig.round("null", sigfigs=3) also results in the exception
+        # ValueError: invalid input Character "n" (position 1, state A)
+        log.warning('fmt_unit() was passed literal string "null"')
         return None
 
     # These stringified values power a Bokeh plot. Ensure that the textual
