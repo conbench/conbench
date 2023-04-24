@@ -27,6 +27,7 @@ The maximum number of commits used is defined by the Conbench server's `DISTRIBU
 In certain cases, there will be fewer than this number: if there are not that many commits in the ancestry, or if a distribution change was annotated by someone acting as a data curator -- see below for more details.
 
 In some cases (e.g. navigating the UI, or generating alerts with the `benchalerts` library), Conbench will provide the user with a sensible baseline commit.
+See [the docs](https://conbench.github.io/conbench/pages/benchmarking_and_the_dev_process.html) for the reasoning about this.
 
 - If the contender is on a PR branch, the sensible baseline commit is the point at which the PR branch forked from the default branch.
 - If the contender is on the default branch, the sensible baseline commit is the parent commit.
@@ -34,25 +35,6 @@ In some cases (e.g. navigating the UI, or generating alerts with the `benchalert
 
 If there are no matching results on the baseline commit, that's alright - the analysis will still include matching results from the git history.
 If there are multiple results on the baseline commit (from different runs, etc.), all of them will be used.
-
-## Creating the z-score
-
-To create a z-score, Conbench must calculate the mean and standard deviation of the historic result distribution.
-Before doing so, outliers are automatically excluded from the distribution.
-Documentation on this process is coming soon.
-
-After outliers are excluded, the remaining data is sorted by commit timestamp.
-For each benchmark result, Conbench uses the mean of all the result's iterations.
-Then:
-
-- the rolling mean is calculated (with the window boundaries as described above)
-- the residual of each result's mean from the rolling mean is calculated
-- the standard deviation of the residuals is calculated, using Bessel's correction
-
-Then the z-score is the difference of the distribution's mean from the contender result's mean, divided by the standard deviation of the residuals.
-The sign is modified depending on the unit, such that a positive z-score is "good" and a negative z-score is "bad."
-
-See below for details of why the standard deviation of the residuals is used.
 
 ## Manually curating the distribution
 
@@ -80,6 +62,25 @@ Other users will be able to see this change as well, but you can revert the chan
 
 Notice how the ±5 standard-deviation boundaries have changed!
 The plot now knows that the data after the distribution change should have a different mean than before the distribution change, and so the algorithm works slightly differently.
+
+## Creating the z-score
+
+To create a z-score, Conbench must calculate the mean and standard deviation of the historic result distribution.
+Before doing so, outliers are automatically excluded from the distribution.
+Documentation on this process is coming soon.
+
+After outliers are excluded, the remaining data is sorted by commit timestamp.
+For each benchmark result, Conbench uses the mean of all the result's iterations.
+Then:
+
+- the rolling mean is calculated (with the window boundaries as described above)
+- the residual of each result's mean from the rolling mean is calculated
+- the standard deviation of the residuals is calculated, using Bessel's correction
+
+Then the z-score is the difference of the distribution's mean from the contender result's mean, divided by the standard deviation of the residuals.
+The sign is modified depending on the unit, such that a positive z-score indicates a performance improvement and a negative z-score indicates a performance regression.
+
+See below for details of why the standard deviation of the residuals is used.
 
 ### How curating the data affects the algorithm
 
