@@ -185,6 +185,9 @@ def _should_format(floats: List[Optional[float]], unit):
             # I think in legacy code this would have simply blown up in a
             # `float(None)``
             continue
+
+        # Not yet understood. We got here for a non-float non-None value:
+        # https://github.com/conbench/conbench/issues/1155
         units_formatted.add(unit_fmt(f, unit).split(" ", 1)[1])
 
     unit_formatted = units_formatted.pop() if len(units_formatted) == 1 else None
@@ -473,7 +476,11 @@ def time_series_plot(
     with_dist = [s for s in samples if s.zscorestats.rolling_mean]
     inliers = [s for s in samples if not s.zscorestats.is_outlier]
     outliers = [s for s in samples if s.zscorestats.is_outlier]
-    formatted, axis_unit = _should_format([s.mean for s in samples], unit)
+
+    formatted, axis_unit = _should_format(
+        [s.single_value_for_plot for s in samples], unit
+    )
+
     dist_change_indexes = [
         ix
         for ix, sample in enumerate(samples)

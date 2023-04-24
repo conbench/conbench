@@ -123,6 +123,9 @@ class HistorySample:
     run_name: str
     zscorestats: HistorySampleZscoreStats
 
+    # Note(JP):
+    # we should expose the unit of `data` in this structure, too.
+
     def _dict_for_api_json(self) -> dict:
         d = dataclasses.asdict(self)
         # if performance is a concern then https://pypi.org/project/orjson/
@@ -130,6 +133,33 @@ class HistorySample:
         # instances into JSON.
         d["commit_timestamp"] = self.commit_timestamp.isoformat()
         return d
+
+    @property
+    def single_value_for_plot(self) -> float:
+        """
+        Helper for plotting routines. This sample ended up in a collection that
+        wants to be plotted. For that, a single value is needed defining the
+        position on "y axis".
+
+        Downstream code relies on a float(y) value to be returned, which
+        includes `math.nan`.
+        """
+        if self.mean is not None:
+            # Want to be sure I understand what's happening. Context:
+            # https://github.com/conbench/conbench/issues/1155
+            assert isinstance(self.mean, float)
+            return self.mean
+
+        if len(self.data) not in (1, 2):
+            log.warning("bad history sample: mean is none, data length unexpected")
+            return math.nan
+
+        # Assume there is at least one data point, at most two data points. See
+        # https://github.com/conbench/conbench/issues/1118 Lacking a better
+        # rationale, for now return one of both data points. If these are two
+        # values and they have vastly different values, then this is non-ideal
+        # situation anyway.
+        return self.data[1]
 
 
 def get_history_for_benchmark(benchmark_result_id: str):
