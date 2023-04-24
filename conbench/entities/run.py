@@ -165,7 +165,7 @@ class Run(Base, EntityMixin):
 
         if not baseline_commit:
             return _CandidateBaselineSearchResult(
-                error="the baseline commit was not found"
+                error="this baseline commit type does not exist for this run"
             )
 
         try:
@@ -176,18 +176,12 @@ class Run(Base, EntityMixin):
             )
         except CantFindAncestorCommitsError as e:
             return _CandidateBaselineSearchResult(
-                error=f"could not find the baseline commit ancestry because {e}"
+                error=f"could not find the baseline commit's ancestry because {e}"
             )
 
         baseline_run_query = (
             s.select(
-                Run.id,
-                Commit.sha,
-                BenchmarkResult.case_id,
-                BenchmarkResult.context_id,
-                Run.reason,
-                ancestor_commits.c.commit_order,
-                Run.timestamp,
+                Run.id, Commit.sha, BenchmarkResult.case_id, BenchmarkResult.context_id
             )
             .select_from(BenchmarkResult)
             .join(Run, Run.id == BenchmarkResult.run_id)
@@ -201,18 +195,22 @@ class Run(Base, EntityMixin):
                 Run.timestamp.desc(),  # then latest Run timestamp
             )
         )
+        matching_benchmark_results = Session.execute(baseline_run_query).all()
 
-        valid_cases_and_contexts = Session.execute(
-            s.select(BenchmarkResult.case_id, BenchmarkResult.context_id)
-            .filter(BenchmarkResult.run_id == self.id)
-            .distinct()
-        ).all()
+        valid_cases_and_contexts = set(
+            row.tuple()
+            for row in Session.execute(
+                s.select(BenchmarkResult.case_id, BenchmarkResult.context_id).filter(
+                    BenchmarkResult.run_id == self.id
+                )
+            ).all()
+        )
 
-        result = Session.execute(baseline_run_query).all()
-        for row in result:
-            if (row[2], row[3]) in valid_cases_and_contexts:
-                # Choose the first one that matches a case_id/context_id of this run
-                result = row
+        for row in matching_benchmark_results:
+            baseline_run_id, baseline_commit_hash, case_id, context_id = row.tuple()
+            if (case_id, context_id) in valid_cases_and_contexts:
+                # Continue onward with the first one that matches a case_id/context_id
+                # of this run
                 break
         else:
             return _CandidateBaselineSearchResult(
@@ -220,37 +218,35 @@ class Run(Base, EntityMixin):
             )
 
         # Figure out a list of commits that were skipped in the search for a baseline
-        baseline_run_id, baseline_commit_hash, *_ = result.tuple()
-        all_commit_hashes = Session.scalars(
+        commit_hashes_searched = Session.scalars(
             s.select(Commit.sha)
             .select_from(ancestor_commits)
             .join(Commit, Commit.id == ancestor_commits.c.ancestor_id)
             .order_by(ancestor_commits.c.commit_order.desc())
         ).all()
-        index_of_baseline = all_commit_hashes.index(baseline_commit_hash)
-        commits_skipped = all_commit_hashes[:index_of_baseline]
+        index_of_baseline = commit_hashes_searched.index(baseline_commit_hash)
+        commits_skipped = commit_hashes_searched[:index_of_baseline]
 
         return _CandidateBaselineSearchResult(
             baseline_run_id=baseline_run_id, commits_skipped=commits_skipped
         )
 
-    def get_candidate_baseline_runs(self) -> Dict[str, _CandidateBaselineSearchResult]:
+    def get_candidate_baseline_runs(self) -> Dict[str, dict]:
         """Return information about a few different candidate baseline runs, including
         on the parent commit, fork-point commit, and head-of-default-branch commit.
 
-        See docstring of _get_baseline_run_from_baseline_commit() for how these are
-        found.
+        See docstring of _search_for_baseline_run() for how these are found.
         """
-        candidates = {}
+        candidates: Dict[str, _CandidateBaselineSearchResult] = {}
 
         # The direct, single parent in the git graph
-        if self.commit:
-            candidates["parent"] = self._search_for_baseline_run(
-                self.commit.get_parent_commit()
-            )
-        else:
+        if not self.commit:
             candidates["parent"] = _CandidateBaselineSearchResult(
                 error="the contender run is not connected to the git graph"
+            )
+        else:
+            candidates["parent"] = self._search_for_baseline_run(
+                self.commit.get_parent_commit()
             )
 
         # If this is a PR run, the PR's fork point commit on the default branch
@@ -286,7 +282,10 @@ class Run(Base, EntityMixin):
             ).first()
             candidates["latest_default"] = self._search_for_baseline_run(latest_commit)
 
-        return candidates
+        return {
+            candidate_type: candidate._dict_for_api_json()
+            for candidate_type, candidate in candidates.items()
+        }
 
     @property
     def associated_commit_repo_url(self) -> str:
@@ -449,11 +448,7 @@ class _Serializer(EntitySerializer):
             },
         }
         if get_baseline_runs:
-            candidate_baseline_runs = run.get_candidate_baseline_runs()
-            result["candidate_baseline_runs"] = {
-                candidate_type: candidate._dict_for_api_json()
-                for candidate_type, candidate in candidate_baseline_runs.items()
-            }
+            result["candidate_baseline_runs"] = run.get_candidate_baseline_runs()
         return result
 
 

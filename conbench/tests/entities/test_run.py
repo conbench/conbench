@@ -1,6 +1,5 @@
 import logging
 
-from ...entities.run import Run
 from ..api import _fixtures
 
 log = logging.getLogger(__name__)
@@ -13,16 +12,6 @@ DEFAULT_BRANCH_PLACEHOLDER = {
 }
 
 
-def get_baseline_run_dict(run: Run) -> dict:
-    """Given a run, return the "candidate_baseline_runs" dict that would be returned if
-    you hit GET /api/runs/{run_id} for that run and deserialized the JSON response.
-    """
-    return {
-        candidate_type: candidate._dict_for_api_json()
-        for candidate_type, candidate in run.get_candidate_baseline_runs().items()
-    }
-
-
 def test_get_candidate_baseline_runs():
     commits, benchmark_results = _fixtures.gen_fake_data()
     runs = [result.run for result in benchmark_results]
@@ -31,7 +20,7 @@ def test_get_candidate_baseline_runs():
         # run 0, commit 11111
         {
             "parent": {
-                "error": "the baseline commit was not found",
+                "error": "this baseline commit type does not exist for this run",
                 "baseline_run_id": None,
                 "commits_skipped": None,
             },
@@ -171,7 +160,7 @@ def test_get_candidate_baseline_runs():
         # run 10, commit abcde (different repo)
         {
             "parent": {
-                "error": "the baseline commit was not found",
+                "error": "this baseline commit type does not exist for this run",
                 "baseline_run_id": None,
                 "commits_skipped": None,
             },
@@ -181,17 +170,17 @@ def test_get_candidate_baseline_runs():
         # run 11, commit 'sha' (no detailed commit info)
         {
             "parent": {
-                "error": "the baseline commit was not found",
+                "error": "this baseline commit type does not exist for this run",
                 "baseline_run_id": None,
                 "commits_skipped": None,
             },
             "fork_point": {
-                "error": "the baseline commit was not found",
+                "error": "this baseline commit type does not exist for this run",
                 "baseline_run_id": None,
                 "commits_skipped": None,
             },
             "latest_default": {
-                "error": "the baseline commit was not found",
+                "error": "this baseline commit type does not exist for this run",
                 "baseline_run_id": None,
                 "commits_skipped": None,
             },
@@ -243,7 +232,7 @@ def test_get_candidate_baseline_runs():
     for ix, (run, expected_baseline_run_dict) in enumerate(
         zip(runs, expected_baseline_run_dicts)
     ):
-        actual_baseline_run_dict = get_baseline_run_dict(run)
+        actual_baseline_run_dict = run.get_candidate_baseline_runs()
         if actual_baseline_run_dict != expected_baseline_run_dict:
             failures.append(ix)
             log.info(
@@ -262,7 +251,7 @@ def test_get_candidate_baseline_runs():
         reason="nightly",
         commit=commits["44444"],
     )
-    actual_baseline_run_dict = get_baseline_run_dict(runs[-1])
+    actual_baseline_run_dict = runs[-1].get_candidate_baseline_runs()
     assert actual_baseline_run_dict == {
         "parent": {
             "error": None,
@@ -280,10 +269,9 @@ def test_get_candidate_baseline_runs():
         no_github=True,
     )
     assert benchmark_result_missing_commit.run.commit is None
-    actual_baseline_run_dict = get_baseline_run_dict(
-        benchmark_result_missing_commit.run
+    actual_baseline_run_dict = (
+        benchmark_result_missing_commit.run.get_candidate_baseline_runs()
     )
-    log.info([(ix, r.id) for ix, r in enumerate(runs)])
     assert actual_baseline_run_dict == {
         "parent": {
             "error": "the contender run is not connected to the git graph",
