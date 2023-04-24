@@ -138,10 +138,11 @@ class HistorySample:
     def single_value_for_plot(self) -> float:
         """
         Helper for plotting routines. This sample ended up in a collection that
-        wants to be plotted. For that, of course single value is needed,
-        defining the position on "y axis".
+        wants to be plotted. For that, a single value is needed defining the
+        position on "y axis".
 
-        Downstream code relies on a float(y) value to be returned.
+        Downstream code relies on a float(y) value to be returned, which
+        includes `math.nan`.
         """
         if self.mean is not None:
             # Want to be sure I understand what's happening. Context:
