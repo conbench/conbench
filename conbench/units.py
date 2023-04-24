@@ -1,3 +1,4 @@
+import math
 from typing import Optional
 
 import sigfig
@@ -39,6 +40,11 @@ def fmt_unit(value: Optional[float], unit) -> Optional[str]:
     # Maybe simplify function signature and never allow this to be called
     # with None.
     if value is None:
+        return None
+
+    if value == math.nan:
+        # Must not call sigfig.round() with math.nan, see
+        # https://github.com/conbench/conbench/issues/1155
         return None
 
     # These stringified values power a Bokeh plot. Ensure that the textual

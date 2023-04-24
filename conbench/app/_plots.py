@@ -1,6 +1,7 @@
 import collections
 import copy
 import dataclasses
+import math
 import json
 import logging
 from typing import List, Optional, Tuple, no_type_check
@@ -183,11 +184,8 @@ def _should_format(floats: List[Optional[float]], unit):
     for f in floats:
         if f is None:
             # I think in legacy code this would have simply blown up in a
-            # `float(None)``
+            # `float(None)`
             continue
-
-        # Not yet understood. We got here for a non-float non-None value:
-        # https://github.com/conbench/conbench/issues/1155
         units_formatted.add(unit_fmt(f, unit).split(" ", 1)[1])
 
     unit_formatted = units_formatted.pop() if len(units_formatted) == 1 else None
