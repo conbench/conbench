@@ -146,12 +146,15 @@ class HistorySample:
         """
         if isinstance(self.mean, float):
             if not math.isnan(self.mean):
-                # This is a numeric, floaty value (not `math.nan`).
                 return self.mean
 
         # Mean value isn't set. That should imply that there are less than
         # three data points. Do a sanity check.
         if len(self.data) not in (1, 2):
+            # That is / should be an invariant: if there are more than two
+            # values set, then this HistorySample is expected to have a mean
+            # value set (upon database insertion). If this isn't the case,
+            # leave a log message.
             log.warning(
                 "bad history sample: mean is %s, data length is %s",
                 self.mean,
@@ -159,11 +162,11 @@ class HistorySample:
             )
             return math.nan
 
-        # Assume there is at least one data point, at most two data points. See
-        # https://github.com/conbench/conbench/issues/1118 Lacking a better
+        # There is at least one data point, at most two data points. See
+        # https://github.com/conbench/conbench/issues/1118. Lacking a better
         # rationale, for now return one of both data points. If these are two
-        # values and they have vastly different values, then this is non-ideal
-        # situation anyway.
+        # values and they have vastly different values, then this is a
+        # non-ideal situation anyway.
         return self.data[0]
 
 
