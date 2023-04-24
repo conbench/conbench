@@ -144,12 +144,10 @@ class HistorySample:
         Downstream code relies on a float(y) value to be returned, which
         includes `math.nan`.
         """
-        if self.mean is not None and self.mean is not math.nan:
-            # Want to be sure I understand what's happening. Context:
-            # https://github.com/conbench/conbench/issues/1155
-            assert isinstance(self.mean, float)
-            # This is a numeric, floaty value (not `math.nan`).
-            return self.mean
+        if isinstance(self.mean, float):
+            if not math.isnan(self.value):
+                # This is a numeric, floaty value (not `math.nan`).
+                return self.mean
 
         # Mean value isn't set. That should imply that there are less than
         # three data points. Do a sanity check.
