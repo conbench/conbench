@@ -6,6 +6,7 @@
     :caption: The conbench philosophy:
 
     pages/benchmarking_and_the_dev_process.md
+    pages/lookback_zscore.md
 
 .. toctree::
     :maxdepth: 1
