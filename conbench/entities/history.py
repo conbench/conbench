@@ -145,7 +145,7 @@ class HistorySample:
         includes `math.nan`.
         """
         if isinstance(self.mean, float):
-            if not math.isnan(self.value):
+            if not math.isnan(self.mean):
                 # This is a numeric, floaty value (not `math.nan`).
                 return self.mean
 
