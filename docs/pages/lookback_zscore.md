@@ -6,8 +6,9 @@ This page describes how that process works.
 
 ## Overview
 
-The lookback z-score analysis assigns a numeric z-score value to a benchmark result that represents how "good" the result is compared to a historic distribution of similar results.
+The lookback z-score analysis assigns a numeric z-score value to a benchmark result that represents how consistent the result is in the context of the historic distribution of similar results.
 Coupled with a threshold, this can be used to determine whether the benchmark result is indicative of a performance regression or improvement.
+For example, if a result is very far from the historical distribution and takes longer, that is indicative of a performance regression.
 
 ## Choosing the historic distribution of results
 
