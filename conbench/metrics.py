@@ -24,6 +24,8 @@ import flask
 import prometheus_client
 from prometheus_flask_exporter import NO_PREFIX, PrometheusMetrics
 
+from conbench import job
+
 log = logging.getLogger(__name__)
 
 
@@ -192,7 +194,17 @@ def periodically_set_q_rem() -> None:
     def func():
         log.info("periodically_set_q_rem(): initiate")
         while True:
-            time.sleep(1)
+            # Delay for a bit until setting the gauge next time. But don't just
+            # sleep, to a busy sleep (responsive sleep loop that inspects
+            # SHUTDOWN often_.
+            deadline = time.monotonic() + 3
+            while time.monotonic() < deadline:
+                if job.SHUTDOWN:
+                    # We got told that we have to shut down our activities. OK.
+                    log.debug("periodically_set_q_rem(): shut down")
+                    return
+
+                time.sleep(0.2)
 
             if gauge_gh_api_rem_set["first_value_seen"]:
                 # This process set an actual, meaningful value. Stop

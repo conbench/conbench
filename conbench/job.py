@@ -57,7 +57,7 @@ _cache_bmrs: CacheDict = {
     ),
 }
 
-_SHUTDOWN = False
+SHUTDOWN = False
 _STARTED = False
 
 
@@ -142,21 +142,21 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
         min_delay_between_runs_seconds = 20
 
     def _run_forever():
-        global _SHUTDOWN
+        global SHUTDOWN
         global _STARTED
         _STARTED = True
 
         delay_s = first_sleep_seconds
 
         while True:
-            # Build responsive sleep loop that inspects _SHUTDOWN often.
+            # Build responsive sleep loop that inspects SHUTDOWN often.
             deadline = time.monotonic() + delay_s
             while time.monotonic() < deadline:
-                if _SHUTDOWN:
+                if SHUTDOWN:
                     log.debug("_run_forever: shut down")
                     return
 
-                time.sleep(0.02)
+                time.sleep(0.1)
 
             t0 = time.monotonic()
 
@@ -202,8 +202,8 @@ def shutdown_handler(sig, frame):
     log.info(
         "BMRT cache job (started: %s): saw signal %s, set shutdown flag", _STARTED, sig
     )
-    global _SHUTDOWN
-    _SHUTDOWN = True
+    global SHUTDOWN
+    SHUTDOWN = True
     if sig == signal.SIGINT:
         original_sigint_handler(sig, frame)
 
