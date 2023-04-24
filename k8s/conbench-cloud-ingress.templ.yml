@@ -32,6 +32,10 @@ metadata:
     # will be ignored." That is preclisely what we want, a no-brainer
     # configuration parameter that disallows serving traffic via non-TLS.
     alb.ingress.kubernetes.io/ssl-redirect: '443'
+    # This is here mainly to take active control. Must be shorter than the
+    # timeout constant of the other end, see
+    # https://github.com/conbench/conbench/issues/1156
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=50
     alb.ingress.kubernetes.io/certificate-arn: <CERTIFICATE_ARN>
   labels:
     app: conbench-ingress
