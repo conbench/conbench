@@ -231,6 +231,7 @@ def benchmark_result(
     error=None,
     empty_results=False,
     reason=None,
+    one_sample_no_mean=False,
 ):
     """Create BenchmarkResult and directly write to database.
 
@@ -281,7 +282,7 @@ def benchmark_result(
 
     if results is not None:
         unit = unit if unit else "s"
-        data["stats"] = Conbench._stats(results, unit, [], "s")
+        data["stats"] = Conbench._stats(results, unit, [], "s", one_sample_no_mean)
 
     if empty_results:
         data.pop("stats", None)
@@ -292,11 +293,16 @@ def benchmark_result(
     return BenchmarkResult.create(data)
 
 
-def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
+def gen_fake_data(
+    one_sample_no_mean=False,
+) -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
     """Populate the database with fake Commits and BenchmarkResults to use when testing
     most of the entities.
 
     Return a dict of commits (keyed by hash) and list of BenchmarkResults.
+
+    Note(JP): I believe the major point here really is to create a 'history of
+    benchmark results', related through commits.
     """
     # Manually post all the Commits to the database first, so that upon posting
     # BenchmarkResults, the server doesn't hit the GitHub API for more commit information.
@@ -412,6 +418,7 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
                     commit=commit,
                     name=name,
                     pull_request=commit.branch == "branch" if commit else False,
+                    one_sample_no_mean=one_sample_no_mean,
                 )
             )
         else:
@@ -421,6 +428,7 @@ def gen_fake_data() -> Tuple[Dict[str, Commit], List[BenchmarkResult]]:
                     commit=commit,
                     name=name,
                     pull_request=commit.branch == "branch" if commit else False,
+                    one_sample_no_mean=one_sample_no_mean,
                 )
             )
 
