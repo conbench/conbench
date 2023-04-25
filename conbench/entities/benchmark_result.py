@@ -99,9 +99,17 @@ class BenchmarkResult(Base, EntityMixin):
     # store is the user-given timestamp properly translated to UTC.
     timestamp: Mapped[datetime] = NotNull(s.DateTime(timezone=False))
     iterations: Mapped[Optional[int]] = Nullable(s.Integer)
+
+    # Mean can only be None for errored BenchmarkResults. Is guaranteed to have
+    # a numeric value for all non-errored BenchmarkResults, including those
+    # that have just one data point (when the mean is not an exciting
+    # statistic, but still a useful one).
+    mean: Mapped[Optional[float]] = Nullable(s.Numeric, check("mean>=0"))
+
+    # The remaining aggregates are only non-None when the BenchmarkResult has
+    # at least N data points (see below).
     min: Mapped[Optional[float]] = Nullable(s.Numeric, check("min>=0"))
     max: Mapped[Optional[float]] = Nullable(s.Numeric, check("max>=0"))
-    mean: Mapped[Optional[float]] = Nullable(s.Numeric, check("mean>=0"))
     median: Mapped[Optional[float]] = Nullable(s.Numeric, check("median>=0"))
     stdev: Mapped[Optional[float]] = Nullable(s.Numeric, check("stdev>=0"))
     q1: Mapped[Optional[float]] = Nullable(s.Numeric, check("q1>=0"))
