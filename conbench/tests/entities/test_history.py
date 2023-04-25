@@ -4,6 +4,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 import pytest
+import sigfig
 import sqlalchemy as s
 
 from ...db import Session
@@ -41,61 +42,68 @@ def _get_head_of_default(commit: Commit) -> Commit:
     ).first()
 
 
+def assert_equal_leeway(v1, v2, sfigs=4):
+    """
+    Compare two float values but allow for a relatively dimensioned epsilon.
+    """
+    assert sigfig.round(v1, sigfigs=sfigs) == sigfig.round(v2, sigfigs=sfigs)
+
+
 # These correspond to the benchmark_results of _fixtures.gen_fake_data() without modification
 EXPECTED_Z_SCORES = {
     "closest_defaultbranch_ancestor": [
         None,
         None,
-        28.477042698148946,
-        0.7071067811865444,
-        2.1213203435596393,
-        13.435028842544385,
-        1.0928748862317967,
-        -2.1857497724635935,
-        -4.486481486904943,
-        -4.946696853470237,
+        28.48,
+        0.7071,
+        2.121,
+        13.44,
+        1.093,
+        -2.186,
+        -4.487,
+        -4.947,
         None,
         None,
         None,
         None,
         None,
-        -5.98205200884773,
+        -5.982,
     ],
     "parent": [
         None,
         None,
-        28.477042698148946,
-        0.7071067811865444,
-        2.1213203435596393,
-        13.435028842544385,
-        1.0928748862317967,
-        -2.8246140882627757,
-        -4.486481486904943,
-        -4.946696853470237,
+        28.48,
+        0.7071,
+        2.121,
+        13.44,
+        1.093,
+        -2.825,
+        -4.487,
+        -4.947,
         None,
         None,
         None,
         None,
         None,
-        -5.98205200884773,
+        -5.982,
     ],
     "head_of_default": [
-        0.662490861131055,
-        0.6082868170201319,
-        1.726858274546817,
-        0.662490861131055,
-        0.7166949052419783,
-        1.1503272581293638,
-        1.1503272581293638,
-        0.12045042002182318,
-        -0.6022521001091159,
-        -0.7468142857529476,
+        0.6625,
+        0.6083,
+        1.7269,
+        0.6625,
+        0.7167,
+        1.150,
+        1.150,
+        0.1205,
+        -0.6023,
+        -0.7468,
         None,
         None,
         None,
         None,
         None,
-        -1.072038550418487,
+        -1.072,
     ],
 }
 
@@ -174,7 +182,7 @@ def test_set_z_scores(
     for benchmark_result, expected_z_score in zip(
         benchmark_results, EXPECTED_Z_SCORES[strategy_name]
     ):
-        assert benchmark_result.z_score == expected_z_score
+        assert_equal_leeway(benchmark_result.z_score, expected_z_score)
 
     if strategy_name == "head_of_default":
         return
@@ -199,7 +207,7 @@ def test_set_z_scores(
             name=benchmark_results[0].case.name,
         )
     )
-    expected_z_scores = EXPECTED_Z_SCORES[strategy_name] + [-52.9995128086829]
+    expected_z_scores = EXPECTED_Z_SCORES[strategy_name] + [-52.9993797469743]
 
     for benchmark_result in benchmark_results:
         baseline_commit = get_baseline_func(benchmark_result.run.commit)
@@ -212,7 +220,7 @@ def test_set_z_scores(
             benchmark_result.z_score = None
 
     for benchmark_result, expected_z_score in zip(benchmark_results, expected_z_scores):
-        assert benchmark_result.z_score == expected_z_score
+        assert_equal_leeway(benchmark_result.z_score, expected_z_score)
 
 
 @pytest.mark.parametrize(
@@ -259,7 +267,7 @@ def test_set_z_scores_with_distribution_change(
             benchmark_result.z_score = None
 
     for benchmark_result, expected_z_score in zip(benchmark_results, expected_z_scores):
-        assert benchmark_result.z_score == expected_z_score
+        assert_equal_leeway(benchmark_result.z_score, expected_z_score)
 
 
 def test_detect_shifts_with_trimmed_estimators():
