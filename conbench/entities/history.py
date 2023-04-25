@@ -683,14 +683,14 @@ def _add_rolling_stats_columns_to_df(
             # Exclude the current commit first...
             closed="left",
             min_periods=1,
-        )["mean"]
+        )["svs"]
         .mean()
         .values
     )
     # (and fill NaNs at the beginning of segments with the first value)
     df.loc[~df.is_outlier, "rolling_mean_excluding_this_commit"] = df.loc[
         ~df.is_outlier, "rolling_mean_excluding_this_commit"
-    ].combine_first(df.loc[~df.is_outlier, "mean"])
+    ].combine_first(df.loc[~df.is_outlier, "svs"])
 
     # ...but if requested, include the current commit
     if include_current_commit_in_rolling_stats:
@@ -702,7 +702,7 @@ def _add_rolling_stats_columns_to_df(
                 on="timestamp",
                 closed="right",
                 min_periods=1,
-            )["mean"]
+            )["svs"]
             .mean()
             .values
         )
@@ -711,7 +711,7 @@ def _add_rolling_stats_columns_to_df(
 
     # Add column with the residuals from the exclusive rolling mean, since we always
     # want to compare to the baseline distribution
-    df["residual"] = df["mean"] - df["rolling_mean_excluding_this_commit"]
+    df["residual"] = df["svs"] - df["rolling_mean_excluding_this_commit"]
 
     # Add column with the rolling standard deviation of the residuals
     # (these can go outside the segment since we assume they don't change much)
@@ -795,20 +795,20 @@ def _detect_shifts_with_trimmed_estimators(
         # clean copy will only get result columns
         out_group_df = copy.deepcopy(group_df)
 
-        group_df["mean_diff"] = group_df["mean"].diff()
-        mean_diff_clipped = copy.deepcopy(group_df.mean_diff)
-        mean_diff_clipped.loc[
-            (group_df.mean_diff < group_df.mean_diff.quantile(0.05))
-            | (group_df.mean_diff > group_df.mean_diff.quantile(0.95))
+        group_df["svs_diff"] = group_df["svs"].diff()
+        svs_diff_clipped = copy.deepcopy(group_df.svs_diff)
+        svs_diff_clipped.loc[
+            (group_df.svs_diff < group_df.svs_diff.quantile(0.05))
+            | (group_df.svs_diff > group_df.svs_diff.quantile(0.95))
         ] = np.nan
-        group_df["rolling_mean"] = mean_diff_clipped.rolling(
+        group_df["rolling_mean"] = svs_diff_clipped.rolling(
             Config.DISTRIBUTION_COMMITS, min_periods=1
         ).mean()
-        group_df["rolling_std"] = mean_diff_clipped.rolling(
+        group_df["rolling_std"] = svs_diff_clipped.rolling(
             Config.DISTRIBUTION_COMMITS, min_periods=1
         ).std()
         group_df["z_score"] = (
-            group_df.mean_diff - group_df.rolling_mean
+            group_df.svs_diff - group_df.rolling_mean
         ) / group_df.rolling_std
 
         group_df["is_shift"] = group_df.z_score.abs() > z_score_threshold
