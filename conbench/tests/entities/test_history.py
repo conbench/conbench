@@ -42,11 +42,25 @@ def _get_head_of_default(commit: Commit) -> Commit:
     ).first()
 
 
-def assert_equal_leeway(v1, v2, sfigs=4):
+def assert_equal_leeway(comparison, reference, figs=4):
     """
-    Compare two float values but allow for a relatively dimensioned epsilon.
+    Compare two Optional[float] values but allow for
+    - a tiny absolute epsilon
+    - a relatively dimensioned epsilon
     """
-    assert sigfig.round(v1, sigfigs=sfigs) == sigfig.round(v2, sigfigs=sfigs)
+    if reference is None or comparison is None:
+        assert comparison is reference
+        return
+
+    if abs(reference - comparison) < 10**-13:
+        return
+
+    # For tiny values close to zero the condition below can fail with for
+    # example `assert -3.846e-15 == 0.0` -- in our context is I think this can
+    # safely be considered numerical noise.
+    assert sigfig.round(reference, sigfigs=figs) == sigfig.round(
+        comparison, sigfigs=figs
+    )
 
 
 # These correspond to the benchmark_results of _fixtures.gen_fake_data() without modification
