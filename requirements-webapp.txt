@@ -11,6 +11,7 @@ Flask-Compress
 Flask-Login
 flask-swagger-ui
 Flask-WTF
+Werkzeug==2.2.3
 gitpython
 gunicorn
 marshmallow
