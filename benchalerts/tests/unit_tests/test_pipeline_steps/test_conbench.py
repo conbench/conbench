@@ -39,6 +39,7 @@ def test_runs_comparison_fails_when_no_baseline(
 def test_GetConbenchZComparisonStep(conbench_env):
     step = GetConbenchZComparisonStep(
         commit_hash="abc",
+        baseline_run_type=BaselineRunCandidates.fork_point,
         z_score_threshold=500,
         conbench_client=ConbenchClient(adapter=MockAdapter()),
     )
@@ -49,6 +50,7 @@ def test_GetConbenchZComparisonStep(conbench_env):
 def test_comparison_fails_when_no_runs(conbench_env):
     step = GetConbenchZComparisonStep(
         commit_hash="no_runs",
+        baseline_run_type=BaselineRunCandidates.fork_point,
         conbench_client=ConbenchClient(adapter=MockAdapter()),
     )
     with pytest.raises(ValueError, match="runs"):
@@ -60,8 +62,9 @@ def test_comparison_warns_when_no_baseline(
 ):
     step = GetConbenchZComparisonStep(
         commit_hash="no_baseline",
+        baseline_run_type=BaselineRunCandidates.fork_point,
         conbench_client=ConbenchClient(adapter=MockAdapter()),
     )
     res = step.run_step(previous_outputs={})
     assert res
-    assert "could not find a baseline run" in caplog.text
+    assert "the contender run is on the default branch" in caplog.text

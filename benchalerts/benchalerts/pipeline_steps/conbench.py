@@ -12,6 +12,24 @@ from ..conbench_dataclasses import FullComparisonInfo, RunComparisonInfo
 ConbenchClient = LegacyConbenchClient
 
 
+CONBENCH_ENV_VAR_HELP = """
+
+    Notes
+    -----
+    Environment variables
+    ~~~~~~~~~~~~~~~~~~~~~
+    ``CONBENCH_URL``
+        The URL of the Conbench server. Only required if ``conbench_client`` is not
+        provided.
+    ``CONBENCH_EMAIL``
+        The email to use for Conbench login. Only required if ``conbench_client`` is not
+        provided and the server is private.
+    ``CONBENCH_PASSWORD``
+        The password to use for Conbench login. Only required if ``conbench_client`` is
+        not provided and the server is private.
+"""
+
+
 class BaselineRunCandidates(Enum):
     """Types of baselines available from `/api/runs/{run_id}` in the
     `candidate_baseline_runs` field.
@@ -23,7 +41,8 @@ class BaselineRunCandidates(Enum):
 
 
 class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
-    """An ``AlertPipeline`` step to get information from Conbench comparing run(s) to
+    (
+        """An ``AlertPipeline`` step to get information from Conbench comparing run(s) to
     their baselines, using a z-score threshold. This is always the first step of the
     pipeline.
 
@@ -49,26 +68,14 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
     FullComparisonInfo
         Information about each run associated with the contender commit, and a
         comparison to its baseline run if that exists.
-
-    Notes
-    -----
-    Environment variables
-    ~~~~~~~~~~~~~~~~~~~~~
-    ``CONBENCH_URL``
-        The URL of the Conbench server. Only required if ``conbench_client`` is not
-        provided.
-    ``CONBENCH_EMAIL``
-        The email to use for Conbench login. Only required if ``conbench_client`` is not
-        provided and the server is private.
-    ``CONBENCH_PASSWORD``
-        The password to use for Conbench login. Only required if ``conbench_client`` is
-        not provided and the server is private.
     """
+        + CONBENCH_ENV_VAR_HELP
+    )
 
     def __init__(
         self,
         run_ids: List[str],
-        baseline_run_type: Optional[BaselineRunCandidates],
+        baseline_run_type: BaselineRunCandidates,
         z_score_threshold: Optional[float] = None,
         conbench_client: Optional[LegacyConbenchClient] = None,
         step_name: Optional[str] = None,
@@ -89,7 +96,6 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
 
     def _get_one_run_comparison(self, run_id: str) -> RunComparisonInfo:
         """Create and populate one RunComparisonInfo instance."""
-        assert self.baseline_run_type
         run_comparison = RunComparisonInfo(
             contender_info=self.conbench_client.get(f"/runs/{run_id}/")
         )
@@ -129,7 +135,8 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
 
 
 class GetConbenchZComparisonStep(GetConbenchZComparisonForRunsStep):
-    """An ``AlertPipeline`` step to get information from Conbench comparing the runs on
+    (
+        """An ``AlertPipeline`` step to get information from Conbench comparing the runs on
     a contender commit to their baselines, using a z-score threshold. This is always the
     first step of the pipeline.
 
@@ -139,6 +146,8 @@ class GetConbenchZComparisonStep(GetConbenchZComparisonForRunsStep):
         The commit hash of the contender commit to compare. Needs to match EXACTLY what
         Conbench has stored; typically 40 characters. It can't be a shortened version of
         the hash.
+    baseline_run_type
+        The type of baseline to use. See ``BaselineCandidates`` for options.
     z_score_threshold
         The (positive) z-score threshold to send to the Conbench compare endpoint.
         Benchmarks with a z-score more extreme than this threshold will be marked as
@@ -155,33 +164,21 @@ class GetConbenchZComparisonStep(GetConbenchZComparisonForRunsStep):
     FullComparisonInfo
         Information about each run associated with the contender commit, and a
         comparison to its baseline run if that exists.
-
-    Notes
-    -----
-    Environment variables
-    ~~~~~~~~~~~~~~~~~~~~~
-    ``CONBENCH_URL``
-        The URL of the Conbench server. Only required if ``conbench_client`` is not
-        provided.
-    ``CONBENCH_EMAIL``
-        The email to use for Conbench login. Only required if ``conbench_client`` is not
-        provided and the server is private.
-    ``CONBENCH_PASSWORD``
-        The password to use for Conbench login. Only required if ``conbench_client`` is
-        not provided and the server is private.
     """
+        + CONBENCH_ENV_VAR_HELP
+    )
 
     def __init__(
         self,
         commit_hash: str,
+        baseline_run_type: BaselineRunCandidates,
         z_score_threshold: Optional[float] = None,
         conbench_client: Optional[LegacyConbenchClient] = None,
         step_name: Optional[str] = None,
     ) -> None:
         super().__init__(
             run_ids=[],
-            # TODO populate and use this value properly
-            baseline_run_type=None,
+            baseline_run_type=baseline_run_type,
             z_score_threshold=z_score_threshold,
             conbench_client=conbench_client,
             step_name=step_name,
@@ -201,40 +198,3 @@ class GetConbenchZComparisonStep(GetConbenchZComparisonForRunsStep):
             )
 
         return super().run_step(previous_outputs)
-
-    def _get_one_run_comparison(self, run_id: str) -> RunComparisonInfo:
-        """Create and populate one RunComparisonInfo instance."""
-        run_comparison = RunComparisonInfo(
-            contender_info=self.conbench_client.get(f"/runs/{run_id}/")
-        )
-
-        if run_comparison.baseline_path:
-            # A baseline run exists. Get it.
-            run_comparison.baseline_info = self.conbench_client.get(
-                run_comparison.baseline_path
-            )
-
-            # Get the comparison.
-            compare_params = (
-                {"threshold_z": self.z_score_threshold}
-                if self.z_score_threshold
-                else None
-            )
-            run_comparison.compare_results = self.conbench_client.get(
-                run_comparison.compare_path, params=compare_params
-            )
-
-        else:
-            log.warning(
-                "Conbench could not find a baseline run for the contender run "
-                f"{run_id}. A baseline run needs to be on the default branch in the "
-                "same repository, with the same hardware, and have at least one of the "
-                "same benchmark case/context pairs."
-            )
-            if run_comparison.has_errors:
-                # get more information so we have more details about errors
-                run_comparison.benchmark_results = self.conbench_client.get(
-                    "/benchmarks/", params={"run_id": run_id}
-                )
-
-        return run_comparison
