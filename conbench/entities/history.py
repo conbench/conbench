@@ -464,6 +464,99 @@ def _query_and_calculate_distribution_stats(
     }
 
 
+def execute_history_query_get_dataframe(statement) -> Tuple[pd.DataFrame, Dict]:
+    """
+    Emit prepared query statement to database.
+
+    Return a (df, dict) tuple. In the pandas DataFrame, each row represents a
+    benchmark result (BMR) plus associated metadata (that cannot be typically
+    found on the BenchmarkResult directly).
+
+    A row in the dataframe contains limited information about a BMR, such as
+    its ID. The dictionary mapping allows for looking up the full BMR via ID.
+
+    Think: this function returns a timeseries: one BenchmarkResult(+additional
+    info) per point in time, and the `BenchmarkResult(+additional info)` is
+    spread across two objects.
+
+    Previously, we did
+
+        df = pd.read_sql(statement, Session.connection())
+
+    which unpacked individual BenchmarkResult columns into dataframe columns.
+
+    It was not easily possible to access the raw BenchmarkResult object.
+
+    This paradigm here does more explicit iteration and creates more
+    intermediate objects, but also allows for more explicitly mapping items
+    into the dataframe.
+
+    If this fetches too many BMR columns, we can limit the columns fetched
+    actively with a "deferred loading" technique provided by SQLAlchemy.
+
+    Note that `row_iterator ` is an iterator that can only be consumed once,
+    i.e. we immediately store the data in mappings.
+
+    Assume that history is not gigantic; and even when history is comprised of
+    O(1000) benchmark results then the two dictionaries and the one dataframe
+    creates in this function should be smallish (from a mem consumption point
+    of view).
+    """
+    row_iterator = Session.execute(statement)
+    rows_by_bmrid = {}
+    bmrs_by_bmrid: Dict[str, BenchmarkResult] = {}
+
+    for row in row_iterator:
+        bmr = row[0]
+        rows_by_bmrid[bmr.id] = row
+        bmrs_by_bmrid[bmr.id] = bmr
+
+    if len(rows_by_bmrid) == 0:
+        log.debug("history query returned no results")
+        return pd.DataFrame({}), {}
+
+    # The dictionary from which a pandas DataFrame will be be created.
+    dict_for_df = defaultdict(list)
+
+    # Translate row-oriented result into column-oriented df, but picking only
+    # specific columns.
+    for bmr_id, row in rows_by_bmrid.items():
+        # Iterate over values in this row, and also get their metadata/column
+        # descriptions. See
+        # https://stackoverflow.com/a/6456360/145400
+        for coldesc, value in zip(statement.column_descriptions, row):
+            if coldesc["name"] == "BenchmarkResult":
+                assert bmr_id == value.id
+                dict_for_df["benchmark_result_id"].append(bmr_id)
+                dict_for_df["case_id"].append(value.case_id)
+                dict_for_df["context_id"].append(value.context_id)
+                # dict_for_df["mean"].append(value.mean)
+                dict_for_df["svs"].append(value.svs)
+                dict_for_df["change_annotations"].append(value.change_annotations)
+                dict_for_df["result_timestamp"].append(value.timestamp)
+            if coldesc["name"] == "hardware_hash":
+                dict_for_df["hash"].append(value)
+
+            if coldesc["name"] == "repository":
+                dict_for_df["repository"].append(value)
+
+            if coldesc["name"] == "commit_timestamp":
+                # The timestamp we associate with this benchmark result for
+                # timeseries analysis. This is chosen to be the commit
+                # timestamp.
+                dict_for_df["timestamp"].append(value)
+
+            # This does not need to be in the dataframe, but it's better
+            # than result.run.commit.message below
+            if coldesc["name"] in ("commit_message", "commit_hash", "run_name"):
+                dict_for_df[coldesc["name"]].append(value)
+
+    history_df = pd.DataFrame(dict_for_df)
+    # log.info("df:\n%s", history_df.to_string())
+
+    return history_df, bmrs_by_bmrid
+
+
 class _CommitIndexer(pd.api.indexers.BaseIndexer):
     """pandas isn't great about rolling over ranges, so this class lets us roll over
     the commit timestamp column correctly (not caring about time between commits)."""
