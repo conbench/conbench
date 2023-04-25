@@ -1124,6 +1124,8 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
     def test_create_result_no_agg_before_three(self, client, samples):
         self.authenticate(client)
 
+        aggkeys = ("q1", "q3", "median", "min", "max", "stdev", "iqr")
+
         result = _fixtures.VALID_RESULT_PAYLOAD.copy()
         result["stats"] = {
             "data": samples,
@@ -1138,10 +1140,16 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         resp = client.post("/api/benchmark-results/", json=result)
         assert resp.status_code == 201, resp.text
 
+        # Mean must be defined for all non-errored results, i.e. also when
+        # there is just one data point in the result.
+        # See https://github.com/conbench/conbench/issues/1169
+        assert resp.json["stats"]["mean"] > 0
+
         # prepare for testing
         # https://github.com/conbench/conbench/issues/1118
         if len(samples) >= 3:
-            assert resp.json["stats"]["stdev"] > 0
+            for k in aggkeys:
+                assert resp.json["stats"][k] > 0
         else:
-            for k in ("q1", "q3", "mean", "median", "min", "max", "stdev", "iqr"):
+            for k in aggkeys:
                 assert resp.json["stats"][k] is None
