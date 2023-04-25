@@ -15,7 +15,10 @@
 import pytest
 from benchclients.conbench import LegacyConbenchClient
 
-from benchalerts.pipeline_steps.conbench import GetConbenchZComparisonStep
+from benchalerts.pipeline_steps.conbench import (
+    BaselineRunCandidates,
+    GetConbenchZComparisonStep,
+)
 
 ConbenchClient = LegacyConbenchClient
 
@@ -62,7 +65,11 @@ def test_GetConbenchZComparisonStep(
         )
     monkeypatch.setenv("CONBENCH_URL", conbench_url)
     cb = ConbenchClient()
-    step = GetConbenchZComparisonStep(commit_hash=commit, conbench_client=cb)
+    step = GetConbenchZComparisonStep(
+        commit_hash=commit,
+        baseline_run_type=BaselineRunCandidates.parent,
+        conbench_client=cb,
+    )
     full_comparison = step.run_step(previous_outputs={})
     assert len(full_comparison.run_comparisons) == expected_len
     for run in full_comparison.run_comparisons:
