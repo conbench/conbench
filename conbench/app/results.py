@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Dict, Optional
 
 import bokeh
 import flask as f
@@ -11,9 +11,11 @@ import conbench.util
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
-from ..app._plots import TimeSeriesPlotMixin
+from ..app._plots import BokehPlotJSONOrError, TimeSeriesPlotMixin
 from ..app._util import augment, display_time
 from ..config import Config
+from ..entities._entity import NotFound
+from ..entities.benchmark_result import BenchmarkResult
 
 log = logging.getLogger(__name__)
 
@@ -216,14 +218,25 @@ class RunMixin:
         return response.json, response
 
 
-class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
-    def page(self, benchmark, run, delete_form, update_form):
-        if benchmark is None:
+class BenchmarkResultView(
+    AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin
+):
+    def page(
+        self,
+        result_dict: Optional[Dict],
+        result_obj: Optional[BenchmarkResult],
+        run,
+        delete_form,
+        update_form,
+    ) -> str:
+        if result_dict is None:
             return self.redirect("app.index")
 
         update_button_color = "secondary"
         if flask_login.current_user.is_authenticated:
-            if benchmark["change_annotations"].get("begins_distribution_change", False):
+            if result_dict["change_annotations"].get(
+                "begins_distribution_change", False
+            ):
                 update_form.toggle_distribution_change.label.text = (
                     "Unmark this as the first result of a distribution change"
                 )
@@ -236,13 +249,19 @@ class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlo
             delattr(delete_form, "delete")
             delattr(update_form, "toggle_distribution_change")
 
-        plotinfo = self.get_history_plot(benchmark, run)
+        if result_obj is not None:
+            plotinfo = self.get_history_plot(result_obj, run)
+        else:
+            plotinfo = BokehPlotJSONOrError(
+                None,
+                "no benchmark result defined",
+            )
 
         return self.render_template(
             "benchmark-result.html",
             application=Config.APPLICATION_NAME,
             title="Benchmark",
-            benchmark=benchmark,
+            benchmark=result_dict,
             run=run,
             delete_form=delete_form,
             update_form=update_form,
@@ -253,9 +272,13 @@ class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlo
 
     @authorize_or_terminate
     def get(self, benchmark_result_id):
-        benchmark, run = self._get_benchmark_and_run(benchmark_result_id)
+        result_dict, run, result_obj = self._get_benchmark_and_run(benchmark_result_id)
         return self.page(
-            benchmark, run, BenchmarkResultDeleteForm(), BenchmarkResultUpdateForm()
+            result_dict,
+            result_obj,
+            run,
+            BenchmarkResultDeleteForm(),
+            BenchmarkResultUpdateForm(),
         )
 
     def post(self, benchmark_result_id):
@@ -301,8 +324,12 @@ class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlo
         if delete_form.errors == csrf or update_form.errors == csrf:
             self.flash("The CSRF token is missing.")
 
-        benchmark, run = self._get_benchmark_and_run(benchmark_result_id)
-        return self.page(benchmark, run, delete_form, update_form)
+        result_dict, run, benchmark_result_obj = self._get_benchmark_and_run(
+            benchmark_result_id
+        )
+        return self.page(
+            result_dict, benchmark_result_obj, run, delete_form, update_form
+        )
 
     def data(self, form: BenchmarkResultUpdateForm):
         """Construct the data to PUT when calling self.api_put()."""
@@ -312,11 +339,17 @@ class BenchmarkResult(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlo
             return {"change_annotations": {"begins_distribution_change": True}}
 
     def _get_benchmark_and_run(self, benchmark_result_id):
-        result = self.get_display_benchmark(benchmark_result_id)
+        # Intermediate: get straight form DB, w/o API indirection
+        try:
+            benchmark_result_obj = BenchmarkResult.one(id=benchmark_result_id)
+        except NotFound:
+            benchmark_result_obj = None
+
+        result_dict = self.get_display_benchmark(benchmark_result_id)
         run = None
-        if result is not None:
-            run = self.get_display_run(result["run_id"])
-        return result, run
+        if result_dict is not None:
+            run = self.get_display_run(result_dict["run_id"])
+        return result_dict, run, benchmark_result_obj
 
 
 class BenchmarkResultList(AppEndpoint, ContextMixin):
@@ -359,7 +392,7 @@ rule(
 
 rule(
     "/benchmark-results/<benchmark_result_id>/",
-    view_func=BenchmarkResult.as_view("benchmark-result"),
+    view_func=BenchmarkResultView.as_view("benchmark-result"),
     methods=["GET", "POST"],
 )
 
@@ -376,6 +409,6 @@ rule(
 # Context: https://github.com/conbench/conbench/pull/966#issuecomment-1487072612
 rule(
     "/benchmarks/<benchmark_result_id>/",
-    view_func=BenchmarkResult.as_view("benchmark"),
+    view_func=BenchmarkResultView.as_view("benchmark"),
     methods=["GET", "POST"],
 )

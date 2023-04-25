@@ -11,6 +11,7 @@ import bokeh.plotting
 
 from conbench import util
 from conbench.api.history import get_history_for_benchmark
+from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.entities.history import HistorySample, HistorySampleZscoreStats
 
 from ..hacks import sorted_data
@@ -48,12 +49,14 @@ class TimeSeriesPlotMixin:
         ]
         return biggest_changes, biggest_changes_ids, biggest_changes_names
 
-    def get_history_plot(self, benchmark, run, i=0) -> BokehPlotJSONOrError:
+    def get_history_plot(
+        self, benchmark_result: BenchmarkResult, run, i=0
+    ) -> BokehPlotJSONOrError:
         """
         Generate JSON string for inclusion in HTML doc or a reason for why
         the plot-describing JSON doc was not generated.
         """
-        samples = get_history_for_benchmark(benchmark_result_id=benchmark["id"])
+        samples = get_history_for_benchmark(benchmark_result_id=benchmark_result.id)
 
         # The number (1, 2, 3?) maybe needs to be tuned further. Also see
         # https://github.com/conbench/conbench/issues/867
@@ -61,7 +64,7 @@ class TimeSeriesPlotMixin:
             assert isinstance(samples[0], HistorySample)
             jsondoc = json.dumps(
                 bokeh.embed.json_item(
-                    time_series_plot(samples, benchmark, run),
+                    time_series_plot(samples, benchmark_result, run),
                     f"plot-history-{i}",  # type: ignore
                 )
             )
@@ -465,7 +468,11 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
 
 
 def time_series_plot(
-    samples: List[HistorySample], benchmark, run, height=380, width=1100
+    samples: List[HistorySample],
+    current_benchmark_result: BenchmarkResult,
+    run,
+    height=380,
+    width=1100,
 ):
     # log.info("Time series plot for:\n%s", json.dumps(samples, indent=2))
 
@@ -510,11 +517,11 @@ def time_series_plot(
     )
 
     dummy_hs = HistorySample(
-        mean=benchmark["stats"]["mean"],
+        mean=current_benchmark_result.mean,
         commit_msg=run["commit"]["message"],
         commit_timestamp=util.tznaive_iso8601_to_tzaware_dt(run["commit"]["timestamp"]),
         commit_hash=run["commit"]["sha"],
-        benchmark_result_id=benchmark["id"],
+        benchmark_result_id=current_benchmark_result.id,
         repository=run["commit"]["repository"],
         # Right now, the _source() function requires as first arg a list of
         # HistorySample objects. Comply with this, but most of the info is
@@ -538,16 +545,18 @@ def time_series_plot(
     )
 
     source_current_bm_mean = _source(
-        [dummy_hs],
+        [dummy_hs_for_current_svs],
         unit,
         formatted=formatted,
     )
 
-    # create same dummy structure, only difference: set min as mean.
-    dummy_hs_min = copy.copy(dummy_hs)
-    dummy_hs_min.mean = benchmark["stats"]["min"]
+    # Create same dummy structure, only difference: set min as single value
+    # summary (SVS).
+    curbmrdata = current_benchmark_result.data
+    dummy_hs_for_min = copy.copy(dummy_hs_for_current_svs)
+    dummy_hs_for_min.svs = min(curbmrdata) if curbmrdata else math.nan
     source_current_bm_min = _source(
-        [dummy_hs_min],
+        [dummy_hs_for_min],
         unit,
         formatted=formatted,
     )

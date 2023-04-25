@@ -12,6 +12,7 @@ from ..app._plots import TimeSeriesPlotMixin, simple_bar_plot
 from ..app._util import augment, error_page
 from ..app.results import BenchmarkResultMixin, RunMixin
 from ..config import Config
+from ..entities.benchmark_result import BenchmarkResult
 from ..entities.run import commit_hardware_run_map
 
 log = logging.getLogger(__name__)
@@ -40,6 +41,7 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
 
         elif comparisons and self.type == "benchmark-result":
             baseline = self.get_display_benchmark(baseline_id)
+            # TODO: fetch directly from db, no indirection through API.
             contender = self.get_display_benchmark(contender_id)
             plot = self._get_plot(baseline, contender)
             baseline_run_id = baseline["run_id"]
@@ -52,7 +54,11 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             contender_run = self.get_display_run(contender_run_id)
 
         if comparisons and self.type == "benchmark-result":
-            plot_history = self.get_history_plot(contender, contender_run)
+            # `contender` is a dictionary representing the benchmark result.
+            # Also inject the 'proper' benchmark result object  into
+            # get_history_plot().
+            benchmark_result = BenchmarkResult.one(id=contender["id"])
+            plot_history = self.get_history_plot(benchmark_result, contender_run)
 
         if comparisons and self.type != "benchmark-result":
             comparisons_by_id = {

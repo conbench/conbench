@@ -58,7 +58,7 @@ def fmt_unit(value: Optional[float], unit) -> Optional[str]:
     except ValueError as exc:
         # https://github.com/conbench/conbench/issues/1155
         log.warning("fmt_unit(): got unexpected value `%s`, exc: %s", repr(value), exc)
-        return None
+        raise
 
 
 def formatter_for_unit(unit):
