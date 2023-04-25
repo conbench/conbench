@@ -3,6 +3,7 @@ import copy
 import dataclasses
 import json
 import logging
+import math
 from typing import List, Optional, Tuple, no_type_check
 
 import bokeh.events
@@ -290,10 +291,8 @@ def _source(
         else:
             # Again, non-obvious purpose of this function: if not specified
             # otherwise, this extracts the multisample mean-over-time.
-            points = [x.mean for x in samples]
-            values_with_unit = [
-                unit_fmt(float(x.mean), unit) for x in samples if x.mean
-            ]
+            points = [x.svs for x in samples]
+            values_with_unit = [unit_fmt(float(x.svs), unit) for x in samples if x.svs]
 
     if formatted:
         # Note(JP): why would we want to calculate the raw numeric data from
@@ -493,7 +492,11 @@ def time_series_plot(
     height=380,
     width=1100,
 ):
-    # log.info("Time series plot for:\n%s", json.dumps(samples, indent=2))
+    # log.info(
+    #     "Time series plot for:\n%s",
+    #     json.dumps([s._dict_for_api_json() for s in samples], indent=2, default=str),
+    # )
+
     units = set([s.unit for s in samples])
     if len(units) != 1:
         raise HistoryUserFacingError(f"heterogenous set of units: {units}")
@@ -505,10 +508,8 @@ def time_series_plot(
     outliers = [s for s in samples if s.zscorestats.is_outlier]
 
     has_outliers = len(outliers) > 0
-
-    formatted, axis_unit = _should_format(
-        [s.single_value_for_plot for s in samples], unit
-    )
+    formatted, axis_unit = _should_format([s.svs for s in samples], unit)
+    # log.info("formatted: %s, axis_unit: %s", formatted, axis_unit)
 
     dist_change_indexes = [
         ix
@@ -539,20 +540,23 @@ def time_series_plot(
         )
     )
 
-    dummy_hs = HistorySample(
+    # The _source() function requires as first arg a list of HistorySample
+    # objects. Comply with this, but most of the info is ignored. We may want
+    # to add a new type for stream-lining this.
+    dummy_hs_for_current_svs = HistorySample(
         mean=current_benchmark_result.mean,
+        svs=current_benchmark_result.svs,
+        svs_type=current_benchmark_result.svs_type,
         commit_msg=run["commit"]["message"],
         commit_timestamp=util.tznaive_iso8601_to_tzaware_dt(run["commit"]["timestamp"]),
         commit_hash=run["commit"]["sha"],
         benchmark_result_id=current_benchmark_result.id,
         repository=run["commit"]["repository"],
-        # Right now, the _source() function requires as first arg a list of
-        # HistorySample objects. Comply with this, but most of the info is
-        # ignored. We may want to add a new type for stream-lining this.
         case_id="dummy",  # not consumed
         context_id="dummy",  # not consumed
-        data=[0],  # not consumed
-        times=[0],  # not consumed
+        # "Per PEP 484, int is a subtype of float"
+        data=[0.0],  # not consumed
+        times=[0.0],  # not consumed
         unit="dummy",  # not consumed
         hardware_hash="dummy",  # not consumed
         run_name="dummy",  # not consumed
