@@ -45,6 +45,23 @@
             "list": "http://localhost/api/runs/",
             "self": "http://localhost/api/runs/some-run-uuid-1/"
         },
+        "candidate_baseline_runs": {
+            "fork_point": {
+                "baseline_run_id": "some_baseline",
+                "commits_skipped": [],
+                "error": null
+            },
+            "head_of_default": {
+                "baseline_run_id": "some_baseline",
+                "commits_skipped": [],
+                "error": null
+            },
+            "parent": {
+                "baseline_run_id": "some_baseline",
+                "commits_skipped": [],
+                "error": null
+            }
+        },
         "name": "some run name",
         "reason": "some run reason",
         "timestamp": "2021-02-04T17:22:05.225583"
