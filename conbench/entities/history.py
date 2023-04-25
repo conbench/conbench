@@ -202,21 +202,13 @@ def get_history_for_cchr(
 
     history = (
         Session.query(
-            BenchmarkResult.id,
-            BenchmarkResult.case_id,
-            BenchmarkResult.context_id,
-            BenchmarkResult.mean,
-            BenchmarkResult.unit,
-            BenchmarkResult.data,
-            BenchmarkResult.times,
-            BenchmarkResult.change_annotations,
-            BenchmarkResult.timestamp.label("result_timestamp"),
-            Hardware.hash,
-            Commit.sha,
+            BenchmarkResult,
+            Hardware.hash.label("hardware_hash"),
+            Commit.sha.label("commit_hash"),
             Commit.repository,
-            Commit.message,
-            Commit.timestamp,
-            Run.name,
+            Commit.message.label("commit_message"),
+            Commit.timestamp.label("commit_timestamp"),
+            Run.name.label("run_name"),
         )
         .join(Run, Run.id == BenchmarkResult.run_id)
         .join(Hardware, Hardware.id == Run.hardware_id)
@@ -235,17 +227,19 @@ def get_history_for_cchr(
         )
     )
 
-    history_df = pd.read_sql(history.statement, Session.connection())
+    history_df, bmrs_by_bmrid = execute_history_query_get_dataframe(history.statement)
 
-    history_df = _add_rolling_stats_columns_to_df(
+    if len(history_df) == 0:
+        return []
+
+    history_df_rolling_stats = _add_rolling_stats_columns_to_df(
         history_df, include_current_commit_in_rolling_stats=False
     )
 
-    # return list(history_df.itertuples())
-
     samples: List[HistorySample] = []
+
     # Iterate over rows of pandas dataframe; get each row as namedtuple.
-    for sample in history_df.itertuples():
+    for sample in history_df_rolling_stats.itertuples():
         # Note(JP): the Commit.timestamp is nullable, i.e. not all Commit
         # entities in the DB have a timestamp (authoring time) attached.
         # However, in this function I believe there is an invariant that the
@@ -253,6 +247,9 @@ def get_history_for_cchr(
         # precise reason for this invariant? I think there is one). Codify this
         # invariant with an assertion.
         assert isinstance(sample.timestamp, datetime.datetime)
+
+        # Restore 'sample' (df row) correspondence to BenchmarkResult objects.
+        result = bmrs_by_bmrid[sample.benchmark_result_id]
 
         zstats = HistorySampleZscoreStats(
             begins_distribution_change=sample.begins_distribution_change,
@@ -268,21 +265,19 @@ def get_history_for_cchr(
         # list. Make it so that in the output object they are always a list,
         # potentially empty. `data` and `times` contain more than one value if
         # this was a multi-sample benchmark.
-
         data = []
-        if sample.data is not None:
-            data = [float(d) if d is not None else math.nan for d in sample.data]
+        if result.data is not None:
+            data = [float(d) if d is not None else math.nan for d in result.data]
 
         times = []
-        if sample.times is not None:
-            times = [float(t) if t is not None else math.nan for t in sample.times]
+        if result.times is not None:
+            times = [float(t) if t is not None else math.nan for t in result.times]
 
         samples.append(
             HistorySample(
-                benchmark_result_id=sample.id,
-                case_id=sample.case_id,
-                context_id=sample.context_id,
-                mean=sample.mean,
+                benchmark_result_id=sample.benchmark_result_id,
+                case_id=result.case_id,
+                context_id=result.context_id,
                 # Keep exposing the `mean` property like before. This was meant
                 # to be the single value summary, guaranteed to have a value
                 # set. So, actually read this from the new .svs property which
@@ -293,13 +288,17 @@ def get_history_for_cchr(
                 svs_type=result.svs_type,  # hard-code for now
                 data=data,
                 times=times,
-                unit=sample.unit,
+                # JSON schema requires unit to be set upon BMR insertion, so I
+                # do not think this 'undefined' is met often. Maybe empty
+                # strings can be inserted into the DB, and this would be
+                # handled here, too.
+                unit=result.unit if result.unit else "undefined",
                 hardware_hash=sample.hash,
                 repository=sample.repository,
-                commit_msg=sample.message,
-                commit_hash=sample.sha,
+                commit_msg=sample.commit_message,
+                commit_hash=sample.commit_hash,
                 commit_timestamp=sample.timestamp,
-                run_name=sample.name,
+                run_name=sample.run_name,
                 zscorestats=zstats,
             )
         )
@@ -406,14 +405,11 @@ def _query_and_calculate_distribution_stats(
     # Find all historic results in the distribution to analyze
     history = (
         Session.query(
-            BenchmarkResult.case_id,
-            BenchmarkResult.context_id,
-            BenchmarkResult.change_annotations,
-            BenchmarkResult.mean,
-            BenchmarkResult.timestamp.label("result_timestamp"),
-            Hardware.hash,
+            # we can use the `defer` method to not select all columns
+            BenchmarkResult,
+            Hardware.hash.label("hardware_hash"),
             s.sql.expression.literal(baseline_commit.repository).label("repository"),
-            commits.c.ancestor_timestamp.label("timestamp"),
+            commits.c.ancestor_timestamp.label("commit_timestamp"),
         )
         .select_from(BenchmarkResult)
         .join(Run, Run.id == BenchmarkResult.run_id)
@@ -448,7 +444,10 @@ def _query_and_calculate_distribution_stats(
             ),
         )
 
-    history_df = pd.read_sql(history.statement, Session.connection())
+    history_df, _ = execute_history_query_get_dataframe(history.statement)
+
+    if len(history_df) == 0:
+        return {}
 
     history_df = _add_rolling_stats_columns_to_df(
         history_df, include_current_commit_in_rolling_stats=True
@@ -458,6 +457,7 @@ def _query_and_calculate_distribution_stats(
     stats_df = history_df.sort_values("timestamp", ascending=False).drop_duplicates(
         ["case_id", "context_id"]
     )
+
     return {
         (row.case_id, row.context_id): (row.rolling_mean, row.rolling_stddev)
         for row in stats_df.itertuples()
@@ -595,14 +595,14 @@ def _add_rolling_stats_columns_to_df(
 
     The input DataFrame must already have the following columns:
 
-        - BenchmarkResult.case_id
-        - BenchmarkResult.context_id
-        - BenchmarkResult.change_annotations
-        - BenchmarkResult.mean
-        - BenchmarkResult.timestamp.label("result_timestamp")
-        - Hardware.hash
-        - Commit.repository
-        - Commit.timestamp
+        - BenchmarkResult: case_id
+        - BenchmarkResult: context_id
+        - BenchmarkResult: change_annotations
+        - BenchmarkResult: svs (single value summary, currently mean)
+        - BenchmarkResult: result_timestamp
+        - Hardware: hash
+        - Commit: repository
+        - Commit: timestamp
 
     and this function will add these columns (more detail below):
 
