@@ -361,6 +361,86 @@ class BenchmarkResult(Base, EntityMixin):
             },
         }
 
+    def is_failed(self):
+        """
+        Return True if this BenchmarkResult is considered to be 'failed' /
+        erroneous.
+
+        The criteria are conventions that we (hopefully) apply consistently
+        across components.
+        """
+        if self.data is None:
+            log.info("data is none")
+            return True
+
+        if do_iteration_samples_look_like_error(self.data):
+            log.info("iterations look like err")
+            return True
+
+        if self.error is not None:
+            log.info("selferr is not none")
+            return True
+
+        return False
+
+    @property
+    def svs(self) -> float:
+        """
+        Return single value summary (currently: mean) or raise an
+        Exception.
+        """
+
+        # This is here just for the shorter name.
+        return self._single_value_summary()
+
+    @property
+    def svs_type(self) -> str:
+        """
+        Return single value summary type (currently: "mean")
+        """
+        return "mean"
+
+    def _single_value_summary(self) -> float:
+        """
+        Return a single numeric value summarizing the collection of data points
+        D associated with this benchmark result. Currently static (mean), can
+        be dynamic in the future.
+
+        Assumption: each non-errored benchmark result (self.is_failed() returns
+        False) is guaranteed to have at least one data point.
+
+        The value returned by this method is intended to be used in analysis
+        and plotting routines.
+
+        This method primarily serves the purpose of rather ignorantly mapping
+        collection of data points of unknown size (at least l) to a single
+        value. This single-value summary may be the mean or min (or something
+        else), and is not always statistically sound. But that is a problem
+        that needs to be addressed with higher-level means.
+
+        From a perspective of plotting, this here is the 'location' of the data
+        point.
+
+        Notes on terminology:
+
+        - https://english.stackexchange.com/a/484587/70578
+        - https://en.wikipedia.org/wiki/Summary_statistics
+
+        Related issues:
+
+        - https://github.com/conbench/conbench/issues/535
+        - https://github.com/conbench/conbench/issues/640
+        - https://github.com/conbench/conbench/issues/530
+        """
+        if self.is_failed():
+            return math.nan
+
+        # Should be implied by the outcome of self.is_failed(), encode this.
+        assert self.mean is not None
+
+        # TODO: add support beyond mean.
+        return float(self.mean)
+
     @property
     def ui_mean_and_uncertainty(self) -> str:
         """
