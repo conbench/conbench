@@ -5,7 +5,7 @@ bokeh
 click
 dacite
 email-validator
-Flask
+Flask==2.2.3
 Flask-Bootstrap
 Flask-Compress
 Flask-Login
