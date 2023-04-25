@@ -70,10 +70,10 @@ class BenchmarkResult(Base, EntityMixin):
 
     # These can be empty lists. An item in the list is of type float, which
     # includes `math.nan` as valid value.
-    data: Mapped[Optional[List[float]]] = Nullable(
+    data: Mapped[Optional[List[Decimal]]] = Nullable(
         postgresql.ARRAY(s.Numeric), default=[]
     )
-    times: Mapped[Optional[List[float]]] = Nullable(
+    times: Mapped[Optional[List[Decimal]]] = Nullable(
         postgresql.ARRAY(s.Numeric), default=[]
     )
 
