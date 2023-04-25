@@ -84,9 +84,10 @@ class BenchmarkResult(Base, EntityMixin):
     info: Mapped[Info] = relationship("Info", lazy="joined")
     context: Mapped[Context] = relationship("Context", lazy="joined")
 
-    # `unit` is required by schema and currently documented with "The unit of
-    # the data object (e.g. seconds, B/s)". Where do we systematically keep
-    # track of "less is better" or "more is better"?
+    # Why is this nullable? `unit` is required via the JSON schema and
+    # currently documented with "The unit of the data object (e.g. seconds,
+    # B/s)". Where do we systematically keep track of "less is better" or "more
+    # is better"?
     unit: Mapped[Optional[str]] = Nullable(s.Text)
     time_unit: Mapped[Optional[str]] = Nullable(s.Text)
 
