@@ -10,11 +10,17 @@ from ...entities.run import Run
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
+DEFAULT_BRANCH_PLACEHOLDER = {
+    "error": "the contender run is already on the default branch",
+    "baseline_run_id": None,
+    "commits_skipped": None,
+}
 
-def _expected_entity(run, baseline_id=None, include_baseline=True):
+
+def _expected_entity(run, candidate_baseline_runs=None):
     parent = run.commit.get_parent_commit()
     has_errors = False
-    return _api_run_entity(
+    entity = _api_run_entity(
         run.id,
         run.name,
         run.reason,
@@ -24,8 +30,6 @@ def _expected_entity(run, baseline_id=None, include_baseline=True):
         run.hardware.name,
         run.hardware.type,
         tznaive_dt_to_aware_iso8601_for_api(run.timestamp),
-        baseline_id,
-        include_baseline,
         has_errors,
         tznaive_dt_to_aware_iso8601_for_api(run.finished_timestamp)
         if run.finished_timestamp
@@ -34,6 +38,11 @@ def _expected_entity(run, baseline_id=None, include_baseline=True):
         run.error_info,
         run.error_type,
     )
+    if candidate_baseline_runs:
+        entity["candidate_baseline_runs"] = candidate_baseline_runs
+    else:
+        del entity["candidate_baseline_runs"]
+    return entity
 
 
 class TestRunGet(_asserts.GetEnforcer):
@@ -64,7 +73,21 @@ class TestRunGet(_asserts.GetEnforcer):
         self.authenticate(client)
         run, baseline = self._create(baseline=True, name=name, language=language)
         response = client.get(f"/api/runs/{run.id}/")
-        self.assert_200_ok(response, _expected_entity(run, baseline.id))
+        self.assert_200_ok(
+            response,
+            _expected_entity(
+                run,
+                candidate_baseline_runs={
+                    "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "parent": {
+                        "baseline_run_id": baseline.id,
+                        "commits_skipped": [],
+                        "error": None,
+                    },
+                },
+            ),
+        )
 
     def test_get_run_should_not_prefer_test_runs_as_baseline(self, client):
         """Test runs shouldn't be preferred, but if they are the only runs that exist,
@@ -78,7 +101,21 @@ class TestRunGet(_asserts.GetEnforcer):
         baseline.reason = "test"
         baseline.save()
         response = client.get(f"/api/runs/{run.id}/")
-        self.assert_200_ok(response, _expected_entity(run, baseline.id))
+        self.assert_200_ok(
+            response,
+            _expected_entity(
+                run,
+                candidate_baseline_runs={
+                    "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "parent": {
+                        "baseline_run_id": baseline.id,
+                        "commits_skipped": [],
+                        "error": None,
+                    },
+                },
+            ),
+        )
 
     def test_get_run_find_correct_baseline_many_matching_contexts(self, client):
         # same context for different benchmark runs, but different benchmarks
@@ -88,9 +125,37 @@ class TestRunGet(_asserts.GetEnforcer):
         run_1, baseline_1 = self._create(baseline=True, name=name_1, language=language)
         run_2, baseline_2 = self._create(baseline=True, name=name_2, language=language)
         response = client.get(f"/api/runs/{run_1.id}/")
-        self.assert_200_ok(response, _expected_entity(run_1, baseline_1.id))
+        self.assert_200_ok(
+            response,
+            _expected_entity(
+                run_1,
+                candidate_baseline_runs={
+                    "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "parent": {
+                        "baseline_run_id": baseline_1.id,
+                        "commits_skipped": [],
+                        "error": None,
+                    },
+                },
+            ),
+        )
         response = client.get(f"/api/runs/{run_2.id}/")
-        self.assert_200_ok(response, _expected_entity(run_2, baseline_2.id))
+        self.assert_200_ok(
+            response,
+            _expected_entity(
+                run_2,
+                candidate_baseline_runs={
+                    "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "parent": {
+                        "baseline_run_id": baseline_2.id,
+                        "commits_skipped": [],
+                        "error": None,
+                    },
+                },
+            ),
+        )
 
     def test_get_run_find_correct_baseline_with_multiple_runs(self, client):
         language_1, language_2, name_1, name_2 = _uuid(), _uuid(), _uuid(), _uuid()
@@ -129,10 +194,15 @@ class TestRunGet(_asserts.GetEnforcer):
             run_id=baseline_run_id_2,
         )
         response = client.get(f"/api/runs/{contender_run_id}/")
-        assert (
-            response.json["links"]["baseline"]
-            == f"http://localhost/api/runs/{baseline_run_id_1}/"
-        )
+        assert response.json["candidate_baseline_runs"] == {
+            "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "parent": {
+                "baseline_run_id": baseline_run_id_1,
+                "commits_skipped": [],
+                "error": None,
+            },
+        }
 
     def test_get_run_without_baseline_run_with_matching_benchmarks(self, client):
         (
@@ -156,7 +226,15 @@ class TestRunGet(_asserts.GetEnforcer):
             name=name, sha=_fixtures.PARENT, language=language_2, run_id=baseline_run_id
         )
         response = client.get(f"/api/runs/{contender_run_id}/")
-        assert not response.json["links"]["baseline"]
+        assert response.json["candidate_baseline_runs"] == {
+            "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "parent": {
+                "baseline_run_id": None,
+                "commits_skipped": None,
+                "error": "no matching baseline run was found",
+            },
+        }
 
     def test_closest_commit_different_machines(self, client):
         # same benchmarks, different machines
@@ -168,7 +246,7 @@ class TestRunGet(_asserts.GetEnforcer):
             sha=_fixtures.CHILD,
             hardware_name=machine_1,
         )
-        _fixtures.benchmark_result(
+        parent = _fixtures.benchmark_result(
             name=name,
             sha=_fixtures.PARENT,
             hardware_name=machine_2,
@@ -188,7 +266,21 @@ class TestRunGet(_asserts.GetEnforcer):
         baseline_run = baseline.run
 
         response = client.get(f"/api/runs/{contender_run.id}/")
-        self.assert_200_ok(response, _expected_entity(contender_run, baseline_run.id))
+        self.assert_200_ok(
+            response,
+            _expected_entity(
+                contender_run,
+                candidate_baseline_runs={
+                    "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "parent": {
+                        "baseline_run_id": baseline_run.id,
+                        "commits_skipped": [parent.run.commit.sha],
+                        "error": None,
+                    },
+                },
+            ),
+        )
 
     def test_closest_commit_different_machines_should_not_prefer_test_runs_as_baseline(
         self, client
@@ -204,7 +296,7 @@ class TestRunGet(_asserts.GetEnforcer):
             sha=_fixtures.CHILD,
             hardware_name=machine_1,
         )
-        _fixtures.benchmark_result(
+        parent = _fixtures.benchmark_result(
             name=name,
             sha=_fixtures.PARENT,
             hardware_name=machine_2,
@@ -229,28 +321,24 @@ class TestRunGet(_asserts.GetEnforcer):
         baseline_run = baseline.run
 
         response = client.get(f"/api/runs/{contender_run.id}/")
-        self.assert_200_ok(response, _expected_entity(contender_run, baseline_run.id))
-
-    def test_baseline_run_always_on_default_branch(self, client):
-        self.authenticate(client)
-        _, benchmark_results = _fixtures.gen_fake_data()
-
-        successes = 0
-        for benchmark_result in benchmark_results:
-            response = client.get(f"/api/runs/{benchmark_result.run_id}/")
-            assert response.status_code == 200, f"bad response: {response.__dict__}"
-            baseline_run_link = response.json["links"].get("baseline")
-            if baseline_run_link:
-                baseline_run_response = client.get(
-                    baseline_run_link.replace("http://localhost", "")
-                )
-                assert (
-                    baseline_run_response.status_code == 200
-                ), f"bad response: {baseline_run_response.__dict__}"
-                assert baseline_run_response.json["commit"]["branch"] == "default"
-                successes += 1
-
-        assert successes == 10
+        self.assert_200_ok(
+            response,
+            _expected_entity(
+                contender_run,
+                candidate_baseline_runs={
+                    "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "parent": {
+                        "baseline_run_id": baseline_run.id,
+                        "commits_skipped": [
+                            parent.run.commit.sha,
+                            testing.run.commit.sha,
+                        ],
+                        "error": None,
+                    },
+                },
+            ),
+        )
 
 
 class TestRunList(_asserts.ListEnforcer):
@@ -266,18 +354,14 @@ class TestRunList(_asserts.ListEnforcer):
         self.authenticate(client)
         run = self._create()
         response = client.get("/api/runs/")
-        self.assert_200_ok(
-            response, contains=_expected_entity(run, include_baseline=False)
-        )
+        self.assert_200_ok(response, contains=_expected_entity(run))
 
     def test_run_list_filter_by_sha(self, client):
         sha = _fixtures.CHILD
         self.authenticate(client)
         run = self._create()
         response = client.get(f"/api/runs/?sha={sha}")
-        self.assert_200_ok(
-            response, contains=_expected_entity(run, include_baseline=False)
-        )
+        self.assert_200_ok(response, contains=_expected_entity(run))
 
     def test_run_list_filter_by_multiple_sha(self, client):
         sha1 = _fixtures.CHILD
@@ -289,13 +373,9 @@ class TestRunList(_asserts.ListEnforcer):
         run_2 = _fixtures.benchmark_result()
         response = client.get(f"/api/runs/?sha={sha1},{sha2}")
 
-        self.assert_200_ok(
-            response, contains=_expected_entity(run_1.run, include_baseline=False)
-        )
+        self.assert_200_ok(response, contains=_expected_entity(run_1.run))
 
-        self.assert_200_ok(
-            response, contains=_expected_entity(run_2.run, include_baseline=False)
-        )
+        self.assert_200_ok(response, contains=_expected_entity(run_2.run))
 
     def test_run_list_filter_by_sha_no_match(self, client):
         sha = "some unknown sha"
