@@ -81,6 +81,7 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
 
     def run_step(self, previous_outputs: Dict[str, Any]) -> FullComparisonInfo:
         log.info(f"Getting comparisons from {len(self.run_ids)} run(s)")
+        assert self.baseline_run_type
         return FullComparisonInfo(
             run_comparisons=[
                 self._get_one_run_comparison(run_id) for run_id in self.run_ids
