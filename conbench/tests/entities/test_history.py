@@ -303,6 +303,10 @@ def test_detect_shifts_with_trimmed_estimators():
             "timestamp": np.arange(100),
             "result_timestamp": np.arange(100),
             "mean": mean_vals,
+            # Introduce concept of single value summary (SVS), currently
+            # equivalent with mean, the single value representing the outcome
+            # of the benchmark result.
+            "svs": mean_vals,
         }
     )
 

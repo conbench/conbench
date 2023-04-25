@@ -401,6 +401,8 @@ def _api_history_entity(benchmark_result_id, case_id, context_id, run_name):
             "data": BENCHMARK_ENTITY["stats"]["data"],
             "hardware_hash": "diana-2-2-4-17179869184",
             "mean": 0.036369,
+            "svs": 0.036369,
+            "svs_type": "mean",
             "repository": "https://github.com/org/repo",
             "run_name": run_name,
             "times": BENCHMARK_ENTITY["stats"]["times"],
