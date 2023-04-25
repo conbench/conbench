@@ -577,7 +577,7 @@ def time_series_plot(
     # summary (SVS).
     curbmrdata = current_benchmark_result.data
     dummy_hs_for_min = copy.copy(dummy_hs_for_current_svs)
-    dummy_hs_for_min.svs = min(curbmrdata) if curbmrdata else math.nan
+    dummy_hs_for_min.svs = float(min(curbmrdata)) if curbmrdata else math.nan
     source_current_bm_min = _source(
         [dummy_hs_for_min],
         unit,
