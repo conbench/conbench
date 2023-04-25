@@ -73,9 +73,8 @@ class TestBenchmarkResultGet(_asserts.GetEnforcer):
         self.authenticate(client)
         _, bmresults = _fixtures.gen_fake_data(one_sample_no_mean=True)
         bmr_id = bmresults[3].id
-        with pytest.raises(ValueError, match="invalid input Character"):
-            resp = client.get(f"benchmark-results/{bmr_id}/")
-            assert resp.status_code == 200, resp.text
+        resp = client.get(f"benchmark-results/{bmr_id}/")
+        assert resp.status_code == 200, resp.text
 
 
 class TestBenchmarkResultDelete(_asserts.DeleteEnforcer):
