@@ -22,8 +22,20 @@ from ..entities.run import Run
 log = logging.getLogger(__name__)
 
 
-def _to_float(number: Optional[Union[decimal.Decimal, float, int]]) -> Optional[float]:
-    """Standardize decimals/floats/ints/Nones/NaNs to be either floats or Nones"""
+def _to_float_or_none(
+    number: Optional[Union[decimal.Decimal, float, int]]
+) -> Optional[float]:
+    """
+    Standardize decimals/floats/ints/Nones/NaNs to be either floats or Nones
+
+    Notes for why this can be helpful:
+
+    - In mypy, passing an int where a float is demanded is never an error. That
+      is, `if isinstance(value, float)` may be stricter than type checking,
+      which can lead to bugs.
+    - math.nan must be checked for with math.isnan, but it must not be given
+      str or None arg, i.e. the isnan() check must be preceded by other checks.
+    """
     if number is None:
         return None
 
@@ -64,7 +76,7 @@ class _Serializer(EntitySerializer):
             "benchmark_result_id": history.id,
             "case_id": history.case_id,
             "context_id": history.context_id,
-            "mean": _to_float(history.mean),
+            "mean": _to_float_or_none(history.mean),
             "data": history.data,
             "times": history.times,
             "unit": history.unit,
@@ -77,8 +89,8 @@ class _Serializer(EntitySerializer):
             # This is the Commit timestamp. Expose Result timestamp, too?
             "timestamp": history.timestamp.isoformat(),
             "run_name": history.name,
-            "distribution_mean": _to_float(history.rolling_mean),
-            "distribution_stdev": _to_float(history.rolling_stddev) or 0.0,
+            "distribution_mean": _to_float_or_none(history.rolling_mean),
+            "distribution_stdev": _to_float_or_none(history.rolling_stddev) or 0.0,
         }
 
 
@@ -270,9 +282,9 @@ def get_history_for_cchr(
             begins_distribution_change=sample.begins_distribution_change,
             segment_id=sample.segment_id,
             rolling_mean_excluding_this_commit=sample.rolling_mean_excluding_this_commit,
-            rolling_mean=_to_float(sample.rolling_mean),
+            rolling_mean=_to_float_or_none(sample.rolling_mean),
             residual=sample.residual,
-            rolling_stddev=_to_float(sample.rolling_stddev) or 0.0,
+            rolling_stddev=_to_float_or_none(sample.rolling_stddev) or 0.0,
             is_outlier=sample.is_outlier or False,
         )
 
@@ -356,10 +368,10 @@ def set_z_scores(
             (benchmark_result.case_id, benchmark_result.context_id), (None, None)
         )
         benchmark_result.z_score = _calculate_z_score(
-            data_point=_to_float(benchmark_result.mean),
+            data_point=_to_float_or_none(benchmark_result.mean),
             unit=benchmark_result.unit,
-            dist_mean=_to_float(dist_mean),
-            dist_stddev=_to_float(dist_stddev),
+            dist_mean=_to_float_or_none(dist_mean),
+            dist_stddev=_to_float_or_none(dist_stddev),
         )
 
 
