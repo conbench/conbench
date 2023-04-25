@@ -138,6 +138,9 @@ class HistorySample:
     # Note(JP):
     # we should expose the unit of `data` in this structure, too.
 
+    def __str__(self):
+        return f"<{self.__class__.__name__}(mean:{self.mean}),data:{self.data}>"
+
     def _dict_for_api_json(self) -> dict:
         d = dataclasses.asdict(self)
         # if performance is a concern then https://pypi.org/project/orjson/
