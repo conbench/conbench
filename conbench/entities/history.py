@@ -146,41 +146,6 @@ class HistorySample:
         d["commit_timestamp"] = self.commit_timestamp.isoformat()
         return d
 
-    @property
-    def single_value_for_plot(self) -> float:
-        """
-        Helper for plotting routines. This sample ended up in a collection that
-        wants to be plotted. For that, a single value is needed defining the
-        position on "y axis".
-
-        Downstream code relies on a float(y) value to be returned, which
-        includes `math.nan`.
-        """
-        if isinstance(self.mean, float):
-            if not math.isnan(self.mean):
-                return self.mean
-
-        # Mean value isn't set. That should imply that there are less than
-        # three data points. Do a sanity check.
-        if len(self.data) not in (1, 2):
-            # That is / should be an invariant: if there are more than two
-            # values set, then this HistorySample is expected to have a mean
-            # value set (upon database insertion). If this isn't the case,
-            # leave a log message.
-            log.warning(
-                "bad history sample: mean is %s, data length is %s",
-                self.mean,
-                len(self.data),
-            )
-            return math.nan
-
-        # There is at least one data point, at most two data points. See
-        # https://github.com/conbench/conbench/issues/1118. Lacking a better
-        # rationale, for now return one of both data points. If these are two
-        # values and they have vastly different values, then this is a
-        # non-ideal situation anyway.
-        return self.data[0]
-
 
 def get_history_for_benchmark(benchmark_result_id: str):
     # First, find case / context / hardware / repo combination based on the
