@@ -27,6 +27,25 @@ class BokehPlotJSONOrError:
     reason_why_no_plot: Optional[str]
 
 
+class HistoryUserFacingError(Exception):
+    """
+    Raise this while building a benchmark result history. The resulting error
+    is meant to be user-facing and shown to the user in the UI or in the HTTP
+    API.
+
+    There are a number of aspects that may look 'wrong' while building history.
+    I believe that, fundamentally, not all aspects can be caught during
+    benchmark result submission. Quite a bit of validation can (should) be
+    performed during assembly of history.
+
+    It's an interesting question whether bad-looking items in the history
+    should silently be left out (e.g., a mismatching unit) or if the history
+    assembly should then fail. With the ability to mutate and delete individual
+    benchmark results, I think we should err towards strictness and generate
+    nice and precise errors.
+    """
+
+
 class TimeSeriesPlotMixin:
     def get_biggest_changes(self, benchmarks):
         benchmarks_by_id = {b["id"]: b for b in benchmarks}
@@ -475,8 +494,12 @@ def time_series_plot(
     width=1100,
 ):
     # log.info("Time series plot for:\n%s", json.dumps(samples, indent=2))
+    units = set([s.unit for s in samples])
+    if len(units) != 1:
+        raise HistoryUserFacingError(f"heterogenous set of units: {units}")
 
-    unit = samples[0].unit
+    unit = units.pop()
+
     with_dist = [s for s in samples if s.zscorestats.rolling_mean]
     inliers = [s for s in samples if not s.zscorestats.is_outlier]
     outliers = [s for s in samples if s.zscorestats.is_outlier]
