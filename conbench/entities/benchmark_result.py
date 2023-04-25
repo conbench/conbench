@@ -531,17 +531,6 @@ class BenchmarkResult(Base, EntityMixin):
         The indirection here through `self.run` is interesting, might trigger
         database interaction.
         """
-
-        # try:
-        #     # Note: is this jinja2 behavior? when this fails with
-        #     # Attribute error like
-        #     # 'BenchmarkResult' object has no attribute 'hardware'
-        #     # then the template does not crash, but shows no value.
-        #     print(type(self.hardware) + "f")
-        # except Exception as exc:
-        #     print("exc:", exc)
-        #     raise exc
-
         hw = self.run.hardware
         if len(hw.name) > 15:
             return f"{hw.id[:4]}: " + hw.name[:15]
@@ -621,8 +610,8 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
         for key, value in aggregates.items():
             result_data_for_db[key] = sigfig.round(value, sigfigs=5)
 
-            # Log upon conflict. Lett the automatically derived value win,
-            # to achieve consistency between the provided samples and the
+            # Log upon conflict. Let the automatically derived value win, to
+            # achieve consistency between the provided samples and the
             # aggregates.
             if key in stats_usergiven:
                 if not floatcomp(stats_usergiven[key], value):
