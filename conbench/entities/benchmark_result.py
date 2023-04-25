@@ -489,8 +489,16 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
 
     # Initialize all aggregate values explicitly to None -- values set below
     # must be meaningful.
+    # Initialize all aggregate values explicitly to None (except for `mean`,
+    # this has special treatment).
     for k in agg_keys:
         result_data_for_db[k] = None
+
+    # The `mean` is the only aggregate that is OK to be built for at least one
+    # data point (even if not that useful). That gives the guarantee that
+    # BenchmarkResult.mean is populated for all non-errored BenchmarkResults.
+    # See https://github.com/conbench/conbench/issues/1169
+    result_data_for_db["mean"] = np.mean(samples)
 
     if len(samples) >= 2:
         # There is a special case where for one sample the iteration count
@@ -509,7 +517,6 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
         aggregates = {
             "q1": q1,
             "q3": q3,
-            "mean": np.mean(samples),
             "median": np.median(samples),
             "min": np.min(samples),
             "max": np.max(samples),
