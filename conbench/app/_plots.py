@@ -474,6 +474,8 @@ def time_series_plot(
     inliers = [s for s in samples if not s.zscorestats.is_outlier]
     outliers = [s for s in samples if s.zscorestats.is_outlier]
 
+    has_outliers = len(outliers) > 0
+
     formatted, axis_unit = _should_format(
         [s.single_value_for_plot for s in samples], unit
     )
@@ -665,21 +667,22 @@ def time_series_plot(
         nonselection_line_alpha=1.0,
     )
 
-    scatter_outlier_mean_over_time = p.circle(
-        source=source_outlier_mean_over_time,
-        legend_label=f"outlier {label}",
-        name="outliers",
-        size=6,
-        line_color="#ccc",
-        fill_color="white",
-        line_width=1,
-        selection_color="#76bf5a",  # like bootstrap panel dff0d8, but darker
-        selection_line_color="#5da540",  # same green, again darker
-        # Cannot change the size upon selection
-        # selection_size=10,
-        nonselection_fill_alpha=1.0,
-        nonselection_line_alpha=1.0,
-    )
+    if has_outliers:
+        scatter_outlier_mean_over_time = p.circle(
+            source=source_outlier_mean_over_time,
+            legend_label=f"outlier {label}",
+            name="outliers",
+            size=6,
+            line_color="#ccc",
+            fill_color="white",
+            line_width=1,
+            selection_color="#76bf5a",  # like bootstrap panel dff0d8, but darker
+            selection_line_color="#5da540",  # same green, again darker
+            # Cannot change the size upon selection
+            # selection_size=10,
+            nonselection_fill_alpha=1.0,
+            nonselection_line_alpha=1.0,
+        )
 
     if multisample:
         # Do not show min-over-time when each benchmark reports at most one
@@ -771,11 +774,10 @@ def time_series_plot(
             )
             dist_change_in_legend = True
 
-    hover_renderers = [
-        scatter_mean_over_time,
-        scatter_outlier_mean_over_time,
-        cur_bench_mean_circle,
-    ]
+    hover_renderers = [scatter_mean_over_time, cur_bench_mean_circle]
+
+    if has_outliers:
+        hover_renderers.append(scatter_outlier_mean_over_time)
 
     if multisample:
         hover_renderers.append(cur_bench_min_circle)
