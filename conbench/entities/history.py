@@ -121,6 +121,14 @@ class HistorySample:
     # logic in BenchmarkResult.create() which is quite intransparent today,
     # also there is a lack of spec
     mean: Optional[float]
+    # Experimental: introduce 'singe value summary' concept. An item in history
+    # reflects a benchmark result, and that must have a single value
+    # representation for plotting and analysis. If it does not have that, it
+    # should not be part of history (this cannot be None). Initially this is
+    # equivalent to mean. For consumers to make sense of this, also add a
+    # string field carrying the name. the name of this.
+    svs: float
+    svs_type: str
     # math.nan is allowed for representing a failed iteration.
     data: List[float]
     times: List[float]
@@ -275,6 +283,14 @@ def get_history_for_cchr(
                 case_id=sample.case_id,
                 context_id=sample.context_id,
                 mean=sample.mean,
+                # Keep exposing the `mean` property like before. This was meant
+                # to be the single value summary, guaranteed to have a value
+                # set. So, actually read this from the new .svs property which
+                # still is the mean as of today. Do not read this from
+                # BenchmarkResult.mean, because this can be None.
+                mean=result.svs,
+                svs=result.svs,
+                svs_type=result.svs_type,  # hard-code for now
                 data=data,
                 times=times,
                 unit=sample.unit,
