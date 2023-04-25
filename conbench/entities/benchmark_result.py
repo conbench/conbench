@@ -551,22 +551,25 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
 
     agg_keys = ("q1", "q3", "mean", "median", "min", "max", "stdev", "iqr")
 
-    # Encode invariants.
-    samples = stats_usergiven["data"]
-    assert len(samples) > 0
-    for sa in samples:
-        assert sa is not None
-        assert sa != math.nan
+    # Encode invariants. It seems that marshmallow.fields.Decimal allows for
+    # both, str values and float values, and the test suite (at least today)
+    # might inject string values.
+    samples_input: List[Union[float, str]] = stats_usergiven["data"]
 
     # Proceed with float type.
-    samples = [float(s) for s in samples]
+    samples = [float(s) for s in samples_input]
+
+    for sa in samples:
+        assert not math.isnan(sa), sa
 
     # First copy the entire stats data structure (this includes times, data,
     # mean, min, ...). Later: selectively overwrite/augment.
     result_data_for_db = stats_usergiven.copy()
 
-    # Initialize all aggregate values explicitly to None -- values set below
-    # must be meaningful.
+    # And because numbers might have been provided as strings, make sure to
+    # normalize to List[float] here.
+    result_data_for_db["data"] = samples
+
     # Initialize all aggregate values explicitly to None (except for `mean`,
     # this has special treatment).
     for k in agg_keys:
