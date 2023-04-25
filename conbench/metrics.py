@@ -24,8 +24,6 @@ import flask
 import prometheus_client
 from prometheus_flask_exporter import NO_PREFIX, PrometheusMetrics
 
-from conbench import job
-
 log = logging.getLogger(__name__)
 
 
@@ -190,6 +188,9 @@ def periodically_set_q_rem() -> None:
     respect to their initialization state. For us, 0 is a special, allowed
     value and explicitly _not_ the initialization value.)
     """
+    # conbench.job ultimately depends on conbench.entities.commit, which imports this
+    # metrics module. Avoid circular import.
+    from conbench import job
 
     def func():
         log.info("periodically_set_q_rem(): initiate")
