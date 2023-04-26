@@ -854,12 +854,12 @@
                                 "fork_point": {
                                     "baseline_run_id": None,
                                     "commits_skipped": None,
-                                    "error": "the contender run is on the default branch",
+                                    "error": "the contender run is already on the default branch",
                                 },
-                                "head_of_default": {
+                                "latest_default": {
                                     "baseline_run_id": None,
                                     "commits_skipped": None,
-                                    "error": "the contender run is on the default branch",
+                                    "error": "the contender run is already on the default branch",
                                 },
                                 "parent": {
                                     "baseline_run_id": "598b44a1a3c94c63a4b17330c82c899e",
