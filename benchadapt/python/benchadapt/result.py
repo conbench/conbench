@@ -176,8 +176,10 @@ class BenchmarkResult:
         `None: <commit hash>`. Since `run_reason` and commit are required by the API,
         this should in most situations produce a reasonably useful `run_name`.
         """
-        if not self.run_name and self.github.get("commit"):
-            self.run_name = f"{self.run_reason}: {self.github['commit']}"
+        if not self.run_name:
+            if isinstance(self.github, dict):
+                if self.github.get("commit"):
+                    self.run_name = f"{self.run_reason}: {self.github['commit']}"
 
     @property
     def _github_property(self):
