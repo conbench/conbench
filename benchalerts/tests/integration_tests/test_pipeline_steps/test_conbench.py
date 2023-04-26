@@ -46,7 +46,7 @@ ConbenchClient = LegacyConbenchClient
         (
             "https://velox-conbench.voltrondata.run",
             "b74e7045fade737e39b0f9867bc8b8b23fe00b78",
-            BaselineRunCandidates.head_of_default,
+            BaselineRunCandidates.latest_default,
             1,
             None,
         ),

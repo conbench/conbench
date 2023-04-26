@@ -51,7 +51,7 @@
                 "commits_skipped": null,
                 "error": "the contender run is on the default branch"
             },
-            "head_of_default": {
+            "latest_default": {
                 "baseline_run_id": null,
                 "commits_skipped": null,
                 "error": "the contender run is on the default branch"

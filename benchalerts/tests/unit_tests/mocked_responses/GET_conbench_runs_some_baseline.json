@@ -51,7 +51,7 @@
                 "commits_skipped": [],
                 "error": null
             },
-            "head_of_default": {
+            "latest_default": {
                 "baseline_run_id": "another_baseline",
                 "commits_skipped": [],
                 "error": null

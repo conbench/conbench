@@ -18,7 +18,7 @@ class BaselineRunCandidates(Enum):
     """
 
     fork_point = "fork_point"
-    head_of_default = "head_of_default"
+    latest_default = "latest_default"
     parent = "parent"
 
 
