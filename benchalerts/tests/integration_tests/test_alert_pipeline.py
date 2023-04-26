@@ -75,10 +75,16 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
     # now a real pipeline
     pipeline_steps = [
         steps.GetConbenchZComparisonStep(
-            commit_hash=velox_commit, z_score_threshold=None, step_name="z_none"
+            commit_hash=velox_commit,
+            baseline_run_type=steps.conbench.BaselineRunCandidates.fork_point,
+            z_score_threshold=None,
+            step_name="z_none",
         ),
         steps.GetConbenchZComparisonStep(
-            commit_hash=velox_commit, z_score_threshold=500, step_name="z_500"
+            commit_hash=velox_commit,
+            baseline_run_type=steps.conbench.BaselineRunCandidates.fork_point,
+            z_score_threshold=500,
+            step_name="z_500",
         ),
         steps.GitHubStatusStep(
             repo=test_status_repo,
