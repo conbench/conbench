@@ -263,11 +263,14 @@ def validate_or_remove_github_commit_key(res_dict: Dict, strict=False):
 
     def _warn_or_raise():
         msg = (
-            "Entity not publishable! `github.repository` and `github.commit` "
-            "must be populated. You may pass github metadata via "
-            "CONBENCH_PROJECT_REPOSITORY, CONBENCH_PROJECT_COMMIT, "
-            "and CONBENCH_PR_NUMBER environment variables. "
-            f"\ngithub: {res_dict['github']}"
+            "This dictionary does not contain commit information. "
+            "This might be intended (for a so-called pre-merge benchmark "
+            "result). If it is not intended then you might be accidentally "
+            "missing out on those Conbench capabilities that associate "
+            "benchmark results with code changes. For automatically "
+            "adding commit information, set the CONBENCH_PROJECT_* family "
+            "of environment variables before dataclass instantiation (see API "
+            "docs for details)."
         )
         if strict:
             raise ValueError(msg)
