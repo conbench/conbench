@@ -193,7 +193,7 @@ class BenchmarkResult:
             value = _machine_info.detect_commit_info_from_local_git_or_raise()
         else:
             # Better: schema validation
-            if not value is None and not isinstance(value, dict):
+            if value is not None and not isinstance(value, dict):
                 raise Exception(f"unexpected value for `github` property: {value}")
 
         self._github_cache = value
