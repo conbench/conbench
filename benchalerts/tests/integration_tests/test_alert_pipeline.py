@@ -22,7 +22,6 @@ import benchalerts.pipeline_steps as steps
 from benchalerts import AlertPipeline
 
 
-@pytest.skip("Will fail until #1078 is deployed to these conbench instances")
 @pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)
 def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
     """While this test is running, you can watch
@@ -107,6 +106,7 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
             )
 
     pipeline = AlertPipeline(pipeline_steps)
+    pytest.skip("Will fail until #1078 is deployed to these conbench instances")
     outputs = pipeline.run_pipeline()
 
     assert outputs["GitHubStatusStep"]["state"] == "success"

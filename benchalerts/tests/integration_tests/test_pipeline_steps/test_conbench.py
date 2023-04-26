@@ -23,7 +23,6 @@ from benchalerts.pipeline_steps.conbench import (
 ConbenchClient = LegacyConbenchClient
 
 
-@pytest.skip("Will fail until #1078 is deployed to these conbench instances")
 @pytest.mark.parametrize(
     ["conbench_url", "commit", "baseline_type", "expected_len", "expected_bip"],
     [
@@ -80,6 +79,7 @@ def test_GetConbenchZComparisonStep(
         baseline_run_type=baseline_type,
         conbench_client=cb,
     )
+    pytest.skip("Will fail until #1078 is deployed to these conbench instances")
     full_comparison = step.run_step(previous_outputs={})
     assert len(full_comparison.run_comparisons) == expected_len
     for run in full_comparison.run_comparisons:
