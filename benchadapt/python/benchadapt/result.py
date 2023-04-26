@@ -274,13 +274,12 @@ def validate_or_remove_github_commit_key(res_dict: Dict, strict=False):
 
         warnings.warn(msg)
 
-    # For now, the decision is to send the result out, signaling to the
-    # Conbench API that this result has no repo/commit context. Maybe we should
-    # have the client tooling error out instead?
-    if "github" not in res_dict:
-        # API-wise, that's a valid state, signaling "no commit information
-        # present"
-        _warn_or_raise()
+    if res_dict["github"] is None:
+        # Tis means: "no commit information present", and this was desired by
+        # the user (i.e., be quiet and do as demanded by user). Normalize this
+        # state into the the one way to tell the Conbench HTTP API "no commit
+        # info": remove the key from the BenchmarkResult dict.
+        del res_dict["github"]
         return
 
     for checkkey in ("repository", "commit"):
