@@ -127,7 +127,7 @@ def detect_commit_info_from_local_git():
     and only supply the "pr_number" (or leave it None if it's a commit to the default
     branch).
     """
-    commit = _exec_command(["git", "rev-parse", "HEAD"])
+    commit = _exec_command(["git", "rev-parse", "HEAD"], ignore_error=False)
     if not commit:
         warnings.warn(
             "error in detect_commit_info_from_local_git(): probably not in a git repo; returning {}",
@@ -149,7 +149,9 @@ def detect_commit_info_from_local_git():
         _, branch_name, _, upstream, *_ = current_branch.split()
         if not upstream.startswith("["):
             remote = "origin"
-            branch = _exec_command(["git", "branch", "--show-current"])
+            branch = _exec_command(
+                ["git", "branch", "--show-current"], ignore_error=False
+            )
             warnings.warn(
                 f"error in detect_commit_info_from_local_git(): untracked branch; returning {branch=}",
                 GitParseWarning,
@@ -158,7 +160,7 @@ def detect_commit_info_from_local_git():
             remote = upstream[1:].split("/")[0]
             branch = branch_name
 
-    remote_url = _exec_command(["git", "remote", "get-url", remote])
+    remote_url = _exec_command(["git", "remote", "get-url", remote], ignore_error=False)
     fork = re.search("(?<=.com[/:])([^/]*?)(?=/)", remote_url).group(0)
 
     # Assumed to be all str values of non-zero length.
@@ -386,17 +388,26 @@ def _has_missing(info, mapping):
     return False
 
 
-def _exec_command(command):
+def _exec_command(command, ignore_error=True):
+    """
+    The ignore_error behavior is for legacy code, it's not advisable to
+    swallow error like this; really hard to debug.
+    """
     result = subprocess.run(command, capture_output=True)
 
     # Some of these failures are expected, i.e. the command not executing isn't
     # supposed to be fatal to this program here. However, it makes sense to log
     # information about how exactly the child process invocation failed.
     if result.returncode != 0:
-        log.info(
-            "child process returned with code %s, stderr prefix:\n %s",
+        log.warning(
+            "command `%s` returned with code %s, stderr prefix:\n %s",
+            command,
             result.returncode,
             result.stderr.decode("utf-8").strip()[:500],
         )
+        if not ignore_error:
+            raise Exception(
+                "command unexpectedly returned with non-zero exit code, see log for details"
+            )
 
     return result.stdout.decode("utf-8").strip()
