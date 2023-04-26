@@ -43,7 +43,10 @@ build_url = (
 # Create a pipeline to update a GitHub Check
 pipeline = AlertPipeline(
     steps=[
-        steps.GetConbenchZComparisonStep(commit_hash=commit_hash),
+        steps.GetConbenchZComparisonStep(
+            commit_hash=commit_hash,
+            baseline_run_type=steps.BaselineRunCandidates.fork_point,
+        ),
         steps.GitHubCheckStep(repo=repo),
     ],
     error_handlers=[
