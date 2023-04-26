@@ -52,7 +52,7 @@ class TestBenchmarkRun:
                 machine_info=None, cluster_info=None, github=run_json["github"]
             ).to_publishable_dict()
 
-    def test_github_detection(self, monkeypatch):
+    def test_commit_detection(self, monkeypatch):
         monkeypatch.setenv(
             "CONBENCH_PROJECT_REPOSITORY", run_json["github"]["repository"]
         )
@@ -68,7 +68,7 @@ class TestBenchmarkRun:
 
         with pytest.raises(
             ValueError,
-            match="Entity not publishable! `github.repository` and `github.commit` must be populated",
+            match="dictionary does not contain commit information",
         ):
             BenchmarkRun().to_publishable_dict()
 
@@ -85,10 +85,29 @@ class TestBenchmarkRun:
         monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY", raising=False)
         monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER", raising=False)
         monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
-
         run = BenchmarkRun(reason=run_json["reason"])
         assert run.github == {}
-
         assert run.name is None
         run.github = run_json["github"]
         assert run.name == f"{run_json['reason']}: {run_json['github']['commit']}"
+
+    def test_commit_info_do_not_send(self, monkeypatch):
+        monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY", raising=False)
+        monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER", raising=False)
+        monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
+        run = BenchmarkRun()
+        with pytest.raises(
+            ValueError,
+            match="dictionary does not contain commit information",
+        ):
+            run.to_publishable_dict()
+
+        # We're OK not sending commit info.
+        run = BenchmarkRun(github=None)
+        d = run.to_publishable_dict()
+        assert "github" not in d
+
+    def test_commit_info_from_local_git(self):
+        run = BenchmarkRun(github="inspect_git_in_cwd")
+        d = run.to_publishable_dict()
+        assert d["github"]["repository"] == "https://github.com/conbench/conbench"
