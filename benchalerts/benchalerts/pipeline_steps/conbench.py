@@ -12,24 +12,6 @@ from ..conbench_dataclasses import FullComparisonInfo, RunComparisonInfo
 ConbenchClient = LegacyConbenchClient
 
 
-CONBENCH_ENV_VAR_HELP = """
-
-    Notes
-    -----
-    Environment variables
-    ~~~~~~~~~~~~~~~~~~~~~
-    ``CONBENCH_URL``
-        The URL of the Conbench server. Only required if ``conbench_client`` is not
-        provided.
-    ``CONBENCH_EMAIL``
-        The email to use for Conbench login. Only required if ``conbench_client`` is not
-        provided and the server is private.
-    ``CONBENCH_PASSWORD``
-        The password to use for Conbench login. Only required if ``conbench_client`` is
-        not provided and the server is private.
-"""
-
-
 class BaselineRunCandidates(Enum):
     """Types of baselines available from `/api/runs/{run_id}` in the
     `candidate_baseline_runs` field.
@@ -41,8 +23,7 @@ class BaselineRunCandidates(Enum):
 
 
 class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
-    (
-        """An ``AlertPipeline`` step to get information from Conbench comparing run(s) to
+    """An ``AlertPipeline`` step to get information from Conbench comparing run(s) to
     their baselines, using a z-score threshold. This is always the first step of the
     pipeline.
 
@@ -68,9 +49,21 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
     FullComparisonInfo
         Information about each run associated with the contender commit, and a
         comparison to its baseline run if that exists.
+
+    Notes
+    -----
+    Environment variables
+    ~~~~~~~~~~~~~~~~~~~~~
+    ``CONBENCH_URL``
+        The URL of the Conbench server. Only required if ``conbench_client`` is not
+        provided.
+    ``CONBENCH_EMAIL``
+        The email to use for Conbench login. Only required if ``conbench_client`` is not
+        provided and the server is private.
+    ``CONBENCH_PASSWORD``
+        The password to use for Conbench login. Only required if ``conbench_client`` is
+        not provided and the server is private.
     """
-        + CONBENCH_ENV_VAR_HELP
-    )
 
     def __init__(
         self,
@@ -135,8 +128,7 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
 
 
 class GetConbenchZComparisonStep(GetConbenchZComparisonForRunsStep):
-    (
-        """An ``AlertPipeline`` step to get information from Conbench comparing the runs on
+    """An ``AlertPipeline`` step to get information from Conbench comparing the runs on
     a contender commit to their baselines, using a z-score threshold. This is always the
     first step of the pipeline.
 
@@ -164,9 +156,21 @@ class GetConbenchZComparisonStep(GetConbenchZComparisonForRunsStep):
     FullComparisonInfo
         Information about each run associated with the contender commit, and a
         comparison to its baseline run if that exists.
+
+    Notes
+    -----
+    Environment variables
+    ~~~~~~~~~~~~~~~~~~~~~
+    ``CONBENCH_URL``
+        The URL of the Conbench server. Only required if ``conbench_client`` is not
+        provided.
+    ``CONBENCH_EMAIL``
+        The email to use for Conbench login. Only required if ``conbench_client`` is not
+        provided and the server is private.
+    ``CONBENCH_PASSWORD``
+        The password to use for Conbench login. Only required if ``conbench_client`` is
+        not provided and the server is private.
     """
-        + CONBENCH_ENV_VAR_HELP
-    )
 
     def __init__(
         self,

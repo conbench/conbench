@@ -47,7 +47,10 @@ pipeline = AlertPipeline(
             commit_hash=commit_hash,
             baseline_run_type=steps.BaselineRunCandidates.fork_point,
         ),
-        steps.GitHubCheckStep(repo=repo),
+        steps.GitHubCheckStep(
+            comparison_step_name="GetConbenchZComparisonStep",
+            repo=repo
+        ),
     ],
     error_handlers=[
         steps.GitHubCheckErrorHandler(
