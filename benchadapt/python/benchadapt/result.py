@@ -288,6 +288,11 @@ def validate_or_remove_github_commit_key(res_dict: Dict, strict=False):
         del res_dict["github"]
         return
 
+    # Note(JP): this is basically non-strict schema validation with the
+    # following behavior: "ok, it looks like you wanted to send commit
+    # information, but you didn't do it properly, and now I pretend as if
+    # you really didn't want to do that, but I emit a bit of a warning".
+    # We should make this stricter in the future.
     for checkkey in ("repository", "commit"):
         if checkkey not in res_dict["github"]:
             _warn_or_raise()
