@@ -2,7 +2,7 @@ import datetime
 import uuid
 import warnings
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union, Literal
 
 from . import _machine_info
 
@@ -63,18 +63,45 @@ class BenchmarkResult:
         For benchmarks run on a cluster, information about the cluster
     context : Dict[str, Any]
         Should include ``benchmark_language`` and other relevant metadata like compiler flags
-    github : Dict[str, Any]
-        Keys: ``repository`` (in the format ``org/repo``), ``commit``, and ``pr_number``.
-        If this is a benchmark on the default branch, you may leave out ``pr_number``.
-        If it's a non-default-branch & non-PR commit, you may supply the branch name to
-        the optional ``branch`` key in the format ``org:branch``.
+    github : Union[Optional[Dict[str, Any]], Literal["inspect_git_in_cwd"]
 
-        By default, metadata will be obtained from ``CONBENCH_PROJECT_REPOSITORY``,
-        ``CONBENCH_PROJECT_COMMIT``, and ``CONBENCH_PROJECT_PR_NUMBER`` environment variables.
-        If any are unset, a warning will be raised.
+        A dictionary containing GitHub-flavored commit information.
 
-        Advanced: if you have a locally cloned repo, you may explicitly supply ``None``
-        to this argument and its information will be scraped from the cloned repo.
+        Allowed values: `None`, no value, a dictionary.
+
+        Not passing an argument upon dataclass construction results in inspection
+        of the environment variables ``CONBENCH_PROJECT_REPOSITORY``,
+        ``CONBENCH_PROJECT_COMMIT``, and ``CONBENCH_PROJECT_PR_NUMBER``.
+        If any of those are not set, a warning is raised.
+
+        Passing `None` explicitly defines that this result is not associated
+        with any commit.
+
+        Not associating a benchmark result with commit information has special,
+        limited purpose (pre-merge benchmarks, testing). It generally means
+        that this benchmark result will not be considered for time series
+        analysis along a commit tree.
+
+        If passed a dictionary, it should have the following keys:
+        - required: ``repository`` (string, in the format ``https://github.com/<org>/<repo>``)
+        - required: ``commit`` (string, the full commit hash)
+        - recommended: ``pr_number`` (stringified integer) or ``branch`` (string)
+
+        If the benchmark was run gainst the default branch, you may leave
+        out ``pr_number`` and ``branch``.
+
+        If it was run on a GitHub pull request branch, you should provide the
+        ``pr_number``.
+
+        If it was run on a non-default branch and a non-PR commit, you may
+        supply the branch name via the ``branch`` set to a value of the format
+        ``org:branch``.
+
+        Deprecated: pass the special value "inspect_git_in_cwd" to try to
+        attempt commit hash / remote URL / branch information from a .git
+        directory in the current working directory via executing git commands
+        as child processes. This raises an exception when any of the commands
+        fails.
 
     Notes
     -----
@@ -135,7 +162,7 @@ class BenchmarkResult:
     machine_info: Dict[str, Any] = field(default_factory=_machine_info.machine_info)
     cluster_info: Dict[str, Any] = None
     context: Dict[str, Any] = field(default_factory=dict)
-    github: Dict[str, str] = field(
+    github: Union[Optional[Dict[str, str]], Literal["inspect_git_in_cwd"]] = field(
         default_factory=_machine_info.gh_commit_info_from_env
     )
 
