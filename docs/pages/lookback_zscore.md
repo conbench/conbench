@@ -27,7 +27,7 @@ The maximum number of commits used is defined by the Conbench server's `DISTRIBU
 In certain cases, there will be fewer than this number: if there are not that many commits in the ancestry, or if a distribution change was annotated by someone acting as a data curator -- see below for more details.
 
 In some cases (e.g. navigating the UI, or generating alerts with the `benchalerts` library), Conbench will provide the user with a sensible baseline commit.
-See [the docs](https://conbench.github.io/conbench/pages/benchmarking_and_the_dev_process.html) for the reasoning about this.
+See [the docs](benchmarking_and_the_dev_process.md) for the reasoning about this.
 
 - If the contender is on a PR branch, the sensible baseline commit is the point at which the PR branch forked from the default branch.
 - If the contender is on the default branch, the sensible baseline commit is the parent commit.
