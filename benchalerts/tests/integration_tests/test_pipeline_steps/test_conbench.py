@@ -24,12 +24,13 @@ ConbenchClient = LegacyConbenchClient
 
 
 @pytest.mark.parametrize(
-    ["conbench_url", "commit", "expected_len", "expected_bip"],
+    ["conbench_url", "commit", "baseline_type", "expected_len", "expected_bip"],
     [
         # baseline is parent
         (
             "https://conbench.ursa.dev/",
             "bc7de406564fa7b2bcb9bf055cbaba31ca0ca124",
+            BaselineRunCandidates.parent,
             8,
             True,
         ),
@@ -37,6 +38,7 @@ ConbenchClient = LegacyConbenchClient
         (
             "https://velox-conbench.voltrondata.run",
             "2319922d288c519baa3bffe59c0bedbcb6c827cd",
+            BaselineRunCandidates.fork_point,
             1,
             False,
         ),
@@ -44,6 +46,7 @@ ConbenchClient = LegacyConbenchClient
         (
             "https://velox-conbench.voltrondata.run",
             "b74e7045fade737e39b0f9867bc8b8b23fe00b78",
+            BaselineRunCandidates.head_of_default,
             1,
             None,
         ),
@@ -51,13 +54,19 @@ ConbenchClient = LegacyConbenchClient
         (
             "https://conbench.ursa.dev",
             "9fa34df27eb1445ac11b0ab0298d421b04be80f7",
+            BaselineRunCandidates.parent,
             7,
             True,
         ),
     ],
 )
 def test_GetConbenchZComparisonStep(
-    monkeypatch: pytest.MonkeyPatch, conbench_url, commit, expected_len, expected_bip
+    monkeypatch: pytest.MonkeyPatch,
+    conbench_url,
+    commit,
+    baseline_type,
+    expected_len,
+    expected_bip,
 ):
     if "ursa" in conbench_url:
         pytest.skip(
@@ -67,7 +76,7 @@ def test_GetConbenchZComparisonStep(
     cb = ConbenchClient()
     step = GetConbenchZComparisonStep(
         commit_hash=commit,
-        baseline_run_type=BaselineRunCandidates.parent,
+        baseline_run_type=baseline_type,
         conbench_client=cb,
     )
     full_comparison = step.run_step(previous_outputs={})
