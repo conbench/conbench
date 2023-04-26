@@ -252,13 +252,16 @@ class BenchmarkResult:
 
 def validate_or_remove_github_commit_key(res_dict: Dict, strict=False):
     """
-    Mutate BenchmarkResult dictionary in-place to make its `github` key
-    property be compliant with the Conbench HTTP API.
+    Mutate BenchmarkResult dictionary (result of asdict(self)) in-place to make
+    its `github` key property be compliant with the Conbench HTTP API:
+    - Remove it when it's set to `None` (silently)
+    - Remove it when it doesn't look good (but also emit a warning)
 
-    Not providing the `github` key in result dictionary tells Conbench that
+    Not providing the `github` key in the result dictionary tells Conbench that
     this result is commit-context-less (recording it in Conbench might be
-    useful for debugging and testing purposes, but generally we should make
-    clear that this implies missing out on critical features/purpose).
+    useful for e.g. the special pre-merge capability, as well as for debugging
+    and testing purposes, but generally we should make clear that this might
+    imply to accidentally miss out on features/value).
     """
 
     def _warn_or_raise():
