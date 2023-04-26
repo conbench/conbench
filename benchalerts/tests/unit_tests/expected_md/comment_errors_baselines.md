@@ -1,3 +1,5 @@
+Conbench analyzed the 3 benchmark runs on commit `abc`.
+
 There were 3 benchmark results with an error:
 
 - Some Run Reason Run at [2021-02-04 17:22:05.225583](http://localhost/compare/runs/some_contender...some_contender/)
