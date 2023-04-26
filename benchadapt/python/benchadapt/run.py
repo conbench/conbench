@@ -1,7 +1,7 @@
 import uuid
 import warnings
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union, Literal
 
 from . import _machine_info
 from .result import validate_or_remove_github_commit_key
@@ -35,17 +35,7 @@ class BenchmarkRun:
     cluster_info : Dict[str, Any]
         For benchmarks run on a cluster, information about the cluster
     github : Dict[str, Any]
-        Keys: ``repository`` (in the format ``org/repo``), ``commit``, and ``pr_number``.
-        If this is a benchmark on the default branch, you may leave out ``pr_number``.
-        If it's a non-default-branch & non-PR commit, you may supply the branch name to
-        the optional ``branch`` key in the format ``org:branch``.
-
-        By default, metadata will be obtained from ``CONBENCH_PROJECT_REPOSITORY``,
-        ``CONBENCH_PROJECT_COMMIT``, and ``CONBENCH_PROJECT_PR_NUMBER`` environment variables.
-        If any are unset, a warning will be raised.
-
-        Advanced: if you have a locally cloned repo, you may explicitly supply ``None``
-        to this argument and its information will be scraped from the cloned repo.
+        See BenchmarkResult.
     finished_timestamp : str
         Timestamp the run finished, in ISO format, UTC or with timezone offset
     error_type: str
@@ -86,7 +76,7 @@ class BenchmarkRun:
     info: Dict[str, Any] = field(default_factory=dict)
     machine_info: Dict[str, Any] = field(default_factory=_machine_info.machine_info)
     cluster_info: Dict[str, Any] = None
-    github: Dict[str, Any] = field(
+    github: Union[Optional[Dict[str, str]], Literal["inspect_git_in_cwd"]] = field(
         default_factory=_machine_info.gh_commit_info_from_env
     )
     finished_timestamp: str = None
@@ -103,17 +93,26 @@ class BenchmarkRun:
         `None: <commit hash>`. Since reason and commit are required by the API, this
         should in most situations produce a reasonably useful `name`.
         """
-        if not self.name and self.github.get("commit"):
-            self.name = f"{self.reason}: {self.github['commit']}"
+        if not self.name:
+            if isinstance(self.github, dict):
+                if self.github.get("commit"):
+                    self.name = f"{self.reason}: {self.github['commit']}"
 
     @property
     def _github_property(self):
         return self._github_cache
 
     @_github_property.setter
-    def _github_property(self, value: Optional[dict]):
-        if value is None:
-            value = _machine_info.detect_commit_info_from_local_git()
+    def _github_property(
+        self, value: Union[Optional[Dict[str, str]], Literal["inspect_git_in_cwd"]]
+    ):
+        if value == "inspect_git_in_cwd":
+            value = _machine_info.detect_commit_info_from_local_git_or_raise()
+        else:
+            # Better: schema validation
+            if not value is None and not isinstance(value, dict):
+                raise Exception(f"unexpected value for `github` property: {value}")
+
         self._github_cache = value
         self._maybe_set_name()
 
