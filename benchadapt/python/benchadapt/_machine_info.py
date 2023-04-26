@@ -118,7 +118,7 @@ def gh_commit_info_from_env() -> Dict[str, str]:
     return result
 
 
-def detect_commit_info_from_local_git():
+def detect_commit_info_from_local_git_or_raise():
     """Attempts to inspect a locally cloned repository for git information that can be
     posted to the "github" key when creating a run.
 
