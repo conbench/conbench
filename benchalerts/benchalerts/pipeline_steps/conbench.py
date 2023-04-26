@@ -51,7 +51,7 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
     run_ids
         A list of Conbench run IDs of the runs to compare.
     baseline_run_type
-        The type of baseline to use. See ``BaselineCandidates`` for options.
+        The type of baseline to use. See ``BaselineRunCandidates`` for options.
     z_score_threshold
         The (positive) z-score threshold to send to the Conbench compare endpoint.
         Benchmarks with a z-score more extreme than this threshold will be marked as
