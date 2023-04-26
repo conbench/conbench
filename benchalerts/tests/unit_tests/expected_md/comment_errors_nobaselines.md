@@ -1,3 +1,5 @@
+Conbench analyzed the 2 benchmark runs on commit `no_basel`.
+
 There were 2 benchmark results with an error:
 
 - Some Run Reason Run at [2021-02-04 17:22:05.225583](http://localhost/runs/some_contender)

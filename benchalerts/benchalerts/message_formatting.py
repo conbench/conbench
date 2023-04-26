@@ -140,7 +140,16 @@ def pr_comment_link_to_check(
     full_comparison: FullComparisonInfo, check_link: str
 ) -> str:
     """Generate a GitHub PR comment that summarizes and links to a GitHub Check."""
-    comment = ""
+    s = _Pluralizer(full_comparison.run_comparisons).s
+    comment = (
+        _clean(
+            f"""
+            Conbench analyzed the {len(full_comparison.run_comparisons)} benchmark
+            run{s} on commit `{full_comparison.commit_hash[:8]}`.
+            """
+        )
+        + "\n\n"
+    )
 
     if full_comparison.benchmarks_with_errors:
         pluralizer = _Pluralizer(full_comparison.benchmarks_with_errors)
