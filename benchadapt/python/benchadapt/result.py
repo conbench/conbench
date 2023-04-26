@@ -220,7 +220,7 @@ def validate_or_remove_github_commit_key(res_dict: Dict, strict=False):
     property be compliant with the Conbench HTTP API.
 
     Not providing the `github` key in result dictionary tells Conbench that
-    this result is commit context-less (recording it in Conbench might be
+    this result is commit-context-less (recording it in Conbench might be
     useful for debugging and testing purposes, but generally we should make
     clear that this implies missing out on critical features/purpose).
     """
