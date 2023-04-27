@@ -76,7 +76,7 @@ class BenchmarkRun:
     info: Dict[str, Any] = field(default_factory=dict)
     machine_info: Dict[str, Any] = field(default_factory=_machine_info.machine_info)
     cluster_info: Dict[str, Any] = None
-    github: Union[Optional[Dict[str, str]], Literal["inspect_git_in_cwd"]] = field(
+    github: Optional[Dict[str, str]] = field(
         default_factory=_machine_info.gh_commit_info_from_env
     )
     finished_timestamp: str = None
@@ -106,12 +106,9 @@ class BenchmarkRun:
     def _github_property(
         self, value: Union[Optional[Dict[str, str]], Literal["inspect_git_in_cwd"]]
     ):
-        if value == "inspect_git_in_cwd":
-            value = _machine_info.detect_commit_info_from_local_git_or_raise()
-        else:
-            # Better: schema validation
-            if value is not None and not isinstance(value, dict):
-                raise Exception(f"unexpected value for `github` property: {value}")
+        # Better: schema validation
+        if value is not None and not isinstance(value, dict):
+            raise Exception(f"unexpected value for `github` property: {value}")
 
         self._github_cache = value
         self._maybe_set_name()

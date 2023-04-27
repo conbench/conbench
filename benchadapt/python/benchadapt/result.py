@@ -63,7 +63,7 @@ class BenchmarkResult:
         For benchmarks run on a cluster, information about the cluster
     context : Dict[str, Any]
         Should include ``benchmark_language`` and other relevant metadata like compiler flags
-    github : Union[Optional[Dict[str, Any]], Literal["inspect_git_in_cwd"]
+    github : Optional[Dict[str, Any]]
 
         A dictionary containing GitHub-flavored commit information.
 
@@ -96,12 +96,6 @@ class BenchmarkResult:
         If it was run on a non-default branch and a non-PR commit, you may
         supply the branch name via the ``branch`` set to a value of the format
         ``org:branch``.
-
-        Deprecated: pass the special value "inspect_git_in_cwd" to try to
-        attempt commit hash / remote URL / branch information from a .git
-        directory in the current working directory via executing git commands
-        as child processes. This raises an exception when any of the commands
-        fails.
 
     Notes
     -----
@@ -162,11 +156,13 @@ class BenchmarkResult:
     machine_info: Dict[str, Any] = field(default_factory=_machine_info.machine_info)
     cluster_info: Dict[str, Any] = None
     context: Dict[str, Any] = field(default_factory=dict)
-    github: Union[Optional[Dict[str, str]], Literal["inspect_git_in_cwd"]] = field(
+    github: Optional[Dict[str, str]] = field(
         default_factory=_machine_info.gh_commit_info_from_env
     )
 
     def __post_init__(self) -> None:
+        # if self.github == "inspect_git_in_cwd":
+        #    self.github = _machine_info.detect_commit_info_from_local_git_or_raise()
         self._maybe_set_run_name()
 
     def _maybe_set_run_name(self) -> None:
@@ -189,12 +185,9 @@ class BenchmarkResult:
     def _github_property(
         self, value: Union[Optional[Dict[str, str]], Literal["inspect_git_in_cwd"]]
     ):
-        if value == "inspect_git_in_cwd":
-            value = _machine_info.detect_commit_info_from_local_git_or_raise()
-        else:
-            # Better: schema validation
-            if value is not None and not isinstance(value, dict):
-                raise Exception(f"unexpected value for `github` property: {value}")
+        # Better: schema validation
+        if value is not None and not isinstance(value, dict):
+            raise Exception(f"unexpected value for `github` property: {value}")
 
         self._github_cache = value
         self._maybe_set_run_name()

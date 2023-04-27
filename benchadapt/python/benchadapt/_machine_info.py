@@ -118,59 +118,6 @@ def gh_commit_info_from_env() -> Dict[str, str]:
     return result
 
 
-def detect_commit_info_from_local_git_or_raise():
-    """Attempts to inspect a locally cloned repository for git information that can be
-    posted to the "github" key when creating a run.
-
-    It's recommended to NOT use this function, and instead manually supply the commit
-    and repository (in the form "org/repo"). When doing so, ignore the "branch" key
-    and only supply the "pr_number" (or leave it None if it's a commit to the default
-    branch).
-    """
-    commit = _exec_command(["git", "rev-parse", "HEAD"], ignore_error=False)
-    if not commit:
-        warnings.warn(
-            "error in detect_commit_info_from_local_git(): probably not in a git repo; returning {}",
-            GitParseWarning,
-        )
-        return {}
-
-    branches = _exec_command(["git", "branch", "-vv"])
-    if "* (HEAD detached" in branches:
-        remote = "origin"
-        branch = "<DETATCHED BRANCH>"
-        warnings.warn(
-            f"error in detect_commit_info_from_local_git(): detached HEAD; returning {branch=}",
-            GitParseWarning,
-        )
-
-    else:
-        current_branch = [b for b in branches.split("\n") if b.startswith("*")][0]
-        _, branch_name, _, upstream, *_ = current_branch.split()
-        if not upstream.startswith("["):
-            remote = "origin"
-            branch = _exec_command(
-                ["git", "branch", "--show-current"], ignore_error=False
-            )
-            warnings.warn(
-                f"error in detect_commit_info_from_local_git(): untracked branch; returning {branch=}",
-                GitParseWarning,
-            )
-        else:
-            remote = upstream[1:].split("/")[0]
-            branch = branch_name
-
-    remote_url = _exec_command(["git", "remote", "get-url", remote], ignore_error=False)
-    fork = re.search("(?<=.com[/:])([^/]*?)(?=/)", remote_url).group(0)
-
-    # Assumed to be all str values of non-zero length.
-    return {
-        "commit": commit,
-        "repository": remote_url.rsplit(".git")[0],
-        "branch": f"{fork}:{branch}",
-    }
-
-
 def machine_info(host_name: Optional[str] = None):
     os_name, os_version = platform.platform(terse=True).split("-", maxsplit=1)
 

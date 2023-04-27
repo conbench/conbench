@@ -125,8 +125,3 @@ class TestBenchmarkResult:
         result = BenchmarkResult(github=res_json["github"])
         assert result.machine_info["name"] == machine_info_name
         assert result.machine_info["name"] != res_json["machine_info"]["name"]
-
-    def test_commit_info_from_local_git(self):
-        run = BenchmarkResult(github="inspect_git_in_cwd")
-        d = run.to_publishable_dict()
-        assert d["github"]["repository"] == "https://github.com/conbench/conbench"

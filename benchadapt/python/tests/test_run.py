@@ -106,8 +106,3 @@ class TestBenchmarkRun:
         run = BenchmarkRun(github=None)
         d = run.to_publishable_dict()
         assert "github" not in d
-
-    def test_commit_info_from_local_git(self):
-        run = BenchmarkRun(github="inspect_git_in_cwd")
-        d = run.to_publishable_dict()
-        assert d["github"]["repository"] == "https://github.com/conbench/conbench"
