@@ -44,7 +44,7 @@
               <td class="font-monospace">{{ result.context.id[:8] }}</td>
               <td class="font-monospace">{{ result.ui_non_null_sample_count }}</td>
               <td class="font-monospace">{{ result.ui_mean_and_uncertainty }}</td>
-              <td class="font-monospace">{{ result.ui_rel_sem }}</td>
+              <td class="font-monospace" data-order="{{ result.ui_rel_sem[0] }}">{{ result.ui_rel_sem[1] }}</td>
             </tr>
           {% endfor %}
         </tbody>
