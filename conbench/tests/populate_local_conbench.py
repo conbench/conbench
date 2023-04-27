@@ -70,7 +70,7 @@ def generate_benchmarks_data(
     timestamp,
     hardware_type,
     reason,
-    mean=16.670462,
+    measurements=["14.928533", "14.551965", "14.530887"],
     repo_url="https://github.com/apache/arrow",
 ):
     """
@@ -99,16 +99,8 @@ def generate_benchmarks_data(
         "run_id": str(run_id),
         "run_name": run_name,
         "stats": {
-            "data": ["14.928533", "14.551965", "14.530887"],
-            "iqr": "0.198823",
-            "iterations": 3,
-            "max": "14.928533",
-            "mean": mean,
-            "median": "16.551965",
-            "min": "14.530887",
-            "q1": "14.541426",
-            "q3": "14.740249",
-            "stdev": "0.223744",
+            "data": measurements,
+            "iterations": len(measurements),
             "time_unit": "s",
             "times": [],
             "unit": "s",
@@ -218,25 +210,20 @@ def generate_benchmarks_data_with_iteration_missing(
     with_error=True,
 ):
     data = generate_benchmarks_data(
-        run_id,
-        commit,
-        branch,
-        benchmark_name,
-        benchmark_language,
-        timestamp,
-        hardware_type,
-        reason,
-        repo_url,
+        run_id=run_id,
+        commit=commit,
+        branch=branch,
+        benchmark_name=benchmark_name,
+        benchmark_language=benchmark_language,
+        timestamp=timestamp,
+        hardware_type=hardware_type,
+        reason=reason,
+        repo_url=repo_url,
     )
     stats = data.pop("stats")
-
+    # assume each result has three data points,
     # mark the middle iteration as failed
     stats["data"] = [stats["data"][0], None, stats["data"][2]]
-
-    # remove all the calculated stats details
-    for key in ["iqr", "max", "mean", "median", "min", "q1", "q3", "stdev"]:
-        stats.pop(key, None)
-
     data["stats"] = stats
     if with_error:
         data["error"] = {"command": "some command", "stack trace": "stack trace ..."}
@@ -288,7 +275,6 @@ def post_benchmark_result(data):
             # takes too long. Also see
             # https://github.com/conbench/conbench/issues/555
             res = session.post(url, json=data)
-            benchmark_result_id = res.json()["id"]
             break
         except requests.exceptions.RequestException as exc:
             log.info(
@@ -297,7 +283,7 @@ def post_benchmark_result(data):
                 exc,
                 time.monotonic() - t0,
             )
-            time.sleep(5 * attempt)
+            time.sleep(1 * attempt)
 
     log.info(
         f"Posted a benchmark with run_id '{data.get('run_id')}' "
@@ -308,6 +294,9 @@ def post_benchmark_result(data):
 
     if str(res.status_code).startswith("4"):
         log.info("4xx response body: %s", res.text)
+        log.info("request body was: %s", data)
+
+    benchmark_result_id = res.json()["id"]
 
     return benchmark_result_id
 
@@ -339,8 +328,11 @@ def create_benchmarks_data():
 
     branches = ["apache:main", None] * 3
 
-    means = [16.670462, 16.4, 16.5, 16.67, 16.7, 16.7]
+    # means = [16.670462, 16.4, 16.5, 16.67, 16.7, 16.7]
 
+    measurement_lists = [[16.5], [16.670462], [16.4], [16.5], [16.67], [16.7]]
+
+    # What is this doing?
     errors = [False, False, True, False, True, True]
 
     reasons = ["commit", None, "pull request", "nightly", "manual", "an accident"]
@@ -353,38 +345,37 @@ def create_benchmarks_data():
 
     runs = []
 
-    for i in range(len(commits)):
+    for i, commit_hash in enumerate(commits):
         for hardware_type in hardware_types:
             for benchmark_language in benchmark_languages:
                 for benchmark_name in benchmark_names:
                     run_id = f"run-on-{hardware_type}-{i+1}"
-                    commit, branch = commits[i], branches[i]
-                    mean, reason = means[i], reasons[i]
+                    measurements, reason = measurement_lists[i], reasons[i]
                     timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
                     if errors[i] and benchmark_name == "csv-read":
                         benchmark_data = generate_benchmarks_data_with_error(
-                            run_id,
-                            commit,
-                            branch,
-                            benchmark_name,
-                            benchmark_language,
-                            timestamp,
-                            hardware_type,
-                            reason,
+                            run_id=run_id,
+                            commit=commit_hash,
+                            branch=branches[i],
+                            benchmark_name=benchmark_name,
+                            benchmark_language=benchmark_language,
+                            timestamp=timestamp,
+                            hardware_type=hardware_type,
+                            reason=reason,
                             repo_url="https://github.com/apache/arrow",
                         )
                     else:
                         benchmark_data = generate_benchmarks_data(
-                            run_id,
-                            commit,
-                            branch,
-                            benchmark_name,
-                            benchmark_language,
-                            timestamp,
-                            hardware_type,
-                            reason,
-                            mean,
+                            run_id=run_id,
+                            commit=commit_hash,
+                            branch=branches[i],
+                            benchmark_name=benchmark_name,
+                            benchmark_language=benchmark_language,
+                            timestamp=timestamp,
+                            hardware_type=hardware_type,
+                            reason=reason,
                             repo_url="https://github.com/apache/arrow",
+                            measurements=measurements,
                         )
 
                     # Is this actually posting _one_ benchmark result or
@@ -408,36 +399,36 @@ def create_benchmarks_data_with_history():
         "88b42ef66fe664043c5ee5274b2982a3858b414e",
     ]
 
-    means = [16.5, 16.670462, 16.4, 16.5, 16.67, 16.7]
-
+    measurement_lists = [[16.5], [16.670462], [16.4], [16.5], [16.67], [16.7]]
     benchmark_names = ["csv-read", "csv-write"]
-
     partial_successes = [False, True]
-
     runs = []
-
     benchmark_result_ids = []
 
     i = 0
     n = 0
     for commit in commits:
-        mean = means[i]
+        measurements = measurement_lists[i]
+        # mean = means[i]
         i += 1
         for partial_success in partial_successes:
             n += 1
+            # for i, commit in enumerate(commits):
+            #     measurements = measurement_lists[i]
+            #     for n, partial_success in enumerate(partial_successes):
             run_id = f"history_machine{n}"
 
             for benchmark_name in benchmark_names:
                 timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
                 if partial_success:
                     benchmark_data = generate_benchmarks_data_with_iteration_missing(
-                        run_id,
-                        commit,
-                        None,
-                        benchmark_name,
-                        "Python",
-                        timestamp,
-                        "machine",
+                        run_id=run_id,
+                        commit=commit,
+                        branch=None,
+                        benchmark_name=benchmark_name,
+                        benchmark_language="Python",
+                        timestamp=timestamp,
+                        hardware_type="machine",
                         repo_url="https://github.com/apache/arrow",
                         reason="commit",
                         # in order to see the auto-populating of errors on partial completes
@@ -445,15 +436,15 @@ def create_benchmarks_data_with_history():
                     )
                 else:
                     benchmark_data = generate_benchmarks_data(
-                        run_id,
-                        commit,
-                        None,
-                        benchmark_name,
-                        "Python",
-                        timestamp,
-                        "machine",
+                        run_id=run_id,
+                        commit=commit,
+                        branch=None,
+                        benchmark_name=benchmark_name,
+                        benchmark_language="Python",
+                        timestamp=timestamp,
+                        hardware_type="machine",
+                        measurements=measurements,
                         reason="commit",
-                        mean=mean,
                         repo_url="https://github.com/apache/arrow",
                     )
 
@@ -504,7 +495,6 @@ def generate_synthetic_benchmark_history(commit_hashes: List[str], repo_url: str
             timestamp=run_start_timestring_iso8601,
             hardware_type="dummymachine",
             reason="commit",
-            mean=None,
             repo_url=repo_url,
         )
 
@@ -515,7 +505,14 @@ def generate_synthetic_benchmark_history(commit_hashes: List[str], repo_url: str
         # Implement lower bound. Better: choose a different distribution, not
         # a normal distribution.
         samples = []
-        while len(samples) < 6:
+        measurement_count = 6
+
+        if random.random() < 0.08:
+            # Want to have some chance that there's a result with less than
+            # three measurements.
+            measurement_count = 2
+
+        while len(samples) < measurement_count:
             s = distribution.samples(n=1)[0]
             if s < lower_bound:
                 continue
