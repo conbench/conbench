@@ -67,7 +67,7 @@ class BenchmarkResult:
 
         A dictionary containing GitHub-flavored commit information.
 
-        Allowed values: `None`, no value, a dictionary.
+        Allowed values: `None`, no value, a special dictionary.
 
         Not passing an argument upon dataclass construction results in inspection
         of the environment variables ``CONBENCH_PROJECT_REPOSITORY``,
@@ -82,20 +82,21 @@ class BenchmarkResult:
         that this benchmark result will not be considered for time series
         analysis along a commit tree.
 
-        If passed a dictionary, it should have the following keys:
-        - required: ``repository`` (string, in the format ``https://github.com/<org>/<repo>``)
-        - required: ``commit`` (string, the full commit hash)
-        - recommended: ``pr_number`` (stringified integer) or ``branch`` (string)
+        If passed a dictionary, it must have at least the following two keys:
+        - ``repository`` (string, in the format ``https://github.com/<org>/<repo>``)
+        - ``commit`` (string, the full commit hash)
 
-        If the benchmark was run gainst the default branch, you may leave
-        out ``pr_number`` and ``branch``.
+        If the benchmark was run against the default branch, do not specify
+        additional keys.
 
-        If it was run on a GitHub pull request branch, you should provide the
+        If it was run on a GitHub pull request branch, you should provide
         ``pr_number``.
 
         If it was run on a non-default branch and a non-PR commit, you may
         supply the branch name via the ``branch`` set to a value of the format
         ``org:branch``.
+
+        For more details, consult the Conbench HTTP API specification.
 
     Notes
     -----
