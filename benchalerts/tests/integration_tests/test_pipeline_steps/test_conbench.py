@@ -24,7 +24,7 @@ ConbenchClient = LegacyConbenchClient
 
 
 @pytest.mark.parametrize(
-    ["conbench_url", "commit", "baseline_type", "expected_len", "expected_bip"],
+    ["conbench_url", "commit_hash", "baseline_type", "expected_len", "expected_bip"],
     [
         # baseline is parent
         (
