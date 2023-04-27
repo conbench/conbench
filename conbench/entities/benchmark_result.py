@@ -441,7 +441,7 @@ class BenchmarkResult(Base, EntityMixin):
             # being failed_. Because of a temporary logic error. Let's remove
             # this code path again for sanity. Since is_failed() returned False
             # we know that `self.data` has only numbers, and at least one.
-            return statistics.mean(float(self.data))
+            return float(statistics.mean(self.data))
 
         return float(self.mean)
 
