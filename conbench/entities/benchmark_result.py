@@ -435,10 +435,15 @@ class BenchmarkResult(Base, EntityMixin):
         if self.is_failed():
             return math.nan
 
-        # Should be implied by the outcome of self.is_failed(), encode this.
-        assert self.mean is not None
+        if self.mean is None:
+            # See https://github.com/conbench/conbench/issues/1169 -- Legacy
+            # database might have mean being None _despite the benchmark not
+            # being failed_. Because of a temporary logic error. Let's remove
+            # this code path again for sanity. Since is_failed() returned False
+            # we know that `self.data` has only numbers, and at least one.
+            assert self.data is not None
+            return float(statistics.mean(self.data))
 
-        # TODO: add support beyond mean.
         return float(self.mean)
 
     @property
