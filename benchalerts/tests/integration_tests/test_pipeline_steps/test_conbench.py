@@ -62,11 +62,11 @@ ConbenchClient = LegacyConbenchClient
 )
 def test_GetConbenchZComparisonStep(
     monkeypatch: pytest.MonkeyPatch,
-    conbench_url,
-    commit,
-    baseline_type,
-    expected_len,
-    expected_bip,
+    conbench_url: str,
+    commit_hash: str,
+    baseline_type: BaselineRunCandidates,
+    expected_len: int,
+    expected_bip: bool,
 ):
     if "ursa" in conbench_url:
         pytest.skip(
@@ -75,7 +75,7 @@ def test_GetConbenchZComparisonStep(
     monkeypatch.setenv("CONBENCH_URL", conbench_url)
     cb = ConbenchClient()
     step = GetConbenchZComparisonStep(
-        commit_hash=commit,
+        commit_hash=commit_hash,
         baseline_run_type=baseline_type,
         conbench_client=cb,
     )
