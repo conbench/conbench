@@ -496,14 +496,14 @@ class BenchmarkResult(Base, EntityMixin):
         samples = self.data
 
         if samples is None:
-            return (-1, "no data")
+            return (str(-1), "no data")
 
         # otherwise: `TypeError: can't convert type 'NoneType' to numerator/denominator`
         # in statistics.stdev(samples)
         samples = [s for s in samples if s is not None]
 
         if len(samples) < 3:
-            return (-1, "n/a")
+            return (str(-1), "n/a")
 
         stdem = float(statistics.stdev(samples)) / math.sqrt(len(samples))
         # Express relative standard error in percent.
