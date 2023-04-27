@@ -549,57 +549,6 @@ def time_series_plot(
         )
     )
 
-    # The _source() function requires as first arg a list of HistorySample
-    # objects. Comply with this, but most of the info is ignored. We may want
-    # to add a new type for stream-lining this.
-    dummy_hs_for_current_svs = HistorySample(
-        mean=current_benchmark_result.mean,
-        svs=current_benchmark_result.svs,
-        svs_type=current_benchmark_result.svs_type,
-        commit_msg=run["commit"]["message"],
-        commit_timestamp=util.tznaive_iso8601_to_tzaware_dt(run["commit"]["timestamp"]),
-        commit_hash=run["commit"]["sha"],
-        benchmark_result_id=current_benchmark_result.id,
-        repository=run["commit"]["repository"],
-        case_id="dummy",  # not consumed
-        context_id="dummy",  # not consumed
-        # "Per PEP 484, int is a subtype of float"
-        data=[0.0],  # not consumed
-        times=[0.0],  # not consumed
-        unit="dummy",  # not consumed
-        hardware_hash="dummy",  # not consumed
-        run_name="dummy",  # not consumed
-        zscorestats=HistorySampleZscoreStats(
-            begins_distribution_change=False,  # not consumed
-            segment_id="dummy",  # not consumed
-            rolling_mean_excluding_this_commit=0.0,  # not consumed
-            rolling_mean=0.0,  # not consumed
-            residual=0.0,  # not consumed
-            rolling_stddev=0.0,  # not consumed
-            is_outlier=False,  # not consumed
-        ),
-    )
-
-    # Edge case: this may be failed, in which case we cannot show a data point!
-    source_current_bm_mean = "failed"
-    if not current_benchmark_result.is_failed():
-        source_current_bm_mean = _source(
-            [dummy_hs_for_current_svs],
-            unit,
-            formatted=formatted,
-        )
-
-    # Create same dummy structure, only difference: set min as single value
-    # summary (SVS).
-    curbmrdata = current_benchmark_result.data
-    dummy_hs_for_min = copy.copy(dummy_hs_for_current_svs)
-    dummy_hs_for_min.svs = float(min(curbmrdata)) if curbmrdata else math.nan
-    source_current_bm_min = _source(
-        [dummy_hs_for_min],
-        unit,
-        formatted=formatted,
-    )
-
     # Note(JP). The `source_rolling_*` data is based on the "distribution"
     # analysis in conbench which I believe is a rolling window analysis where
     # the time width of the window is variable, as of a fixed commit-count
@@ -768,9 +717,16 @@ def time_series_plot(
     )
     p.line(source=source_rolling_alert_max_over_time, color="Silver")
 
+    (
+        source_current_bm_mean,
+        source_current_bm_min,
+    ) = get_source_for_single_benchmark_result(
+        current_benchmark_result, run, formatted, unit
+    )
+
     cur_bench_mean_circle = None
     cur_bench_min_circle = None
-    if source_current_bm_mean != "failed":
+    if source_current_bm_mean is not None:
         cur_bench_mean_circle = p.x(
             source=source_current_bm_mean,
             size=18,
@@ -860,3 +816,73 @@ def time_series_plot(
     p.xaxis.ticker.desired_num_ticks = 9
 
     return bokeh.layouts.column(p, bokeh.models.Spacer(height=5))
+
+    # The _source() function requires as first arg a list of HistorySample
+    # objects. Comply with this, but most of the info is ignored. We may want
+    # to add a new type for stream-lining this.
+
+
+def get_source_for_single_benchmark_result(
+    current_benchmark_result, cur_run, formatted, unit
+):
+    # Edge case: this may be failed or the commit time might be unknown, in
+    # which case we do not show a data point (for now).
+    # source_current_bm_min = None
+    # source_current_bm_mean = None
+
+    if not cur_run["commit"]["timestamp"]:
+        return None, None
+
+    cur_benchmark_time = util.tznaive_iso8601_to_tzaware_dt(
+        cur_run["commit"]["timestamp"]
+    )
+
+    if current_benchmark_result.is_failed():
+        return None, None
+
+    dummy_hs_for_current_svs = HistorySample(
+        mean=current_benchmark_result.mean,
+        svs=current_benchmark_result.svs,
+        svs_type=current_benchmark_result.svs_type,
+        commit_msg=cur_run["commit"]["message"],
+        commit_timestamp=cur_benchmark_time,
+        commit_hash=cur_run["commit"]["sha"],
+        benchmark_result_id=current_benchmark_result.id,
+        repository=cur_run["commit"]["repository"],
+        case_id="dummy",  # not consumed
+        context_id="dummy",  # not consumed
+        # "Per PEP 484, int is a subtype of float"
+        data=[0.0],  # not consumed
+        times=[0.0],  # not consumed
+        unit="dummy",  # not consumed
+        hardware_hash="dummy",  # not consumed
+        run_name="dummy",  # not consumed
+        zscorestats=HistorySampleZscoreStats(
+            begins_distribution_change=False,  # not consumed
+            segment_id="dummy",  # not consumed
+            rolling_mean_excluding_this_commit=0.0,  # not consumed
+            rolling_mean=0.0,  # not consumed
+            residual=0.0,  # not consumed
+            rolling_stddev=0.0,  # not consumed
+            is_outlier=False,  # not consumed
+        ),
+    )
+
+    source_current_bm_mean = _source(
+        [dummy_hs_for_current_svs],
+        unit,
+        formatted=formatted,
+    )
+
+    # Create same dummy structure, only difference: set min as single value
+    # summary (SVS).
+    curbmrdata = current_benchmark_result.data
+    dummy_hs_for_min = copy.copy(dummy_hs_for_current_svs)
+    dummy_hs_for_min.svs = float(min(curbmrdata)) if curbmrdata else math.nan
+    source_current_bm_min = _source(
+        [dummy_hs_for_min],
+        unit,
+        formatted=formatted,
+    )
+
+    return source_current_bm_mean, source_current_bm_min
