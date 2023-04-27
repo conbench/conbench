@@ -15,18 +15,22 @@
 import pytest
 from benchclients.conbench import LegacyConbenchClient
 
-from benchalerts.pipeline_steps.conbench import GetConbenchZComparisonStep
+from benchalerts.pipeline_steps.conbench import (
+    BaselineRunCandidates,
+    GetConbenchZComparisonStep,
+)
 
 ConbenchClient = LegacyConbenchClient
 
 
 @pytest.mark.parametrize(
-    ["conbench_url", "commit", "expected_len", "expected_bip"],
+    ["conbench_url", "commit_hash", "baseline_type", "expected_len", "expected_bip"],
     [
         # baseline is parent
         (
             "https://conbench.ursa.dev/",
             "bc7de406564fa7b2bcb9bf055cbaba31ca0ca124",
+            BaselineRunCandidates.parent,
             8,
             True,
         ),
@@ -34,6 +38,7 @@ ConbenchClient = LegacyConbenchClient
         (
             "https://velox-conbench.voltrondata.run",
             "2319922d288c519baa3bffe59c0bedbcb6c827cd",
+            BaselineRunCandidates.fork_point,
             1,
             False,
         ),
@@ -41,6 +46,7 @@ ConbenchClient = LegacyConbenchClient
         (
             "https://velox-conbench.voltrondata.run",
             "b74e7045fade737e39b0f9867bc8b8b23fe00b78",
+            BaselineRunCandidates.latest_default,
             1,
             None,
         ),
@@ -48,13 +54,19 @@ ConbenchClient = LegacyConbenchClient
         (
             "https://conbench.ursa.dev",
             "9fa34df27eb1445ac11b0ab0298d421b04be80f7",
+            BaselineRunCandidates.parent,
             7,
             True,
         ),
     ],
 )
 def test_GetConbenchZComparisonStep(
-    monkeypatch: pytest.MonkeyPatch, conbench_url, commit, expected_len, expected_bip
+    monkeypatch: pytest.MonkeyPatch,
+    conbench_url: str,
+    commit_hash: str,
+    baseline_type: BaselineRunCandidates,
+    expected_len: int,
+    expected_bip: bool,
 ):
     if "ursa" in conbench_url:
         pytest.skip(
@@ -62,7 +74,12 @@ def test_GetConbenchZComparisonStep(
         )
     monkeypatch.setenv("CONBENCH_URL", conbench_url)
     cb = ConbenchClient()
-    step = GetConbenchZComparisonStep(commit_hash=commit, conbench_client=cb)
+    step = GetConbenchZComparisonStep(
+        commit_hash=commit_hash,
+        baseline_run_type=baseline_type,
+        conbench_client=cb,
+    )
+    pytest.skip("Will fail until #1078 is deployed to these conbench instances")
     full_comparison = step.run_step(previous_outputs={})
     assert len(full_comparison.run_comparisons) == expected_len
     for run in full_comparison.run_comparisons:

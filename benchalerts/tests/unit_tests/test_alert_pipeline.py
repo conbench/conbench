@@ -25,12 +25,14 @@ def test_reasonable_pipeline(conbench_env, github_auth):
         steps=[
             steps.GetConbenchZComparisonStep(
                 commit_hash=commit_hash,
+                baseline_run_type=steps.BaselineRunCandidates.fork_point,
                 z_score_threshold=None,
                 conbench_client=conbench_client,
                 step_name="z_none",
             ),
             steps.GetConbenchZComparisonStep(
                 commit_hash=commit_hash,
+                baseline_run_type=steps.BaselineRunCandidates.fork_point,
                 z_score_threshold=500,
                 conbench_client=conbench_client,
                 step_name="z_500",

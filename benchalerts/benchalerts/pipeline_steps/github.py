@@ -18,12 +18,18 @@ from ..message_formatting import (
 
 class GitHubCheckStep(AlertPipelineStep):
     """An ``AlertPipeline`` step to update a GitHub Check on a commit on GitHub, based
-    on information collected in a previously-run ``GetConbenchZComparisonStep``.
+    on information collected in a previously-run ``GetConbenchZComparisonStep`` or
+    ``GetConbenchZComparisonForRunsStep``.
 
     You must use GitHub App authentication to use this step.
 
     Parameters
     ----------
+    comparison_step_name
+        The name of the ``GetConbenchZComparisonStep`` or
+        ``GetConbenchZComparisonForRunsStep`` that ran earlier in the pipeline. If
+        unspecified in that step, it defaults to the name of the step class, e.g.
+        ``"GetConbenchZComparisonStep"``.
     repo
         The repo name to post the status to, in the form "owner/repo". Either provide
         this or ``github_client``.
@@ -31,11 +37,9 @@ class GitHubCheckStep(AlertPipelineStep):
         A GitHubRepoClient instance. Either provide this or ``repo``.
     commit_hash
         The commit hash to update. Default is to use the same one that was analyzed in
-        the GetConbenchZComparisonStep earlier in the pipeline.
-    comparison_step_name
-        The name of the ``GetConbenchZComparisonStep`` that ran earlier in the pipeline.
-        Defaults to "GetConbenchZComparisonStep" (which was the default if no name was
-        given to that step).
+        the ``GetConbenchZComparisonStep`` earlier in the pipeline. If
+        ``GetConbenchZComparisonForRunsStep`` is used because the contender lacks commit
+        metadata, ``commit_hash`` must be provided.
     step_name
         The name for this step. If not given, will default to this class's name.
 
@@ -44,7 +48,8 @@ class GitHubCheckStep(AlertPipelineStep):
     dict
         The response body from the GitHub HTTP API as a dict.
     FullComparisonInfo
-        The FullComparisonInfo object that the GetConbenchZComparisonStep output.
+        The ``FullComparisonInfo`` object that the ``GetConbenchZComparisonStep`` or
+        ``GetConbenchZComparisonForRunsStep`` output.
 
     Notes
     -----
@@ -62,10 +67,10 @@ class GitHubCheckStep(AlertPipelineStep):
 
     def __init__(
         self,
+        comparison_step_name: str,
         repo: Optional[str] = None,
         github_client: Optional[GitHubRepoClient] = None,
         commit_hash: Optional[str] = None,
-        comparison_step_name: str = "GetConbenchZComparisonStep",
         step_name: Optional[str] = None,
     ) -> None:
         super().__init__(step_name=step_name)
@@ -129,10 +134,16 @@ class GitHubCheckStep(AlertPipelineStep):
 
 class GitHubStatusStep(AlertPipelineStep):
     """An ``AlertPipeline`` step to update a GitHub Status on a commit on GitHub, based
-    on information collected in a previously-run ``GetConbenchZComparisonStep``.
+    on information collected in a previously-run ``GetConbenchZComparisonStep`` or
+    ``GetConbenchZComparisonForRunsStep``.
 
     Parameters
     ----------
+    comparison_step_name
+        The name of the ``GetConbenchZComparisonStep`` or
+        ``GetConbenchZComparisonForRunsStep`` that ran earlier in the pipeline.If
+        unspecified in that step, it defaults to the name of the step class, e.g.
+        ``"GetConbenchZComparisonStep"``.
     repo
         The repo name to post the status to, in the form "owner/repo". Either provide
         this or ``github_client``.
@@ -140,11 +151,9 @@ class GitHubStatusStep(AlertPipelineStep):
         A GitHubRepoClient instance. Either provide this or ``repo``.
     commit_hash
         The commit hash to update. Default is to use the same one that was analyzed in
-        the GetConbenchZComparisonStep earlier in the pipeline.
-    comparison_step_name
-        The name of the ``GetConbenchZComparisonStep`` that ran earlier in the pipeline.
-        Defaults to "GetConbenchZComparisonStep" (which was the default if no name was
-        given to that step).
+        the ``GetConbenchZComparisonStep`` earlier in the pipeline. If
+        ``GetConbenchZComparisonForRunsStep`` is used because the contender lacks commit
+        metadata, ``commit_hash`` must be provided.
     step_name
         The name for this step. If not given, will default to this class's name.
 
@@ -174,10 +183,10 @@ class GitHubStatusStep(AlertPipelineStep):
 
     def __init__(
         self,
+        comparison_step_name: str,
         repo: Optional[str] = None,
         github_client: Optional[GitHubRepoClient] = None,
         commit_hash: Optional[str] = None,
-        comparison_step_name: str = "GetConbenchZComparisonStep",
         step_name: Optional[str] = None,
     ) -> None:
         super().__init__(step_name=step_name)

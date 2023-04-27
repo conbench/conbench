@@ -1,4 +1,8 @@
-from .conbench import GetConbenchZComparisonStep
+from .conbench import (
+    BaselineRunCandidates,
+    GetConbenchZComparisonForRunsStep,
+    GetConbenchZComparisonStep,
+)
 from .github import (
     GitHubCheckErrorHandler,
     GitHubCheckStep,
@@ -8,6 +12,8 @@ from .github import (
 )
 
 __all__ = [
+    "BaselineRunCandidates",
+    "GetConbenchZComparisonForRunsStep",
     "GetConbenchZComparisonStep",
     "GitHubCheckErrorHandler",
     "GitHubCheckStep",
