@@ -1,7 +1,7 @@
 import uuid
 import warnings
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, Literal, Optional, Union
+from typing import Any, Dict, Optional
 
 from . import _machine_info
 from .result import validate_or_remove_github_commit_key
