@@ -92,11 +92,16 @@ class TestBenchmarkResult:
         monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER")
         monkeypatch.delenv("CONBENCH_PROJECT_COMMIT")
 
-        with pytest.warns(
-            UserWarning,
-            match="Result not publishable! `github.repository` and `github.commit` must be populated",
+        with pytest.raises(
+            ValueError,
+            match="dictionary does not contain commit hash / repository information",
         ):
-            BenchmarkResult().to_publishable_dict()
+            d = BenchmarkResult().to_publishable_dict()
+            assert "github" not in d
+
+        # Intended, hopefully no warning, proceed.
+        d = BenchmarkResult(github=None).to_publishable_dict()
+        assert "github" not in d
 
     def test_run_name_defaulting(self, monkeypatch):
         monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY", raising=False)
@@ -104,8 +109,8 @@ class TestBenchmarkResult:
         monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
 
         res = BenchmarkResult(run_reason=res_json["run_reason"])
+        assert res.github == {}
 
-        assert res.github == {"commit": None, "repository": None, "pr_number": None}
         assert res.run_name is None
         res.github = res_json["github"]
         assert (
@@ -117,6 +122,5 @@ class TestBenchmarkResult:
         monkeypatch.setenv("CONBENCH_MACHINE_INFO_NAME", machine_info_name)
 
         result = BenchmarkResult(github=res_json["github"])
-
         assert result.machine_info["name"] == machine_info_name
         assert result.machine_info["name"] != res_json["machine_info"]["name"]

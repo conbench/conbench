@@ -1,14 +1,15 @@
+import logging
 import os
 import platform
-import re
 import subprocess
-import warnings
-from typing import Optional
+from typing import Dict, Optional
 
 
 def _sysctl(stat):
     return ["sysctl", "-n", stat]
 
+
+log = logging.getLogger(__name__)
 
 MUST_BE_INTS = [
     "cpu_core_count",
@@ -76,73 +77,43 @@ class GitParseWarning(RuntimeWarning):
     pass
 
 
-def github_info():
-    """Get github metadata from environment variables"""
-    repo = os.environ.get("CONBENCH_PROJECT_REPOSITORY")
-    pr_number = os.environ.get("CONBENCH_PROJECT_PR_NUMBER") or os.environ.get(
-        "BENCHMARKABLE_PR_NUMBER"
-    )
-    commit = os.environ.get("CONBENCH_PROJECT_COMMIT")
-
-    gh_info = {
-        "commit": commit,
-        "repository": repo,
-        # "branch": None,
-        "pr_number": pr_number,
-    }
-
-    return gh_info
-
-
-def detect_github_info():
-    """Attempts to inspect a locally cloned repository for git information that can be
-    posted to the "github" key when creating a run.
-
-    It's recommended to NOT use this function, and instead manually supply the commit
-    and repository (in the form "org/repo"). When doing so, ignore the "branch" key
-    and only supply the "pr_number" (or leave it None if it's a commit to the default
-    branch).
+def gh_commit_info_from_env() -> Dict[str, str]:
     """
-    commit = _exec_command(["git", "rev-parse", "HEAD"])
-    if not commit:
-        warnings.warn(
-            "error in github_info(): probably not in a git repo; returning {}",
-            GitParseWarning,
-        )
-        return {}
+    Attempt to read a specific set of environment variables expected to carry
+    GitHub-flavored information about the commit/checkout state of the
+    benchmarked repository.
 
-    branches = _exec_command(["git", "branch", "-vv"])
-    if "* (HEAD detached" in branches:
-        remote = "origin"
-        branch = "<DETATCHED BRANCH>"
-        warnings.warn(
-            f"error in github_info(): detached HEAD; returning {branch=}",
-            GitParseWarning,
-        )
+    The returned dictionary is guaranteed to have both keys and values of type
+    str, all of length greater zero.
 
-    else:
-        current_branch = [b for b in branches.split("\n") if b.startswith("*")][0]
-        _, branch_name, _, upstream, *_ = current_branch.split()
-        if not upstream.startswith("["):
-            remote = "origin"
-            branch = _exec_command(["git", "branch", "--show-current"])
-            warnings.warn(
-                f"error in github_info(): untracked branch; returning {branch=}",
-                GitParseWarning,
-            )
-        else:
-            remote = upstream[1:].split("/")[0]
-            branch = branch_name
+    The returned dictionary may be empty.
+    """
 
-    remote_url = _exec_command(["git", "remote", "get-url", remote])
-    fork = re.search("(?<=.com[/:])([^/]*?)(?=/)", remote_url).group(0)
-
-    return {
-        "commit": commit,
-        "repository": remote_url.rsplit(".git")[0],
-        "branch": f"{fork}:{branch}",
-        "pr_number": None,
+    varmap = {
+        "CONBENCH_PROJECT_REPOSITORY": "repository",
+        "CONBENCH_PROJECT_COMMIT": "commit",
+        "BENCHMARKABLE_PR_NUMBER": "pr_number",
+        "CONBENCH_PROJECT_PR_NUMBER": "pr_number",  # later entry takes precedence
     }
+
+    result = {}
+
+    for evarname, dictkey in varmap.items():
+        val = os.environ.get(evarname)
+        if val is not None:
+            stripval = val.strip()
+
+            if len(stripval) > 0:
+                result[dictkey] = stripval
+                continue
+
+            log.warning(
+                "ignoring environment variable %s with whitespace value: `%s`",
+                evarname,
+                repr(val),
+            )
+
+    return result
 
 
 def machine_info(host_name: Optional[str] = None):
@@ -362,6 +333,26 @@ def _has_missing(info, mapping):
     return False
 
 
-def _exec_command(command):
+def _exec_command(command, ignore_error=True):
+    """
+    The ignore_error behavior is for legacy code, it's not advisable to
+    swallow error like this; really hard to debug.
+    """
     result = subprocess.run(command, capture_output=True)
+
+    # Some of these failures are expected, i.e. the command not executing isn't
+    # supposed to be fatal to this program here. However, it makes sense to log
+    # information about how exactly the child process invocation failed.
+    if result.returncode != 0:
+        log.warning(
+            "command `%s` returned with code %s, stderr prefix:\n %s",
+            command,
+            result.returncode,
+            result.stderr.decode("utf-8").strip()[:500],
+        )
+        if not ignore_error:
+            raise Exception(
+                "command unexpectedly returned with non-zero exit code, see log for details"
+            )
+
     return result.stdout.decode("utf-8").strip()

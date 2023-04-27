@@ -564,19 +564,41 @@ class SchemaGitHubCreate(marshmallow.Schema):
         required=False,
         allow_none=True,
         metadata={
-            "description": "[recommended] The number of the GitHub pull request that "
-            "is running this benchmark, or `null` if it's a run on the default branch"
+            "description": conbench.util.dedent_rejoin(
+                """
+                If set, this needs to be an integer or a stringified integer.
+
+                This is the recommended way to indicate that this benchmark
+                result has been obtained for a specific pull request branch.
+                Conbench will use this pull request number to (try to) obtain
+                branch information via the GitHub HTTP API.
+
+                Set this to `null` or leave this out to indicate that this
+                benchmark result has been obtained for the default branch.
+                """
+            )
         },
     )
     branch = marshmallow.fields.String(
-        # I think this means that all of these pass validation:
-        # empty string, non-empty-string, null
+        # All of these pass schema validation: empty string, non-empty-string,
+        # null
         required=False,
         allow_none=True,
         metadata={
-            "description": "[not recommended] Instead of supplying `pr_number` you may "
-            "supply this, the branch name in the form `org:branch`. Only do so if you "
-            "know exactly what you're doing."
+            "description": conbench.util.dedent_rejoin(
+                """
+                This is an alternative way to indicate that this benchmark
+                result has been obtained for a commit that is not on the
+                default branch. Do not use this for GitHub pull requests (use
+                the `pr_number` argument for that, see above).
+
+                If set, this needs to be a string of the form `org:branch`.
+
+                Warning: currently, if `branch` and `pr_number` are both
+                provided, there is no error and `branch` takes precedence. Only
+                use this when you know what you are doing.
+                """
+            )
         },
     )
 
