@@ -3,7 +3,7 @@ import math
 import statistics
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import flask as f
 import marshmallow
