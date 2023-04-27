@@ -78,13 +78,22 @@ class TimeSeriesPlotMixin:
         """
         samples = get_history_for_benchmark(benchmark_result_id=benchmark_result.id)
 
+        # Does `samples` include the current benchmark result? Interesting: the
+        # current benchmark result may be failed, but I think all items in
+        # samples (historical benchmark results are guaranteed to not be
+        # failed.
+
         # The number (1, 2, 3?) maybe needs to be tuned further. Also see
         # https://github.com/conbench/conbench/issues/867
         if len(samples) > 2:
             assert isinstance(samples[0], HistorySample)
             jsondoc = json.dumps(
                 bokeh.embed.json_item(
-                    time_series_plot(samples, benchmark_result, run),
+                    time_series_plot(
+                        samples=samples,
+                        current_benchmark_result=benchmark_result,
+                        run=run,
+                    ),
                     f"plot-history-{i}",  # type: ignore
                 )
             )
@@ -571,11 +580,14 @@ def time_series_plot(
         ),
     )
 
-    source_current_bm_mean = _source(
-        [dummy_hs_for_current_svs],
-        unit,
-        formatted=formatted,
-    )
+    # Edge case: this may be failed, in which case we cannot show a data point!
+    source_current_bm_mean = "failed"
+    if not current_benchmark_result.is_failed():
+        source_current_bm_mean = _source(
+            [dummy_hs_for_current_svs],
+            unit,
+            formatted=formatted,
+        )
 
     # Create same dummy structure, only difference: set min as single value
     # summary (SVS).
@@ -756,24 +768,29 @@ def time_series_plot(
     )
     p.line(source=source_rolling_alert_max_over_time, color="Silver")
 
-    cur_bench_mean_circle = p.x(
-        source=source_current_bm_mean,
-        size=18,
-        line_width=2.5,
-        color="#A65DE7",
-        legend_label="current benchmark (mean)" if multisample else "current benchmark",
-        name="benchmark",
-    )
-
-    if multisample:
-        # do not show this for n=1 (then min equals to mean).
-        cur_bench_min_circle = p.circle(
-            source=source_current_bm_min,
-            size=6,
-            color="#000",
-            legend_label="current benchmark (min)",
+    cur_bench_mean_circle = None
+    cur_bench_min_circle = None
+    if source_current_bm_mean != "failed":
+        cur_bench_mean_circle = p.x(
+            source=source_current_bm_mean,
+            size=18,
+            line_width=2.5,
+            color="#A65DE7",
+            legend_label="current benchmark (mean)"
+            if multisample
+            else "current benchmark",
             name="benchmark",
         )
+
+        if multisample:
+            # do not show this for n=1 (then min equals to mean).
+            cur_bench_min_circle = p.circle(
+                source=source_current_bm_min,
+                size=6,
+                color="#000",
+                legend_label="current benchmark (min)",
+                name="benchmark",
+            )
 
     # further visually separate out distribution changes with a vertical line
     dist_change_in_legend = False
@@ -810,13 +827,16 @@ def time_series_plot(
             )
             dist_change_in_legend = True
 
-    hover_renderers = [scatter_mean_over_time, cur_bench_mean_circle]
+    hover_renderers = [scatter_mean_over_time]
+
+    if cur_bench_mean_circle is not None:
+        hover_renderers.append(cur_bench_mean_circle)
+
+    if cur_bench_min_circle is not None:
+        hover_renderers.append(cur_bench_min_circle)
 
     if has_outliers:
         hover_renderers.append(scatter_outlier_mean_over_time)
-
-    if multisample:
-        hover_renderers.append(cur_bench_min_circle)
 
     p.add_tools(
         bokeh.models.HoverTool(

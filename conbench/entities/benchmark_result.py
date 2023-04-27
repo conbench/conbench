@@ -3,7 +3,7 @@ import math
 import statistics
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import flask as f
 import marshmallow
@@ -486,23 +486,30 @@ class BenchmarkResult(Base, EntityMixin):
 
     # maybe make this a cached property
     @property
-    def ui_rel_sem(self) -> str:
+    def ui_rel_sem(self) -> Tuple[str, str]:
+        """
+        The first string is a stringified float for sorting in the table.
+        The second string is for display in the table, with unit.
+        Associate "n/a" with a negative value so that DESC sorting by error
+        is helpful.
+        """
         samples = self.data
 
         if samples is None:
-            return "no data"
+            return (str(-1), "no data")
 
         # otherwise: `TypeError: can't convert type 'NoneType' to numerator/denominator`
         # in statistics.stdev(samples)
         samples = [s for s in samples if s is not None]
 
         if len(samples) < 3:
-            return "n/a"
+            return (str(-1), "n/a")
 
         stdem = float(statistics.stdev(samples)) / math.sqrt(len(samples))
         # Express relative standard error in percent.
         rsep = 100 * (stdem / float(statistics.mean(samples)))
-        return f"{sigfig.round(rsep, sigfigs=2)} %"
+        errstr = sigfig.round(rsep, sigfigs=2)
+        return (errstr, f"{errstr} %")
 
     @property
     def ui_non_null_sample_count(self) -> str:
