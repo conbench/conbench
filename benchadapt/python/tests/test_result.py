@@ -92,10 +92,9 @@ class TestBenchmarkResult:
         monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER")
         monkeypatch.delenv("CONBENCH_PROJECT_COMMIT")
 
-        # Unintended, emit warning, but proceed.
-        with pytest.warns(
-            UserWarning,
-            match="dictionary does not contain commit information",
+        with pytest.raises(
+            ValueError,
+            match="dictionary does not contain commit hash / repository information",
         ):
             d = BenchmarkResult().to_publishable_dict()
             assert "github" not in d

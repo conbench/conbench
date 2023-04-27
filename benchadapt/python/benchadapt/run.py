@@ -103,9 +103,7 @@ class BenchmarkRun:
         return self._github_cache
 
     @_github_property.setter
-    def _github_property(
-        self, value: Union[Optional[Dict[str, str]], Literal["inspect_git_in_cwd"]]
-    ):
+    def _github_property(self, value: Optional[Dict[str, str]]):
         # Better: schema validation
         if value is not None and not isinstance(value, dict):
             raise Exception(f"unexpected value for `github` property: {value}")

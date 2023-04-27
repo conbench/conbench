@@ -258,21 +258,15 @@ def validate_or_remove_github_commit_key(res_dict: Dict, strict=False):
     imply to accidentally miss out on features/value).
     """
 
-    def _warn_or_raise():
-        msg = (
-            "This dictionary does not contain commit information. "
-            "This might be intended (for a so-called pre-merge benchmark "
-            "result). If it is not intended then you might be accidentally "
-            "missing out on those Conbench capabilities that associate "
-            "benchmark results with code changes. For automatically "
-            "adding commit information, set the CONBENCH_PROJECT_* family "
-            "of environment variables before dataclass instantiation (see API "
-            "docs for details)."
-        )
-        if strict:
-            raise ValueError(msg)
-
-        warnings.warn(msg)
+    errmsg = (
+        "This dictionary does not contain commit hash / repository information. "
+        "If that is intended (for a so-called pre-merge benchmark "
+        "result), explicitly set `github=None` upon data class "
+        "instantiation. For automatically "
+        "adding commit information, set the CONBENCH_PROJECT_* family "
+        "of environment variables before dataclass instantiation (see API "
+        "docs for details)."
+    )
 
     if res_dict["github"] is None:
         # Tis means: "no commit information present", and this was desired by
@@ -282,18 +276,9 @@ def validate_or_remove_github_commit_key(res_dict: Dict, strict=False):
         del res_dict["github"]
         return
 
-    # Note(JP): this is basically non-strict schema validation with the
-    # following behavior: "ok, it looks like you wanted to send commit
-    # information, but you didn't do it properly, and now I pretend as if
-    # you really didn't want to do that, but I emit a bit of a warning".
-    # We should make this stricter in the future.
     for checkkey in ("repository", "commit"):
         if checkkey not in res_dict["github"]:
-            _warn_or_raise()
-            # Normalize this state into the recommended, single way to say "no
-            # commit info": remove the key from the BenchmarkResult dict..
-            del res_dict["github"]
-            break
+            raise ValueError(errmsg)
 
 
 # Ugly, but per https://stackoverflow.com/a/61480946 lets us keep defaults and order

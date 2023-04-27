@@ -68,7 +68,7 @@ class TestBenchmarkRun:
 
         with pytest.raises(
             ValueError,
-            match="dictionary does not contain commit information",
+            match="dictionary does not contain commit hash / repository information",
         ):
             BenchmarkRun().to_publishable_dict()
 
@@ -98,7 +98,7 @@ class TestBenchmarkRun:
         run = BenchmarkRun()
         with pytest.raises(
             ValueError,
-            match="dictionary does not contain commit information",
+            match="dictionary does not contain commit hash / repository information",
         ):
             run.to_publishable_dict()
 
