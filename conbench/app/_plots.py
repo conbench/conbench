@@ -3,6 +3,7 @@ import copy
 import dataclasses
 import json
 import logging
+import math
 from typing import List, Optional, Tuple, no_type_check
 
 import bokeh.events
@@ -11,6 +12,7 @@ import bokeh.plotting
 
 from conbench import util
 from conbench.api.history import get_history_for_benchmark
+from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.entities.history import HistorySample, HistorySampleZscoreStats
 
 from ..hacks import sorted_data
@@ -24,6 +26,25 @@ class BokehPlotJSONOrError:
     # mutually exclusive
     jsondoc: Optional[str]
     reason_why_no_plot: Optional[str]
+
+
+class HistoryUserFacingError(Exception):
+    """
+    Raise this while building a benchmark result history. The resulting error
+    is meant to be user-facing and shown to the user in the UI or in the HTTP
+    API.
+
+    There are a number of aspects that may look 'wrong' while building history.
+    I believe that, fundamentally, not all aspects can be caught during
+    benchmark result submission. Quite a bit of validation can (should) be
+    performed during assembly of history.
+
+    It's an interesting question whether bad-looking items in the history
+    should silently be left out (e.g., a mismatching unit) or if the history
+    assembly should then fail. With the ability to mutate and delete individual
+    benchmark results, I think we should err towards strictness and generate
+    nice and precise errors.
+    """
 
 
 class TimeSeriesPlotMixin:
@@ -48,12 +69,14 @@ class TimeSeriesPlotMixin:
         ]
         return biggest_changes, biggest_changes_ids, biggest_changes_names
 
-    def get_history_plot(self, benchmark, run, i=0) -> BokehPlotJSONOrError:
+    def get_history_plot(
+        self, benchmark_result: BenchmarkResult, run, i=0
+    ) -> BokehPlotJSONOrError:
         """
         Generate JSON string for inclusion in HTML doc or a reason for why
         the plot-describing JSON doc was not generated.
         """
-        samples = get_history_for_benchmark(benchmark_result_id=benchmark["id"])
+        samples = get_history_for_benchmark(benchmark_result_id=benchmark_result.id)
 
         # The number (1, 2, 3?) maybe needs to be tuned further. Also see
         # https://github.com/conbench/conbench/issues/867
@@ -61,7 +84,7 @@ class TimeSeriesPlotMixin:
             assert isinstance(samples[0], HistorySample)
             jsondoc = json.dumps(
                 bokeh.embed.json_item(
-                    time_series_plot(samples, benchmark, run),
+                    time_series_plot(samples, benchmark_result, run),
                     f"plot-history-{i}",  # type: ignore
                 )
             )
@@ -268,10 +291,8 @@ def _source(
         else:
             # Again, non-obvious purpose of this function: if not specified
             # otherwise, this extracts the multisample mean-over-time.
-            points = [x.mean for x in samples]
-            values_with_unit = [
-                unit_fmt(float(x.mean), unit) for x in samples if x.mean
-            ]
+            points = [x.svs for x in samples]
+            values_with_unit = [unit_fmt(float(x.svs), unit) for x in samples if x.svs]
 
     if formatted:
         # Note(JP): why would we want to calculate the raw numeric data from
@@ -465,20 +486,30 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
 
 
 def time_series_plot(
-    samples: List[HistorySample], benchmark, run, height=380, width=1100
+    samples: List[HistorySample],
+    current_benchmark_result: BenchmarkResult,
+    run,
+    height=380,
+    width=1100,
 ):
-    # log.info("Time series plot for:\n%s", json.dumps(samples, indent=2))
+    # log.info(
+    #     "Time series plot for:\n%s",
+    #     json.dumps([s._dict_for_api_json() for s in samples], indent=2, default=str),
+    # )
 
-    unit = samples[0].unit
+    units = set([s.unit for s in samples])
+    if len(units) != 1:
+        raise HistoryUserFacingError(f"heterogenous set of units: {units}")
+
+    unit = units.pop()
+
     with_dist = [s for s in samples if s.zscorestats.rolling_mean]
     inliers = [s for s in samples if not s.zscorestats.is_outlier]
     outliers = [s for s in samples if s.zscorestats.is_outlier]
 
     has_outliers = len(outliers) > 0
-
-    formatted, axis_unit = _should_format(
-        [s.single_value_for_plot for s in samples], unit
-    )
+    formatted, axis_unit = _should_format([s.svs for s in samples], unit)
+    # log.info("formatted: %s, axis_unit: %s", formatted, axis_unit)
 
     dist_change_indexes = [
         ix
@@ -509,20 +540,23 @@ def time_series_plot(
         )
     )
 
-    dummy_hs = HistorySample(
-        mean=benchmark["stats"]["mean"],
+    # The _source() function requires as first arg a list of HistorySample
+    # objects. Comply with this, but most of the info is ignored. We may want
+    # to add a new type for stream-lining this.
+    dummy_hs_for_current_svs = HistorySample(
+        mean=current_benchmark_result.mean,
+        svs=current_benchmark_result.svs,
+        svs_type=current_benchmark_result.svs_type,
         commit_msg=run["commit"]["message"],
         commit_timestamp=util.tznaive_iso8601_to_tzaware_dt(run["commit"]["timestamp"]),
         commit_hash=run["commit"]["sha"],
-        benchmark_result_id=benchmark["id"],
+        benchmark_result_id=current_benchmark_result.id,
         repository=run["commit"]["repository"],
-        # Right now, the _source() function requires as first arg a list of
-        # HistorySample objects. Comply with this, but most of the info is
-        # ignored. We may want to add a new type for stream-lining this.
         case_id="dummy",  # not consumed
         context_id="dummy",  # not consumed
-        data=[0],  # not consumed
-        times=[0],  # not consumed
+        # "Per PEP 484, int is a subtype of float"
+        data=[0.0],  # not consumed
+        times=[0.0],  # not consumed
         unit="dummy",  # not consumed
         hardware_hash="dummy",  # not consumed
         run_name="dummy",  # not consumed
@@ -538,16 +572,18 @@ def time_series_plot(
     )
 
     source_current_bm_mean = _source(
-        [dummy_hs],
+        [dummy_hs_for_current_svs],
         unit,
         formatted=formatted,
     )
 
-    # create same dummy structure, only difference: set min as mean.
-    dummy_hs_min = copy.copy(dummy_hs)
-    dummy_hs_min.mean = benchmark["stats"]["min"]
+    # Create same dummy structure, only difference: set min as single value
+    # summary (SVS).
+    curbmrdata = current_benchmark_result.data
+    dummy_hs_for_min = copy.copy(dummy_hs_for_current_svs)
+    dummy_hs_for_min.svs = float(min(curbmrdata)) if curbmrdata else math.nan
     source_current_bm_min = _source(
-        [dummy_hs_min],
+        [dummy_hs_for_min],
         unit,
         formatted=formatted,
     )

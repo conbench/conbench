@@ -4,6 +4,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 import pytest
+import sigfig
 import sqlalchemy as s
 
 from ...db import Session
@@ -41,61 +42,82 @@ def _get_head_of_default(commit: Commit) -> Commit:
     ).first()
 
 
+def assert_equal_leeway(comparison, reference, figs=4):
+    """
+    Compare two Optional[float] values but allow for
+    - a tiny absolute epsilon
+    - a relatively dimensioned epsilon
+    """
+    if reference is None or comparison is None:
+        assert comparison is reference
+        return
+
+    if abs(reference - comparison) < 10**-13:
+        return
+
+    # For tiny values close to zero the condition below can fail with for
+    # example `assert -3.846e-15 == 0.0` -- in our context is I think this can
+    # safely be considered numerical noise.
+    assert sigfig.round(reference, sigfigs=figs) == sigfig.round(
+        comparison, sigfigs=figs
+    )
+
+
 # These correspond to the benchmark_results of _fixtures.gen_fake_data() without modification
 EXPECTED_Z_SCORES = {
     "closest_defaultbranch_ancestor": [
         None,
         None,
-        28.477042698148946,
-        0.7071067811865444,
-        2.1213203435596393,
-        13.435028842544385,
-        1.0928748862317967,
-        -2.1857497724635935,
-        -4.486481486904943,
-        -4.946696853470237,
+        28.48,
+        0.7071,
+        2.121,
+        13.44,
+        1.093,
+        -2.186,
+        -4.487,
+        -4.947,
         None,
         None,
         None,
         None,
         None,
-        -5.98205200884773,
+        -5.982,
     ],
     "parent": [
         None,
         None,
-        28.477042698148946,
-        0.7071067811865444,
-        2.1213203435596393,
-        13.435028842544385,
-        1.0928748862317967,
-        -2.8246140882627757,
-        -4.486481486904943,
-        -4.946696853470237,
+        28.48,
+        0.7071,
+        2.121,
+        13.44,
+        1.093,
+        -2.825,
+        -4.487,
+        -4.947,
         None,
         None,
         None,
         None,
         None,
-        -5.98205200884773,
+        -5.982,
     ],
     "head_of_default": [
-        0.662490861131055,
-        0.6082868170201319,
-        1.726858274546817,
-        0.662490861131055,
-        0.7166949052419783,
-        1.1503272581293638,
-        1.1503272581293638,
-        0.12045042002182318,
-        -0.6022521001091159,
-        -0.7468142857529476,
+        0.6625,
+        0.6083,
+        1.7269,
+        0.6625,
+        0.7167,
+        1.150,
+        1.150,
+        0.1205,
+        -0.6023,
+        -0.7468,
         None,
         None,
         None,
         None,
         None,
-        -1.072038550418487,
+        -1.072,
     ],
 }
 
@@ -174,7 +196,7 @@ def test_set_z_scores(
     for benchmark_result, expected_z_score in zip(
         benchmark_results, EXPECTED_Z_SCORES[strategy_name]
     ):
-        assert benchmark_result.z_score == expected_z_score
+        assert_equal_leeway(benchmark_result.z_score, expected_z_score)
 
     if strategy_name == "head_of_default":
         return
@@ -199,7 +221,7 @@ def test_set_z_scores(
             name=benchmark_results[0].case.name,
         )
     )
-    expected_z_scores = EXPECTED_Z_SCORES[strategy_name] + [-52.9995128086829]
+    expected_z_scores = EXPECTED_Z_SCORES[strategy_name] + [-52.9993797469743]
 
     for benchmark_result in benchmark_results:
         baseline_commit = get_baseline_func(benchmark_result.run.commit)
@@ -212,7 +234,7 @@ def test_set_z_scores(
             benchmark_result.z_score = None
 
     for benchmark_result, expected_z_score in zip(benchmark_results, expected_z_scores):
-        assert benchmark_result.z_score == expected_z_score
+        assert_equal_leeway(benchmark_result.z_score, expected_z_score)
 
 
 @pytest.mark.parametrize(
@@ -259,7 +281,7 @@ def test_set_z_scores_with_distribution_change(
             benchmark_result.z_score = None
 
     for benchmark_result, expected_z_score in zip(benchmark_results, expected_z_scores):
-        assert benchmark_result.z_score == expected_z_score
+        assert_equal_leeway(benchmark_result.z_score, expected_z_score)
 
 
 def test_detect_shifts_with_trimmed_estimators():
@@ -281,6 +303,10 @@ def test_detect_shifts_with_trimmed_estimators():
             "timestamp": np.arange(100),
             "result_timestamp": np.arange(100),
             "mean": mean_vals,
+            # Introduce concept of single value summary (SVS), currently
+            # equivalent with mean, the single value representing the outcome
+            # of the benchmark result.
+            "svs": mean_vals,
         }
     )
 

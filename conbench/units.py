@@ -1,5 +1,4 @@
 import logging
-import math
 from typing import Optional
 
 import sigfig
@@ -45,17 +44,6 @@ def fmt_unit(value: Optional[float], unit) -> Optional[str]:
     if value is None:
         return None
 
-    if value is math.nan:
-        # Must not call sigfig.round() with math.nan, see
-        # https://github.com/conbench/conbench/issues/1155
-        return None
-
-    if value == "null":
-        # sigfig.round("null", sigfigs=3) also results in the exception
-        # ValueError: invalid input Character "n" (position 1, state A)
-        log.warning('fmt_unit() was passed literal string "null"')
-        return None
-
     # These stringified values power a Bokeh plot. Ensure that the textual
     # representation of the numeric value encodes a desired minimum number of
     # significant digits, to allow for meaningful plotting resolution.
@@ -65,7 +53,12 @@ def fmt_unit(value: Optional[float], unit) -> Optional[str]:
     # I have seen a KeyError being thrown which I could not reproduce anymore.
     # sigfig/sigfig.py line 551 does `del number.map[p]` and this resulted in
     # `KeyError: 0`. It was probably a programming mistake.
-    return f"{sigfig.round(value, sigfigs=4)} {unit}"
+    try:
+        return f"{sigfig.round(value, sigfigs=4)} {unit}"
+    except ValueError as exc:
+        # https://github.com/conbench/conbench/issues/1155
+        log.warning("fmt_unit(): got unexpected value `%s`, exc: %s", repr(value), exc)
+        raise
 
 
 def formatter_for_unit(unit):

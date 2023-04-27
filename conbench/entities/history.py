@@ -4,6 +4,7 @@ import datetime
 import decimal
 import logging
 import math
+from collections import defaultdict
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -22,8 +23,20 @@ from ..entities.run import Run
 log = logging.getLogger(__name__)
 
 
-def _to_float(number: Optional[Union[decimal.Decimal, float, int]]) -> Optional[float]:
-    """Standardize decimals/floats/ints/Nones/NaNs to be either floats or Nones"""
+def _to_float_or_none(
+    number: Optional[Union[decimal.Decimal, float, int]]
+) -> Optional[float]:
+    """
+    Standardize decimals/floats/ints/Nones/NaNs to be either floats or Nones
+
+    Notes for why this can be helpful:
+
+    - In mypy, passing an int where a float is demanded is never an error. That
+      is, `if isinstance(value, float)` may be stricter than type checking,
+      which can lead to bugs.
+    - math.nan must be checked for with math.isnan, but it must not be given
+      str or None arg, i.e. the isnan() check must be preceded by other checks.
+    """
     if number is None:
         return None
 
@@ -64,7 +77,7 @@ class _Serializer(EntitySerializer):
             "benchmark_result_id": history.id,
             "case_id": history.case_id,
             "context_id": history.context_id,
-            "mean": _to_float(history.mean),
+            "mean": _to_float_or_none(history.mean),
             "data": history.data,
             "times": history.times,
             "unit": history.unit,
@@ -77,8 +90,8 @@ class _Serializer(EntitySerializer):
             # This is the Commit timestamp. Expose Result timestamp, too?
             "timestamp": history.timestamp.isoformat(),
             "run_name": history.name,
-            "distribution_mean": _to_float(history.rolling_mean),
-            "distribution_stdev": _to_float(history.rolling_stddev) or 0.0,
+            "distribution_mean": _to_float_or_none(history.rolling_mean),
+            "distribution_stdev": _to_float_or_none(history.rolling_stddev) or 0.0,
         }
 
 
@@ -109,6 +122,14 @@ class HistorySample:
     # logic in BenchmarkResult.create() which is quite intransparent today,
     # also there is a lack of spec
     mean: Optional[float]
+    # Experimental: introduce 'singe value summary' concept. An item in history
+    # reflects a benchmark result, and that must have a single value
+    # representation for plotting and analysis. If it does not have that, it
+    # should not be part of history (this cannot be None). Initially this is
+    # equivalent to mean. For consumers to make sense of this, also add a
+    # string field carrying the name. the name of this.
+    svs: float
+    svs_type: str
     # math.nan is allowed for representing a failed iteration.
     data: List[float]
     times: List[float]
@@ -126,6 +147,9 @@ class HistorySample:
     # Note(JP):
     # we should expose the unit of `data` in this structure, too.
 
+    def __str__(self):
+        return f"<{self.__class__.__name__}(mean:{self.mean}),data:{self.data}>"
+
     def _dict_for_api_json(self) -> dict:
         d = dataclasses.asdict(self)
         # if performance is a concern then https://pypi.org/project/orjson/
@@ -133,33 +157,6 @@ class HistorySample:
         # instances into JSON.
         d["commit_timestamp"] = self.commit_timestamp.isoformat()
         return d
-
-    @property
-    def single_value_for_plot(self) -> float:
-        """
-        Helper for plotting routines. This sample ended up in a collection that
-        wants to be plotted. For that, a single value is needed defining the
-        position on "y axis".
-
-        Downstream code relies on a float(y) value to be returned, which
-        includes `math.nan`.
-        """
-        if self.mean is not None:
-            # Want to be sure I understand what's happening. Context:
-            # https://github.com/conbench/conbench/issues/1155
-            assert isinstance(self.mean, float)
-            return self.mean
-
-        if len(self.data) not in (1, 2):
-            log.warning("bad history sample: mean is none, data length unexpected")
-            return math.nan
-
-        # Assume there is at least one data point, at most two data points. See
-        # https://github.com/conbench/conbench/issues/1118 Lacking a better
-        # rationale, for now return one of both data points. If these are two
-        # values and they have vastly different values, then this is non-ideal
-        # situation anyway.
-        return self.data[1]
 
 
 def get_history_for_benchmark(benchmark_result_id: str):
@@ -206,21 +203,13 @@ def get_history_for_cchr(
 
     history = (
         Session.query(
-            BenchmarkResult.id,
-            BenchmarkResult.case_id,
-            BenchmarkResult.context_id,
-            BenchmarkResult.mean,
-            BenchmarkResult.unit,
-            BenchmarkResult.data,
-            BenchmarkResult.times,
-            BenchmarkResult.change_annotations,
-            BenchmarkResult.timestamp.label("result_timestamp"),
-            Hardware.hash,
-            Commit.sha,
+            BenchmarkResult,
+            Hardware.hash.label("hardware_hash"),
+            Commit.sha.label("commit_hash"),
             Commit.repository,
-            Commit.message,
-            Commit.timestamp,
-            Run.name,
+            Commit.message.label("commit_message"),
+            Commit.timestamp.label("commit_timestamp"),
+            Run.name.label("run_name"),
         )
         .join(Run, Run.id == BenchmarkResult.run_id)
         .join(Hardware, Hardware.id == Run.hardware_id)
@@ -239,17 +228,19 @@ def get_history_for_cchr(
         )
     )
 
-    history_df = pd.read_sql(history.statement, Session.connection())
+    history_df, bmrs_by_bmrid = execute_history_query_get_dataframe(history.statement)
 
-    history_df = _add_rolling_stats_columns_to_df(
+    if len(history_df) == 0:
+        return []
+
+    history_df_rolling_stats = _add_rolling_stats_columns_to_df(
         history_df, include_current_commit_in_rolling_stats=False
     )
 
-    # return list(history_df.itertuples())
-
     samples: List[HistorySample] = []
+
     # Iterate over rows of pandas dataframe; get each row as namedtuple.
-    for sample in history_df.itertuples():
+    for sample in history_df_rolling_stats.itertuples():
         # Note(JP): the Commit.timestamp is nullable, i.e. not all Commit
         # entities in the DB have a timestamp (authoring time) attached.
         # However, in this function I believe there is an invariant that the
@@ -258,13 +249,16 @@ def get_history_for_cchr(
         # invariant with an assertion.
         assert isinstance(sample.timestamp, datetime.datetime)
 
+        # Restore 'sample' (df row) correspondence to BenchmarkResult objects.
+        result = bmrs_by_bmrid[sample.benchmark_result_id]
+
         zstats = HistorySampleZscoreStats(
             begins_distribution_change=sample.begins_distribution_change,
             segment_id=sample.segment_id,
             rolling_mean_excluding_this_commit=sample.rolling_mean_excluding_this_commit,
-            rolling_mean=_to_float(sample.rolling_mean),
+            rolling_mean=_to_float_or_none(sample.rolling_mean),
             residual=sample.residual,
-            rolling_stddev=_to_float(sample.rolling_stddev) or 0.0,
+            rolling_stddev=_to_float_or_none(sample.rolling_stddev) or 0.0,
             is_outlier=sample.is_outlier or False,
         )
 
@@ -272,30 +266,40 @@ def get_history_for_cchr(
         # list. Make it so that in the output object they are always a list,
         # potentially empty. `data` and `times` contain more than one value if
         # this was a multi-sample benchmark.
-
         data = []
-        if sample.data is not None:
-            data = [float(d) if d is not None else math.nan for d in sample.data]
+        if result.data is not None:
+            data = [float(d) if d is not None else math.nan for d in result.data]
 
         times = []
-        if sample.times is not None:
-            times = [float(t) if t is not None else math.nan for t in sample.times]
+        if result.times is not None:
+            times = [float(t) if t is not None else math.nan for t in result.times]
 
         samples.append(
             HistorySample(
-                benchmark_result_id=sample.id,
-                case_id=sample.case_id,
-                context_id=sample.context_id,
-                mean=sample.mean,
+                benchmark_result_id=sample.benchmark_result_id,
+                case_id=result.case_id,
+                context_id=result.context_id,
+                # Keep exposing the `mean` property like before. This was meant
+                # to be the single value summary, guaranteed to have a value
+                # set. So, actually read this from the new .svs property which
+                # still is the mean as of today. Do not read this from
+                # BenchmarkResult.mean, because this can be None.
+                mean=result.svs,
+                svs=result.svs,
+                svs_type=result.svs_type,  # hard-code for now
                 data=data,
                 times=times,
-                unit=sample.unit,
+                # JSON schema requires unit to be set upon BMR insertion, so I
+                # do not think this 'undefined' is met often. Maybe empty
+                # strings can be inserted into the DB, and this would be
+                # handled here, too.
+                unit=result.unit if result.unit else "undefined",
                 hardware_hash=sample.hash,
                 repository=sample.repository,
-                commit_msg=sample.message,
-                commit_hash=sample.sha,
+                commit_msg=sample.commit_message,
+                commit_hash=sample.commit_hash,
                 commit_timestamp=sample.timestamp,
-                run_name=sample.name,
+                run_name=sample.run_name,
                 zscorestats=zstats,
             )
         )
@@ -348,10 +352,10 @@ def set_z_scores(
             (benchmark_result.case_id, benchmark_result.context_id), (None, None)
         )
         benchmark_result.z_score = _calculate_z_score(
-            data_point=_to_float(benchmark_result.mean),
+            data_point=_to_float_or_none(benchmark_result.mean),
             unit=benchmark_result.unit,
-            dist_mean=_to_float(dist_mean),
-            dist_stddev=_to_float(dist_stddev),
+            dist_mean=_to_float_or_none(dist_mean),
+            dist_stddev=_to_float_or_none(dist_stddev),
         )
 
 
@@ -402,14 +406,11 @@ def _query_and_calculate_distribution_stats(
     # Find all historic results in the distribution to analyze
     history = (
         Session.query(
-            BenchmarkResult.case_id,
-            BenchmarkResult.context_id,
-            BenchmarkResult.change_annotations,
-            BenchmarkResult.mean,
-            BenchmarkResult.timestamp.label("result_timestamp"),
-            Hardware.hash,
+            # we can use the `defer` method to not select all columns
+            BenchmarkResult,
+            Hardware.hash.label("hardware_hash"),
             s.sql.expression.literal(baseline_commit.repository).label("repository"),
-            commits.c.ancestor_timestamp.label("timestamp"),
+            commits.c.ancestor_timestamp.label("commit_timestamp"),
         )
         .select_from(BenchmarkResult)
         .join(Run, Run.id == BenchmarkResult.run_id)
@@ -444,7 +445,10 @@ def _query_and_calculate_distribution_stats(
             ),
         )
 
-    history_df = pd.read_sql(history.statement, Session.connection())
+    history_df, _ = execute_history_query_get_dataframe(history.statement)
+
+    if len(history_df) == 0:
+        return {}
 
     history_df = _add_rolling_stats_columns_to_df(
         history_df, include_current_commit_in_rolling_stats=True
@@ -454,10 +458,104 @@ def _query_and_calculate_distribution_stats(
     stats_df = history_df.sort_values("timestamp", ascending=False).drop_duplicates(
         ["case_id", "context_id"]
     )
+
     return {
         (row.case_id, row.context_id): (row.rolling_mean, row.rolling_stddev)
         for row in stats_df.itertuples()
     }
+
+
+def execute_history_query_get_dataframe(statement) -> Tuple[pd.DataFrame, Dict]:
+    """
+    Emit prepared query statement to database.
+
+    Return a (df, dict) tuple. In the pandas DataFrame, each row represents a
+    benchmark result (BMR) plus associated metadata (that cannot be typically
+    found on the BenchmarkResult directly).
+
+    A row in the dataframe contains limited information about a BMR, such as
+    its ID. The dictionary mapping allows for looking up the full BMR via ID.
+
+    Think: this function returns a timeseries: one BenchmarkResult(+additional
+    info) per point in time, and the `BenchmarkResult(+additional info)` is
+    spread across two objects.
+
+    Previously, we did
+
+        df = pd.read_sql(statement, Session.connection())
+
+    which unpacked individual BenchmarkResult columns into dataframe columns.
+
+    It was not easily possible to access the raw BenchmarkResult object.
+
+    This paradigm here does more explicit iteration and creates more
+    intermediate objects, but also allows for more explicitly mapping items
+    into the dataframe.
+
+    If this fetches too many BMR columns, we can limit the columns fetched
+    actively with a "deferred loading" technique provided by SQLAlchemy.
+
+    Note that `row_iterator ` is an iterator that can only be consumed once,
+    i.e. we immediately store the data in mappings.
+
+    Assume that history is not gigantic; and even when history is comprised of
+    O(1000) benchmark results then the two dictionaries and the one dataframe
+    creates in this function should be smallish (from a mem consumption point
+    of view).
+    """
+    row_iterator = Session.execute(statement)
+    rows_by_bmrid = {}
+    bmrs_by_bmrid: Dict[str, BenchmarkResult] = {}
+
+    for row in row_iterator:
+        bmr = row[0]
+        rows_by_bmrid[bmr.id] = row
+        bmrs_by_bmrid[bmr.id] = bmr
+
+    if len(rows_by_bmrid) == 0:
+        log.debug("history query returned no results")
+        return pd.DataFrame({}), {}
+
+    # The dictionary from which a pandas DataFrame will be be created.
+    dict_for_df = defaultdict(list)
+
+    # Translate row-oriented result into column-oriented df, but picking only
+    # specific columns.
+    for bmr_id, row in rows_by_bmrid.items():
+        # Iterate over values in this row, and also get their metadata/column
+        # descriptions. See
+        # https://stackoverflow.com/a/6456360/145400
+        for coldesc, value in zip(statement.column_descriptions, row):
+            if coldesc["name"] == "BenchmarkResult":
+                assert bmr_id == value.id
+                dict_for_df["benchmark_result_id"].append(bmr_id)
+                dict_for_df["case_id"].append(value.case_id)
+                dict_for_df["context_id"].append(value.context_id)
+                # dict_for_df["mean"].append(value.mean)
+                dict_for_df["svs"].append(value.svs)
+                dict_for_df["change_annotations"].append(value.change_annotations)
+                dict_for_df["result_timestamp"].append(value.timestamp)
+            if coldesc["name"] == "hardware_hash":
+                dict_for_df["hash"].append(value)
+
+            if coldesc["name"] == "repository":
+                dict_for_df["repository"].append(value)
+
+            if coldesc["name"] == "commit_timestamp":
+                # The timestamp we associate with this benchmark result for
+                # timeseries analysis. This is chosen to be the commit
+                # timestamp.
+                dict_for_df["timestamp"].append(value)
+
+            # This does not need to be in the dataframe, but it's better
+            # than result.run.commit.message below
+            if coldesc["name"] in ("commit_message", "commit_hash", "run_name"):
+                dict_for_df[coldesc["name"]].append(value)
+
+    history_df = pd.DataFrame(dict_for_df)
+    # log.info("df:\n%s", history_df.to_string())
+
+    return history_df, bmrs_by_bmrid
 
 
 class _CommitIndexer(pd.api.indexers.BaseIndexer):
@@ -498,14 +596,14 @@ def _add_rolling_stats_columns_to_df(
 
     The input DataFrame must already have the following columns:
 
-        - BenchmarkResult.case_id
-        - BenchmarkResult.context_id
-        - BenchmarkResult.change_annotations
-        - BenchmarkResult.mean
-        - BenchmarkResult.timestamp.label("result_timestamp")
-        - Hardware.hash
-        - Commit.repository
-        - Commit.timestamp
+        - BenchmarkResult: case_id
+        - BenchmarkResult: context_id
+        - BenchmarkResult: change_annotations
+        - BenchmarkResult: svs (single value summary, currently mean)
+        - BenchmarkResult: result_timestamp
+        - Hardware: hash
+        - Commit: repository
+        - Commit: timestamp
 
     and this function will add these columns (more detail below):
 
@@ -585,14 +683,14 @@ def _add_rolling_stats_columns_to_df(
             # Exclude the current commit first...
             closed="left",
             min_periods=1,
-        )["mean"]
+        )["svs"]
         .mean()
         .values
     )
     # (and fill NaNs at the beginning of segments with the first value)
     df.loc[~df.is_outlier, "rolling_mean_excluding_this_commit"] = df.loc[
         ~df.is_outlier, "rolling_mean_excluding_this_commit"
-    ].combine_first(df.loc[~df.is_outlier, "mean"])
+    ].combine_first(df.loc[~df.is_outlier, "svs"])
 
     # ...but if requested, include the current commit
     if include_current_commit_in_rolling_stats:
@@ -604,7 +702,7 @@ def _add_rolling_stats_columns_to_df(
                 on="timestamp",
                 closed="right",
                 min_periods=1,
-            )["mean"]
+            )["svs"]
             .mean()
             .values
         )
@@ -613,7 +711,7 @@ def _add_rolling_stats_columns_to_df(
 
     # Add column with the residuals from the exclusive rolling mean, since we always
     # want to compare to the baseline distribution
-    df["residual"] = df["mean"] - df["rolling_mean_excluding_this_commit"]
+    df["residual"] = df["svs"] - df["rolling_mean_excluding_this_commit"]
 
     # Add column with the rolling standard deviation of the residuals
     # (these can go outside the segment since we assume they don't change much)
@@ -697,20 +795,20 @@ def _detect_shifts_with_trimmed_estimators(
         # clean copy will only get result columns
         out_group_df = copy.deepcopy(group_df)
 
-        group_df["mean_diff"] = group_df["mean"].diff()
-        mean_diff_clipped = copy.deepcopy(group_df.mean_diff)
-        mean_diff_clipped.loc[
-            (group_df.mean_diff < group_df.mean_diff.quantile(0.05))
-            | (group_df.mean_diff > group_df.mean_diff.quantile(0.95))
+        group_df["svs_diff"] = group_df["svs"].diff()
+        svs_diff_clipped = copy.deepcopy(group_df.svs_diff)
+        svs_diff_clipped.loc[
+            (group_df.svs_diff < group_df.svs_diff.quantile(0.05))
+            | (group_df.svs_diff > group_df.svs_diff.quantile(0.95))
         ] = np.nan
-        group_df["rolling_mean"] = mean_diff_clipped.rolling(
+        group_df["rolling_mean"] = svs_diff_clipped.rolling(
             Config.DISTRIBUTION_COMMITS, min_periods=1
         ).mean()
-        group_df["rolling_std"] = mean_diff_clipped.rolling(
+        group_df["rolling_std"] = svs_diff_clipped.rolling(
             Config.DISTRIBUTION_COMMITS, min_periods=1
         ).std()
         group_df["z_score"] = (
-            group_df.mean_diff - group_df.rolling_mean
+            group_df.svs_diff - group_df.rolling_mean
         ) / group_df.rolling_std
 
         group_df["is_shift"] = group_df.z_score.abs() > z_score_threshold

@@ -446,8 +446,8 @@ class Conbench(Connection, MixinPython, MixinR):
         }
 
         if one_sample_no_mean:
-            # Brutal way to create a BenchmarkResult in a history that
-            # has no aggregates, in particular no mean value.
+            # Submit a BenchmarkResult in a history that has  one data point
+            # and no aggregates, in particular no (user-given) mean value set.
             agg_keys = ("q1", "q3", "mean", "median", "min", "max", "stdev", "iqr")
 
             result["data"] = [result["data"][0]]

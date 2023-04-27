@@ -3,7 +3,7 @@ import math
 import statistics
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import flask as f
 import marshmallow
@@ -70,10 +70,10 @@ class BenchmarkResult(Base, EntityMixin):
 
     # These can be empty lists. An item in the list is of type float, which
     # includes `math.nan` as valid value.
-    data: Mapped[Optional[List[float]]] = Nullable(
+    data: Mapped[Optional[List[Decimal]]] = Nullable(
         postgresql.ARRAY(s.Numeric), default=[]
     )
-    times: Mapped[Optional[List[float]]] = Nullable(
+    times: Mapped[Optional[List[Decimal]]] = Nullable(
         postgresql.ARRAY(s.Numeric), default=[]
     )
 
@@ -84,9 +84,10 @@ class BenchmarkResult(Base, EntityMixin):
     info: Mapped[Info] = relationship("Info", lazy="joined")
     context: Mapped[Context] = relationship("Context", lazy="joined")
 
-    # `unit` is required by schema and currently documented with "The unit of
-    # the data object (e.g. seconds, B/s)". Where do we systematically keep
-    # track of "less is better" or "more is better"?
+    # Why is this nullable? `unit` is required via the JSON schema and
+    # currently documented with "The unit of the data object (e.g. seconds,
+    # B/s)". Where do we systematically keep track of "less is better" or "more
+    # is better"?
     unit: Mapped[Optional[str]] = Nullable(s.Text)
     time_unit: Mapped[Optional[str]] = Nullable(s.Text)
 
@@ -99,9 +100,17 @@ class BenchmarkResult(Base, EntityMixin):
     # store is the user-given timestamp properly translated to UTC.
     timestamp: Mapped[datetime] = NotNull(s.DateTime(timezone=False))
     iterations: Mapped[Optional[int]] = Nullable(s.Integer)
+
+    # Mean can only be None for errored BenchmarkResults. Is guaranteed to have
+    # a numeric value for all non-errored BenchmarkResults, including those
+    # that have just one data point (when the mean is not an exciting
+    # statistic, but still a useful one).
+    mean: Mapped[Optional[float]] = Nullable(s.Numeric, check("mean>=0"))
+
+    # The remaining aggregates are only non-None when the BenchmarkResult has
+    # at least N data points (see below).
     min: Mapped[Optional[float]] = Nullable(s.Numeric, check("min>=0"))
     max: Mapped[Optional[float]] = Nullable(s.Numeric, check("max>=0"))
-    mean: Mapped[Optional[float]] = Nullable(s.Numeric, check("mean>=0"))
     median: Mapped[Optional[float]] = Nullable(s.Numeric, check("median>=0"))
     stdev: Mapped[Optional[float]] = Nullable(s.Numeric, check("stdev>=0"))
     q1: Mapped[Optional[float]] = Nullable(s.Numeric, check("q1>=0"))
@@ -352,6 +361,86 @@ class BenchmarkResult(Base, EntityMixin):
             },
         }
 
+    def is_failed(self):
+        """
+        Return True if this BenchmarkResult is considered to be 'failed' /
+        erroneous.
+
+        The criteria are conventions that we (hopefully) apply consistently
+        across components.
+        """
+        if self.data is None:
+            log.info("data is none")
+            return True
+
+        if do_iteration_samples_look_like_error(self.data):
+            log.info("iterations look like err")
+            return True
+
+        if self.error is not None:
+            log.info("selferr is not none")
+            return True
+
+        return False
+
+    @property
+    def svs(self) -> float:
+        """
+        Return single value summary (currently: mean) or raise an
+        Exception.
+        """
+
+        # This is here just for the shorter name.
+        return self._single_value_summary()
+
+    @property
+    def svs_type(self) -> str:
+        """
+        Return single value summary type (currently: "mean")
+        """
+        return "mean"
+
+    def _single_value_summary(self) -> float:
+        """
+        Return a single numeric value summarizing the collection of data points
+        D associated with this benchmark result. Currently static (mean), can
+        be dynamic in the future.
+
+        Assumption: each non-errored benchmark result (self.is_failed() returns
+        False) is guaranteed to have at least one data point.
+
+        The value returned by this method is intended to be used in analysis
+        and plotting routines.
+
+        This method primarily serves the purpose of rather ignorantly mapping
+        collection of data points of unknown size (at least l) to a single
+        value. This single-value summary may be the mean or min (or something
+        else), and is not always statistically sound. But that is a problem
+        that needs to be addressed with higher-level means.
+
+        From a perspective of plotting, this here is the 'location' of the data
+        point.
+
+        Notes on terminology:
+
+        - https://english.stackexchange.com/a/484587/70578
+        - https://en.wikipedia.org/wiki/Summary_statistics
+
+        Related issues:
+
+        - https://github.com/conbench/conbench/issues/535
+        - https://github.com/conbench/conbench/issues/640
+        - https://github.com/conbench/conbench/issues/530
+        """
+        if self.is_failed():
+            return math.nan
+
+        # Should be implied by the outcome of self.is_failed(), encode this.
+        assert self.mean is not None
+
+        # TODO: add support beyond mean.
+        return float(self.mean)
+
     @property
     def ui_mean_and_uncertainty(self) -> str:
         """
@@ -442,17 +531,6 @@ class BenchmarkResult(Base, EntityMixin):
         The indirection here through `self.run` is interesting, might trigger
         database interaction.
         """
-
-        # try:
-        #     # Note: is this jinja2 behavior? when this fails with
-        #     # Attribute error like
-        #     # 'BenchmarkResult' object has no attribute 'hardware'
-        #     # then the template does not crash, but shows no value.
-        #     print(type(self.hardware) + "f")
-        # except Exception as exc:
-        #     print("exc:", exc)
-        #     raise exc
-
         hw = self.run.hardware
         if len(hw.name) > 15:
             return f"{hw.id[:4]}: " + hw.name[:15]
@@ -473,24 +551,35 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
 
     agg_keys = ("q1", "q3", "mean", "median", "min", "max", "stdev", "iqr")
 
-    # Encode invariants.
-    samples = stats_usergiven["data"]
-    assert len(samples) > 0
-    for sa in samples:
-        assert sa is not None
-        assert sa != math.nan
+    # Encode invariants. It seems that marshmallow.fields.Decimal allows for
+    # both, str values and float values, and the test suite (at least today)
+    # might inject string values.
+    samples_input: List[Union[float, str]] = stats_usergiven["data"]
 
     # Proceed with float type.
-    samples = [float(s) for s in samples]
+    samples = [float(s) for s in samples_input]
+
+    for sa in samples:
+        assert not math.isnan(sa), sa
 
     # First copy the entire stats data structure (this includes times, data,
     # mean, min, ...). Later: selectively overwrite/augment.
     result_data_for_db = stats_usergiven.copy()
 
-    # Initialize all aggregate values explicitly to None -- values set below
-    # must be meaningful.
+    # And because numbers might have been provided as strings, make sure to
+    # normalize to List[float] here.
+    result_data_for_db["data"] = samples
+
+    # Initialize all aggregate values explicitly to None (except for `mean`,
+    # this has special treatment).
     for k in agg_keys:
         result_data_for_db[k] = None
+
+    # The `mean` is the only aggregate that is OK to be built for at least one
+    # data point (even if not that useful). That gives the guarantee that
+    # BenchmarkResult.mean is populated for all non-errored BenchmarkResults.
+    # See https://github.com/conbench/conbench/issues/1169
+    result_data_for_db["mean"] = np.mean(samples)
 
     if len(samples) >= 2:
         # There is a special case where for one sample the iteration count
@@ -509,7 +598,6 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
         aggregates = {
             "q1": q1,
             "q3": q3,
-            "mean": np.mean(samples),
             "median": np.median(samples),
             "min": np.min(samples),
             "max": np.max(samples),
@@ -525,8 +613,8 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
         for key, value in aggregates.items():
             result_data_for_db[key] = sigfig.round(value, sigfigs=5)
 
-            # Log upon conflict. Lett the automatically derived value win,
-            # to achieve consistency between the provided samples and the
+            # Log upon conflict. Let the automatically derived value win, to
+            # achieve consistency between the provided samples and the
             # aggregates.
             if key in stats_usergiven:
                 if not floatcomp(stats_usergiven[key], value):
