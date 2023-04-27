@@ -266,7 +266,7 @@ rule(
     methods=["GET", "POST"],
 )
 rule(
-    "/benchmark=results/<benchmark_result_id>/",
+    "/benchmark-results/<benchmark_result_id>/",
     view_func=benchmark_entity_view,
     methods=["GET", "DELETE", "PUT"],
 )
