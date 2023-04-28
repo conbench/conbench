@@ -88,7 +88,7 @@ class UnmatchingUnitsError(Exception):
 
 
 class BenchmarkResultComparator:
-    """Dataclass to hold the comparison of two BenchmarkResults."""
+    """Data model class to hold the comparison of two BenchmarkResults."""
 
     def __init__(
         self,
@@ -231,7 +231,7 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
         """
         ---
         description: |
-            Compare benchmark results.
+            Compare a baseline and contender benchmark result.
 
             Returns basic information about the baseline and contender benchmark results
             as well as some analyses comparing the performance of the contender to the
@@ -244,22 +244,24 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
             extreme than the threshold are marked as `regression_indicated` or
             `improvement_indicated`. The threshold is 5.0% by default, but can be
             changed via the `threshold` query parameter, which should be a positive
-            number representing a percent.
+            percent value.
 
             The `pairwise` analysis may be `null` if either benchmark result does not
             have a mean value, or if the baseline result's mean value is 0.
 
-            The `lookback_z_score` analysis computes the z-score of the contender's mean
-            value compared to a distribution of benchmark results ending with the
-            baseline result. The reported z-score is also signed such that a more
-            negative value indicates more of a performance regression, and thresholded.
-            The threshold z-score is 5.0, but can be changed via the `threshold_z` query
-            parameter, which should be a positive number.
+            The `lookback_z_score` analysis compares the contender's mean value to a
+            baseline distribution of benchmark result mean values (from the git history
+            of the baseline result) via the so-called lookback z-score method. The
+            reported z-score is also signed such that a more negative value indicates
+            more of a performance regression, and thresholded. The threshold z-score is
+            5.0 by default, but can be changed via the `threshold_z` query parameter,
+            which should be a positive number.
 
-            The `lookback_z_score` may be `null` if the contender benchmark result is
-            missing a z-score, due to not finding a baseline distribution that matches
-            the contender benchmark result. More details about this analysis can be
-            found at https://conbench.github.io/conbench/pages/lookback_zscore.html.
+            The `lookback_z_score` analysis object may be `null` if a z-score cannot be
+            computed for the contender benchmark result, due to not finding a baseline
+            distribution that matches the contender benchmark result. More details about
+            this analysis can be found at
+            https://conbench.github.io/conbench/pages/lookback_zscore.html.
 
             If either benchmark result is not found, this endpoint will raise a 404. If
             the benchmark results don't have the same unit, this endpoint will raise a
