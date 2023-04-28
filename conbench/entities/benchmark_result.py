@@ -548,40 +548,56 @@ def ui_rel_sem(values: List[float]):
 
 def ui_mean_and_uncertainty(values: List[float], unit: str):
     """
-    Build human-readable text conveying the data point acquired here.
+    Build human-readable text conveying the data acquired here.
 
-    If this is a multi-sample data point then return notation like string like
-    '3.1 ± 0.7'.
+    The returned string
+
+        - includes a unit.
+        - limits the number of significant digits.
+
+    If this is a multi-sample data point then return notation like
+    string like '3.1 ± 0.7'.
 
         mean_unc_str = sigfig.round(mean, uncertainty=stdem)
 
     It's difficult to write code like this because of
-    https://github.com/conbench/conbench/issues/813 and related discussions.
+    https://github.com/conbench/conbench/issues/813
+    and related discussions; I think we should really make it so that
+    each element in self.data is of type float.
 
-    Note that sigfig.round is incredibly CPU intense (takes 10 seconds to run
-    on 60000 benchmark results on my beefy CPU). Do not call this for many
-    benchmark results, only for a smaller set that must be displayed.
     """
-    if not values:
+
+    if self.is_failed():
+        return "failed"
+
+    samples = self.data
+
+    if samples is None:
         return "no data"
 
-    if len(values) < 3:
-        # Show each sample with five significant figures.
-        return "; ".join(f"{numstr(v, sigfigs=5)} {unit}" for v in values)
+    # otherwise: `TypeError: can't convert type 'NoneType' to numerator/denominator`
+    # in statistics.stdev(samples)
+    samples = [s for s in samples if s is not None]
+
+    if len(samples) < 3:
+        # Show each sample.
+        return "; ".join(
+            str(sigfig.round(s, sigfigs=4)) + " " + self.unit for s in samples
+        )
 
     # Build sample standard deviation. Maybe we can also use the pre-built
     # value, but trust needs to be established first.
-    stdev = statistics.stdev(values)
-    mean = statistics.mean(values)
-
+    stdev = float(statistics.stdev(samples))
+    mean = float(statistics.mean(samples))
     # Calculate standard error of the mean for canonical scientific
     # notation of the result. Make float from Decimal, otherwise
     # TypeError: unsupported operand type(s) for /: 'decimal.Decimal' and 'float'
-    stdem = stdev / math.sqrt(len(values))
+    stdem = stdev / math.sqrt(len(samples))
 
+    # minstr = f"min: {sigfig.round(min, 3)} s"
     # This generates a string like '3.1 ± 0.7'
-    mean_uncertainty_str = sigfig.round(mean, uncertainty=stdem, warn=False)
-    return f"({mean_uncertainty_str}) {unit}"
+    mean_uncertainty_str = sigfig.round(mean, uncertainty=stdem)
+    return f"({mean_uncertainty_str}) {self.unit}"
 
 
 def validate_and_aggregate_samples(stats_usergiven: Any):

@@ -265,6 +265,7 @@ class BenchmarkResultView(
             application=Config.APPLICATION_NAME,
             title="Benchmark",
             benchmark=result_dict,
+            result=result_obj,
             run=run,
             delete_form=delete_form,
             update_form=update_form,
