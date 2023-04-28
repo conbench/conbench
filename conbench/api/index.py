@@ -58,6 +58,8 @@ def docs():
     # in test_docs.
     if "/api/wipe-db" in d["paths"]:
         del d["paths"]["/api/wipe-db"]
+        del d["paths"]["/api/raise-httperr"]
+        del d["paths"]["/api/raise-unexpected"]
 
     return f.jsonify(d)
 
@@ -197,15 +199,20 @@ register_api(IndexAPI, "index", "/")
 
 # Register this API endpoint only in testing mode.
 if Config.TESTING:
-
+    # Endpoints for local development / developer productivity.
     @api.route("/wipe-db", methods=("GET",))
     def wipe_db():
-        """
-        For local development / developer productivity.
-        """
         log.info("clear DB tables")
         empty_db_tables()
         return "200 OK", 200
+
+    @api.route("/raise-httperr", methods=("GET",))
+    def raise_httperr():
+        f.abort(400, description="foo")
+
+    @api.route("/raise-unexpected", methods=("GET",))
+    def raise_unexpected():
+        raise Exception("doh")
 
 
 spec.components.schema("Ping", schema=PingSchema)

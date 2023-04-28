@@ -88,7 +88,7 @@ rebuild-expected-api-docs: run-app-bg
 	curl --silent --show-error --fail --retry 10 \
 		--retry-all-errors --retry-delay 1 --retry-max-time 30 \
 			http://$(shell docker compose port app 5000)/api/docs.json > _new_api_docs.json
-	docker compose down
+	docker compose down --remove-orphans
 	python -c "import json; print(str(json.loads(open('_new_api_docs.json').read())))" > _new_api_docs.py
 	black _new_api_docs.py
 	mv -f _new_api_docs.py ./conbench/tests/api/_expected_docs.py

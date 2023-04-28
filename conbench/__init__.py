@@ -17,6 +17,7 @@ import importlib.metadata as importlib_metadata
 import json
 import logging
 import os
+import traceback
 from typing import TYPE_CHECKING
 
 import conbench.logger
@@ -134,6 +135,8 @@ def _init_flask_application(app):
     app.register_blueprint(api, url_prefix="/api")
     app.register_blueprint(api_docs, url_prefix="/api/docs")
     app.register_error_handler(werkzeug.exceptions.HTTPException, _json_http_errors)
+    app.register_error_handler(Exception, _handle_all_other_exceptions)
+
     _init_api_docs(app)
 
     @app.before_request
@@ -166,32 +169,48 @@ def _init_api_docs(application):
             spec.path(view=view_fn)
 
 
+def _handle_all_other_exceptions(exc):
+    """
+    "If you register handlers for both HTTPException and Exception, the
+    Exception handler will not handle HTTPException subclasses because it the
+    HTTPException handler is more specific"
+    """
+    import flask as f
+
+    # For now: even in 'prod', expose the traceback corresponding to the
+    # exception in an HTTP 500 response, facilitating debugging; so that users
+    # can send tracebacks right away.
+    tbstr = "".join(traceback.format_exception(exc))
+    return f.make_response((f"unexpected exception, please report this:\n{tbstr}", 500))
+
+
 def _json_http_errors(exc) -> "werkzeug.wrappers.Response":
     """
-    Turn an HTTPException object into a JSON response where exception detail
-    is emitted as part of the JSON document.
+    Seems to be guaranteed to only be called for
+    werkzeug.exceptions.HTTPException.
+
+    Turn an HTTPException object into a JSON response where exception detail is
+    emitted as part of the JSON document.
+    See https://github.com/conbench/conbench/issues/1181.
     """
     # Note(JP): I understand this is against cyclic imports, but having this as
-    # part of requently called error handler (even if the import machinery is
+    # part of frequently called error handler (even if the import machinery is
     # fast and cached) is a code smell -- let's see about this.
     import flask as f
 
-    data = {"code": exc.code, "name": exc.name}
-
-    # When for example calling flask.abort(404, foo="bar") then the
-    # resulting HTTPException object has a property "foo".
-    for attr in vars(exc):
-        # denylist or allowlist? Hm.
-        if attr not in ("response", "www_authenticate"):
-            data[attr] = getattr(exc, attr)
-
-    # documented with "Get a response object. If one was passed to the
-    # exception it’s returned directly.""
-    resp = exc.get_response()
-    resp.data = f.json.dumps(data)
-    resp.content_type = "application/json"
-
-    return resp
+    # "Return JSON instead of HTML for HTTP errors"
+    # From https://flask.palletsprojects.com/en/2.2.x/errorhandling/#generic-exception-handlers
+    # start with the correct headers and status code from the error
+    response = exc.get_response()
+    response.data = f.json.dumps(
+        {
+            "code": exc.code,
+            "name": exc.name,
+            "description": exc.description,
+        }
+    )
+    response.content_type = "application/json"
+    return response
 
 
 def dict_or_objattrs_to_nonsensitive_string(obj):

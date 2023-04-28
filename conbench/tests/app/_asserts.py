@@ -52,7 +52,8 @@ class AppEndpointTest:
         # TODO: How to make this an HTML error page?
         # While still having json error rs for the API.
         assert r.content_type == "application/json", r.content_type
-        assert r.json == {"code": 404, "name": "Not Found"}, r.json
+        assert r.json["code"] == 404, r.json
+        assert r.json["name"] == "Not Found", r.json
 
     def assert_login_page(self, r):
         self.assert_200_ok(r)
