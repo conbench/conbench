@@ -89,6 +89,27 @@ class TestRunGet(_asserts.GetEnforcer):
             ),
         )
 
+    def test_get_run_without_commit(self, client):
+        self.authenticate(client)
+        result = _fixtures.benchmark_result(no_github=True)
+        run = result.run
+        response = client.get(f"/api/runs/{run.id}/")
+        self.assert_200_ok(
+            response,
+            _expected_entity(
+                run,
+                candidate_baseline_runs={
+                    "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "parent": {
+                        "baseline_run_id": None,
+                        "commits_skipped": None,
+                        "error": "no matching baseline run was found",
+                    },
+                },
+            ),
+        )
+
     def test_get_run_should_not_prefer_test_runs_as_baseline(self, client):
         """Test runs shouldn't be preferred, but if they are the only runs that exist,
         we'll pick them up"""
