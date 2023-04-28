@@ -58,6 +58,8 @@ def docs():
     # in test_docs.
     if "/api/wipe-db" in d["paths"]:
         del d["paths"]["/api/wipe-db"]
+        del d["paths"]["/api/raise-httperr"]
+        del d["paths"]["/api/raise-unexpected"]
 
     return f.jsonify(d)
 
