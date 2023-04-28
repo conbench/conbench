@@ -315,67 +315,6 @@
                 },
                 "description": "OK",
             },
-            "CompareBenchmarkResult": {
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "commits": {
-                                "baseline": {
-                                    "author_avatar": "https://avatars.githubusercontent.com/u/1299904?v=4",
-                                    "author_login": "bkietz",
-                                    "author_name": "Benjamin Kietzman",
-                                    "branch": "some_user_or_org:some_branch",
-                                    "fork_point_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                    "id": "some-baseline-commit-id",
-                                    "message": "ARROW-11767: [C++] Scalar::Hash may segfault",
-                                    "parent_sha": "6d703c4c7b15be630af48d5e9ef61628751674b2",
-                                    "repository": "https://github.com/org/repo",
-                                    "sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                    "timestamp": "2021-02-24T22:12:11",
-                                    "url": "https://github.com/org/repo/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                },
-                                "contender": {
-                                    "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
-                                    "author_login": "dianaclarke",
-                                    "author_name": "Diana Clarke",
-                                    "branch": "some_user_or_org:some_branch",
-                                    "fork_point_sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                    "id": "some-contender-commit-id",
-                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
-                                    "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                    "repository": "https://github.com/org/repo",
-                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                    "timestamp": "2021-02-25T01:02:51",
-                                    "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
-                                },
-                            },
-                            "links": {
-                                "self": "http://localhost/api/compare/commits/4beb514d071c9beec69b8917b5265e77ade22fb3...02addad336ba19a654f9c857ede546331be7b631/"
-                            },
-                            "runs": [
-                                {
-                                    "baseline": {
-                                        "hardware_name": "diana",
-                                        "run": "http://localhost/api/runs/some-baseline-run-id/",
-                                        "run_id": "some-baseline-run-id",
-                                        "run_name": "commit: 4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                        "run_timestamp": "2021-02-24T23:12:11",
-                                    },
-                                    "compare": "http://localhost/api/compare/runs/some-baseline-run-id...some-contender-run-id/",
-                                    "contender": {
-                                        "hardware_name": "diana",
-                                        "run": "http://localhost/api/runs/some-contender-run-id/",
-                                        "run_id": "some-contender-run-id",
-                                        "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
-                                        "run_timestamp": "2021-02-25T06:02:51",
-                                    },
-                                }
-                            ],
-                        }
-                    }
-                },
-                "description": "OK",
-            },
             "CompareEntity": {
                 "content": {
                     "application/json": {
@@ -402,6 +341,7 @@
                                 "error": None,
                                 "language": "Python",
                                 "run_id": "some-run-uuid-1",
+                                "single_value_summary": 0.03637,
                                 "tags": {
                                     "compression": "snappy",
                                     "cpu_count": "2",
@@ -410,7 +350,6 @@
                                     "input_type": "arrow",
                                     "name": "file-read",
                                 },
-                                "value": 0.03637,
                             },
                             "contender": {
                                 "batch_id": "some-batch-uuid-2",
@@ -420,6 +359,7 @@
                                 "error": None,
                                 "language": "Python",
                                 "run_id": "some-run-uuid-2",
+                                "single_value_summary": 0.03637,
                                 "tags": {
                                     "compression": "snappy",
                                     "cpu_count": "2",
@@ -428,7 +368,6 @@
                                     "input_type": "arrow",
                                     "name": "file-read",
                                 },
-                                "value": 0.03637,
                             },
                             "less_is_better": True,
                             "unit": "s",
@@ -464,6 +403,7 @@
                                     "error": None,
                                     "language": "Python",
                                     "run_id": "some-run-uuid-1",
+                                    "single_value_summary": 0.03637,
                                     "tags": {
                                         "compression": "snappy",
                                         "cpu_count": "2",
@@ -472,7 +412,6 @@
                                         "input_type": "arrow",
                                         "name": "file-read",
                                     },
-                                    "value": 0.03637,
                                 },
                                 "contender": {
                                     "batch_id": "some-batch-uuid-2",
@@ -482,6 +421,7 @@
                                     "error": None,
                                     "language": "Python",
                                     "run_id": "some-run-uuid-2",
+                                    "single_value_summary": 0.03637,
                                     "tags": {
                                         "compression": "snappy",
                                         "cpu_count": "2",
@@ -490,7 +430,6 @@
                                         "input_type": "arrow",
                                         "name": "file-read",
                                     },
-                                    "value": 0.03637,
                                 },
                                 "less_is_better": True,
                                 "unit": "s",
@@ -518,6 +457,7 @@
                                     "error": None,
                                     "language": "Python",
                                     "run_id": "some-run-uuid-1",
+                                    "single_value_summary": 0.03637,
                                     "tags": {
                                         "compression": "snappy",
                                         "cpu_count": "2",
@@ -526,7 +466,6 @@
                                         "input_type": "arrow",
                                         "name": "file-write",
                                     },
-                                    "value": 0.03637,
                                 },
                                 "contender": {
                                     "batch_id": "some-batch-uuid-2",
@@ -536,6 +475,7 @@
                                     "error": None,
                                     "language": "Python",
                                     "run_id": "some-run-uuid-2",
+                                    "single_value_summary": 0.03637,
                                     "tags": {
                                         "compression": "snappy",
                                         "cpu_count": "2",
@@ -544,7 +484,6 @@
                                         "input_type": "arrow",
                                         "name": "file-write",
                                     },
-                                    "value": 0.03637,
                                 },
                                 "less_is_better": True,
                                 "unit": "s",
@@ -1604,7 +1543,7 @@
         },
         "/api/compare/benchmark-results/{compare_ids}/": {
             "get": {
-                "description": "Compare benchmark results.",
+                "description": "Compare benchmark results.\n\nReturns basic information about the baseline and contender benchmark results\nas well as some analyses comparing the performance of the contender to the\nbaseline.\n\nThe `pairwise` analysis computes the percentage difference of the\ncontender's mean value to the baseline's mean value. The reported difference\nis signed such that a more negative value indicates more of a performance\nregression. This difference is then thresholded such that values more\nextreme than the threshold are marked as `regression_indicated` or\n`improvement_indicated`. The threshold is 5.0% by default, but can be\nchanged via the `threshold` query parameter, which should be a positive\nnumber representing a percent.\n\nThe `pairwise` analysis may be `null` if either benchmark result does not\nhave a mean value, or if the baseline result's mean value is 0.\n\nThe `lookback_z_score` analysis computes the z-score of the contender's mean\nvalue compared to a distribution of benchmark results ending with the\nbaseline result. The reported z-score is also signed such that a more\nnegative value indicates more of a performance regression, and thresholded.\nThe threshold z-score is 5.0, but can be changed via the `threshold_z` query\nparameter, which should be a positive number.\n\nThe `lookback_z_score` may be `null` if the contender benchmark result is\nmissing a z-score, due to not finding a baseline distribution that matches\nthe contender benchmark result. More details about this analysis can be\nfound at https://conbench.github.io/conbench/pages/lookback_zscore.html.\n\nIf either benchmark result is not found, this endpoint will raise a 404. If\nthe benchmark results don't have the same unit, this endpoint will raise a\n400. Otherwise, you may compare any two benchmark results, no matter if\ntheir cases, contexts, hardwares, or even repositories don't match.\n",
                 "parameters": [
                     {
                         "example": "<baseline_id>...<contender_id>",
@@ -1622,6 +1561,7 @@
                 ],
                 "responses": {
                     "200": {"$ref": "#/components/responses/CompareEntity"},
+                    "400": {"$ref": "#/components/responses/400"},
                     "401": {"$ref": "#/components/responses/401"},
                     "404": {"$ref": "#/components/responses/404"},
                 },
@@ -1630,7 +1570,7 @@
         },
         "/api/compare/runs/{compare_ids}/": {
             "get": {
-                "description": "Compare benchmark results.",
+                "description": "Compare all benchmark results between two runs.\n\nThis endpoint will return a list of comparison objects, pairing benchmark\nresults from the given baseline and contender runs that have the same case,\ncontext, hardware, repository, and unit. The comparison object is the same\nas the `GET /api/compare/benchmark-results/` response; see that endpoint's\ndocumentation for details.\n\nIf a benchmark result from one run does not have a matching result in the\nother run, a comparison object will still be returned for it, with the other\nresult's information replaced by `null` and each analysis also `null`.\n\nIf a benchmark result from one run has multiple matching results in the\nother run, a comparison object will be returned for each match. Filtering\nmust be done clientside.\n",
                 "parameters": [
                     {
                         "example": "<baseline_id>...<contender_id>",

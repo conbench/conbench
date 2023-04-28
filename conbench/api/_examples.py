@@ -180,7 +180,7 @@ def _api_compare_entity(
             "benchmark_name": benchmark_name,
             "case_permutation": case_permutation,
             "language": "Python",
-            "value": 0.03637,
+            "single_value_summary": 0.03637,
             "error": None,
             "benchmark_result_id": benchmark_result_ids[0],
             "batch_id": batch_ids[0],
@@ -191,7 +191,7 @@ def _api_compare_entity(
             "benchmark_name": benchmark_name,
             "case_permutation": case_permutation,
             "language": "Python",
-            "value": 0.03637,
+            "single_value_summary": 0.03637,
             "error": None,
             "benchmark_result_id": benchmark_result_ids[1],
             "batch_id": batch_ids[1],
@@ -232,7 +232,7 @@ def _api_compare_list(
                 "benchmark_name": benchmark_names[0],
                 "case_permutation": case_permutations[0],
                 "language": "Python",
-                "value": 0.03637,
+                "single_value_summary": 0.03637,
                 "error": None,
                 "benchmark_result_id": baseline_ids[0],
                 "batch_id": batch_ids[0],
@@ -243,7 +243,7 @@ def _api_compare_list(
                 "benchmark_name": benchmark_names[0],
                 "case_permutation": case_permutations[0],
                 "language": "Python",
-                "value": 0.03637,
+                "single_value_summary": 0.03637,
                 "error": None,
                 "benchmark_result_id": contender_ids[0],
                 "batch_id": batch_ids[1],
@@ -272,7 +272,7 @@ def _api_compare_list(
                 "benchmark_name": benchmark_names[1],
                 "case_permutation": case_permutations[1],
                 "language": "Python",
-                "value": 0.03637,
+                "single_value_summary": 0.03637,
                 "error": None,
                 "benchmark_result_id": baseline_ids[1],
                 "batch_id": batch_ids[0],
@@ -283,7 +283,7 @@ def _api_compare_list(
                 "benchmark_name": benchmark_names[1],
                 "case_permutation": case_permutations[1],
                 "language": "Python",
-                "value": 0.03637,
+                "single_value_summary": 0.03637,
                 "error": None,
                 "benchmark_result_id": contender_ids[1],
                 "batch_id": batch_ids[1],
@@ -306,72 +306,6 @@ def _api_compare_list(
             },
         },
     ]
-
-
-def _api_compare_benchmark_result(
-    baseline_commit_id,
-    contender_commit_id,
-    baseline_id,
-    baseline_name,
-    baseline_timestamp,
-    contender_id,
-    contender_name,
-    contender_timestamp,
-):
-    return {
-        "commits": {
-            "baseline": {
-                "author_avatar": "https://avatars.githubusercontent.com/u/1299904?v=4",
-                "author_login": "bkietz",
-                "author_name": "Benjamin Kietzman",
-                "id": baseline_commit_id,
-                "message": "ARROW-11767: [C++] Scalar::Hash may segfault",
-                "parent_sha": "6d703c4c7b15be630af48d5e9ef61628751674b2",
-                "repository": "https://github.com/org/repo",
-                "sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-                "timestamp": "2021-02-24T22:12:11",
-                "url": "https://github.com/org/repo/commit/4beb514d071c9beec69b8917b5265e77ade22fb3",
-                "branch": "some_user_or_org:some_branch",
-                "fork_point_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-            },
-            "contender": {
-                "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
-                "author_login": "dianaclarke",
-                "author_name": "Diana Clarke",
-                "id": contender_commit_id,
-                "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
-                "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-                "repository": "https://github.com/org/repo",
-                "sha": "02addad336ba19a654f9c857ede546331be7b631",
-                "timestamp": "2021-02-25T01:02:51",
-                "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
-                "branch": "some_user_or_org:some_branch",
-                "fork_point_sha": "02addad336ba19a654f9c857ede546331be7b631",
-            },
-        },
-        "links": {
-            "self": "http://localhost/api/compare/commits/4beb514d071c9beec69b8917b5265e77ade22fb3...02addad336ba19a654f9c857ede546331be7b631/"
-        },
-        "runs": [
-            {
-                "baseline": {
-                    "hardware_name": "diana",
-                    "run": f"http://localhost/api/runs/{baseline_id}/",
-                    "run_id": baseline_id,
-                    "run_name": baseline_name,
-                    "run_timestamp": baseline_timestamp,
-                },
-                "compare": f"http://localhost/api/compare/runs/{baseline_id}...{contender_id}/",
-                "contender": {
-                    "hardware_name": "diana",
-                    "run": f"http://localhost/api/runs/{contender_id}/",
-                    "run_id": contender_id,
-                    "run_name": contender_name,
-                    "run_timestamp": contender_timestamp,
-                },
-            },
-        ],
-    }
 
 
 def _api_context_entity(context_id, links=True):
@@ -594,16 +528,6 @@ COMPARE_LIST = _api_compare_list(
             "name": "file-write",
         },
     ],
-)
-COMPARE_BENCHMARK_RESULT = _api_compare_benchmark_result(
-    "some-baseline-commit-id",
-    "some-contender-commit-id",
-    "some-baseline-run-id",
-    "commit: 4beb514d071c9beec69b8917b5265e77ade22fb3",
-    "2021-02-24T23:12:11",
-    "some-contender-run-id",
-    "commit: 02addad336ba19a654f9c857ede546331be7b631",
-    "2021-02-25T06:02:51",
 )
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
 HISTORY_ENTITY = _api_history_entity(

@@ -256,9 +256,15 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             compare = f'{c["baseline"]["benchmark_result_id"]}...{c["contender"]["benchmark_result_id"]}'
             c["compare_benchmarks_url"] = f.url_for(view, compare_ids=compare)
 
-            if c["analysis"]["lookback_z_score"]["regression_indicated"]:
+            if (
+                c["analysis"]["lookback_z_score"]
+                and c["analysis"]["lookback_z_score"]["regression_indicated"]
+            ):
                 regressions += 1
-            if c["analysis"]["lookback_z_score"]["improvement_indicated"]:
+            if (
+                c["analysis"]["lookback_z_score"]
+                and c["analysis"]["lookback_z_score"]["improvement_indicated"]
+            ):
                 improvements += 1
 
         return comparisons, regressions, improvements, None
