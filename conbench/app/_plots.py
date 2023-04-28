@@ -499,7 +499,7 @@ def time_series_plot(
     current_benchmark_result: BenchmarkResult,
     run,
     height=380,
-    width=1100,
+    width=800,
 ):
     # log.info(
     #     "Time series plot for:\n%s",

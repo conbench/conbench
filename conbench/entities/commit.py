@@ -73,6 +73,7 @@ class Commit(Base, EntityMixin):
 
     # I think this is guaranteed to be a URL. Is it?
     author_avatar: Mapped[Optional[str]] = Nullable(s.String(100))
+
     # Note(JP): tz-naive datetime, git commit author date, in UTC.
     # Edit: adding the type Optional[datetime] is not sufficient because
     # further down we use `.label()` which seems to be sqlalchemy-specific

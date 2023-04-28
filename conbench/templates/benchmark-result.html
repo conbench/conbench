@@ -1,49 +1,86 @@
 {% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
-  <nav aria-label="breadcrumb">
+  <!-- <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item active">
-        <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">Run</a>
+      <li class="breadcrumb-item small">
+        <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">Run {{ benchmark.run_id[:9] }}...</a>
       </li>
-      <li class="breadcrumb-item active">
-        <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">Batch</a>
-      </li>
-      <li class="breadcrumb-item active" aria-current="page">
+      <li class="breadcrumb-item active small" aria-current="page">
         <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
-        Benchmark result {{ benchmark.id[:7] }}...</a>
+        Result {{ benchmark.id[:9] }}...</a>
       </li>
     </ol>
-  </nav>
-  <br />
-  {% if history_plot_info.jsondoc is not none %}
-    <h3>History plot for benchmark '{{ benchmark.display_bmname }}'</h3>
-    <p class="fst-italic fw-light">For a specific case permutation and hardware/context (see below)</p>
-    <!-- <div>{{ benchmark.display_case_perm }}</div> -->
-    <div class="mt-4" id="plot-history-0" align="center"></div>
-    <div class="row">
-      <div class="col-md-12" style="padding-top: 10px;">
-        Click on a benchmark result (grey point) in the plot to see a corresponding benchmark result summary.
-        <div class="conbench-histplot-run-details" style="display: none;">
-          <br />
-          <div class="panel panel-success">
-            <div class="panel-heading">Summary for selected benchmark (green data point in plot)</div>
-            <div class="panel-body">
-              <ul class="ul-histplot-run-details">
-              </ul>
+  </nav> -->
+
+
+  <h4>
+   <strong>{{ benchmark.display_bmname }}</strong> / result {{ result.id[:15] }}...
+  </h4>
+
+
+
+  <div class="row">
+    <div class="col-md-4 mt-5 p-3">
+      <div class="row cb-bm-summary small">
+        <dt class="col-sm-4">status</dt>
+        <dd class="col-sm-8"><code>{% if result.is_failed() %} failed {% else %} success {%endif%}</code></dd>
+
+        <dt class="col-sm-4">data</dt>
+        <dd class="col-sm-8"><code>{{ result.ui_mean_and_uncertainty }}</code></dd>
+
+        <dt class="col-sm-4">benchmark date</dt>
+        <dd class="col-sm-8"><code>{{ result.timestamp.strftime("%Y-%m-%d") }}</code></dd>
+
+        <dt class="col-sm-4">commit date </dt>
+        <dd class="col-sm-8"><code>{{ result.run.commit.timestamp.strftime("%Y-%m-%d") }}</code></dd>
+
+        <dt class="col-sm-4">commit hash</dt>
+        <dd class="col-sm-8"><code>{{ result.run.commit.hash[:8]}}</code></dd>
+
+        <dt class="col-sm-4">repo</dt>
+        <dd class="col-sm-8"><code>{{ result.run.commit.repo_url }}</code></dd>
+
+        <dt class="col-sm-4">hardware</dt>
+        <dd class="col-sm-8 text-truncate"><code>{{ result.run.hardware.name }}</code></dd>
+      </div>
+    </div>
+    <div class="col-md-8 mt-3 p-3">
+      {% if history_plot_info.jsondoc is not none %}
+      <div class="mt-4" id="plot-history-0"></div>
+      <div class="row">
+        <div class="col-md-12 pl-5 small">
+          Click on a benchmark result (grey point) in the plot to see a corresponding benchmark result summary.
+          <div class="conbench-histplot-run-details" style="display: none;">
+            <br />
+            <div class="panel panel-success">
+              <div class="panel-heading">Summary for selected benchmark (green data point in plot)</div>
+              <div class="panel-body">
+                <ul class="ul-histplot-run-details">
+                </ul>
+              </div>
             </div>
           </div>
         </div>
       </div>
+    {% else %}
+      <div class="alert alert-info" role="alert">
+        Cannot display history plot for this benchmark result: {{ history_plot_info.reason_why_no_plot }}
+      </div>
+    {% endif %}
+
     </div>
-  {% else %}
-    <div class="alert alert-info" role="alert">
-      Cannot display history plot for this benchmark result: {{ history_plot_info.reason_why_no_plot }}
-    </div>
-  {% endif %}
-  <br />
+  </div>
+
+
+
+
+
+
+  <hr class="border border-danger border-1 opacity-50">
+
   <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-8 mt-3">
       {{ wtf.quick_form(update_form, id="update-form", button_map={'toggle_distribution_change': update_button_color}) }}
     </div>
   </div>

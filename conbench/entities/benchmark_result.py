@@ -449,7 +449,12 @@ class BenchmarkResult(Base, EntityMixin):
     @property
     def ui_mean_and_uncertainty(self) -> str:
         """
-        Build human-readable text conveying the data point acquired here.
+        Build human-readable text conveying the data acquired here.
+
+        The returned string
+
+            - includes a unit.
+            - limits the number of significant digits.
 
         If this is a multi-sample data point then return notation like
         string like '3.1 ± 0.7'.
@@ -462,6 +467,10 @@ class BenchmarkResult(Base, EntityMixin):
         each element in self.data is of type float.
 
         """
+
+        if self.is_failed():
+            return "failed"
+
         samples = self.data
 
         if samples is None:
@@ -472,8 +481,10 @@ class BenchmarkResult(Base, EntityMixin):
         samples = [s for s in samples if s is not None]
 
         if len(samples) < 3:
-            # Show each sample with five significant figures.
-            return "; ".join(str(sigfig.round(s, sigfigs=5)) for s in samples)
+            # Show each sample.
+            return "; ".join(
+                str(sigfig.round(s, sigfigs=4)) + " " + self.unit for s in samples
+            )
 
         # Build sample standard deviation. Maybe we can also use the pre-built
         # value, but trust needs to be established first.

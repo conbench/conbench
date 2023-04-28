@@ -1,12 +1,6 @@
 {% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item active">Run</li>
-      {% if run_id %}<li class="breadcrumb-item active" aria-current="page">{{ run_id }}</li>{% endif %}
-    </ol>
-  </nav>
   {% if compare_runs_url %}
     <p class="fs-5">
       <i class="bi bi-file-diff"></i> <a href="{{ compare_runs_url }}">compare to baseline</a>
@@ -51,15 +45,19 @@
     </div>
   {% endif %}
   <div class="col-md-12">
-    <h4>Benchmark results in Run</h4>
-    <table id="benchmarks" class="table table-hover">
+
+    <h4>
+      <strong>Run {{ run_id }}</strong> / benchmark results
+    </h4>
+
+    <table id="benchmarks" class="table table-hover small">
       <thead>
         <tr>
           <th scope="col">Date</th>
           <th scope="col" style="width: 80px">Lang</th>
           <th scope="col" style="width: 80px">Benchmark name</th>
           <th scope="col">Case permutation</th>
-          <th scope="col" style="width: 55px">Mean</th>
+          <th scope="col" style="width: 55px">Data</th>
           <th scope="col" style="width: 55px">Z-Score</th>
           <th scope="col" style="width: 55px">Error</th>
         </tr>
