@@ -13,7 +13,6 @@ import sqlalchemy as s
 
 from ..config import Config
 from ..db import Session
-from ..entities._comparator import _less_is_better
 from ..entities._entity import EntitySerializer
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import CantFindAncestorCommitsError, Commit
@@ -729,6 +728,12 @@ def _add_rolling_stats_columns_to_df(
     )
 
     return df
+
+
+def _less_is_better(unit) -> bool:
+    if unit in ["B/s", "i/s"]:
+        return False
+    return True
 
 
 def _calculate_z_score(

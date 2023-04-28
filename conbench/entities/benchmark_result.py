@@ -18,7 +18,6 @@ from sqlalchemy.orm import Mapped, relationship
 import conbench.util
 from conbench.db import Session
 
-from ..entities._comparator import z_improvement, z_regression
 from ..entities._entity import (
     Base,
     EntityMixin,
@@ -285,19 +284,6 @@ class BenchmarkResult(Base, EntityMixin):
 
     def to_dict_for_json_api(benchmark_result):
         # `self` is just convention :-P
-        #
-        # Note(JP): Communicating the z-score as part of the benchmark result
-        # object is a legacy approach. I think in the future we want to have a
-        # property called `analyses` (or so, conceptually); and then this is
-        # either empty, or shows details per-method. That could look like:
-        #
-        # analyses: { lookback-z-score: { z-score: 3.2, z-regression: true } }
-        try:
-            benchmark_result.z_score = float(benchmark_result.z_score)
-        except (AttributeError, ValueError, TypeError):
-            # Not all objects have this attribute set -> AttributeError.
-            # Some objects might have a non-numeric value set? Not sure -> ValueError
-            benchmark_result.z_score = None
 
         # Note(JP): having case/tags here is interesting; this requires a JOIN
         # query when fetching BenchmarkResult objects from the database.
@@ -332,12 +318,10 @@ class BenchmarkResult(Base, EntityMixin):
                 "q1": to_float(benchmark_result.q1),
                 "q3": to_float(benchmark_result.q3),
                 "iqr": to_float(benchmark_result.iqr),
-                # Note(JP): it's interesting that this was added here into
-                # `stats`, that's not a nice separation between input and
-                # output.`
-                "z_score": benchmark_result.z_score,
-                "z_regression": z_regression(benchmark_result.z_score),
-                "z_improvement": z_improvement(benchmark_result.z_score),
+                # TODO: remove these.
+                "z_score": None,
+                "z_regression": False,
+                "z_improvement": False,
             },
             "error": benchmark_result.error,
             "links": {
