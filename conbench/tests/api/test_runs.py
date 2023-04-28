@@ -17,8 +17,8 @@ DEFAULT_BRANCH_PLACEHOLDER = {
 }
 
 
-def _expected_entity(run, candidate_baseline_runs=None):
-    parent = run.commit.get_parent_commit()
+def _expected_entity(run: Run, candidate_baseline_runs=None):
+    parent = run.commit.get_parent_commit() if run.commit else None
     has_errors = False
     entity = _api_run_entity(
         run.id,
@@ -94,21 +94,29 @@ class TestRunGet(_asserts.GetEnforcer):
         result = _fixtures.benchmark_result(no_github=True)
         run = result.run
         response = client.get(f"/api/runs/{run.id}/")
-        self.assert_200_ok(
-            response,
-            _expected_entity(
-                run,
-                candidate_baseline_runs={
-                    "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
-                    "parent": {
-                        "baseline_run_id": None,
-                        "commits_skipped": None,
-                        "error": "no matching baseline run was found",
-                    },
+        expected = _expected_entity(
+            run,
+            candidate_baseline_runs={
+                "fork_point": {
+                    "baseline_run_id": None,
+                    "commits_skipped": None,
+                    "error": "the contender run is not connected to the git graph",
                 },
-            ),
+                "latest_default": {
+                    "baseline_run_id": None,
+                    "commits_skipped": None,
+                    "error": "this baseline commit type does not exist for this run",
+                },
+                "parent": {
+                    "baseline_run_id": None,
+                    "commits_skipped": None,
+                    "error": "the contender run is not connected to the git graph",
+                },
+            },
         )
+        expected["commit"] = None
+        expected["links"].pop("commit")
+        self.assert_200_ok(response, expected)
 
     def test_get_run_should_not_prefer_test_runs_as_baseline(self, client):
         """Test runs shouldn't be preferred, but if they are the only runs that exist,

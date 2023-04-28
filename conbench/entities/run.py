@@ -414,9 +414,17 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
 
 class _Serializer(EntitySerializer):
     def _dump(self, run: Run, get_baseline_runs: bool = False):
-        commit = CommitSerializer().one.dump(run.commit)
+        if run.commit:
+            commit = CommitSerializer().one.dump(run.commit)
+            commit.pop("links", None)
+            commit_link = f.url_for(
+                "api.commit", commit_id=commit["id"], _external=True
+            )
+        else:
+            commit = None
+            commit_link = None
+
         hardware = HardwareSerializer().one.dump(run.hardware)
-        commit.pop("links", None)
         hardware.pop("links", None)
         result = {
             "id": run.id,
@@ -439,14 +447,13 @@ class _Serializer(EntitySerializer):
             "links": {
                 "list": f.url_for("api.runs", _external=True),
                 "self": f.url_for("api.run", run_id=run.id, _external=True),
-                "commit": f.url_for(
-                    "api.commit", commit_id=commit["id"], _external=True
-                ),
                 "hardware": f.url_for(
                     "api.hardware", hardware_id=hardware["id"], _external=True
                 ),
             },
         }
+        if commit_link:
+            result["links"]["commit"] = commit_link
         if get_baseline_runs:
             result["candidate_baseline_runs"] = run.get_candidate_baseline_runs()
         return result
