@@ -24,6 +24,8 @@ table.dataTable thead .sorting_desc {
    in a datatables presentation */
 .dataTables_paginate .page-link {
   border: none;
+  outline: none !important;
+  box-shadow: none;
 }
 
 /*
