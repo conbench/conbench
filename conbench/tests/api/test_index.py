@@ -37,3 +37,16 @@ class TestAPI(_asserts.ApiEndpointTest):
         # This endpoint is here for convenience in local development/testing.
         response = client.get("/api/wipe-db")
         assert response.status_code == 200
+
+    def test_json_err(self, client):
+        # This endpoint is here for convenience in local development/testing.
+        response = client.get("/api/raise-httperr")
+        assert response.status_code == 400
+        for k in ("code", "name", "description"):
+            assert response.json[k]
+
+    def test_traceback_in_500(self, client):
+        # This endpoint is here for convenience in local development/testing.
+        response = client.get("/api/raise-unexpected")
+        assert response.status_code == 500
+        assert "traceback" in response.text.lower()

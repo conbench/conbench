@@ -207,5 +207,21 @@ if Config.TESTING:
         empty_db_tables()
         return "200 OK", 200
 
+    @api.route("/raise-httperr", methods=("GET",))
+    def raise_httperr():
+        """
+        For local development / developer productivity.
+        """
+        f.abort(400, description="foo")
+
+    @api.route("/raise-unexpected", methods=("GET",))
+    def raise_unexpected():
+        """
+        For local development / developer productivity.
+        """
+        raise Exception("doh")
+        # raise AssertionError("doh!")
+        # assert True == False
+
 
 spec.components.schema("Ping", schema=PingSchema)

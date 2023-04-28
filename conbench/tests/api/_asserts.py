@@ -60,7 +60,8 @@ class ApiEndpointTest:
     def assert_401_unauthorized(self, r):
         assert r.status_code == 401, r.status_code
         assert r.content_type == "application/json", r.content_type
-        assert r.json == {"code": 401, "name": "Unauthorized"}, r.json
+        assert r.json["code"] == 401, r.json
+        assert r.json["name"] == "Unauthorized"
         errors = ErrorSchema().validate(r.json)
         assert errors == {}, errors
 
