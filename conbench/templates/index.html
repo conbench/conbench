@@ -1,11 +1,12 @@
 {% extends "app.html" %}
 {% block app_content %}
-  <h1 class="display-3 text-center" style="margin-bottom: 40px">/ˈkɒnbɛnʧ/</h1>
+  <h1 class="display-3 text-center" style="margin: 40px 0 30px 0; font-weight: 50;">/ˈkɒnbɛnʧ/</h1>
   {% for reponame, runobjs in repo_runs_map.items() %}
-    <div class="p-0">
-      <h4>Recent runs for {{ reponame }}</h4>
-    </div>
-    <hr class="border border-danger border-1 opacity-50">
+    <div class="row mb-5">
+
+    <h4>Recent runs for <strong>{{ reponame }}</strong></h4>
+
+    <!-- <hr class="border border-danger border-1 opacity-50"> -->
     <!-- https://getbootstrap.com/docs/5.2/content/tables/#responsive-tables -->
     <div class="table-responsive" style="margin-bottom: 50px">
       <!-- wow, the width:100% on the table below is really important, otherwise
@@ -15,31 +16,30 @@
      but otherwise spent way too much time debugging. This structure repeats,
      and only the _first_ table had properties
 -->
-      <table class="cb-runs-table table table-hover"
-             style="width:100%;
-                    display: none">
+      <table class="cb-runs-table table table-hover table-borderless small"
+             style="width:100%; display: none">
         <thead>
           {# https://datatables.net/examples/basic_init/complex_header.html #}
           <tr>
-            <th scope="colgroup" colspan="3">Run</th>
-            <th scope="colgroup" colspan="3">Commit</th>
+            <th scope="colgroup" colspan="4" style="padding-bottom:0;" class="">Run</th>
+            <th scope="colgroup" colspan="3" class="">Commit</th>
           </tr>
           <tr>
             <!-- add tooltip, saying that this is DB insertion time -->
-            <th scope="col" style="width: 180px">insertion time</th>
-            <th scope="col">results</th>
-            <th scope="col" class="reason-col">reason</th>
-            <th scope="col" style="width: 150px">hardware</th>
-            <th scope="col" style="width: 170px">author</th>
-            <th scope="col" class="commit-col" style="width: 90px">hash</th>
-            <th scope="col">message</th>
+            <th scope="col" style="width: 180px" class="cb-colgroup-run">creation time</th>
+            <th scope="col" class="cb-colgroup-run">results</th>
+            <th scope="col" class="reason-col cb-colgroup-run">reason</th>
+            <th scope="col" style="width: 150px" class="cb-colgroup-run">hardware</th>
+            <th scope="col" style="width: 170px" class="cb-colgroup-commit">author</th>
+            <th scope="col" class="commit-col cb-colgroup-commit" style="width: 90px">hash</th>
+            <th scope="col" class="cb-colgroup-commit">message</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="table-group-divider">
           {% for r in runobjs %}
-            <tr>
-              <td style="white-space: nowrap;">
-                <a href="{{ url_for('app.run', run_id=r.run.id) }}">{{ r.ctime_for_table }}</a>
+            <tr class="no-border">
+              <td>
+                <code><a href="{{ url_for('app.run', run_id=r.run.id) }}">{{ r.ctime_for_table }}</a></code>
                 {% if r.run.has_errors or r.run.error_info %}
                   <i class="bi bi-exclamation-circle text-danger"
                      data-toggle="tooltip"
@@ -56,7 +56,7 @@
                 {% endif %}
               </td>
               <td>
-                <div class="table-entry">{{ r.run.hardware.name }}</div>
+                <span class="table-entry text-truncate d-inline-block" style="max-width: 140px;">{{ r.run.hardware.name }}</span>
               </td>
               <td>
                 <div class="table-entry">
@@ -72,7 +72,7 @@
               </td>
               <td>
                 {% if r.run.commit.commit_url is not none %}
-                  <a href="{{ r.run.commit.commit_url }}">{{ r.run.commit.hash[:7] }}</a>
+                  <code><a href="{{ r.run.commit.commit_url }}">{{ r.run.commit.hash[:7] }}</a></code>
                 {% else %}
                   {# is this a valid scenario? when there's a hash, but no url? #}
                   {{ r.run.commit.hash[:7] }}
@@ -86,6 +86,7 @@
         </tbody>
       </table>
     </div>
+  </div>
   {% endfor %}
 {% endblock %}
 {% block scripts %}
@@ -102,10 +103,12 @@
           "order": [[0, 'desc']],
         // https://datatables.net/reference/option/dom
         // put `l` to the bottom to show the "show N entries" menu at bottom
-          "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
+          //"dom": '<"row"<"col-6"l><"col-6"f>>rt<"row"<"col-6"i><".col-6"p>>',
+          "dom": '<"row"<"d-flex flex-row-reverse p-0"fl>>rt<"row p-2"<"col-6"i><".col-6"p>>',
           "language": {
             "searchPlaceholder": "search across all columns",
           },
+          "language": { search: '', searchPlaceholder: "search all columns" },
           initComplete: function () {
             var api = this.api();
           // reveal only after DOM modification is complete (reduce loading

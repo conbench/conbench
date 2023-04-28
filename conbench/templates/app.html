@@ -35,7 +35,7 @@
         {% block body -%}
           {% block navbar %}
             <!-- Note(JP): based on navbarTogglerDemo02 bootstrap 5.2 docs demo -->
-            <nav class="navbar navbar-expand-lg bg-light">
+            <nav class="navbar navbar-expand-lg navbar-dark">
               <div class="container">
                 <a class="navbar-brand" href="{{ url_for('app.index') }}">{{ application }}</a>
                 <button class="navbar-toggler"
@@ -52,7 +52,7 @@
                     <!-- ms-auto for right alignment -->
                     <ul class="nav navbar-nav ms-auto">
                       <li class="nav-item">
-                        <a class="btn btn-outline-dark" href="{{ url_for('app.login') }}">Login</a>
+                        <a class="btn btn-outline-light" href="{{ url_for('app.login') }}">Login</a>
                       </li>
                     </ul>
                   {% else %}
@@ -103,8 +103,7 @@
             </div>
           {% endblock %}
           {% block content %}
-            <div class="container">
-              <br>
+            <div class="container mt-5">
               <!-- https://flask.palletsprojects.com/en/2.2.x/patterns/flashing/#flashing-with-categories -->
               {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -117,7 +116,6 @@
                 {% endif %}
               {% endwith %}
               {# application content needs to be provided in the app_content block #}
-              <div style="margin-top: 30px"></div>
               {% block app_content %}{% endblock %}
               <br>
               <hr>
