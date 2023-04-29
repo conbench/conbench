@@ -226,8 +226,7 @@ INPUTS:
                   table.columns(column_indexes).every(function() {
                     var that = this;
                     var title = this.header().textContent;
-                    $(`<br /><input class="custom-input-text custom-search-box" type="text" placeholder="🔍 filter"
-                onClick="if(event.stopPropagation!==undefined){event.preventDefault(); event.stopPropagation();}event.cancelBubble=true;"/>`)
+                    $(`<br /><input class="custom-input-text custom-search-box" type="text" placeholder="🔍 filter" onClick="if(event.stopPropagation!==undefined){event.preventDefault(); event.stopPropagation();}event.cancelBubble=true;" />`)
                       .appendTo(this.header())
                       .on('keyup change clear', function() { //column search/sorting triggered on keypress
                         that
@@ -241,7 +240,7 @@ INPUTS:
 /*
 INFO:
     Function to check unique value count and set the required search type.
-        - Unique values <10 & >1 [specific_column_search]: drop-down based search is implemented
+        - Unique values <10 &>1 [specific_column_search]: drop-down based search is implemented
         - Unique values >10 [free_text_column_search]: free text search is implemented
         - Search is not enabled with single OR null data points and a message is logged on console
         - If any unidentified value (beyond assumed definitions) is encountered, a message is logged on console

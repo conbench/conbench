@@ -163,17 +163,13 @@
           {% if run.commit.display_timestamp %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>date</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ run.commit.display_timestamp }}
-              </div>
+              <div align="right" style="display:inline-block; float: right;">{{ run.commit.display_timestamp }}</div>
             </li>
           {% endif %}
           {% if run.commit.display_message %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>author</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ run.commit.author_name }}
-              </div>
+              <div align="right" style="display:inline-block; float: right;">{{ run.commit.author_name }}</div>
             </li>
           {% endif %}
           <li class="list-group-item" style="overflow-y: auto;">
@@ -185,52 +181,36 @@
           {% if run.commit.branch %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>branch</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ run.commit.branch }}
-              </div>
+              <div align="right" style="display:inline-block; float: right;">{{ run.commit.branch }}</div>
             </li>
           {% endif %}
           {% if run.commit.fork_point_sha %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>forked from default at</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ run.commit.fork_point_sha }}
-              </div>
+              <div align="right" style="display:inline-block; float: right;">{{ run.commit.fork_point_sha }}</div>
             </li>
           {% endif %}
         {% endif %}
-        <li class="list-group-item list-group-item-primary">
-          Hardware
-        </li>
+        <li class="list-group-item list-group-item-primary">Hardware</li>
         {% for k,v in run.hardware.items() %}
           <li class="list-group-item" style="overflow-y: auto;">
             <b>{{ k }}</b>
-            <div align="right" style="display:inline-block; float: right;">
-              {{ v }}
-            </div>
+            <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
           </li>
         {% endfor %}
-        <li class="list-group-item list-group-item-primary">
-          Context
-        </li>
+        <li class="list-group-item list-group-item-primary">Context</li>
         {% for k,v in benchmark.context.items() %}
           <li class="list-group-item" style="overflow-y: auto;">
             <b>{{ k }}</b>
-            <div align="right" style="display:inline-block; float: right;">
-              {{ v }}
-            </div>
+            <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
           </li>
         {% endfor %}
         {% if benchmark.info and benchmark.info|length > 1 %}
-          <li class="list-group-item list-group-item-primary">
-            Additional Context Details
-          </li>
+          <li class="list-group-item list-group-item-primary">Additional Context Details</li>
           {% for k,v in benchmark.info.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">
-                {{ v | urlize(target="_blank") }}
-              </div>
+              <div align="right" style="display:inline-block; float: right;">{{ v | urlize(target="_blank") }}</div>
             </li>
           {% endfor %}
         {% endif %}
