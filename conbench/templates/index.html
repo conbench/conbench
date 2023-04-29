@@ -60,27 +60,41 @@
               </td>
               <td>
                 <div class="table-entry">
-                  {% if r.run.commit.author_avatar_url is not none %}
-                    <img alt="avatar"
-                         src="{{ r.run.commit.author_avatar_url  }}"
-                         height="25"
-                         style="border-radius: 50%">
-                    &nbsp;
+                  {% if r.run.commit is not none %}
+                    {% if r.run.commit.author_avatar_url is not none %}
+                      <img alt="avatar"
+                           src="{{ r.run.commit.author_avatar_url  }}"
+                           height="25"
+                           style="border-radius: 50%">
+                      &nbsp;
+                    {% endif %}
+                    {{ r.run.commit.author_name }}
+                  {% else %}
+                    n/a
                   {% endif %}
-                  {{ r.run.commit.author_name }}
                 </div>
               </td>
               <td>
-                {% if r.run.commit.commit_url is not none %}
-                  <a href="{{ r.run.commit.commit_url }}">{{ r.run.commit.hash[:7] }}</a>
+                {% if r.run.commit is not none %}
+                  {% if r.run.commit.commit_url is not none %}
+                    <a href="{{ r.run.commit.commit_url }}">{{ r.run.commit.hash[:7] }}</a>
+                  {% else %}
+                    {# is this a valid scenario? when there's a hash, but no url? #}
+                    {{ r.run.commit.hash[:7] }}
+                  {% endif %}
+                  <!--NOTE: enable full commit has search while maintaining partial hash display -->
+                  <p style="display:none">{{ r.run.commit.hash }}</p>
                 {% else %}
-                  {# is this a valid scenario? when there's a hash, but no url? #}
-                  {{ r.run.commit.hash[:7] }}
+                  n/a
                 {% endif %}
-                <!--NOTE: enable full commit has search while maintaining partial hash display -->
-                <p style="display:none">{{ r.run.commit.hash }}</p>
               </td>
-              <td>{{ r.commit_message_short }}</td>
+              <td>
+                {% if r.run.commit is not none %}
+                  {{ r.commit_message_short }}
+                {% else %}
+                  n/a
+                {% endif %}
+              </td>
             </tr>
           {% endfor %}
         </tbody>
