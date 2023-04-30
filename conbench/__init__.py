@@ -181,7 +181,9 @@ def _handle_all_other_exceptions(exc):
     # exception in an HTTP 500 response, facilitating debugging; so that users
     # can send tracebacks right away.
     tbstr = "".join(traceback.format_exception(exc))
-    return f.make_response((f"unexpected exception, please report this:\n{tbstr}", 500))
+    resp = f.make_response((f"unexpected exception, please report this:\n{tbstr}", 500))
+    resp.headers["Content-Type"] = "text/plain"
+    return resp
 
 
 def _json_http_errors(exc) -> "werkzeug.wrappers.Response":

@@ -118,27 +118,19 @@
                 {% if (c.contender.value is not none) and (c.baseline.value is not none) %}
                   <td>{{ c.analysis.pairwise.percent_change }}%</td>
                 {% else %}
-                  <td>
-                  </td>
+                  <td></td>
                 {% endif %}
+                <td>{{ c.baseline.language }}</td>
                 <td>
-                  {{ c.baseline.language }}
-                </td>
-                <td>
-                  <div>
-                    {{ c.baseline.benchmark_name }}
-                  </div>
+                  <div>{{ c.baseline.benchmark_name }}</div>
                 </td>
                 <td>
                   {% if (c.contender.value is not none or c.contender_error) and (c.baseline.value is not none or c.baseline_error) %}
                     <a href="{{ c.compare_benchmarks_url }}">
-                      <div>
-                        {{ c.baseline.case_permutation }}
-                      </div>
+                      <div>{{ c.baseline.case_permutation }}</div>
                     </a>
                   {% else %}
-                    <div>
-                    </div>
+                    <div></div>
                   {% endif %}
                 </td>
                 {% if c.baseline.error is not none %}
@@ -151,9 +143,7 @@
                       </i></a>
                     </td>
                   {% else %}
-                    <td style="white-space: nowrap;">
-                      {{ c.baseline.value }} {{ c.unit }}
-                    </td>
+                    <td style="white-space: nowrap;">{{ c.baseline.value }} {{ c.unit }}</td>
                   {% endif %}
                   {% if c.contender.error is not none %}
                     <td>
@@ -165,9 +155,7 @@
                         </i></a>
                       </td>
                     {% else %}
-                      <td style="white-space: nowrap;">
-                        {{ c.contender.value }} {{ c.unit }}
-                      </td>
+                      <td style="white-space: nowrap;">{{ c.contender.value }} {{ c.unit }}</td>
                     {% endif %}
                   </tr>
                 {% endif %}
@@ -177,52 +165,34 @@
         </div>
       </div>
       <hr />
-      <h4>
-        Compare current contender run with another run:
-      </h4>
+      <h4>Compare current contender run with another run:</h4>
       <br>
       <form>
         <div class="form-group">
-          <label for="commit-date">
-            Baseline Commit Date
-          </label>
+          <label for="commit-date">Baseline Commit Date</label>
           <input type="date" id="commit-date" name="commit-date" value="">
         </div>
         <div class="form-group">
-          <label for="baseline-commit">
-            Baseline Commit
-          </label>
+          <label for="baseline-commit">Baseline Commit</label>
           <select class="custom-select" name="baseline-commit" id="baseline-commit">
-            <option value="" selected="selected">
-              Please select baseline commit date
-            </option>
+            <option value="" selected="selected">Please select baseline commit date</option>
           </select>
         </div>
         <div class="form-group">
-          <label for="hardware">
-            Hardware
-          </label>
+          <label for="hardware">Hardware</label>
           <select class="custom-select" name="hardware" id="hardware">
-            <option value="" selected="selected">
-              Please select baseline commit first
-            </option>
+            <option value="" selected="selected">Please select baseline commit first</option>
           </select>
         </div>
         <div class="form-group">
-          <label for="run-name">
-            Run Name
-          </label>
+          <label for="run-name">Run Name</label>
           <select class="custom-select" name="run-name" id="run-name">
-            <option value="" selected="selected">
-              Please select hardware first
-            </option>
+            <option value="" selected="selected">Please select hardware first</option>
           </select>
         </div>
       </form>
       <form name="compare-runs" id="compare-runs"  method="get" action="">
-        <button type="submit" class="btn btn-primary">
-          Submit
-        </button>
+        <button type="submit" class="btn btn-primary">Submit</button>
       </form>
     {% endblock %}
     {% block scripts %}
