@@ -25,6 +25,8 @@ class GitHubCheckStep(AlertPipelineStep):
 
     Parameters
     ----------
+    commit_hash
+        The commit hash to update.
     comparison_step_name
         The name of the ``GetConbenchZComparisonStep`` or
         ``GetConbenchZComparisonForRunsStep`` that ran earlier in the pipeline. If
@@ -35,11 +37,6 @@ class GitHubCheckStep(AlertPipelineStep):
         this or ``github_client``.
     github_client
         A GitHubRepoClient instance. Either provide this or ``repo``.
-    commit_hash
-        The commit hash to update. Default is to use the same one that was analyzed in
-        the ``GetConbenchZComparisonStep`` earlier in the pipeline. If
-        ``GetConbenchZComparisonForRunsStep`` is used because the contender lacks commit
-        metadata, ``commit_hash`` must be provided.
     step_name
         The name for this step. If not given, will default to this class's name.
 
@@ -67,10 +64,10 @@ class GitHubCheckStep(AlertPipelineStep):
 
     def __init__(
         self,
+        commit_hash: str,
         comparison_step_name: str,
         repo: Optional[str] = None,
         github_client: Optional[GitHubRepoClient] = None,
-        commit_hash: Optional[str] = None,
         step_name: Optional[str] = None,
     ) -> None:
         super().__init__(step_name=step_name)
@@ -93,7 +90,7 @@ class GitHubCheckStep(AlertPipelineStep):
         s = _Pluralizer(full_comparison.benchmarks_with_z_regressions).s
         res = self.github_client.update_check(
             name="Conbench performance report",
-            commit_hash=self.commit_hash or full_comparison.commit_hash,
+            commit_hash=self.commit_hash,
             status=self._default_check_status(full_comparison),
             title=(
                 "Some benchmarks had errors"
@@ -139,6 +136,8 @@ class GitHubStatusStep(AlertPipelineStep):
 
     Parameters
     ----------
+    commit_hash
+        The commit hash to update.
     comparison_step_name
         The name of the ``GetConbenchZComparisonStep`` or
         ``GetConbenchZComparisonForRunsStep`` that ran earlier in the pipeline.If
@@ -149,11 +148,6 @@ class GitHubStatusStep(AlertPipelineStep):
         this or ``github_client``.
     github_client
         A GitHubRepoClient instance. Either provide this or ``repo``.
-    commit_hash
-        The commit hash to update. Default is to use the same one that was analyzed in
-        the ``GetConbenchZComparisonStep`` earlier in the pipeline. If
-        ``GetConbenchZComparisonForRunsStep`` is used because the contender lacks commit
-        metadata, ``commit_hash`` must be provided.
     step_name
         The name for this step. If not given, will default to this class's name.
 
@@ -183,10 +177,10 @@ class GitHubStatusStep(AlertPipelineStep):
 
     def __init__(
         self,
+        commit_hash: str,
         comparison_step_name: str,
         repo: Optional[str] = None,
         github_client: Optional[GitHubRepoClient] = None,
-        commit_hash: Optional[str] = None,
         step_name: Optional[str] = None,
     ) -> None:
         super().__init__(step_name=step_name)
@@ -200,7 +194,7 @@ class GitHubStatusStep(AlertPipelineStep):
         ]
 
         res = self.github_client.update_commit_status(
-            commit_hash=self.commit_hash or full_comparison.commit_hash,
+            commit_hash=self.commit_hash,
             title="conbench",
             description=self._default_status_description(full_comparison),
             state=self._default_status_state(full_comparison),

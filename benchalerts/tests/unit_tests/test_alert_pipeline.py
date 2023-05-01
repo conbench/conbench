@@ -38,10 +38,14 @@ def test_reasonable_pipeline(conbench_env, github_auth):
                 step_name="z_500",
             ),
             steps.GitHubCheckStep(
-                github_client=github_client, comparison_step_name="z_none"
+                commit_hash=commit_hash,
+                comparison_step_name="z_none",
+                github_client=github_client,
             ),
             steps.GitHubStatusStep(
-                github_client=github_client, comparison_step_name="z_500"
+                commit_hash=commit_hash,
+                comparison_step_name="z_500",
+                github_client=github_client,
             ),
             steps.GitHubPRCommentAboutCheckStep(
                 pr_number=1, github_client=github_client
@@ -74,7 +78,9 @@ def test_reasonable_pipeline(conbench_env, github_auth):
     # now force an error to test error handling
     pipeline.steps.append(
         steps.GitHubStatusStep(
-            github_client=github_client, comparison_step_name="doesnt_exist"
+            commit_hash=commit_hash,
+            comparison_step_name="doesnt_exist",
+            github_client=github_client,
         ),
     )
     with pytest.raises(KeyError):

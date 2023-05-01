@@ -30,10 +30,8 @@ class RunComparisonInfo:
     contender_info
         The dict returned from Conbench when hitting /runs/{contender_run_id}. Contains
         info about the run's ID, commit, errors, links, etc.
-    baseline_info
-        The dict returned from Conbench when hitting /runs/{baseline_run_id}, if a
-        baseline run exists for this contender run. Contains info about the run's ID,
-        commit, errors, links, etc.
+    baseline_run_type
+        The user-given baseline run type to look for.
     compare_results
         The list returned from Conbench when hitting
         /compare/runs/{baseline_run_id}...{contender_run_id}, only if a baseline run
@@ -41,15 +39,15 @@ class RunComparisonInfo:
         to its baseline, including the statistics and regression analysis.
     benchmark_results
         The list returned from Conbench when hitting
-        /benchmarks?run_id={contender_run_id}, only if the contender run has errors and
-        there is no baseline run. Contains info about each benchmark result in the
-        contender run, including statistics and tracebacks. Only used when a baseline
-        run doesn't exist because otherwise all this information is already in the
-        compare_results.
+        /benchmark-results/?run_id={contender_run_id}, only if the contender run has
+        errors and there is no baseline run. Contains info about each benchmark result
+        in the contender run, including statistics and tracebacks. Only used when a
+        baseline run doesn't exist because otherwise all this information is already in
+        the compare_results.
     """
 
     contender_info: dict
-    baseline_info: Optional[dict] = None
+    baseline_run_type: str
     compare_results: Optional[List[dict]] = None
     benchmark_results: Optional[List[dict]] = None
 
@@ -62,32 +60,23 @@ class RunComparisonInfo:
             assert self.compare_link
             return [
                 BenchmarkResultInfo(
-                    name=benchmark_result["contender"]["case_permutation"]
-                    if "analysis" in benchmark_result
-                    else benchmark_result["benchmark"],
+                    name=comparison["contender"]["case_permutation"],
                     link=self.benchmark_result_link(
-                        benchmark_result["contender"]["benchmark_result_id"]
-                        if "analysis" in benchmark_result
-                        else benchmark_result["contender_id"]
+                        comparison["contender"]["benchmark_result_id"]
                     ),
-                    has_error=bool(
-                        benchmark_result["contender"]["error"]
-                        if "analysis" in benchmark_result
-                        else benchmark_result["contender_error"]
-                    ),
-                    has_z_regression=bool(
-                        benchmark_result["analysis"]["lookback_z_score"][
-                            "regression_indicated"
-                        ]
-                        if "analysis" in benchmark_result
-                        else benchmark_result["contender_z_regression"]
-                    ),
+                    has_error=bool(comparison["contender"]["error"]),
+                    has_z_regression=comparison["analysis"]["lookback_z_score"][
+                        "regression_indicated"
+                    ]
+                    if comparison["analysis"]["lookback_z_score"]
+                    else False,
                     run_id=self.contender_id,
                     run_reason=self.contender_reason,
                     run_time=self.contender_datetime,
                     run_link=self.compare_link,
                 )
-                for benchmark_result in self.compare_results
+                for comparison in self.compare_results
+                if comparison["contender"]
             ]
         elif self.benchmark_results:
             return [
@@ -107,18 +96,6 @@ class RunComparisonInfo:
             ]
         else:
             return []
-
-    @property
-    def baseline_is_parent(self) -> Optional[bool]:
-        """Whether the baseline run is on a commit that's the immediate parent of the
-        contender commit.
-        """
-        if self.baseline_info:
-            return (
-                self.baseline_info["commit"]["sha"]
-                == self.contender_info["commit"]["parent_sha"]
-            )
-        return None
 
     @property
     def contender_reason(self) -> str:
@@ -160,10 +137,24 @@ class RunComparisonInfo:
 
     @property
     def baseline_id(self) -> Optional[str]:
-        """The baseline run_id."""
-        if self.baseline_info:
-            return self.baseline_info["id"]
-        return None
+        """The baseline run_id, if found."""
+        return self.contender_info["candidate_baseline_runs"][self.baseline_run_type][
+            "baseline_run_id"
+        ]
+
+    @property
+    def baseline_error(self) -> Optional[str]:
+        """The error message if Conbench failed to get a baseline run."""
+        return self.contender_info["candidate_baseline_runs"][self.baseline_run_type][
+            "error"
+        ]
+
+    @property
+    def baseline_commits_skipped(self) -> Optional[List[str]]:
+        """The commit hashes skipped to find the baseline run, if it was found."""
+        return self.contender_info["candidate_baseline_runs"][self.baseline_run_type][
+            "commits_skipped"
+        ]
 
     @property
     def app_url(self) -> str:
@@ -176,14 +167,6 @@ class RunComparisonInfo:
         """The API path to get comparisons between the baseline and contender."""
         if self.baseline_id:
             return f"/compare/runs/{self.baseline_id}...{self.contender_id}/"
-        return None
-
-    @property
-    def baseline_path(self) -> Optional[str]:
-        """The API path to get the baseline info."""
-        baseline_link: Optional[str] = self.contender_info["links"].get("baseline")
-        if baseline_link:
-            return baseline_link.rsplit("/api", 1)[-1]
         return None
 
 
@@ -233,28 +216,21 @@ class FullComparisonInfo:
     def no_baseline_runs(self) -> bool:
         """Whether all contender runs are missing a baseline run."""
         return not any(
-            run_comparison.baseline_info for run_comparison in self.run_comparisons
-        )
-
-    @property
-    def no_baseline_is_parent(self) -> bool:
-        """Whether no baseline runs were on the immediate parent commit of the contender
-        commit.
-        """
-        return not any(
-            run_comparison.baseline_is_parent for run_comparison in self.run_comparisons
+            run_comparison.baseline_id for run_comparison in self.run_comparisons
         )
 
     @property
     def z_score_threshold(self) -> float:
         """The z-score threshold used in this analysis."""
-        z_score_thresholds = set(
-            comparison.compare_results[0]["analysis"]["lookback_z_score"]["z_threshold"]
-            if "analysis" in comparison.compare_results[0]
-            else comparison.compare_results[0]["threshold_z"]
-            for comparison in self.run_comparisons
-            if comparison.compare_results
-        )
+        z_score_thresholds = set()
+        for run_comparison in self.run_comparisons:
+            if run_comparison.compare_results:
+                for compare in run_comparison.compare_results:
+                    if compare["analysis"]["lookback_z_score"]:
+                        z_score_thresholds.add(
+                            compare["analysis"]["lookback_z_score"]["z_threshold"]
+                        )
+
         if len(z_score_thresholds) != 1:
             fatal_and_log(
                 f"There wasn't exactly one z_score_threshold: {z_score_thresholds=}"
@@ -262,9 +238,11 @@ class FullComparisonInfo:
         return z_score_thresholds.pop()
 
     @property
-    def commit_hash(self) -> str:
+    def commit_hash(self) -> Optional[str]:
         """The contender hash used in this analysis."""
-        return self.run_comparisons[0].contender_info["commit"]["sha"]
+        if self.run_comparisons[0].contender_info["commit"]:
+            return self.run_comparisons[0].contender_info["commit"]["sha"]
+        return None
 
     @property
     def app_url(self) -> str:

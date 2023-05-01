@@ -43,12 +43,14 @@ def test_GitHubCheckStep(
     if github_auth == "pat":
         with pytest.raises(ValueError, match="GitHub App"):
             GitHubCheckStep(
+                commit_hash="abc",
                 github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
                 comparison_step_name="comparison_step",
             )
         return
 
     step = GitHubCheckStep(
+        commit_hash="abc",
         github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
         comparison_step_name="comparison_step",
     )
@@ -72,6 +74,7 @@ def test_GitHubCheckStep(
 @pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)
 def test_GitHubStatusStep(mock_comparison_info: FullComparisonInfo, github_auth: str):
     step = GitHubStatusStep(
+        commit_hash="abc",
         github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
         comparison_step_name="comparison_step",
     )

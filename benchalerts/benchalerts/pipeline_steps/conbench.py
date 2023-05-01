@@ -90,19 +90,11 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
     def _get_one_run_comparison(self, run_id: str) -> RunComparisonInfo:
         """Create and populate one RunComparisonInfo instance."""
         run_comparison = RunComparisonInfo(
-            contender_info=self.conbench_client.get(f"/runs/{run_id}/")
+            contender_info=self.conbench_client.get(f"/runs/{run_id}/"),
+            baseline_run_type=self.baseline_run_type.value,
         )
 
-        candidate_baseline_run = run_comparison.contender_info[
-            "candidate_baseline_runs"
-        ][self.baseline_run_type.value]
-        baseline_run_id = candidate_baseline_run["baseline_run_id"]
-
-        if baseline_run_id:
-            run_comparison.baseline_info = self.conbench_client.get(
-                f"/runs/{baseline_run_id}/"
-            )
-
+        if run_comparison.baseline_id:
             # Get the comparison.
             compare_params = (
                 {"threshold_z": self.z_score_threshold}
@@ -116,12 +108,12 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
         else:
             log.warning(
                 f"Conbench could not find a {self.baseline_run_type.value} baseline run "
-                f"for the contender run {run_id}. Error: {candidate_baseline_run['error']}"
+                f"for the contender run {run_id}. Error: {run_comparison.baseline_error}"
             )
             if run_comparison.has_errors:
                 # get more information so we have more details about errors
                 run_comparison.benchmark_results = self.conbench_client.get(
-                    "/benchmarks/", params={"run_id": run_id}
+                    "/benchmark-results/", params={"run_id": run_id}
                 )
 
         return run_comparison

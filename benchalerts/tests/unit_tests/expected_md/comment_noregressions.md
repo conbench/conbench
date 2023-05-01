@@ -2,4 +2,4 @@ Conbench analyzed the 2 benchmark runs on commit `abc`.
 
 There were no benchmark performance regressions. 🎉
 
-The [full Conbench report](https://github.com/github/hello-world/runs/4) for commit `abc` has more details.
+The [full Conbench report](https://github.com/github/hello-world/runs/4) has more details.

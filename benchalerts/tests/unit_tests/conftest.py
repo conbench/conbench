@@ -109,14 +109,16 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
                 result["contender"]["error"] = None
         return res
 
-    benchmark_results = _response("GET_conbench_benchmarks_run_id_contender_wo_base")
+    benchmark_results = _response(
+        "GET_conbench_benchmark-results_run_id_contender_wo_base"
+    )
 
     if how == "errors_baselines":
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
                     contender_info=_run(has_errors=True, has_baseline=True),
-                    baseline_info=_run(has_errors=True, has_baseline=True),
+                    baseline_run_type="parent",
                     compare_results=_compare(has_errors=True, has_regressions=True),
                     benchmark_results=None,
                 )
@@ -128,7 +130,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
             [
                 RunComparisonInfo(
                     contender_info=_run(has_errors=True, has_baseline=False),
-                    baseline_info=None,
+                    baseline_run_type="parent",
                     compare_results=None,
                     benchmark_results=benchmark_results,
                 )
@@ -140,7 +142,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
             [
                 RunComparisonInfo(
                     contender_info=_run(has_errors=False, has_baseline=False),
-                    baseline_info=None,
+                    baseline_run_type="parent",
                     compare_results=None,
                     benchmark_results=None,
                 )
@@ -152,19 +154,19 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
             [
                 RunComparisonInfo(
                     contender_info=_run(has_errors=False, has_baseline=False),
-                    baseline_info=None,
+                    baseline_run_type="parent",
                     compare_results=None,
                     benchmark_results=None,
                 ),
                 RunComparisonInfo(
                     contender_info=_run(has_errors=False, has_baseline=True),
-                    baseline_info=_run(has_errors=False, has_baseline=True),
+                    baseline_run_type="parent",
                     compare_results=_compare(has_errors=False, has_regressions=True),
                     benchmark_results=None,
                 ),
                 RunComparisonInfo(
                     contender_info=_run(has_errors=False, has_baseline=True),
-                    baseline_info=_run(has_errors=False, has_baseline=True),
+                    baseline_run_type="parent",
                     compare_results=_compare(has_errors=False, has_regressions=True),
                     benchmark_results=None,
                 ),
@@ -175,7 +177,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
             [
                 RunComparisonInfo(
                     contender_info=_run(has_errors=False, has_baseline=True),
-                    baseline_info=_run(has_errors=False, has_baseline=True),
+                    baseline_run_type="parent",
                     compare_results=_compare(has_errors=False, has_regressions=False),
                     benchmark_results=None,
                 )

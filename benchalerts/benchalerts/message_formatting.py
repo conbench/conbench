@@ -62,10 +62,29 @@ def _list_results(
     return out
 
 
+def _intro_sentence(full_comparison: FullComparisonInfo) -> str:
+    """Generate a Markdown sentence to introduce a message."""
+    s = _Pluralizer(full_comparison.run_comparisons).s
+    if full_comparison.commit_hash:
+        intro = _clean(
+            f"""
+            Conbench analyzed the {len(full_comparison.run_comparisons)} benchmark
+            run{s} on commit `{full_comparison.commit_hash[:8]}`.
+            """
+        )
+    else:
+        intro = _clean(
+            f"""
+            Conbench analyzed the {len(full_comparison.run_comparisons)} benchmark
+            run{s} that triggered this notification.
+            """
+        )
+    return intro + "\n\n"
+
+
 def github_check_summary(full_comparison: FullComparisonInfo) -> str:
     """Generate a Markdown summary of what happened regarding errors and regressions."""
-    hash = full_comparison.commit_hash[:8]
-    summary = ""
+    summary = _intro_sentence(full_comparison)
 
     if full_comparison.benchmarks_with_errors:
         summary += _clean(
@@ -96,12 +115,13 @@ def github_check_summary(full_comparison: FullComparisonInfo) -> str:
         # exit early
         return summary
 
-    s = _Pluralizer(full_comparison.benchmarks_with_z_regressions).s
+    pluralizer = _Pluralizer(full_comparison.benchmarks_with_z_regressions)
+    were = pluralizer.were
+    s = pluralizer.s
     summary += _clean(
         f"""
-        Contender commit `{hash}` had
-        {len(full_comparison.benchmarks_with_z_regressions)} performance regression{s}
-        using the lookback z-score method.
+        There {were} {len(full_comparison.benchmarks_with_z_regressions)} possible
+        performance regression{s}, according to the lookback z-score method.
         """
     )
     summary += "\n\n"
@@ -110,7 +130,7 @@ def github_check_summary(full_comparison: FullComparisonInfo) -> str:
         summary += "### Benchmarks with regressions:"
         summary += _list_results(full_comparison.benchmarks_with_z_regressions)
 
-    summary += f"## All benchmark runs on commit `{hash}`\n"
+    summary += "## All benchmark runs analyzed:\n"
     for comparison in full_comparison.run_comparisons:
         summary += "\n"
         summary += _run_bullet(
@@ -140,16 +160,7 @@ def pr_comment_link_to_check(
     full_comparison: FullComparisonInfo, check_link: str
 ) -> str:
     """Generate a GitHub PR comment that summarizes and links to a GitHub Check."""
-    s = _Pluralizer(full_comparison.run_comparisons).s
-    comment = (
-        _clean(
-            f"""
-            Conbench analyzed the {len(full_comparison.run_comparisons)} benchmark
-            run{s} on commit `{full_comparison.commit_hash[:8]}`.
-            """
-        )
-        + "\n\n"
-    )
+    comment = _intro_sentence(full_comparison)
 
     if full_comparison.benchmarks_with_errors:
         pluralizer = _Pluralizer(full_comparison.benchmarks_with_errors)
@@ -192,8 +203,7 @@ def pr_comment_link_to_check(
 
     comment += _clean(
         f"""
-        The [full Conbench report]({check_link}) for commit
-        `{full_comparison.commit_hash[:8]}` has more details.
+        The [full Conbench report]({check_link}) has more details.
         """
     )
 
