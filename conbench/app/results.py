@@ -155,22 +155,25 @@ class RunMixin:
 
     def _augment(self, run):
         self._display_time(run, "timestamp")
+        run["display_name"] = ""
+        if run["name"]:
+            run["display_name"] = run["name"].split(":", 1)[0]
+
+        c = run["commit"]
+        # If this run isn't associated with a commit, do no more augmentation
+        if not c:
+            return
 
         # Note(JP): `run["commit"]["timestamp"]` can be `None`, see
         # https://github.com/conbench/conbench/pull/651
-        # Does run["commit"] every result in KeyError?
-        self._display_time(run["commit"], "timestamp")
-        repository = run["commit"]["repository"]
+        self._display_time(c, "timestamp")
+        repository = c["repository"]
         repository_name = repository
 
         if "github.com/" in repository:
             repository_name = repository.split("github.com/")[1]
 
-        run["display_name"] = ""
-        if run["name"]:
-            run["display_name"] = run["name"].split(":", 1)[0]
-
-        run["commit"]["display_repository"] = repository_name
+        c["display_repository"] = repository_name
 
         # For HTML template processing make it so that the commit dictionary
         # _always_ has non-empty string value for all of the following
@@ -181,7 +184,6 @@ class RunMixin:
         #
         # Expect the "sha" key to be present as a non-empty strings
 
-        c = run["commit"]
         if c.get("url") is None:
             # non-empty string value for HTML
             c["url"] = "#"
