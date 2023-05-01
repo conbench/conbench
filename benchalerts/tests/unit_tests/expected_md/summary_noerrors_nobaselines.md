@@ -1,3 +1,5 @@
+Conbench analyzed the 2 benchmark runs on commit `abc`.
+
 ## Benchmarks with performance regressions
 
 There weren't enough matching historic runs in Conbench to make a call on whether there were regressions or not.

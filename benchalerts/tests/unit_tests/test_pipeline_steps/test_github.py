@@ -29,6 +29,7 @@ from ..mocks import (
         ("noerrors_nobaselines", "summary_noerrors_nobaselines", None),
         ("regressions", "summary_regressions", "details_regressions"),
         ("noregressions", "summary_noregressions", "details_noregressions"),
+        ("nocommit", "summary_nocommit", "details_nocommit"),
     ],
     indirect=["mock_comparison_info"],
 )
@@ -43,12 +44,14 @@ def test_GitHubCheckStep(
     if github_auth == "pat":
         with pytest.raises(ValueError, match="GitHub App"):
             GitHubCheckStep(
+                commit_hash="abc",
                 github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
                 comparison_step_name="comparison_step",
             )
         return
 
     step = GitHubCheckStep(
+        commit_hash="abc",
         github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
         comparison_step_name="comparison_step",
     )
@@ -66,12 +69,14 @@ def test_GitHubCheckStep(
         "noerrors_nobaselines",
         "regressions",
         "noregressions",
+        "nocommit",
     ],
     indirect=["mock_comparison_info"],
 )
 @pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)
 def test_GitHubStatusStep(mock_comparison_info: FullComparisonInfo, github_auth: str):
     step = GitHubStatusStep(
+        commit_hash="abc",
         github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
         comparison_step_name="comparison_step",
     )
@@ -87,6 +92,7 @@ def test_GitHubStatusStep(mock_comparison_info: FullComparisonInfo, github_auth:
         ("noerrors_nobaselines", "comment_noerrors_nobaselines"),
         ("regressions", "comment_regressions"),
         ("noregressions", "comment_noregressions"),
+        ("nocommit", "comment_nocommit"),
     ],
     indirect=["mock_comparison_info"],
 )

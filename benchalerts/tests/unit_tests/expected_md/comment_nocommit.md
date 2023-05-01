@@ -1,4 +1,4 @@
-Conbench analyzed the 2 benchmark runs on commit `abc`.
+Conbench analyzed the 2 benchmark runs that triggered this notification.
 
 There were no benchmark performance regressions. 🎉
 

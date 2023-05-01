@@ -61,7 +61,9 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
     pipeline = AlertPipeline(
         steps=[
             steps.GitHubStatusStep(
-                repo=test_status_repo, comparison_step_name="doesnt_exist"
+                commit_hash=test_status_commit,
+                comparison_step_name="doesnt_exist",
+                repo=test_status_repo,
             )
         ],
         error_handlers=error_handlers,

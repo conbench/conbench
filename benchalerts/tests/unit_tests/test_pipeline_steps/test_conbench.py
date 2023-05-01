@@ -36,6 +36,16 @@ def test_runs_comparison_fails_when_no_baseline(
     assert "the contender run is on the default branch" in caplog.text
 
 
+def test_runs_comparison_without_commit(conbench_env, caplog: pytest.LogCaptureFixture):
+    step = GetConbenchZComparisonForRunsStep(
+        run_ids=["no_commit"],
+        baseline_run_type=BaselineRunCandidates.latest_default,
+        conbench_client=ConbenchClient(adapter=MockAdapter()),
+    )
+    res = step.run_step(previous_outputs={})
+    assert res
+
+
 def test_GetConbenchZComparisonStep(conbench_env):
     step = GetConbenchZComparisonStep(
         commit_hash="abc",
