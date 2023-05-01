@@ -144,16 +144,26 @@ def github_check_summary(full_comparison: FullComparisonInfo) -> str:
 
 def github_check_details(full_comparison: FullComparisonInfo) -> Optional[str]:
     """Generate Markdown details of what happened regarding regressions."""
-    if full_comparison.no_baseline_runs:
-        return None
+    details = ""
 
-    details = _clean(
-        f"""
-        This report was generated using the lookback z-score method with a z-score
-        threshold of {full_comparison.z_score_threshold}.
-        """
-    )
-    return details
+    if not full_comparison.commit_hash:
+        details += _clean(
+            """
+            This report was not associated with any commit connected to the git graph.
+            This probably means that benchmarks were run on a transient merge-commit.
+            """
+        )
+        details += "\n\n"
+
+    if not full_comparison.no_baseline_runs:
+        details += _clean(
+            f"""
+            This report was generated using the lookback z-score method with a z-score
+            threshold of {full_comparison.z_score_threshold}.
+            """
+        )
+
+    return details or None
 
 
 def pr_comment_link_to_check(

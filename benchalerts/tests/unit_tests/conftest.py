@@ -102,6 +102,8 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
             run_id = "contender_wo_base"
         res = _response(f"GET_conbench_runs_{run_id}")
         res["has_errors"] = has_errors
+        if res["commit"]:
+            res["commit"]["sha"] = "abc"
         return res
 
     def _compare(has_errors: bool, has_regressions: bool):

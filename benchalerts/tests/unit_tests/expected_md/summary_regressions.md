@@ -1,4 +1,4 @@
-Conbench analyzed the 3 benchmark runs on commit `no_basel`.
+Conbench analyzed the 3 benchmark runs on commit `abc`.
 
 ## Benchmarks with performance regressions
 

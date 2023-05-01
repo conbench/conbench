@@ -30,7 +30,8 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
     Parameters
     ----------
     run_ids
-        A list of Conbench run IDs of the runs to compare.
+        A list of Conbench run IDs of the runs to compare. There must be at least one,
+        and they must all be from the same commit.
     baseline_run_type
         The type of baseline to use. See ``BaselineRunCandidates`` for options.
     z_score_threshold
@@ -80,6 +81,9 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
         self.conbench_client = conbench_client or ConbenchClient()
 
     def run_step(self, previous_outputs: Dict[str, Any]) -> FullComparisonInfo:
+        if not self.run_ids:
+            fatal_and_log("No run IDs provided to compare.")
+
         log.info(f"Getting comparisons from {len(self.run_ids)} run(s)")
         return FullComparisonInfo(
             run_comparisons=[

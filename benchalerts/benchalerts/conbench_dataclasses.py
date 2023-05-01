@@ -240,9 +240,16 @@ class FullComparisonInfo:
     @property
     def commit_hash(self) -> Optional[str]:
         """The contender hash used in this analysis."""
-        if self.run_comparisons[0].contender_info["commit"]:
-            return self.run_comparisons[0].contender_info["commit"]["sha"]
-        return None
+        commit_hashes = set()
+        for run_comparison in self.run_comparisons:
+            if run_comparison.contender_info["commit"]:
+                commit_hashes.add(run_comparison.contender_info["commit"]["sha"])
+
+        if len(commit_hashes) == 0:
+            return None
+        if len(commit_hashes) != 1:
+            fatal_and_log(f"There wasn't exactly one commit_hash: {commit_hashes=}")
+        return commit_hashes.pop()
 
     @property
     def app_url(self) -> str:

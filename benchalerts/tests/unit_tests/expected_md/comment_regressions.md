@@ -1,4 +1,4 @@
-Conbench analyzed the 3 benchmark runs on commit `no_basel`.
+Conbench analyzed the 3 benchmark runs on commit `abc`.
 
 There were 2 benchmark results indicating a performance regression:
 

@@ -1,4 +1,4 @@
-Conbench analyzed the 2 benchmark runs on commit `no_basel`.
+Conbench analyzed the 2 benchmark runs on commit `abc`.
 
 There weren't enough matching historic benchmark runs to make a call on whether there were regressions.
 

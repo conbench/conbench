@@ -29,7 +29,7 @@ from ..mocks import (
         ("noerrors_nobaselines", "summary_noerrors_nobaselines", None),
         ("regressions", "summary_regressions", "details_regressions"),
         ("noregressions", "summary_noregressions", "details_noregressions"),
-        ("nocommit", "summary_nocommit", "details_noregressions"),
+        ("nocommit", "summary_nocommit", "details_nocommit"),
     ],
     indirect=["mock_comparison_info"],
 )
