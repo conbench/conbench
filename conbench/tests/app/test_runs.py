@@ -1,3 +1,4 @@
+import copy
 import re
 
 from ...tests.api import _fixtures
@@ -12,6 +13,23 @@ class TestRunGet(_asserts.GetEnforcer):
     def _create(self, client):
         self.create_benchmark(client)
         return _fixtures.VALID_RESULT_PAYLOAD["run_id"]
+
+    def test_get_run_without_commit(self, client):
+        self.authenticate(client)
+
+        # Post a benchmark without a commit
+        payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
+        del payload["github"]
+        response = client.post("/api/benchmarks/", json=payload)
+        assert response.status_code == 201
+
+        # Ensure the run doesn't have a commit
+        response = client.get(f'/api/runs/{payload["run_id"]}/')
+        assert response.status_code == 200
+        assert response.json["commit"] is None
+
+        # Ensure the run page looks as expected
+        self._assert_view(client, payload["run_id"])
 
 
 class TestRunDelete(_asserts.DeleteEnforcer):
