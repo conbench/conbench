@@ -80,6 +80,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
             "noerrors_nobaselines",
             "regressions",
             "noregressions",
+            "nocommit",
         ],
         indirect=["mock_comparison_info"],
     )
@@ -91,9 +92,14 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         filename = basename + ".json"
         return MockResponse.from_file(response_dir / filename).json()
 
-    def _run(has_errors: bool, has_baseline: bool):
+    def _run(has_errors: bool, has_baseline: bool, has_commit: bool):
         """Get a mocked run response."""
-        run_id = "some_contender" if has_baseline else "contender_wo_base"
+        if not has_commit:
+            run_id = "no_commit"
+        elif has_baseline:
+            run_id = "some_contender"
+        else:
+            run_id = "contender_wo_base"
         res = _response(f"GET_conbench_runs_{run_id}")
         res["has_errors"] = has_errors
         return res
@@ -117,7 +123,9 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
-                    contender_info=_run(has_errors=True, has_baseline=True),
+                    contender_info=_run(
+                        has_errors=True, has_baseline=True, has_commit=True
+                    ),
                     baseline_run_type="parent",
                     compare_results=_compare(has_errors=True, has_regressions=True),
                     benchmark_results=None,
@@ -129,7 +137,9 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
-                    contender_info=_run(has_errors=True, has_baseline=False),
+                    contender_info=_run(
+                        has_errors=True, has_baseline=False, has_commit=True
+                    ),
                     baseline_run_type="parent",
                     compare_results=None,
                     benchmark_results=benchmark_results,
@@ -141,7 +151,9 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
-                    contender_info=_run(has_errors=False, has_baseline=False),
+                    contender_info=_run(
+                        has_errors=False, has_baseline=False, has_commit=True
+                    ),
                     baseline_run_type="parent",
                     compare_results=None,
                     benchmark_results=None,
@@ -153,19 +165,25 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
-                    contender_info=_run(has_errors=False, has_baseline=False),
+                    contender_info=_run(
+                        has_errors=False, has_baseline=False, has_commit=True
+                    ),
                     baseline_run_type="parent",
                     compare_results=None,
                     benchmark_results=None,
                 ),
                 RunComparisonInfo(
-                    contender_info=_run(has_errors=False, has_baseline=True),
+                    contender_info=_run(
+                        has_errors=False, has_baseline=True, has_commit=True
+                    ),
                     baseline_run_type="parent",
                     compare_results=_compare(has_errors=False, has_regressions=True),
                     benchmark_results=None,
                 ),
                 RunComparisonInfo(
-                    contender_info=_run(has_errors=False, has_baseline=True),
+                    contender_info=_run(
+                        has_errors=False, has_baseline=True, has_commit=True
+                    ),
                     baseline_run_type="parent",
                     compare_results=_compare(has_errors=False, has_regressions=True),
                     benchmark_results=None,
@@ -176,8 +194,24 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
-                    contender_info=_run(has_errors=False, has_baseline=True),
+                    contender_info=_run(
+                        has_errors=False, has_baseline=True, has_commit=True
+                    ),
                     baseline_run_type="parent",
+                    compare_results=_compare(has_errors=False, has_regressions=False),
+                    benchmark_results=None,
+                )
+            ]
+            * 2
+        )
+    if how == "nocommit":
+        return FullComparisonInfo(
+            [
+                RunComparisonInfo(
+                    contender_info=_run(
+                        has_errors=False, has_baseline=False, has_commit=False
+                    ),
+                    baseline_run_type="latest_default",
                     compare_results=_compare(has_errors=False, has_regressions=False),
                     benchmark_results=None,
                 )

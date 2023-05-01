@@ -29,6 +29,7 @@ from ..mocks import (
         ("noerrors_nobaselines", "summary_noerrors_nobaselines", None),
         ("regressions", "summary_regressions", "details_regressions"),
         ("noregressions", "summary_noregressions", "details_noregressions"),
+        ("nocommit", "summary_nocommit", "details_noregressions"),
     ],
     indirect=["mock_comparison_info"],
 )
@@ -68,6 +69,7 @@ def test_GitHubCheckStep(
         "noerrors_nobaselines",
         "regressions",
         "noregressions",
+        "nocommit",
     ],
     indirect=["mock_comparison_info"],
 )
@@ -90,6 +92,7 @@ def test_GitHubStatusStep(mock_comparison_info: FullComparisonInfo, github_auth:
         ("noerrors_nobaselines", "comment_noerrors_nobaselines"),
         ("regressions", "comment_regressions"),
         ("noregressions", "comment_noregressions"),
+        ("nocommit", "comment_nocommit"),
     ],
     indirect=["mock_comparison_info"],
 )

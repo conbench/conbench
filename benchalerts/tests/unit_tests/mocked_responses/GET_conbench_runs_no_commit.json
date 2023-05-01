@@ -1,0 +1,56 @@
+{
+    "status_code": 200,
+    "data": {
+        "commit": null,
+        "hardware": {
+            "architecture_name": "x86_64",
+            "cpu_core_count": 2,
+            "cpu_frequency_max_hz": 3500000000,
+            "cpu_l1d_cache_bytes": 32768,
+            "cpu_l1i_cache_bytes": 32768,
+            "cpu_l2_cache_bytes": 262144,
+            "cpu_l3_cache_bytes": 4194304,
+            "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+            "cpu_thread_count": 4,
+            "gpu_count": 2,
+            "gpu_product_names": [
+                "Tesla T4",
+                "GeForce GTX 1060 3GB"
+            ],
+            "id": "some-machine-uuid-1",
+            "kernel_name": "19.6.0",
+            "memory_bytes": 17179869184,
+            "name": "some-machine-name",
+            "os_name": "macOS",
+            "os_version": "10.15.7",
+            "type": "machine"
+        },
+        "has_errors": false,
+        "id": "no_commit",
+        "links": {
+            "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
+            "list": "http://localhost/api/runs/",
+            "self": "http://localhost/api/runs/some-run-uuid-1/"
+        },
+        "candidate_baseline_runs": {
+            "fork_point": {
+                "baseline_run_id": null,
+                "commits_skipped": null,
+                "error": "the contender run is not connected to the git graph"
+            },
+            "latest_default": {
+                "baseline_run_id": "some_baseline",
+                "commits_skipped": [],
+                "error": null
+            },
+            "parent": {
+                "baseline_run_id": null,
+                "commits_skipped": null,
+                "error": "the contender run is not connected to the git graph"
+            }
+        },
+        "name": "some run name",
+        "reason": "some run reason",
+        "timestamp": "2021-02-04T17:22:05.225583"
+    }
+}
