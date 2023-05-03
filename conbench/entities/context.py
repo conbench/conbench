@@ -1,3 +1,5 @@
+from typing import Dict
+
 import flask as f
 import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
@@ -10,6 +12,9 @@ class Context(Base, EntityMixin["Context"]):
     __tablename__ = "context"
     id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=genprimkey)
     tags: Mapped[dict] = NotNull(postgresql.JSONB)
+
+    def to_dict(self) -> Dict:
+        return self.tags
 
 
 s.Index("context_index", Context.tags, unique=True)

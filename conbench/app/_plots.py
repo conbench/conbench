@@ -837,7 +837,7 @@ def get_source_for_single_benchmark_result(
         cur_run["commit"]["timestamp"]
     )
 
-    if current_benchmark_result.is_failed():
+    if current_benchmark_result.is_failed:
         return None, None
 
     dummy_hs_for_current_svs = HistorySample(

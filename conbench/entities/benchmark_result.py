@@ -1,3 +1,4 @@
+import functools
 import logging
 import math
 import statistics
@@ -345,6 +346,7 @@ class BenchmarkResult(Base, EntityMixin):
             },
         }
 
+    @functools.cached_property
     def is_failed(self):
         """
         Return True if this BenchmarkResult is considered to be 'failed' /
@@ -354,15 +356,12 @@ class BenchmarkResult(Base, EntityMixin):
         across components.
         """
         if self.data is None:
-            log.info("data is none")
             return True
 
         if do_iteration_samples_look_like_error(self.data):
-            log.info("iterations look like err")
             return True
 
         if self.error is not None:
-            log.info("selferr is not none")
             return True
 
         return False
@@ -416,7 +415,7 @@ class BenchmarkResult(Base, EntityMixin):
         - https://github.com/conbench/conbench/issues/640
         - https://github.com/conbench/conbench/issues/530
         """
-        if self.is_failed():
+        if self.is_failed:
             return math.nan
 
         if self.mean is None:

@@ -1,11 +1,18 @@
 import dataclasses
 import logging
 import signal
+import sys
 import threading
+
+# import math
 import time
 from collections import defaultdict
-from typing import Dict, List, TypedDict
+from typing import Dict, List, Optional, Tuple, TypedDict, _SpecialForm
 
+# import flask
+import werkzeug.local
+
+# import sqlalchemy
 from sqlalchemy import select
 
 import conbench.metrics
@@ -14,6 +21,9 @@ from conbench.db import Session
 from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.entities.run import Run
 from conbench.hacks import get_case_kvpair_strings
+
+# import werkzeug.contextvars
+
 
 """
 This module implements a job which populates and provides a cache for the N
@@ -28,6 +38,12 @@ original_sigint_handler = signal.getsignal(signal.SIGINT)
 original_sigquit_handler = signal.getsignal(signal.SIGQUIT)
 
 log = logging.getLogger(__name__)
+
+# conbench-app-1  |   File "/usr/local/lib/python3.11/site-packages/werkzeug/local.py", line 513, in _get_current_object
+# conbench-app-1  |     raise RuntimeError(unbound_message) from None
+# conbench-app-1  | RuntimeError: Working outside of application context.
+
+# from memory_profiler import profile
 
 
 # https://goshippo.com/blog/measure-real-size-any-python-object/
@@ -95,10 +111,37 @@ class CacheUpdateMetaInfo:
     n_results: int
 
 
+@dataclasses.dataclass(slots=True)
+class BMRTBenchmarkResult:
+    id: str
+    case_id: str
+    context_id: str
+    data: List[float]
+    mean: Optional[float]
+    unit: str
+    benchmark_name: str
+    # unix timestamp
+    started_at: float
+    # max
+    # stdev
+    # iterations
+    # is_failed: bool
+    hardware_id: str
+    hardware_name: str
+    case_text_id: str
+    context_dict: Dict
+
+    ui_time_started_at: str
+    ui_rel_sem: Tuple[str, str]
+    ui_hardware_short: str
+    ui_non_null_sample_count: str
+    ui_mean_and_uncertainty: str
+
+
 class CacheDict(TypedDict):
-    by_id: Dict[str, BenchmarkResult]
-    by_benchmark_name: Dict[str, List[BenchmarkResult]]
-    by_case_id: Dict[str, List[BenchmarkResult]]
+    by_id: Dict[str, BMRTBenchmarkResult]
+    by_benchmark_name: Dict[str, List[BMRTBenchmarkResult]]
+    by_case_id: Dict[str, List[BMRTBenchmarkResult]]
     meta: CacheUpdateMetaInfo
 
 
@@ -130,37 +173,75 @@ def _fetch_and_cache_most_recent_results(n=0.06 * 10**6) -> None:
 
     # Also fetch hardware from associated Run, so that result.run is in cache,
     # too, and so that result.run.hardware is a quick lookup.
-    results = Session.scalars(
+    # Note that N here determines peak usage of memory.
+    query_statement = (
         select(BenchmarkResult)
         .join(Run)
         .order_by(BenchmarkResult.timestamp.desc())
         .limit(n)
-    ).all()
+    )
+    results = Session.scalars(query_statement).all()
 
     t1 = time.monotonic()
 
     if len(results) == 0:
-        log.debug("BMRT cache: no results (testing mode?)")
+        log.info("BMRT cache: no results")
         return
 
-    by_id_dict: Dict[str, BenchmarkResult] = {}
-    by_name_dict: Dict[str, List[BenchmarkResult]] = defaultdict(list)
-    by_case_dict: Dict[str, List[BenchmarkResult]] = defaultdict(list)
+    by_id_dict: Dict[str, BMRTBenchmarkResult] = {}
+    by_name_dict: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
+    by_case_id_dict: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
+    # case_text_by_id: Dict[str, str] = {}
+    # context_dict_by_id: Dict[str, Dict] = {}
     for result in results:
-        by_id_dict[result.id] = result
-        # Add property _hardware on result obj, from Run.
-        result._hardware = result.run.hardware
+        # if result.is_failed():
+        #     continue
+        # assert result.data
+        # assert result.mean
+
+        benchmark_name = str(result.case.name)
+        case_text_id = " ".join(get_case_kvpair_strings(result.case.tags))
+
+        datapoints = []
+        if not result.is_failed:
+            assert result.data is not None
+            datapoints = [float(d) for d in result.data]
+
+        bmr = BMRTBenchmarkResult(
+            id=str(result.id),
+            benchmark_name=benchmark_name,
+            started_at=result.timestamp.timestamp(),
+            data=datapoints,
+            mean=float(result.mean) if result.mean else None,
+            unit=str(result.unit) if result.unit else "n/a",
+            hardware_id=str(result.run.hardware.id),
+            hardware_name=str(result.run.hardware.name),
+            case_id=str(result.case_id),
+            context_id=str(result.context_id),
+            # These should be deduplcated in mem because source is
+            # using unique constraint in db, index on entire dict
+            context_dict=result.context.to_dict(),
+            case_text_id=case_text_id,
+            ui_hardware_short=str(result.ui_hardware_short),
+            ui_time_started_at=str(result.ui_time_started_at),
+            ui_rel_sem=result.ui_rel_sem,
+            ui_non_null_sample_count=result.ui_non_null_sample_count,
+            ui_mean_and_uncertainty=result.ui_mean_and_uncertainty
+            # is_failed=False,  # result.is_failed(),
+        )
+
+        by_id_dict[str(result.id)] = bmr
         # point of confusion: `result.case.name` is the benchmark name
         # result._bmrt_benchmark_name = str(result.case.name)
         # result._bmrt_hardware_id = str(result.run.hardware.id)
         # result._bmrt_hardware_name = str(result.run.hardware.name)
 
-        by_name_dict[result.case.name].append(result)
+        by_name_dict[benchmark_name].append(bmr)
         # Add a property on the Case object, on the fly.
         # Build the textual representation of this case which should also
         # uniquely / unambiguously define/identify this specific case.
-        result.case.text_id = " ".join(get_case_kvpair_strings(result.case.tags))
-        by_case_dict[result.case.id].append(result)
+        by_case_id_dict[str(result.case_id)].append(bmr)
+
         # case_text_by_id[case_id] = case_text_id
         # result._bmrt_case_text_id = case_text_id
         # result._bmrt_context_id = str(result.context_id)
@@ -196,6 +277,7 @@ def _fetch_and_cache_most_recent_results(n=0.06 * 10**6) -> None:
     # for key, value in vars(first_bmr).items():
     #     log.info("prop %s size: %s", key, get_size(value))
 
+    log.info("bmr size: %s", get_size(first_bmr))
 
     # Mutate the dictionary which is accessed by other threads, do this in a
     # quick fashion -- each of this assignments is atomic (thread-safe), but
@@ -205,7 +287,7 @@ def _fetch_and_cache_most_recent_results(n=0.06 * 10**6) -> None:
     # re-defining the name _cache_bmrs.
     _cache_bmrs["by_id"] = by_id_dict
     _cache_bmrs["by_benchmark_name"] = by_name_dict
-    _cache_bmrs["by_case_id"] = by_case_dict
+    _cache_bmrs["by_case_id"] = by_case_id_dict
     _cache_bmrs["meta"] = CacheUpdateMetaInfo(
         newest_result_time_str=results[0].ui_time_started_at,
         oldest_result_time_str=results[-1].ui_time_started_at,
