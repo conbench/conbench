@@ -1,3 +1,4 @@
+import functools
 import logging
 import math
 import statistics
@@ -67,8 +68,9 @@ class BenchmarkResult(Base, EntityMixin):
     # performed on demand.
     run: Mapped[Run] = relationship("Run", lazy="select", back_populates="results")
 
-    # These can be empty lists. An item in the list is of type float, which
-    # includes `math.nan` as valid value.
+    # `data` holds the numeric values derived from N repetitions of the same
+    # measurement (experiment). These can be empty lists. An item in the list
+    # is of type float, which includes `math.nan` as valid value.
     data: Mapped[Optional[List[Decimal]]] = Nullable(
         postgresql.ARRAY(s.Numeric), default=[]
     )
@@ -345,6 +347,7 @@ class BenchmarkResult(Base, EntityMixin):
             },
         }
 
+    @functools.cached_property
     def is_failed(self):
         """
         Return True if this BenchmarkResult is considered to be 'failed' /
@@ -354,15 +357,12 @@ class BenchmarkResult(Base, EntityMixin):
         across components.
         """
         if self.data is None:
-            log.info("data is none")
             return True
 
         if do_iteration_samples_look_like_error(self.data):
-            log.info("iterations look like err")
             return True
 
         if self.error is not None:
-            log.info("selferr is not none")
             return True
 
         return False
@@ -387,8 +387,11 @@ class BenchmarkResult(Base, EntityMixin):
     def _single_value_summary(self) -> float:
         """
         Return a single numeric value summarizing the collection of data points
-        D associated with this benchmark result. Currently static (mean), can
-        be dynamic in the future.
+        D associated with this benchmark result.
+
+        Return `math.nan` if this result is failed.
+
+        Summary: currently static (mean), can be dynamic in the future.
 
         Assumption: each non-errored benchmark result (self.is_failed() returns
         False) is guaranteed to have at least one data point.
@@ -416,7 +419,7 @@ class BenchmarkResult(Base, EntityMixin):
         - https://github.com/conbench/conbench/issues/640
         - https://github.com/conbench/conbench/issues/530
         """
-        if self.is_failed():
+        if self.is_failed:
             return math.nan
 
         if self.mean is None:
@@ -429,6 +432,26 @@ class BenchmarkResult(Base, EntityMixin):
             return float(statistics.mean(self.data))
 
         return float(self.mean)
+
+    @functools.cached_property
+    def measurements(self) -> List[float]:
+        """
+        Return list of floats. Each item is guaranteed to not be NaN. The
+        returned list may however be empty (for all failed results).
+
+        This is an experiment for a hopefully valuable abstraction. I think we
+        maybe want to make users of this class not use the `.data` property
+        anymore.
+
+        We also may want to instruct SQLAlchemy to return numbers as floats
+        directly.
+        """
+        values = []
+        if not self.is_failed:
+            assert self.data is not None
+            values = [float(d) for d in self.data]
+
+        return values
 
     @property
     def ui_mean_and_uncertainty(self) -> str:

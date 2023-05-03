@@ -4,9 +4,9 @@ import signal
 import threading
 import time
 from collections import defaultdict
-from typing import Dict, List, TypedDict
+from typing import Dict, List, Optional, Tuple, TypedDict
 
-from sqlalchemy import select
+import sqlalchemy
 
 import conbench.metrics
 from conbench.config import Config
@@ -37,10 +37,36 @@ class CacheUpdateMetaInfo:
     n_results: int
 
 
+# CPython 3.10/3.11 feature:  dataclass nicely integrated with slots. __slots__
+# saves memory: prevents the automatic creation of __dict__ and __weakref__ for
+# each instance. See
+# https://docs.python.org/3/reference/datamodel.html#object.__slots__
+# https://www.trueblade.com/blogs/news/python-3-10-new-dataclass-features
+@dataclasses.dataclass(slots=True)
+class BMRTBenchmarkResult:
+    id: str
+    case_id: str
+    context_id: str
+    data: List[float]
+    mean: Optional[float]
+    unit: str
+    benchmark_name: str
+    started_at: float
+    hardware_id: str
+    hardware_name: str
+    case_text_id: str
+    context_dict: Dict
+    ui_time_started_at: str
+    ui_rel_sem: Tuple[str, str]
+    ui_hardware_short: str
+    ui_non_null_sample_count: str
+    ui_mean_and_uncertainty: str
+
+
 class CacheDict(TypedDict):
-    by_id: Dict[str, BenchmarkResult]
-    by_benchmark_name: Dict[str, List[BenchmarkResult]]
-    by_case_id: Dict[str, List[BenchmarkResult]]
+    by_id: Dict[str, BMRTBenchmarkResult]
+    by_benchmark_name: Dict[str, List[BMRTBenchmarkResult]]
+    by_case_id: Dict[str, List[BMRTBenchmarkResult]]
     meta: CacheUpdateMetaInfo
 
 
@@ -72,33 +98,75 @@ def _fetch_and_cache_most_recent_results(n=0.06 * 10**6) -> None:
 
     # Also fetch hardware from associated Run, so that result.run is in cache,
     # too, and so that result.run.hardware is a quick lookup.
-    results = Session.scalars(
-        select(BenchmarkResult)
+    # Note that N here determines peak usage of memory.
+    query_statement = (
+        sqlalchemy.select(BenchmarkResult)
         .join(Run)
         .order_by(BenchmarkResult.timestamp.desc())
         .limit(n)
-    ).all()
+    )
+    results = Session.scalars(query_statement).all()
 
     t1 = time.monotonic()
 
     if len(results) == 0:
-        log.debug("BMRT cache: no results (testing mode?)")
+        log.info("BMRT cache: no results")
         return
 
-    by_id_dict: Dict[str, BenchmarkResult] = {}
-    by_name_dict: Dict[str, List[BenchmarkResult]] = defaultdict(list)
-    by_case_dict: Dict[str, List[BenchmarkResult]] = defaultdict(list)
+    by_id_dict: Dict[str, BMRTBenchmarkResult] = {}
+    by_name_dict: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
+    by_case_id_dict: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
+
     for result in results:
-        by_id_dict[result.id] = result
-        # Add property _hardware on result obj, from Run.
-        result._hardware = result.run.hardware
-        # point of confusion: `result.case.name` is the benchmark name
-        by_name_dict[result.case.name].append(result)
+        # For now: put both, failed and non-failed results into the cache.
+        # It would be a nice code simplification to only consider succeeded
+        # ones, but then we miss out on reporting about the failed ones.
+
+        benchmark_name = str(result.case.name)
+
+        # A textual representation of the case permutation. As it is 'complete'
+        # it should also work as a proper identifier (like primary key).
+        case_text_id = " ".join(get_case_kvpair_strings(result.case.tags))
+
+        bmr = BMRTBenchmarkResult(
+            id=str(result.id),
+            benchmark_name=benchmark_name,
+            started_at=result.timestamp.timestamp(),
+            data=result.measurements,
+            mean=float(result.mean) if result.mean else None,
+            unit=str(result.unit) if result.unit else "n/a",
+            hardware_id=str(result.run.hardware.id),
+            hardware_name=str(result.run.hardware.name),
+            case_id=str(result.case_id),
+            context_id=str(result.context_id),
+            # These context dictionaries are often the largest part of these
+            # BMRTBenchmarkResult object (in terms of memory usage) -- they can
+            # be a rather big collection of strings. However, by the nature of
+            # the processed data there can be a high degree of duplication
+            # across benchmark results. The data source uses a unique
+            # constraint (enforced in DB) with an index on the entire
+            # dictionary, i.e. use the _same_ object here and assume it may be
+            # shared across potentially many BMRTBenchmarkResult objects.
+            context_dict=result.context.to_dict(),
+            case_text_id=case_text_id,
+            ui_hardware_short=str(result.ui_hardware_short),
+            ui_time_started_at=str(result.ui_time_started_at),
+            ui_rel_sem=result.ui_rel_sem,
+            ui_non_null_sample_count=result.ui_non_null_sample_count,
+            ui_mean_and_uncertainty=result.ui_mean_and_uncertainty,
+        )
+
+        # The str() indirections below (and above) are here to quickly make
+        # sure that there is no more SQLAlchemy magic associated to objects we
+        # store here (no more mapping to columns). Maybe that is not needed
+        # but instead of making that experiment I took the quick way.
+        by_id_dict[str(result.id)] = bmr
+        by_name_dict[benchmark_name].append(bmr)
+
         # Add a property on the Case object, on the fly.
         # Build the textual representation of this case which should also
         # uniquely / unambiguously define/identify this specific case.
-        result.case.text_id = " ".join(get_case_kvpair_strings(result.case.tags))
-        by_case_dict[result.case.id].append(result)
+        by_case_id_dict[str(result.case_id)].append(bmr)
 
     # Mutate the dictionary which is accessed by other threads, do this in a
     # quick fashion -- each of this assignments is atomic (thread-safe), but
@@ -108,7 +176,7 @@ def _fetch_and_cache_most_recent_results(n=0.06 * 10**6) -> None:
     # re-defining the name _cache_bmrs.
     _cache_bmrs["by_id"] = by_id_dict
     _cache_bmrs["by_benchmark_name"] = by_name_dict
-    _cache_bmrs["by_case_id"] = by_case_dict
+    _cache_bmrs["by_case_id"] = by_case_id_dict
     _cache_bmrs["meta"] = CacheUpdateMetaInfo(
         newest_result_time_str=results[0].ui_time_started_at,
         oldest_result_time_str=results[-1].ui_time_started_at,

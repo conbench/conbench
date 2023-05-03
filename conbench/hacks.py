@@ -3,13 +3,6 @@ from typing import Dict, List
 
 from conbench.entities.benchmark_result import BenchmarkResult
 
-# Note(JP): ideally this contains just a single key. I think that this here is
-# purely for display purposes, not for storing in the DB. Now that I think
-# about it: Let's keep things simple: this is part of the case permutation in
-# the database, so show it.
-#  CASE_KEYS_DO_NOT_USE_FOR_STRING = ("id", "name", "suite", "source", "dataset")
-
-
 log = logging.getLogger(__name__)
 
 
@@ -27,6 +20,8 @@ def get_case_kvpair_strings(tags: Dict[str, str]) -> List[str]:
     Special keys are omitted (does that make sense?)
 
     Keep those with None value.
+
+    TODO: move to different module
     """
     return [f"{k}={v}" for k, v in sorted(tags.items()) if k not in ("name")]
 
@@ -36,6 +31,8 @@ def set_display_case_permutation(bmresult: Dict | BenchmarkResult):
     Build and set a string reflecting the case permutation (specific variation
     of str/str key/value pairs, each pair reflecting a case parameter) for this
     benchmark result object.
+
+    TODO: move to different module
     """
 
     # Extract `tags` object.
@@ -85,6 +82,8 @@ def set_display_benchmark_name(bmresult):
     """
     Build and set a string reflecting the benchmark identity (the conceptual
     benchmark) for this benchmark result.
+
+    TODO: move to different module
     """
     is_api = isinstance(bmresult, dict)
     # will this next line not raise a KeyError of is_api is false?
@@ -101,6 +100,10 @@ def set_display_benchmark_name(bmresult):
 
 
 def sorted_data(benchmarks):
+    """
+    TODO: identify what this does, assess the value, and re-implement in
+    a different module.
+    """
     data = []
     for benchmark in benchmarks:
         if benchmark["error"]:
@@ -127,3 +130,70 @@ def sorted_data(benchmarks):
     new_data = sorted(new_data)
 
     return [row[1] for row in new_data]
+
+
+# Note(JP): Keeping this here because this turned out to be highly useful and
+# we want to maybe re-use that. I started with
+# https://goshippo.com/blog/measure-real-size-any-python-object/ and
+# https://stackoverflow.com/a/40880923 and then brute-forced may way through
+# Flask/SQLAlchemy special conditions. This tries to answer "How big is this
+# object" in memory? I applied it to a big dictionary which held other
+# dictionaries which held SQLAlchemy DB entity-entangled objects
+# (DeclarativeBase-derived) entangled with Flask/werkzeug-app context /
+# "request locals". My goal was to get this to count at least something. The
+# special cases below with dubious handling happen rarely, i.e. this counts the
+# majority of what matters. Note however for result interpretation you need to
+# understand some things about CPython's memory management (string interning,
+# etc). The more macroscopic view (heap size of CPython process is after all
+# showing if changes/insights are helpful or not). I am ke def get_size(obj,
+# seen=None): """Recursively finds size of objects"""
+
+#     if obj is None:
+#         return 0
+
+#     if isinstance(obj, werkzeug.local.ContextVar):
+#         return 0
+
+#     size = sys.getsizeof(obj)
+
+#     if seen is None:
+#         seen = set()
+
+#     obj_id = id(obj)
+#     if obj_id in seen:
+#         return 0
+#     # Important mark as seen *before* entering recursion to gracefully handle
+#     # self-referential objects
+#     seen.add(obj_id)
+
+#     if isinstance(obj, dict):
+#         size += sum([get_size(v, seen) for v in obj.values()])
+#         size += sum([get_size(k, seen) for k in obj.keys()])
+
+#     elif hasattr(obj, "__dict__"):
+#         try:
+#             size += get_size(obj.__dict__, seen)
+#         except RuntimeError:
+#             # handle werkzeug.local special context var protection:
+#             # https://github.com/pallets/werkzeug/blob/2.2.3/src/werkzeug/local.py
+#             log.info("ignore werkzeug RuntimeErr")
+#             return 0
+
+#     elif hasattr(obj, "__iter__") and not isinstance(obj, (str, bytes, bytearray)):
+#         if obj is None:
+#             return 0
+
+#         # from typing import _SpecialForm.
+#         if isinstance(obj, _SpecialForm):
+#             # Ignore this obj: TypeError: '_SpecialForm' object is not iterable
+#             return 0
+
+#         try:
+#             size += sum([get_size(i, seen) for i in obj])
+#         except TypeError:
+#             # Might still fail with
+#             # TypeError: 'NoneType' object is not iterable
+#             log.info("ignore not-yet-understood TypeError")
+#             seen.add(id(obj))
+#             return 0
+#     return size
