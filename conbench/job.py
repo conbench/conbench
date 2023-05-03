@@ -117,11 +117,10 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
 
     # Corresponding to the `yield_per` magic, consume the returned value as an
     # iterator. `all()` would consume all results and would defeat the purpose
-    # of the memory-saving exercise. The following line of code does not do the
-    # work yet; that begins once the iterator is consumed.
+    # of the memory-saving exercise. The following line of code does not do
+    # much of the work yet; that begins once the iterator is consumed (maybe it
+    # fetches the first chunk?).
     result_rows_iterator = Session.scalars(query_statement)
-
-    t1 = time.monotonic()
 
     by_id_dict: Dict[str, BMRTBenchmarkResult] = {}
     by_name_dict: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
@@ -186,7 +185,7 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
         # uniquely / unambiguously define/identify this specific case.
         by_case_id_dict[str(result.case_id)].append(bmr)
 
-    t2 = time.monotonic()
+    t1 = time.monotonic()
 
     if len(by_name_dict) == 0:
         log.info("BMRT cache: no results")
@@ -214,18 +213,12 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
         n_results=len(by_name_dict),
     )
 
-    # t3 = time.monotonic()
-
     conbench.metrics.GAUGE_BMRT_CACHE_LAST_UPDATE_SECONDS.set(t2 - t0)
 
     log.info(
-        (
-            "BMRT cache: keys in cache: %s, "
-            "query took %.5f s, dict population took %.5f s"
-        ),
+        ("BMRT cache population done (%s results, took %.3f s)"),
         len(bmrt_cache["by_id"]),
         t1 - t0,
-        t2 - t1,
     )
 
 
