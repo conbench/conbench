@@ -9,6 +9,8 @@ Flask==2.2.3
 Flask-Bootstrap
 Flask-Compress
 Flask-Login
+memory-profiler
+Pympler
 flask-swagger-ui
 Flask-WTF
 Werkzeug==2.2.3
@@ -30,6 +32,6 @@ python-dotenv
 PyYAML
 requests
 sigfig
-SQLAlchemy>=2
+SQLAlchemy==2.0.12
 tenacity
 uuid7
