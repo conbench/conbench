@@ -9,7 +9,6 @@ import orjson
 from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
-
 from conbench.job import BMRTBenchmarkResult, _cache_bmrs
 
 log = logging.getLogger(__name__)
