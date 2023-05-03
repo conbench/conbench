@@ -53,9 +53,9 @@ class ConbenchClient(RetryingHTTPClient):
     # context-specific timeout constant is for a login request, see below.
     # Note: for now, this `timeout_long_running_requests` timeout constant
     # applies to all requests unless specified otherwise.
-    timeout_long_running_requests = (120, 3.5)
+    timeout_long_running_requests = (3.5, 120)
 
-    timeout_login_request = (10, 3.5)
+    timeout_login_request = (3.5, 10)
 
     def __init__(self, default_retry_for_seconds=None, adapter=None):
         # If this library is embedded into a Python program that has stdlib
