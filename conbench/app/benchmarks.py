@@ -10,7 +10,6 @@ from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
 
-# from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.job import BMRTBenchmarkResult, _cache_bmrs
 
 log = logging.getLogger(__name__)
@@ -22,7 +21,7 @@ def list_benchmarks() -> str:
     return flask.render_template(
         "c-benchmarks.html",
         # benchmarks_by_name=benchmarks_by_name,
-        benchmarks_by_name=_cache_bmrs["by_benchmark_name"],
+        benchmarks_by_name=_cache_bmrs["by_benchmark_nameresults_by_case"],
         benchmark_result_count=len(_cache_bmrs["by_id"]),
         bmr_cache_meta=_cache_bmrs["meta"],
         application=Config.APPLICATION_NAME,
@@ -55,15 +54,14 @@ def show_benchmark_cases(bname: str) -> str:
     log.info("building hardware_count_per_case took %.3f s", time.monotonic() - t0)
 
     last_result_per_case_id: Dict[str, BMRTBenchmarkResult] = {}
-    context_count_per_case_id = {}
+
+    context_count_per_case_id: Dict[str, int] = {}
     for case_id, results in results_by_case_id.items():
         context_count_per_case_id[case_id] = len(set([r.context_id for r in results]))
         last_result_per_case_id[case_id] = max(results, key=lambda r: r.started_at)
 
     return flask.render_template(
         "c-benchmark-cases.html",
-        # benchmarks_by_name=benchmarks_by_name,
-        # benchmarks_results=results,
         benchmark_name=bname,
         bmr_cache_meta=_cache_bmrs["meta"],
         results_by_case_id=results_by_case_id,
