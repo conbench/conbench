@@ -1,17 +1,12 @@
 import dataclasses
 import logging
 import signal
-import sys
 import threading
-
-
 import time
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple, TypedDict, _SpecialForm
-
+from typing import Dict, List, Optional, Tuple, TypedDict
 
 import sqlalchemy
-
 
 import conbench.metrics
 from conbench.config import Config
@@ -172,8 +167,6 @@ def _fetch_and_cache_most_recent_results(n=0.06 * 10**6) -> None:
         # Build the textual representation of this case which should also
         # uniquely / unambiguously define/identify this specific case.
         by_case_id_dict[str(result.case_id)].append(bmr)
-
-    first_bmr = next(iter(by_id_dict))
 
     # Mutate the dictionary which is accessed by other threads, do this in a
     # quick fashion -- each of this assignments is atomic (thread-safe), but

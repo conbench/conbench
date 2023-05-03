@@ -3,7 +3,6 @@ from typing import Dict, List
 
 from conbench.entities.benchmark_result import BenchmarkResult
 
-
 log = logging.getLogger(__name__)
 
 
