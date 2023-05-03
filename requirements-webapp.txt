@@ -8,6 +8,7 @@ email-validator
 Flask==2.2.3
 Flask-Bootstrap
 Flask-Compress
+filprofiler
 Flask-Login
 flask-swagger-ui
 Flask-WTF
