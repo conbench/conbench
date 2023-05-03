@@ -9,8 +9,9 @@ import orjson
 from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
-from conbench.entities.benchmark_result import BenchmarkResult
-from conbench.job import _cache_bmrs
+
+# from conbench.entities.benchmark_result import BenchmarkResult
+from conbench.job import BMRTBenchmarkResult, _cache_bmrs
 
 log = logging.getLogger(__name__)
 
@@ -39,25 +40,25 @@ def show_benchmark_cases(bname: str) -> str:
 
     # cases = set(bmr.case for bmr in results)
 
-    results_by_case: Dict[str, List[BenchmarkResult]] = defaultdict(list)
+    results_by_case_id: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
     for r in matching_results:
-        results_by_case[r.case].append(r)
+        results_by_case_id[r.case_id].append(r)
 
     t0 = time.monotonic()
 
-    hardware_count_per_case = {}
-    for case, results in results_by_case.items():
+    hardware_count_per_case_id = {}
+    for case_id, results in results_by_case_id.items():
         # The indirection through `.run` here is an architecture / DB schema
         # smell I think. This might fetch run dynamically from the DB>
-        hardware_count_per_case[case] = len(set([r._hardware for r in results]))
+        hardware_count_per_case_id[case_id] = len(set([r.hardware_id for r in results]))
 
     log.info("building hardware_count_per_case took %.3f s", time.monotonic() - t0)
 
-    last_result_per_case: Dict[str, BenchmarkResult] = {}
-    context_count_per_case = {}
-    for case, results in results_by_case.items():
-        context_count_per_case[case] = len(set([r.context for r in results]))
-        last_result_per_case[case] = max(results, key=lambda r: r.timestamp)
+    last_result_per_case_id: Dict[str, BMRTBenchmarkResult] = {}
+    context_count_per_case_id = {}
+    for case_id, results in results_by_case_id.items():
+        context_count_per_case_id[case_id] = len(set([r.context_id for r in results]))
+        last_result_per_case_id[case_id] = max(results, key=lambda r: r.started_at)
 
     return flask.render_template(
         "c-benchmark-cases.html",
@@ -65,11 +66,10 @@ def show_benchmark_cases(bname: str) -> str:
         # benchmarks_results=results,
         benchmark_name=bname,
         bmr_cache_meta=_cache_bmrs["meta"],
-        results_by_case=results_by_case,
-        hardware_count_per_case=hardware_count_per_case,
-        last_result_per_case=last_result_per_case,
-        context_count_per_case=context_count_per_case,
-        # cases=cases,
+        results_by_case_id=results_by_case_id,
+        hardware_count_per_case_id=hardware_count_per_case_id,
+        last_result_per_case_id=last_result_per_case_id,
+        context_count_per_case_id=context_count_per_case_id,
         benchmark_result_count=len(matching_results),
         application=Config.APPLICATION_NAME,
         title=Config.APPLICATION_NAME,  # type: ignore
@@ -93,7 +93,7 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
     # Now, filter those that have the required case ID set.
     matching_results = []
     for r in results_all_with_bname:
-        if r.case.id == caseid:
+        if r.case_id == caseid:
             matching_results.append(r)
 
     log.info(
@@ -104,22 +104,23 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
     # Be explicit that this is now of no use.
     del results_all_with_bname
 
-    if matching_results:
-        case = matching_results[0].case
-    else:
+    if not matching_results:
         return f"no results found for benchmark `{bname}` and case `{caseid}`"
 
-    results_by_hardware_and_context: Dict[Tuple, List[BenchmarkResult]] = defaultdict(
-        list
-    )
+    results_by_hardware_and_context: Dict[
+        Tuple, List[BMRTBenchmarkResult]
+    ] = defaultdict(list)
 
     # Build up timeseries of results (group results, don't sort them yet).
     for result in matching_results:
         # The indirection through `result.run.hardware` here is an architecture
         # / DB schema smell I think. This might fetch run dynamically from the
         # DB. Store hardware name in dictionary key, for convenience.
-        h = result._hardware
-        hwid, hwname, ctxid = h.id, h.name, result.context.id
+        hwid, hwname, ctxid = (
+            result.hardware_id,
+            result.hardware_name,
+            result.context_id,
+        )
         results_by_hardware_and_context[(hwid, ctxid, hwname)].append(result)
 
     # Make it so that infos_for_uplots is sorted by result count, i.e. show
@@ -152,7 +153,7 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
 
         infos_for_uplots[f"{hwid}_{ctxid}"] = {
             "data_for_uplot": [
-                [r.timestamp.timestamp() for r in results],
+                [r.started_at for r in results],
                 # rely on mean to be correct? use all data for
                 # error vis
                 [float(r.mean) for r in results if r.mean is not None],
@@ -174,7 +175,8 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
         bmr_cache_meta=_cache_bmrs["meta"],
         infos_for_uplots=infos_for_uplots,
         infos_for_uplots_json=infos_for_uplots_json,
-        case=case,
+        this_case_id=matching_results[0].case_id,
+        this_case_text_id=matching_results[0].case_text_id,
         application=Config.APPLICATION_NAME,
         title=Config.APPLICATION_NAME,  # type: ignore
     )

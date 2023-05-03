@@ -2,9 +2,9 @@
 {% block app_content %}
   <div>
     <h3>
-      <strong>{{ benchmark_name }}</strong> / case {{ case.id[:7] }}
+      <strong>{{ benchmark_name }}</strong> / case {{ this_case_id[:7] }}
     </h3>
-    <span class="fs-4"><code>{{ case.text_id }}</code></span>
+    <span class="fs-4"><code>{{ this_case_text_id }}</code></span>
     <p>
       Identified {{ matching_benchmark_result_count }} result(s) matching this case permutation.
       Based on {{ bmr_cache_meta.n_results }} results reported in
@@ -41,7 +41,7 @@
                 <a href="{{ url_for('app.benchmark-result', benchmark_result_id=result.id) }}">{{ result.id [:9] }}</a>
               </td>
               <td class="font-monospace">{{ result.ui_hardware_short }}</td>
-              <td class="font-monospace">{{ result.context.id[:8] }}</td>
+              <td class="font-monospace">{{ result.context_id[:8] }}</td>
               <td class="font-monospace">{{ result.ui_non_null_sample_count }}</td>
               <td class="font-monospace">{{ result.ui_mean_and_uncertainty }}</td>
               <td class="font-monospace" data-order="{{ result.ui_rel_sem[0] }}">{{ result.ui_rel_sem[1] }}</td>

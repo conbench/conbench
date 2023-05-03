@@ -26,16 +26,16 @@
         </tr>
       </thead>
       <tbody>
-        {% for case, results in results_by_case.items() %}
+        {% for case_id, results in results_by_case_id.items() %}
           <tr>
             <td class="font-monospace">
-              <a href="{{ url_for('app.show_benchmark_results', bname=benchmark_name, caseid=case.id) }}">{{ case.id[:10] }}</a>
+              <a href="{{ url_for('app.show_benchmark_results', bname=benchmark_name, caseid=case_id) }}">{{ case_id[:10] }}</a>
             </td>
-            <td class="font-monospace">{{ case.text_id }}</td>
-            <td class="font-monospace">{{ last_result_per_case[case].ui_time_started_at }}</td>
+            <td class="font-monospace">{{ results[0].case_text_id }}</td>
+            <td class="font-monospace">{{ last_result_per_case_id[case_id].ui_time_started_at }}</td>
             <td class="font-monospace">{{ results|length }}</td>
-            <td class="font-monospace">{{ hardware_count_per_case[case] }}</td>
-            <td class="font-monospace">{{ context_count_per_case[case] }}</td>
+            <td class="font-monospace">{{ hardware_count_per_case_id[case_id] }}</td>
+            <td class="font-monospace">{{ context_count_per_case_id[caseid] }}</td>
           </tr>
         {% endfor %}
       </tbody>
