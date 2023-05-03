@@ -539,7 +539,7 @@ class BenchmarkResult(Base, EntityMixin):
         """
         Return UI-friendly version of self.timestamp (user-given 'start time').
         """
-        return self.timestamp.strftime("%Y-%m-%d %H:%M:%S") + " (UTC)"
+        return self.timestamp.strftime("%Y-%m-%d %H:%M:%S") + " UTC"
 
     @property
     def ui_hardware_short(self) -> str:

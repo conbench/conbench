@@ -34,6 +34,7 @@ log = logging.getLogger(__name__)
 class CacheUpdateMetaInfo:
     newest_result_time_str: str
     oldest_result_time_str: str
+    covered_timeframe_days_approx: str  # stringified integer, for UI
     n_results: int
 
 
@@ -74,12 +75,15 @@ class CacheDict(TypedDict):
 # parent, maybe via https://pypi.org/project/shared-memory-dict/ this is _not_
 # as stdlib pickling dict
 # https://github.com/luizalabs/shared-memory-dict/issues/10
-_cache_bmrs: CacheDict = {
+bmrt_cache: CacheDict = {
     "by_id": {},
     "by_benchmark_name": {},
     "by_case_id": {},
     "meta": CacheUpdateMetaInfo(
-        newest_result_time_str="n/a", oldest_result_time_str="n/a", n_results=0
+        newest_result_time_str="n/a",
+        oldest_result_time_str="n/a",
+        n_results=0,
+        covered_timeframe_days_approx="n/a",
     ),
 }
 
@@ -89,10 +93,10 @@ _STARTED = False
 
 # Fetching one million items from a sample DB takes ~1 minute on my machine
 # (the `results = Session.scalars(....all())` call takes that long.
-def _fetch_and_cache_most_recent_results(n=0.06 * 10**6) -> None:
+def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
     log.debug(
         "BMRT cache: keys in cache: %s",
-        len(_cache_bmrs["by_id"]),
+        len(bmrt_cache["by_id"]),
     )
     t0 = time.monotonic()
 
@@ -173,12 +177,15 @@ def _fetch_and_cache_most_recent_results(n=0.06 * 10**6) -> None:
     # between those two assignments a thread might perform read access. (minor
     # inconsistency is possible). Of course we can add another lookup
     # indirection layer by assembling a completely new dictionary here and then
-    # re-defining the name _cache_bmrs.
-    _cache_bmrs["by_id"] = by_id_dict
-    _cache_bmrs["by_benchmark_name"] = by_name_dict
-    _cache_bmrs["by_case_id"] = by_case_id_dict
-    _cache_bmrs["meta"] = CacheUpdateMetaInfo(
+    # re-defining the name bmrt_cache.
+    bmrt_cache["by_id"] = by_id_dict
+    bmrt_cache["by_benchmark_name"] = by_name_dict
+    bmrt_cache["by_case_id"] = by_case_id_dict
+    bmrt_cache["meta"] = CacheUpdateMetaInfo(
         newest_result_time_str=results[0].ui_time_started_at,
+        covered_timeframe_days_approx=str(
+            (results[0].timestamp - results[-1].timestamp).days
+        ),
         oldest_result_time_str=results[-1].ui_time_started_at,
         n_results=len(results),
     )
@@ -192,7 +199,7 @@ def _fetch_and_cache_most_recent_results(n=0.06 * 10**6) -> None:
             "BMRT cache: keys in cache: %s, "
             "query took %.5f s, dict population took %.5f s"
         ),
-        len(_cache_bmrs["by_id"]),
+        len(bmrt_cache["by_id"]),
         t1 - t0,
         t2 - t1,
     )
