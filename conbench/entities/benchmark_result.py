@@ -345,6 +345,7 @@ class BenchmarkResult(Base, EntityMixin):
             },
         }
 
+    @functools.cached_property
     def is_failed(self):
         """
         Return True if this BenchmarkResult is considered to be 'failed' /
