@@ -499,26 +499,29 @@ class BenchmarkResult(Base, EntityMixin):
     @property
     def ui_rel_sem(self) -> Tuple[str, str]:
         """
-        The first string is a stringified float for sorting in the table.
-        The second string is for display in the table, with unit.
+        The first string in the tuple is a stringified float for sorting in a table.
+        The second string in the tuple is for display in the table, with unit.
+
         Associate "n/a" with a negative value so that DESC sorting by error
         is helpful.
         """
-        samples = self.data
+        if self.is_failed:
+            return (str(-1), "n/a (failed)")
 
-        if samples is None:
-            return (str(-1), "no data")
+        values = self.measurements
+        if all(v == 0 for v in values):
+            return (str(-1), "n/a (bad data)")
 
-        # otherwise: `TypeError: can't convert type 'NoneType' to numerator/denominator`
-        # in statistics.stdev(samples)
-        samples = [s for s in samples if s is not None]
+        if len(values) < 3:
+            return (str(-1), "n/a (< 3)")
 
-        if len(samples) < 3:
-            return (str(-1), "n/a")
+        stdem = float(statistics.stdev(values)) / math.sqrt(len(values))
 
-        stdem = float(statistics.stdev(samples)) / math.sqrt(len(samples))
         # Express relative standard error in percent.
-        rsep = 100 * (stdem / float(statistics.mean(samples)))
+        # Seen with real-world data:
+        # ZeroDivisionError: float division by zero
+        rsep = 100 * (stdem / float(statistics.mean(values)))
+
         errstr = sigfig.round(rsep, sigfigs=2)
         return (errstr, f"{errstr} %")
 
