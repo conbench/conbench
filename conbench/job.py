@@ -30,6 +30,64 @@ original_sigquit_handler = signal.getsignal(signal.SIGQUIT)
 log = logging.getLogger(__name__)
 
 
+# https://goshippo.com/blog/measure-real-size-any-python-object/
+# https://stackoverflow.com/a/40880923
+# And then brute force to get this to count at least something.
+# the special cases happen rarely, i.e. this counts the majority of what
+# matters.
+def get_size(obj, seen=None):
+    """Recursively finds size of objects"""
+
+    if obj is None:
+        return 0
+
+    if isinstance(obj, werkzeug.local.ContextVar):
+        return 0
+
+    size = sys.getsizeof(obj)
+
+    if seen is None:
+        seen = set()
+
+    obj_id = id(obj)
+    if obj_id in seen:
+        return 0
+    # Important mark as seen *before* entering recursion to gracefully handle
+    # self-referential objects
+    seen.add(obj_id)
+
+    if isinstance(obj, dict):
+        size += sum([get_size(v, seen) for v in obj.values()])
+        size += sum([get_size(k, seen) for k in obj.keys()])
+
+    elif hasattr(obj, "__dict__"):
+        try:
+            size += get_size(obj.__dict__, seen)
+        except RuntimeError:
+            # handle werkzeug.local special context var protection:
+            # https://github.com/pallets/werkzeug/blob/2.2.3/src/werkzeug/local.py
+            log.info("ignore werkzeug RuntimeErr")
+            return 0
+
+    elif hasattr(obj, "__iter__") and not isinstance(obj, (str, bytes, bytearray)):
+        if obj is None:
+            return 0
+
+        if isinstance(obj, _SpecialForm):
+            # Ignore this obj: TypeError: '_SpecialForm' object is not iterable
+            return 0
+
+        try:
+            size += sum([get_size(i, seen) for i in obj])
+        except TypeError:
+            # Might still fail with
+            # TypeError: 'NoneType' object is not iterable
+            log.info("ignore not-yet-understood TypeError")
+            seen.add(id(obj))
+            return 0
+    return size
+
+
 @dataclasses.dataclass
 class CacheUpdateMetaInfo:
     newest_result_time_str: str
