@@ -355,15 +355,12 @@ class BenchmarkResult(Base, EntityMixin):
         across components.
         """
         if self.data is None:
-            log.info("data is none")
             return True
 
         if do_iteration_samples_look_like_error(self.data):
-            log.info("iterations look like err")
             return True
 
         if self.error is not None:
-            log.info("selferr is not none")
             return True
 
         return False
