@@ -4,14 +4,14 @@
     <strong>Benchmarks</strong>
   </h3>
   <p>
-    Based on {{ benchmark_result_count }} results reported in
+    Based on <strong>{{ benchmark_result_count }}</strong> results reported in
     total between <strong>{{ bmr_cache_meta.oldest_result_time_str }}</strong> and
     <strong>{{ bmr_cache_meta.newest_result_time_str }}</strong>
     (~{{ bmr_cache_meta.covered_timeframe_days_approx }} days).
   </p>
   <div class="row mt-5">
     <div class="col">
-      <h4>By name</h4>
+      <h4>by name</h4>
       {% for benchmark_name, results in benchmarks_by_name_sorted_alphabetically.items() %}
         <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
         ({{ results|length }} results)
@@ -19,7 +19,7 @@
       {% endfor %}
     </div>
     <div class="col">
-      <h4>By most recent result (top 15)</h4>
+      <h4>by most recent result (top 15)</h4>
       {% for benchmark_name, results in benchmarks_by_name_sorted_by_most_recent_result_topN.items() %}
         <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
         ({{ results|length }} results)
