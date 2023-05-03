@@ -68,8 +68,9 @@ class BenchmarkResult(Base, EntityMixin):
     # performed on demand.
     run: Mapped[Run] = relationship("Run", lazy="select", back_populates="results")
 
-    # These can be empty lists. An item in the list is of type float, which
-    # includes `math.nan` as valid value.
+    # `data` holds the numeric values derived from N repetitions of the same
+    # measurement (experiment). These can be empty lists. An item in the list
+    # is of type float, which includes `math.nan` as valid value.
     data: Mapped[Optional[List[Decimal]]] = Nullable(
         postgresql.ARRAY(s.Numeric), default=[]
     )
@@ -386,8 +387,11 @@ class BenchmarkResult(Base, EntityMixin):
     def _single_value_summary(self) -> float:
         """
         Return a single numeric value summarizing the collection of data points
-        D associated with this benchmark result. Currently static (mean), can
-        be dynamic in the future.
+        D associated with this benchmark result.
+
+        Return `math.nan` if this result is failed.
+
+        Summary: currently static (mean), can be dynamic in the future.
 
         Assumption: each non-errored benchmark result (self.is_failed() returns
         False) is guaranteed to have at least one data point.
