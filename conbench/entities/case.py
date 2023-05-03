@@ -6,6 +6,8 @@ from ..entities._entity import Base, EntityMixin, NotNull, genprimkey
 
 
 class Case(Base, EntityMixin["Case"]):
+    # __slots__ = ("id", "name", "tags")
+
     __tablename__ = "case"
     id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=genprimkey)
     # The name of the conceptual benchmark (store on BenchmarkResult directly)?
