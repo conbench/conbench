@@ -4,7 +4,8 @@
 services:
   app:
     # Add --reload to command, to reload on file change.
-    command: ["fil-profile", "python", "-m",  "gunicorn", "-c", "conbench/gunicorn-conf.py", "--reload"]
+    # command: ["fil-profile", "python", "-m",  "gunicorn", "-c", "conbench/gunicorn-conf.py", "--reload"]
+    command: ["gunicorn", "-c", "conbench/gunicorn-conf.py", "--reload"]
     volumes:
       # Left-hand path: relative to this compose file. Mount the directory
       # that this compose file resided in as `/app` into the container.

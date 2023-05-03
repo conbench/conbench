@@ -7,7 +7,8 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Tuple, TypedDict
 
 import sqlalchemy
-from filprofiler.api import profile as filprofile
+
+# from filprofiler.api import profile as filprofile
 
 import conbench.metrics
 from conbench.config import Config
@@ -259,8 +260,8 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
             t0 = time.monotonic()
 
             try:
-                filprofile(lambda: _fetch_and_cache_most_recent_results(), "fil-result")
-                # _fetch_and_cache_most_recent_results()
+                # filprofile(lambda: _fetch_and_cache_most_recent_results(), "fil-result")
+                _fetch_and_cache_most_recent_results()
             except Exception as exc:
                 # For now, log all error detail. (but handle all exceptions; do
                 # some careful log-reading after rolling this out).
