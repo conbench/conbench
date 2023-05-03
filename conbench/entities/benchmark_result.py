@@ -429,6 +429,26 @@ class BenchmarkResult(Base, EntityMixin):
 
         return float(self.mean)
 
+    @functools.cached_property
+    def measurements(self) -> List[float]:
+        """
+        Return list of floats. Each item is guaranteed to not be NaN. The
+        returned list may however be empty (for all failed results).
+
+        This is an experiment for a hopefully valuable abstraction. I think we
+        maybe want to make users of this class not use the `.data` property
+        anymore.
+
+        We also may want to instruct SQLAlchemy to return numbers as floats
+        directly.
+        """
+        values = []
+        if not self.is_failed:
+            assert self.data is not None
+            values = [float(d) for d in self.data]
+
+        return values
+
     @property
     def ui_mean_and_uncertainty(self) -> str:
         """
