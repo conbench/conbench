@@ -9,20 +9,48 @@ import orjson
 from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
-from conbench.job import BMRTBenchmarkResult, _cache_bmrs
+from conbench.job import BMRTBenchmarkResult, bmrt_cache
 
 log = logging.getLogger(__name__)
+
+
+def newest_of_many_results(results: List[BMRTBenchmarkResult]) -> BMRTBenchmarkResult:
+    return max(results, key=lambda r: r.started_at)
+
+
+def time_of_newest_of_many_results(results: List[BMRTBenchmarkResult]) -> float:
+    return max(r.started_at for r in results)
+
+
+def get_first_n_dict_subset(d: Dict, n: int) -> Dict:
+    # A bit of discussion here:
+    # https://stackoverflow.com/a/12980510/145400
+    return {k: d[k] for k in list(d)[:n]}
 
 
 @app.route("/c-benchmarks/", methods=["GET"])  # type: ignore
 @authorize_or_terminate
 def list_benchmarks() -> str:
+    # Sort alphabetically by string key
+    benchmarks_by_name_sorted_alphabetically = dict(
+        sorted(bmrt_cache["by_benchmark_name"].items())
+    )
+    benchmarks_by_name_sorted_by_most_recent_result = dict(
+        sorted(
+            bmrt_cache["by_benchmark_name"].items(),
+            key=lambda item: time_of_newest_of_many_results(item[1]),
+        )
+    )
+
     return flask.render_template(
         "c-benchmarks.html",
-        # benchmarks_by_name=benchmarks_by_name,
-        benchmarks_by_name=_cache_bmrs["by_benchmark_name"],
-        benchmark_result_count=len(_cache_bmrs["by_id"]),
-        bmr_cache_meta=_cache_bmrs["meta"],
+        benchmarks_by_name=bmrt_cache["by_benchmark_name"],
+        benchmark_result_count=len(bmrt_cache["by_id"]),
+        benchmarks_by_name_sorted_alphabetically=benchmarks_by_name_sorted_alphabetically,
+        benchmarks_by_name_sorted_by_most_recent_result_topN=get_first_n_dict_subset(
+            benchmarks_by_name_sorted_by_most_recent_result, 15
+        ),
+        bmr_cache_meta=bmrt_cache["meta"],
         application=Config.APPLICATION_NAME,
         title=Config.APPLICATION_NAME,  # type: ignore
     )
@@ -32,11 +60,9 @@ def list_benchmarks() -> str:
 @authorize_or_terminate
 def show_benchmark_cases(bname: str) -> str:
     try:
-        matching_results = _cache_bmrs["by_benchmark_name"][bname]
+        matching_results = bmrt_cache["by_benchmark_name"][bname]
     except KeyError:
         return f"benchmark name not known: `{bname}`"
-
-    # cases = set(bmr.case for bmr in results)
 
     results_by_case_id: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
     for r in matching_results:
@@ -57,12 +83,12 @@ def show_benchmark_cases(bname: str) -> str:
     context_count_per_case_id: Dict[str, int] = {}
     for case_id, results in results_by_case_id.items():
         context_count_per_case_id[case_id] = len(set([r.context_id for r in results]))
-        last_result_per_case_id[case_id] = max(results, key=lambda r: r.started_at)
+        last_result_per_case_id[case_id] = newest_of_many_results(results)
 
     return flask.render_template(
         "c-benchmark-cases.html",
         benchmark_name=bname,
-        bmr_cache_meta=_cache_bmrs["meta"],
+        bmr_cache_meta=bmrt_cache["meta"],
         results_by_case_id=results_by_case_id,
         hardware_count_per_case_id=hardware_count_per_case_id,
         last_result_per_case_id=last_result_per_case_id,
@@ -83,7 +109,7 @@ class TypeUIPlotInfo(TypedDict):
 def show_benchmark_results(bname: str, caseid: str) -> str:
     # First, filter by benchmark name.
     try:
-        results_all_with_bname = _cache_bmrs["by_benchmark_name"][bname]
+        results_all_with_bname = bmrt_cache["by_benchmark_name"][bname]
     except KeyError:
         return f"benchmark name not known: `{bname}`"
 
@@ -169,7 +195,7 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
         matching_benchmark_result_count=len(matching_results),
         benchmark_results_for_table=results_for_table,
         benchmark_name=bname,
-        bmr_cache_meta=_cache_bmrs["meta"],
+        bmr_cache_meta=bmrt_cache["meta"],
         infos_for_uplots=infos_for_uplots,
         infos_for_uplots_json=infos_for_uplots_json,
         this_case_id=matching_results[0].case_id,
