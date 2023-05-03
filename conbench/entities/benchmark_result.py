@@ -1,3 +1,4 @@
+import functools
 import logging
 import math
 import statistics
@@ -414,7 +415,7 @@ class BenchmarkResult(Base, EntityMixin):
         - https://github.com/conbench/conbench/issues/640
         - https://github.com/conbench/conbench/issues/530
         """
-        if self.is_failed():
+        if self.is_failed:
             return math.nan
 
         if self.mean is None:
