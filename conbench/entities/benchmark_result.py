@@ -446,12 +446,11 @@ class BenchmarkResult(Base, EntityMixin):
         We also may want to instruct SQLAlchemy to return numbers as floats
         directly.
         """
-        values = []
-        if not self.is_failed:
-            assert self.data is not None
-            values = [float(d) for d in self.data]
+        if self.is_failed:
+            return []
 
-        return values
+        assert self.data is not None
+        return [float(d) for d in self.data]
 
     @property
     def ui_mean_and_uncertainty(self) -> str:
