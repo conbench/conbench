@@ -151,12 +151,51 @@ def _fetch_and_cache_most_recent_results(n=0.06 * 10**6) -> None:
         # Add property _hardware on result obj, from Run.
         result._hardware = result.run.hardware
         # point of confusion: `result.case.name` is the benchmark name
+        # result._bmrt_benchmark_name = str(result.case.name)
+        # result._bmrt_hardware_id = str(result.run.hardware.id)
+        # result._bmrt_hardware_name = str(result.run.hardware.name)
+
         by_name_dict[result.case.name].append(result)
         # Add a property on the Case object, on the fly.
         # Build the textual representation of this case which should also
         # uniquely / unambiguously define/identify this specific case.
         result.case.text_id = " ".join(get_case_kvpair_strings(result.case.tags))
         by_case_dict[result.case.id].append(result)
+        # case_text_by_id[case_id] = case_text_id
+        # result._bmrt_case_text_id = case_text_id
+        # result._bmrt_context_id = str(result.context_id)
+        # result._bmrt_context_dict = result.context.to_dict()
+        # result._bmrt_ui_hardware_short = str(result.ui_hardware_short)
+        # result._bmrt_is_failed = result.is_failed()
+
+        # for obj in (result,):
+        #     Session.expunge(obj)
+        #     sqlalchemy.orm.make_transient(obj)
+
+        # Alternatively, take an approach with
+        # @dataclasses.dataclass(slots=True)
+        # del result.run
+        # del result.case
+        # del result.info
+        # del result.context
+        # del result.optional_benchmark_info
+        # del result.change_annotations
+        # del result.error
+        # del result.times
+        # del result.q1
+        # del result.q3
+        # del result.iqr
+        # del result.validation
+        # del result._sa_instance_state
+
+    # last_result = results[-1]
+    # for key, value in vars(last_result).items():
+    #     log.info("prop %s size: %s", key, get_size(value))
+
+    first_bmr = next(iter(by_id_dict))
+    # for key, value in vars(first_bmr).items():
+    #     log.info("prop %s size: %s", key, get_size(value))
+
 
     # Mutate the dictionary which is accessed by other threads, do this in a
     # quick fashion -- each of this assignments is atomic (thread-safe), but
@@ -186,6 +225,9 @@ def _fetch_and_cache_most_recent_results(n=0.06 * 10**6) -> None:
         t1 - t0,
         t2 - t1,
     )
+
+    dsize = get_size(_cache_bmrs)
+    log.info("_cache_bmrs size: %s", dsize)
 
 
 def _periodically_fetch_last_n_benchmark_results() -> None:
