@@ -20,7 +20,7 @@ def list_benchmarks() -> str:
     return flask.render_template(
         "c-benchmarks.html",
         # benchmarks_by_name=benchmarks_by_name,
-        benchmarks_by_name=_cache_bmrs["by_benchmark_nameresults_by_case"],
+        benchmarks_by_name=_cache_bmrs["by_benchmark_name"],
         benchmark_result_count=len(_cache_bmrs["by_id"]),
         bmr_cache_meta=_cache_bmrs["meta"],
         application=Config.APPLICATION_NAME,
