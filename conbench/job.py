@@ -100,28 +100,39 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
     )
     t0 = time.monotonic()
 
+    # Note(JP): process query result rows in a streaming-like fashion in
+    # smaller chunks to keep peak memory usage in check. Also see
+    # https://docs.sqlalchemy.org/en/20/core/connections.html#using-server-side-cursors-a-k-a-stream-results
+    # https://docs.sqlalchemy.org/en/20/orm/queryguide/api.html#fetching-large-result-sets-with-yield-per
     # Also fetch hardware from associated Run, so that result.run is in cache,
     # too, and so that result.run.hardware is a quick lookup.
-    # Note that N here determines peak usage of memory.
     query_statement = (
         sqlalchemy.select(BenchmarkResult)
         .join(Run)
         .order_by(BenchmarkResult.timestamp.desc())
         .limit(n)
-    )
-    results = Session.scalars(query_statement).all()
+    ).execution_options(yield_per=2000)
 
-    t1 = time.monotonic()
-
-    if len(results) == 0:
-        log.info("BMRT cache: no results")
-        return
+    # Corresponding to the `yield_per` magic, consume the returned value as an
+    # iterator. `all()` would consume all results and would defeat the purpose
+    # of the memory-saving exercise. The following line of code does not do
+    # much of the work yet; that begins once the iterator is consumed (maybe it
+    # fetches the first chunk?).
+    result_rows_iterator = Session.scalars(query_statement)
 
     by_id_dict: Dict[str, BMRTBenchmarkResult] = {}
     by_name_dict: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
     by_case_id_dict: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
 
-    for result in results:
+    first_result = None
+    last_result = None
+    for result in result_rows_iterator:  # pylint: disable=E1133
+        # Keep track of the first (newest) and last (oldest) result while
+        # consuming the iterator. If n=1 they are the same.
+        last_result = result
+        if first_result is None:
+            first_result = result
+
         # For now: put both, failed and non-failed results into the cache.
         # It would be a nice code simplification to only consider succeeded
         # ones, but then we miss out on reporting about the failed ones.
@@ -172,6 +183,16 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
         # uniquely / unambiguously define/identify this specific case.
         by_case_id_dict[str(result.case_id)].append(bmr)
 
+    t1 = time.monotonic()
+
+    if len(by_name_dict) == 0:
+        log.info("BMRT cache: no results")
+        return
+
+    # This helps mypy, too.
+    assert first_result
+    assert last_result
+
     # Mutate the dictionary which is accessed by other threads, do this in a
     # quick fashion -- each of this assignments is atomic (thread-safe), but
     # between those two assignments a thread might perform read access. (minor
@@ -182,26 +203,20 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
     bmrt_cache["by_benchmark_name"] = by_name_dict
     bmrt_cache["by_case_id"] = by_case_id_dict
     bmrt_cache["meta"] = CacheUpdateMetaInfo(
-        newest_result_time_str=results[0].ui_time_started_at,
+        newest_result_time_str=first_result.ui_time_started_at,
         covered_timeframe_days_approx=str(
-            (results[0].timestamp - results[-1].timestamp).days
+            (first_result.timestamp - last_result.timestamp).days
         ),
-        oldest_result_time_str=results[-1].ui_time_started_at,
-        n_results=len(results),
+        oldest_result_time_str=last_result.ui_time_started_at,
+        n_results=len(by_name_dict),
     )
 
-    t2 = time.monotonic()
-
-    conbench.metrics.GAUGE_BMRT_CACHE_LAST_UPDATE_SECONDS.set(t2 - t0)
+    conbench.metrics.GAUGE_BMRT_CACHE_LAST_UPDATE_SECONDS.set(t1 - t0)
 
     log.info(
-        (
-            "BMRT cache: keys in cache: %s, "
-            "query took %.5f s, dict population took %.5f s"
-        ),
+        ("BMRT cache population done (%s results, took %.3f s)"),
         len(bmrt_cache["by_id"]),
         t1 - t0,
-        t2 - t1,
     )
 
 
@@ -236,6 +251,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
             t0 = time.monotonic()
 
             try:
+                # filprofile(lambda: _fetch_and_cache_most_recent_results(), "fil-result")
                 _fetch_and_cache_most_recent_results()
             except Exception as exc:
                 # For now, log all error detail. (but handle all exceptions; do
