@@ -70,11 +70,15 @@ class BenchmarkResult(Base, EntityMixin):
 
     # `data` holds the numeric values derived from N repetitions of the same
     # measurement (experiment). These can be empty lists. An item in the list
-    # is of type float, which includes `math.nan` as valid value.
-    data: Mapped[Optional[List[Decimal]]] = Nullable(
+    # is of type float, which includes `math.nan` as valid value. Note(JP): I
+    # think the type annotation `Optional[List[Optional[Decimal]]]` is now
+    # finally correct, reflecting what we allow to be inserted into the DB. I
+    # think we should really make it so that each element in self.data is of
+    # type float.
+    data: Mapped[Optional[List[Optional[Decimal]]]] = Nullable(
         postgresql.ARRAY(s.Numeric), default=[]
     )
-    times: Mapped[Optional[List[Decimal]]] = Nullable(
+    times: Mapped[Optional[List[Optional[Decimal]]]] = Nullable(
         postgresql.ARRAY(s.Numeric), default=[]
     )
 
@@ -85,11 +89,16 @@ class BenchmarkResult(Base, EntityMixin):
     info: Mapped[Info] = relationship("Info", lazy="joined")
     context: Mapped[Context] = relationship("Context", lazy="joined")
 
-    # Why is this nullable? `unit` is required via the JSON schema and
-    # currently documented with "The unit of the data object (e.g. seconds,
-    # B/s)". Where do we systematically keep track of "less is better" or "more
-    # is better"?
-    unit: Mapped[Optional[str]] = Nullable(s.Text)
+    # Note(JP): `unit` can I think never be `None`. The column does not need to
+    # be / should not be nullable. But it is. Reflect in the type annotation
+    # that this always is populated: `str`, not `Optional[str]`. This
+    # user-given property is required via the JSON schema and currently
+    # documented with "The unit of the data object (e.g. seconds, B/s)".
+    # Interesting: where do we systematically keep track of "less is better" or
+    # "more is better"? I think we derive this from the unit, which is
+    # fundamentally error-prone. Should be a user-given property.
+    unit: Mapped[str] = Nullable(s.Text)
+
     time_unit: Mapped[Optional[str]] = Nullable(s.Text)
 
     batch_id: Mapped[Optional[str]] = Nullable(s.Text)
@@ -419,17 +428,18 @@ class BenchmarkResult(Base, EntityMixin):
         - https://github.com/conbench/conbench/issues/640
         - https://github.com/conbench/conbench/issues/530
         """
-        if self.is_failed:
+        values = self.measurements
+
+        if not values:
             return math.nan
 
         if self.mean is None:
             # See https://github.com/conbench/conbench/issues/1169 -- Legacy
             # database might have mean being None _despite the benchmark not
             # being failed_. Because of a temporary logic error. Let's remove
-            # this code path again for sanity. Since is_failed() returned False
-            # we know that `self.data` has only numbers, and at least one.
-            assert self.data is not None
-            return float(statistics.mean(self.data))
+            # this code path again for sanity. `values` (from
+            # self.measurements) has only numbers.
+            return statistics.mean(values)
 
         return float(self.mean)
 
@@ -438,6 +448,9 @@ class BenchmarkResult(Base, EntityMixin):
         """
         Return list of floats. Each item is guaranteed to not be NaN. The
         returned list may however be empty (for all failed results).
+
+        For a non-failed result this list is guaranteed to have at least one
+        item.
 
         This is an experiment for a hopefully valuable abstraction. I think we
         maybe want to make users of this class not use the `.data` property
@@ -449,8 +462,20 @@ class BenchmarkResult(Base, EntityMixin):
         if self.is_failed:
             return []
 
+        # The following two asserts might be even costly in terms of
+        # performance. However, they explicitly document two assumptions that
+        # we rely on to be valid after is_failed returned False. Also, these
+        # the first assert statements is piicked up by mypy for type inference.
+        # Note that `assert all(d is not None for d in self.data)` did not help
+        # mypy narrow down the type. See
+        # https://github.com/python/mypy/issues/15180. To keep keep the
+        # feedback tight I have now chosen the `if d is not None` plus length
+        # constraint check, which should overall not have noticeable
+        # performance impact.
         assert self.data is not None
-        return [float(d) for d in self.data]
+        result = [float(d) for d in self.data if d is not None]
+        assert len(result) == len(self.data)
+        return result
 
     @property
     def ui_mean_and_uncertainty(self) -> str:
@@ -686,7 +711,7 @@ def floatcomp(v1, v2, sigfigs=5):
     return abs(float(v1s) - float(v2s)) < 10**-10
 
 
-def do_iteration_samples_look_like_error(samples: list[Optional[Decimal]]) -> bool:
+def do_iteration_samples_look_like_error(samples: List[Optional[Decimal]]) -> bool:
     """
     Inspect user-given numerical values for individual iteration results.
     Input is a list of either `None` or `Decimal` objects (currently enforced
@@ -892,6 +917,9 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
         },
     )
     unit = marshmallow.fields.String(
+        # I think in marshmallow terms this unfortunately means that empty
+        # strings are/were allowed to be injected. TODO: be more strict.
+        # Require users to provide a unit (non-zero length string)./
         required=True,
         metadata={"description": "The unit of the data object (e.g. seconds, B/s)"},
     )
