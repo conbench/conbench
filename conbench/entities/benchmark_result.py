@@ -477,78 +477,13 @@ class BenchmarkResult(Base, EntityMixin):
         assert len(result) == len(self.data)
         return result
 
-    @property
+    @functools.cached_property
     def ui_mean_and_uncertainty(self) -> str:
-        """
-        Build human-readable text conveying the data point acquired here.
+        return ui_mean_and_uncertainty(self.measurements, self.unit)
 
-        If this is a multi-sample data point then return notation like
-        string like '3.1 ± 0.7'.
-
-            mean_unc_str = sigfig.round(mean, uncertainty=stdem)
-
-        It's difficult to write code like this because of
-        https://github.com/conbench/conbench/issues/813
-        and related discussions; I think we should really make it so that
-        each element in self.data is of type float.
-
-        """
-        samples = self.data
-
-        if samples is None:
-            return "no data"
-
-        # otherwise: `TypeError: can't convert type 'NoneType' to numerator/denominator`
-        # in statistics.stdev(samples)
-        samples = [s for s in samples if s is not None]
-
-        if len(samples) < 3:
-            # Show each sample with five significant figures.
-            return "; ".join(str(sigfig.round(s, sigfigs=5)) for s in samples)
-
-        # Build sample standard deviation. Maybe we can also use the pre-built
-        # value, but trust needs to be established first.
-        stdev = float(statistics.stdev(samples))
-        mean = float(statistics.mean(samples))
-        # Calculate standard error of the mean for canonical scientific
-        # notation of the result. Make float from Decimal, otherwise
-        # TypeError: unsupported operand type(s) for /: 'decimal.Decimal' and 'float'
-        stdem = stdev / math.sqrt(len(samples))
-
-        # minstr = f"min: {sigfig.round(min, 3)} s"
-        # This generates a string like '3.1 ± 0.7'
-        mean_uncertainty_str = sigfig.round(mean, uncertainty=stdem)
-        return f"({mean_uncertainty_str}) {self.unit}"  # err ~ {rsep_str} %"
-
-    # maybe make this a cached property
-    @property
+    @functools.cached_property
     def ui_rel_sem(self) -> Tuple[str, str]:
-        """
-        The first string in the tuple is a stringified float for sorting in a table.
-        The second string in the tuple is for display in the table, with unit.
-
-        Associate "n/a" with a negative value so that DESC sorting by error
-        is helpful.
-        """
-        if self.is_failed:
-            return (str(-1), "n/a (failed)")
-
-        values = self.measurements
-        if all(v == 0 for v in values):
-            return (str(-1), "n/a (bad data)")
-
-        if len(values) < 3:
-            return (str(-1), "n/a (< 3)")
-
-        stdem = float(statistics.stdev(values)) / math.sqrt(len(values))
-
-        # Express relative standard error in percent.
-        # Seen with real-world data:
-        # ZeroDivisionError: float division by zero
-        rsep = 100 * (stdem / float(statistics.mean(values)))
-
-        errstr = sigfig.round(rsep, sigfigs=2)
-        return (errstr, f"{errstr} %")
+        return ui_rel_sem(self.measurements)
 
     @property
     def ui_non_null_sample_count(self) -> str:
@@ -582,6 +517,74 @@ class BenchmarkResult(Base, EntityMixin):
             return f"{hw.id[:4]}: " + hw.name[:15]
 
         return f"{hw.id[:4]}: " + hw.name
+
+
+def ui_rel_sem(values: List[float]):
+    """
+    The first string in the tuple is a stringified float for sorting in a
+    table. The second string in the tuple is for display in the table, with
+    unit (percent).
+
+    Associate "n/a" with a negative value so that DESC sorting by error is
+    helpful.
+    """
+    if not values:
+        # That is the case for 'failed'
+        return (str(-1), "n/a (no data)")
+
+    if all(v == 0 for v in values):
+        return (str(-1), "n/a (bad data)")
+
+    if len(values) < 3:
+        return (str(-1), "n/a (< 3)")
+
+    stdem = float(statistics.stdev(values)) / math.sqrt(len(values))
+
+    # Express relative standard error in percent.
+    # Seen with real-world data:
+    # ZeroDivisionError: float division by zero
+    rsep = 100 * (stdem / float(statistics.mean(values)))
+
+    errstr = sigfig.round(rsep, sigfigs=2)
+    return (errstr, f"{errstr} %")
+
+
+def ui_mean_and_uncertainty(values: List[float], unit: str):
+    """
+    Build human-readable text conveying the data point acquired here.
+
+    If this is a multi-sample data point then return notation like string like
+    '3.1 ± 0.7'.
+
+        mean_unc_str = sigfig.round(mean, uncertainty=stdem)
+
+    It's difficult to write code like this because of
+    https://github.com/conbench/conbench/issues/813 and related discussions.
+
+    Note that sigfig.round is incredibly CPU intense (takes 10 seconds to run
+    on 60000 benchmark results on my beefy CPU). Do not call this for many
+    benchmark results, only for a smaller set that must be displayed.
+    """
+    if not values:
+        return "no data"
+
+    if len(values) < 3:
+        # Show each sample with five significant figures.
+        return "; ".join(str(sigfig.round(v, sigfigs=5)) for v in values)
+
+    # Build sample standard deviation. Maybe we can also use the pre-built
+    # value, but trust needs to be established first.
+    stdev = statistics.stdev(values)
+    mean = statistics.mean(values)
+
+    # Calculate standard error of the mean for canonical scientific
+    # notation of the result. Make float from Decimal, otherwise
+    # TypeError: unsupported operand type(s) for /: 'decimal.Decimal' and 'float'
+    stdem = stdev / math.sqrt(len(values))
+
+    # This generates a string like '3.1 ± 0.7'
+    mean_uncertainty_str = sigfig.round(mean, uncertainty=stdem)
+    return f"({mean_uncertainty_str}) {unit}"
 
 
 def validate_and_aggregate_samples(stats_usergiven: Any):
