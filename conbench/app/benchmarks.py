@@ -33,8 +33,11 @@ def get_first_n_dict_subset(d: Dict, n: int) -> Dict:
 def list_benchmarks() -> str:
     # Sort alphabetically by string key
     benchmarks_by_name_sorted_alphabetically = dict(
-        sorted(bmrt_cache["by_benchmark_name"].items())
+        sorted(
+            bmrt_cache["by_benchmark_name"].items(), key=lambda item: item[0].lower()
+        )
     )
+
     benchmarks_by_name_sorted_by_most_recent_result = dict(
         sorted(
             bmrt_cache["by_benchmark_name"].items(),
