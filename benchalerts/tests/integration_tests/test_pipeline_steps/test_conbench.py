@@ -87,7 +87,7 @@ def test_GetConbenchZComparisonStep(
         assert run.contender_link
         assert run.contender_id
         if run.compare_results:
-            assert run.compare_link
+            assert run.run_compare_link
             for benchmark in run.compare_results:
                 # new compare result format
                 if "analysis" in benchmark:
