@@ -33,4 +33,4 @@ sigfig
 SQLAlchemy>=2
 tenacity
 uuid7
-yappi
+
