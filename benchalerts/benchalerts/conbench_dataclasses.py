@@ -57,12 +57,17 @@ class RunComparisonInfo:
         benchmark result on the contender run.
         """
         if self.compare_results:
-            assert self.compare_link
+            assert self.run_compare_link
             return [
                 BenchmarkResultInfo(
                     name=comparison["contender"]["case_permutation"],
-                    link=self.benchmark_result_link(
-                        comparison["contender"]["benchmark_result_id"]
+                    link=self.make_benchmark_result_link(
+                        contender_result_id=comparison["contender"][
+                            "benchmark_result_id"
+                        ],
+                        baseline_result_id=comparison["baseline"]["benchmark_result_id"]
+                        if comparison["baseline"]
+                        else None,
                     ),
                     has_error=bool(comparison["contender"]["error"]),
                     has_z_regression=comparison["analysis"]["lookback_z_score"][
@@ -73,7 +78,7 @@ class RunComparisonInfo:
                     run_id=self.contender_id,
                     run_reason=self.contender_reason,
                     run_time=self.contender_datetime,
-                    run_link=self.compare_link,
+                    run_link=self.run_compare_link,
                 )
                 for comparison in self.compare_results
                 if comparison["contender"]
@@ -84,7 +89,10 @@ class RunComparisonInfo:
                     name=benchmark_result["tags"].get(
                         "name", str(benchmark_result["tags"])
                     ),
-                    link=self.benchmark_result_link(benchmark_result["id"]),
+                    link=self.make_benchmark_result_link(
+                        contender_result_id=benchmark_result["id"],
+                        baseline_result_id=None,
+                    ),
                     has_error=bool(benchmark_result["error"]),
                     has_z_regression=False,  # no baseline run
                     run_id=self.contender_id,
@@ -114,16 +122,22 @@ class RunComparisonInfo:
         return f"{self.app_url}/runs/{self.contender_id}"
 
     @property
-    def compare_link(self) -> Optional[str]:
+    def run_compare_link(self) -> Optional[str]:
         """The link to the run comparison page in the webapp."""
         if self.compare_path:
             # self._compare_path has a leading slash already
             return f"{self.app_url}{self.compare_path}"
         return None
 
-    def benchmark_result_link(self, benchmark_result_id: str) -> str:
-        """Get the link to a specific benchmark result in the webapp."""
-        return f"{self.app_url}/benchmarks/{benchmark_result_id}"
+    def make_benchmark_result_link(
+        self, contender_result_id: str, baseline_result_id: Optional[str]
+    ) -> str:
+        """Get the link to a specific benchmark result in the webapp, or to the result
+        comparison page if a baseline result ID is given.
+        """
+        if baseline_result_id:
+            return f"{self.app_url}/compare/benchmarks/{baseline_result_id}...{contender_result_id}"
+        return f"{self.app_url}/benchmark-results/{contender_result_id}"
 
     @property
     def has_errors(self) -> bool:
