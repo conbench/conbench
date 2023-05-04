@@ -349,47 +349,44 @@ class CompareRunsAPI(ApiEndpoint):
         contender_results: List[BenchmarkResult],
     ) -> List[Tuple[Optional[BenchmarkResult], Optional[BenchmarkResult]]]:
         """Do a full outer join of two lists of benchmark results, pairing by case,
-        context, hardware, repo, and unit.
+        context, hardware, and unit.
 
-        If a case/context/hardware/repo/unit combination is present in one list but not
+        If a case/context/hardware/unit combination is present in one list but not
         the other, it will still be included but the other tuple element will be None.
 
-        If there are multiple results for a case/context/hardware/repo/unit combination
+        If there are multiple results for a case/context/hardware/unit combination
         in both lists, a cartesian product of them all will be returned.
         """
-        _key_type = Tuple[str, str, str, Optional[str], Optional[str]]
+        _key_type = Tuple[str, str, str, Optional[str]]
 
         def _generate_key(result: BenchmarkResult) -> _key_type:
-            repo = result.run.commit.repository if result.run.commit else None
             return (
                 result.case_id,
                 result.context_id,
                 result.run.hardware.hash,
-                repo,
                 result.unit,
             )
 
-        # cchru means 'case/context/hardware/repo/unit'
-        baseline_results_by_cchru: Dict[
+        baseline_results_by_key: Dict[
             _key_type, List[Optional[BenchmarkResult]]
         ] = collections.defaultdict(list)
-        contender_results_by_cchru: Dict[
+        contender_results_by_key: Dict[
             _key_type, List[Optional[BenchmarkResult]]
         ] = collections.defaultdict(list)
 
         for result in baseline_results:
-            baseline_results_by_cchru[_generate_key(result)].append(result)
+            baseline_results_by_key[_generate_key(result)].append(result)
 
         for result in contender_results:
-            contender_results_by_cchru[_generate_key(result)].append(result)
+            contender_results_by_key[_generate_key(result)].append(result)
 
         joined_results: List[
             Tuple[Optional[BenchmarkResult], Optional[BenchmarkResult]]
         ] = []
 
-        for cchru in set(baseline_results_by_cchru) | set(contender_results_by_cchru):
-            for baseline_result in baseline_results_by_cchru[cchru] or [None]:
-                for contender_result in contender_results_by_cchru[cchru] or [None]:
+        for key in set(baseline_results_by_key) | set(contender_results_by_key):
+            for baseline_result in baseline_results_by_key[key] or [None]:
+                for contender_result in contender_results_by_key[key] or [None]:
                     joined_results.append((baseline_result, contender_result))
 
         return joined_results
@@ -403,7 +400,7 @@ class CompareRunsAPI(ApiEndpoint):
 
             This endpoint will return a list of comparison objects, pairing benchmark
             results from the given baseline and contender runs that have the same case,
-            context, hardware, repository, and unit. The comparison object is the same
+            context, hardware, and unit. The comparison object is the same
             as the `GET /api/compare/benchmark-results/` response; see that endpoint's
             documentation for details.
 
