@@ -17,7 +17,9 @@ class FakeEntity:
 
 class TestJoinResults:
     @staticmethod
-    def _fake_benchmark_result(benchmark_result_id, case_id, context_id):
+    def _fake_benchmark_result(
+        benchmark_result_id, case_id, context_id, has_commit=True
+    ):
         """Just for this testing class, return a fake BenchmarkResult from which a
         case/context/hardware/repo/unit key can be extracted.
 
@@ -29,7 +31,10 @@ class TestJoinResults:
         commit.repository = "repo 1"
         run = FakeEntity("")
         run.hardware = hardware
-        run.commit = commit
+        if has_commit:
+            run.commit = commit
+        else:
+            run.commit = None
 
         result = FakeEntity(benchmark_result_id)
         result.unit = "unit 1"
@@ -160,6 +165,25 @@ class TestJoinResults:
         contenders = [self._fake_benchmark_result("id3", "case 1", "context 1")]
         pairs = CompareRunsAPI._join_results(baselines, contenders)
         assert self._parse_ids_from_pairs(pairs) == {("id1", "id3"), ("id2", None)}
+
+    def test_contender_missing_commit(self):
+        baselines = [
+            self._fake_benchmark_result("id1", "case 1", "context 1", has_commit=True),
+            self._fake_benchmark_result("id2", "case 1", "context 2", has_commit=True),
+            self._fake_benchmark_result("id3", "case 1", "context 3", has_commit=True),
+        ]
+        contenders = [
+            self._fake_benchmark_result("id4", "case 1", "context 1", has_commit=False),
+            self._fake_benchmark_result("id5", "case 1", "context 2", has_commit=False),
+            self._fake_benchmark_result("id6", "case 1", "context 4", has_commit=False),
+        ]
+        pairs = CompareRunsAPI._join_results(baselines, contenders)
+        assert self._parse_ids_from_pairs(pairs) == {
+            ("id1", "id4"),
+            ("id2", "id5"),
+            ("id3", None),
+            (None, "id6"),
+        }
 
 
 class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
