@@ -100,6 +100,7 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
                 repo=test_status_repo,
                 commit_hash=test_status_commit,
                 comparison_step_name="z_none",
+                external_id="123",
             )
         )
         if not os.getenv("CI"):  # don't post PR comments in CI

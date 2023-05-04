@@ -39,6 +39,9 @@ class GitHubCheckStep(AlertPipelineStep):
         A GitHubRepoClient instance. Either provide this or ``repo``.
     step_name
         The name for this step. If not given, will default to this class's name.
+    external_id
+        An optional reference to another system. This argument will set the
+        "external_id" property of the posted GitHub Check, but do nothing else.
 
     Returns
     -------
@@ -69,6 +72,7 @@ class GitHubCheckStep(AlertPipelineStep):
         repo: Optional[str] = None,
         github_client: Optional[GitHubRepoClient] = None,
         step_name: Optional[str] = None,
+        external_id: Optional[str] = None,
     ) -> None:
         super().__init__(step_name=step_name)
         self.github_client = github_client or GitHubRepoClient(repo=repo or "")
@@ -79,6 +83,7 @@ class GitHubCheckStep(AlertPipelineStep):
             )
         self.commit_hash = commit_hash
         self.comparison_step_name = comparison_step_name
+        self.external_id = external_id
 
     def run_step(
         self, previous_outputs: Dict[str, Any]
@@ -101,6 +106,7 @@ class GitHubCheckStep(AlertPipelineStep):
             details=self._default_check_details(full_comparison),
             # point to the homepage table filtered to runs of this commit
             details_url=f"{full_comparison.app_url}/?search={full_comparison.commit_hash}",
+            external_id=self.external_id,
         )
         log.debug(res)
         return res, full_comparison
