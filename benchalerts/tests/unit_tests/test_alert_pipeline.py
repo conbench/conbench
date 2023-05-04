@@ -41,6 +41,7 @@ def test_reasonable_pipeline(conbench_env, github_auth):
                 commit_hash=commit_hash,
                 comparison_step_name="z_none",
                 github_client=github_client,
+                external_id="123",
             ),
             steps.GitHubStatusStep(
                 commit_hash=commit_hash,

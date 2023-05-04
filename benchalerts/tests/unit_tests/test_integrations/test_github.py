@@ -71,6 +71,7 @@ class TestGitHubRepoClient:
             summary="Testing something",
             details="Some details",
             details_url="https://conbench.biz/",
+            external_id="123",
         )
         assert res["output"]["summary"] == "Testing something"
 

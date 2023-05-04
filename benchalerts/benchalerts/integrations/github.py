@@ -264,6 +264,7 @@ class GitHubRepoClient(BaseClient):
         summary: Optional[str] = None,
         details: Optional[str] = None,
         details_url: Optional[str] = None,
+        external_id: Optional[str] = None,
     ):
         """Adds a new (or updates an existing) GitHub Check on a commit.
 
@@ -293,6 +294,8 @@ class GitHubRepoClient(BaseClient):
             Details about the check results. Supports Markdown. Default None.
         details_url
             A URL to be linked to when clicking on check Details. Default None.
+        external_id
+            An optional reference to another system. Default None.
 
         Returns
         -------
@@ -317,5 +320,8 @@ class GitHubRepoClient(BaseClient):
 
         if details_url:
             json["details_url"] = details_url
+
+        if external_id:
+            json["external_id"] = external_id
 
         return self.post("/check-runs", json=json)

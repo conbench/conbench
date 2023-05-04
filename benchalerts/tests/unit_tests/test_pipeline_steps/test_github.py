@@ -47,6 +47,7 @@ def test_GitHubCheckStep(
                 commit_hash="abc",
                 github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
                 comparison_step_name="comparison_step",
+                external_id="123",
             )
         return
 
@@ -54,6 +55,7 @@ def test_GitHubCheckStep(
         commit_hash="abc",
         github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
         comparison_step_name="comparison_step",
+        external_id="123",
     )
     gh_res, full_comparison = step.run_step({"comparison_step": mock_comparison_info})
     assert gh_res
