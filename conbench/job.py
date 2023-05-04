@@ -8,6 +8,9 @@ from typing import Dict, List, Optional, Tuple, TypedDict
 
 import sqlalchemy
 
+# from filprofiler.api import profile as filprofile
+import yappi
+
 import conbench.metrics
 from conbench.config import Config
 from conbench.db import Session
@@ -93,7 +96,7 @@ _STARTED = False
 
 # Fetching one million items from a sample DB takes ~1 minute on my machine
 # (the `results = Session.scalars(....all())` call takes that long.
-def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
+def _fetch_and_cache_most_recent_results(n=0.05 * 10**6) -> None:
     log.debug(
         "BMRT cache: keys in cache: %s",
         len(bmrt_cache["by_id"]),
@@ -126,12 +129,15 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
 
     first_result = None
     last_result = None
-    for result in result_rows_iterator:  # pylint: disable=E1133
+    for idx, result in enumerate(result_rows_iterator, 1):  # pylint: disable=E1133
         # Keep track of the first (newest) and last (oldest) result while
         # consuming the iterator. If n=1 they are the same.
         last_result = result
         if first_result is None:
             first_result = result
+
+        if (idx % 1000) == 0:
+            log.info("1000 results processed")
 
         # For now: put both, failed and non-failed results into the cache.
         # It would be a nice code simplification to only consider succeeded
@@ -250,6 +256,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
 
             t0 = time.monotonic()
 
+            yappi.start()
             try:
                 # filprofile(lambda: _fetch_and_cache_most_recent_results(), "fil-result")
                 _fetch_and_cache_most_recent_results()
@@ -257,8 +264,26 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
                 # For now, log all error detail. (but handle all exceptions; do
                 # some careful log-reading after rolling this out).
                 log.exception("BMRT cache: exception during update: %s", exc)
+            yappi.stop()
 
             last_call_duration_s = time.monotonic() - t0
+
+            threads = yappi.get_thread_stats()
+            print()
+            print()
+            for thread in threads:
+                print(
+                    "Function stats for (%s) (%d)" % (thread.name, thread.id)
+                )  # it is the Thread.__class__.__name__
+
+                columns = {
+                    0: ("name", 150),
+                    1: ("ncall", 10),
+                    2: ("tsub", 12),
+                    3: ("ttot", 12),
+                    4: ("tavg", 12),
+                }
+                yappi.get_func_stats(ctx_id=thread.id).print_all(columns=columns)
 
             # Generally we want to spent the majority of the time _not_ doing
             # this thing here. So, if the last iteration lasted for e.g. ~60
