@@ -462,10 +462,9 @@ class BenchmarkResult(Base, EntityMixin):
         if self.is_failed:
             return []
 
-        # The following two asserts might be even costly in terms of
-        # performance. However, they explicitly document two assumptions that
-        # we rely on to be valid after is_failed returned False. Also, these
-        # the first assert statements is piicked up by mypy for type inference.
+        # The following two asserts explicitly document two assumptions that we
+        # rely on to be valid after is_failed returned False. Also, these the
+        # first assert statements is piicked up by mypy for type inference.
         # Note that `assert all(d is not None for d in self.data)` did not help
         # mypy narrow down the type. See
         # https://github.com/python/mypy/issues/15180. To keep keep the
