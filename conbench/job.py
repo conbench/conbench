@@ -147,20 +147,24 @@ def _fetch_and_cache_most_recent_results(n=0.05 * 10**6) -> None:
 
     first_result = None
     last_result = None
-    for idx, result in enumerate(result_rows_iterator, 1):  # pylint: disable=E1133
-        # Keep track of the first (newest) and last (oldest) result while
-        # consuming the iterator. If n=1 they are the same.
+    for result in result_rows_iterator:  # pylint: disable=E1133
+        # Note that the DB might feed us so quickly that this loop body becomes
+        # CPU-bound. In that case, given the current deployment model, we
+        # starve the other threads (hello, GIL!) that want to process HTTP
+        # requests. Pragmatic solution could be to sleep a bit in each loop
+        # iteration here (e.g. 0.1 s). We will see. Better would be do do the
+        # update from a separate process, and share the outcome via shared mem
+        # (e.g. SHM, but anything goes as long as we don't re-serialize).
+
+        # Keep track of the first (newest) and last (oldest) result
+        # while consuming the iterator. If n=1 they are the same.
         last_result = result
         if first_result is None:
             first_result = result
 
-        if (idx % 6000) == 0:
-            log.info("6000 results processed")
-
         # For now: put both, failed and non-failed results into the cache.
         # It would be a nice code simplification to only consider succeeded
         # ones, but then we miss out on reporting about the failed ones.
-
         benchmark_name = str(result.case.name)
 
         # A textual representation of the case permutation. As it is 'complete'
