@@ -11,9 +11,19 @@ import sqlalchemy
 import conbench.metrics
 from conbench.config import Config
 from conbench.db import Session
-from conbench.entities.benchmark_result import BenchmarkResult
+from conbench.entities.benchmark_result import (
+    BenchmarkResult,
+    ui_mean_and_uncertainty,
+    ui_rel_sem,
+)
 from conbench.entities.run import Run
 from conbench.hacks import get_case_kvpair_strings
+
+# A memory profiler, and a CPU profiler that are both tested to work well
+# with the process/threading model used here.
+# from filprofiler.api import profile as filprofile
+# import yappi
+
 
 """
 This module implements a job which populates and provides a cache for the N
@@ -58,10 +68,21 @@ class BMRTBenchmarkResult:
     case_text_id: str
     context_dict: Dict
     ui_time_started_at: str
-    ui_rel_sem: Tuple[str, str]
     ui_hardware_short: str
     ui_non_null_sample_count: str
-    ui_mean_and_uncertainty: str
+
+    # There is conceptual duplication between the class BenchmarkResult
+    # and this class BMRTBenchmarkResult. Fundamentally, it might make sense
+    # that we have two types of classes, with distinct values:
+    # - one for database abstraction (the 'big instances', mutable, ...)
+    # - one for data mangling (small mem footprint, immutable, ...)
+    @property
+    def ui_mean_and_uncertainty(self) -> str:
+        return ui_mean_and_uncertainty(self.data, self.unit)
+
+    @property
+    def ui_rel_sem(self) -> Tuple[str, str]:
+        return ui_rel_sem(self.data)
 
 
 class CacheDict(TypedDict):
@@ -127,8 +148,16 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
     first_result = None
     last_result = None
     for result in result_rows_iterator:  # pylint: disable=E1133
-        # Keep track of the first (newest) and last (oldest) result while
-        # consuming the iterator. If n=1 they are the same.
+        # Note that the DB might feed us so quickly that this loop body becomes
+        # CPU-bound. In that case, given the current deployment model, we
+        # starve the other threads (hello, GIL!) that want to process HTTP
+        # requests. Pragmatic solution could be to sleep a bit in each loop
+        # iteration here (e.g. 0.1 s). We will see. Better would be do do the
+        # update from a separate process, and share the outcome via shared mem
+        # (e.g. SHM, but anything goes as long as we don't re-serialize).
+
+        # Keep track of the first (newest) and last (oldest) result
+        # while consuming the iterator. If n=1 they are the same.
         last_result = result
         if first_result is None:
             first_result = result
@@ -136,7 +165,6 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
         # For now: put both, failed and non-failed results into the cache.
         # It would be a nice code simplification to only consider succeeded
         # ones, but then we miss out on reporting about the failed ones.
-
         benchmark_name = str(result.case.name)
 
         # A textual representation of the case permutation. As it is 'complete'
@@ -166,9 +194,7 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
             case_text_id=case_text_id,
             ui_hardware_short=str(result.ui_hardware_short),
             ui_time_started_at=str(result.ui_time_started_at),
-            ui_rel_sem=result.ui_rel_sem,
             ui_non_null_sample_count=result.ui_non_null_sample_count,
-            ui_mean_and_uncertainty=result.ui_mean_and_uncertainty,
         )
 
         # The str() indirections below (and above) are here to quickly make
@@ -224,7 +250,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
     """
     Immediately return after having spawned a thread triggers periodic action.
     """
-    first_sleep_seconds = 10
+    first_sleep_seconds = 3
     min_delay_between_runs_seconds = 120
 
     if Config.TESTING:
@@ -250,6 +276,8 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
 
             t0 = time.monotonic()
 
+            # yappi.start()
+
             try:
                 # filprofile(lambda: _fetch_and_cache_most_recent_results(), "fil-result")
                 _fetch_and_cache_most_recent_results()
@@ -257,6 +285,9 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
                 # For now, log all error detail. (but handle all exceptions; do
                 # some careful log-reading after rolling this out).
                 log.exception("BMRT cache: exception during update: %s", exc)
+
+            # yappi.stop()
+            # yappi_print_threads_stats()
 
             last_call_duration_s = time.monotonic() - t0
 
@@ -297,6 +328,24 @@ def shutdown_handler(sig, frame):
     SHUTDOWN = True
     if sig == signal.SIGINT:
         original_sigint_handler(sig, frame)
+
+
+# def yappi_print_threads_stats():
+#     """ """
+#     threads = yappi.get_thread_stats()
+#     print("\n\n")
+#     for thread in threads:
+#         print("Stats for (%s) (%d)" % (thread.name, thread.id))
+#         # Didn't find docs, but after code inspection I found a way to
+#         # increase column width in output.
+#         columns = {
+#             0: ("name", 150),
+#             1: ("ncall", 10),
+#             2: ("tsub", 12),
+#             3: ("ttot", 12),
+#             4: ("tavg", 12),
+#         }
+#         yappi.get_func_stats(ctx_id=thread.id).print_all(columns=columns)
 
 
 # Handle the common signals that instruct us to gracefully shut down. We have
