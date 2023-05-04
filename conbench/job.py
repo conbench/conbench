@@ -7,6 +7,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Tuple, TypedDict
 
 import sqlalchemy
+from sqlalchemy.orm import selectinload
 
 import conbench.metrics
 from conbench.config import Config
@@ -16,7 +17,6 @@ from conbench.entities.benchmark_result import (
     ui_mean_and_uncertainty,
     ui_rel_sem,
 )
-from conbench.entities.run import Run
 from conbench.hacks import get_case_kvpair_strings
 
 # A memory profiler, and a CPU profiler that are both tested to work well
