@@ -2,6 +2,7 @@ import functools
 import logging
 import sys
 
+import orjson
 import psycopg2
 import sqlalchemy.exc
 import tenacity
@@ -56,6 +57,13 @@ def configure_engine(url):
             # https://www.postgresql.org/docs/12/libpq-connect.html
             "connect_timeout": 3,  # unit: seconds
         },
+        # This uses orjson for JSON-parsing JSONB fields from the database.
+        # Anecdotal scenario seen with profiling: when loading 50000 result
+        # objects from DB: psycopg2/_json.py:159 typecast_json took 2.5 s in
+        # total (invoking stdblib JSONDecoder.decode 300000 times), with orjson
+        # it took 0.3 s in total. No further noticeable gain with cysimdjson's
+        # parser.
+        json_deserializer=orjson.loads,  # pylint: disable=E1101
     )
     logfunc("bind engine to session")
     session_maker.configure(bind=engine)
