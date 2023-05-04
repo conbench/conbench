@@ -14,7 +14,11 @@ import yappi
 import conbench.metrics
 from conbench.config import Config
 from conbench.db import Session
-from conbench.entities.benchmark_result import BenchmarkResult
+from conbench.entities.benchmark_result import (
+    BenchmarkResult,
+    ui_mean_and_uncertainty,
+    ui_rel_sem,
+)
 from conbench.entities.run import Run
 from conbench.hacks import get_case_kvpair_strings
 
@@ -61,10 +65,21 @@ class BMRTBenchmarkResult:
     case_text_id: str
     context_dict: Dict
     ui_time_started_at: str
-    ui_rel_sem: Tuple[str, str]
     ui_hardware_short: str
     ui_non_null_sample_count: str
-    ui_mean_and_uncertainty: str
+
+    # There is conceptual duplication between the class BenchmarkResult
+    # and this class BMRTBenchmarkResult. Fundamentally, it might make sense
+    # that we have two types of classes, with distinct values:
+    # - one for database abstraction (the 'big instances', mutable, ...)
+    # - one for data mangling (small mem footprint, immutable, ...)
+    @property
+    def ui_mean_and_uncertainty(self) -> str:
+        return ui_mean_and_uncertainty(self.data, self.unit)
+
+    @property
+    def ui_rel_sem(self) -> Tuple[str, str]:
+        return ui_rel_sem(self.data)
 
 
 class CacheDict(TypedDict):
@@ -172,9 +187,7 @@ def _fetch_and_cache_most_recent_results(n=0.05 * 10**6) -> None:
             case_text_id=case_text_id,
             ui_hardware_short=str(result.ui_hardware_short),
             ui_time_started_at=str(result.ui_time_started_at),
-            ui_rel_sem=result.ui_rel_sem,
             ui_non_null_sample_count=result.ui_non_null_sample_count,
-            ui_mean_and_uncertainty=result.ui_mean_and_uncertainty,
         )
 
         # The str() indirections below (and above) are here to quickly make
