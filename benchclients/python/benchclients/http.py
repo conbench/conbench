@@ -360,21 +360,20 @@ class RetryingHTTPClient(ABC):
         if resp.status_code == expected_status_code:
             return resp
 
+        # Decide whether or not this is retryable based on the response status
+        # code alone so that this decision can be put into the log message
+        # before leaving this function.
+        retryable_code = self._retryable_status_code(resp.status_code)
+
         # Log body prefix: sometimes this is critical for debuggability.
         log.info(
-            "unexpected response (code: %s, body bytes: <%s ...>)",
+            "unexpected response. code: %s%s, body bytes: <%s ...>",
             resp.status_code,
+            " (retryable)" if retryable_code else "",
             resp.text[:400],
         )
 
-        if resp.status_code == 429:
-            # Not yet emitted by Conbench, but that's the canonical way to
-            # signal "back off, retry soon".
-            return "retry"
-
-        # Retry upon any 5xx response, later maybe fine-tune by specific status
-        # code.
-        if str(resp.status_code).startswith("5"):
+        if retryable_code:
             return "retry"
 
         # 401 has a distinct meaning.
@@ -392,3 +391,20 @@ class RetryingHTTPClient(ABC):
         )
 
         raise RetryingHTTPClientNonRetryableResponse(message=msg, error_response=resp)
+
+    def _retryable_status_code(self, code: int) -> bool:
+        """
+        Do we (want to) consider this response as retryable, based on the
+        status code alone?
+        """
+        if code == 429:
+            # Not yet emitted by Conbench, but that's the canonical way to
+            # signal "back off, retry soon".
+            return True
+
+        # Retry upon any 5xx response, later maybe fine-tune by specific status
+        # code.
+        if str(code).startswith("5"):
+            return True
+
+        return False
