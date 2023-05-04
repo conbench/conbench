@@ -8,8 +8,6 @@ from typing import Dict, List, Optional, Tuple, TypedDict
 
 import sqlalchemy
 
-# from filprofiler.api import profile as filprofile
-
 import conbench.metrics
 from conbench.config import Config
 from conbench.db import Session
