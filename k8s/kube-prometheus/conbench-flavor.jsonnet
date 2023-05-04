@@ -65,7 +65,7 @@ local kp =
           // vd-2 in mind. Almost ephemeral setup. But we want to retain
           // data across kube-prometheus updates. Use short retention and tiny
           // persistent volumes.
-          retention: '6d',
+          retention: '12d',
           // <comment-used-by-ci: pvc-start>
           storage: {
             volumeClaimTemplate: {
