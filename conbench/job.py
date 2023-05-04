@@ -19,6 +19,8 @@ from conbench.entities.benchmark_result import (
 from conbench.entities.run import Run
 from conbench.hacks import get_case_kvpair_strings
 
+# A memory profiler, and a CPU profiler that are both tested to work well
+# with the process/threading model used here.
 # from filprofiler.api import profile as filprofile
 # import yappi
 
@@ -271,6 +273,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
             t0 = time.monotonic()
 
             # yappi.start()
+
             try:
                 # filprofile(lambda: _fetch_and_cache_most_recent_results(), "fil-result")
                 _fetch_and_cache_most_recent_results()
@@ -278,26 +281,11 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
                 # For now, log all error detail. (but handle all exceptions; do
                 # some careful log-reading after rolling this out).
                 log.exception("BMRT cache: exception during update: %s", exc)
+
             # yappi.stop()
+            # yappi_print_threads_stats()
 
             last_call_duration_s = time.monotonic() - t0
-
-            # threads = yappi.get_thread_stats()
-            # print()
-            # print()
-            # for thread in threads:
-            #     print(
-            #         "Function stats for (%s) (%d)" % (thread.name, thread.id)
-            #     )  # it is the Thread.__class__.__name__
-
-            #     columns = {
-            #         0: ("name", 150),
-            #         1: ("ncall", 10),
-            #         2: ("tsub", 12),
-            #         3: ("ttot", 12),
-            #         4: ("tavg", 12),
-            #     }
-            #     yappi.get_func_stats(ctx_id=thread.id).print_all(columns=columns)
 
             # Generally we want to spent the majority of the time _not_ doing
             # this thing here. So, if the last iteration lasted for e.g. ~60
@@ -336,6 +324,24 @@ def shutdown_handler(sig, frame):
     SHUTDOWN = True
     if sig == signal.SIGINT:
         original_sigint_handler(sig, frame)
+
+
+# def yappi_print_threads_stats():
+#     """ """
+#     threads = yappi.get_thread_stats()
+#     print("\n\n")
+#     for thread in threads:
+#         print("Stats for (%s) (%d)" % (thread.name, thread.id))
+#         # Didn't find docs, but after code inspection I found a way to
+#         # increase column width in output.
+#         columns = {
+#             0: ("name", 150),
+#             1: ("ncall", 10),
+#             2: ("tsub", 12),
+#             3: ("ttot", 12),
+#             4: ("tavg", 12),
+#         }
+#         yappi.get_func_stats(ctx_id=thread.id).print_all(columns=columns)
 
 
 # Handle the common signals that instruct us to gracefully shut down. We have
