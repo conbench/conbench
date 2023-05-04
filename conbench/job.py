@@ -213,7 +213,7 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
         n_results=len(by_name_dict),
     )
 
-    conbench.metrics.GAUGE_BMRT_CACHE_LAST_UPDATE_SECONDS.set(t2 - t0)
+    conbench.metrics.GAUGE_BMRT_CACHE_LAST_UPDATE_SECONDS.set(t1 - t0)
 
     log.info(
         ("BMRT cache population done (%s results, took %.3f s)"),
