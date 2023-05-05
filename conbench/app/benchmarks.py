@@ -38,21 +38,28 @@ def list_benchmarks() -> str:
         )
     )
 
-    benchmarks_by_name_sorted_by_most_recent_result = dict(
-        sorted(
-            bmrt_cache["by_benchmark_name"].items(),
-            key=lambda item: time_of_newest_of_many_results(item[1]),
+    newest_result_by_bname = {
+        bname: newest_of_many_results(bmrlist)
+        for bname, bmrlist in bmrt_cache["by_benchmark_name"].items()
+    }
+
+    newest_result_for_each_benchmark_name_sorted = [
+        bmr
+        for _, bmr in sorted(
+            newest_result_by_bname.items(),
+            key=lambda item: item[1].started_at,
+            reverse=True,
         )
-    )
+    ]
 
     return flask.render_template(
         "c-benchmarks.html",
         benchmarks_by_name=bmrt_cache["by_benchmark_name"],
         benchmark_result_count=len(bmrt_cache["by_id"]),
         benchmarks_by_name_sorted_alphabetically=benchmarks_by_name_sorted_alphabetically,
-        benchmarks_by_name_sorted_by_most_recent_result_topN=get_first_n_dict_subset(
-            benchmarks_by_name_sorted_by_most_recent_result, 15
-        ),
+        newest_result_for_each_benchmark_name_topN=newest_result_for_each_benchmark_name_sorted[
+            :15
+        ],
         bmr_cache_meta=bmrt_cache["meta"],
         application=Config.APPLICATION_NAME,
         title=Config.APPLICATION_NAME,  # type: ignore
