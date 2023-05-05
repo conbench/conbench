@@ -123,12 +123,13 @@ class HistorySample:
     mean: Optional[float]
     # Experimental: introduce 'singe value summary' concept. An item in history
     # reflects a benchmark result, and that must have a single value
-    # representation for plotting and analysis. If it does not have that, it
-    # should not be part of history (this cannot be None). Initially this is
-    # equivalent to mean. For consumers to make sense of this, also add a
-    # string field carrying the name. the name of this.
-    svs: float
-    svs_type: str
+    # representation for plotting and analysis. If it does not have that, it is
+    # "failed" and it should not be part of history (this cannot be None).
+    # Initially, this is equivalent to mean. For consumers to make sense of
+    # this, also add a string field carrying the name. the name of this.
+    single_value_summary: float
+    # A string reflecting the kind/type/method of the SVS. E.g. "mean".
+    single_value_summary_type: str
     # math.nan is allowed for representing a failed iteration.
     data: List[float]
     times: List[float]
