@@ -9,8 +9,8 @@ from ...app._plots import _should_format, _simple_source, _source
 def legacy_dict_to_hs(d: dict) -> HistorySample:
     return HistorySample(
         mean=d["mean"],
-        single_value_summary=d["mean"],
-        single_value_summary_type="mean",
+        svs=d["mean"],
+        svs_type="mean",
         commit_msg=d["message"],
         commit_timestamp=util.tznaive_iso8601_to_tzaware_dt(d["timestamp"]),
         commit_hash=d["sha"],
