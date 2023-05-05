@@ -13,7 +13,6 @@ import sqlalchemy as s
 
 from ..config import Config
 from ..db import Session
-from ..entities._entity import EntitySerializer
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import CantFindAncestorCommitsError, Commit
 from ..entities.hardware import Hardware
@@ -54,7 +53,6 @@ def _to_float_or_none(
 # BenchmarkResults, because that's fundamentally related to their histories.
 
 
-
 @dataclasses.dataclass
 class HistorySampleZscoreStats:
     begins_distribution_change: bool
@@ -83,9 +81,9 @@ class HistorySample:
     # "failed" and it should not be part of history (this cannot be None).
     # Initially, this is equivalent to mean. For consumers to make sense of
     # this, also add a string field carrying the name. the name of this.
-    single_value_summary: float
+    svs: float
     # A string reflecting the kind/type/method of the SVS. E.g. "mean".
-    single_value_summary_type: str
+    svs_type: str
     # math.nan is allowed for representing a failed iteration.
     data: List[float]
     times: List[float]
@@ -111,7 +109,13 @@ class HistorySample:
         # if performance is a concern then https://pypi.org/project/orjson/
         # promises to be among the fastest for serializing python dataclass
         # instances into JSON.
+
+        # For external consumption, change type/representation of time.
         d["commit_timestamp"] = self.commit_timestamp.isoformat()
+
+        # Rename SVS for clarity for external consumption.
+        d["single_value_summary"] = d.pop("svs")
+        d["single_value_summary_type"] = d.pop("svs_type")
         return d
 
 
