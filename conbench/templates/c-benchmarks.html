@@ -4,9 +4,12 @@
     <strong>Benchmarks</strong>
   </h3>
   <p>
-    Based on <strong>{{ benchmark_result_count }}</strong> results reported in
-    total between <strong>{{ bmr_cache_meta.oldest_result_time_str }}</strong> and
-    <strong>{{ bmr_cache_meta.newest_result_time_str }}</strong>
+    <strong>{{ benchmarks_by_name | length }}</strong> unique benchmark names
+    across the <strong>{{ bmr_cache_meta.n_results }}</strong> most recently submitted results.
+    <br>
+    Time window:
+    {{ bmr_cache_meta.oldest_result_time_str }} to
+    {{ bmr_cache_meta.newest_result_time_str }}
     (~{{ bmr_cache_meta.covered_timeframe_days_approx }} days).
   </p>
   <div class="row mt-5">
@@ -19,12 +22,21 @@
       {% endfor %}
     </div>
     <div class="col">
-      <h4>by most recent result (top 15)</h4>
-      {% for benchmark_name, results in benchmarks_by_name_sorted_by_most_recent_result_topN.items() %}
-        <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
-        ({{ results|length }} results)
+      <h4>by most recent result</h4>
+      {% for result in newest_result_for_each_benchmark_name_topN %}
+        <strong><a href="{{ url_for('app.show_benchmark_cases', bname=result.benchmark_name) }}">{{ result.benchmark_name }}</a></strong>
+        (<time class="timeago" datetime="{{ result.started_at_iso }}">{{ result.ui_time_started_at }}</time>)
         <br>
       {% endfor %}
     </div>
   </div>
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.7/jquery.timeago.min.js"></script>
+  <script type="text/javascript">
+  $(document).ready(function() {
+     $("time.timeago").timeago();
+  });
+  </script>
 {% endblock %}
