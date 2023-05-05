@@ -4,12 +4,14 @@ import signal
 import threading
 import time
 from collections import defaultdict
+from datetime import datetime
 from typing import Dict, List, Optional, Tuple, TypedDict
 
 import sqlalchemy
 from sqlalchemy.orm import selectinload
 
 import conbench.metrics
+import conbench.util
 from conbench.config import Config
 from conbench.db import Session
 from conbench.entities.benchmark_result import (
@@ -84,6 +86,16 @@ class BMRTBenchmarkResult:
     def ui_rel_sem(self) -> Tuple[str, str]:
         return ui_rel_sem(self.data)
 
+    @property
+    def started_at_iso(self) -> str:
+        """
+        Add an ISO timestring on the object so that JavaScript's `new
+        Date(input)` can parse this into a tz-aware object.
+        """
+        return conbench.util.tznaive_dt_to_aware_iso8601_for_api(
+            datetime.fromtimestamp(self.started_at)
+        )
+
 
 class CacheDict(TypedDict):
     by_id: Dict[str, BMRTBenchmarkResult]
@@ -114,7 +126,7 @@ _STARTED = False
 
 # Fetching one million items from a sample DB takes ~1 minute on my machine
 # (the `results = Session.scalars(....all())` call takes that long.
-def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
+def _fetch_and_cache_most_recent_results(n=0.2 * 10**6) -> None:
     log.debug(
         "BMRT cache: keys in cache: %s",
         len(bmrt_cache["by_id"]),
@@ -239,7 +251,7 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
             (first_result.timestamp - last_result.timestamp).days
         ),
         oldest_result_time_str=last_result.ui_time_started_at,
-        n_results=len(by_name_dict),
+        n_results=len(by_id_dict),
     )
 
     conbench.metrics.GAUGE_BMRT_CACHE_LAST_UPDATE_SECONDS.set(t1 - t0)

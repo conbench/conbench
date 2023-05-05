@@ -7,6 +7,13 @@ html {
   font-size: 14px;
 }
 
+/* spacing between DT items */
+div.dataTables_filter label {
+  font-size: 12px;
+  margin-left: 10px;
+ }
+
+
 /* fix blue border on button click */
 .btn:focus,.btn:active {
   outline: none !important;
