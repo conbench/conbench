@@ -622,8 +622,8 @@
                                     "mean": 0.036369,
                                     "repository": "https://github.com/org/repo",
                                     "run_name": "some run name",
-                                    "svs": 0.036369,
-                                    "svs_type": "mean",
+                                    "single_value_summary": 0.036369,
+                                    "single_value_summary_type": "mean",
                                     "times": [
                                         0.099094,
                                         0.037129,
