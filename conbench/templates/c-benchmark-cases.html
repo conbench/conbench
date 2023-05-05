@@ -1,17 +1,14 @@
 {% extends "app.html" %}
 {% block app_content %}
   <h3>
-    <strong>{{ benchmark_name }}</strong> / unique case permutations
+    Case permutations for benchmark <strong>{{ benchmark_name }}</strong>
   </h3>
   <p>
-    Found {{ benchmark_result_count }} result(s) for benchmark <code>{{ benchmark_name }}</code>,
-    spanning {{ results_by_case_id|length }} case(s).
+    Found <strong>{{ results_by_case_id|length }}</strong> unique case permutation(s)
+    across <strong>{{ benchmark_result_count }}</strong> result(s).
     <br>
-    Based on {{ bmr_cache_meta.n_results }} results reported in
-    total between {{ bmr_cache_meta.oldest_result_time_str }} and
-    {{ bmr_cache_meta.newest_result_time_str }}
   </p>
-  <div class="mt-5">
+  <div class="mt-3">
     <table class="table table-hover conbench-datatable"
            style="width:100%;
                   display: none">
@@ -41,6 +38,9 @@
       </tbody>
     </table>
   </div>
+  Report based on {{ bmr_cache_meta.n_results }} results reported in
+  total between {{ bmr_cache_meta.oldest_result_time_str }} and
+  {{ bmr_cache_meta.newest_result_time_str }}
 {% endblock %}
 {% block scripts %}
   {{ super() }}
