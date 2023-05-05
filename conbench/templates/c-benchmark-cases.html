@@ -58,6 +58,8 @@
             // published in https://cdn.datatables.net/plug-ins/1.13.3/features/.
             // kudos to https://stackoverflow.com/a/29639664/145400
           "conditionalPaging": true,
+          // hide the "Showing 1 to 12 of 12 entries" element
+          "bInfo" : false,
           "responsive": true,
             // the default default seems to be the first item in lengthMenu.
           "lengthMenu": [ 5, 10, 50, 75, 100, 250, 750 ],
@@ -65,8 +67,14 @@
           "pageLength": 50,
             // Take rather precise control of layouting elements, put bottom elements
             // into a mult-col single row, using BS's grid system.
-          "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
-            // default sort order: by result count, highest first
+          "dom": '<"row"<"d-flex flex-row-reverse p-0"fl>>rt<"row p-2"<"col-6"i><".col-6"p>>',
+          "language": {
+            "search": '',
+            "searchPlaceholder": "search all columns",
+            "lengthMenu": "show _MENU_ cases",
+          },
+
+          // default sort order: by result count, highest first
           "order": [[2, 'desc']],
           "columnDefs": [{ "orderable": true }],
           initComplete: function () {
