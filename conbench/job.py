@@ -4,12 +4,14 @@ import signal
 import threading
 import time
 from collections import defaultdict
+from datetime import datetime
 from typing import Dict, List, Optional, Tuple, TypedDict
 
 import sqlalchemy
 from sqlalchemy.orm import selectinload
 
 import conbench.metrics
+import conbench.util
 from conbench.config import Config
 from conbench.db import Session
 from conbench.entities.benchmark_result import (
@@ -83,6 +85,16 @@ class BMRTBenchmarkResult:
     @property
     def ui_rel_sem(self) -> Tuple[str, str]:
         return ui_rel_sem(self.data)
+
+    @property
+    def started_at_iso(self) -> str:
+        """
+        Add an ISO timestring on the object so that JavaScript's `new
+        Date(input)` can parse this into a tz-aware object.
+        """
+        return conbench.util.tznaive_dt_to_aware_iso8601_for_api(
+            datetime.fromtimestamp(self.started_at)
+        )
 
 
 class CacheDict(TypedDict):
