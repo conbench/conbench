@@ -13,7 +13,6 @@ import sqlalchemy as s
 
 from ..config import Config
 from ..db import Session
-from ..entities._entity import EntitySerializer
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import CantFindAncestorCommitsError, Commit
 from ..entities.hardware import Hardware
@@ -54,51 +53,6 @@ def _to_float_or_none(
 # BenchmarkResults, because that's fundamentally related to their histories.
 
 
-class _Serializer(EntitySerializer):
-    def _dump(self, history):
-        # Note(JP): expose `times` or `data` or flatten them or expose both?
-        # Unclear. `times` is specified as "A list of benchmark durations. If
-        # data is a duration measure, this should be a duplicate of that
-        # object." `data` is specified with "A list of benchmark results (e.g.
-        # durations, throughput). This will be used as the main + only metric
-        # for regression and improvement. The values should be ordered in the
-        # order the iterations were executed (the first element is the first
-        # iteration, the second element is the second iteration, etc.). If an
-        # iteration did not complete but others did and you want to send
-        # partial data, mark each iteration that didn't complete as null."
-        # Expose both for now.
-        #
-        # In practice, I have only seen `data` being used so far and even when
-        # `data` was representing durations then this vector was not duplicated
-        # as `times`.
-
-        return {
-            "benchmark_result_id": history.id,
-            "case_id": history.case_id,
-            "context_id": history.context_id,
-            "mean": _to_float_or_none(history.mean),
-            "data": history.data,
-            "times": history.times,
-            "unit": history.unit,
-            "begins_distribution_change": history.begins_distribution_change,
-            "hardware_hash": history.hash,
-            "sha": history.sha,
-            "repository": history.repository,
-            # Note(JP): this is the commit message
-            "message": history.message,
-            # This is the Commit timestamp. Expose Result timestamp, too?
-            "timestamp": history.timestamp.isoformat(),
-            "run_name": history.name,
-            "distribution_mean": _to_float_or_none(history.rolling_mean),
-            "distribution_stdev": _to_float_or_none(history.rolling_stddev) or 0.0,
-        }
-
-
-class HistorySerializer:
-    one = _Serializer()
-    many = _Serializer(many=True)
-
-
 @dataclasses.dataclass
 class HistorySampleZscoreStats:
     begins_distribution_change: bool
@@ -123,11 +77,12 @@ class HistorySample:
     mean: Optional[float]
     # Experimental: introduce 'singe value summary' concept. An item in history
     # reflects a benchmark result, and that must have a single value
-    # representation for plotting and analysis. If it does not have that, it
-    # should not be part of history (this cannot be None). Initially this is
-    # equivalent to mean. For consumers to make sense of this, also add a
-    # string field carrying the name. the name of this.
+    # representation for plotting and analysis. If it does not have that, it is
+    # "failed" and it should not be part of history (this cannot be None).
+    # Initially, this is equivalent to mean. For consumers to make sense of
+    # this, also add a string field carrying the name. the name of this.
     svs: float
+    # A string reflecting the kind/type/method of the SVS. E.g. "mean".
     svs_type: str
     # math.nan is allowed for representing a failed iteration.
     data: List[float]
@@ -154,7 +109,13 @@ class HistorySample:
         # if performance is a concern then https://pypi.org/project/orjson/
         # promises to be among the fastest for serializing python dataclass
         # instances into JSON.
+
+        # For external consumption, change type/representation of time.
         d["commit_timestamp"] = self.commit_timestamp.isoformat()
+
+        # Rename SVS for clarity for external consumption.
+        d["single_value_summary"] = d.pop("svs")
+        d["single_value_summary_type"] = d.pop("svs_type")
         return d
 
 

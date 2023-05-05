@@ -2,7 +2,7 @@ import dataclasses
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
 from urllib.parse import urlparse
 
 import flask as f
@@ -322,9 +322,12 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
     API.
     """
 
-    def _guts(cinfo: TypeCommitInfoGitHub) -> Commit:
+    def _guts(cinfo: TypeCommitInfoGitHub) -> Tuple[Commit, bool]:
         """
         Return a Commit object or raise `sqlalchemy.exc.IntegrityError`.
+
+        The boolean return value means "created", is `False` if the first
+        query for the commit object succeeds, else `True.
         """
         # Try to see if commit is already database. This is an optimization, to
         # not needlessly interact with the GitHub HTTP API in case the commit
@@ -333,7 +336,7 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
         dbcommit = Commit.first(sha=cinfo["commit_hash"], repository=cinfo["repo_url"])
 
         if dbcommit is not None:
-            return dbcommit
+            return dbcommit, False
 
         # Try to fetch metadata for commit via GitHub HTTP API. Fall back
         # gracefully if that does not work.
@@ -369,27 +372,27 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
                     exc,
                 )
                 raise
-            return dbcommit
+            return dbcommit, True
 
         # Fetching metadata from GitHub failed. Store most important bits in
         # database.
         dbcommit = Commit.create_unknown_context(
             commit_hash=cinfo["commit_hash"], repo_url=cinfo["repo_url"]
         )
-        return dbcommit
+        return dbcommit, True
 
+    created: bool = False
     t0 = time.monotonic()
     try:
         # `_guts()` is expected to raise IntegrityError when a concurrent racer
         # did insert the Commit object by now. This can happen, also see
         # https://github.com/conbench/conbench/issues/809
-        commit = _guts(ghcommit)
+        commit, created = _guts(ghcommit)
     except s.exc.IntegrityError as exc:
         # Expected error example:
         #  sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) \
         #    duplicate key value violates unique constraint "commit_index"
         log.info("Ignored IntegrityError while inserting Commit: %s", exc)
-
         # Look up the Commit entity again because this function must return the
         # commit ID (DB primary key).
         Session.rollback()
@@ -403,11 +406,14 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
 
     d_seconds = time.monotonic() - t0
 
-    log.info(
-        "commit_fetch_info_and_create_in_db_if_not_exists(%s) took %.3f s",
-        ghcommit,
-        d_seconds,
-    )
+    # Only log when the commit object was inserted (keep logs interesting,
+    # reduce verbosity).
+    if created:
+        log.info(
+            "commit_fetch_info_and_create_in_db_if_not_exists(%s) inserted, took %.3f s",
+            ghcommit,
+            d_seconds,
+        )
 
     return commit
 

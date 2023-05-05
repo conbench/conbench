@@ -122,11 +122,12 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
         if r.case_id == caseid:
             matching_results.append(r)
 
-    log.info(
-        "results_all_with_bname: %s, results with caseid and bname: %s",
-        len(results_all_with_bname),
-        len(matching_results),
-    )
+    # log.info(
+    #     "results_all_with_bname: %s, results with caseid and bname: %s",
+    #     len(results_all_with_bname),
+    #     len(matching_results),
+    # )
+
     # Be explicit that this is now of no use.
     del results_all_with_bname
 

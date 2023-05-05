@@ -396,23 +396,24 @@ class BenchmarkResult(Base, EntityMixin):
     def _single_value_summary(self) -> float:
         """
         Return a single numeric value summarizing the collection of data points
-        D associated with this benchmark result.
+        associated with this benchmark result.
 
         Return `math.nan` if this result is failed.
 
         Summary: currently static (mean), can be dynamic in the future.
 
-        Assumption: each non-errored benchmark result (self.is_failed() returns
-        False) is guaranteed to have at least one data point.
+        Assumption: each non-errored benchmark result (self.is_failed is False)
+        is guaranteed to have at least one data point.
 
         The value returned by this method is intended to be used in analysis
         and plotting routines.
 
-        This method primarily serves the purpose of rather ignorantly mapping
-        collection of data points of unknown size (at least l) to a single
+        This method primarily serves the purpose of rather ignorantly mapping a
+        collection of data points of unknown size (but at least 1) to a single
         value. This single-value summary may be the mean or min (or something
-        else), and is not always statistically sound. But that is a problem
-        that needs to be addressed with higher-level means.
+        else), and is not always statistically sound. But that is a type of
+        problem that needs to be addressed with higher-level means (no pun
+        intended).
 
         From a perspective of plotting, this here is the 'location' of the data
         point.
