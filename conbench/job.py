@@ -7,6 +7,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Tuple, TypedDict
 
 import sqlalchemy
+from sqlalchemy.orm import selectinload
 
 import conbench.metrics
 from conbench.config import Config
@@ -16,7 +17,6 @@ from conbench.entities.benchmark_result import (
     ui_mean_and_uncertainty,
     ui_rel_sem,
 )
-from conbench.entities.run import Run
 from conbench.hacks import get_case_kvpair_strings
 
 # A memory profiler, and a CPU profiler that are both tested to work well
@@ -126,10 +126,15 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
     # https://docs.sqlalchemy.org/en/20/core/connections.html#using-server-side-cursors-a-k-a-stream-results
     # https://docs.sqlalchemy.org/en/20/orm/queryguide/api.html#fetching-large-result-sets-with-yield-per
     # Also fetch hardware from associated Run, so that result.run is in cache,
-    # too, and so that result.run.hardware is a quick lookup.
+    # too, and so that result.run.hardware is a quick lookup. Use selectinload
+    # for fetching Run data -- "The yield_per execution option is not
+    # compatible with “subquery” eager loading loading or “joined” eager
+    # loading when using collections. It is potentially compatible with “select
+    # in” eager loading , provided the database driver supports multiple,
+    # independent cursors." -- seems to result in overall less queries.
     query_statement = (
         sqlalchemy.select(BenchmarkResult)
-        .join(Run)
+        .options(selectinload(BenchmarkResult.run))
         .order_by(BenchmarkResult.timestamp.desc())
         .limit(n)
     ).execution_options(yield_per=2000)
