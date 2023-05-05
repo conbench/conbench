@@ -239,7 +239,7 @@ def _fetch_and_cache_most_recent_results(n=0.08 * 10**6) -> None:
             (first_result.timestamp - last_result.timestamp).days
         ),
         oldest_result_time_str=last_result.ui_time_started_at,
-        n_results=len(by_name_dict),
+        n_results=len(by_id_dict),
     )
 
     conbench.metrics.GAUGE_BMRT_CACHE_LAST_UPDATE_SECONDS.set(t1 - t0)
