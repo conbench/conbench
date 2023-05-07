@@ -19,7 +19,7 @@ FROM python:3.11-slim
 # curl is needed for docker-compose health checks. `git` is needed by some unit
 # tests as of today.
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
-    curl git build-essential libpq-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
+    curl git build-essential libpq-dev postgresql-client && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements-webapp.txt /tmp/
 COPY requirements-dev.txt /tmp/
