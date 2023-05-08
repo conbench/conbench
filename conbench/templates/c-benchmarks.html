@@ -40,12 +40,13 @@
     <div class="col">
       <div class="card">
         <div class="card-body overflow-auto" style="max-height: 500px;">
-          <h5 class="card-title">by results per case
-              <sup><i style="font-size: 12px"
-                class="bi bi-info-circle"
-                data-bs-toggle="tooltip"
-                data-bs-title="average result count per case permutation">
-               </i></sup>
+          <h5 class="card-title">
+            by results per case
+            <sup><i style="font-size: 12px"
+   class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="average result count per case permutation">
+            </i></sup>
           </h5>
           {% for benchmark_name, ratio in benchmark_names_by_results_per_case_sorted.items() %}
             <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
