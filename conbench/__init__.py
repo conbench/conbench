@@ -25,7 +25,8 @@ import conbench.logger
 try:
     __version__ = importlib_metadata.version(__name__)
 except Exception:
-    # When is this expected to happen?
+    # When is this expected to happen? Is this meant for the CLI code path?
+    # Or for the web app?
     __version__ = importlib_metadata.version("conbench")
 
 del importlib_metadata

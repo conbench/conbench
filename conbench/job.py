@@ -61,7 +61,7 @@ class BMRTBenchmarkResult:
     case_id: str
     context_id: str
     data: List[float]
-    mean: Optional[float]
+    svs: float
     unit: str
     benchmark_name: str
     started_at: float
@@ -123,10 +123,15 @@ bmrt_cache: CacheDict = {
 SHUTDOWN = False
 _STARTED = False
 
+BMRT_CACHE_SIZE = 0.2 * 10**6
+if Config.TESTING:
+    # quicker update in testing
+    BMRT_CACHE_SIZE = 0.2 * 10**6
+
 
 # Fetching one million items from a sample DB takes ~1 minute on my machine
 # (the `results = Session.scalars(....all())` call takes that long.
-def _fetch_and_cache_most_recent_results(n=0.2 * 10**6) -> None:
+def _fetch_and_cache_most_recent_results() -> None:
     log.debug(
         "BMRT cache: keys in cache: %s",
         len(bmrt_cache["by_id"]),
@@ -148,7 +153,7 @@ def _fetch_and_cache_most_recent_results(n=0.2 * 10**6) -> None:
         sqlalchemy.select(BenchmarkResult)
         .options(selectinload(BenchmarkResult.run))
         .order_by(BenchmarkResult.timestamp.desc())
-        .limit(n)
+        .limit(int(BMRT_CACHE_SIZE))
     ).execution_options(yield_per=2000)
 
     # Corresponding to the `yield_per` magic, consume the returned value as an
@@ -193,7 +198,7 @@ def _fetch_and_cache_most_recent_results(n=0.2 * 10**6) -> None:
             benchmark_name=benchmark_name,
             started_at=result.timestamp.timestamp(),
             data=result.measurements,
-            mean=float(result.mean) if result.mean else None,
+            svs=result.svs,  # float(result.mean) if result.mean else None,
             unit=str(result.unit) if result.unit else "n/a",
             hardware_id=str(result.run.hardware.id),
             hardware_name=str(result.run.hardware.name),
