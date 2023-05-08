@@ -186,7 +186,14 @@
       };
 
       {% for hwctx, plotinfo in infos_for_uplots.items() %}
-        let uplot_{{hwctx}} = new uPlot(plotopts, plot_info_by_hwctx["{{hwctx}}"]["data_for_uplot"], $('.cb-plot-{{hwctx}}')[0]);
+        // About plot_info_by_hwctx[xxx]["data_for_uplot"]:
+        // 2-tuple. First item: array of time values, second item:
+        // array of ordinate values.
+        let uplot_{{hwctx}} = new uPlot(
+          generateUPlotOpts(plot_info_by_hwctx["{{hwctx}}"]["data_for_uplot"][1]),
+          plot_info_by_hwctx["{{hwctx}}"]["data_for_uplot"],
+          $('.cb-plot-{{hwctx}}')[0]
+          );
       {% endfor %}
 
     // Enable bootstrap tooltips on this page.
