@@ -69,11 +69,12 @@ def list_benchmarks() -> str:
 @app.route("/c-benchmarks/<bname>", methods=["GET"])  # type: ignore
 @authorize_or_terminate
 def show_benchmark_cases(bname: str) -> str:
-    try:
-        matching_results = bmrt_cache["by_benchmark_name"][bname]
-    except KeyError:
+    # Do not catch KeyError upon lookup for checking for key, because this
+    # would insert the key into the defaultdict(list) (as an empty list).
+    if bname not in bmrt_cache["by_benchmark_name"]:
         return f"benchmark name not known: `{bname}`"
 
+    matching_results = bmrt_cache["by_benchmark_name"][bname]
     results_by_case_id: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
     for r in matching_results:
         results_by_case_id[r.case_id].append(r)
