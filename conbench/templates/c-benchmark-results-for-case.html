@@ -63,7 +63,7 @@
         {% for hwctx, plotinfo in infos_for_uplots.items() %}
           <!-- with xl-6 I have tested that each plot (fixed width) has enough space -->
           <div class="col-xl-6 mb-5">
-              {{ plotinfo.title }}, <a href="{{ plotinfo.url_to_newest_result }}">newest result</a>
+            {{ plotinfo.title }}, <a href="{{ plotinfo.url_to_newest_result }}">newest result</a>
             <div class="cb-plot-{{ hwctx }}" style="width: 550px"></div>
           </div>
         {% endfor %}
