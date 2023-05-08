@@ -18,6 +18,7 @@ from sqlalchemy.orm import Mapped, relationship
 
 import conbench.util
 from conbench.db import Session
+from conbench.numstr import numstr
 
 from ..entities._entity import (
     Base,
@@ -545,7 +546,7 @@ def ui_rel_sem(values: List[float]):
     # ZeroDivisionError: float division by zero
     rsep = 100 * (stdem / float(statistics.mean(values)))
 
-    errstr = sigfig.round(rsep, sigfigs=2)
+    errstr = numstr(rsep, 2)
     return (errstr, f"{errstr} %")
 
 
@@ -570,7 +571,7 @@ def ui_mean_and_uncertainty(values: List[float], unit: str):
 
     if len(values) < 3:
         # Show each sample with five significant figures.
-        return "; ".join(str(sigfig.round(v, sigfigs=5)) for v in values)
+        return "; ".join(f"{numstr(v, sigfigs=5)} {unit}" for v in values)
 
     # Build sample standard deviation. Maybe we can also use the pre-built
     # value, but trust needs to be established first.
@@ -708,9 +709,10 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     return result_data_for_db
 
 
-def floatcomp(v1, v2, sigfigs=5):
-    v1s = sigfig.round(v1, sigfigs=sigfigs)
-    v2s = sigfig.round(v2, sigfigs=sigfigs)
+def floatcomp_with_leeway(v1, v2, sigfigs=5):
+    # TODO: review
+    v1s = numstr(v1, sigfigs=sigfigs)
+    v2s = numstr(v2, sigfigs=sigfigs)
     return abs(float(v1s) - float(v2s)) < 10**-10
 
 
