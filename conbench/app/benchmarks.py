@@ -39,7 +39,7 @@ def list_benchmarks() -> str:
         )
     )
 
-    newest_result_by_bname = {
+    newest_result_by_bname: Dict[str, BMRTBenchmarkResult] = {
         bname: newest_of_many_results(bmrlist)
         for bname, bmrlist in bmrt_cache["by_benchmark_name"].items()
     }
@@ -53,13 +53,22 @@ def list_benchmarks() -> str:
         )
     ]
 
+    benchmarks_by_name_sorted_by_resultcount = dict(
+        sorted(
+            bmrt_cache["by_benchmark_name"].items(),
+            key=lambda item: len(item[1]),
+            reverse=True,
+        ),
+    )
+
     return flask.render_template(
         "c-benchmarks.html",
         benchmarks_by_name=bmrt_cache["by_benchmark_name"],
         benchmark_result_count=len(bmrt_cache["by_id"]),
         benchmarks_by_name_sorted_alphabetically=benchmarks_by_name_sorted_alphabetically,
+        benchmarks_by_name_sorted_by_resultcount=benchmarks_by_name_sorted_by_resultcount,
         newest_result_for_each_benchmark_name_topN=newest_result_for_each_benchmark_name_sorted[
-            :15
+            :20
         ],
         bmr_cache_meta=bmrt_cache["meta"],
         application=Config.APPLICATION_NAME,
