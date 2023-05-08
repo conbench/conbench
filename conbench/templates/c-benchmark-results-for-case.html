@@ -76,8 +76,52 @@
   <script>
     let plot_info_by_hwctx = {{ infos_for_uplots_json|safe }};
 
+    function orderOfMagnMax(values) {
+      // assume only positive values (benchmark data: time, bandwidth, etc)
+      let max = Math.max(...values);
+      // Get order of magnitude of maximum, also see
+      // https://stackoverflow.com/a/23917134/145400
+      let oommax = Math.floor(Math.log(max) / Math.LN10 + 0.000000001);
+      return oommax;
+    }
     $(document).ready(function () {
       let plotopts = {
+    function switchToScientifcNotation(values) {
+      // Switch to scientific notation for large values, and for small
+      // values. Assume only positive values.
+      if (orderOfMagnMax(values) > 4 || orderOfMagnMax(values) < -1 ) {
+        return true;
+      }
+      return false;
+    }
+
+    function formatValuesForAxis(values) {
+      /*
+      Do not exclusively show exponential/scientific notation, but only
+      when the maximum value is larger than 10^5.
+      Alternatively, prepare tick labels in backend and use
+      matplotlib.ticker.ScalarFormatter, also see
+      https://stackoverflow.com/a/42658124/145400
+      */
+
+      if (switchToScientifcNotation(values)) {
+        return values.map((v) => v.toExponential(1));
+      }
+
+      //return values.map((v) => v.toPrecision(2));
+      // kudos to https://stackoverflow.com/a/58494899/145400
+      return values.map((v) => parseFloat(v.toPrecision(2)));
+    }
+
+    function yAxisLabelSpace(values) {
+      // For scientific notation there needs to be more space.
+      if (switchToScientifcNotation(values)) {
+        return 60;
+      }
+      return 45;
+    }
+      function generateUPlotOpts(yValues) {
+      return {
         title: "",
         class: "cb-uplot",
         width: 550,
@@ -116,11 +160,13 @@
           {},
           {
             scale: "y",
-                // give y axis labels some space
-            size: 60,
-                // This is used for y axis formatting. Trade-off:
-                // predictable width, medium precision is sufficient.
-            values: (u, splits) => splits.map((v) => v.toExponential(2)),
+            // give y axis labels some space
+            //size: 57,
+            size: yAxisLabelSpace(yValues),
+            // This is used for y axis formatting. Trade-off:
+            // predictable width, medium precision is sufficient.
+            values: (u, splits) => formatValuesForAxis(splits),
+            //values: (u, splits) => splits.map((v) => v.toExponential(2)),
           }
         ],
         scales: {
