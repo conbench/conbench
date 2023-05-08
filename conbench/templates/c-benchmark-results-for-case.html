@@ -69,6 +69,7 @@
         {% endfor %}
       </div>
     </div>
+    <div style="font-family: 'Roboto Mono';">.</div>
   </div>
 {% endblock %}
 {% block scripts %}
@@ -119,6 +120,7 @@
       }
       return 45;
     }
+    function renderPlots() {
       function generateUPlotOpts(yValues) {
       return {
         title: "",
@@ -137,13 +139,13 @@
             sorted: 0,
             show: true,
             spanGaps: false,
-            stroke: 'rgb(87, 125, 134)',
-            width: 0.5,
+            stroke: "#812570", // dark magenta, main line color
+            width: 0.6,
             // I have been taking greenish colors from this palette:
             // https://colorhunt.co/palette/b9eddd87cbb9569daa577d86 We can
             // think about greenifying some graphs, and reddifying others,
             // based on their properties.
-            fill: "rgba(135, 203, 185, 0.4)",
+            fill: "#38BDD122", // skyblue, transp
             //fill: "rgba(255, 0, 0, 0.3)",
             //dash: [10, 5],
             scale: "y",
@@ -156,9 +158,29 @@
           }
         ],
         axes: [
-          {},
+          {
+            label: "benchmark time",
+            labelFont: "bold 12px 'Roboto Mono'",
+            font: "11px 'Roboto Mono'",
+            stroke: "#812570", // dark magenta
+            // 24 hour format on time axis ticks, remove am/pm, etc.
+            // Copied the default value from docs, then edited.
+            values: [
+            // tick incr          default           year                             month    day                        hour     min                sec       mode
+              [3600 * 24 * 365,   "{YYYY}",         null,                            null,    null,                      null,    null,              null,        1],
+              [3600 * 24 * 28,    "{MMM}",          "\n{YYYY}",                      null,    null,                      null,    null,              null,        1],
+              [3600 * 24,         "{MM}/{DD}",        "\n{YYYY}",                      null,    null,                      null,    null,              null,        1],
+              [3600,              "{HH}",        "\n{YYYY}-{MM}-{DD}",                null,    "\n{MM}-{DD}",               null,    null,              null,        1],
+              [60,                "{HH}:{mm}",   "\n{YYYY}-{MM}-{DD}",                null,    "\n{MM}-{DD}",               null,    null,              null,        1],
+              [1,                 ":{ss}",          "\n{YYYY}-{MM}-{DD} {HH}:{mm}",   null,    "\n{MM}-{DD} {HH}:{mm}",  null,    "\n{HH}:{mm}",  null,        1],
+              [0.001,             ":{ss}.{fff}",    "\n{YYYY}-{MM}-{DD} {HH}:{mm}",   null,    "\n{MM}-{DD} {HH}:{mm}",  null,    "\n{HH}:{mm}",  null,        1],
+            ],
+          },
           {
             label: "{{ y_unit_for_all_plots }}",
+            labelFont: "bold 12px 'Roboto Mono'",
+            font: "11px  'Roboto Mono'",
+            stroke: "#812570", // dark magenta
             scale: "y",
             // give y axis labels some space
             //size: 57,
@@ -183,7 +205,7 @@
 
           }
         },
-      };
+      }};
 
       {% for hwctx, plotinfo in infos_for_uplots.items() %}
         // About plot_info_by_hwctx[xxx]["data_for_uplot"]:
@@ -196,8 +218,11 @@
           );
       {% endfor %}
 
+    };
+
+    $(document).ready(function () {
     // Enable bootstrap tooltips on this page.
-      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
       const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
       $('table.conbench-datatable').each(function() {
@@ -228,5 +253,26 @@
         });
       });
     });
+
+  // https://stackoverflow.com/a/7289880/145400
+  // https://github.com/typekit/webfontloader
+  WebFontConfig = {
+      google: {
+        families: ['Roboto']
+      },
+      active: function() {
+      /* code to execute once all font families are loaded */
+      console.log(" I sure hope my font is loaded now. ");
+      renderPlots();
+    }
+   };
+
+   (function(d) {
+      var wf = d.createElement('script'), s = d.scripts[0];
+      wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
+      wf.async = true;
+      s.parentNode.insertBefore(wf, s);
+   })(document);
+
   </script>
 {% endblock %}
