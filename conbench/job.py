@@ -5,7 +5,7 @@ import threading
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, TypedDict
+from typing import Dict, List, Tuple, TypedDict
 
 import sqlalchemy
 from sqlalchemy.orm import selectinload
