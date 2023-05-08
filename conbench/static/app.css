@@ -14,6 +14,13 @@ div.dataTables_filter label {
  }
 
 
+div.cb-tinyplot {
+  background-color: #f3f3f3;
+  /* make div as wide as content, not as wide as wrapper */
+  display: inline-block;
+
+}
+
 /* fix blue border on button click */
 .btn:focus,.btn:active {
   outline: none !important;
