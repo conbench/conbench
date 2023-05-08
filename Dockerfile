@@ -60,7 +60,8 @@ RUN pwd && /bin/ls -1 .
 # Installing this package as of now is necessary not for installing
 # dependencies, but for preventing:
 # importlib.metadata.PackageNotFoundError: No package metadata was found for conbench
-# RUN pip install .
+# This needs cleanup, see https://github.com/conbench/conbench/issues/617
+RUN pip install .
 
 # Bake build information into container image. This invalidates the layer
 # cache for every commit and therefore it is important to do this as late as
