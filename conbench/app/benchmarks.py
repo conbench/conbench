@@ -197,10 +197,17 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
 
         infos_for_uplots[f"{hwid}_{ctxid}"] = {
             "data_for_uplot": [
-                [r.started_at for r in results],
-                # rely on mean to be correct? use all data for
-                # error vis
-                [float(r.mean) for r in results if r.mean is not None],
+                # Send timestamp with 1 second resolution.
+                [int(r.started_at) for r in results],
+                # Use single value summary (right now: mean or NaN). Also:
+                # there is no need to send an abstruse number of significant
+                # digits here (64 bit floating point precision). Benchmark
+                # results should not vary across many orders of magnitude
+                # between invocations. If they do, it's a qualitative problem
+                # and the _precise_ difference does not need to be readable
+                # from these plots. I think sending detail across seven orders
+                # of magnitude is fine.
+                [conbench.numstr.numstr(r.svs, 7) for r in results],
             ],
             # Rely on at least one result being in the list.
             "title": "hardware: %s, context: %s, %s results"
