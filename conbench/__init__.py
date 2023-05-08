@@ -26,7 +26,7 @@ try:
     __version__ = importlib_metadata.version(__name__)
 except Exception:
     # When is this expected to happen? Is this meant for the CLI code path?
-    # Or for the web app?
+    # Or for the web app? TODO: https://github.com/conbench/conbench/issues/617
     __version__ = importlib_metadata.version("conbench")
 
 del importlib_metadata
