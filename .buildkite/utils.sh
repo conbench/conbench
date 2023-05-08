@@ -2,8 +2,11 @@
 
 # Location of the Conbench web application container image. Note: it seems like
 # FLASK_APP has a static value: "conbench". Maybe we should hard-code this to
-# "conbench-webapp" or something like that.
-export IMAGE_SPEC="${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}"
+# "conbench-webapp" or something like that. For now, give this a clearer
+# variable name.
+
+export CB_WEBAPP_IMAGE_NAME="${FLASK_APP}"
+export IMAGE_SPEC="${DOCKER_REGISTRY}/${CB_WEBAPP_IMAGE_NAME}:${BUILDKITE_COMMIT}"
 
 # This script assumes that secrets have been injected via environment. (`env`
 # file fetched from S3, and sourced automatically on the Buildkite runner
@@ -20,10 +23,13 @@ export IMAGE_SPEC="${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}"
 build_and_push() {
   set -x
   make set-build-info
-  docker build -t ${FLASK_APP} .
-  docker tag ${FLASK_APP}:latest ${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}
+  docker build -t ${CB_WEBAPP_IMAGE_NAME} .
+  # Show information about image, such as size.
+  docker images | grep conbench
+
+  docker tag ${CB_WEBAPP_IMAGE_NAME}:latest ${IMAGE_SPEC}
   aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin ${DOCKER_REGISTRY}
-  docker push ${DOCKER_REGISTRY}/${FLASK_APP}:${BUILDKITE_COMMIT}
+  docker push ${IMAGE_SPEC}
 }
 
 deploy_secrets_and_config() {
@@ -61,7 +67,7 @@ deploy_secrets_and_config() {
         s/{{DB_NAME}}/${DB_NAME}/g;\
         s/{{DB_HOST}}/${DB_HOST}/g;\
         s/{{DB_PORT}}/${DB_PORT}/g;\
-        s/{{FLASK_APP}}/${FLASK_APP}/g;\
+        s/{{FLASK_APP}}/${CB_WEBAPP_IMAGE_NAME}/g;\
         s/{{DISTRIBUTION_COMMITS}}/${DISTRIBUTION_COMMITS}/g; \
         s/{{BENCHMARKS_DATA_PUBLIC}}/${BENCHMARKS_DATA_PUBLIC}/g" | kubectl apply -f -
 }
