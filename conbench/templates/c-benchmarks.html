@@ -1,33 +1,72 @@
 {% extends "app.html" %}
 {% block app_content %}
   <h3>
-    <strong>Benchmarks</strong>
+    <strong>Overview</strong>
   </h3>
   <p>
-    <strong>{{ benchmarks_by_name | length }}</strong> unique benchmark names
-    across the <strong>{{ bmr_cache_meta.n_results }}</strong> most recently submitted results.
+    <strong>{{ benchmarks_by_name | length }}</strong> unique benchmark names seen
+    across the <strong>{{ bmr_cache_meta.n_results }}</strong> most recently submitted results
     <br>
-    Time window:
+    between
     {{ bmr_cache_meta.oldest_result_time_str }} to
     {{ bmr_cache_meta.newest_result_time_str }}
     (~{{ bmr_cache_meta.covered_timeframe_days_approx }} days).
   </p>
-  <div class="row mt-5">
+  <div class="row row-cols-1 row-cols-md-3 g-4">
     <div class="col">
-      <h4>by name</h4>
-      {% for benchmark_name, results in benchmarks_by_name_sorted_alphabetically.items() %}
-        <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
-        ({{ results|length }} results)
-        <br>
-      {% endfor %}
+      <div class="card">
+        <div class="card-body overflow-auto" style="max-height: 500px;">
+          <h5 class="card-title">by name</h5>
+          {% for benchmark_name, results in benchmarks_by_name_sorted_alphabetically.items() %}
+            <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
+            ({{ results|length }} results)
+            <br>
+          {% endfor %}
+        </div>
+      </div>
     </div>
     <div class="col">
-      <h4>by most recent result</h4>
-      {% for result in newest_result_for_each_benchmark_name_topN %}
-        <strong><a href="{{ url_for('app.show_benchmark_cases', bname=result.benchmark_name) }}">{{ result.benchmark_name }}</a></strong>
-        (<time class="timeago" datetime="{{ result.started_at_iso }}">{{ result.ui_time_started_at }}</time>)
-        <br>
-      {% endfor %}
+      <div class="card">
+        <div class="card-body overflow-auto" style="max-height: 500px;">
+          <h5 class="card-title">by most recent result</h5>
+          {% for result in newest_result_for_each_benchmark_name_topN %}
+            <strong><a href="{{ url_for('app.show_benchmark_cases', bname=result.benchmark_name) }}">{{ result.benchmark_name }}</a></strong>
+            (<time class="timeago" datetime="{{ result.started_at_iso }}">{{ result.ui_time_started_at }}</time>)
+            <br>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-body overflow-auto" style="max-height: 500px;">
+          <h5 class="card-title">
+            by results per case
+            <sup><i style="font-size: 12px"
+   class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="average result count per case permutation">
+            </i></sup>
+          </h5>
+          {% for benchmark_name, ratio in benchmark_names_by_results_per_case_sorted.items() %}
+            <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
+            (~{{ ratio }})
+            <br>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-body overflow-auto" style="max-height: 500px;">
+          <h5 class="card-title">by result count</h5>
+          {% for benchmark_name, results in benchmarks_by_name_sorted_by_resultcount.items() %}
+            <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
+            ({{ results|length }} results)
+            <br>
+          {% endfor %}
+        </div>
+      </div>
     </div>
   </div>
 {% endblock %}
@@ -36,7 +75,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.7/jquery.timeago.min.js"></script>
   <script type="text/javascript">
   $(document).ready(function() {
-     $("time.timeago").timeago();
+    $("time.timeago").timeago();
+    // Enable bootstrap tooltips on this page.
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
   });
   </script>
 {% endblock %}

@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple, TypedDict
 import flask
 import orjson
 
+import conbench.numstr
 from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
@@ -38,7 +39,7 @@ def list_benchmarks() -> str:
         )
     )
 
-    newest_result_by_bname = {
+    newest_result_by_bname: Dict[str, BMRTBenchmarkResult] = {
         bname: newest_of_many_results(bmrlist)
         for bname, bmrlist in bmrt_cache["by_benchmark_name"].items()
     }
@@ -52,13 +53,44 @@ def list_benchmarks() -> str:
         )
     ]
 
+    benchmarks_by_name_sorted_by_resultcount = dict(
+        sorted(
+            bmrt_cache["by_benchmark_name"].items(),
+            key=lambda item: len(item[1]),
+            reverse=True,
+        ),
+    )
+
+    # Note(JP): build an average "results per case" metric to normalize for
+    # those benchmarks that have many results but also many case permutations.
+    # As we frequently find us saying in discussions, the individual case
+    # permutation is what we look at as the individual benchmark.
+    benchmark_names_by_results_per_case: Dict[str, str] = {}
+    for bname, results in bmrt_cache["by_benchmark_name"].items():
+        case_count = len(set(r.case_id for r in results))
+        ratio = len(results) / float(case_count)
+        # Sort order is not too important when there is a clash here as of
+        # loss in precision.
+        ratio_str = f"{ratio:.1f}"
+        benchmark_names_by_results_per_case[bname] = ratio_str
+
+    benchmark_names_by_results_per_case_sorted = dict(
+        sorted(
+            benchmark_names_by_results_per_case.items(),
+            key=lambda item: float(item[1]),
+            reverse=True,
+        )
+    )
+
     return flask.render_template(
         "c-benchmarks.html",
         benchmarks_by_name=bmrt_cache["by_benchmark_name"],
         benchmark_result_count=len(bmrt_cache["by_id"]),
         benchmarks_by_name_sorted_alphabetically=benchmarks_by_name_sorted_alphabetically,
+        benchmarks_by_name_sorted_by_resultcount=benchmarks_by_name_sorted_by_resultcount,
+        benchmark_names_by_results_per_case_sorted=benchmark_names_by_results_per_case_sorted,
         newest_result_for_each_benchmark_name_topN=newest_result_for_each_benchmark_name_sorted[
-            :15
+            :20
         ],
         bmr_cache_meta=bmrt_cache["meta"],
         application=Config.APPLICATION_NAME,
@@ -197,10 +229,17 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
 
         infos_for_uplots[f"{hwid}_{ctxid}"] = {
             "data_for_uplot": [
-                [r.started_at for r in results],
-                # rely on mean to be correct? use all data for
-                # error vis
-                [float(r.mean) for r in results if r.mean is not None],
+                # Send timestamp with 1 second resolution.
+                [int(r.started_at) for r in results],
+                # Use single value summary (right now: mean or NaN). Also:
+                # there is no need to send an abstruse number of significant
+                # digits here (64 bit floating point precision). Benchmark
+                # results should not vary across many orders of magnitude
+                # between invocations. If they do, it's a qualitative problem
+                # and the _precise_ difference does not need to be readable
+                # from these plots. I think sending detail across seven orders
+                # of magnitude is fine.
+                [conbench.numstr.numstr(r.svs, 7) for r in results],
             ],
             # Rely on at least one result being in the list.
             "title": "hardware: %s, context: %s, %s results"
@@ -226,7 +265,9 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
 
     # Need to find a way to put bytes straight into jinja template.
     # still is still a tiny bit faster than using stdlib json.dumps()
-    infos_for_uplots_json = orjson.dumps(infos_for_uplots).decode("utf-8")
+    infos_for_uplots_json = orjson.dumps(
+        infos_for_uplots, option=orjson.OPT_INDENT_2
+    ).decode("utf-8")
 
     return flask.render_template(
         "c-benchmark-results-for-case.html",
