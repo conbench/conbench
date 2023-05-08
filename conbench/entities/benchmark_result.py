@@ -18,6 +18,7 @@ from sqlalchemy.orm import Mapped, relationship
 
 import conbench.util
 from conbench.db import Session
+from conbench.numstr import numstr
 
 from ..entities._entity import (
     Base,
@@ -545,7 +546,7 @@ def ui_rel_sem(values: List[float]):
     # ZeroDivisionError: float division by zero
     rsep = 100 * (stdem / float(statistics.mean(values)))
 
-    errstr = sigfig.round(rsep, sigfigs=2)
+    errstr = numstr(rsep, 2)
     return (errstr, f"{errstr} %")
 
 
@@ -570,7 +571,7 @@ def ui_mean_and_uncertainty(values: List[float], unit: str):
 
     if len(values) < 3:
         # Show each sample with five significant figures.
-        return "; ".join(str(sigfig.round(v, sigfigs=5)) for v in values)
+        return "; ".join(f"{numstr(v, sigfigs=5)} {unit}" for v in values)
 
     # Build sample standard deviation. Maybe we can also use the pre-built
     # value, but trust needs to be established first.
@@ -642,36 +643,44 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     if len(samples) >= 3:
         # See https://github.com/conbench/conbench/issues/802 and
         # https://github.com/conbench/conbench/issues/1118
-        q1, q3 = np.percentile(samples, [25, 75])
+        percentiles: List[float] = list(np.percentile(samples, [25, 75]))
+        q1, q3 = float(percentiles[0]), float(percentiles[1])
 
-        aggregates = {
+        aggregates: Dict[str, float] = {
             "q1": q1,
             "q3": q3,
-            "median": np.median(samples),
+            "median": float(np.median(samples)),
             "min": np.min(samples),
             "max": np.max(samples),
             # With ddof=1 this is Bessel's correction, has N-1 in the divisor.
             # This is the same behavior as
             # statistics.stdev() and the same behavior as
             # scipy.stats.tstd([1.0, 2, 3])
-            "stdev": np.std(samples, ddof=1),
+            "stdev": float(np.std(samples, ddof=1)),
             "iqr": q3 - q1,
         }
 
-        # Now, overwrite with self-derived aggregates:
+        # Now, overwrite with self-derived aggregates.
         for key, value in aggregates.items():
-            result_data_for_db[key] = sigfig.round(value, sigfigs=5)
+            result_data_for_db[key] = value
 
             # Log upon conflict. Let the automatically derived value win, to
             # achieve consistency between the provided samples and the
             # aggregates.
             if key in stats_usergiven:
-                if not floatcomp(stats_usergiven[key], value):
+                try:
+                    if not floatcomp_with_leeway(stats_usergiven[key], value):
+                        log.warning(
+                            "key %s, user-given val %s vs. calculated %s",
+                            key,
+                            stats_usergiven[key],
+                            value,
+                        )
+                except Exception as exc:
                     log.warning(
-                        "key %s, user-given val %s vs. calculated %s",
-                        key,
-                        stats_usergiven[key],
-                        value,
+                        "exception during floatcomp_with_leeway(): %s, stats_usergiven: %s",
+                        exc,
+                        stats_usergiven,
                     )
 
     if len(samples) == 1:
@@ -708,9 +717,10 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     return result_data_for_db
 
 
-def floatcomp(v1, v2, sigfigs=5):
-    v1s = sigfig.round(v1, sigfigs=sigfigs)
-    v2s = sigfig.round(v2, sigfigs=sigfigs)
+def floatcomp_with_leeway(v1, v2, sigfigs=5):
+    # TODO: review
+    v1s = numstr(v1, sigfigs=sigfigs)
+    v2s = numstr(v2, sigfigs=sigfigs)
     return abs(float(v1s) - float(v2s)) < 10**-10
 
 
