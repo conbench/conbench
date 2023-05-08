@@ -61,12 +61,34 @@ def list_benchmarks() -> str:
         ),
     )
 
+    # Note(JP): build an average "results per case" metric to normalize for
+    # those benchmarks that have many results but also many case permutations.
+    # As we frequently find us saying in discussions, the individual case
+    # permutation is what we look at as the individual benchmark.
+    benchmark_names_by_results_per_case: Dict[str, str] = {}
+    for bname, results in bmrt_cache["by_benchmark_name"].items():
+        case_count = len(set(r.case_id for r in results))
+        ratio = len(results) / float(case_count)
+        # Sort order is not too important when there is a clash here as of
+        # loss in precision.
+        ratio_str = f"{ratio:.1f}"
+        benchmark_names_by_results_per_case[bname] = ratio_str
+
+    benchmark_names_by_results_per_case_sorted = dict(
+        sorted(
+            benchmark_names_by_results_per_case.items(),
+            key=lambda item: float(item[1]),
+            reverse=True,
+        )
+    )
+
     return flask.render_template(
         "c-benchmarks.html",
         benchmarks_by_name=bmrt_cache["by_benchmark_name"],
         benchmark_result_count=len(bmrt_cache["by_id"]),
         benchmarks_by_name_sorted_alphabetically=benchmarks_by_name_sorted_alphabetically,
         benchmarks_by_name_sorted_by_resultcount=benchmarks_by_name_sorted_by_resultcount,
+        benchmark_names_by_results_per_case_sorted=benchmark_names_by_results_per_case_sorted,
         newest_result_for_each_benchmark_name_topN=newest_result_for_each_benchmark_name_sorted[
             :20
         ],
