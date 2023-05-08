@@ -81,6 +81,10 @@ lint-ci:
 	curlylint conbench/templates/
 	djlint . --extension=html.j2 --check --indent=2 conbench/templates/*html
 
+.PHONY: lint-html
+lint-html:
+	curlylint conbench/templates/
+	djlint . --extension=html.j2 --reformat --indent=2 conbench/templates/*html
 
 .PHONY: rebuild-expected-api-docs
 rebuild-expected-api-docs: run-app-bg

@@ -14,12 +14,21 @@
 # The downside here is that with `build-essential` baked into the image we
 # do a bad job optimizing for image size; but we do that anyway so far, so
 # maybe it's really not a big deal.
-FROM python:3.11-slim
+FROM python:3.11-slim-bullseye
 
 # curl is needed for docker-compose health checks. `git` is needed by some unit
-# tests as of today.
+# tests as of today. build-essential is for non-binary wheels for aarch64
+# developer platforms, like for psutil. libpq dev is for psycopg2 source build.
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
-    curl git build-essential libpq-dev postgresql-client && apt-get clean && rm -rf /var/lib/apt/lists/*
+    curl git build-essential curl ca-certificates gnupg && \
+    # Install postgres-client-15 from official PG repo
+    # see https://wiki.postgresql.org/wiki/Apt -- I added `bullseye`
+    # so that we do not need lsb_release
+    curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
+        gpg --dearmor | tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg >/dev/null && \
+        sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt bullseye-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
+        apt update && apt install -y postgresql-client-15 libpq-dev  && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements-webapp.txt /tmp/
 COPY requirements-dev.txt /tmp/
@@ -51,6 +60,7 @@ RUN pwd && /bin/ls -1 .
 # Installing this package as of now is necessary not for installing
 # dependencies, but for preventing:
 # importlib.metadata.PackageNotFoundError: No package metadata was found for conbench
+# This needs cleanup, see https://github.com/conbench/conbench/issues/617
 RUN pip install .
 
 # Bake build information into container image. This invalidates the layer
@@ -59,6 +69,6 @@ RUN pip install .
 COPY ./buildinfo.json /buildinfo.json
 
 # Re-active this to get ideas for how the image size can be further reduced.
-#RUN echo "biggest dirs"
-#RUN cd / && du -ha . | sort -r -h | head -n 50 || true
+# RUN echo "biggest dirs"
+# RUN cd / && du -ha . | sort -r -h | head -n 50 || true
 
