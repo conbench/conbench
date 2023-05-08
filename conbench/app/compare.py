@@ -285,8 +285,15 @@ class CompareRuns(Compare):
 
 
 rule(
-    "/compare/benchmarks/<compare_ids>/",
+    "/compare/benchmark-results/<compare_ids>/",
     view_func=CompareBenchmarkResults.as_view("compare-benchmark-results"),
+    methods=["GET"],
+)
+# legacy route
+rule(
+    "/compare/benchmarks/<compare_ids>/",
+    endpoint="compare-benchmarks",
+    redirect_to="/compare/benchmark-results/<compare_ids>/",
     methods=["GET"],
 )
 rule(

@@ -16,7 +16,7 @@ def _emsg_needle(thing, thingid):
 
 
 class TestCompareBenchmarkResults(_asserts.GetEnforcer):
-    url = "/compare/benchmarks/{}/"
+    url = "/compare/benchmark-results/{}/"
     title = "Compare Benchmark Results"
     redirect_on_unknown = False
 
@@ -36,6 +36,41 @@ class TestCompareBenchmarkResults(_asserts.GetEnforcer):
 
         response = client.get("/compare/benchmarks/foo...bar/", follow_redirects=True)
         self.assert_page(response, "Compare Benchmark Results")
+        assert "cannot perform comparison:" in response.text
+
+
+class TestCompareBenchmarks(_asserts.AppEndpointTest):
+    url = "/compare/benchmarks/{}/"
+    title = "Compare Benchmark Results"
+    redirect_on_unknown = False
+
+    def _create(self, client):
+        benchmark_result_id = self.create_benchmark(client)
+        return f"{benchmark_result_id}...{benchmark_result_id}"
+
+    def test_redirects(self, client):
+        self.authenticate(client)
+
+        response = client.get(
+            "/compare/benchmarks/unknown...unknown2/", follow_redirects=True
+        )
+        assert "/compare/benchmark-results/unknown...unknown2/" in response.request.url
+        assert any(
+            [
+                "/compare/benchmarks/unknown...unknown2/" == res.request.path
+                for res in response.history
+            ]
+        )
+        assert "cannot perform comparison:" in response.text, response.text
+
+        response = client.get("/compare/benchmarks/foo...bar/", follow_redirects=True)
+        assert "/compare/benchmark-results/foo...bar/" in response.request.url
+        assert any(
+            [
+                "/compare/benchmarks/foo...bar/" == res.request.path
+                for res in response.history
+            ]
+        )
         assert "cannot perform comparison:" in response.text
 
 
