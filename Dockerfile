@@ -17,9 +17,18 @@
 FROM python:3.11-slim-bullseye
 
 # curl is needed for docker-compose health checks. `git` is needed by some unit
-# tests as of today.
+# tests as of today. build-essential is for non-binary wheels for aarch64
+# developer platforms, like for psutil. libpq dev is for psycopg2 source build.
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
-    curl git build-essential libpq-dev postgresql-client && apt-get clean && rm -rf /var/lib/apt/lists/*
+    curl git build-essential curl ca-certificates gnupg && \
+    # Install postgres-client-15 from official PG repo
+    # see https://wiki.postgresql.org/wiki/Apt -- I added `bullseye`
+    # so that we do not need lsb_release
+    curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
+        gpg --dearmor | tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg >/dev/null && \
+        sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt bullseye-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
+        apt update && apt install -y postgresql-client-15 libpq-dev  && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements-webapp.txt /tmp/
 COPY requirements-dev.txt /tmp/
