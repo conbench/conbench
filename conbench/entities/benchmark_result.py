@@ -643,19 +643,20 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     if len(samples) >= 3:
         # See https://github.com/conbench/conbench/issues/802 and
         # https://github.com/conbench/conbench/issues/1118
-        q1, q3 = np.percentile(samples, [25, 75])
+        percentiles: List[float] = list(np.percentile(samples, [25, 75]))
+        q1, q3 = float(percentiles[0]), float(percentiles[1])
 
-        aggregates = {
+        aggregates: Dict[str, float] = {
             "q1": q1,
             "q3": q3,
-            "median": np.median(samples),
+            "median": float(np.median(samples)),
             "min": np.min(samples),
             "max": np.max(samples),
             # With ddof=1 this is Bessel's correction, has N-1 in the divisor.
             # This is the same behavior as
             # statistics.stdev() and the same behavior as
             # scipy.stats.tstd([1.0, 2, 3])
-            "stdev": np.std(samples, ddof=1),
+            "stdev": float(np.std(samples, ddof=1)),
             "iqr": q3 - q1,
         }
 
