@@ -223,8 +223,8 @@
     };
 
     $(document).ready(function () {
-    // Enable bootstrap tooltips on this page.
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+      // Enable bootstrap tooltips on this page.
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
       const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
       $('table.conbench-datatable').each(function() {
