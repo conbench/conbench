@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple, TypedDict
 import flask
 import orjson
 
+import conbench.numstr
 from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
@@ -233,7 +234,9 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
 
     # Need to find a way to put bytes straight into jinja template.
     # still is still a tiny bit faster than using stdlib json.dumps()
-    infos_for_uplots_json = orjson.dumps(infos_for_uplots).decode("utf-8")
+    infos_for_uplots_json = orjson.dumps(
+        infos_for_uplots, option=orjson.OPT_INDENT_2
+    ).decode("utf-8")
 
     return flask.render_template(
         "c-benchmark-results-for-case.html",
