@@ -112,7 +112,9 @@ def show_benchmark_cases(bname: str) -> str:
 
 class TypeUIPlotInfo(TypedDict):
     title: str
+    url_to_newest_result: str
     data_for_uplot: List[List]
+    unit: str
 
 
 @app.route("/c-benchmarks/<bname>/<caseid>", methods=["GET"])  # type: ignore
@@ -159,7 +161,7 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
         results_by_hardware_and_context[(hwid, ctxid, hwname)].append(result)
 
     # Make it so that infos_for_uplots is sorted by result count, i.e. show
-    # most busy plots first.
+    # most busy plots first. Instead, it might make sense to sort by recency!
     results_by_hardware_and_context_sorted = dict(
         sorted(
             results_by_hardware_and_context.items(),
@@ -178,13 +180,20 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
 
     # This is going to be the data structure that the individual plots are
     # based on, also JSON-serialized and then accessed by JavaScript.
-    infos_for_uplots = {}
+    infos_for_uplots: Dict[str, TypeUIPlotInfo] = {}
+
+    units_seen = set()
 
     for (hwid, ctxid, _), results in results_by_hardware_and_context_sorted.items():
         # Only include those cases where there are at least three results.
         # (this structure is used for plotting only).
         if len(results) < 3:
             continue
+
+        newest_result = newest_of_many_results(results)
+
+        for r in results:
+            units_seen.add(r.unit)
 
         infos_for_uplots[f"{hwid}_{ctxid}"] = {
             "data_for_uplot": [
@@ -196,7 +205,24 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
             # Rely on at least one result being in the list.
             "title": "hardware: %s, context: %s, %s results"
             % (results[0].ui_hardware_short, ctxid[:7], len(results)),
+            "url_to_newest_result": flask.url_for(
+                "app.benchmark-result",
+                benchmark_result_id=newest_result.id,
+            ),
+            "unit": newest_result.unit,
         }
+
+    # For now, only emit a warning in the web application log.
+    # TODO: show a user-facing warning on this page.
+
+    if len(units_seen) != 1:
+        log.warning(
+            "/c-benchmarks/%s/%s: saw more than one unit: %s", bname, caseid, units_seen
+        )
+
+    # Proceed, show a potentially wrong unit.
+    y_unit_for_all_plots = maybe_longer_unit(units_seen.pop())
+    # log.info("unit: %s", y_unit_for_all_plots)
 
     # Need to find a way to put bytes straight into jinja template.
     # still is still a tiny bit faster than using stdlib json.dumps()
@@ -206,6 +232,7 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
         "c-benchmark-results-for-case.html",
         matching_benchmark_result_count=len(matching_results),
         benchmark_results_for_table=results_for_table,
+        y_unit_for_all_plots=y_unit_for_all_plots,
         benchmark_name=bname,
         bmr_cache_meta=bmrt_cache["meta"],
         infos_for_uplots=infos_for_uplots,
@@ -215,3 +242,15 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
         application=Config.APPLICATION_NAME,
         title=Config.APPLICATION_NAME,  # type: ignore
     )
+
+
+_UNIT_REPLACE_MAP = {"s": "seconds", "i/s": "iterations / second"}
+
+
+def maybe_longer_unit(unit: str) -> str:
+    """
+    A longer unit reads better on the ordinate of a plot.
+    """
+    if unit in _UNIT_REPLACE_MAP:
+        return _UNIT_REPLACE_MAP[unit]
+    return unit
