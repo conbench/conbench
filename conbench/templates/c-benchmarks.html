@@ -1,13 +1,13 @@
 {% extends "app.html" %}
 {% block app_content %}
   <h3>
-    <strong>Benchmarks</strong>
+    <strong>Overview</strong>
   </h3>
   <p>
-    <strong>{{ benchmarks_by_name | length }}</strong> unique benchmark names
-    across the <strong>{{ bmr_cache_meta.n_results }}</strong> most recently submitted results.
+    <strong>{{ benchmarks_by_name | length }}</strong> unique benchmark names seen
+    across the <strong>{{ bmr_cache_meta.n_results }}</strong> most recently submitted results
     <br>
-    Time window:
+    between
     {{ bmr_cache_meta.oldest_result_time_str }} to
     {{ bmr_cache_meta.newest_result_time_str }}
     (~{{ bmr_cache_meta.covered_timeframe_days_approx }} days).
