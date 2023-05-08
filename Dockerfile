@@ -14,7 +14,7 @@
 # The downside here is that with `build-essential` baked into the image we
 # do a bad job optimizing for image size; but we do that anyway so far, so
 # maybe it's really not a big deal.
-FROM python:3.11-slim
+FROM python:3.11-slim-bullseye
 
 # curl is needed for docker-compose health checks. `git` is needed by some unit
 # tests as of today.
