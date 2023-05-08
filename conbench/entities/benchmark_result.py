@@ -660,20 +660,27 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
             "iqr": q3 - q1,
         }
 
-        # Now, overwrite with self-derived aggregates:
+        # Now, overwrite with self-derived aggregates.
         for key, value in aggregates.items():
-            result_data_for_db[key] = sigfig.round(value, sigfigs=5)
+            result_data_for_db[key] = value
 
             # Log upon conflict. Let the automatically derived value win, to
             # achieve consistency between the provided samples and the
             # aggregates.
             if key in stats_usergiven:
-                if not floatcomp(stats_usergiven[key], value):
+                try:
+                    if not floatcomp_with_leeway(stats_usergiven[key], value):
+                        log.warning(
+                            "key %s, user-given val %s vs. calculated %s",
+                            key,
+                            stats_usergiven[key],
+                            value,
+                        )
+                except Exception as exc:
                     log.warning(
-                        "key %s, user-given val %s vs. calculated %s",
-                        key,
-                        stats_usergiven[key],
-                        value,
+                        "exception during floatcomp_with_leeway(): %s, stats_usergiven: %s",
+                        exc,
+                        stats_usergiven,
                     )
 
     if len(samples) == 1:
