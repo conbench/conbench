@@ -345,7 +345,7 @@ def _source(
         # List of short commit hashes with hashtag prefix
         "commit_hashes_short": ["#" + s.commit_hash[:8] for s in samples],
         "relative_benchmark_urls": [
-            f"/benchmarks/{s.benchmark_result_id}" for s in samples
+            f"/benchmark-results/{s.benchmark_result_id}" for s in samples
         ],
         # Stringified values (truncated, with unit)
         "values_with_unit": values_with_unit,
@@ -498,11 +498,11 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
 
         // TODO? show run timestamp, not only commit timestamp.
         var newHtml = \
-            '<li>Report: <a href="' + run_report_relurl + '">' + run_report_relurl + '</a></li>' +
+            '<li>Result view: <a href="' + run_report_relurl + '">' + run_report_relurl + '</a></li>' +
             '<li>Commit: ' + commit_repo_string + '</li>' +
             '<li>Commit message (truncated): ' + run_commit_msg_pfx + '</li>' +
             "<li>Commit timestamp: " + run_date_string + "</li>" +
-            "<li>Result value: " + run_result_value_with_unit + "</li>";
+            "<li>Result mean: " + run_result_value_with_unit + "</li>";
 
 
         if (run_samples_with_units) {{
