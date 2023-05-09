@@ -38,7 +38,7 @@
     </div>
   {% else %}
     <div class="alert alert-info" role="alert">
-      Cannot display history plot for this benchmark result: {{ history_plot_info.reason_why_no_plot }}
+      Cannot display history plot for this benchmark result: {{ history_plot_info.reason_why_no_plot|safe }}
     </div>
   {% endif %}
   <br />
