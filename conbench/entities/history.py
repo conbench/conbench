@@ -119,7 +119,7 @@ class HistorySample:
         return d
 
 
-def get_history_for_benchmark(benchmark_result_id: str):
+def get_history_for_benchmark(benchmark_result_id: str) -> List[HistorySample]:
     # First, find case / context / hardware / repo combination based on the
     # input benchmark result ID. This database lookup may raise the `NotFound`
     # exception.

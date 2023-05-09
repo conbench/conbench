@@ -1,10 +1,9 @@
 import collections
 import copy
-import dataclasses
 import json
 import logging
 import math
-from typing import List, Optional, Tuple, no_type_check
+from typing import Dict, List, Optional, Tuple, no_type_check
 
 import bokeh.events
 import bokeh.models
@@ -17,15 +16,9 @@ from conbench.entities.history import HistorySample, HistorySampleZscoreStats
 
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
+from .types import BokehPlotJSONOrError, HighlightInHistPlot
 
 log = logging.getLogger(__name__)
-
-
-@dataclasses.dataclass
-class BokehPlotJSONOrError:
-    # mutually exclusive
-    jsondoc: Optional[str]
-    reason_why_no_plot: Optional[str]
 
 
 class HistoryUserFacingError(Exception):
@@ -70,13 +63,24 @@ class TimeSeriesPlotMixin:
         return biggest_changes, biggest_changes_ids, biggest_changes_names
 
     def get_history_plot(
-        self, benchmark_result: BenchmarkResult, run, i=0
+        self,
+        current_benchmark_result: BenchmarkResult,
+        run,
+        plot_index_for_html=0,
+        highlight_other_result: Optional[HighlightInHistPlot] = None,
     ) -> BokehPlotJSONOrError:
         """
-        Generate JSON string for inclusion in HTML doc or a reason for why
-        the plot-describing JSON doc was not generated.
+        Generate JSON string for inclusion in HTML doc or a reason for why the
+        plot-describing JSON doc was not generated.
+
+        `current_benchmark_result` is the result to generate the history plot
+        for. If there is history and if after all a plot is generated, then
+        _this_ result will be labeled as "current result" in the plot, and it
+        will be the newest one in the plot (right-most on time axis).
         """
-        samples = get_history_for_benchmark(benchmark_result_id=benchmark_result.id)
+        samples = get_history_for_benchmark(
+            benchmark_result_id=current_benchmark_result.id
+        )
 
         # Does `samples` include the current benchmark result? Interesting: the
         # current benchmark result may be failed, but I think all items in
@@ -85,28 +89,49 @@ class TimeSeriesPlotMixin:
 
         # The number (1, 2, 3?) maybe needs to be tuned further. Also see
         # https://github.com/conbench/conbench/issues/867
-        if len(samples) > 2:
-            assert isinstance(samples[0], HistorySample)
-            jsondoc = json.dumps(
-                bokeh.embed.json_item(
-                    time_series_plot(
-                        samples=samples,
-                        current_benchmark_result=benchmark_result,
-                        run=run,
-                    ),
-                    f"plot-history-{i}",  # type: ignore
-                )
+        if len(samples) < 3:
+            # This reason/error will be shown verbatim in HTML, so this should be
+            # a nice message.
+            return BokehPlotJSONOrError(
+                None,
+                f"not enough history items yet ({len(samples)}). Keep submitting "
+                "results for this specific benchmark scenario (case permutation, "
+                "and context)!",
             )
-            return BokehPlotJSONOrError(jsondoc, None)
 
-        # This reason/error will be shown verbatim in HTML, so this should be
-        # a nice message.
-        return BokehPlotJSONOrError(
-            None,
-            f"not enough history items yet ({len(samples)}). Keep submitting "
-            "results for this specific benchmark scenario (case permutation, "
-            "and context)!",
+        highlight_other: Optional[Tuple[HistorySample, str]] = None
+
+        if highlight_other_result is not None:
+            s_by_id: Dict[str, HistorySample] = {
+                s.benchmark_result_id: s for s in samples
+            }
+
+            if highlight_other_result.bmrid not in s_by_id:
+                return BokehPlotJSONOrError(
+                    None,
+                    "you asked to highlight the benchmark result with ID "
+                    f"<kbd>{highlight_other_result.bmrid}</kbd> in this view. "
+                    "However, that result is not part of the history of the "
+                    f"result <kbd>{current_benchmark_result.id}</kbd>",
+                )
+            highlight_other = (
+                s_by_id[highlight_other_result.bmrid],
+                highlight_other_result.highlight_name,
+            )
+
+        assert isinstance(samples[0], HistorySample)
+        jsondoc = json.dumps(
+            bokeh.embed.json_item(
+                time_series_plot(
+                    samples=samples,
+                    current_benchmark_result=current_benchmark_result,
+                    run=run,
+                    highlight_result_in_hist=highlight_other,
+                ),
+                f"plot-history-{plot_index_for_html}",  # type: ignore
+            )
         )
+        return BokehPlotJSONOrError(jsondoc, None)
 
 
 def get_display_unit(unit):
@@ -320,7 +345,7 @@ def _source(
         # List of short commit hashes with hashtag prefix
         "commit_hashes_short": ["#" + s.commit_hash[:8] for s in samples],
         "relative_benchmark_urls": [
-            f"/benchmarks/{s.benchmark_result_id}" for s in samples
+            f"/benchmark-results/{s.benchmark_result_id}" for s in samples
         ],
         # Stringified values (truncated, with unit)
         "values_with_unit": values_with_unit,
@@ -473,11 +498,11 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
 
         // TODO? show run timestamp, not only commit timestamp.
         var newHtml = \
-            '<li>Report: <a href="' + run_report_relurl + '">' + run_report_relurl + '</a></li>' +
+            '<li>Result view: <a href="' + run_report_relurl + '">' + run_report_relurl + '</a></li>' +
             '<li>Commit: ' + commit_repo_string + '</li>' +
             '<li>Commit message (truncated): ' + run_commit_msg_pfx + '</li>' +
             "<li>Commit timestamp: " + run_date_string + "</li>" +
-            "<li>Result value: " + run_result_value_with_unit + "</li>";
+            "<li>Result mean: " + run_result_value_with_unit + "</li>";
 
 
         if (run_samples_with_units) {{
@@ -498,8 +523,9 @@ def time_series_plot(
     samples: List[HistorySample],
     current_benchmark_result: BenchmarkResult,
     run,
-    height=380,
+    height=420,
     width=1100,
+    highlight_result_in_hist: Optional[Tuple[HistorySample, str]] = None,
 ):
     # log.info(
     #     "Time series plot for:\n%s",
@@ -580,9 +606,9 @@ def time_series_plot(
 
     t_range = t_end - t_start
 
-    # Add padding/buffer to left and right so that newest data point does not
-    # disappear under right plot boundary, and so that the oldest data point
-    # has space from legend.
+    # Add explicit padding/buffer to left and right so that newest data point
+    # does not disappear under right plot boundary, and so that the oldest data
+    # point has space from legend.
     t_start = t_start - (0.4 * t_range)
     t_end = t_end + (0.07 * t_range)
 
@@ -616,6 +642,13 @@ def time_series_plot(
         toolbar_location="right",
         x_range=(t_start, t_end),
     )
+
+    # Use a built-in method for taking influence on the y-axis/ordinate range,
+    # just don't zoom in as much as bokeh usually would. For now, we don't show
+    # the zero, and that might be fine so that one can focus on the acutal
+    # change happening (losing perspective if that change matters or not :-)
+    # but yeah that's what stock markets also do ¯\_(ツ)_/¯).
+    p.y_range.range_padding = 0.5  # type: ignore[attr-defined]
     p.toolbar.logo = None  # type: ignore[attr-defined]
 
     # TapTool is not responding to each click event, but but only triggers when
@@ -643,9 +676,9 @@ def time_series_plot(
     p.xaxis.axis_label = "date of commit associated with the benchmark result"
 
     multisample, multisample_count = _inspect_for_multisample(samples)
-    label = "benchmark (n=1)"
+    label = "result (n=1)"
     if multisample:
-        label = "benchmark mean"
+        label = "result mean"
         if multisample_count:
             label += f" (n={multisample_count})"
 
@@ -653,7 +686,7 @@ def time_series_plot(
         source=source_unfiltered_mean_over_time,
         legend_label=label,
         name="samples",
-        size=6,
+        size=5,
         color="#ccc",
         line_width=1,
         selection_color="#76bf5a",  # like bootstrap panel dff0d8, but darker
@@ -685,16 +718,16 @@ def time_series_plot(
         # Do not show min-over-time when each benchmark reports at most one
         # sample, i.e. when mean and min are the same.
 
-        label = "benchmark min"
+        label = "result min"
         if multisample_count:
             label += f" (n={multisample_count})"
 
-        p.line(
-            source=source_min_over_time,
-            legend_label=label,
-            name="min-over-time",
-            color="#222",
-        )
+        # p.line(
+        #     source=source_min_over_time,
+        #     legend_label=label,
+        #     name="min-over-time",
+        #     color="#222",
+        # )
         p.circle(
             source=source_min_over_time,
             legend_label=label,
@@ -706,12 +739,13 @@ def time_series_plot(
     p.line(
         source=source_rolling_mean_over_time,
         color="#ffa600",
-        legend_label="rolling window mean",
+        line_width=2,
+        legend_label="lookback z-score mean",
     )
     p.line(
         source=source_rolling_alert_min_over_time,
         color="Silver",
-        legend_label="rolling window mean +/- 5 σ",
+        legend_label="lookback z-score leeway",
         line_join="round",
         width=1,
     )
@@ -724,28 +758,45 @@ def time_series_plot(
         current_benchmark_result, run, formatted, unit
     )
 
+    if highlight_result_in_hist is not None:
+        hs = highlight_result_in_hist[0]
+        description = highlight_result_in_hist[1]
+        bokeh_ds_highlight_result = bokeh.models.ColumnDataSource(
+            data={
+                "x": [hs.commit_timestamp],
+                "y": [hs.svs],
+            }
+        )
+
+        p.x(
+            source=bokeh_ds_highlight_result,
+            size=19,
+            line_width=2.5,
+            color="#005050",  # VD magenta
+            legend_label=f"highlighted result:\n{description} ({hs.svs_type})",
+            name="additionally highlighted benchmark result",
+        )
+
     cur_bench_mean_circle = None
     cur_bench_min_circle = None
     if source_current_bm_mean is not None:
         cur_bench_mean_circle = p.x(
             source=source_current_bm_mean,
-            size=18,
-            line_width=2.5,
-            color="#A65DE7",
-            legend_label="current benchmark (mean)"
-            if multisample
-            else "current benchmark",
-            name="benchmark",
+            size=20,
+            line_width=2.7,
+            color="#C440C3",  # VD dark magenta
+            legend_label="current result (mean)" if multisample else "current result",
+            name="result",
         )
 
         if multisample:
             # do not show this for n=1 (then min equals to mean).
             cur_bench_min_circle = p.circle(
                 source=source_current_bm_min,
-                size=6,
-                color="#000",
-                legend_label="current benchmark (min)",
-                name="benchmark",
+                size=8,
+                color="#C440C3",
+                legend_label="current result (min)",
+                name="result",
             )
 
     # further visually separate out distribution changes with a vertical line
@@ -806,8 +857,9 @@ def time_series_plot(
     )
 
     p.legend.title_text_color = "darkgray"
-    p.legend.title = f"benchmark results: {len(samples)}"
+    p.legend.title = f"number of results: {len(samples)}"
     p.legend.location = "top_left"
+    p.legend.label_text_font_size = "12px"
 
     # Change the number of expected/desired date x ticks. There is otherwise
     # only very few of them (like 4). Also see

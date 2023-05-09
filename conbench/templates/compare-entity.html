@@ -49,46 +49,18 @@ matching fields between baseline and contender are aligned and mismatched fields
   </nav>
   <div class="row">
     <div class="col-md-6">
+      <!-- what kind of plot is this supposed to be, especially given that
+        this might be displayed for run vs. run, result vs. result? -->
       <div id="plot" align="center"></div>
       <br />
     </div>
-    {% if comparisons %}
-      <div class="col-md-5">
-        <table id="benchmarks"
-               class="table table-striped table-bordered table-hover">
-          <thead>
-            <tr>
-              <th width="25%" scope="col">Z-Score</th>
-              <th width="25%" scope="col">Change</th>
-              <th width="25%" scope="col">Baseline</th>
-              <th width="25%" scope="col">Contender</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for c in comparisons %}
-              <tr>
-                <td>
-                  {% if c.analysis.lookback_z_score.z_score %}{{ c.analysis.lookback_z_score.z_score }} z{% endif %}
-                  {% if c.analysis.lookback_z_score.regression_indicated %}
-                    <span class="glyphicon glyphicon-arrow-down"></span>
-                  {% endif %}
-                  {% if c.analysis.lookback_z_score.improvement_indicated %}
-                    <span class="glyphicon glyphicon-arrow-up"></span>
-                  {% endif %}
-                </td>
-                <td>
-                  {{ c.analysis.pairwise.percent_change }}%
-                  {% if c.analysis.pairwise.regression_indicated %}<span class="glyphicon glyphicon-arrow-down"></span>{% endif %}
-                  {% if c.analysis.pairwise.improvement_indicated %}<span class="glyphicon glyphicon-arrow-up"></span>{% endif %}
-                </td>
-                <td>{{ c.baseline.value }} {{ c.unit }}</td>
-                <td>{{ c.contender.value }} {{ c.unit }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% endif %}
+    <!--
+        Here was a table, but it was a bit broken, see
+        https://github.com/conbench/conbench/issues/1230
+        when comparing two benchmark results I think the history plot
+        and the tabular comparison of the result measurements are sufficient.
+        let's maybe re-activate it when we understand its value better.
+      -->
   </div>
   <div align="center">{{ baseline.display_bmname }}, {{ baseline.display_case_perm }}</div>
   <div id="plot-history-0" align="center"></div>
@@ -105,13 +77,13 @@ matching fields between baseline and contender are aligned and mismatched fields
             </div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>batch</b>
+            <b>benchmark name</b>
             <div align="right" style="display:inline-block; float: right;">
               <a href="{{ url_for('app.batch', batch_id=baseline.batch_id ) }}">{{ baseline.display_bmname }}</a>
             </div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>benchmark</b>
+            <b>case permutation</b>
             <div align="right" style="display:inline-block; float: right;">
               <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline.id) }}">{{ baseline.display_case_perm }}</a>
             </div>
@@ -202,13 +174,13 @@ matching fields between baseline and contender are aligned and mismatched fields
             </div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>batch</b>
+            <b>benchmark name</b>
             <div align="right" style="display:inline-block; float: right;">
               <a href="{{ url_for('app.batch', batch_id=contender.batch_id ) }}">{{ contender.display_bmname }}</a>
             </div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>benchmark</b>
+            <b>case permutation</b>
             <div align="right" style="display:inline-block; float: right;">
               <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender.id) }}">{{ contender.display_case_perm }}</a>
             </div>
@@ -304,6 +276,12 @@ matching fields between baseline and contender are aligned and mismatched fields
       });
     {% endif %}
 
+
+    {% if benchmark_result_history_plot_info.jsondoc %}
+      $(document).ready(function () {
+        Bokeh.embed.embed_item({{ benchmark_result_history_plot_info.jsondoc | safe }});
+      });
+    {% endif %}
 
   </script>
 {% endblock %}

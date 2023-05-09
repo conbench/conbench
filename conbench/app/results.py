@@ -11,11 +11,12 @@ import conbench.util
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
-from ..app._plots import BokehPlotJSONOrError, TimeSeriesPlotMixin
+from ..app._plots import TimeSeriesPlotMixin
 from ..app._util import augment, display_time
 from ..config import Config
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import BenchmarkResult
+from .types import BokehPlotJSONOrError, HighlightInHistPlot
 
 log = logging.getLogger(__name__)
 
@@ -230,6 +231,7 @@ class BenchmarkResultView(
         run,
         delete_form,
         update_form,
+        highlight_other_result: Optional[HighlightInHistPlot] = None,
     ) -> str:
         if result_dict is None:
             return self.redirect("app.index")
@@ -252,7 +254,11 @@ class BenchmarkResultView(
             delattr(update_form, "toggle_distribution_change")
 
         if result_obj is not None:
-            plotinfo = self.get_history_plot(result_obj, run)
+            plotinfo = self.get_history_plot(
+                result_obj,
+                run,
+                highlight_other_result=highlight_other_result,
+            )
         else:
             plotinfo = BokehPlotJSONOrError(
                 None,
@@ -275,12 +281,24 @@ class BenchmarkResultView(
     @authorize_or_terminate
     def get(self, benchmark_result_id):
         result_dict, run, result_obj = self._get_benchmark_and_run(benchmark_result_id)
+
+        # Read optional query argument
+        highlight_other: Optional[HighlightInHistPlot] = None
+        highlight_other_str: Optional[str] = f.request.args.get("highlight-other")
+        if highlight_other_str:
+            bmrid = highlight_other_str
+            name = "no description"
+            if "," in highlight_other_str:
+                bmrid, name = highlight_other_str.split(",")[:2]
+            highlight_other = HighlightInHistPlot(bmrid=bmrid, highlight_name=name)
+
         return self.page(
             result_dict,
             result_obj,
             run,
             BenchmarkResultDeleteForm(),
             BenchmarkResultUpdateForm(),
+            highlight_other_result=highlight_other,
         )
 
     def post(self, benchmark_result_id):
