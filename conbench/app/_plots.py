@@ -523,7 +523,7 @@ def time_series_plot(
     samples: List[HistorySample],
     current_benchmark_result: BenchmarkResult,
     run,
-    height=380,
+    height=420,
     width=1100,
     highlight_result_in_hist: Optional[Tuple[HistorySample, str]] = None,
 ):
@@ -606,9 +606,9 @@ def time_series_plot(
 
     t_range = t_end - t_start
 
-    # Add padding/buffer to left and right so that newest data point does not
-    # disappear under right plot boundary, and so that the oldest data point
-    # has space from legend.
+    # Add explicit padding/buffer to left and right so that newest data point
+    # does not disappear under right plot boundary, and so that the oldest data
+    # point has space from legend.
     t_start = t_start - (0.4 * t_range)
     t_end = t_end + (0.07 * t_range)
 
@@ -686,7 +686,7 @@ def time_series_plot(
         source=source_unfiltered_mean_over_time,
         legend_label=label,
         name="samples",
-        size=6,
+        size=5,
         color="#ccc",
         line_width=1,
         selection_color="#76bf5a",  # like bootstrap panel dff0d8, but darker
@@ -782,9 +782,9 @@ def time_series_plot(
     if source_current_bm_mean is not None:
         cur_bench_mean_circle = p.x(
             source=source_current_bm_mean,
-            size=18,
-            line_width=2.5,
-            color="#A65DE7",
+            size=20,
+            line_width=2.7,
+            color="#C440C3",  # VD dark magenta
             legend_label="current result (mean)" if multisample else "current result",
             name="result",
         )
@@ -793,8 +793,8 @@ def time_series_plot(
             # do not show this for n=1 (then min equals to mean).
             cur_bench_min_circle = p.circle(
                 source=source_current_bm_min,
-                size=6,
-                color="#000",
+                size=8,
+                color="#C440C3",
                 legend_label="current result (min)",
                 name="result",
             )
@@ -859,6 +859,7 @@ def time_series_plot(
     p.legend.title_text_color = "darkgray"
     p.legend.title = f"number of results: {len(samples)}"
     p.legend.location = "top_left"
+    p.legend.label_text_font_size = "12px"
 
     # Change the number of expected/desired date x ticks. There is otherwise
     # only very few of them (like 4). Also see
