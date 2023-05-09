@@ -11,6 +11,7 @@ from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin, simple_bar_plot
 from ..app._util import augment, error_page
 from ..app.results import BenchmarkResultMixin, RunMixin
+from ..app.types import HighlightInHistPlot
 from ..config import Config
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.run import commit_hardware_run_map

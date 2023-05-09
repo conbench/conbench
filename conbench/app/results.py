@@ -11,11 +11,12 @@ import conbench.util
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
-from ..app._plots import BokehPlotJSONOrError, TimeSeriesPlotMixin
+from ..app._plots import TimeSeriesPlotMixin
 from ..app._util import augment, display_time
 from ..config import Config
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import BenchmarkResult
+from .types import BokehPlotJSONOrError, HighlightInHistPlot
 
 log = logging.getLogger(__name__)
 

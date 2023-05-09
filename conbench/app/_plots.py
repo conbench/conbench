@@ -17,15 +17,9 @@ from conbench.entities.history import HistorySample, HistorySampleZscoreStats
 
 from ..hacks import sorted_data
 from ..units import formatter_for_unit
+from .types import BokehPlotJSONOrError, HighlightInHistPlot
 
 log = logging.getLogger(__name__)
-
-
-@dataclasses.dataclass
-class BokehPlotJSONOrError:
-    # mutually exclusive
-    jsondoc: Optional[str]
-    reason_why_no_plot: Optional[str]
 
 
 class HistoryUserFacingError(Exception):
