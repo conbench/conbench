@@ -116,7 +116,7 @@ def show_benchmark_cases(bname: str) -> str:
     #     itertools.chain.from_iterable(r.case_dict.keys() for r in matching_results)
     # )
 
-    all_values_per_case_key: Dict[str, set] = defaultdict(set)
+    all_values_per_case_key = defaultdict(set)
     for r in matching_results:
         # Maybe make this a counter.
         for k, v in r.case_dict.items():
