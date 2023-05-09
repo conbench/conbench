@@ -750,6 +750,25 @@ def time_series_plot(
         current_benchmark_result, run, formatted, unit
     )
 
+    if highlight_result_in_hist is not None:
+        hs = highlight_result_in_hist[0]
+        description = highlight_result_in_hist[1]
+        bokeh_ds_highlight_result = bokeh.models.ColumnDataSource(
+            data={
+                "x": [hs.commit_timestamp],
+                "y": [hs.svs],
+            }
+        )
+
+        p.x(
+            source=bokeh_ds_highlight_result,
+            size=19,
+            line_width=2.5,
+            color="#005050",  # VD magenta
+            legend_label=f"highlighted result:\n{description} ({hs.svs_type})",
+            name="additionally highlighted benchmark result",
+        )
+
     cur_bench_mean_circle = None
     cur_bench_min_circle = None
     if source_current_bm_mean is not None:
