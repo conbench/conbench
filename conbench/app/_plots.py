@@ -722,12 +722,12 @@ def time_series_plot(
         if multisample_count:
             label += f" (n={multisample_count})"
 
-        p.line(
-            source=source_min_over_time,
-            legend_label=label,
-            name="min-over-time",
-            color="#222",
-        )
+        # p.line(
+        #     source=source_min_over_time,
+        #     legend_label=label,
+        #     name="min-over-time",
+        #     color="#222",
+        # )
         p.circle(
             source=source_min_over_time,
             legend_label=label,
