@@ -739,12 +739,13 @@ def time_series_plot(
     p.line(
         source=source_rolling_mean_over_time,
         color="#ffa600",
-        legend_label="rolling window mean",
+        line_width=2,
+        legend_label="lookback z-score mean",
     )
     p.line(
         source=source_rolling_alert_min_over_time,
         color="Silver",
-        legend_label="rolling window mean +/- 5 σ",
+        legend_label="lookback z-score leeway",
         line_join="round",
         width=1,
     )
