@@ -95,9 +95,9 @@ _conversion_correctness_tests = (
 if __name__ == "__main__":
     # Run tests.
     for nbr, expected in _conversion_correctness_tests:
-        # got = numstr(nbr)
+        got = numstr(nbr)
+        # got = sigfig.round(nbr, sigfigs=5, output_type=str)
         # got = str(sigfig.round(nbr, sigfigs=5))
-        got = str(sigfig.round(nbr, sigfigs=5))
         assert (
             got == expected
         ), f"input: {repr(nbr)} -- expected {expected} but got {got}"
