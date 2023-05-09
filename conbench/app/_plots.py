@@ -785,10 +785,8 @@ def time_series_plot(
             size=18,
             line_width=2.5,
             color="#A65DE7",
-            legend_label="current benchmark (mean)"
-            if multisample
-            else "current benchmark",
-            name="benchmark",
+            legend_label="current result (mean)" if multisample else "current result",
+            name="result",
         )
 
         if multisample:
@@ -797,8 +795,8 @@ def time_series_plot(
                 source=source_current_bm_min,
                 size=6,
                 color="#000",
-                name="benchmark",
                 legend_label="current result (min)",
+                name="result",
             )
 
     # further visually separate out distribution changes with a vertical line
