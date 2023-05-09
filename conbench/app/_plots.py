@@ -676,9 +676,9 @@ def time_series_plot(
     p.xaxis.axis_label = "date of commit associated with the benchmark result"
 
     multisample, multisample_count = _inspect_for_multisample(samples)
-    label = "benchmark (n=1)"
+    label = "result (n=1)"
     if multisample:
-        label = "benchmark mean"
+        label = "result mean"
         if multisample_count:
             label += f" (n={multisample_count})"
 
@@ -718,7 +718,7 @@ def time_series_plot(
         # Do not show min-over-time when each benchmark reports at most one
         # sample, i.e. when mean and min are the same.
 
-        label = "benchmark min"
+        label = "result min"
         if multisample_count:
             label += f" (n={multisample_count})"
 
@@ -796,8 +796,8 @@ def time_series_plot(
                 source=source_current_bm_min,
                 size=6,
                 color="#000",
-                legend_label="current benchmark (min)",
                 name="benchmark",
+                legend_label="current result (min)",
             )
 
     # further visually separate out distribution changes with a vertical line
@@ -858,7 +858,7 @@ def time_series_plot(
     )
 
     p.legend.title_text_color = "darkgray"
-    p.legend.title = f"benchmark results: {len(samples)}"
+    p.legend.title = f"number of results: {len(samples)}"
     p.legend.location = "top_left"
 
     # Change the number of expected/desired date x ticks. There is otherwise
