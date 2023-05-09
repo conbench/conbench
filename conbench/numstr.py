@@ -13,7 +13,7 @@ https://github.com/conbench/conbench/issues/1218
 
 Then I found a test case that fails for sigfig.round(), but does not for
 
-    sigfig.round(15272000, 5) produces "15272000.0", i.e. here we have the
+    sigfig.round(15272063, 5) produces "15272000.0", i.e. here we have the
     unnecessary .0 suffix.
 
 Then I researched further options and gladly found np.format_float_positional()
@@ -71,8 +71,10 @@ def numstr(v: Union[float, int], sigfigs: int = 5) -> str:
 
 
 _conversion_correctness_tests = (
-    (15272063, "15272000"),  # Does not add trailing . or even .0
-    (15272063.0, "15272000"),  # Works with float and int input
+    (15272063, "15272000"),  #
+    # Works with float and int input.
+    # Does not add trailing . or even .0
+    (15272063.0, "15272000"),
     (015272063.0, "15272000"),  # Works with leading zero in input
     (1.2345, "1.2345"),  # Keeps things unmodified
     (1.23456, "1.2346"),  # Performs rounding
@@ -93,8 +95,12 @@ _conversion_correctness_tests = (
 if __name__ == "__main__":
     # Run tests.
     for nbr, expected in _conversion_correctness_tests:
-        got = numstr(nbr)
-        assert got == expected, f"exp {expected} but got {got}"
+        # got = numstr(nbr)
+        # got = str(sigfig.round(nbr, sigfigs=5))
+        got = str(sigfig.round(nbr, sigfigs=5))
+        assert (
+            got == expected
+        ), f"input: {repr(nbr)} -- expected {expected} but got {got}"
 
     # Do a bit of a performance comparison:
     for value, figs in (
