@@ -1,10 +1,9 @@
 import collections
 import copy
-import dataclasses
 import json
 import logging
 import math
-from typing import List, Optional, Tuple, no_type_check
+from typing import Dict, List, Optional, Tuple, no_type_check
 
 import bokeh.events
 import bokeh.models
@@ -64,13 +63,24 @@ class TimeSeriesPlotMixin:
         return biggest_changes, biggest_changes_ids, biggest_changes_names
 
     def get_history_plot(
-        self, benchmark_result: BenchmarkResult, run, i=0
+        self,
+        current_benchmark_result: BenchmarkResult,
+        run,
+        plot_index_for_html=0,
+        highlight_other_result: Optional[HighlightInHistPlot] = None,
     ) -> BokehPlotJSONOrError:
         """
-        Generate JSON string for inclusion in HTML doc or a reason for why
-        the plot-describing JSON doc was not generated.
+        Generate JSON string for inclusion in HTML doc or a reason for why the
+        plot-describing JSON doc was not generated.
+
+        `current_benchmark_result` is the result to generate the history plot
+        for. If there is history and if after all a plot is generated, then
+        _this_ result will be labeled as "current result" in the plot, and it
+        will be the newest one in the plot (right-most on time axis).
         """
-        samples = get_history_for_benchmark(benchmark_result_id=benchmark_result.id)
+        samples = get_history_for_benchmark(
+            benchmark_result_id=current_benchmark_result.id
+        )
 
         # Does `samples` include the current benchmark result? Interesting: the
         # current benchmark result may be failed, but I think all items in
@@ -79,28 +89,49 @@ class TimeSeriesPlotMixin:
 
         # The number (1, 2, 3?) maybe needs to be tuned further. Also see
         # https://github.com/conbench/conbench/issues/867
-        if len(samples) > 2:
-            assert isinstance(samples[0], HistorySample)
-            jsondoc = json.dumps(
-                bokeh.embed.json_item(
-                    time_series_plot(
-                        samples=samples,
-                        current_benchmark_result=benchmark_result,
-                        run=run,
-                    ),
-                    f"plot-history-{i}",  # type: ignore
-                )
+        if len(samples) < 3:
+            # This reason/error will be shown verbatim in HTML, so this should be
+            # a nice message.
+            return BokehPlotJSONOrError(
+                None,
+                f"not enough history items yet ({len(samples)}). Keep submitting "
+                "results for this specific benchmark scenario (case permutation, "
+                "and context)!",
             )
-            return BokehPlotJSONOrError(jsondoc, None)
 
-        # This reason/error will be shown verbatim in HTML, so this should be
-        # a nice message.
-        return BokehPlotJSONOrError(
-            None,
-            f"not enough history items yet ({len(samples)}). Keep submitting "
-            "results for this specific benchmark scenario (case permutation, "
-            "and context)!",
+        highlight_other: Optional[Tuple[HistorySample, str]] = None
+
+        if highlight_other_result is not None:
+            s_by_id: Dict[str, HistorySample] = {
+                s.benchmark_result_id: s for s in samples
+            }
+
+            if highlight_other_result.bmrid not in s_by_id:
+                return BokehPlotJSONOrError(
+                    None,
+                    "you asked to highlight the benchmark result with ID "
+                    f"<kbd>{highlight_other_result.bmrid}</kbd> in this view. "
+                    "However, that result is not part of the history of the "
+                    f"result <kbd>{current_benchmark_result.id}</kbd>",
+                )
+            highlight_other = (
+                s_by_id[highlight_other_result.bmrid],
+                highlight_other_result.highlight_name,
+            )
+
+        assert isinstance(samples[0], HistorySample)
+        jsondoc = json.dumps(
+            bokeh.embed.json_item(
+                time_series_plot(
+                    samples=samples,
+                    current_benchmark_result=current_benchmark_result,
+                    run=run,
+                    highlight_result_in_hist=highlight_other,
+                ),
+                f"plot-history-{plot_index_for_html}",  # type: ignore
+            )
         )
+        return BokehPlotJSONOrError(jsondoc, None)
 
 
 def get_display_unit(unit):
@@ -494,6 +525,7 @@ def time_series_plot(
     run,
     height=380,
     width=1100,
+    highlight_result_in_hist: Optional[Tuple[HistorySample, str]] = None,
 ):
     # log.info(
     #     "Time series plot for:\n%s",
