@@ -642,6 +642,13 @@ def time_series_plot(
         toolbar_location="right",
         x_range=(t_start, t_end),
     )
+
+    # Use a built-in method for taking influence on the y-axis/ordinate range,
+    # just don't zoom in as much as bokeh usually would. For now, we don't show
+    # the zero, and that might be fine so that one can focus on the acutal
+    # change happening (losing perspective if that change matters or not :-)
+    # but yeah that's what stock markets also do ¯\_(ツ)_/¯).
+    p.y_range.range_padding = 0.5
     p.toolbar.logo = None  # type: ignore[attr-defined]
 
     # TapTool is not responding to each click event, but but only triggers when
