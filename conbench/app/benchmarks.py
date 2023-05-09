@@ -1,6 +1,5 @@
 import logging
 import time
-import itertools
 from collections import defaultdict
 from typing import Dict, List, Tuple, TypedDict
 
