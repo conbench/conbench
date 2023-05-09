@@ -36,6 +36,7 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         baseline, contender, plot, plot_history = None, None, None, None
         baseline_run, contender_run = None, None
         biggest_changes_names, outlier_urls = None, None
+        benchmark_result_history_plot_info = None
 
         if comparisons and self.type == "run":
             baseline_run_id, contender_run_id = baseline_id, contender_id
@@ -44,7 +45,9 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             baseline = self.get_display_benchmark(baseline_id)
             # TODO: fetch directly from db, no indirection through API.
             contender = self.get_display_benchmark(contender_id)
-            plot = self._get_plot(baseline, contender)
+            # I think this is a bar chart showing two bars. One for each
+            # benchmark result's mean value. Don't need a plot for that.
+            # plot = self._get_plot(baseline, contender)
             baseline_run_id = baseline["run_id"]
             contender_run_id = contender["run_id"]
             compare = f"{baseline_run_id}...{contender_run_id}"
@@ -57,9 +60,18 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         if comparisons and self.type == "benchmark-result":
             # `contender` is a dictionary representing the benchmark result.
             # Also inject the 'proper' benchmark result object  into
-            # get_history_plot().
-            benchmark_result = BenchmarkResult.one(id=contender["id"])
-            plot_history = self.get_history_plot(benchmark_result, contender_run)
+            # get_history_plot(). This is a mad way to deal with madness.
+            # We need to remove this API layer indirection:
+            # https://github.com/conbench/conbench/issues/968
+            contender_benchmark_result = BenchmarkResult.one(id=contender["id"])
+            benchmark_result_history_plot_info = self.get_history_plot(
+                contender_benchmark_result,
+                contender_run,
+                highlight_other_result=HighlightInHistPlot(
+                    bmrid=baseline_id, highlight_name="baseline"
+                ),
+            )
+            # log.info("compare view: generated history plot", plot_history)
 
         if comparisons and self.type != "benchmark-result":
             comparisons_by_id = {
@@ -81,6 +93,9 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
                 comparisons_by_id.get(x, {}).get("compare_benchmarks_url", "")
                 for x in biggest_changes_ids
             ]
+            # Note(JP): I think this has been broken for a while. Just
+            # rediscovering this -- do we really want to
+            # show multiple history plots when we compare two runs?
             plot_history = [
                 self.get_history_plot(b, contender_run, i)
                 for i, b in enumerate(biggest_changes)
@@ -91,8 +106,10 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             application=Config.APPLICATION_NAME,
             title=self.title,
             type=self.type,
+            # This is probably a plot! But what kind of plot?
             plot=plot,
             plot_history=plot_history,
+            benchmark_result_history_plot_info=benchmark_result_history_plot_info,
             resources=bokeh.resources.CDN.render(),
             comparisons=comparisons,
             regressions=regressions,
@@ -221,9 +238,10 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         If the last item is a string then it is an error message for why
         the comparison failed. Do not process the first three items then.
         """
-        # This farms out one of three API endpoints. self.api_endpoint_name is
-        # set in a child class. Re-assemble the stringified input argument for
-        # the virtual API endpoint, carrying both baseline and contender ID
+        # NOte(JP): This farms out one of three API endpoints.
+        # self.api_endpoint_name is mind-boggling. It is set in a child class.
+        # Re-assemble the stringified input argument for the virtual API
+        # endpoint, carrying both baseline and contender ID
         params = {"compare_ids": f"{baseline_id}...{contender_id}"}
         # error: "Compare" has no attribute "api_endpoint_name"  [attr-defined]
         response = self.api_get(self.api_endpoint_name, **params)  # type: ignore
