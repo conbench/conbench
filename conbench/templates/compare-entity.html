@@ -49,10 +49,18 @@ matching fields between baseline and contender are aligned and mismatched fields
   </nav>
   <div class="row">
     <div class="col-md-6">
+      <!-- what kind of plot is this supposed to be, especially given that
+        this might be displayed for run vs. run, result vs. result? -->
       <div id="plot" align="center"></div>
       <br />
     </div>
     {% if comparisons %}
+      <!--
+         This table is currently broken, see
+         https://github.com/conbench/conbench/issues/1230
+         when comparing two benchmark results I think the history plot
+         and the tabular comparison of the result measurements are sufficient.
+        let's maybe re-activate it when we understand its value better.
       <div class="col-md-5">
         <table id="benchmarks"
                class="table table-striped table-bordered table-hover">
@@ -88,6 +96,7 @@ matching fields between baseline and contender are aligned and mismatched fields
           </tbody>
         </table>
       </div>
+      -->
     {% endif %}
   </div>
   <div align="center">{{ baseline.display_bmname }}, {{ baseline.display_case_perm }}</div>
@@ -105,13 +114,13 @@ matching fields between baseline and contender are aligned and mismatched fields
             </div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>batch</b>
+            <b>benchmark name</b>
             <div align="right" style="display:inline-block; float: right;">
               <a href="{{ url_for('app.batch', batch_id=baseline.batch_id ) }}">{{ baseline.display_bmname }}</a>
             </div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>benchmark</b>
+            <b>case permutation</b>
             <div align="right" style="display:inline-block; float: right;">
               <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline.id) }}">{{ baseline.display_case_perm }}</a>
             </div>
@@ -202,13 +211,13 @@ matching fields between baseline and contender are aligned and mismatched fields
             </div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>batch</b>
+            <b>benchmark name</b>
             <div align="right" style="display:inline-block; float: right;">
               <a href="{{ url_for('app.batch', batch_id=contender.batch_id ) }}">{{ contender.display_bmname }}</a>
             </div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>benchmark</b>
+            <b>case permutation</b>
             <div align="right" style="display:inline-block; float: right;">
               <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender.id) }}">{{ contender.display_case_perm }}</a>
             </div>
@@ -304,6 +313,12 @@ matching fields between baseline and contender are aligned and mismatched fields
       });
     {% endif %}
 
+
+    {% if benchmark_result_history_plot_info.jsondoc %}
+      $(document).ready(function () {
+        Bokeh.embed.embed_item({{ benchmark_result_history_plot_info.jsondoc | safe }});
+      });
+    {% endif %}
 
   </script>
 {% endblock %}
