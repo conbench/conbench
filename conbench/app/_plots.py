@@ -648,7 +648,7 @@ def time_series_plot(
     # the zero, and that might be fine so that one can focus on the acutal
     # change happening (losing perspective if that change matters or not :-)
     # but yeah that's what stock markets also do ¯\_(ツ)_/¯).
-    p.y_range.range_padding = 0.5
+    p.y_range.range_padding = 0.5  # type: ignore[attr-defined]
     p.toolbar.logo = None  # type: ignore[attr-defined]
 
     # TapTool is not responding to each click event, but but only triggers when
