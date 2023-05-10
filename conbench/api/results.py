@@ -6,13 +6,11 @@ import orjson
 from sqlalchemy import select
 
 import conbench.metrics
-from conbench.job import BMRTBenchmarkResult, bmrt_cache
 
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..db import Session
-
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import (
     BenchmarkResult,
