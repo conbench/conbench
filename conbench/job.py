@@ -222,7 +222,7 @@ def _fetch_and_cache_most_recent_results() -> None:
             ui_hardware_short=str(result.ui_hardware_short),
             ui_time_started_at=str(result.ui_time_started_at),
             ui_non_null_sample_count=result.ui_non_null_sample_count,
-            run_reason=bmrrun.reason,
+            run_reason=bmrrun.reason if bmrrun.reason else "n/a",
         )
 
         # The str() indirections below (and above) are here to quickly make
