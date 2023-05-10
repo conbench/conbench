@@ -68,6 +68,7 @@ class BMRTBenchmarkResult:
     hardware_id: str
     hardware_name: str
     case_text_id: str
+    case_dict: Dict[str, str]
     context_dict: Dict
     ui_time_started_at: str
     ui_hardware_short: str
@@ -191,7 +192,8 @@ def _fetch_and_cache_most_recent_results() -> None:
 
         # A textual representation of the case permutation. As it is 'complete'
         # it should also work as a proper identifier (like primary key).
-        case_text_id = " ".join(get_case_kvpair_strings(result.case.tags))
+        casedict = result.case.to_dict()
+        case_text_id = " ".join(get_case_kvpair_strings(casedict))
 
         bmr = BMRTBenchmarkResult(
             id=str(result.id),
@@ -214,6 +216,7 @@ def _fetch_and_cache_most_recent_results() -> None:
             # shared across potentially many BMRTBenchmarkResult objects.
             context_dict=result.context.to_dict(),
             case_text_id=case_text_id,
+            case_dict=casedict,
             ui_hardware_short=str(result.ui_hardware_short),
             ui_time_started_at=str(result.ui_time_started_at),
             ui_non_null_sample_count=result.ui_non_null_sample_count,
