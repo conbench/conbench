@@ -73,6 +73,7 @@ class BMRTBenchmarkResult:
     ui_time_started_at: str
     ui_hardware_short: str
     ui_non_null_sample_count: str
+    run_reason: str
 
     # There is conceptual duplication between the class BenchmarkResult
     # and this class BMRTBenchmarkResult. Fundamentally, it might make sense
@@ -195,6 +196,7 @@ def _fetch_and_cache_most_recent_results() -> None:
         casedict = result.case.to_dict()
         case_text_id = " ".join(get_case_kvpair_strings(casedict))
 
+        bmrrun = result.run
         bmr = BMRTBenchmarkResult(
             id=str(result.id),
             benchmark_name=benchmark_name,
@@ -202,8 +204,8 @@ def _fetch_and_cache_most_recent_results() -> None:
             data=result.measurements,
             svs=result.svs,  # float(result.mean) if result.mean else None,
             unit=str(result.unit) if result.unit else "n/a",
-            hardware_id=str(result.run.hardware.id),
-            hardware_name=str(result.run.hardware.name),
+            hardware_id=str(bmrrun.hardware.id),
+            hardware_name=str(bmrrun.run.hardware.name),
             case_id=str(result.case_id),
             context_id=str(result.context_id),
             # These context dictionaries are often the largest part of these
@@ -220,6 +222,7 @@ def _fetch_and_cache_most_recent_results() -> None:
             ui_hardware_short=str(result.ui_hardware_short),
             ui_time_started_at=str(result.ui_time_started_at),
             ui_non_null_sample_count=result.ui_non_null_sample_count,
+            run_reason=bmrrun.reason,
         )
 
         # The str() indirections below (and above) are here to quickly make
