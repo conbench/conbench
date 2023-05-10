@@ -205,7 +205,7 @@ def _fetch_and_cache_most_recent_results() -> None:
             svs=result.svs,  # float(result.mean) if result.mean else None,
             unit=str(result.unit) if result.unit else "n/a",
             hardware_id=str(bmrrun.hardware.id),
-            hardware_name=str(bmrrun.run.hardware.name),
+            hardware_name=str(bmrrun.hardware.name),
             case_id=str(result.case_id),
             context_id=str(result.context_id),
             # These context dictionaries are often the largest part of these
