@@ -60,8 +60,10 @@ class BMRTBenchmarkResult:
     id: str
     case_id: str
     context_id: str
+    run_id: str
     data: List[float]
     svs: float
+    svs_type: str
     unit: str
     benchmark_name: str
     started_at: float
@@ -203,11 +205,13 @@ def _fetch_and_cache_most_recent_results() -> None:
             started_at=result.timestamp.timestamp(),
             data=result.measurements,
             svs=result.svs,  # float(result.mean) if result.mean else None,
+            svs_type=result.svs_type,
             unit=str(result.unit) if result.unit else "n/a",
             hardware_id=str(bmrrun.hardware.id),
             hardware_name=str(bmrrun.hardware.name),
             case_id=str(result.case_id),
             context_id=str(result.context_id),
+            run_id=str(result.run_id),
             # These context dictionaries are often the largest part of these
             # BMRTBenchmarkResult object (in terms of memory usage) -- they can
             # be a rather big collection of strings. However, by the nature of
