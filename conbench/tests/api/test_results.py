@@ -346,10 +346,11 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
     def test_benchmark_list_filter_by_run_reason(self, client):
         self.authenticate(client)
-        _fixtures.benchmark_result(run_id="100", reason="rolf")
-        benchmark_result = _fixtures.benchmark_result(run_id="100")
-        response = client.get("/api/benchmarks/?run_reason=rolf")
-        self.assert_200_ok(response, [_expected_entity(benchmark_result)])
+        thisresult = _fixtures.benchmark_result(run_id="100", reason="rolf")
+        resp = client.get("/api/benchmark-results/?run_reason=rolf")
+        assert resp.status_code == 200, resp.text
+        assert resp.json[0]["run_reason"]
+        self.assert_200_ok(resp[_expected_entity(thisresult)])
 
     def test_benchmark_list_filter_by_multiple_run_id(self, client):
         self.authenticate(client)
