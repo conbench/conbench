@@ -349,8 +349,11 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         thisresult = _fixtures.benchmark_result(run_id="100", reason="rolf")
         resp = client.get("/api/benchmark-results/?run_reason=rolf")
         assert resp.status_code == 200, resp.text
-        assert resp.json[0]["run_reason"]
         self.assert_200_ok(resp[_expected_entity(thisresult)])
+
+        resp = client.get("/api/benchmark-results/?run_reason=foo")
+        assert resp.status_code == 200, resp.text
+        assert resp.json == []
 
     def test_benchmark_list_filter_by_multiple_run_id(self, client):
         self.authenticate(client)
