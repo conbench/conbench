@@ -6,11 +6,13 @@ import orjson
 from sqlalchemy import select
 
 import conbench.metrics
+from conbench.job import BMRTBenchmarkResult, bmrt_cache
 
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..db import Session
+
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import (
     BenchmarkResult,
@@ -19,6 +21,7 @@ from ..entities.benchmark_result import (
     BenchmarkResultValidationError,
 )
 from ..entities.case import Case
+from ..entities.run import Run
 from ._resp import json_response_for_byte_sequence, resp400
 
 log = logging.getLogger(__name__)
@@ -185,6 +188,11 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             benchmark_results = Session.scalars(
                 select(BenchmarkResult).where(BenchmarkResult.run_id.in_(run_ids))
             ).all()
+
+        elif run_reason_arg := f.request.args.get("run_reason"):
+            benchmark_results = BenchmarkResult.search(
+                filters=[Run.reason == run_reason_arg], joins=[Run], limit=15000
+            )
 
         else:
             benchmark_results = BenchmarkResult.all(
