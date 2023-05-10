@@ -83,14 +83,18 @@ class EntityMixin(Generic[T]):
         return q.filter(*filters).all()
 
     @classmethod
-    def search(cls, filters, joins=None, order_by=None):
+    def search(cls, filters, joins=None, order_by=None, limit=None):
         q = Session.query(cls)
         if joins:
             for join in joins:
                 q = q.join(join)
         if order_by is not None:
             q = q.order_by(order_by)
-        return q.filter(*filters).all()
+
+        if limit is None:
+            return q.filter(*filters).all()
+
+        return q.filter(*filters).limit(limit).all()
 
     @classmethod
     def all(cls, limit=None, order_by=None, filter_args=None, **kwargs):
