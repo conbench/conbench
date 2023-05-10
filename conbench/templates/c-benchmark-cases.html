@@ -15,7 +15,7 @@
    data-bs-toggle="tooltip"
    data-bs-title="Each panel represents one case parameter, and lists all known values as well as the number of benchmark results per value. Clicking a value applies a filter to the table below. Current limitation: two selected values per parameter are not yet supported.">
       </i>
-      </sup>
+    </sup>
   </h5>
   <div class="row mt-2 row-cols-2 row-cols-lg-5 g-2 g-lg-3">
     {% for case_param_key, case_param_value_count_dict in all_values_per_case_key_sorted.items() %}
@@ -27,7 +27,7 @@
           {% for v, vcount in case_param_value_count_dict.items() %}
             <span class="case-parm-value"
                   data-cvp-key="{{ case_param_key }}"
-                  data-cvp-value="{{v}}">{{v }} ({{ vcount }})</span>
+                  data-cvp-value="{{v}}">{{ v }} ({{ vcount }})</span>
             <br>
           {% endfor %}
         </div>
