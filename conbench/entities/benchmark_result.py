@@ -669,7 +669,7 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
             # aggregates.
             if key in stats_usergiven:
                 try:
-                    if not floatcomp_with_leeway(stats_usergiven[key], value):
+                    if not floatcomp_with_leeway(float(stats_usergiven[key]), value):
                         log.warning(
                             "key %s, user-given val %s vs. calculated %s",
                             key,
@@ -717,8 +717,7 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     return result_data_for_db
 
 
-def floatcomp_with_leeway(v1, v2, sigfigs=5):
-    # TODO: review
+def floatcomp_with_leeway(v1: float, v2: float, sigfigs=5):
     v1s = numstr(v1, sigfigs=sigfigs)
     v2s = numstr(v2, sigfigs=sigfigs)
     return abs(float(v1s) - float(v2s)) < 10**-10
