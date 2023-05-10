@@ -1,6 +1,6 @@
+import collections
 import logging
 import time
-from collections import defaultdict
 from typing import Dict, List, Tuple, TypedDict
 
 import flask
@@ -107,7 +107,9 @@ def show_benchmark_cases(bname: str) -> str:
         return f"benchmark name not known: `{bname}`"
 
     matching_results = bmrt_cache["by_benchmark_name"][bname]
-    results_by_case_id: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
+    results_by_case_id: Dict[str, List[BMRTBenchmarkResult]] = collections.defaultdict(
+        list
+    )
 
     for r in matching_results:
         results_by_case_id[r.case_id].append(r)
@@ -116,13 +118,24 @@ def show_benchmark_cases(bname: str) -> str:
     #     itertools.chain.from_iterable(r.case_dict.keys() for r in matching_results)
     # )
 
-    all_values_per_case_key: Dict[str, set] = defaultdict(set)
+    all_values_per_case_key: Dict[str, collections.Counter] = collections.defaultdict(
+        collections.Counter
+    )
     for r in matching_results:
         # Maybe make this a counter.
-        for k, v in r.case_dict.items():
-            all_values_per_case_key[k].add(v)
+        for case_parm_key, case_parm_value in r.case_dict.items():
+            # Today, there might be any kind of type here for key and value in
+            # the DB. Difficult. See
+            # https://github.com/conbench/conbench/pull/948 and
+            # https://github.com/conbench/conbench/issues/940.
+            # Change both to string here. For example, this might result in
+            # values to be `"None"`.
+            all_values_per_case_key[str(case_parm_key)].update([str(case_parm_value)])
 
-    # Sort by parameter value count.
+    log.info("all_values_per_case_key: %s", all_values_per_case_key)
+
+    # Sort by parameter value count (uniquely different parameter values,
+    # not by how often these individual values are used).
     all_values_per_case_key = dict(
         sorted(
             all_values_per_case_key.items(),
@@ -131,12 +144,18 @@ def show_benchmark_cases(bname: str) -> str:
         )
     )
 
+    log.info("all_values_per_case_key: %s", all_values_per_case_key)
+
     # Each item's value is a set of observed values. Make it a list, sorted
     # alphabetically.
-    all_values_per_case_key_sorted: Dict[str, list] = {}
-    for k, valueset in all_values_per_case_key.items():
-        all_values_per_case_key_sorted[k] = list(sorted(valueset))
+    all_values_per_case_key_sorted: Dict[str, Dict[str, int]] = {}
+    for case_parm_key, value_counter in all_values_per_case_key.items():
+        all_values_per_case_key_sorted[case_parm_key] = dict(
+            value_counter.most_common(None)
+        )
     # log.info("all case parameters seen: %s", all_values_per_case_key)
+
+    log.info("all_values_per_case_key_sorted: %s", all_values_per_case_key_sorted)
 
     t0 = time.monotonic()
 
@@ -206,7 +225,7 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
 
     results_by_hardware_and_context: Dict[
         Tuple, List[BMRTBenchmarkResult]
-    ] = defaultdict(list)
+    ] = collections.defaultdict(list)
 
     # Build up timeseries of results (group results, don't sort them yet).
     for result in matching_results:

@@ -7,6 +7,25 @@ html {
   font-size: 14px;
 }
 
+span.case-parm-value {
+  font-family: monospace;
+  padding: 1px;
+  margin: 2px
+}
+
+span.case-parm-value.selected {
+  font-family: monospace;
+  background-color: #38BDD155;
+}
+
+/* select.caseparm-select {
+  overflow: auto !important;
+  border: none;
+  background: none;
+  font-family: monospace;
+} */
+
+
 /* spacing between DT items */
 div.dataTables_filter label {
   font-size: 12px;
