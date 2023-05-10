@@ -11,59 +11,66 @@
   <div class="mt-5">
     <h5>
       <strong>case parameters</strong>
-    </h5>
-    <div class="row mt-2 row-cols-2 row-cols-lg-5 g-2 g-lg-3">
-      {% for case_param_key, case_param_values in all_values_per_case_key_sorted.items() %}
-        <div class="col">
-          <div class="p-3 border bg-light overflow-auto" style="height: 170px;">
-            <code>{{ case_param_key }} ({{ case_param_values|length }})</code>
+      <sup><i class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="Each panel represents one case parameter, and lists all known values as well as the number of benchmark results per value. Clicking a value applies a filter to the table below. Current limitation: two selected values per parameter are not yet supported.">
+      </i>
+      </sup>
+  </h5>
+  <div class="row mt-2 row-cols-2 row-cols-lg-5 g-2 g-lg-3">
+    {% for case_param_key, case_param_value_count_dict in all_values_per_case_key_sorted.items() %}
+      <div class="col">
+        <div class="p-3 border bg-light overflow-auto" style="height: 190px;">
+          <code>{{ case_param_key }} ({{ case_param_value_count_dict|length }})</code>
+          <br>
+          <hr>
+          {% for v, vcount in case_param_value_count_dict.items() %}
+            <span class="case-parm-value"
+                  data-cvp-key="{{ case_param_key }}"
+                  data-cvp-value="{{v}}">{{v }} ({{ vcount }})</span>
             <br>
-            <hr>
-            {% for v in case_param_values %}
-              {{v}}
-              <br>
-            {% endfor %}
-          </div>
+          {% endfor %}
         </div>
-      {% endfor %}
-    </div>
+      </div>
+    {% endfor %}
   </div>
-  <div class="mt-5">
-    <h5>
-      <strong>case permutations</strong>
-    </h5>
-    <table class="table table-hover conbench-datatable"
-           style="width:100%;
-                  display: none">
-      <thead>
+</div>
+<div class="mt-5">
+  <h5>
+    <strong>case permutations</strong>
+  </h5>
+  <table class="table table-hover conbench-datatable"
+         style="width:100%;
+                display: none">
+    <thead>
+      <tr>
+        <th scope="col" style="width: 7%">case id</th>
+        <th scope="col" style="width: 35%">case permutation</th>
+        <th scope="col" style="width: 13%">last result</th>
+        <th scope="col" style="width: 6%"># results</th>
+        <th scope="col" style="width: 8%"># hardwares</th>
+        <th scope="col" style="width: 6%"># contexts</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for case_id, results in results_by_case_id.items() %}
         <tr>
-          <th scope="col" style="width: 7%">case id</th>
-          <th scope="col" style="width: 35%">case permutation</th>
-          <th scope="col" style="width: 13%">last result</th>
-          <th scope="col" style="width: 6%"># results</th>
-          <th scope="col" style="width: 8%"># hardwares</th>
-          <th scope="col" style="width: 6%"># contexts</th>
+          <td class="font-monospace">
+            <a href="{{ url_for('app.show_benchmark_results', bname=benchmark_name, caseid=case_id) }}">{{ case_id[:10] }}</a>
+          </td>
+          <td class="font-monospace">{{ results[0].case_text_id }}</td>
+          <td class="font-monospace">{{ last_result_per_case_id[case_id].ui_time_started_at }}</td>
+          <td class="font-monospace">{{ results|length }}</td>
+          <td class="font-monospace">{{ hardware_count_per_case_id[case_id] }}</td>
+          <td class="font-monospace">{{ context_count_per_case_id[case_id] }}</td>
         </tr>
-      </thead>
-      <tbody>
-        {% for case_id, results in results_by_case_id.items() %}
-          <tr>
-            <td class="font-monospace">
-              <a href="{{ url_for('app.show_benchmark_results', bname=benchmark_name, caseid=case_id) }}">{{ case_id[:10] }}</a>
-            </td>
-            <td class="font-monospace">{{ results[0].case_text_id }}</td>
-            <td class="font-monospace">{{ last_result_per_case_id[case_id].ui_time_started_at }}</td>
-            <td class="font-monospace">{{ results|length }}</td>
-            <td class="font-monospace">{{ hardware_count_per_case_id[case_id] }}</td>
-            <td class="font-monospace">{{ context_count_per_case_id[case_id] }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  Report based on {{ bmr_cache_meta.n_results }} results reported in
-  total between {{ bmr_cache_meta.oldest_result_time_str }} and
-  {{ bmr_cache_meta.newest_result_time_str }}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+Report based on {{ bmr_cache_meta.n_results }} results reported in
+total between {{ bmr_cache_meta.oldest_result_time_str }} and
+{{ bmr_cache_meta.newest_result_time_str }}
 {% endblock %}
 {% block scripts %}
   {{ super() }}
@@ -74,15 +81,15 @@
       const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
       const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
-      $('table.conbench-datatable').each(function() {
-        $(this).DataTable({
+
+      let table = $('table.conbench-datatable').DataTable({
             // Note(JP): this enables a special, simple plugin called
             // `conditionalPaging` which must be included, e.g. via the dist URLs
             // published in https://cdn.datatables.net/plug-ins/1.13.3/features/.
             // kudos to https://stackoverflow.com/a/29639664/145400
           "conditionalPaging": true,
           // hide the "Showing 1 to 12 of 12 entries" element
-          "bInfo" : false,
+          "bInfo" : true,
           "responsive": true,
             // the default default seems to be the first item in lengthMenu.
           "lengthMenu": [ 5, 10, 50, 75, 100, 250, 750 ],
@@ -109,9 +116,80 @@
             $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
           },
         });
+
+
+      // table.column(1).data().filter(function(value, index) {
+      //   if (value.includes("query_id=TPCH-03")) {
+      //     return true;
+      //   }
+      //   return false;
+      // });
+      // this works! but the search is not customizable, it takes only
+      // a string as an arg
+      // table.column(1).search("query_id=TPCH-03").draw();
+
+      // key: parameter name
+      // value: list of selected values.
+      // no, prepare strings!
+      let selectedGlobal = {};
+
+      // https://datatables.net/manual/plug-ins/search
+      $.fn.dataTable.ext.search.push(function(settings, searchData, index, rowData, counter) {
+        //console.log('hello from custom search, settings:', settings)
+        // It's horrible that this is the stringified version of the
+        // case params! But well, I think it works! :)
+        // Rely on this being a key=value format.
+        let currentRowCasePermString = rowData[1];
+
+        // Now this is an explosion of l00pyl00ps and certainly not an
+        // efficient way to search in general, but JS is fast, and the amount
+        // of data is small.
+
+        // The approach here is to test this row against all currently known
+        // criteria. If one of the tests fails: bail out. At the end of the
+        // function: return true.
+        for (let needle in selectedGlobal) {
+          // Each of the keys in selectedGlobal is a 'needle', i.e. a
+          // substring that must be part of the haystack.
+          if (! currentRowCasePermString.includes(needle)) {
+            return false;
+          }
+          // console.log(key, yourobject[key]);
+        }
+
+        return true;
+      });
+
+      // Now, perform a search, to make the custom search function apply.
+      // Input is noop.
+      table.search("").draw();
+
+
+      $('.case-parm-value').click(function() {
+        console.log('i got clicked: ', $(this));
+
+        $(this).toggleClass('selected');
+
+        let dataattrs = $(this).data();
+        console.log('dataattrs:',dataattrs);
+        kvpair = dataattrs['cvpKey'] + "=" + dataattrs['cvpValue']
+
+        console.log('kvpair:', kvpair);
+
+        if (kvpair in selectedGlobal) {
+          delete selectedGlobal[kvpair];
+        }
+        else {
+          // want to have a hash map type data struct for simple key lookup,
+          // value shrug.
+          selectedGlobal[kvpair] = true;
+        }
+
+        console.log('updated selectedGlobal: ', selectedGlobal)
+        // now update the table: test each row against search criteria.
+        table.search("").draw();
+
       });
     });
-
-
   </script>
 {% endblock %}
