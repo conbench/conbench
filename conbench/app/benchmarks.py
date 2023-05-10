@@ -116,7 +116,7 @@ def show_benchmark_cases(bname: str) -> str:
     #     itertools.chain.from_iterable(r.case_dict.keys() for r in matching_results)
     # )
 
-    all_values_per_case_key = defaultdict(set)
+    all_values_per_case_key: Dict[str, set] = defaultdict(set)
     for r in matching_results:
         # Maybe make this a counter.
         for k, v in r.case_dict.items():
@@ -133,8 +133,9 @@ def show_benchmark_cases(bname: str) -> str:
 
     # Each item's value is a set of observed values. Make it a list, sorted
     # alphabetically.
+    all_values_per_case_key_sorted: Dict[str, list] = {}
     for k, valueset in all_values_per_case_key.items():
-        all_values_per_case_key[k] = list(sorted(valueset))
+        all_values_per_case_key_sorted[k] = list(sorted(valueset))
     # log.info("all case parameters seen: %s", all_values_per_case_key)
 
     t0 = time.monotonic()
@@ -163,7 +164,7 @@ def show_benchmark_cases(bname: str) -> str:
         last_result_per_case_id=last_result_per_case_id,
         context_count_per_case_id=context_count_per_case_id,
         benchmark_result_count=len(matching_results),
-        all_values_per_case_key=all_values_per_case_key,
+        all_values_per_case_key_sorted=all_values_per_case_key_sorted,
         application=Config.APPLICATION_NAME,
         title=Config.APPLICATION_NAME,  # type: ignore
     )
