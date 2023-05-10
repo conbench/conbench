@@ -1,6 +1,6 @@
+import collections
 import logging
 import time
-import collections
 from typing import Dict, List, Tuple, TypedDict
 
 import flask
@@ -225,7 +225,7 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
 
     results_by_hardware_and_context: Dict[
         Tuple, List[BMRTBenchmarkResult]
-    ] = defaultdict(list)
+    ] = collections.defaultdict(list)
 
     # Build up timeseries of results (group results, don't sort them yet).
     for result in matching_results:
