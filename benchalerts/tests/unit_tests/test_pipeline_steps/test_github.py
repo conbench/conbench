@@ -30,6 +30,8 @@ from ..mocks import (
         ("regressions", "summary_regressions", "details_regressions"),
         ("noregressions", "summary_noregressions", "details_noregressions"),
         ("nocommit", "summary_nocommit", "details_nocommit"),
+        ("noruns", "summary_noruns", "details_noruns"),
+        ("noresults", "summary_noresults", None),
     ],
     indirect=["mock_comparison_info"],
 )
@@ -48,6 +50,7 @@ def test_GitHubCheckStep(
                 github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
                 comparison_step_name="comparison_step",
                 external_id="123",
+                build_url="https://austin.something",
             )
         return
 
@@ -56,6 +59,7 @@ def test_GitHubCheckStep(
         github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
         comparison_step_name="comparison_step",
         external_id="123",
+        build_url="https://austin.something",
     )
     gh_res, full_comparison = step.run_step({"comparison_step": mock_comparison_info})
     assert gh_res
@@ -72,6 +76,8 @@ def test_GitHubCheckStep(
         "regressions",
         "noregressions",
         "nocommit",
+        "noruns",
+        "noresults",
     ],
     indirect=["mock_comparison_info"],
 )
@@ -95,6 +101,8 @@ def test_GitHubStatusStep(mock_comparison_info: FullComparisonInfo, github_auth:
         ("regressions", "comment_regressions"),
         ("noregressions", "comment_noregressions"),
         ("nocommit", "comment_nocommit"),
+        ("noruns", "comment_noruns"),
+        ("noresults", "comment_noresults"),
     ],
     indirect=["mock_comparison_info"],
 )

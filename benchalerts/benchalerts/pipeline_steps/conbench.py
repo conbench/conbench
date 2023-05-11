@@ -4,7 +4,8 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from benchclients.conbench import LegacyConbenchClient
-from benchclients.logging import fatal_and_log, log
+from benchclients.logging import log
+import requests
 
 from ..alert_pipeline import AlertPipelineStep
 from ..conbench_dataclasses import FullComparisonInfo, RunComparisonInfo
@@ -81,20 +82,31 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
         self.conbench_client = conbench_client or ConbenchClient()
 
     def run_step(self, previous_outputs: Dict[str, Any]) -> FullComparisonInfo:
-        if not self.run_ids:
-            fatal_and_log("No run IDs provided to compare.")
-
         log.info(f"Getting comparisons from {len(self.run_ids)} run(s)")
-        return FullComparisonInfo(
-            run_comparisons=[
-                self._get_one_run_comparison(run_id) for run_id in self.run_ids
-            ]
-        )
+        run_comparisons: List[RunComparisonInfo] = []
+        for run_id in self.run_ids:
+            run_comparison = self._get_one_run_comparison(run_id)
+            if run_comparison:
+                run_comparisons.append(run_comparison)
 
-    def _get_one_run_comparison(self, run_id: str) -> RunComparisonInfo:
-        """Create and populate one RunComparisonInfo instance."""
+        return FullComparisonInfo(run_comparisons=run_comparisons)
+
+    def _get_one_run_comparison(self, run_id: str) -> Optional[RunComparisonInfo]:
+        """Create and populate one RunComparisonInfo instance. Return None if the run
+        is not found on the Conbench server.
+        """
+        try:
+            contender_info = self.conbench_client.get(f"/runs/{run_id}/")
+        except requests.HTTPError as e:
+            if e.response.status_code == 404:
+                log.info(
+                    f"Conbench couldn't find run {run_id}; not including it for analysis"
+                )
+                return None
+            raise
+
         run_comparison = RunComparisonInfo(
-            contender_info=self.conbench_client.get(f"/runs/{run_id}/"),
+            contender_info=contender_info,
             baseline_run_type=self.baseline_run_type.value,
         )
 
@@ -114,11 +126,10 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
                 f"Conbench could not find a {self.baseline_run_type.value} baseline run "
                 f"for the contender run {run_id}. Error: {run_comparison.baseline_error}"
             )
-            if run_comparison.has_errors:
-                # get more information so we have more details about errors
-                run_comparison.benchmark_results = self.conbench_client.get(
-                    "/benchmark-results/", params={"run_id": run_id}
-                )
+            # Just get information about the contender benchmark results.
+            run_comparison.benchmark_results = self.conbench_client.get(
+                "/benchmark-results/", params={"run_id": run_id}
+            )
 
         return run_comparison
 
@@ -192,9 +203,5 @@ class GetConbenchZComparisonStep(GetConbenchZComparisonForRunsStep):
                 "/runs/", params={"sha": self.commit_hash}
             )
         ]
-        if not self.run_ids:
-            fatal_and_log(
-                f"Contender commit '{self.commit_hash}' doesn't have any runs in Conbench."
-            )
 
         return super().run_step(previous_outputs)

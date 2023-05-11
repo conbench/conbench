@@ -42,6 +42,8 @@ class GitHubCheckStep(AlertPipelineStep):
     external_id
         An optional reference to another system. This argument will set the
         "external_id" property of the posted GitHub Check, but do nothing else.
+    build_url
+        An optional build URL to include in the GitHub Check.
 
     Returns
     -------
@@ -73,6 +75,7 @@ class GitHubCheckStep(AlertPipelineStep):
         github_client: Optional[GitHubRepoClient] = None,
         step_name: Optional[str] = None,
         external_id: Optional[str] = None,
+        build_url: Optional[str] = None,
     ) -> None:
         super().__init__(step_name=step_name)
         self.github_client = github_client or GitHubRepoClient(repo=repo or "")
@@ -84,6 +87,7 @@ class GitHubCheckStep(AlertPipelineStep):
         self.commit_hash = commit_hash
         self.comparison_step_name = comparison_step_name
         self.external_id = external_id
+        self.build_url = build_url
 
     def run_step(
         self, previous_outputs: Dict[str, Any]
@@ -92,20 +96,14 @@ class GitHubCheckStep(AlertPipelineStep):
             self.comparison_step_name
         ]
 
-        s = _Pluralizer(full_comparison.benchmarks_with_z_regressions).s
         res = self.github_client.update_check(
             name="Conbench performance report",
             commit_hash=self.commit_hash,
             status=self._default_check_status(full_comparison),
-            title=(
-                "Some benchmarks had errors"
-                if full_comparison.benchmarks_with_errors
-                else f"Found {len(full_comparison.benchmarks_with_z_regressions)} regression{s}"
-            ),
+            title=self._default_check_title(full_comparison),
             summary=self._default_check_summary(full_comparison),
             details=self._default_check_details(full_comparison),
-            # point to the homepage table filtered to runs of this commit
-            details_url=f"{full_comparison.app_url}/?search={full_comparison.commit_hash}",
+            details_url=full_comparison.app_url,
             external_id=self.external_id,
         )
         log.debug(res)
@@ -117,18 +115,37 @@ class GitHubCheckStep(AlertPipelineStep):
     @staticmethod
     def _default_check_status(full_comparison: FullComparisonInfo) -> CheckStatus:
         """Return a different status based on errors and regressions."""
-        if full_comparison.benchmarks_with_errors:
+        if full_comparison.results_with_errors:
+            # results with errors require action
             return CheckStatus.ACTION_REQUIRED
-        elif full_comparison.no_baseline_runs:
-            return CheckStatus.SKIPPED
-        elif full_comparison.benchmarks_with_z_regressions:
+        elif full_comparison.results_with_z_regressions:
+            # no errors, but results with regressions are still a failure
             return CheckStatus.FAILURE
-        else:
+        elif full_comparison.has_any_z_analyses:
+            # we analyzed z-scores and didn't find errors or regressions
             return CheckStatus.SUCCESS
+        elif full_comparison.has_any_contender_results:
+            # we have results but couldn't analyze z-scores (normal at beginning of history)
+            return CheckStatus.SKIPPED
+        else:
+            # we don't have results; this requires action
+            return CheckStatus.ACTION_REQUIRED
 
     @staticmethod
-    def _default_check_summary(full_comparison: FullComparisonInfo) -> str:
-        return github_check_summary(full_comparison)
+    def _default_check_title(full_comparison: FullComparisonInfo) -> str:
+        if full_comparison.results_with_errors:
+            return "Some benchmarks had errors"
+        elif not full_comparison.has_any_z_analyses:
+            return "Could not do the lookback z-score analysis"
+        else:
+            pluralizer = _Pluralizer(full_comparison.results_with_z_regressions)
+            s = pluralizer.s
+            return (
+                f"Found {len(full_comparison.results_with_z_regressions)} regression{s}"
+            )
+
+    def _default_check_summary(self, full_comparison: FullComparisonInfo) -> str:
+        return github_check_summary(full_comparison, build_url=self.build_url)
 
     @staticmethod
     def _default_check_details(full_comparison: FullComparisonInfo) -> Optional[str]:
@@ -204,8 +221,7 @@ class GitHubStatusStep(AlertPipelineStep):
             title="conbench",
             description=self._default_status_description(full_comparison),
             state=self._default_status_state(full_comparison),
-            # point to the homepage table filtered to runs of this commit
-            details_url=f"{full_comparison.app_url}/?search={full_comparison.commit_hash}",
+            details_url=full_comparison.app_url,
         )
         log.debug(res)
         return res
@@ -216,27 +232,34 @@ class GitHubStatusStep(AlertPipelineStep):
     @staticmethod
     def _default_status_state(full_comparison: FullComparisonInfo) -> StatusState:
         """Return a different status based on errors and regressions."""
-        if full_comparison.benchmarks_with_errors:
+        if full_comparison.results_with_errors:
+            # results with errors require action
             return StatusState.FAILURE
-        elif full_comparison.no_baseline_runs:
+        elif full_comparison.results_with_z_regressions:
+            # no errors, but results with regressions are still a failure
+            return StatusState.FAILURE
+        elif full_comparison.has_any_z_analyses:
+            # we analyzed z-scores and didn't find errors or regressions
             return StatusState.SUCCESS
-        elif full_comparison.benchmarks_with_z_regressions:
-            return StatusState.FAILURE
+        elif full_comparison.has_any_contender_results:
+            # we have results but couldn't analyze z-scores (normal at beginning of history)
+            return StatusState.SUCCESS
         else:
-            return StatusState.SUCCESS
+            # we don't have results; this requires action
+            return StatusState.FAILURE
 
     @staticmethod
     def _default_status_description(full_comparison: FullComparisonInfo) -> str:
-        if full_comparison.benchmarks_with_errors:
+        if full_comparison.results_with_errors:
             return "Some benchmarks had errors"
-        elif full_comparison.no_baseline_runs:
-            return "Could not find any baseline runs to compare to"
+        elif not full_comparison.has_any_z_analyses:
+            return "Could not do the lookback z-score analysis"
         else:
-            pluralizer = _Pluralizer(full_comparison.benchmarks_with_z_regressions)
+            pluralizer = _Pluralizer(full_comparison.results_with_z_regressions)
             were = pluralizer.were
             s = pluralizer.s
             return (
-                f"There {were} {len(full_comparison.benchmarks_with_z_regressions)} "
+                f"There {were} {len(full_comparison.results_with_z_regressions)} "
                 f"benchmark regression{s} in this commit"
             )
 

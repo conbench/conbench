@@ -46,6 +46,16 @@ def test_runs_comparison_without_commit(conbench_env, caplog: pytest.LogCaptureF
     assert res
 
 
+def test_runs_comparison_skips_runs_not_found(conbench_env):
+    step = GetConbenchZComparisonForRunsStep(
+        run_ids=["contender_wo_base", "not_found"],
+        baseline_run_type=BaselineRunCandidates.latest_default,
+        conbench_client=ConbenchClient(adapter=MockAdapter()),
+    )
+    res = step.run_step(previous_outputs={})
+    assert len(res.run_comparisons) == 1
+
+
 def test_GetConbenchZComparisonStep(conbench_env):
     step = GetConbenchZComparisonStep(
         commit_hash="abc",
@@ -57,14 +67,14 @@ def test_GetConbenchZComparisonStep(conbench_env):
     assert res
 
 
-def test_comparison_fails_when_no_runs(conbench_env):
+def test_comparison_doesnt_fail_when_no_runs(conbench_env):
     step = GetConbenchZComparisonStep(
         commit_hash="no_runs",
         baseline_run_type=BaselineRunCandidates.fork_point,
         conbench_client=ConbenchClient(adapter=MockAdapter()),
     )
-    with pytest.raises(ValueError, match="runs"):
-        step.run_step(previous_outputs={})
+    res = step.run_step(previous_outputs={})
+    assert res
 
 
 def test_comparison_warns_when_no_baseline(
