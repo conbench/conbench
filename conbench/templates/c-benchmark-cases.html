@@ -16,27 +16,29 @@
     <div class="d-flex flex-wrap">
       {% for case_param_key, case_param_value_count_dict in all_values_per_case_key_sorted.items() %}
         <div class="bg-light case-param-panel">
-          <div class="case-param-title"><code>{{ case_param_key }} ({{ case_param_value_count_dict|length }})</code></div>
-            <div class="case-param-values c-bench-scrollbar">
-              {% for v, vcount in case_param_value_count_dict.items() %}
-                <span class="case-parm-value"
-                      data-cvp-key="{{ case_param_key }}"
-                      data-cvp-value="{{v}}">{{ v }} ({{ vcount }})</span>
-                <br>
-              {% endfor %}
-            </div>
+          <div class="case-param-title">
+            <code>{{ case_param_key }} ({{ case_param_value_count_dict|length }})</code>
+          </div>
+          <div class="case-param-values c-bench-scrollbar">
+            {% for v, vcount in case_param_value_count_dict.items() %}
+              <span class="case-parm-value"
+                    data-cvp-key="{{ case_param_key }}"
+                    data-cvp-value="{{v}}">{{ v }} ({{ vcount }})</span>
+              <br>
+            {% endfor %}
+          </div>
         </div>
       {% endfor %}
     </div>
   </div>
 </div>
 <div class="mt-5">
-<p>
-  Found <strong>{{ results_by_case_id|length }}</strong> unique case permutation(s)
-  across <strong>{{ benchmark_result_count }}</strong> result(s). The table below
-  shows one row per case permutation. You can limit the permutations shown by
-  selecting case parameter key/value pairs in the panels above.
-</p>
+  <p>
+    Found <strong>{{ results_by_case_id|length }}</strong> unique case permutation(s)
+    across <strong>{{ benchmark_result_count }}</strong> result(s). The table below
+    shows one row per case permutation. You can limit the permutations shown by
+    selecting case parameter key/value pairs in the panels above.
+  </p>
 </div>
 <div class="mt-4">
   <table class="table table-hover conbench-datatable c-bench-caseperm-table"
