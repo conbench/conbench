@@ -1,16 +1,11 @@
 {% extends "app.html" %}
 {% block app_content %}
   <h3>
-    Case permutations for benchmark <strong>{{ benchmark_name }}</strong>
+    benchmark <strong>{{ benchmark_name }}</strong>: case permutations
   </h3>
-  <p>
-    Found <strong>{{ results_by_case_id|length }}</strong> unique case permutation(s)
-    across <strong>{{ benchmark_result_count }}</strong> result(s).
-    <br>
-  </p>
-  <div class="mt-5">
+  <div class="mt-3">
     <h5>
-      <strong>case parameters</strong>
+      known case parameters
       <sup><i class="bi bi-info-circle"
    data-bs-toggle="tooltip"
    data-bs-title="Each panel represents one case parameter, and lists all known values as well as the number of benchmark results per value. Clicking a value applies a filter to the table below. Current limitation: two selected values per parameter are not yet supported.">
