@@ -12,10 +12,10 @@
     {{ bmr_cache_meta.newest_result_time_str }}
     (~{{ bmr_cache_meta.covered_timeframe_days_approx }} days).
   </p>
-  <div class="row row-cols-1 row-cols-md-3 g-4">
+  <div class="c-bench-landing row row-cols-1 row-cols-md-3 g-4">
     <div class="col">
       <div class="card">
-        <div class="card-body overflow-auto" style="max-height: 500px;">
+        <div class="card-body overflow-auto c-bench-scrollbar" style="max-height: 450px;">
           <h5 class="card-title">by name</h5>
           {% for benchmark_name, results in benchmarks_by_name_sorted_alphabetically.items() %}
             <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
@@ -27,7 +27,7 @@
     </div>
     <div class="col">
       <div class="card">
-        <div class="card-body overflow-auto" style="max-height: 500px;">
+        <div class="card-body overflow-auto c-bench-scrollbar" style="max-height: 450px;">
           <h5 class="card-title">by most recent result</h5>
           {% for result in newest_result_for_each_benchmark_name_topN %}
             <strong><a href="{{ url_for('app.show_benchmark_cases', bname=result.benchmark_name) }}">{{ result.benchmark_name }}</a></strong>
@@ -39,7 +39,7 @@
     </div>
     <div class="col">
       <div class="card">
-        <div class="card-body overflow-auto" style="max-height: 500px;">
+        <div class="card-body overflow-auto c-bench-scrollbar" style="max-height: 450px;">
           <h5 class="card-title">
             by results per case
             <sup><i style="font-size: 12px"
@@ -58,7 +58,7 @@
     </div>
     <div class="col">
       <div class="card">
-        <div class="card-body overflow-auto" style="max-height: 500px;">
+        <div class="card-body overflow-auto c-bench-scrollbar" style="max-height: 450px;">
           <h5 class="card-title">by result count</h5>
           {% for benchmark_name, results in benchmarks_by_name_sorted_by_resultcount.items() %}
             <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>

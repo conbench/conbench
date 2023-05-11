@@ -7,6 +7,11 @@ html {
   font-size: 14px;
 }
 
+.c-bench-landing div.card {
+  font-size: 12px;
+}
+
+
 .c-bench-scrollbar {
   /* Foreground, Background */
   scrollbar-color: #812570 #f3f3f3;
