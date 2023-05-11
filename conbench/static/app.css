@@ -47,6 +47,20 @@ div.case-param-panel {
   margin-right: 7px;
 }
 
+table.c-bench-caseperm-table tbody tr td {
+  font-family: var(--bs-font-monospace);
+  font-size: 12px;
+}
+
+table.c-bench-caseperm-table td.casepermstring {
+  font-size: 11px;
+}
+
+table.c-bench-caseperm-table th{
+  font-size: 12px;
+}
+
+
 span.case-parm-value {
   font-family: monospace;
   font-size: 11px;
@@ -56,7 +70,7 @@ span.case-parm-value {
 
 span.case-parm-value.selected {
   font-family: monospace;
-  background-color: #38BDD155;
+  background-color: #38BDD166;
 }
 
 /* select.caseparm-select {
