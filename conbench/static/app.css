@@ -31,20 +31,34 @@ html {
 }
 
 div.case-param-title {
-  border-bottom: 1px solid #81257022;
+  /*border-bottom: 1px solid #81257022;*/
   padding-bottom: 2px;
-  padding-left: 2px;
-  background-color: #f3f3f3;
+  padding-left: 3px;
+  background-color: #e9ecef;
 }
 
 div.case-param-values {
   height: 70px;
   overflow: auto;
+  overflow-wrap: break-word;
+}
+
+.case-param-values.one-value {
+  height: 35px !important;
 }
 
 div.case-param-panel {
-  width: 125px;
+  /*width: 125px;*/
+  /*
+   explicit max-content instead of not setting width
+   but with an upper bound. note that  this here now looks a bit like
+   masonry.
+  */
+  max-width: 200px;
+  width: max-content;
   margin-right: 7px;
+  margin-right: 8px;
+  border: 1px solid #e9ecef;
 }
 
 table.c-bench-caseperm-table tbody tr td {
