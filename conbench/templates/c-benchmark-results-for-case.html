@@ -69,10 +69,21 @@
             <div class="cb-plot-{{ hwctx }}" style="width: 550px"></div>
           </div>
         </div>
-      {% endfor %}
+  {% for ctxid, context_dict in context_dicts_by_context_id.items() %}
+  <div class="offcanvas offcanvas-start" data-bs-scroll="true" tabindex="-1" id="offcanvasContextDict-{{ctxid}}" aria-labelledby="offcanvasContextDictLabel-{{ctxid}}">
+    <div class="offcanvas-header">
+      <span class="offcanvas-title" id="offcanvasContextDictLabel-{{ctxid}}">Context <code>{{ctxid}}</code></span>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-    <div style="font-family: 'Roboto Mono';">.</div>
+    <div class="offcanvas-body">
+      <ul>
+      {% for key, value in context_dict.items() %}
+      <li><code>{{key}}</code>: <code>{{value}}</code></li>
+      {% endfor %}
+      </ul>
+    </div>
   </div>
+  {% endfor %}
 {% endblock %}
 {% block scripts %}
   {{ super() }}
