@@ -56,10 +56,9 @@ table.c-bench-caseperm-table td.casepermstring {
   font-size: 11px;
 }
 
-table.c-bench-caseperm-table th{
+table.c-bench-caseperm-table th {
   font-size: 12px;
 }
-
 
 span.case-parm-value {
   font-family: monospace;
@@ -72,6 +71,15 @@ span.case-parm-value.selected {
   font-family: monospace;
   background-color: #38BDD166;
 }
+
+div.offcanvas-cb-context pre {
+  /* do not overflow horizontally: word wrap in pre.
+    kudos to https://stackoverflow.com/a/45783868/145400 */
+  white-space: pre-wrap;
+  word-break: keep-all;
+  font-size: 13px;
+}
+
 
 /* select.caseparm-select {
   overflow: auto !important;
@@ -87,6 +95,26 @@ div.dataTables_filter label {
   margin-left: 10px;
  }
 
+div.cb-tinyplot div.hardware {
+  font-family: var(--bs-font-monospace);
+  font-size: 11px;
+  padding-left: 5px;
+}
+
+div.cb-tinyplot div.context {
+  font-family: var(--bs-font-monospace);
+  font-size: 11px;
+  padding-left: 15px;
+}
+
+div.cb-tinyplot div.results {
+  font-family: var(--bs-font-monospace);
+  font-size: 11px;
+}
+
+div.cb-tinyplot a {
+  color: #812570
+}
 
 div.cb-tinyplot {
   background-color: #f3f3f3;
