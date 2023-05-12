@@ -127,7 +127,7 @@ bmrt_cache: CacheDict = {
 SHUTDOWN = False
 _STARTED = False
 
-BMRT_CACHE_SIZE = 0.2 * 10**6
+BMRT_CACHE_SIZE = 0.3 * 10**6
 if Config.TESTING:
     # quicker update in testing
     BMRT_CACHE_SIZE = 0.2 * 10**6
