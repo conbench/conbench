@@ -1,17 +1,27 @@
 {% extends "app.html" %}
 {% block app_content %}
   <h3>
-    <strong>{{ benchmark_name }}</strong> / case {{ this_case_id[:7] }}
+    benchmark <strong>'{{ benchmark_name }}'</strong> / case {{ this_case_id[:7] }}
   </h3>
   <span class="fs-4"><code>{{ this_case_text_id }}</code></span>
   <p>
-    Identified {{ matching_benchmark_result_count }} result(s) matching this case permutation.
-    Based on {{ bmr_cache_meta.n_results }} results reported in
+    Found {{ matching_benchmark_result_count }} benchmark result(s) matching this
+    case permutation. Based on {{ bmr_cache_meta.n_results }} results reported in
     total between {{ bmr_cache_meta.oldest_result_time_str }} and
     {{ bmr_cache_meta.newest_result_time_str }}.
   </p>
-  <p>Showing {{ benchmark_results_for_table|length }} of {{ matching_benchmark_result_count }} results:</p>
   <div class="mt-5">
+    <h5 class="mb-3">
+      History for unique hardware/context combinations
+      <sup><i style="font-size: 12px"
+   class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="Benchmark results, grouped by unique (hardware, context) combinations.
+   Ordinate: the benchmarked metric. Mean value, if multisample.
+   Time axis: benchmark result start time (associated commit data is not used).
+   A plot is only shown for at least three data points.">
+      </i></sup>
+    </h5>
     <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
     <div class="row gy-5">
       {% for hwctx, plotinfo in infos_for_uplots.items() %}
@@ -36,6 +46,9 @@
     </div>
     <div style="font-family: 'Roboto Mono';">.</div>
   </div>
+
+  <div class="mt-5">
+    <p> All {{ benchmark_results_for_table|length }} individual benchmark results:</p>
     <table class="table table-hover conbench-datatable"
            style="width:100%;
                   display: none">
@@ -87,6 +100,9 @@
     </div>
   </div>
   {% endfor %}
+
+
+
 {% endblock %}
 {% block scripts %}
   {{ super() }}
