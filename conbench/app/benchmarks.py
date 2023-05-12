@@ -190,7 +190,10 @@ def show_benchmark_cases(bname: str) -> str:
 
 
 class TypeUIPlotInfo(TypedDict):
-    title: str
+    hwid: str
+    ctxid: str
+    hwname: str
+    n_results: int
     url_to_newest_result: str
     data_for_uplot: List[List]
     unit: str
