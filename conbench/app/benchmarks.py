@@ -263,11 +263,23 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
 
     units_seen = set()
 
+    # context_dicts_by_context_id: Dict[str, Dict[str, str]] = {}
+    context_json_by_context_id: Dict[str, str] = {}
+
     for (hwid, ctxid, _), results in results_by_hardware_and_context_sorted.items():
         # Only include those cases where there are at least three results.
         # (this structure is used for plotting only).
         if len(results) < 3:
             continue
+
+        # context_dicts_by_context_id[ctxid] = results[0].context_dict
+
+        # Maybe we don't need to pass the Python dict into the temmplate,
+        # but a pre-formatted JSON doc for copy/pasting might result
+        # in better UX.
+        context_json_by_context_id[ctxid] = orjson.dumps(
+            results[0].context_dict, option=orjson.OPT_INDENT_2
+        ).decode("utf-8")
 
         newest_result = newest_of_many_results(results)
 
@@ -289,8 +301,10 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
                 [conbench.numstr.numstr(r.svs, 7) for r in results],
             ],
             # Rely on at least one result being in the list.
-            "title": "hardware: %s, context: %s, %s results"
-            % (results[0].ui_hardware_short, ctxid[:7], len(results)),
+            "hwid": hwid,
+            "ctxid": ctxid,
+            "hwname": results[0].hardware_name,
+            "n_results": len(results),
             "url_to_newest_result": flask.url_for(
                 "app.benchmark-result",
                 benchmark_result_id=newest_result.id,
@@ -327,6 +341,7 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
         infos_for_uplots_json=infos_for_uplots_json,
         this_case_id=matching_results[0].case_id,
         this_case_text_id=matching_results[0].case_text_id,
+        context_json_by_context_id=context_json_by_context_id,
         application=Config.APPLICATION_NAME,
         title=Config.APPLICATION_NAME,  # type: ignore
     )
