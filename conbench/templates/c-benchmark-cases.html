@@ -1,68 +1,70 @@
 {% extends "app.html" %}
 {% block app_content %}
   <h3>
-    Case permutations for benchmark <strong>{{ benchmark_name }}</strong>
+    benchmark <strong>{{ benchmark_name }}</strong>: case permutations
   </h3>
-  <p>
-    Found <strong>{{ results_by_case_id|length }}</strong> unique case permutation(s)
-    across <strong>{{ benchmark_result_count }}</strong> result(s).
-    <br>
-  </p>
-  <div class="mt-5">
+  <div class="mt-3">
     <h5>
-      <strong>case parameters</strong>
+      known case parameters
       <sup><i class="bi bi-info-circle"
    data-bs-toggle="tooltip"
    data-bs-title="Each panel represents one case parameter, and lists all known values as well as the number of benchmark results per value. Clicking a value applies a filter to the table below. Current limitation: two selected values per parameter are not yet supported.">
       </i>
     </sup>
   </h5>
-  <div class="row mt-2 row-cols-2 row-cols-lg-5 g-2 g-lg-3">
-    {% for case_param_key, case_param_value_count_dict in all_values_per_case_key_sorted.items() %}
-      <div class="col">
-        <div class="p-3 border bg-light overflow-auto" style="height: 190px;">
-          <code>{{ case_param_key }} ({{ case_param_value_count_dict|length }})</code>
-          <br>
-          <hr>
-          {% for v, vcount in case_param_value_count_dict.items() %}
-            <span class="case-parm-value"
-                  data-cvp-key="{{ case_param_key }}"
-                  data-cvp-value="{{v}}">{{ v }} ({{ vcount }})</span>
-            <br>
-          {% endfor %}
+  <div class="row mt-2">
+    <div class="d-flex flex-wrap">
+      {% for case_param_key, case_param_value_count_dict in all_values_per_case_key_sorted.items() %}
+        <div class="bg-light case-param-panel">
+          <div class="case-param-title">
+            <code>{{ case_param_key }} ({{ case_param_value_count_dict|length }})</code>
+          </div>
+          <div class="case-param-values c-bench-scrollbar">
+            {% for v, vcount in case_param_value_count_dict.items() %}
+              <span class="case-parm-value"
+                    data-cvp-key="{{ case_param_key }}"
+                    data-cvp-value="{{v}}">{{ v }} ({{ vcount }})</span>
+              <br>
+            {% endfor %}
+          </div>
         </div>
-      </div>
-    {% endfor %}
+      {% endfor %}
+    </div>
   </div>
 </div>
 <div class="mt-5">
-  <h5>
-    <strong>case permutations</strong>
-  </h5>
-  <table class="table table-hover conbench-datatable"
+  <p>
+    Found <strong>{{ results_by_case_id|length }}</strong> unique case permutation(s)
+    across <strong>{{ benchmark_result_count }}</strong> result(s). The table below
+    shows one row per case permutation. You can limit the permutations shown by
+    selecting case parameter key/value pairs in the panels above.
+  </p>
+</div>
+<div class="mt-4">
+  <table class="table table-hover conbench-datatable c-bench-caseperm-table"
          style="width:100%;
                 display: none">
     <thead>
       <tr>
         <th scope="col" style="width: 7%">case id</th>
-        <th scope="col" style="width: 35%">case permutation</th>
-        <th scope="col" style="width: 13%">last result</th>
-        <th scope="col" style="width: 6%"># results</th>
+        <th scope="col" style="">case permutation</th>
+        <th scope="col" style="width: 12%">last result (UTC)</th>
+        <th scope="col" style="width: 7%"># results</th>
         <th scope="col" style="width: 8%"># hardwares</th>
-        <th scope="col" style="width: 6%"># contexts</th>
+        <th scope="col" style="width: 7%"># contexts</th>
       </tr>
     </thead>
     <tbody>
       {% for case_id, results in results_by_case_id.items() %}
         <tr>
-          <td class="font-monospace">
+          <td>
             <a href="{{ url_for('app.show_benchmark_results', bname=benchmark_name, caseid=case_id) }}">{{ case_id[:10] }}</a>
           </td>
-          <td class="font-monospace">{{ results[0].case_text_id }}</td>
-          <td class="font-monospace">{{ last_result_per_case_id[case_id].ui_time_started_at }}</td>
-          <td class="font-monospace">{{ results|length }}</td>
-          <td class="font-monospace">{{ hardware_count_per_case_id[case_id] }}</td>
-          <td class="font-monospace">{{ context_count_per_case_id[case_id] }}</td>
+          <td class="casepermstring">{{ results[0].case_text_id }}</td>
+          <td>{{ last_result_per_case_id[case_id].ui_time_started_at[:-4] }}</td>
+          <td class="text-end">{{ results|length }}</td>
+          <td class="text-end">{{ hardware_count_per_case_id[case_id] }}</td>
+          <td class="text-end">{{ context_count_per_case_id[case_id] }}</td>
         </tr>
       {% endfor %}
     </tbody>

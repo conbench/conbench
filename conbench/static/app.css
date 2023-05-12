@@ -7,15 +7,70 @@ html {
   font-size: 14px;
 }
 
+.c-bench-landing div.card {
+  font-size: 12px;
+}
+
+
+.c-bench-scrollbar {
+  /* Foreground, Background */
+  scrollbar-color: #812570 #f3f3f3;
+  scrollbar-width: thin;
+}
+.c-bench-scrollbar::-webkit-scrollbar {
+  width: 5px; /* Mostly for vertical scrollbars */
+  height: 7px; /* Mostly for horizontal scrollbars */
+}
+.c-bench-scrollbar::-webkit-scrollbar-thumb { /* Foreground */
+  background: #81257088;
+  border-radius: 2px;
+}
+.c-bench-scrollbar::-webkit-scrollbar-track { /* Background */
+  background: #f3f3f3;
+  border-radius: 3px;
+}
+
+div.case-param-title {
+  border-bottom: 1px solid #81257022;
+  padding-bottom: 2px;
+  padding-left: 2px;
+  background-color: #f3f3f3;
+}
+
+div.case-param-values {
+  height: 70px;
+  overflow: auto;
+}
+
+div.case-param-panel {
+  width: 125px;
+  margin-right: 7px;
+}
+
+table.c-bench-caseperm-table tbody tr td {
+  font-family: var(--bs-font-monospace);
+  font-size: 12px;
+}
+
+table.c-bench-caseperm-table td.casepermstring {
+  font-size: 11px;
+}
+
+table.c-bench-caseperm-table th{
+  font-size: 12px;
+}
+
+
 span.case-parm-value {
   font-family: monospace;
+  font-size: 11px;
   padding: 1px;
   margin: 2px
 }
 
 span.case-parm-value.selected {
   font-family: monospace;
-  background-color: #38BDD155;
+  background-color: #38BDD166;
 }
 
 /* select.caseparm-select {
