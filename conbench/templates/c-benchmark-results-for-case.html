@@ -16,10 +16,7 @@
       <sup><i style="font-size: 12px"
    class="bi bi-info-circle"
    data-bs-toggle="tooltip"
-   data-bs-title="Benchmark results, grouped by unique (hardware, context) combinations.
-   Ordinate: the benchmarked metric. Mean value, if multisample.
-   Time axis: benchmark result start time (associated commit data is not used).
-   A plot is only shown for at least three data points.">
+   data-bs-title="Benchmark results, grouped by unique (hardware, context) combinations. Ordinate: the benchmarked metric. Mean value, if multisample. Time axis: benchmark result start time (associated commit data is not used). A plot is only shown for at least three data points.">
       </i></sup>
     </h5>
     <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
@@ -29,15 +26,24 @@
           <div class="cb-tinyplot pt-1 shadow">
             <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
             <div class="d-flex">
-              <div class="hardware" data-bs-toggle="tooltip" data-bs-title="Hardware" data-bs-delay='{"show":700,"hide":150}'>
+              <div class="hardware"
+                   data-bs-toggle="tooltip"
+                   data-bs-title="Hardware"
+                   data-bs-delay='{"show":700,"hide":150}'>
                 <i class="bi bi-cpu"></i> {{ plotinfo.hwname[:25] }}
               </div>
-              <div class="context" data-bs-toggle="tooltip" data-bs-title="Context" data-bs-delay='{"show":700,"hide":150}'>
-                <i class="bi bi-sliders2"></i> <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasContextDict-{{plotinfo.ctxid}}" aria-controls="offcanvasContextDict-{{plotinfo.ctxid}}">
-                    {{ plotinfo.ctxid[:7] }}
-                  </a>
+              <div class="context"
+                   data-bs-toggle="tooltip"
+                   data-bs-title="Context"
+                   data-bs-delay='{"show":700,"hide":150}'>
+                <i class="bi bi-sliders2"></i> <a href="#"
+    data-bs-toggle="offcanvas"
+    data-bs-target="#offcanvasContextDict-{{ plotinfo.ctxid }}"
+    aria-controls="offcanvasContextDict-{{ plotinfo.ctxid }}">{{ plotinfo.ctxid[:7] }}</a>
               </div>
-              <div class="ms-auto ps-2 results">{{plotinfo.n_results}} results <a href="{{ plotinfo.url_to_newest_result }}"> (newest)</a></div>
+              <div class="ms-auto ps-2 results">
+                {{ plotinfo.n_results }} results <a href="{{ plotinfo.url_to_newest_result }}">(newest)</a>
+              </div>
             </div>
             <div class="cb-plot-{{ hwctx }}" style="width: 550px"></div>
           </div>
@@ -46,9 +52,8 @@
     </div>
     <div style="font-family: 'Roboto Mono';">.</div>
   </div>
-
   <div class="mt-5">
-    <p> All {{ benchmark_results_for_table|length }} individual benchmark results:</p>
+    <p>All {{ benchmark_results_for_table|length }} individual benchmark results:</p>
     <table class="table table-hover conbench-datatable"
            style="width:100%;
                   display: none">
@@ -86,23 +91,26 @@
       </tbody>
     </table>
   </div>
-
   {% for ctxid, context_json in context_json_by_context_id.items() %}
-  <div class="offcanvas offcanvas-start" data-bs-scroll="true" tabindex="-1" id="offcanvasContextDict-{{ctxid}}" aria-labelledby="offcanvasContextDictLabel-{{ctxid}}">
-    <div class="offcanvas-header">
-      <span class="offcanvas-title" id="offcanvasContextDictLabel-{{ctxid}}">Context {{ctxid}}</span>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <div class="offcanvas offcanvas-start"
+         data-bs-scroll="true"
+         tabindex="-1"
+         id="offcanvasContextDict-{{ ctxid }}"
+         aria-labelledby="offcanvasContextDictLabel-{{ ctxid }}">
+      <div class="offcanvas-header">
+        <span class="offcanvas-title" id="offcanvasContextDictLabel-{{ ctxid }}">Context {{ ctxid }}</span>
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="offcanvas"
+                aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body offcanvas-cb-context">
+        <code>
+          <pre style="">{{context_json}}</pre>
+        </code>
+      </div>
     </div>
-    <div class="offcanvas-body offcanvas-cb-context">
-      <code>
-        <pre style="">{{context_json}}</pre>
-      </code>
-    </div>
-  </div>
   {% endfor %}
-
-
-
 {% endblock %}
 {% block scripts %}
   {{ super() }}
