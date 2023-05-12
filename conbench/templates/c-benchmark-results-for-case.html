@@ -12,6 +12,30 @@
   </p>
   <p>Showing {{ benchmark_results_for_table|length }} of {{ matching_benchmark_result_count }} results:</p>
   <div class="mt-5">
+    <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
+    <div class="row gy-5">
+      {% for hwctx, plotinfo in infos_for_uplots.items() %}
+        <div class="col-6" style="width: 600px">
+          <div class="cb-tinyplot pt-1 shadow">
+            <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
+            <div class="d-flex">
+              <div class="hardware" data-bs-toggle="tooltip" data-bs-title="Hardware" data-bs-delay='{"show":700,"hide":150}'>
+                <i class="bi bi-cpu"></i> {{ plotinfo.hwname[:25] }}
+              </div>
+              <div class="context" data-bs-toggle="tooltip" data-bs-title="Context" data-bs-delay='{"show":700,"hide":150}'>
+                <i class="bi bi-sliders2"></i> <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasContextDict-{{plotinfo.ctxid}}" aria-controls="offcanvasContextDict-{{plotinfo.ctxid}}">
+                    {{ plotinfo.ctxid[:7] }}
+                  </a>
+              </div>
+              <div class="ms-auto ps-2 results">{{plotinfo.n_results}} results <a href="{{ plotinfo.url_to_newest_result }}"> (newest)</a></div>
+            </div>
+            <div class="cb-plot-{{ hwctx }}" style="width: 550px"></div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <div style="font-family: 'Roboto Mono';">.</div>
+  </div>
     <table class="table table-hover conbench-datatable"
            style="width:100%;
                   display: none">
@@ -49,27 +73,7 @@
       </tbody>
     </table>
   </div>
-  <div class="mt-5">
-    <h3 class="mb-3">
-      History plots
-      <sup><i style="font-size: 12px"
-   class="bi bi-info-circle"
-   data-bs-toggle="tooltip"
-   data-bs-title="Benchmark results, grouped by unique (hardware, context) combinations. Time axis: benchmark result start time (associated commit data is not used), ordinate: mean value, if multisample. A plot is only shown for at least three data points. ">
-      </i></sup>
-    </h3>
-    <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
-    <div class="row gy-5">
-      {% for hwctx, plotinfo in infos_for_uplots.items() %}
-        <div class="col-6" style="width: 600px">
-          <div class="cb-tinyplot pt-4 shadow">
-            <div class="text-center">
-              {{ plotinfo.title }}, <a href="{{ plotinfo.url_to_newest_result }}">newest result</a>
-            </div>
-            <div class="cb-plot-{{ hwctx }}" style="width: 550px"></div>
-          </div>
-        </div>
-  {% for ctxid, context_dict in context_dicts_by_context_id.items() %}
+
   {% for ctxid, context_json in context_json_by_context_id.items() %}
   <div class="offcanvas offcanvas-start" data-bs-scroll="true" tabindex="-1" id="offcanvasContextDict-{{ctxid}}" aria-labelledby="offcanvasContextDictLabel-{{ctxid}}">
     <div class="offcanvas-header">
