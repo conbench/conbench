@@ -177,7 +177,7 @@
         ],
         axes: [
           {
-            label: "benchmark time",
+            label: "date",
             labelFont: "bold 12px 'Roboto Mono'",
             font: "11px 'Roboto Mono'",
             stroke: "#812570", // dark magenta
@@ -255,7 +255,7 @@
           "pageLength": 10,
             // Take rather precise control of layouting elements, put bottom elements
             // into a mult-col single row, using BS's grid system.
-          "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
+          "dom": '<"row"<"d-flex flex-row-reverse p-0"fl>>rt<"row p-2"<"col-6"i><".col-6"p>>',
           "order": [[0, 'desc']],
           "columnDefs": [{ "orderable": true }],
           initComplete: function () {
