@@ -147,7 +147,7 @@ def show_benchmark_cases(bname: str) -> str:
     # Within a key, we can then see how recently the value was actually varied
     # across results. That way, we can identify those key/value pairs that do
     # not seem to be recent anymore.
-    time_of_last_result_with_kv_pair_set: Dict[Tuple[str, str], float] = {}
+    time_of_last_result_with_casekey_set: Dict[str, float] = {}
 
     for r in matching_results:
         # Today, there might be any kind of type here for key and value in the
@@ -167,25 +167,31 @@ def show_benchmark_cases(bname: str) -> str:
             # The Counter update with a single value seems stupid :shrug:.
             all_values_per_case_key[k].update([v])
 
-            if r.started_at > time_of_last_result_with_kv_pair_set.get((k, v), 0):
-                time_of_last_result_with_kv_pair_set[(k, v)] = r.started_at
+            if r.started_at > time_of_last_result_with_casekey_set.get(k, 0):
+                time_of_last_result_with_casekey_set[k] = r.started_at
 
     # Translate absolute time(stamp) into age (in seconds) relative to ... not
     # to _now_ but relative to the more-or-less average time that the most
     # recent benchmark results came in.
     reftime = avg_starttime_of_newest_n_percent_of_results(matching_results, 10)
-    relative_age_of_last_result_with_kv_pair_set = {
-        k: reftime - t for k, t in time_of_last_result_with_kv_pair_set.items()
+
+    relative_age_of_last_result_with_casekey_set = {
+        k: reftime - t for k, t in time_of_last_result_with_casekey_set.items()
     }
 
     # And now identify those case key/value pairs that are _old_ compared to
     # the more recent benchmark results we talk about here.
-    dead_stock_kv_pairs: List[Tuple[str, str]] = []
-    for kvpair, rel_age_seconds in relative_age_of_last_result_with_kv_pair_set.items():
+    # The string value in the following dict is a numeric string, indicating
+    # the "relative age" in days, shown in the UI
+    dead_stock_casekeys: Dict[str, str] = {}
+    for (
+        casekey,
+        rel_age_seconds,
+    ) in relative_age_of_last_result_with_casekey_set.items():
         # Now. This might be too simple and too arbitrary, but it's worth
-        # trying. N months
-        if rel_age_seconds > 24 * 60 * 60 * 30 * 2:
-            dead_stock_kv_pairs.append(kvpair)
+        # trying. A day has 86400 seconds. Set threshold in terms of N weeks.
+        if rel_age_seconds > 86400 * 7 * 3:
+            dead_stock_casekeys[casekey] = f"{int(rel_age_seconds / 86400.0)} days"
 
     # Sort by parameter value count (uniquely different parameter values,
     # not by how often these individual values are used).
@@ -204,6 +210,12 @@ def show_benchmark_cases(bname: str) -> str:
         all_values_per_case_key_sorted[case_parm_key] = dict(
             value_counter.most_common(None)
         )
+
+    # Now, the tricky part -- simply remove the dead stock? For now, yes! But
+    # also show in UI which case key parameters are hidden from the filter
+    # panels, and why.
+    for dskey in dead_stock_casekeys:
+        del all_values_per_case_key_sorted[dskey]
 
     hardware_count_per_case_id = {}
     for case_id, results in results_by_case_id.items():
@@ -228,6 +240,7 @@ def show_benchmark_cases(bname: str) -> str:
         context_count_per_case_id=context_count_per_case_id,
         benchmark_result_count=len(matching_results),
         all_values_per_case_key_sorted=all_values_per_case_key_sorted,
+        dead_stock_casekeys=dead_stock_casekeys,
         application=Config.APPLICATION_NAME,
         title=Config.APPLICATION_NAME,  # type: ignore
     )

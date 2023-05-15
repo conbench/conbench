@@ -106,6 +106,12 @@ span.case-parm-value.selected {
   background-color: #7bffff;
 }
 
+div.dead-case-parameter-box {
+  border: 1px solid #81257077;
+  margin-top: 10px;
+  padding: 15px;
+}
+
 div.offcanvas-cb-context pre {
   /* do not overflow horizontally: word wrap in pre.
     kudos to https://stackoverflow.com/a/45783868/145400 */
