@@ -81,6 +81,8 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
             "regressions",
             "noregressions",
             "nocommit",
+            "noruns",
+            "noresults",
         ],
         indirect=["mock_comparison_info"],
     )
@@ -117,9 +119,13 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
                 result["contender"]["error"] = None
         return res
 
-    benchmark_results = _response(
-        "GET_conbench_benchmark-results_run_id_contender_wo_base"
-    )
+    def _results(has_errors: bool):
+        """Get a mocked benchmark results response."""
+        res = _response("GET_conbench_benchmark-results_run_id_contender_wo_base")
+        if not has_errors:
+            for result in res:
+                result["error"] = None
+        return res
 
     if how == "errors_baselines":
         return FullComparisonInfo(
@@ -144,7 +150,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
                     ),
                     baseline_run_type="parent",
                     compare_results=None,
-                    benchmark_results=benchmark_results,
+                    benchmark_results=_results(has_errors=True),
                 )
             ]
             * 2
@@ -158,7 +164,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
                     ),
                     baseline_run_type="parent",
                     compare_results=None,
-                    benchmark_results=None,
+                    benchmark_results=_results(has_errors=False),
                 )
             ]
             * 2
@@ -172,7 +178,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
                     ),
                     baseline_run_type="parent",
                     compare_results=None,
-                    benchmark_results=None,
+                    benchmark_results=_results(has_errors=False),
                 ),
                 RunComparisonInfo(
                     contender_info=_run(
@@ -219,4 +225,19 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
                 )
             ]
             * 2
+        )
+    if how == "noruns":
+        return FullComparisonInfo([])
+    if how == "noresults":
+        return FullComparisonInfo(
+            [
+                RunComparisonInfo(
+                    contender_info=_run(
+                        has_errors=False, has_baseline=False, has_commit=True
+                    ),
+                    baseline_run_type="parent",
+                    compare_results=None,
+                    benchmark_results=[],
+                )
+            ]
         )

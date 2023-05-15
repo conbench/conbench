@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from benchclients.logging import fatal_and_log
+from benchclients.logging import log
 
 
 @dataclass
@@ -25,6 +25,8 @@ class RunComparisonInfo:
     """Track and organize specific info about a comparison between a contender run and
     its baseline run.
 
+    compare_results and benchmark_results are mutually exclusive.
+
     Parameters
     ----------
     contender_info
@@ -39,11 +41,10 @@ class RunComparisonInfo:
         to its baseline, including the statistics and regression analysis.
     benchmark_results
         The list returned from Conbench when hitting
-        /benchmark-results/?run_id={contender_run_id}, only if the contender run has
-        errors and there is no baseline run. Contains info about each benchmark result
-        in the contender run, including statistics and tracebacks. Only used when a
-        baseline run doesn't exist because otherwise all this information is already in
-        the compare_results.
+        /benchmark-results/?run_id={contender_run_id}, only if there is no baseline run.
+        Contains info about each benchmark result in the contender run, including
+        statistics and tracebacks. Only used when a baseline run doesn't exist because
+        otherwise all this information is already in the compare_results.
     """
 
     contender_info: dict
@@ -140,11 +141,6 @@ class RunComparisonInfo:
         return f"{self.app_url}/benchmark-results/{contender_result_id}"
 
     @property
-    def has_errors(self) -> bool:
-        """Whether this run has any benchmark errors."""
-        return self.contender_info["has_errors"]
-
-    @property
     def contender_id(self) -> str:
         """The contender run_id."""
         return self.contender_info["id"]
@@ -190,14 +186,34 @@ class FullComparisonInfo:
     the comparisons to their baselines.
     """
 
+    # Can be empty.
     run_comparisons: List[RunComparisonInfo]
 
-    def __post_init__(self):
-        # Any code that constructs an instance should ensure run_comparisons is non-empty
-        assert self.run_comparisons
+    @property
+    def has_any_contender_runs(self) -> bool:
+        """Whether there are any contender runs available."""
+        return bool(self.run_comparisons)
 
     @property
-    def benchmarks_with_errors(self) -> List[BenchmarkResultInfo]:
+    def has_any_contender_results(self) -> bool:
+        """Whether there are any contender benchmark results available."""
+        for run_comparison in self.run_comparisons:
+            if run_comparison.contender_benchmark_result_info:
+                return True
+        return False
+
+    @property
+    def has_any_z_analyses(self) -> bool:
+        """Whether there are any lookback z-score analyses available."""
+        for run_comparison in self.run_comparisons:
+            if run_comparison.compare_results:
+                for compare_result in run_comparison.compare_results:
+                    if compare_result["analysis"]["lookback_z_score"]:
+                        return True
+        return False
+
+    @property
+    def results_with_errors(self) -> List[BenchmarkResultInfo]:
         """Get information about all benchmark results with errors across runs."""
         out = []
 
@@ -211,7 +227,7 @@ class FullComparisonInfo:
         return out
 
     @property
-    def benchmarks_with_z_regressions(self) -> List[BenchmarkResultInfo]:
+    def results_with_z_regressions(self) -> List[BenchmarkResultInfo]:
         """Get information about all benchmark results across runs whose z-scores were
         extreme enough to constitute a regression.
         """
@@ -227,14 +243,7 @@ class FullComparisonInfo:
         return out
 
     @property
-    def no_baseline_runs(self) -> bool:
-        """Whether all contender runs are missing a baseline run."""
-        return not any(
-            run_comparison.baseline_id for run_comparison in self.run_comparisons
-        )
-
-    @property
-    def z_score_threshold(self) -> float:
+    def z_score_threshold(self) -> Optional[float]:
         """The z-score threshold used in this analysis."""
         z_score_thresholds = set()
         for run_comparison in self.run_comparisons:
@@ -245,8 +254,10 @@ class FullComparisonInfo:
                             compare["analysis"]["lookback_z_score"]["z_threshold"]
                         )
 
+        if len(z_score_thresholds) == 0:
+            return None
         if len(z_score_thresholds) != 1:
-            fatal_and_log(
+            log.warn(
                 f"There wasn't exactly one z_score_threshold: {z_score_thresholds=}"
             )
         return z_score_thresholds.pop()
@@ -262,10 +273,12 @@ class FullComparisonInfo:
         if len(commit_hashes) == 0:
             return None
         if len(commit_hashes) != 1:
-            fatal_and_log(f"There wasn't exactly one commit_hash: {commit_hashes=}")
+            log.warn(f"There wasn't exactly one commit_hash: {commit_hashes=}")
         return commit_hashes.pop()
 
     @property
-    def app_url(self) -> str:
+    def app_url(self) -> Optional[str]:
         """The base URL to use for links to the webapp, without a trailing slash."""
-        return self.run_comparisons[0].app_url
+        if self.has_any_contender_runs:
+            return self.run_comparisons[0].app_url
+        return None

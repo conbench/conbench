@@ -6,6 +6,6 @@ There were 2 benchmark results with an error:
   - [file-write](http://localhost/benchmark-results/some-benchmark-uuid-2)
   - [file-write](http://localhost/benchmark-results/some-benchmark-uuid-2)
 
-There weren't enough matching historic benchmark runs to make a call on whether there were regressions.
+There weren't enough matching historic benchmark results to make a call on whether there were regressions.
 
 The [full Conbench report](https://github.com/github/hello-world/runs/4) has more details.

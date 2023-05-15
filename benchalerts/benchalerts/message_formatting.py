@@ -82,11 +82,35 @@ def _intro_sentence(full_comparison: FullComparisonInfo) -> str:
     return intro + "\n\n"
 
 
-def github_check_summary(full_comparison: FullComparisonInfo) -> str:
+def github_check_summary(
+    full_comparison: FullComparisonInfo, build_url: Optional[str]
+) -> str:
     """Generate a Markdown summary of what happened regarding errors and regressions."""
     summary = _intro_sentence(full_comparison)
 
-    if full_comparison.benchmarks_with_errors:
+    if not full_comparison.has_any_contender_runs:
+        summary += _clean(
+            """
+            None of the specified runs were found on the Conbench server.
+            """
+        )
+        if build_url:
+            summary += f" See the [build logs]({build_url}) for more information."
+        # exit early
+        return summary
+
+    if not full_comparison.has_any_contender_results:
+        summary += _clean(
+            """
+            None of the specified runs had any associated benchmark results.
+            """
+        )
+        if build_url:
+            summary += f" See the [build logs]({build_url}) for more information."
+        # exit early
+        return summary
+
+    if full_comparison.results_with_errors:
         summary += _clean(
             """
             ## Benchmarks with errors
@@ -96,11 +120,11 @@ def github_check_summary(full_comparison: FullComparisonInfo) -> str:
             have more information about what the error was.
             """
         )
-        summary += _list_results(full_comparison.benchmarks_with_errors)
+        summary += _list_results(full_comparison.results_with_errors)
 
     summary += "## Benchmarks with performance regressions\n\n"
 
-    if full_comparison.no_baseline_runs:
+    if not full_comparison.has_any_z_analyses:
         summary += _clean(
             """
             There weren't enough matching historic runs in Conbench to make a call on
@@ -115,20 +139,20 @@ def github_check_summary(full_comparison: FullComparisonInfo) -> str:
         # exit early
         return summary
 
-    pluralizer = _Pluralizer(full_comparison.benchmarks_with_z_regressions)
+    pluralizer = _Pluralizer(full_comparison.results_with_z_regressions)
     were = pluralizer.were
     s = pluralizer.s
     summary += _clean(
         f"""
-        There {were} {len(full_comparison.benchmarks_with_z_regressions)} possible
+        There {were} {len(full_comparison.results_with_z_regressions)} possible
         performance regression{s}, according to the lookback z-score method.
         """
     )
     summary += "\n\n"
 
-    if full_comparison.benchmarks_with_z_regressions:
+    if full_comparison.results_with_z_regressions:
         summary += "### Benchmarks with regressions:"
-        summary += _list_results(full_comparison.benchmarks_with_z_regressions)
+        summary += _list_results(full_comparison.results_with_z_regressions)
 
     summary += "## All benchmark runs analyzed:\n"
     for comparison in full_comparison.run_comparisons:
@@ -155,7 +179,7 @@ def github_check_details(full_comparison: FullComparisonInfo) -> Optional[str]:
         )
         details += "\n\n"
 
-    if not full_comparison.no_baseline_runs:
+    if full_comparison.has_any_z_analyses:
         details += _clean(
             f"""
             This report was generated using the lookback z-score method with a z-score
@@ -172,44 +196,61 @@ def pr_comment_link_to_check(
     """Generate a GitHub PR comment that summarizes and links to a GitHub Check."""
     comment = _intro_sentence(full_comparison)
 
-    if full_comparison.benchmarks_with_errors:
-        pluralizer = _Pluralizer(full_comparison.benchmarks_with_errors)
-        were = pluralizer.were
-        s = pluralizer.s
-        comment += _clean(
-            f"""
-            There {were} {len(full_comparison.benchmarks_with_errors)} benchmark
-            result{s} with an error:
-            """
-        )
-        comment += _list_results(full_comparison.benchmarks_with_errors, limit=2)
-
-    if full_comparison.no_baseline_runs:
+    if not full_comparison.has_any_contender_runs:
         comment += _clean(
             """
-            There weren't enough matching historic benchmark runs to make a call on
-            whether there were regressions.
+            None of the specified runs were found on the Conbench server.
             """
         )
         comment += "\n\n"
-    elif full_comparison.benchmarks_with_z_regressions:
-        pluralizer = _Pluralizer(full_comparison.benchmarks_with_z_regressions)
-        were = pluralizer.were
-        s = pluralizer.s
+    elif not full_comparison.has_any_contender_results:
         comment += _clean(
-            f"""
-            There {were} {len(full_comparison.benchmarks_with_z_regressions)} benchmark
-            result{s} indicating a performance regression:
+            """
+            None of the specified runs had any associated benchmark results.
             """
         )
-        comment += _list_results(full_comparison.benchmarks_with_z_regressions, limit=2)
+        comment += "\n\n"
     else:
-        comment += _clean(
-            """
-            There were no benchmark performance regressions. 🎉
-            """
-        )
-        comment += "\n\n"
+        if full_comparison.results_with_errors:
+            pluralizer = _Pluralizer(full_comparison.results_with_errors)
+            were = pluralizer.were
+            s = pluralizer.s
+            comment += _clean(
+                f"""
+                There {were} {len(full_comparison.results_with_errors)} benchmark
+                result{s} with an error:
+                """
+            )
+            comment += _list_results(full_comparison.results_with_errors, limit=2)
+
+        if not full_comparison.has_any_z_analyses:
+            comment += _clean(
+                """
+                There weren't enough matching historic benchmark results to make a call
+                on whether there were regressions.
+                """
+            )
+            comment += "\n\n"
+        elif full_comparison.results_with_z_regressions:
+            pluralizer = _Pluralizer(full_comparison.results_with_z_regressions)
+            were = pluralizer.were
+            s = pluralizer.s
+            comment += _clean(
+                f"""
+                There {were} {len(full_comparison.results_with_z_regressions)} benchmark
+                result{s} indicating a performance regression:
+                """
+            )
+            comment += _list_results(
+                full_comparison.results_with_z_regressions, limit=2
+            )
+        else:
+            comment += _clean(
+                """
+                There were no benchmark performance regressions. 🎉
+                """
+            )
+            comment += "\n\n"
 
     comment += _clean(
         f"""
