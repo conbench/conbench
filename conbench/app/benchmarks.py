@@ -70,8 +70,8 @@ def list_benchmarks() -> str:
     # is what we look at as the individual benchmark.
     # See https://github.com/conbench/conbench/issues/1264 for definition of
     # rpcr.
-    benchmark_names_by_rpcr: Dict[str, str] = {}
     now = time.time()
+    benchmark_names_by_rpcr: Dict[str, str] = {}
     for bname, results in bmrt_cache["by_benchmark_name"].items():
         # Generally, there are C case permutations for this benchmark. Group
         # the results by case permutation.
@@ -81,21 +81,14 @@ def list_benchmarks() -> str:
         for r in results:
             results_per_case[r.case_id].append(r)
 
-        # Now, build the RPCR metric for each benchmark.
+        # Now, build the RPCR metric for each conceptual benchmark.
         rpcr = 0.0
         for _, cresults in results_per_case.items():
-            # Sort by age: newer items last -> smaller age values last ->
-            # desc -> reverse=True
-            ages_seconds = list(
-                sorted((now - r.started_at for r in cresults), reverse=True)
+            # mean age in seconds of the last 10 % of the results
+            a_i_seconds = now - avg_starttime_of_newest_n_percent_of_results(
+                cresults, 10
             )
-
-            # Take a most recent fraction of this list and build the mean value
-            # (mean age in seconds of the last 10 % of the results)
-            a_i_seconds = np.mean(
-                ages_seconds[-math.ceil(len(ages_seconds) / 10) :]  # noqa
-            )
-            a_i_days = float(a_i_seconds / (24.0 * 60 * 60))
+            a_i_days = a_i_seconds / (24.0 * 60 * 60)
             rpcr += 1 / a_i_days * len(cresults)
 
         # ratio = len(results) / float(case_permutation_count)
@@ -144,9 +137,17 @@ def show_benchmark_cases(bname: str) -> str:
     for r in matching_results:
         results_by_case_id[r.case_id].append(r)
 
+    # Observe each unique key/value pair, but also keep track of how often
+    # particular value was set for a key.
     all_values_per_case_key: Dict[str, collections.Counter] = collections.defaultdict(
         collections.Counter
     )
+
+    # Keep track of the last time when a particular key/value pair was set.
+    # Within a key, we can then see how recently the value was actually varied
+    # across results. That way, we can identify those key/value pairs that do
+    # not seem to be recent anymore.
+    time_of_last_result_with_casekey_set: Dict[str, float] = {}
 
     for r in matching_results:
         # Today, there might be any kind of type here for key and value in the
@@ -155,7 +156,42 @@ def show_benchmark_cases(bname: str) -> str:
         # https://github.com/conbench/conbench/issues/940. Change both to
         # string here. Might be error-prone and a nest of bees, but we will have to see
         for case_parm_key, case_parm_value in r.case_dict.items():
-            all_values_per_case_key[str(case_parm_key)].update([str(case_parm_value)])
+            # Note that this two-dim loop that we're in can get expensive,
+            # maybe takes 0.5 s for 10^5 results? I suspect there is lots of
+            # low-hanging fruit potential for speeding this up by 10 or 100 x
+            # -- However, really let's not do premature optimization. First,
+            # make this 'correct', then maybe later measure and optimize.
+            k = str(case_parm_key)
+            v = str(case_parm_value)
+
+            # The Counter update with a single value seems stupid :shrug:.
+            all_values_per_case_key[k].update([v])
+
+            if r.started_at > time_of_last_result_with_casekey_set.get(k, 0):
+                time_of_last_result_with_casekey_set[k] = r.started_at
+
+    # Translate absolute time(stamp) into age (in seconds) relative to ... not
+    # to _now_ but relative to the more-or-less average time that the most
+    # recent benchmark results came in.
+    reftime = avg_starttime_of_newest_n_percent_of_results(matching_results, 10)
+
+    relative_age_of_last_result_with_casekey_set = {
+        k: reftime - t for k, t in time_of_last_result_with_casekey_set.items()
+    }
+
+    # And now identify those case key/value pairs that are _old_ compared to
+    # the more recent benchmark results we talk about here.
+    # The string value in the following dict is a numeric string, indicating
+    # the "relative age" in days, shown in the UI
+    dead_stock_casekeys: Dict[str, str] = {}
+    for (
+        casekey,
+        rel_age_seconds,
+    ) in relative_age_of_last_result_with_casekey_set.items():
+        # Now. This might be too simple and too arbitrary, but it's worth
+        # trying. A day has 86400 seconds. Set threshold in terms of N weeks.
+        if rel_age_seconds > 86400 * 7 * 3:
+            dead_stock_casekeys[casekey] = f"{int(rel_age_seconds / 86400.0)} days"
 
     # Sort by parameter value count (uniquely different parameter values,
     # not by how often these individual values are used).
@@ -174,6 +210,12 @@ def show_benchmark_cases(bname: str) -> str:
         all_values_per_case_key_sorted[case_parm_key] = dict(
             value_counter.most_common(None)
         )
+
+    # Now, the tricky part -- simply remove the dead stock? For now, yes! But
+    # also show in UI which case key parameters are hidden from the filter
+    # panels, and why.
+    for dskey in dead_stock_casekeys:
+        del all_values_per_case_key_sorted[dskey]
 
     hardware_count_per_case_id = {}
     for case_id, results in results_by_case_id.items():
@@ -198,6 +240,7 @@ def show_benchmark_cases(bname: str) -> str:
         context_count_per_case_id=context_count_per_case_id,
         benchmark_result_count=len(matching_results),
         all_values_per_case_key_sorted=all_values_per_case_key_sorted,
+        dead_stock_casekeys=dead_stock_casekeys,
         application=Config.APPLICATION_NAME,
         title=Config.APPLICATION_NAME,  # type: ignore
     )
@@ -374,3 +417,24 @@ def maybe_longer_unit(unit: str) -> str:
     if unit in _UNIT_REPLACE_MAP:
         return _UNIT_REPLACE_MAP[unit]
     return unit
+
+
+def avg_starttime_of_newest_n_percent_of_results(
+    results: List[BMRTBenchmarkResult], npc: int
+) -> float:
+    """
+    Return average start time of the newest N percent of those results in the
+    input list.
+
+    Return the average start time in the form of a unix timestamp.
+
+    This is a helper that can provide an idea about the 'recency' of a
+    collection of benchmark results.
+    """
+    # Sort by age: newer items last -> smaller  values first -> asc (default
+    # sort direction).
+    timestamps = list(sorted((r.started_at for r in results)))
+
+    # Take a most recent fraction of this list and build the mean value
+    # (example:mean age in seconds of the last 10 % of the results)
+    return float(np.mean(timestamps[-math.ceil(len(timestamps) / npc) :]))  # noqa
