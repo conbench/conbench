@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from benchclients.logging import fatal_and_log, log
+from benchclients.logging import log
 
 
 @dataclass

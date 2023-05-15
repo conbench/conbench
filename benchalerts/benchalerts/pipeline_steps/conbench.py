@@ -3,9 +3,9 @@
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+import requests
 from benchclients.conbench import LegacyConbenchClient
 from benchclients.logging import log
-import requests
 
 from ..alert_pipeline import AlertPipelineStep
 from ..conbench_dataclasses import FullComparisonInfo, RunComparisonInfo

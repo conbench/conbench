@@ -226,8 +226,8 @@ def pr_comment_link_to_check(
         if not full_comparison.has_any_z_analyses:
             comment += _clean(
                 """
-                There weren't enough matching historic benchmark runs to make a call on
-                whether there were regressions.
+                There weren't enough matching historic benchmark results to make a call
+                on whether there were regressions.
                 """
             )
             comment += "\n\n"
