@@ -68,6 +68,7 @@ class RunComparisonInfo:
                         ],
                         baseline_result_id=comparison["baseline"]["benchmark_result_id"]
                         if comparison["baseline"]
+                        and not comparison["contender"]["error"]
                         else None,
                     ),
                     has_error=bool(comparison["contender"]["error"]),

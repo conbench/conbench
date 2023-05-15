@@ -5,9 +5,9 @@ Conbench analyzed the 3 benchmark runs on commit `abc`.
 These are errors that were caught while running the benchmarks. You can click each link to go to the Conbench entry for that benchmark, which might have more information about what the error was.
 
 - Some Run Reason Run at [2021-02-04 17:22:05.225583](http://localhost/compare/runs/some_baseline...some_contender/)
-  - [snappy, nyctaxi_sample, csv, arrow](http://localhost/compare/benchmarks/some-benchmark-uuid-2...some-benchmark-uuid-4)
-  - [snappy, nyctaxi_sample, csv, arrow](http://localhost/compare/benchmarks/some-benchmark-uuid-2...some-benchmark-uuid-4)
-  - [snappy, nyctaxi_sample, csv, arrow](http://localhost/compare/benchmarks/some-benchmark-uuid-2...some-benchmark-uuid-4)
+  - [snappy, nyctaxi_sample, csv, arrow](http://localhost/benchmark-results/some-benchmark-uuid-4)
+  - [snappy, nyctaxi_sample, csv, arrow](http://localhost/benchmark-results/some-benchmark-uuid-4)
+  - [snappy, nyctaxi_sample, csv, arrow](http://localhost/benchmark-results/some-benchmark-uuid-4)
 
 ## Benchmarks with performance regressions
 
