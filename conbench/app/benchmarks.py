@@ -418,9 +418,9 @@ def avg_starttime_of_newest_n_percent_of_results(
     This is a helper that can provide an idea about the 'recency' of a
     collection of benchmark results.
     """
-    # Sort by age: newer items last -> smaller age values last ->
-    # desc -> reverse=True
-    timestamps = list(sorted((r.started_at for r in results), reverse=True))
+    # Sort by age: newer items last -> smaller  values first -> asc (default
+    # sort direction).
+    timestamps = list(sorted((r.started_at for r in results)))
 
     # Take a most recent fraction of this list and build the mean value
     # (example:mean age in seconds of the last 10 % of the results)
