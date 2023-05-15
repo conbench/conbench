@@ -1,9 +1,11 @@
 import collections
 import logging
+import math
 import time
 from typing import Dict, List, Tuple, TypedDict
 
 import flask
+import numpy as np
 import orjson
 
 import conbench.numstr
@@ -61,22 +63,49 @@ def list_benchmarks() -> str:
         ),
     )
 
-    # Note(JP): build an average "results per case" metric to normalize for
-    # those benchmarks that have many results but also many case permutations.
-    # As we frequently find us saying in discussions, the individual case
-    # permutation is what we look at as the individual benchmark.
-    benchmark_names_by_results_per_case: Dict[str, str] = {}
+    # Note(JP): build an average "results per case and recency" metric that
+    # favors those benchmarks that have have more results per case permutation
+    # and that have most of their results reported in the recent past. As we
+    # frequently find us saying in discussions, the individual case permutation
+    # is what we look at as the individual benchmark.
+    # See https://github.com/conbench/conbench/issues/1264 for definition of
+    # rpcr.
+    benchmark_names_by_rpcr: Dict[str, str] = {}
+    now = time.time()
     for bname, results in bmrt_cache["by_benchmark_name"].items():
-        case_count = len(set(r.case_id for r in results))
-        ratio = len(results) / float(case_count)
+        # Generally, there are C case permutations for this benchmark. Group
+        # the results by case permutation.
+        results_per_case: Dict[
+            str, List[BMRTBenchmarkResult]
+        ] = collections.defaultdict(list)
+        for r in results:
+            results_per_case[r.case_id].append(r)
+
+        # Now, build the RPCR metric for each benchmark.
+        rpcr = 0.0
+        for _, cresults in results_per_case.items():
+            # Sort by age: newer items last -> smaller age values last ->
+            # desc -> reverse=True
+            ages_seconds = list(
+                sorted((now - r.started_at for r in cresults), reverse=True)
+            )
+
+            # Take a most recent fraction of this list and build the mean value
+            # (mean age in seconds of the last 10 % of the results)
+            a_i_seconds = np.mean(
+                ages_seconds[-math.ceil(len(ages_seconds) / 10) :]  # noqa
+            )
+            a_i_days = float(a_i_seconds / (24.0 * 60 * 60))
+            rpcr += 1 / a_i_days * len(cresults)
+
+        # ratio = len(results) / float(case_permutation_count)
         # Sort order is not too important when there is a clash here as of
         # loss in precision.
-        ratio_str = f"{ratio:.1f}"
-        benchmark_names_by_results_per_case[bname] = ratio_str
+        benchmark_names_by_rpcr[bname] = f"{rpcr:.1f}"
 
-    benchmark_names_by_results_per_case_sorted = dict(
+    benchmark_names_by_rpcr_sorted = dict(
         sorted(
-            benchmark_names_by_results_per_case.items(),
+            benchmark_names_by_rpcr.items(),
             key=lambda item: float(item[1]),
             reverse=True,
         )
@@ -88,7 +117,7 @@ def list_benchmarks() -> str:
         benchmark_result_count=len(bmrt_cache["by_id"]),
         benchmarks_by_name_sorted_alphabetically=benchmarks_by_name_sorted_alphabetically,
         benchmarks_by_name_sorted_by_resultcount=benchmarks_by_name_sorted_by_resultcount,
-        benchmark_names_by_results_per_case_sorted=benchmark_names_by_results_per_case_sorted,
+        benchmark_names_by_rpcr_sorted=benchmark_names_by_rpcr_sorted,
         newest_result_for_each_benchmark_name_topN=newest_result_for_each_benchmark_name_sorted[
             :20
         ],
