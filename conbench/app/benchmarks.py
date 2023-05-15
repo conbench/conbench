@@ -1,5 +1,4 @@
 import collections
-import itertools
 import logging
 import math
 import time
@@ -136,8 +135,6 @@ def show_benchmark_cases(bname: str) -> str:
     if bname not in bmrt_cache["by_benchmark_name"]:
         return f"benchmark name not known: `{bname}`"
 
-    t0 = time.monotonic()
-
     matching_results = bmrt_cache["by_benchmark_name"][bname]
     results_by_case_id: Dict[str, List[BMRTBenchmarkResult]] = collections.defaultdict(
         list
@@ -147,43 +144,18 @@ def show_benchmark_cases(bname: str) -> str:
     for r in matching_results:
         results_by_case_id[r.case_id].append(r)
 
-    log.info("after first loop: %.5f s", time.monotonic() - t0)
-
-    # Go through all results for this benchmark and keep track of all case
-    # parameter keys seen. This is useful because it is allowed for a result to
-    # _not_ specify a case parameter key in its case dictionary, and that
-    # counts as a special case for a value: "not set".
-    # all_case_keys_seen = set(
-    #     itertools.chain.from_iterable(r.case_dict.keys() for r in matching_results)
-    # )
-
-    log.info("after second loop: %.5f s", time.monotonic() - t0)
-
     all_values_per_case_key: Dict[str, collections.Counter] = collections.defaultdict(
         collections.Counter
     )
 
     for r in matching_results:
-        # Detect when this result's case dict does not specify some keys, and
-        # represent those as special value. This allows for correct
-        # identification of "constant case parameters" across _all_ results
-        # (value count :1); in that case the parameter can be removed / ignored
-        # / treated specially in the UI> Today, there might be any kind of type
-        # here for key and value in the r.case_dict (coming straight from DB).
-        # Difficult. See https://github.com/conbench/conbench/pull/948 and
+        # Today, there might be any kind of type here for key and value in the
+        # r.case_dict (coming straight from DB). Difficult. See
+        # https://github.com/conbench/conbench/pull/948 and
         # https://github.com/conbench/conbench/issues/940. Change both to
-        # string here. For example, this might result in values to be `"None"`.
-        # keys_not_specified = all_case_keys_seen - set(r.case_dict.keys())
-        # for k in keys_not_specified:
-        #     # Forcing the type conversion from various types to string: this
-        #     # might be error-prone and a nest of bees, but we will have to see
-        #     all_values_per_case_key[str(k)].update(["_NOT_SET_IN_DICT"])
+        # string here. Might be error-prone and a nest of bees, but we will have to see
         for case_parm_key, case_parm_value in r.case_dict.items():
             all_values_per_case_key[str(case_parm_key)].update([str(case_parm_value)])
-
-    # log.info("all_values_per_case_key: %s", all_values_per_case_key)
-
-    log.info("after third loop: %.5f s", time.monotonic() - t0)
 
     # Sort by parameter value count (uniquely different parameter values,
     # not by how often these individual values are used).
@@ -195,10 +167,6 @@ def show_benchmark_cases(bname: str) -> str:
         )
     )
 
-    # log.info("all_values_per_case_key: %s", all_values_per_case_key)
-
-    log.info("after sort 1: %.5f s", time.monotonic() - t0)
-
     # Each item's value is a set of observed values. Make it a list, sorted
     # alphabetically.
     all_values_per_case_key_sorted: Dict[str, Dict[str, int]] = {}
@@ -206,13 +174,6 @@ def show_benchmark_cases(bname: str) -> str:
         all_values_per_case_key_sorted[case_parm_key] = dict(
             value_counter.most_common(None)
         )
-    # log.info("all case parameters seen: %s", all_values_per_case_key)
-
-    # log.info("all_values_per_case_key_sorted: %s", all_values_per_case_key_sorted)
-
-    log.info("after most common: %.5f s", time.monotonic() - t0)
-
-    t0 = time.monotonic()
 
     hardware_count_per_case_id = {}
     for case_id, results in results_by_case_id.items():
@@ -220,18 +181,12 @@ def show_benchmark_cases(bname: str) -> str:
         # smell I think. This might fetch run dynamically from the DB>
         hardware_count_per_case_id[case_id] = len(set([r.hardware_id for r in results]))
 
-    log.info("after hw stuff: %.5f s", time.monotonic() - t0)
-
-    # log.info("building hardware_count_per_case took %.3f s", time.monotonic() - t0)
-
     last_result_per_case_id: Dict[str, BMRTBenchmarkResult] = {}
 
     context_count_per_case_id: Dict[str, int] = {}
     for case_id, results in results_by_case_id.items():
         context_count_per_case_id[case_id] = len(set([r.context_id for r in results]))
         last_result_per_case_id[case_id] = newest_of_many_results(results)
-
-    log.info("after case stuff: %.5f s", time.monotonic() - t0)
 
     return flask.render_template(
         "c-benchmark-cases.html",
