@@ -12,6 +12,8 @@ class Case(Base, EntityMixin["Case"]):
     id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=genprimkey)
     # The name of the conceptual benchmark (store on BenchmarkResult directly)?
     name: Mapped[str] = NotNull(s.Text)
+
+    # Note(JP): we should work towards guaranteeing str->str mapping
     tags: Mapped[dict] = NotNull(postgresql.JSONB)
 
     def to_dict(self) -> Dict:
