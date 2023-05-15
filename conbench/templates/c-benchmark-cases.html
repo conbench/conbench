@@ -32,23 +32,24 @@
   </div>
 </div>
 <div class="mt-2">
-  <p>Select specific parameter values above tow narrow down the contents shown in the table below.</p>
+  <p>Select specific parameter values above to narrow down the contents shown in the table below.</p>
 </div>
 {% if dead_stock_casekeys|length > 0 %}
   <div class="mt-1">
-    Some case parameters have not recently been used and are therefore not shown above:
-    <a href="#"
+    Some case parameters have not recently been used and are therefore not shown above
+    (<a href="#"
        class="dead-stock-params-toggle"
        data-bs-toggle="collapse"
        data-bs-target="#collapseDeadCaseParameters"
        aria-expanded="false"
-       aria-controls="collapseDeadCaseParameters">view</a>
+       aria-controls="collapseDeadCaseParameters">view</a>).
     <div class="collapse" id="collapseDeadCaseParameters">
       <div class="dead-case-parameter-box">
         {% for case_param_key, age_string in dead_stock_casekeys.items() %}
-          <code>{{ case_param_key }}</code> (relative age: {{ age_string }})
+          <code>{{ case_param_key }}</code> ({{ age_string }})
           <br>
         {% endfor %}
+        <p style="margin-top:15px;"><i class="bi bi-info-square-fill"></i> note: the numbers above are a <i>relative</i> age, measured relative to the time of the most recent group of results represented on this page.</p>
       </div>
     </div>
   </div>
