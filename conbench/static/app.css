@@ -14,51 +14,67 @@ html {
 
 .c-bench-scrollbar {
   /* Foreground, Background */
-  scrollbar-color: #812570 #f3f3f3;
+  scrollbar-color: #201D38aa #f3f3f3;
   scrollbar-width: thin;
 }
 .c-bench-scrollbar::-webkit-scrollbar {
-  width: 5px; /* Mostly for vertical scrollbars */
+  width: 4px; /* Mostly for vertical scrollbars */
   height: 7px; /* Mostly for horizontal scrollbars */
 }
 .c-bench-scrollbar::-webkit-scrollbar-thumb { /* Foreground */
-  background: #81257088;
-  border-radius: 2px;
+  background: #201D38aa;
+  border-radius: 1px;
 }
 .c-bench-scrollbar::-webkit-scrollbar-track { /* Background */
   background: #f3f3f3;
-  border-radius: 3px;
+  border-radius: 1px;
+}
+
+div.case-param-title code {
+  color: #fff;
 }
 
 div.case-param-title {
   /*border-bottom: 1px solid #81257022;*/
-  padding-bottom: 2px;
-  padding-left: 3px;
-  background-color: #e9ecef;
+  padding: 0 3px 2px 5px;
+  background-color: #812570BB;/* #47509E;*/
+  margin-bottom: 1px;
 }
 
 div.case-param-values {
-  height: 70px;
+  color: #000000bb;
+  max-height: 60px;
   overflow: auto;
   overflow-wrap: break-word;
+  line-height: 110%;
+  padding-left: 4px;
+  padding-right: 5px;
+  padding-bottom: 3px;
 }
 
+/*
 .case-param-values.one-value {
-  height: 35px !important;
-}
+  height: 25px !important;
+}*/
 
 div.case-param-panel {
-  /*width: 125px;*/
+  /* width: 125px; */
   /*
    explicit max-content instead of not setting width
    but with an upper bound. note that  this here now looks a bit like
    masonry.
+
+   Note that the max-width here is a really interesting parameter that can be
+   varied with the goal to maximize vertical space usage, try it out using
+   the browser devtools (mouse over this value, use mouse wheel to vary it --
+   with the flexbox grid setup everything else dynamically adjusts in a really
+   interesting way!
   */
-  max-width: 200px;
+  max-width: 185px;
   width: max-content;
-  margin-right: 7px;
-  margin-top: 8px;
-  border: 1px solid #e9ecef;
+  margin-right: 6px;
+  margin-top: 6px;
+  border: 1px solid #4981C8aa;
 }
 
 table.c-bench-caseperm-table tbody tr td {
@@ -67,7 +83,7 @@ table.c-bench-caseperm-table tbody tr td {
 }
 
 table.c-bench-caseperm-table td.casepermstring {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 table.c-bench-caseperm-table th {
@@ -76,14 +92,18 @@ table.c-bench-caseperm-table th {
 
 span.case-parm-value {
   font-family: monospace;
-  font-size: 11px;
-  padding: 1px;
-  margin: 2px
+  font-size: 12px;
+  padding: 0px;
+  padding-left: 2px;
+  margin-left: 0px;
+  margin-top: 2px;
+  width:100%;
+  display: block;
 }
 
 span.case-parm-value.selected {
   font-family: monospace;
-  background-color: #38BDD166;
+  background-color: #7bffff;
 }
 
 div.offcanvas-cb-context pre {
