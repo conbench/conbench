@@ -140,28 +140,22 @@ def show_benchmark_cases(bname: str) -> str:
         list
     )
 
+    # First, group results by case.
     for r in matching_results:
         results_by_case_id[r.case_id].append(r)
-
-    # all_case_keys = set(
-    #     itertools.chain.from_iterable(r.case_dict.keys() for r in matching_results)
-    # )
 
     all_values_per_case_key: Dict[str, collections.Counter] = collections.defaultdict(
         collections.Counter
     )
-    for r in matching_results:
-        # Maybe make this a counter.
-        for case_parm_key, case_parm_value in r.case_dict.items():
-            # Today, there might be any kind of type here for key and value in
-            # the DB. Difficult. See
-            # https://github.com/conbench/conbench/pull/948 and
-            # https://github.com/conbench/conbench/issues/940.
-            # Change both to string here. For example, this might result in
-            # values to be `"None"`.
-            all_values_per_case_key[str(case_parm_key)].update([str(case_parm_value)])
 
-    log.info("all_values_per_case_key: %s", all_values_per_case_key)
+    for r in matching_results:
+        # Today, there might be any kind of type here for key and value in the
+        # r.case_dict (coming straight from DB). Difficult. See
+        # https://github.com/conbench/conbench/pull/948 and
+        # https://github.com/conbench/conbench/issues/940. Change both to
+        # string here. Might be error-prone and a nest of bees, but we will have to see
+        for case_parm_key, case_parm_value in r.case_dict.items():
+            all_values_per_case_key[str(case_parm_key)].update([str(case_parm_value)])
 
     # Sort by parameter value count (uniquely different parameter values,
     # not by how often these individual values are used).
@@ -173,8 +167,6 @@ def show_benchmark_cases(bname: str) -> str:
         )
     )
 
-    log.info("all_values_per_case_key: %s", all_values_per_case_key)
-
     # Each item's value is a set of observed values. Make it a list, sorted
     # alphabetically.
     all_values_per_case_key_sorted: Dict[str, Dict[str, int]] = {}
@@ -182,19 +174,12 @@ def show_benchmark_cases(bname: str) -> str:
         all_values_per_case_key_sorted[case_parm_key] = dict(
             value_counter.most_common(None)
         )
-    # log.info("all case parameters seen: %s", all_values_per_case_key)
-
-    log.info("all_values_per_case_key_sorted: %s", all_values_per_case_key_sorted)
-
-    t0 = time.monotonic()
 
     hardware_count_per_case_id = {}
     for case_id, results in results_by_case_id.items():
         # The indirection through `.run` here is an architecture / DB schema
         # smell I think. This might fetch run dynamically from the DB>
         hardware_count_per_case_id[case_id] = len(set([r.hardware_id for r in results]))
-
-    log.info("building hardware_count_per_case took %.3f s", time.monotonic() - t0)
 
     last_result_per_case_id: Dict[str, BMRTBenchmarkResult] = {}
 
