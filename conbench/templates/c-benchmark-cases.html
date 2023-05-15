@@ -19,7 +19,7 @@
           <div class="case-param-title">
             <code>{{ case_param_key }} ({{ case_param_value_count_dict|length }})</code>
           </div>
-          <div class="case-param-values c-bench-scrollbar {% if case_param_value_count_dict|length  == 1 %} one-value {%endif%}">
+          <div class="case-param-values c-bench-scrollbar {% if case_param_value_count_dict|length  == 1 %}one-value{% endif %}">
             {% for v, vcount in case_param_value_count_dict.items() %}
               <span class="case-parm-value"
                     data-cvp-key="{{ case_param_key }}"

@@ -44,16 +44,16 @@
         <div class="card-body overflow-auto c-bench-scrollbar"
              style="max-height: 450px">
           <h5 class="card-title">
-            by results per case
+            by results per case and recency
             <sup><i style="font-size: 12px"
    class="bi bi-info-circle"
    data-bs-toggle="tooltip"
-   data-bs-title="average result count per case permutation">
+   data-bs-title="results per case permutation, weighted by recency (see issue #1264)">
             </i></sup>
           </h5>
-          {% for benchmark_name, ratio in benchmark_names_by_results_per_case_sorted.items() %}
+          {% for benchmark_name, rpcr in benchmark_names_by_rpcr_sorted.items() %}
             <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
-            (~{{ ratio }})
+            (~{{ rpcr }})
             <br>
           {% endfor %}
         </div>
