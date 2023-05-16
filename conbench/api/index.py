@@ -6,7 +6,6 @@ import flask_login
 import marshmallow
 from sqlalchemy.sql import text
 
-from .. import __version__
 from ..api import api, rule
 from ..api._docs import api_server_url, spec
 from ..api._endpoint import ApiEndpoint
@@ -181,8 +180,8 @@ class PingAPI(ApiEndpoint):
                 alembic_version = "err"
 
         return {
+            # This is largely a legacy structure.
             "date": now.strftime("%a, %d %b %Y %H:%M:%S %Z"),
-            "conbench_version": __version__,
             "alembic_version": alembic_version,
             "commit": BUILD_INFO.commit,
         }
