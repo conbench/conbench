@@ -1,7 +1,6 @@
 import json
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 import dacite
 
@@ -23,9 +22,8 @@ class Buildinfo:
     version_string: str
 
 
-# TODO: require this, remove ambiguity (crash if file not there or in
-# unexpected shape)
-BUILD_INFO: Optional[Buildinfo] = None
+# Require this, remove ambiguity (crash if file not there or in unexpected shape)
+
 try:
     # Try to discover additional build information at well-known path. For now,
     # do not crash the application upon: file not found, file having unexpected
@@ -36,6 +34,6 @@ try:
 
     # `dacite.from_dict()` validates against dataclass types, rendering the
     # type info on the dataclass reliable.
-    BUILD_INFO = dacite.from_dict(data_class=Buildinfo, data=data)
+    BUILD_INFO: Buildinfo = dacite.from_dict(data_class=Buildinfo, data=data)
 except Exception as exc:
-    log.info("graceful degradation, could not read/parse buildinfo: %s", exc)
+    log.exception("graceful degradation, could not read/parse buildinfo: %s", exc)
