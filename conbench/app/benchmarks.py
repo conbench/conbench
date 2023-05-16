@@ -357,8 +357,14 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
                 # between invocations. If they do, it's a qualitative problem
                 # and the _precise_ difference does not need to be readable
                 # from these plots. I think sending detail across seven orders
-                # of magnitude is fine.
-                [conbench.numstr.numstr(r.svs, 7) for r in results],
+                # of magnitude is fine. Careful: >>>
+                # np.format_float_positional(float("NaN")) would return 'nan'
+                # (string). But for orjson to emit a `null` ( which is what
+                # uplot wants we should have a `None` in the list).
+                [
+                    conbench.numstr.numstr(r.svs, 7) if not math.isnan(r.svs) else None
+                    for r in results
+                ],
             ],
             # Rely on at least one result being in the list.
             "hwid": hwid,
