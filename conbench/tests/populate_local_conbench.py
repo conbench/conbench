@@ -678,5 +678,10 @@ CONBENCH_COMMIT_HASH_LINES_50 = """
     4e7441d72f1d14cf9a40525eca8993f7713937a7
     """
 
+# Add a PR commit to the Conbench commits.
+CONBENCH_COMMIT_HASH_LINES_50 = (
+    "9da0b7a68ea3003eb5431f1a5708222f1c15efa6" + CONBENCH_COMMIT_HASH_LINES_50
+)
+
 if __name__ == "__main__":
     main()
