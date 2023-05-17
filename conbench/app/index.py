@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 import flask
@@ -58,7 +58,7 @@ class Index(AppEndpoint, RunMixin):
         # consistency between benchmark results in the run is currently not
         # granted: https://github.com/conbench/conbench/issues/864
 
-        reponame_runs_map = defaultdict(list)
+        reponame_runs_map: Dict[str, List[RunForDisplay]] = defaultdict(list)
 
         for r in runs:
             rd = RunForDisplay(
@@ -79,10 +79,16 @@ class Index(AppEndpoint, RunMixin):
             rname = repo_url_to_display_name(r.associated_commit_repo_url)
             reponame_runs_map[rname].append(rd)
 
-        # A quick/pragmatic decision for now, not set in stone: get a stable
-        # sort order of repositories the way they are listed on that page;
-        # do this by sorting alphabetically.
+        # A quick decision for now, not set in stone: get a stable sort order
+        # of repositories the way they are listed on that page; do this by
+        # sorting alphabetically.
         reponame_runs_map_sorted = dict(sorted(reponame_runs_map.items()))
+
+        # Those runs without repo information "n/a" should for now not
+        # be at the top. Move this to the end of the (ordered) dict.
+        # See https://github.com/conbench/conbench/issues/1226
+        if "n/a" in reponame_runs_map_sorted:
+            reponame_runs_map_sorted["n/a"] = reponame_runs_map_sorted.pop("n/a")
 
         return self.page(reponame_runs_map_sorted)
 
