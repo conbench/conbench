@@ -30,12 +30,11 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
     if github_auth == "pat" and os.getenv("CI"):
         pytest.skip("The CI PAT does not work with this test")
 
-    # note: something *might* go wrong if we go past 1000 statuses on this test commit?
+    # note: something goes wrong if we go past 1000 statuses on this test commit
     # https://docs.github.com/en/rest/commits/statuses#create-a-commit-status
-    test_status_repo = "conbench/benchalerts"
-    # Note: this will start failing after N test executions, see
     # https://github.com/conbench/conbench/issues/945
-    test_status_commit = "9cff2efafa1a44c924310569f576de97e8dc9b57"
+    test_status_repo = "conbench/benchalerts"
+    test_status_commit = "f6e70aeb29ce07c40eed0c0175e9dced488ed6ee"
 
     monkeypatch.setenv("CONBENCH_URL", "https://velox-conbench.voltrondata.run/")
     velox_commit = "c76715c9db1eea7cf3f32dca6fe78fc35c4f3ecd"

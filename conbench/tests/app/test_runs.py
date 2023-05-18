@@ -28,9 +28,11 @@ class TestRunGet(_asserts.GetEnforcer):
         the run IDs aren't provided.
         """
         response_text = " ".join(response_text.split())
-        expected_text = _default_hyperlink_text[candidate_baseline_type]
+        expected_text = _default_hyperlink_text[candidate_baseline_type] + "</a>"
         if recommended:
-            expected_text = f"{expected_text} (recommended)"
+            expected_text = (
+                expected_text + ' <span class="badge bg-primary">Recommended</span>'
+            )
 
         if baseline_id and contender_id:
             assert (
