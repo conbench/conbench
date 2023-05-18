@@ -79,7 +79,11 @@ class TestRunGet(_asserts.GetEnforcer):
                 run,
                 candidate_baseline_runs={
                     "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": {
+                        "baseline_run_id": baseline.id,
+                        "commits_skipped": [run.commit.sha],
+                        "error": None,
+                    },
                     "parent": {
                         "baseline_run_id": baseline.id,
                         "commits_skipped": [],
@@ -136,7 +140,11 @@ class TestRunGet(_asserts.GetEnforcer):
                 run,
                 candidate_baseline_runs={
                     "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": {
+                        "baseline_run_id": baseline.id,
+                        "commits_skipped": [run.commit.sha],
+                        "error": None,
+                    },
                     "parent": {
                         "baseline_run_id": baseline.id,
                         "commits_skipped": [],
@@ -160,7 +168,11 @@ class TestRunGet(_asserts.GetEnforcer):
                 run_1,
                 candidate_baseline_runs={
                     "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": {
+                        "baseline_run_id": baseline_1.id,
+                        "commits_skipped": [run_1.commit.sha],
+                        "error": None,
+                    },
                     "parent": {
                         "baseline_run_id": baseline_1.id,
                         "commits_skipped": [],
@@ -176,7 +188,11 @@ class TestRunGet(_asserts.GetEnforcer):
                 run_2,
                 candidate_baseline_runs={
                     "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": {
+                        "baseline_run_id": baseline_2.id,
+                        "commits_skipped": [run_2.commit.sha],
+                        "error": None,
+                    },
                     "parent": {
                         "baseline_run_id": baseline_2.id,
                         "commits_skipped": [],
@@ -196,7 +212,7 @@ class TestRunGet(_asserts.GetEnforcer):
 
         self.authenticate(client)
         # Create contender run with two benchmark results
-        _fixtures.benchmark_result(
+        a_contender_result = _fixtures.benchmark_result(
             name=name_1,
             sha=_fixtures.CHILD,
             language=language_1,
@@ -225,7 +241,11 @@ class TestRunGet(_asserts.GetEnforcer):
         response = client.get(f"/api/runs/{contender_run_id}/")
         assert response.json["candidate_baseline_runs"] == {
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": {
+                "baseline_run_id": baseline_run_id_1,
+                "commits_skipped": [a_contender_result.run.commit.sha],
+                "error": None,
+            },
             "parent": {
                 "baseline_run_id": baseline_run_id_1,
                 "commits_skipped": [],
@@ -257,7 +277,11 @@ class TestRunGet(_asserts.GetEnforcer):
         response = client.get(f"/api/runs/{contender_run_id}/")
         assert response.json["candidate_baseline_runs"] == {
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": {
+                "baseline_run_id": None,
+                "commits_skipped": None,
+                "error": "no matching baseline run was found",
+            },
             "parent": {
                 "baseline_run_id": None,
                 "commits_skipped": None,
@@ -301,7 +325,14 @@ class TestRunGet(_asserts.GetEnforcer):
                 contender_run,
                 candidate_baseline_runs={
                     "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": {
+                        "baseline_run_id": baseline_run.id,
+                        "commits_skipped": [
+                            contender.run.commit.sha,
+                            parent.run.commit.sha,
+                        ],
+                        "error": None,
+                    },
                     "parent": {
                         "baseline_run_id": baseline_run.id,
                         "commits_skipped": [parent.run.commit.sha],
@@ -356,7 +387,15 @@ class TestRunGet(_asserts.GetEnforcer):
                 contender_run,
                 candidate_baseline_runs={
                     "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-                    "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+                    "latest_default": {
+                        "baseline_run_id": baseline_run.id,
+                        "commits_skipped": [
+                            contender.run.commit.sha,
+                            parent.run.commit.sha,
+                            testing.run.commit.sha,
+                        ],
+                        "error": None,
+                    },
                     "parent": {
                         "baseline_run_id": baseline_run.id,
                         "commits_skipped": [

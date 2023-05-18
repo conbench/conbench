@@ -188,7 +188,7 @@ class Run(Base, EntityMixin):
             .join(Hardware, Hardware.id == Run.hardware_id)
             .join(Commit, Commit.id == Run.commit_id)
             .join(ancestor_commits, ancestor_commits.c.ancestor_id == Commit.id)
-            .filter(Hardware.hash == self.hardware.hash)
+            .filter(Hardware.hash == self.hardware.hash, Run.id != self.id)
             .order_by(
                 s.desc(Run.reason == self.reason),  # Prefer this Run's run_reason,
                 ancestor_commits.c.commit_order.desc(),  # then latest commit,
@@ -264,23 +264,17 @@ class Run(Base, EntityMixin):
             )
 
         # The latest commit on the default branch that Conbench knows about
-        if self.commit and self.commit.sha == self.commit.fork_point_sha:
-            candidates["latest_default"] = _CandidateBaselineSearchResult(
-                error="the contender run is already on the default branch"
-            )
-        else:
-            # Query the DB for the latest commit
-            query = s.select(Commit).filter(Commit.sha == Commit.fork_point_sha)
+        query = s.select(Commit).filter(Commit.sha == Commit.fork_point_sha)
 
-            # TODO: how do we filter by repository if there's no commit?
-            # (For now we just choose the latest commit of any repository.)
-            if self.commit:
-                query = query.filter(Commit.repository == self.commit.repository)
+        # TODO: how do we filter by repository if there's no commit?
+        # (For now we just choose the latest commit of any repository.)
+        if self.commit:
+            query = query.filter(Commit.repository == self.commit.repository)
 
-            latest_commit = Session.scalars(
-                query.order_by(s.desc(Commit.timestamp)).limit(1)
-            ).first()
-            candidates["latest_default"] = self._search_for_baseline_run(latest_commit)
+        latest_commit = Session.scalars(
+            query.order_by(s.desc(Commit.timestamp)).limit(1)
+        ).first()
+        candidates["latest_default"] = self._search_for_baseline_run(latest_commit)
 
         return {
             candidate_type: candidate._dict_for_api_json()

@@ -2,6 +2,7 @@ import copy
 import re
 from typing import Optional
 
+from ...app.runs import _default_hyperlink_text
 from ...tests.api import _fixtures
 from ...tests.app import _asserts
 
@@ -21,26 +22,25 @@ class TestRunGet(_asserts.GetEnforcer):
         candidate_baseline_type: str,
         baseline_id: Optional[str],
         contender_id: Optional[str],
+        recommended: bool = False,
     ) -> None:
         """Assert that a link to compare runs exists in the HTML, or doesn't exist if
         the run IDs aren't provided.
         """
         response_text = " ".join(response_text.split())
-
-        if candidate_baseline_type == "parent":
-            text = "compare to baseline run from parent commit"
-        elif candidate_baseline_type == "fork_point":
-            text = "compare to baseline run from fork point commit"
-        elif candidate_baseline_type == "latest_default":
-            text = "compare to latest baseline run on default branch"
+        expected_text = _default_hyperlink_text[candidate_baseline_type] + "</a>"
+        if recommended:
+            expected_text = (
+                expected_text + ' <span class="badge bg-primary">Recommended</span>'
+            )
 
         if baseline_id and contender_id:
             assert (
-                f'/compare/runs/{baseline_id}...{contender_id}/">{text}'
+                f'/compare/runs/{baseline_id}...{contender_id}/">{expected_text}'
                 in response_text
             )
         else:
-            assert text not in response_text
+            assert expected_text not in response_text
 
     def test_get_run_without_commit(self, client):
         self.authenticate(client)
@@ -72,22 +72,35 @@ class TestRunGet(_asserts.GetEnforcer):
         for benchmark_result in benchmark_results:
             self._assert_view(client, benchmark_result.run_id)
 
-        # 0 (first in history) should not have any links
+        # 0 (first in history) should only have the latest_default link
         response = client.get(self.url.format(benchmark_results[0].run_id))
         self._assert_baseline_link(response.text, "parent", None, None)
         self._assert_baseline_link(response.text, "fork_point", None, None)
-        self._assert_baseline_link(response.text, "latest_default", None, None)
+        self._assert_baseline_link(
+            response.text,
+            "latest_default",
+            # the latest default branch run with same reason (commit)
+            benchmark_results[9].run_id,
+            benchmark_results[0].run_id,
+        )
 
-        # 1 (also on default branch) should only link to 0
+        # 1 (also on default branch) should link to 0 for parent
         response = client.get(self.url.format(benchmark_results[1].run_id))
         self._assert_baseline_link(
             response.text,
             "parent",
             benchmark_results[0].run_id,
             benchmark_results[1].run_id,
+            recommended=True,
         )
         self._assert_baseline_link(response.text, "fork_point", None, None)
-        self._assert_baseline_link(response.text, "latest_default", None, None)
+        self._assert_baseline_link(
+            response.text,
+            "latest_default",
+            # the latest default branch run with same reason (commit)
+            benchmark_results[9].run_id,
+            benchmark_results[1].run_id,
+        )
 
         # 3 is a PR run forked from 1
         response = client.get(self.url.format(benchmark_results[3].run_id))
@@ -102,11 +115,12 @@ class TestRunGet(_asserts.GetEnforcer):
             "fork_point",
             benchmark_results[1].run_id,
             benchmark_results[3].run_id,
+            recommended=True,
         )
         self._assert_baseline_link(
             response.text,
             "latest_default",
-            benchmark_results[15].run_id,  # the latest default branch run
+            benchmark_results[15].run_id,  # the latest default branch run in general
             benchmark_results[3].run_id,
         )
 

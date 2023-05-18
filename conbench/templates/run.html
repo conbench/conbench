@@ -7,24 +7,11 @@
       {% if run_id %}<li class="breadcrumb-item active" aria-current="page">{{ run_id }}</li>{% endif %}
     </ol>
   </nav>
-  {% if compare_to_baseline_urls['parent'] %}
-    <p class="fs-5">
-      <i class="bi bi-file-diff"></i> <a href="{{ compare_to_baseline_urls['parent'] }}">compare to baseline run from
-      parent commit</a>
+  {% for link in comparisons %}
+    <p class="fs-6">
+      <i class="bi bi-file-diff"></i> <a href="{{ link.url }}">{{ link.text }}</a> {{ link.badge | safe }}
     </p>
-  {% endif %}
-  {% if compare_to_baseline_urls['fork_point'] %}
-    <p class="fs-5">
-      <i class="bi bi-file-diff"></i> <a href="{{ compare_to_baseline_urls['fork_point'] }}">compare to baseline run from
-      fork point commit</a>
-    </p>
-  {% endif %}
-  {% if compare_to_baseline_urls['latest_default'] %}
-    <p class="fs-5">
-      <i class="bi bi-file-diff"></i> <a href="{{ compare_to_baseline_urls['latest_default'] }}">compare to latest
-      baseline run on default branch</a>
-    </p>
-  {% endif %}
+  {% endfor %}
   {% if plot_history %}
     <div class="col-md-12">
       <h6>Top Outliers</h6>
