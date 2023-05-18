@@ -9,7 +9,7 @@
   </nav>
   {% for link in comparisons %}
     <p class="fs-6">
-      <i class="bi bi-file-diff"></i> <a href="{{ link.url }}">{{ link.full_text }}</a>
+      <i class="bi bi-file-diff"></i> <a href="{{ link.url }}">{{ link.text }}</a> {{ link.badge | safe }}
     </p>
   {% endfor %}
   {% if plot_history %}

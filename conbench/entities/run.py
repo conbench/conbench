@@ -188,7 +188,7 @@ class Run(Base, EntityMixin):
             .join(Hardware, Hardware.id == Run.hardware_id)
             .join(Commit, Commit.id == Run.commit_id)
             .join(ancestor_commits, ancestor_commits.c.ancestor_id == Commit.id)
-            .filter(Hardware.hash == self.hardware.hash)
+            .filter(Hardware.hash == self.hardware.hash, Run.id != self.id)
             .order_by(
                 s.desc(Run.reason == self.reason),  # Prefer this Run's run_reason,
                 ancestor_commits.c.commit_order.desc(),  # then latest commit,

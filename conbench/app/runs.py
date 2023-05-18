@@ -25,11 +25,11 @@ class _RunComparisonLinker:
     recommended: bool
 
     @property
-    def full_text(self) -> str:
+    def badge(self) -> str:
         if self.recommended:
-            return f"{self.text} (recommended)"
+            return '<span class="badge bg-primary">Recommended</span>'
         else:
-            return self.text
+            return ""
 
 
 _default_hyperlink_text = {

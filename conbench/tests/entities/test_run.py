@@ -173,7 +173,7 @@ def test_get_candidate_baseline_runs():
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[9].id,
+                "baseline_run_id": runs[8].id,
                 "commits_skipped": [],
             },
         },
@@ -186,9 +186,9 @@ def test_get_candidate_baseline_runs():
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
-                "error": None,
-                "baseline_run_id": runs[10].id,
-                "commits_skipped": [],
+                "error": "no matching baseline run was found",
+                "baseline_run_id": None,
+                "commits_skipped": None,
             },
         },
         # run 11, commit 'sha' (no detailed commit info)
@@ -218,9 +218,9 @@ def test_get_candidate_baseline_runs():
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
-                "error": None,
-                "baseline_run_id": runs[12].id,
-                "commits_skipped": [],
+                "error": "no matching baseline run was found",
+                "baseline_run_id": None,
+                "commits_skipped": None,
             },
         },
         # run 13, commit 66666 (different context)
@@ -232,9 +232,9 @@ def test_get_candidate_baseline_runs():
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
-                "error": None,
-                "baseline_run_id": runs[13].id,
-                "commits_skipped": [],
+                "error": "no matching baseline run was found",
+                "baseline_run_id": None,
+                "commits_skipped": None,
             },
         },
         # run 14, commit 66666 (different hardware)
@@ -246,9 +246,9 @@ def test_get_candidate_baseline_runs():
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
-                "error": None,
-                "baseline_run_id": runs[14].id,
-                "commits_skipped": [],
+                "error": "no matching baseline run was found",
+                "baseline_run_id": None,
+                "commits_skipped": None,
             },
         },
         # run 15, commit 66666 (nightly reason)
@@ -261,7 +261,7 @@ def test_get_candidate_baseline_runs():
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[15].id,
+                "baseline_run_id": runs[9].id,
                 "commits_skipped": [],
             },
         },
@@ -301,8 +301,8 @@ def test_get_candidate_baseline_runs():
         "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
         "latest_default": {
             "error": None,
-            "baseline_run_id": runs[-1].id,
-            "commits_skipped": [],
+            "baseline_run_id": new_benchmark_result.run.id,
+            "commits_skipped": ["66666", "55555"],
         },
     }
 
