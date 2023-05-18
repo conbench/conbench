@@ -25,7 +25,11 @@ def test_get_candidate_baseline_runs():
                 "commits_skipped": None,
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": {
+                "error": None,
+                "baseline_run_id": runs[9].id,
+                "commits_skipped": [],
+            },
         },
         # run 1, commit 22222
         {
@@ -35,7 +39,11 @@ def test_get_candidate_baseline_runs():
                 "commits_skipped": [],
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": {
+                "error": None,
+                "baseline_run_id": runs[9].id,
+                "commits_skipped": [],
+            },
         },
         # run 2, commit aaaaa
         {
@@ -99,7 +107,11 @@ def test_get_candidate_baseline_runs():
                 "commits_skipped": ["33333"],
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": {
+                "error": None,
+                "baseline_run_id": runs[9].id,
+                "commits_skipped": [],
+            },
         },
         # run 6, commit fffff
         {
@@ -145,7 +157,11 @@ def test_get_candidate_baseline_runs():
                 "commits_skipped": ["55555"],
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": {
+                "error": None,
+                "baseline_run_id": runs[9].id,
+                "commits_skipped": [],
+            },
         },
         # run 9, commit 66666
         {
@@ -155,7 +171,11 @@ def test_get_candidate_baseline_runs():
                 "commits_skipped": ["55555"],
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": {
+                "error": None,
+                "baseline_run_id": runs[9].id,
+                "commits_skipped": [],
+            },
         },
         # run 10, commit abcde (different repo)
         {
@@ -165,7 +185,11 @@ def test_get_candidate_baseline_runs():
                 "commits_skipped": None,
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": {
+                "error": None,
+                "baseline_run_id": runs[10].id,
+                "commits_skipped": [],
+            },
         },
         # run 11, commit 'sha' (no detailed commit info)
         {
@@ -193,7 +217,11 @@ def test_get_candidate_baseline_runs():
                 "commits_skipped": None,
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": {
+                "error": None,
+                "baseline_run_id": runs[12].id,
+                "commits_skipped": [],
+            },
         },
         # run 13, commit 66666 (different context)
         {
@@ -203,7 +231,11 @@ def test_get_candidate_baseline_runs():
                 "commits_skipped": None,
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": {
+                "error": None,
+                "baseline_run_id": runs[13].id,
+                "commits_skipped": [],
+            },
         },
         # run 14, commit 66666 (different hardware)
         {
@@ -213,7 +245,11 @@ def test_get_candidate_baseline_runs():
                 "commits_skipped": None,
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": {
+                "error": None,
+                "baseline_run_id": runs[14].id,
+                "commits_skipped": [],
+            },
         },
         # run 15, commit 66666 (nightly reason)
         {
@@ -223,7 +259,11 @@ def test_get_candidate_baseline_runs():
                 "commits_skipped": ["55555"],
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-            "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+            "latest_default": {
+                "error": None,
+                "baseline_run_id": runs[15].id,
+                "commits_skipped": [],
+            },
         },
     ]
     assert len(runs) == len(expected_baseline_run_dicts), "you should test all runs"
@@ -259,7 +299,11 @@ def test_get_candidate_baseline_runs():
             "commits_skipped": ["55555"],
         },
         "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
-        "latest_default": DEFAULT_BRANCH_PLACEHOLDER,
+        "latest_default": {
+            "error": None,
+            "baseline_run_id": runs[-1].id,
+            "commits_skipped": [],
+        },
     }
 
     # test a run with no commit that can still find a latest_default baseline
