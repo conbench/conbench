@@ -1,3 +1,5 @@
+import copy
+
 from ...tests.api import _fixtures
 from ...tests.app import _asserts
 
@@ -94,3 +96,24 @@ class TestCompareRuns(_asserts.GetEnforcer):
         response = client.get("/compare/runs/foo...bar/", follow_redirects=True)
         self.assert_page(response, "Compare Runs")
         assert _emsg_needle("run", "foo") in response.text
+
+    @staticmethod
+    def _post_result(client, run_id, language) -> None:
+        payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
+        payload["run_id"] = run_id
+        payload["context"]["benchmark_language"] = language
+        response = client.post("/api/benchmarks/", json=payload)
+        assert response.status_code == 201, response.text
+
+    def test_mismatching_runs(self, client):
+        self.authenticate(client)
+
+        # Some benchmark results are comparable, some aren't
+        self._post_result(client, "run1", "python")
+        self._post_result(client, "run1", "R")
+        self._post_result(client, "run2", "python")
+        self._post_result(client, "run2", "C++")
+
+        # Ensure the run page returns a 200 and HTML, not a traceback
+        response = client.get("/compare/runs/run1...run2/")
+        self.assert_page(response, "Compare Runs")

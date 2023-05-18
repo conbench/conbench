@@ -75,7 +75,9 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
 
         if comparisons and self.type != "benchmark-result":
             comparisons_by_id = {
-                c["contender"]["benchmark_result_id"]: c for c in comparisons
+                c["contender"]["benchmark_result_id"]: c
+                for c in comparisons
+                if c["contender"]
             }
             if self.type == "run":
                 benchmarks, response = self._get_benchmarks(run_id=contender_id)
@@ -272,8 +274,11 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         # Mutate comparison objs (dictionaries) on the fly
         for c in comparisons:
             view = "app.compare-benchmark-results"
-            compare = f'{c["baseline"]["benchmark_result_id"]}...{c["contender"]["benchmark_result_id"]}'
-            c["compare_benchmarks_url"] = f.url_for(view, compare_ids=compare)
+            if c["baseline"] and c["contender"]:
+                compare = f'{c["baseline"]["benchmark_result_id"]}...{c["contender"]["benchmark_result_id"]}'
+                c["compare_benchmarks_url"] = f.url_for(view, compare_ids=compare)
+            else:
+                c["compare_benchmarks_url"] = None
 
             if (
                 c["analysis"]["lookback_z_score"]

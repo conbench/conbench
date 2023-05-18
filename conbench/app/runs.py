@@ -1,3 +1,5 @@
+from typing import Dict, Optional
+
 import bokeh
 import flask as f
 import flask_login
@@ -17,13 +19,23 @@ from ..config import Config
 #   (imported name has type "Type[conbench.app.runs.Run]", local name has
 #     type "Type[conbench.entities.run.Run]")  [assignment]
 class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
-    def page(self, benchmarks, baseline_run, contender_run, form, run_id):
-        compare_runs_url = None
+    def page(self, benchmarks, contender_run, form, run_id):
         if not flask_login.current_user.is_authenticated:
             delattr(form, "delete")
-        if baseline_run and contender_run:
-            compare = f'{baseline_run["id"]}...{contender_run["id"]}'
-            compare_runs_url = f.url_for("app.compare-runs", compare_ids=compare)
+
+        compare_to_baseline_urls: Dict[str, Optional[str]] = {}
+        for key in ["parent", "fork_point", "latest_default"]:
+            if contender_run and (
+                baseline_id := contender_run["candidate_baseline_runs"][key][
+                    "baseline_run_id"
+                ]
+            ):
+                compare_to_baseline_urls[key] = f.url_for(
+                    "app.compare-runs",
+                    compare_ids=f"{baseline_id}...{contender_run['id']}",
+                )
+            else:
+                compare_to_baseline_urls[key] = None
 
         (
             biggest_changes,
@@ -40,7 +52,7 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             application=Config.APPLICATION_NAME,
             title="Run",
             benchmarks=benchmarks,
-            compare_runs_url=compare_runs_url,
+            compare_to_baseline_urls=compare_to_baseline_urls,
             run_id=run_id,
             run=contender_run,
             form=form,
@@ -53,12 +65,7 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
 
     @authorize_or_terminate
     def get(self, run_id):
-        contender_run, baseline_run = self.get_display_run(run_id), None
-        if contender_run:
-            baseline_url = contender_run["links"].get("baseline")
-            if baseline_url:
-                baseline_run = self.get_display_baseline_run(baseline_url)
-
+        contender_run = self.get_display_run(run_id)
         benchmarks, response = self._get_benchmarks(run_id)
         if response.status_code != 200:
             self.flash("Error getting benchmarks.")
@@ -68,7 +75,7 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
         for benchmark in benchmarks:
             augment(benchmark, contexts)
 
-        return self.page(benchmarks, baseline_run, contender_run, DeleteForm(), run_id)
+        return self.page(benchmarks, contender_run, DeleteForm(), run_id)
 
     def _get_benchmarks(self, run_id):
         response = self.api_get("api.benchmarks", run_id=run_id)

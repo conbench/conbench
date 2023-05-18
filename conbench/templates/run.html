@@ -7,9 +7,22 @@
       {% if run_id %}<li class="breadcrumb-item active" aria-current="page">{{ run_id }}</li>{% endif %}
     </ol>
   </nav>
-  {% if compare_runs_url %}
+  {% if compare_to_baseline_urls['parent'] %}
     <p class="fs-5">
-      <i class="bi bi-file-diff"></i> <a href="{{ compare_runs_url }}">compare to baseline</a>
+      <i class="bi bi-file-diff"></i> <a href="{{ compare_to_baseline_urls['parent'] }}">compare to baseline run from
+      parent commit</a>
+    </p>
+  {% endif %}
+  {% if compare_to_baseline_urls['fork_point'] %}
+    <p class="fs-5">
+      <i class="bi bi-file-diff"></i> <a href="{{ compare_to_baseline_urls['fork_point'] }}">compare to baseline run from
+      fork point commit</a>
+    </p>
+  {% endif %}
+  {% if compare_to_baseline_urls['latest_default'] %}
+    <p class="fs-5">
+      <i class="bi bi-file-diff"></i> <a href="{{ compare_to_baseline_urls['latest_default'] }}">compare to latest
+      baseline run on default branch</a>
     </p>
   {% endif %}
   {% if plot_history %}
@@ -73,7 +86,8 @@
               <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">{{ benchmark.display_bmname }}</a>
             </td>
             <td>
-              <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">{{ benchmark.display_case_perm }}</a>
+              <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">{{
+              benchmark.display_case_perm }}</a>
             </td>
             <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
             {% if benchmark.stats.z_score is not none %}
@@ -88,7 +102,7 @@
               <td></td>
             {% endif %}
             <td>
-              {%  if benchmark.error %}
+              {% if benchmark.error %}
                 <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
                   <i class="glyphicon glyphicon-exclamation-sign text-danger"
                      data-toggle="tooltip"
@@ -139,7 +153,10 @@
             {% for k,v in run.error_info.items() %}
               <li class="list-group-item" style="overflow-y: auto;">
                 <b>{{ k }}</b>
-                {% if v is not none %}<div align="right" style="display:inline-block; float: right;">{{ v }}</div>{% endif %}
+                {% if v is not none %}
+                  <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+                {% endif
+                %}
               </li>
             {% endfor %}
           {% endif %}
@@ -148,7 +165,10 @@
             {% for k,v in run.info.items() %}
               <li class="list-group-item" style="overflow-y: auto;">
                 <b>{{ k }}</b>
-                {% if v is not none %}<div align="right" style="display:inline-block; float: right;">{{ v }}</div>{% endif %}
+                {% if v is not none %}
+                  <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+                {% endif
+                %}
               </li>
             {% endfor %}
           {% endif %}
@@ -160,36 +180,36 @@
     {{ super() }}
     {{ resources | safe }}
     <script type="text/javascript">
-    var table = $('#benchmarks').dataTable( {
-      "responsive": true,
-    // Take rather precise control of layouting elements, put bottom elements
-    // into a mult-col single row, using BS's grid system.
-      "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
-      "order": [[5, 'asc']],
-      "columnDefs": [{ "orderable": false, "targets": [4] }],
-      initComplete: function () {
-        var api = this.api();
-      //api.columns.adjust();
-        $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
-      },
-    } );
+    var table = $('#benchmarks').dataTable({
+        "responsive": true,
+        // Take rather precise control of layouting elements, put bottom elements
+        // into a mult-col single row, using BS's grid system.
+        "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
+        "order": [[5, 'asc']],
+        "columnDefs": [{ "orderable": false, "targets": [4] }],
+        initComplete: function () {
+            var api = this.api();
+            //api.columns.adjust();
+            $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
+        },
+    });
 
     column_search_implementation($('#benchmarks'));
 
-    $(document).ready(function() {
-      {% if run_id %}
+    $(document).ready(function () {
+        {% if run_id %}
         $("#run-form").find("#delete").attr("type", "button");
         $("#run-form").find("#delete").attr("data-bs-toggle", "modal");
         $("#run-form").find("#delete").attr("data-bs-target", "#confirm-delete");
         $("#run-form").find("#delete").attr("data-cbcustom-form-id", "#run-form");
         $("#run-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.run', run_id=run_id) }}");
         $("#run-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete run: <strong>{{ run_id }}</strong></li></ul>");
-      {% endif %}
+        {% endif %}
     });
 
-    $(document).ready(function() {
-      {% for plot in plot_history %}Bokeh.embed.embed_item({{ plot | safe }});{% endfor %}
-      document.getElementById("bokeh-carousel").style.visibility = "visible";
+    $(document).ready(function () {
+        {% for plot in plot_history %}Bokeh.embed.embed_item({{ plot | safe }});{% endfor %}
+    document.getElementById("bokeh-carousel").style.visibility = "visible";
     });
     </script>
   {% endblock %}
