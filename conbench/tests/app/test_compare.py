@@ -1,11 +1,7 @@
-import logging
-
 import copy
+
 from ...tests.api import _fixtures
 from ...tests.app import _asserts
-
-
-log = logging.getLogger(__name__)
 
 
 def _emsg_needle(thing, thingid):
@@ -118,8 +114,6 @@ class TestCompareRuns(_asserts.GetEnforcer):
         self._post_result(client, "run2", "python")
         self._post_result(client, "run2", "C++")
 
-        # Ensure the run page looks as expected
+        # Ensure the run page returns a 200 and HTML, not a traceback
         response = client.get("/compare/runs/run1...run2/")
         self.assert_page(response, "Compare Runs")
-        log.info(response.text)
-        assert not response.text
