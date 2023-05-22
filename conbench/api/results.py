@@ -189,7 +189,10 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
 
         elif run_reason_arg := f.request.args.get("run_reason"):
             benchmark_results = BenchmarkResult.search(
-                filters=[Run.reason == run_reason_arg], joins=[Run], limit=35000
+                filters=[Run.reason == run_reason_arg],
+                joins=[Run],
+                order_by=BenchmarkResult.timestamp.desc(),
+                limit=55000,
             )
 
         else:
