@@ -7,12 +7,14 @@ from typing import Dict, List, Tuple, TypedDict
 import flask
 import numpy as np
 import orjson
+import pandas as pd
+import numpy.polynomial
 
 import conbench.numstr
 from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
-from conbench.job import BMRTBenchmarkResult, bmrt_cache
+from conbench.job import BMRTBenchmarkResult, bmrt_cache, TBenchmarkName
 
 log = logging.getLogger(__name__)
 
@@ -120,9 +122,80 @@ def list_benchmarks() -> str:
     )
 
 
+@app.route("/c-benchmarks/<bname>/trends", methods=["GET"])  # type: ignore
+@authorize_or_terminate
+def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
+    dfs_by_t3: Dict[Tuple[str, str, str], pd.DataFrame] = {}
+    for (ibname, case_id, context_id, hardware_id), df in bmrt_cache[
+        "dict4tdf"
+    ].items():
+        if ibname == bname:
+            dfs_by_t3[(case_id, context_id, hardware_id)] = df
+
+    relchange_by_t3: Dict[Tuple[str, str, str], float] = {}
+    for t3, df in dfs_by_t3.items():
+        # Note(JP): make a linear regression: derive a slope value. this is
+        # mainly about the sign of the slope. that means: we can work with the
+        # absolute t/time values we have. for the y values the goal is to make
+        # change comparable across different scenarios. Not across different
+        # units, though.
+        #
+        # Interesting: benchmark result time distribution vs. commit
+        # distribution over time. assume that code evolution is highly
+        # correlated with benchmark start time evolution.
+        # ignore df rows in here where results reported VSV being NAN.
+        # df = df[df["svs"].notna()]
+        df = df.dropna()  # drop all rows that have any NaN
+
+        if len(df) < 10:
+            # do this only when we have some history.
+            continue
+
+        # did some of that before here:
+        # https://github.com/jgehrcke/covid-19-analysis/blob/4950649a27c51c2bf36baba258757249385f2808/process.py#L227
+        # it's a bit of a seemingly complex(?) converstion from pd
+        # datetimeindex back to float values. Remove 10^15 from these
+        # nanoseconds-since-epoch to make the numeric values a little less
+        # extreme for printing/debugging.
+        tfloats = (
+            np.array(df.index.to_pydatetime(), dtype=np.datetime64).astype("float")
+            / 10**15
+        )
+        yfloats = df["svs"].values
+        fitted_series = numpy.polynomial.Polynomial.fit(tfloats, yfloats, 1)
+
+        # print(fitted_series)
+        # https://numpy.org/doc/stable/reference/generated/numpy.polynomial.polynomial.Polynomial.fit.html#numpy.polynomial.polynomial.Polynomial.fit
+        slope, ordinate = fitted_series.coef[1], fitted_series.coef[0]
+
+        # Do a 'normalization' here to find _relative change_. For the offset
+        # use data from the linear fit (the constant part of the linearity).
+        # Think: the smaller most of the values are, the _more_ does the _same_
+        # slope reflect relative change.
+        relchange = slope / ordinate
+        #  print(f"slope: {slope}")
+        relchange_by_t3[t3] = relchange
+
+    # sort by relative change, largest first.
+    sorted_by_relchange = dict(
+        sorted(
+            relchange_by_t3.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+    )
+
+    log.info("made %s linear regressions", len(relchange_by_t3))
+
+    for t3, relchange in sorted_by_relchange.items():
+        print(t3, ": ", relchange)
+
+    return "lol"
+
+
 @app.route("/c-benchmarks/<bname>", methods=["GET"])  # type: ignore
 @authorize_or_terminate
-def show_benchmark_cases(bname: str) -> str:
+def show_benchmark_cases(bname: TBenchmarkName) -> str:
     # Do not catch KeyError upon lookup for checking for key, because this
     # would insert the key into the defaultdict(list) (as an empty list).
     if bname not in bmrt_cache["by_benchmark_name"]:
@@ -258,7 +331,7 @@ class TypeUIPlotInfo(TypedDict):
 
 @app.route("/c-benchmarks/<bname>/<caseid>", methods=["GET"])  # type: ignore
 @authorize_or_terminate
-def show_benchmark_results(bname: str, caseid: str) -> str:
+def show_benchmark_results(bname: TBenchmarkName, caseid: str) -> str:
     # First, filter by benchmark name.
     try:
         results_all_with_bname = bmrt_cache["by_benchmark_name"][bname]
