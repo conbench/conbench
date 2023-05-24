@@ -1,0 +1,280 @@
+{% extends "app.html" %}
+{% block app_content %}
+  <h3>
+    benchmark <strong>'{{ benchmark_name }}'</strong> / trends
+  </h3>
+  <span class="fs-4"><code>{{ this_case_text_id }}</code></span>
+  <div class="mt-5">
+    <h5 class="mb-3">
+      History for unique case/hardware/context combinations
+      <sup><i style="font-size: 12px"
+   class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="Benchmark results, grouped by unique (case, hardware, context) combinations. ">
+      </i></sup>
+    </h5>
+    <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
+    <div class="row gy-5">
+      {% for cch, plotinfo in infos_for_uplots.items() %}
+        <div class="col-6" style="width: 600px">
+          <div class="cb-tinyplot pt-1 shadow">
+            <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
+            <div class="d-flex">
+              <div class="hardware"
+                   data-bs-toggle="tooltip"
+                   data-bs-title="Hardware"
+                   data-bs-delay='{"show":700,"hide":150}'>
+                <i class="bi bi-cpu"></i> {{ plotinfo.hwname[:25] }}
+              </div>
+              <div class="context"
+                   data-bs-toggle="tooltip"
+                   data-bs-title="Context"
+                   data-bs-delay='{"show":700,"hide":150}'>
+                <i class="bi bi-sliders2"></i> <a href="#"
+    data-bs-toggle="offcanvas"
+    data-bs-target="#offcanvasContextDict-{{ plotinfo.ctxid }}"
+    aria-controls="offcanvasContextDict-{{ plotinfo.ctxid }}">{{ plotinfo.ctxid[:7] }}</a>
+              </div>
+              <div class="ms-auto ps-2 results">
+                {{ plotinfo.n_results }} results <a href="{{ plotinfo.url_to_newest_result }}">(full hist)</a>
+              </div>
+            </div>
+            <div class="cb-plot-{{ cch }}" style="width: 550px"></div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <div style="font-family: 'Roboto Mono';">.</div>
+  </div>
+  {% for ctxid, context_json in context_json_by_context_id.items() %}
+    <div class="offcanvas offcanvas-start"
+         data-bs-scroll="true"
+         tabindex="-1"
+         id="offcanvasContextDict-{{ ctxid }}"
+         aria-labelledby="offcanvasContextDictLabel-{{ ctxid }}">
+      <div class="offcanvas-header">
+        <span class="offcanvas-title" id="offcanvasContextDictLabel-{{ ctxid }}">Context {{ ctxid }}</span>
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="offcanvas"
+                aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body offcanvas-cb-context">
+        <code>
+          <pre style="">{{context_json}}</pre>
+        </code>
+      </div>
+    </div>
+  {% endfor %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    let plot_info_by_cch = {{ infos_for_uplots_json|safe }};
+
+    function orderOfMagnMax(values) {
+      // assume only positive values (benchmark data: time, bandwidth, etc)
+      let max = Math.max(...values);
+      // Get order of magnitude of maximum, also see
+      // https://stackoverflow.com/a/23917134/145400
+      let oommax = Math.floor(Math.log(max) / Math.LN10 + 0.000000001);
+      return oommax;
+    }
+
+    function switchToScientifcNotation(values) {
+      // Switch to scientific notation for large values, and for small
+      // values. Assume only positive values.
+      if (orderOfMagnMax(values) > 4 || orderOfMagnMax(values) < -1 ) {
+        return true;
+      }
+      return false;
+    }
+
+    function formatValuesForAxis(values) {
+      /*
+      Do not exclusively show exponential/scientific notation, but only
+      when the maximum value is larger than 10^5.
+      Alternatively, prepare tick labels in backend and use
+      matplotlib.ticker.ScalarFormatter, also see
+      https://stackoverflow.com/a/42658124/145400
+      */
+
+      if (switchToScientifcNotation(values)) {
+        return values.map((v) => v.toExponential(1));
+      }
+
+      //return values.map((v) => v.toPrecision(2));
+      // kudos to https://stackoverflow.com/a/58494899/145400
+      return values.map((v) => parseFloat(v.toPrecision(2)));
+    }
+
+    function yAxisLabelSpace(values) {
+      // For scientific notation there needs to be more space.
+      if (switchToScientifcNotation(values)) {
+        return 60;
+      }
+      return 45;
+    }
+
+    function renderPlots() {
+
+      function generateUPlotOpts(yValues, unitStr) {
+      return {
+        title: "",
+        class: "cb-uplot",
+        width: 550,
+        height: 270,
+        cursor: {
+          show: false,
+        },
+        legend: {
+          show: false,
+        },
+        series: [
+          {},
+          {
+            sorted: 0,
+            show: true,
+            spanGaps: false,
+            stroke: "#812570", // dark magenta, main line color
+            width: 0.6,
+            // I have been taking greenish colors from this palette:
+            // https://colorhunt.co/palette/b9eddd87cbb9569daa577d86 We can
+            // think about greenifying some graphs, and reddifying others,
+            // based on their properties.
+            fill: "#38BDD122", // skyblue, transp
+            //fill: "rgba(255, 0, 0, 0.3)",
+            //dash: [10, 5],
+            scale: "y",
+            points: {
+              // Without `show: true`, points do not always show.
+              show: true,
+              size: 5,
+              fill: 'rgba(87, 125, 134, 0.7)'
+            }
+          }
+        ],
+        axes: [
+          {
+            //label: "date",
+            labelFont: "bold 12px 'Roboto Mono'",
+            font: "11px 'Roboto Mono'",
+            stroke: "#812570", // dark magenta
+            // 24 hour format on time axis ticks, remove am/pm, etc.
+            // Copied the default value from docs, then edited.
+            values: [
+              [3600 * 24 * 365,   "{YYYY}",         null,                            null,    null,                      null,    null,              null,        1],
+              [3600 * 24 * 28,    "{MMM}",          "\n{YYYY}",                      null,    null,                      null,    null,              null,        1],
+              [3600 * 24,         "{MM}/{DD}",        "\n{YYYY}",                      null,    null,                      null,    null,              null,        1],
+              [3600,              "{HH}",        "\n{YYYY}-{MM}-{DD}",                null,    "\n{MM}-{DD}",               null,    null,              null,        1],
+              [60,                "{HH}:{mm}",   "\n{YYYY}-{MM}-{DD}",                null,    "\n{MM}-{DD}",               null,    null,              null,        1],
+              [1,                 ":{ss}",          "\n{YYYY}-{MM}-{DD} {HH}:{mm}",   null,    "\n{MM}-{DD} {HH}:{mm}",  null,    "\n{HH}:{mm}",  null,        1],
+              [0.001,             ":{ss}.{fff}",    "\n{YYYY}-{MM}-{DD} {HH}:{mm}",   null,    "\n{MM}-{DD} {HH}:{mm}",  null,    "\n{HH}:{mm}",  null,        1],
+            ],
+          },
+          {
+            label: unitStr,
+            labelFont: "bold 12px 'Roboto Mono'",
+            font: "11px  'Roboto Mono'",
+            stroke: "#812570", // dark magenta
+            scale: "y",
+            // give y axis labels some space
+            //size: 57,
+            size: yAxisLabelSpace(yValues),
+            // This is used for y axis formatting. Trade-off:
+            // predictable width, medium precision is sufficient.
+            values: (u, splits) => formatValuesForAxis(splits),
+          }
+        ],
+        scales: {
+
+          "y": {
+            range: (u, datamin, datamax) => {
+              // Preparing for all kinds of ranges and orders of
+              // magnitude, always show the zero for keeping plots most
+              // meaningful -- if the relative change is very small then
+              // it will be rather invisible in a plot like this, which
+              // is the goal.
+              return [0, datamax * 1.2];
+            },
+
+          }
+        },
+      }};
+
+      {% for cch, plotinfo in infos_for_uplots.items() %}
+        // About plot_info_by_cch[xxx]["data_for_uplot"]:
+        // 2-tuple. First item: array of time values, second item:
+        // array of ordinate values.
+        let uplot_{{cch}} = new uPlot(
+          generateUPlotOpts(
+            plot_info_by_cch["{{cch}}"]["data_for_uplot"][1],
+            plot_info_by_cch["{{cch}}"]["unit"],
+            ),
+          plot_info_by_cch["{{cch}}"]["data_for_uplot"],
+          $('.cb-plot-{{cch}}')[0]
+          );
+      {% endfor %}
+
+    };
+
+    $(document).ready(function () {
+      // Enable bootstrap tooltips on this page.
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+      $('table.conbench-datatable').each(function() {
+        $(this).DataTable({
+            // Note(JP): this enables a special, simple plugin called
+            // `conditionalPaging` which must be included, e.g. via the dist URLs
+            // published in https://cdn.datatables.net/plug-ins/1.13.3/features/.
+            // kudos to https://stackoverflow.com/a/29639664/145400
+          "conditionalPaging": true,
+          "responsive": true,
+            // the default default seems to be the first item in lengthMenu.
+          "lengthMenu": [ 5, 10, 50, 75, 100, 250, 750 ],
+            // but when pageLength is also set, then _this_ is the default.
+          "pageLength": 10,
+            // Take rather precise control of layouting elements, put bottom elements
+            // into a mult-col single row, using BS's grid system.
+          "dom": '<"row"<"d-flex flex-row-reverse p-0"fl>>rt<"row p-2"<"col-6"i><".col-6"p>>',
+          "order": [[0, 'desc']],
+          "columnDefs": [{ "orderable": true }],
+          initComplete: function () {
+            var api = this.api();
+                // reveal only after DOM modification is complete (reduce loading
+                // layout shift artifacts)
+            $('table.conbench-datatable').show();
+            api.columns.adjust();
+            $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
+          },
+        });
+      });
+    });
+
+  // uPlot uses canvas for plotting. To make sure the fonts asked for in here
+  // are really available before starting to draw in the canvace element use
+  // the technique described in  https://stackoverflow.com/a/7289880/145400,
+  // otherwise there are plenty of race conditions that might or might not hit
+  // in across browser refreshs. Also see
+  // https://github.com/typekit/webfontloader
+  WebFontConfig = {
+      google: {
+        families: ['Roboto']
+      },
+      active: function() {
+      /* code to execute once all font families are loaded */
+      console.log(" I sure hope my font is loaded now. ");
+      renderPlots();
+    }
+   };
+
+   (function(d) {
+      var wf = d.createElement('script'), s = d.scripts[0];
+      wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
+      wf.async = true;
+      s.parentNode.insertBefore(wf, s);
+   })(document);
+
+  </script>
+{% endblock %}

@@ -2,17 +2,19 @@ import collections
 import logging
 import math
 import time
-from typing import Dict, List, Tuple, TypedDict
+from typing import Dict, List, Tuple, TypedDict, TypeVar
 
 import flask
 import numpy as np
+import numpy.polynomial
 import orjson
+import pandas as pd
 
 import conbench.numstr
 from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
-from conbench.job import BMRTBenchmarkResult, bmrt_cache
+from conbench.job import BMRTBenchmarkResult, TBenchmarkName, bmrt_cache
 
 log = logging.getLogger(__name__)
 
@@ -25,10 +27,16 @@ def time_of_newest_of_many_results(results: List[BMRTBenchmarkResult]) -> float:
     return max(r.started_at for r in results)
 
 
-def get_first_n_dict_subset(d: Dict, n: int) -> Dict:
+# Make this function's return type precisely be the type of input `d`, which is
+# often more specific than just Dict.
+GenDict = TypeVar("GenDict")  # the variable name must coincide with the string
+
+
+def get_first_n_dict_subset(d: GenDict, n: int) -> GenDict:
     # A bit of discussion here:
     # https://stackoverflow.com/a/12980510/145400
-    return {k: d[k] for k in list(d)[:n]}
+    assert isinstance(d, dict)
+    return {k: d[k] for k in list(d)[:n]}  # type: ignore
 
 
 @app.route("/c-benchmarks/", methods=["GET"])  # type: ignore
@@ -120,9 +128,173 @@ def list_benchmarks() -> str:
     )
 
 
+@app.route("/c-benchmarks/<bname>/trends", methods=["GET"])  # type: ignore
+@authorize_or_terminate
+def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
+    # Narrow down relevant dataframes.
+    dfs_by_t3: Dict[Tuple[str, str, str], pd.DataFrame] = {}
+    for (ibname, case_id, context_id, hardware_id), df in bmrt_cache[
+        "dict4tdf"
+    ].items():
+        if ibname == bname:
+            dfs_by_t3[(case_id, context_id, hardware_id)] = df
+
+    log.info("built dfs_by_t3")
+
+    # Do this trend analysis only for those timeseries that are recent.
+    # Criterion here for now: simple cutoff relative to _now_. TODO:
+    # relative to newest result for this conceptual benchmark.
+
+    now = time.time()
+    relchange_by_t3: Dict[Tuple[str, str, str], float] = {}
+    for t3, df in dfs_by_t3.items():
+        # Note(JP): make a linear regression: derive a slope value. this is
+        # mainly about the sign of the slope. that means: we can work with the
+        # absolute t/time values we have. for the y values the goal is to make
+        # change comparable across different scenarios. Not across different
+        # units, though.
+        #
+        # Interesting: benchmark result time distribution vs. commit
+        # distribution over time. assume that code evolution is highly
+        # correlated with benchmark start time evolution.
+        # ignore df rows in here where results reported VSV being NAN.
+        # df = df[df["svs"].notna()]
+        df = df.dropna()  # drop all rows that have any NaN
+
+        if len(df) < 10:
+            # do this only when we have some history.
+            continue
+
+        # Recency criterion.
+        newest_timestamp = df.index[-1].timestamp()
+        if now - newest_timestamp > 86400 * 30:
+            continue
+
+        # TODO: basic outlier detection before the fit.
+        # Either rolling window median based, or maybe
+        # huber loss https://stackoverflow.com/a/61144766
+
+        # Did some of that before here:
+        # https://github.com/jgehrcke/covid-19-analysis/blob/4950649a27c51c2bf36baba258757249385f2808/process.py#L227
+        # it's a bit of a seemingly complex(?) converstion from pd
+        # datetimeindex back to float values. Remove 10^15 from these
+        # nanoseconds-since-epoch to make the numeric values a little less
+        # extreme for printing/debugging.
+        tfloats = (
+            np.array(df.index.to_pydatetime(), dtype=np.datetime64).astype("float")
+            / 10**15
+        )
+        yfloats = df["svs"].values
+
+        fitted_series = numpy.polynomial.Polynomial.fit(tfloats, yfloats, 1)
+
+        # print(fitted_series)
+        # https://numpy.org/doc/stable/reference/generated/numpy.polynomial.polynomial.Polynomial.fit.html#numpy.polynomial.polynomial.Polynomial.fit
+        slope, ordinate = fitted_series.coef[1], fitted_series.coef[0]
+
+        # Do a 'normalization' here to find _relative change_. For the offset
+        # use data from the linear fit (the constant part of the linearity).
+        # Think: the smaller most of the values are, the _more_ does the _same_
+        # slope reflect relative change.
+        relchange = slope / ordinate
+        #  print(f"slope: {slope}")
+        relchange_by_t3[t3] = relchange
+
+    # sort by relative change, largest first.
+    relchange_by_t3_sorted: Dict[Tuple[str, str, str], float] = dict(
+        sorted(
+            relchange_by_t3.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+    )
+
+    log.info("made %s linear regressions", len(relchange_by_t3))
+
+    # for t3, relchange in relchange_by_t3_sorted.items():
+    #     print(t3, ": ", relchange)
+
+    context_json_by_context_id: Dict[str, str] = {}
+    infos_for_uplots: Dict[str, TypeUIPlotInfo] = {}
+
+    # Input type equals output type, yeah
+    topn_t3_dict = get_first_n_dict_subset(relchange_by_t3_sorted, 10)
+    # topn_t3 = list(relchange_by_t3_sorted.keys())[:6]
+    # log.info("topn for plot: %s", topn_t3_dict)
+
+    for t3, relchange in topn_t3_dict.items():
+        # for (hwid, ctxid, _), results in results_by_hardware_and_context_sorted.items():
+        # Only include those cases where there are at least three results.
+        # (this structure is used for plotting only).
+        caseid, ctxid, hwid = t3
+        results = bmrt_cache["by_4t_list"][(bname, caseid, ctxid, hwid)]
+
+        # sanity check. there must be a considerable number of results in this
+        # list because this is a top N case based on linear fit on a dataframe
+        # with a minimum number of data points.
+        assert len(results) > 7
+
+        # context_dicts_by_context_id[ctxid] = results[0].context_dict
+        # Maybe we don't need to pass the Python dict into the temmplate,
+        # but a pre-formatted JSON doc for copy/pasting might result
+        # in better UX.
+        context_json_by_context_id[ctxid] = orjson.dumps(
+            results[0].context_dict, option=orjson.OPT_INDENT_2
+        ).decode("utf-8")
+
+        units_seen = set()
+        newest_result = newest_of_many_results(results)
+        for r in results:
+            units_seen.add(r.unit)
+
+        # todo: need to add case id
+        infos_for_uplots[f"{caseid}_{hwid}_{ctxid}"] = {
+            # deduplicate with code below
+            "data_for_uplot": [
+                [int(r.started_at) for r in results],
+                [
+                    conbench.numstr.numstr(r.svs, 7) if not math.isnan(r.svs) else None
+                    for r in results
+                ],
+            ],
+            # Rely on at least one result being in the list.
+            "hwid": hwid,
+            "ctxid": ctxid,
+            "caseid": caseid,
+            "hwname": results[0].hardware_name,
+            "n_results": len(results),
+            "url_to_newest_result": flask.url_for(
+                "app.benchmark-result",
+                benchmark_result_id=newest_result.id,
+            ),
+            "unit": maybe_longer_unit(newest_result.unit),
+        }
+
+    log.info("generated uplot structs")
+    # Need to find a way to put bytes straight into jinja template.
+    # still is still a tiny bit faster than using stdlib json.dumps()
+    infos_for_uplots_json = orjson.dumps(
+        infos_for_uplots, option=orjson.OPT_INDENT_2
+    ).decode("utf-8")
+
+    log.info("built plot info JSON")
+
+    return flask.render_template(
+        "c-benchmark-trends.html",
+        benchmark_name=bname,
+        bmr_cache_meta=bmrt_cache["meta"],
+        context_json_by_context_id=context_json_by_context_id,
+        # y_unit_for_all_plots="foo",
+        infos_for_uplots=infos_for_uplots,
+        infos_for_uplots_json=infos_for_uplots_json,
+        application=Config.APPLICATION_NAME,
+        title=Config.APPLICATION_NAME,  # type: ignore
+    )
+
+
 @app.route("/c-benchmarks/<bname>", methods=["GET"])  # type: ignore
 @authorize_or_terminate
-def show_benchmark_cases(bname: str) -> str:
+def show_benchmark_cases(bname: TBenchmarkName) -> str:
     # Do not catch KeyError upon lookup for checking for key, because this
     # would insert the key into the defaultdict(list) (as an empty list).
     if bname not in bmrt_cache["by_benchmark_name"]:
@@ -249,6 +421,7 @@ def show_benchmark_cases(bname: str) -> str:
 class TypeUIPlotInfo(TypedDict):
     hwid: str
     ctxid: str
+    caseid: str
     hwname: str
     n_results: int
     url_to_newest_result: str
@@ -258,7 +431,7 @@ class TypeUIPlotInfo(TypedDict):
 
 @app.route("/c-benchmarks/<bname>/<caseid>", methods=["GET"])  # type: ignore
 @authorize_or_terminate
-def show_benchmark_results(bname: str, caseid: str) -> str:
+def show_benchmark_results(bname: TBenchmarkName, caseid: str) -> str:
     # First, filter by benchmark name.
     try:
         results_all_with_bname = bmrt_cache["by_benchmark_name"][bname]
@@ -369,6 +542,7 @@ def show_benchmark_results(bname: str, caseid: str) -> str:
             # Rely on at least one result being in the list.
             "hwid": hwid,
             "ctxid": ctxid,
+            "caseid": caseid,
             "hwname": results[0].hardware_name,
             "n_results": len(results),
             "url_to_newest_result": flask.url_for(

@@ -5,8 +5,9 @@ import threading
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, Tuple, TypedDict
+from typing import Dict, List, NewType, Tuple, TypedDict, cast
 
+import pandas as pd
 import sqlalchemy
 from sqlalchemy.orm import selectinload
 
@@ -101,10 +102,21 @@ class BMRTBenchmarkResult:
         )
 
 
+TBenchmarkName = NewType("TBenchmarkName", str)
+
+# A type for a dictionary: key is 4-tuple defining a time series, and value is
+# a pandas dataframe containing the time series (index: pd.DateTimeIndex
+# tz-aware, one column: single value summary).
+TDict4tdf = Dict[Tuple[TBenchmarkName, str, str, str], pd.DataFrame]
+TDict4tlist = Dict[Tuple[TBenchmarkName, str, str, str], List[BMRTBenchmarkResult]]
+
+
 class CacheDict(TypedDict):
     by_id: Dict[str, BMRTBenchmarkResult]
-    by_benchmark_name: Dict[str, List[BMRTBenchmarkResult]]
+    by_benchmark_name: Dict[TBenchmarkName, List[BMRTBenchmarkResult]]
     by_case_id: Dict[str, List[BMRTBenchmarkResult]]
+    dict4tdf: TDict4tdf
+    by_4t_list: TDict4tlist
     meta: CacheUpdateMetaInfo
 
 
@@ -116,6 +128,8 @@ bmrt_cache: CacheDict = {
     "by_id": {},
     "by_benchmark_name": {},
     "by_case_id": {},
+    "by_4t_list": {},
+    "dict4tdf": {},
     "meta": CacheUpdateMetaInfo(
         newest_result_time_str="n/a",
         oldest_result_time_str="n/a",
@@ -130,7 +144,7 @@ _STARTED = False
 BMRT_CACHE_SIZE = 0.3 * 10**6
 if Config.TESTING:
     # quicker update in testing
-    BMRT_CACHE_SIZE = 0.2 * 10**6
+    BMRT_CACHE_SIZE = 0.05 * 10**6
 
 
 # Fetching one million items from a sample DB takes ~1 minute on my machine
@@ -168,7 +182,7 @@ def _fetch_and_cache_most_recent_results() -> None:
     result_rows_iterator = Session.scalars(query_statement)
 
     by_id_dict: Dict[str, BMRTBenchmarkResult] = {}
-    by_name_dict: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
+    by_name_dict: Dict[TBenchmarkName, List[BMRTBenchmarkResult]] = defaultdict(list)
     by_case_id_dict: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
 
     first_result = None
@@ -191,7 +205,10 @@ def _fetch_and_cache_most_recent_results() -> None:
         # For now: put both, failed and non-failed results into the cache.
         # It would be a nice code simplification to only consider succeeded
         # ones, but then we miss out on reporting about the failed ones.
-        benchmark_name = str(result.case.name)
+        # Note: with named types it's here not enough to to # type: ...
+        # but an explicit cast is required? perf impact? dunno.
+        # Related: https://github.com/python/typing/discussions/1146
+        benchmark_name = cast(TBenchmarkName, str(result.case.name))
 
         # A textual representation of the case permutation. As it is 'complete'
         # it should also work as a proper identifier (like primary key).
@@ -251,6 +268,9 @@ def _fetch_and_cache_most_recent_results() -> None:
     assert first_result
     assert last_result
 
+    # Group all benchmark results into timeseries
+    dict4tdf, bmrlist_by_4tuple = _generate_tsdf_per_4tuple(by_name_dict)
+
     # Mutate the dictionary which is accessed by other threads, do this in a
     # quick fashion -- each of this assignments is atomic (thread-safe), but
     # between those two assignments a thread might perform read access. (minor
@@ -260,6 +280,8 @@ def _fetch_and_cache_most_recent_results() -> None:
     bmrt_cache["by_id"] = by_id_dict
     bmrt_cache["by_benchmark_name"] = by_name_dict
     bmrt_cache["by_case_id"] = by_case_id_dict
+    bmrt_cache["dict4tdf"] = dict4tdf
+    bmrt_cache["by_4t_list"] = bmrlist_by_4tuple
     bmrt_cache["meta"] = CacheUpdateMetaInfo(
         newest_result_time_str=first_result.ui_time_started_at,
         covered_timeframe_days_approx=str(
@@ -343,6 +365,95 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
     # part of gunicorn's worker process shutdown -- therefore the signal
     # handler-based logic below which injects a shutdown signal into the
     # thread.
+
+
+def _generate_tsdf_per_4tuple(
+    by_name_dict: Dict[TBenchmarkName, List[BMRTBenchmarkResult]]
+) -> Tuple[TDict4tdf, TDict4tlist]:
+    t2 = time.monotonic()
+    by_name_dict_with_timeseries_tuplekeys: Dict[
+        TBenchmarkName, Dict[Tuple, List[BMRTBenchmarkResult]]
+    ] = {}
+
+    for bname, results in by_name_dict.items():
+        # The magic time series 4-tuple is
+        # bname, caseid, hwid, ctxid
+        by_ts_tuple: Dict[Tuple, List[BMRTBenchmarkResult]] = defaultdict(list)
+        for r in results:
+            by_ts_tuple[(r.case_id, r.context_id, r.hardware_id)].append(r)
+        by_name_dict_with_timeseries_tuplekeys[bname] = by_ts_tuple
+
+    t3 = time.monotonic()
+
+    tsdf_by_4tuple: TDict4tdf = {}
+    bmrlist_by_4tuple: TDict4tlist = {}
+
+    # Brutal, slow, approach: (ideally we find a way to represent all data in a
+    # single dataframe with decent multi-index -- that could be a major speedup
+    # for timeseries analysis on all of these series in a bulk.) one dataframe
+    # per 4-tuple: (bname, case_id, context_id, hardware_id).
+    # I have seen this below DF construction loop to take 3 seconds for 2*10^5
+    # results.
+    for bname, unsorted_timeseries in by_name_dict_with_timeseries_tuplekeys.items():
+        for (
+            case_id,
+            context_id,
+            hardware_id,
+        ), usresults in unsorted_timeseries.items():
+            # Think: `usresults` is a list not yet sorted by time.
+
+            df = pd.DataFrame(
+                # Note(jp:): cannot use a generator expression here, len needs
+                # to be known.
+                {"svs": [r.svs for r in usresults]},
+                # Note(jp): also no generator expression possible. The
+                # `unit="s"` is the critical ingredient to convert this list of
+                # floaty unix timestamps to datetime representation. `utc=True`
+                # is required to localize the pandas DateTimeIndex to UTC
+                # (input is tz-naive).
+                index=pd.to_datetime(
+                    [r.started_at for r in usresults], unit="s", utc=True
+                ),
+            )
+            # Sort by time.
+            df = df.sort_index()
+            df.index.rename("time", inplace=True)
+            tsdf_by_4tuple[(bname, case_id, context_id, hardware_id)] = df
+            bmrlist_by_4tuple[(bname, case_id, context_id, hardware_id)] = usresults
+
+    t4 = time.monotonic()
+    log.info("BMRT cache pop: quadratic sort loop took %.3f s", t3 - t2)
+    log.info(
+        "BMRT cache pop: df constr took %.3f s (%s time series)",
+        t4 - t3,
+        len(tsdf_by_4tuple),
+    )
+
+    # The following comment is provides insight into the structure of the
+    # return value. It shows one example for the key (4-tuple) and
+    # corresponding value (and its properties; Index, h)
+
+    # for i, (t4, dffff) in enumerate(tsdf_per_4tuple.items()):
+    #     if i % 1000 == 0:
+    #         print(t4)
+    #         print(dffff)
+    # ('tpch-foobar', '750317efddda4b76a80f72d9ac44f882', 'c99e3d44ccf9415996209006244d6b10', '31ce04b765d44f32a4f2c6a7762e2ddb')
+    #                                             svs
+    # 2022-09-28 02:25:54.315165043+00:00   93.072853
+    # 2022-09-28 10:32:56.099033117+00:00  100.253622
+    # 2022-09-28 13:51:49.347893+00:00     102.833077
+    # 2022-09-28 15:57:35.356076002+00:00   99.807175
+    # 2022-09-28 17:06:46.327281952+00:00  102.777138
+    # 2022-09-28 17:14:14.036443949+00:00  100.854897
+    # 2022-09-28 20:08:16.950268984+00:00   99.565141
+    # 2022-09-28 20:10:27.393528938+00:00   93.057321
+    # 2022-09-29 00:02:27.419251919+00:00   99.077197
+    # 2022-09-29 00:17:44.202492952+00:00   96.842827
+    # 2022-09-29 02:26:19.996010065+00:00   91.103735
+    # 2022-09-29 03:18:40.925746918+00:00         NaN
+    # 2022-09-29 03:52:28.406414986+00:00         NaN
+
+    return tsdf_by_4tuple, bmrlist_by_4tuple
 
 
 def start_jobs():
