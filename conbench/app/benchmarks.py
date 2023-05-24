@@ -2,7 +2,7 @@ import collections
 import logging
 import math
 import time
-from typing import Dict, List, Tuple, TypedDict
+from typing import Dict, List, Tuple, TypedDict, TypeVar
 
 import flask
 import numpy as np
@@ -27,7 +27,12 @@ def time_of_newest_of_many_results(results: List[BMRTBenchmarkResult]) -> float:
     return max(r.started_at for r in results)
 
 
-def get_first_n_dict_subset(d: Dict, n: int) -> Dict:
+# Make this function's return type precisely be the type of input `d`, which is
+# often more specific than just Dict.
+GenDict = TypeVar("GenDict")  # the variable name must coincide with the string
+
+
+def get_first_n_dict_subset(d: GenDict, n: int) -> GenDict:
     # A bit of discussion here:
     # https://stackoverflow.com/a/12980510/145400
     return {k: d[k] for k in list(d)[:n]}
