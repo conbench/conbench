@@ -44,14 +44,6 @@ original_sigquit_handler = signal.getsignal(signal.SIGQUIT)
 log = logging.getLogger(__name__)
 
 
-TBenchmarkName = NewType("TBenchmarkName", str)
-
-# A type for a dictionary: key is 4-tuple defining a time series, and value is
-# a pandas dataframe containing the time series (index: pd.DateTimeIndex
-# tz-aware, one column: single value summary).
-TDict4tdf = Dict[Tuple[TBenchmarkName, str, str, str], pd.DataFrame]
-
-
 @dataclasses.dataclass
 class CacheUpdateMetaInfo:
     newest_result_time_str: str
@@ -111,11 +103,21 @@ class BMRTBenchmarkResult:
         )
 
 
+TBenchmarkName = NewType("TBenchmarkName", str)
+
+# A type for a dictionary: key is 4-tuple defining a time series, and value is
+# a pandas dataframe containing the time series (index: pd.DateTimeIndex
+# tz-aware, one column: single value summary).
+TDict4tdf = Dict[Tuple[TBenchmarkName, str, str, str], pd.DataFrame]
+TDict4tlist = Dict[Tuple[TBenchmarkName, str, str, str], List[BMRTBenchmarkResult]]
+
+
 class CacheDict(TypedDict):
     by_id: Dict[str, BMRTBenchmarkResult]
     by_benchmark_name: Dict[TBenchmarkName, List[BMRTBenchmarkResult]]
     by_case_id: Dict[str, List[BMRTBenchmarkResult]]
     dict4tdf: TDict4tdf
+    by_4t_list: TDict4tlist
     meta: CacheUpdateMetaInfo
 
 
@@ -127,6 +129,8 @@ bmrt_cache: CacheDict = {
     "by_id": {},
     "by_benchmark_name": {},
     "by_case_id": {},
+    "by_4t_list": {},
+    "dict4tdf": {},
     "meta": CacheUpdateMetaInfo(
         newest_result_time_str="n/a",
         oldest_result_time_str="n/a",
@@ -266,7 +270,7 @@ def _fetch_and_cache_most_recent_results() -> None:
     assert last_result
 
     # Group all benchmark results into timeseries
-    dict4tdf = _generate_tsdf_per_4tuple(by_name_dict)
+    dict4tdf, bmrlist_by_4tuple = _generate_tsdf_per_4tuple(by_name_dict)
 
     # Mutate the dictionary which is accessed by other threads, do this in a
     # quick fashion -- each of this assignments is atomic (thread-safe), but
@@ -278,6 +282,7 @@ def _fetch_and_cache_most_recent_results() -> None:
     bmrt_cache["by_benchmark_name"] = by_name_dict
     bmrt_cache["by_case_id"] = by_case_id_dict
     bmrt_cache["dict4tdf"] = dict4tdf
+    bmrt_cache["by_4t_list"] = bmrlist_by_4tuple
     bmrt_cache["meta"] = CacheUpdateMetaInfo(
         newest_result_time_str=first_result.ui_time_started_at,
         covered_timeframe_days_approx=str(
@@ -365,11 +370,12 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
 
 def _generate_tsdf_per_4tuple(
     by_name_dict: Dict[TBenchmarkName, List[BMRTBenchmarkResult]]
-) -> TDict4tdf:
+) -> Tuple[TDict4tdf, TDict4tlist]:
     t2 = time.monotonic()
     by_name_dict_with_timeseries_tuplekeys: Dict[
         TBenchmarkName, Dict[Tuple, List[BMRTBenchmarkResult]]
     ] = {}
+
     for bname, results in by_name_dict.items():
         # The magic time series 4-tuple is
         # bname, caseid, hwid, ctxid
@@ -380,7 +386,8 @@ def _generate_tsdf_per_4tuple(
 
     t3 = time.monotonic()
 
-    tsdf_per_4tuple: TDict4tdf = {}
+    tsdf_by_4tuple: TDict4tdf = {}
+    bmrlist_by_4tuple: TDict4tlist = {}
 
     # Brutal, slow, approach: (ideally we find a way to represent all data in a
     # single dataframe with decent multi-index -- that could be a major speedup
@@ -411,14 +418,16 @@ def _generate_tsdf_per_4tuple(
             )
             # Sort by time.
             df = df.sort_index()
-            tsdf_per_4tuple[(bname, case_id, context_id, hardware_id)] = df
+            df.index.rename("time", inplace=True)
+            tsdf_by_4tuple[(bname, case_id, context_id, hardware_id)] = df
+            bmrlist_by_4tuple[(bname, case_id, context_id, hardware_id)] = usresults
 
     t4 = time.monotonic()
     log.info("BMRT cache pop: quadratic sort loop took %.3f s", t3 - t2)
     log.info(
         "BMRT cache pop: df constr took %.3f s (%s time series)",
         t4 - t3,
-        len(tsdf_per_4tuple),
+        len(tsdf_by_4tuple),
     )
 
     # The following comment is provides insight into the structure of the
@@ -445,7 +454,7 @@ def _generate_tsdf_per_4tuple(
     # 2022-09-29 03:18:40.925746918+00:00         NaN
     # 2022-09-29 03:52:28.406414986+00:00         NaN
 
-    return tsdf_per_4tuple
+    return tsdf_by_4tuple, bmrlist_by_4tuple
 
 
 def start_jobs():
