@@ -35,7 +35,8 @@ GenDict = TypeVar("GenDict")  # the variable name must coincide with the string
 def get_first_n_dict_subset(d: GenDict, n: int) -> GenDict:
     # A bit of discussion here:
     # https://stackoverflow.com/a/12980510/145400
-    return {k: d[k] for k in list(d)[:n]}
+    assert isinstance(d, dict)
+    return {k: d[k] for k in list(d)[:n]}  # type: ignore
 
 
 @app.route("/c-benchmarks/", methods=["GET"])  # type: ignore
