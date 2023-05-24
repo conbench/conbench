@@ -6,15 +6,15 @@ from typing import Dict, List, Tuple, TypedDict, TypeVar
 
 import flask
 import numpy as np
+import numpy.polynomial
 import orjson
 import pandas as pd
-import numpy.polynomial
 
 import conbench.numstr
 from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
-from conbench.job import BMRTBenchmarkResult, bmrt_cache, TBenchmarkName
+from conbench.job import BMRTBenchmarkResult, TBenchmarkName, bmrt_cache
 
 log = logging.getLogger(__name__)
 

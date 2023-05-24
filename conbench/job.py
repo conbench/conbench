@@ -7,10 +7,9 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, NewType, Tuple, TypedDict, cast
 
+import pandas as pd
 import sqlalchemy
 from sqlalchemy.orm import selectinload
-
-import pandas as pd
 
 import conbench.metrics
 import conbench.util
