@@ -130,12 +130,15 @@ def list_benchmarks() -> str:
 @app.route("/c-benchmarks/<bname>/trends", methods=["GET"])  # type: ignore
 @authorize_or_terminate
 def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
+    # Narrow down relevant dataframes.
     dfs_by_t3: Dict[Tuple[str, str, str], pd.DataFrame] = {}
     for (ibname, case_id, context_id, hardware_id), df in bmrt_cache[
         "dict4tdf"
     ].items():
         if ibname == bname:
             dfs_by_t3[(case_id, context_id, hardware_id)] = df
+
+    log.info("built dfs_by_t3")
 
     # Do this trend analysis only for those timeseries that are recent.
     # Criterion here for now: simple cutoff relative to _now_. TODO:
@@ -192,7 +195,7 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         relchange_by_t3[t3] = relchange
 
     # sort by relative change, largest first.
-    sorted_by_relchange = dict(
+    relchange_by_t3_sorted: Dict[Tuple[str, str, str], float] = dict(
         sorted(
             relchange_by_t3.items(),
             key=lambda item: item[1],
@@ -202,10 +205,85 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
 
     log.info("made %s linear regressions", len(relchange_by_t3))
 
-    for t3, relchange in sorted_by_relchange.items():
-        print(t3, ": ", relchange)
+    # for t3, relchange in relchange_by_t3_sorted.items():
+    #     print(t3, ": ", relchange)
 
-    return "lol"
+    context_json_by_context_id: Dict[str, str] = {}
+    infos_for_uplots: Dict[str, TypeUIPlotInfo] = {}
+
+    # Input type equals output type, yeah
+    topn_t3_dict = get_first_n_dict_subset(relchange_by_t3_sorted, 10)
+    # topn_t3 = list(relchange_by_t3_sorted.keys())[:6]
+    # log.info("topn for plot: %s", topn_t3_dict)
+
+    for t3, relchange in topn_t3_dict.items():
+        # for (hwid, ctxid, _), results in results_by_hardware_and_context_sorted.items():
+        # Only include those cases where there are at least three results.
+        # (this structure is used for plotting only).
+        caseid, ctxid, hwid = t3
+        results = bmrt_cache["by_4t_list"][(bname, caseid, ctxid, hwid)]
+
+        # sanity check. there must be a considerable number of results in this
+        # list because this is a top N case based on linear fit on a dataframe
+        # with a minimum number of data points.
+        assert len(results) > 7
+
+        # context_dicts_by_context_id[ctxid] = results[0].context_dict
+        # Maybe we don't need to pass the Python dict into the temmplate,
+        # but a pre-formatted JSON doc for copy/pasting might result
+        # in better UX.
+        context_json_by_context_id[ctxid] = orjson.dumps(
+            results[0].context_dict, option=orjson.OPT_INDENT_2
+        ).decode("utf-8")
+
+        units_seen = set()
+        newest_result = newest_of_many_results(results)
+        for r in results:
+            units_seen.add(r.unit)
+
+        # todo: need to add case id
+        infos_for_uplots[f"{caseid}_{hwid}_{ctxid}"] = {
+            # deduplicate with code below
+            "data_for_uplot": [
+                [int(r.started_at) for r in results],
+                [
+                    conbench.numstr.numstr(r.svs, 7) if not math.isnan(r.svs) else None
+                    for r in results
+                ],
+            ],
+            # Rely on at least one result being in the list.
+            "hwid": hwid,
+            "ctxid": ctxid,
+            "caseid": caseid,
+            "hwname": results[0].hardware_name,
+            "n_results": len(results),
+            "url_to_newest_result": flask.url_for(
+                "app.benchmark-result",
+                benchmark_result_id=newest_result.id,
+            ),
+            "unit": maybe_longer_unit(newest_result.unit),
+        }
+
+    log.info("generated uplot structs")
+    # Need to find a way to put bytes straight into jinja template.
+    # still is still a tiny bit faster than using stdlib json.dumps()
+    infos_for_uplots_json = orjson.dumps(
+        infos_for_uplots, option=orjson.OPT_INDENT_2
+    ).decode("utf-8")
+
+    log.info("built plot info JSON")
+
+    return flask.render_template(
+        "c-benchmark-trends.html",
+        benchmark_name=bname,
+        bmr_cache_meta=bmrt_cache["meta"],
+        context_json_by_context_id=context_json_by_context_id,
+        # y_unit_for_all_plots="foo",
+        infos_for_uplots=infos_for_uplots,
+        infos_for_uplots_json=infos_for_uplots_json,
+        application=Config.APPLICATION_NAME,
+        title=Config.APPLICATION_NAME,  # type: ignore
+    )
 
 
 @app.route("/c-benchmarks/<bname>", methods=["GET"])  # type: ignore
