@@ -137,6 +137,11 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         if ibname == bname:
             dfs_by_t3[(case_id, context_id, hardware_id)] = df
 
+    # Do this trend analysis only for those timeseries that are recent.
+    # Criterion here for now: simple cutoff relative to _now_. TODO:
+    # relative to newest result for this conceptual benchmark.
+
+    now = time.time()
     relchange_by_t3: Dict[Tuple[str, str, str], float] = {}
     for t3, df in dfs_by_t3.items():
         # Note(JP): make a linear regression: derive a slope value. this is
@@ -154,6 +159,11 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
 
         if len(df) < 10:
             # do this only when we have some history.
+            continue
+
+        # Recency criterion.
+        newest_timestamp = df.index[-1].timestamp()
+        if now - newest_timestamp > 86400 * 30:
             continue
 
         # did some of that before here:
