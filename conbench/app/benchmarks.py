@@ -169,7 +169,11 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         if now - newest_timestamp > 86400 * 30:
             continue
 
-        # did some of that before here:
+        # TODO: basic outlier detection before the fit.
+        # Either rolling window median based, or maybe
+        # huber loss https://stackoverflow.com/a/61144766
+
+        # Did some of that before here:
         # https://github.com/jgehrcke/covid-19-analysis/blob/4950649a27c51c2bf36baba258757249385f2808/process.py#L227
         # it's a bit of a seemingly complex(?) converstion from pd
         # datetimeindex back to float values. Remove 10^15 from these
@@ -180,6 +184,7 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
             / 10**15
         )
         yfloats = df["svs"].values
+
         fitted_series = numpy.polynomial.Polynomial.fit(tfloats, yfloats, 1)
 
         # print(fitted_series)
