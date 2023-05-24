@@ -415,6 +415,7 @@ def show_benchmark_cases(bname: TBenchmarkName) -> str:
 class TypeUIPlotInfo(TypedDict):
     hwid: str
     ctxid: str
+    caseid: str
     hwname: str
     n_results: int
     url_to_newest_result: str
@@ -535,6 +536,7 @@ def show_benchmark_results(bname: TBenchmarkName, caseid: str) -> str:
             # Rely on at least one result being in the list.
             "hwid": hwid,
             "ctxid": ctxid,
+            "caseid": caseid,
             "hwname": results[0].hardware_name,
             "n_results": len(results),
             "url_to_newest_result": flask.url_for(
