@@ -1,10 +1,9 @@
 import collections
+import functools
 import logging
 import math
 import time
 from typing import Dict, List, Tuple, TypedDict, TypeVar
-
-import functools
 
 import flask
 import numpy as np
@@ -13,12 +12,11 @@ import orjson
 import pandas as pd
 
 import conbench.numstr
-from conbench.outlier import remove_outliers_by_iqrdist
 from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
 from conbench.job import BMRTBenchmarkResult, TBenchmarkName, bmrt_cache
-
+from conbench.outlier import remove_outliers_by_iqrdist
 
 """
 Experimental: UX around 'conceptual benchmarks'
@@ -197,8 +195,7 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         # nanoseconds-since-epoch to make the numeric values a little less
         # extreme for printing/debugging.
 
-        outliers = remove_outliers_by_iqrdist(df, "svs")
-        # print(outliers)
+        remove_outliers_by_iqrdist(df, "svs")
 
         # Now it's important to drop nans again because the outliers have been
         # marked with NaN, and any NaN will nannify the linear fit. We do not
@@ -209,7 +206,6 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
             # Skip if after outlier removal there's not enough history left.
             continue
 
-        print(len(df))
         tfloats = (
             np.array(df.index.to_pydatetime(), dtype=np.datetime64).astype("float")
             / 10**15
@@ -222,13 +218,13 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         # print(fitted_series)
         # https://numpy.org/doc/stable/reference/generated/numpy.polynomial.polynomial.Polynomial.fit.html#numpy.polynomial.polynomial.Polynomial.fit
         slope, ordinate = fitted_series.coef[1], fitted_series.coef[0]
-        print(slope, ordinate)
+        # print(slope, ordinate)
+
         # these values might be nan if the fit failed. if the input has a
         # nan then the fit fails: clean the input! But even then maybe the
         # fit might fail? Looks like nan has high sort order.
         # check for this value upon data emission? No.
         if math.isnan(slope):
-            print("yes")
             continue
 
         # Do a 'normalization' here to find _relative change_. For the offset
@@ -267,12 +263,12 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         # (this structure is used for plotting only).
         caseid, ctxid, hwid = t3
         results = bmrt_cache["by_4t_list"][(bname, caseid, ctxid, hwid)]
-        dfts = bmrt_cache["by_4t_df"][(bname, caseid, ctxid, hwid)]
 
-        print()
-        print()
-        print((bname, caseid, ctxid, hwid))
-        print(dfts.to_csv(na_rep="NaN", float_format=numstr8))
+        # dfts = bmrt_cache["by_4t_df"][(bname, caseid, ctxid, hwid)]
+        # print()
+        # print()
+        # print((bname, caseid, ctxid, hwid))
+        # print(dfts.to_csv(na_rep="NaN", float_format=numstr8))
 
         # sanity check. there must be a considerable number of results in this
         # list because this is a top N case based on linear fit on a dataframe
