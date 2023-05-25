@@ -105,9 +105,9 @@ class BMRTBenchmarkResult:
 # Do this for case ID, etc, too.
 TBenchmarkName = NewType("TBenchmarkName", str)
 
-# This type is used often. It's the famous 4-tuple defining a timeseries.
-# Or maybe turn this into a namedtuple or sth like this. Watch out a bit for
-# mem consumption.
+# This type is used often. It's the famous 4-tuple defining a timeseries. Or
+# maybe turn this into a namedtuple or sth like this. Watch out a bit for mem
+# consumption.
 Tt4 = Tuple[TBenchmarkName, str, str, str]
 
 # A type for a dictionary: key is 4-tuple defining a time series, and value is
@@ -124,6 +124,14 @@ class CacheDict(TypedDict):
     by_4t_df: TDict4tdf
     by_4t_list: TDict4tlist
     meta: CacheUpdateMetaInfo
+
+
+@dataclasses.dataclass(slots=True)
+class ResultTimeseries:
+    t4: Tt4
+    benchmark_name: str
+    df: pd.DataFrame
+    bmrlist: List[BMRTBenchmarkResult]
 
 
 # Think: do work in a child process, provide dictionary via shared memory to

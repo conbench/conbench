@@ -6,7 +6,7 @@
   <span class="fs-4"><code>{{ this_case_text_id }}</code></span>
   <div class="mt-5">
     <h5 class="mb-3">
-      History for unique case/hardware/context combinations
+      Unique case/hardware/context combinations, rel change (desc)
       <sup><i style="font-size: 12px"
    class="bi bi-info-circle"
    data-bs-toggle="tooltip"
@@ -35,6 +35,9 @@
     data-bs-target="#offcanvasContextDict-{{ plotinfo.ctxid }}"
     aria-controls="offcanvasContextDict-{{ plotinfo.ctxid }}">{{ plotinfo.ctxid[:7] }}</a>
               </div>
+
+              <div class="hardware"> {{ plotinfo.aux_title }} </div>
+
               <div class="ms-auto ps-2 results">
                 {{ plotinfo.n_results }} results <a href="{{ plotinfo.url_to_newest_result }}">(full history)</a>
               </div>
