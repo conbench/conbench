@@ -102,20 +102,26 @@ class BMRTBenchmarkResult:
         )
 
 
+# Do this for case ID, etc, too.
 TBenchmarkName = NewType("TBenchmarkName", str)
+
+# This type is used often. It's the famous 4-tuple defining a timeseries.
+# Or maybe turn this into a namedtuple or sth like this. Watch out a bit for
+# mem consumption.
+Tt4 = Tuple[TBenchmarkName, str, str, str]
 
 # A type for a dictionary: key is 4-tuple defining a time series, and value is
 # a pandas dataframe containing the time series (index: pd.DateTimeIndex
 # tz-aware, one column: single value summary).
-TDict4tdf = Dict[Tuple[TBenchmarkName, str, str, str], pd.DataFrame]
-TDict4tlist = Dict[Tuple[TBenchmarkName, str, str, str], List[BMRTBenchmarkResult]]
+TDict4tdf = Dict[Tt4, pd.DataFrame]
+TDict4tlist = Dict[Tt4, List[BMRTBenchmarkResult]]
 
 
 class CacheDict(TypedDict):
     by_id: Dict[str, BMRTBenchmarkResult]
     by_benchmark_name: Dict[TBenchmarkName, List[BMRTBenchmarkResult]]
     by_case_id: Dict[str, List[BMRTBenchmarkResult]]
-    dict4tdf: TDict4tdf
+    by_4t_df: TDict4tdf
     by_4t_list: TDict4tlist
     meta: CacheUpdateMetaInfo
 
@@ -129,7 +135,7 @@ bmrt_cache: CacheDict = {
     "by_benchmark_name": {},
     "by_case_id": {},
     "by_4t_list": {},
-    "dict4tdf": {},
+    "by_4t_df": {},
     "meta": CacheUpdateMetaInfo(
         newest_result_time_str="n/a",
         oldest_result_time_str="n/a",
@@ -280,7 +286,7 @@ def _fetch_and_cache_most_recent_results() -> None:
     bmrt_cache["by_id"] = by_id_dict
     bmrt_cache["by_benchmark_name"] = by_name_dict
     bmrt_cache["by_case_id"] = by_case_id_dict
-    bmrt_cache["dict4tdf"] = dict4tdf
+    bmrt_cache["by_4t_df"] = dict4tdf
     bmrt_cache["by_4t_list"] = bmrlist_by_4tuple
     bmrt_cache["meta"] = CacheUpdateMetaInfo(
         newest_result_time_str=first_result.ui_time_started_at,
