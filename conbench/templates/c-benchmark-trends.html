@@ -16,7 +16,7 @@
     <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
     <div class="row gy-5">
       {% for cch, plotinfo in infos_for_uplots.items() %}
-        <div class="col-6" style="width: 600px">
+        <div class="col" style="width: 410px;">
           <div class="cb-tinyplot pt-1 shadow">
             <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
             <div class="d-flex">
@@ -35,12 +35,12 @@
     data-bs-target="#offcanvasContextDict-{{ plotinfo.ctxid }}"
     aria-controls="offcanvasContextDict-{{ plotinfo.ctxid }}">{{ plotinfo.ctxid[:5] }}</a>
               </div>
-              <div class="hardware">{{ plotinfo.aux_title }}</div>
+              <div class="auxtitle">{{ plotinfo.aux_title }}</div>
               <div class="ms-auto ps-2 results">
               <!--  {{ plotinfo.n_results }} --><a href="{{ plotinfo.url_to_newest_result }}">full history</a>
               </div>
             </div>
-            <div class="cb-plot-{{ cch }}" style="width: 550px"></div>
+            <div class="cb-plot-{{ cch }}" style="width: 410px"></div>
           </div>
         </div>
       {% endfor %}
@@ -141,8 +141,8 @@
       return {
         title: "",
         class: "cb-uplot",
-        width: 550,
-        height: 270,
+        width: 410,
+        height: 250,
         padding: [0, 15, 0, 0], // https://github.com/leeoniya/uPlot/issues/804
         cursor: {
           show: false,
