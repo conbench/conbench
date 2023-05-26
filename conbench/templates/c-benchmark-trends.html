@@ -195,12 +195,13 @@
           },
           {
             label: unitStr,
-            labelFont: "bold 12px 'Roboto Mono'",
+            labelFont: "bold 11px 'Roboto Mono'",
             font: "11px  'Roboto Mono'",
+            gap: 1, // space between tick and label
             stroke: "#812570", // dark magenta
             scale: "y",
             // give y axis labels some space
-            //size: 57,
+            labelSize: 20, // this determines the distance between y axis label and left bound, think: padding
             size: yAxisLabelSpace(yValues),
             // This is used for y axis formatting. Trade-off:
             // predictable width, medium precision is sufficient.
@@ -218,7 +219,7 @@
               // meaningful -- if the relative change is very small then
               // it will be rather invisible in a plot like this, which
               // is the goal.
-              return [0, datamax * 1.2];
+              return [0, datamax * 1.05];
             },
 
           }
