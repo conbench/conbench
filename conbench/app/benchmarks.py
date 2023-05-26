@@ -256,7 +256,7 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
     infos_for_uplots: Dict[str, TypeUIPlotInfo] = {}
 
     # Input type equals output type, yeah
-    topn_t3_dict = get_first_n_dict_subset(relchange_by_t3_sorted, 25)
+    topn_t3_dict = get_first_n_dict_subset(relchange_by_t3_sorted, 12)
     # topn_t3 = list(relchange_by_t3_sorted.keys())[:6]
     # log.info("topn for plot: %s", topn_t3_dict)
 
