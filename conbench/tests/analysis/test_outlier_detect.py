@@ -32,6 +32,7 @@ def df_from_datafile(fn: str) -> pd.DataFrame:
         ("outlier_B.csv", [785.10015]),
         ("outlier_C.csv", [21.038903]),
         ("outlier_D.csv", []),
+        ("outlier_E.csv", []),
     ],
 )
 def test_scenarios(filename: str, expected_outliers: List):
