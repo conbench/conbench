@@ -119,7 +119,25 @@
 
     function renderPlots() {
 
+      let gridprops = {
+        show: true,
+        stroke: "#ddd",
+        width: 1,
+        dash: [],
+      }
+
+      let tickprops = {
+        show: true,
+        stroke: "#ddd",
+        width: 1,
+        dash: [],
+        size: 10,
+      }
+
       function generateUPlotOpts(yValues, unitStr) {
+
+
+
       return {
         title: "",
         class: "cb-uplot",
@@ -158,6 +176,8 @@
         axes: [
           {
             //label: "date",
+            grid: gridprops,
+            ticks: tickprops,
             labelFont: "bold 12px 'Roboto Mono'",
             font: "11px 'Roboto Mono'",
             stroke: "#812570", // dark magenta
@@ -185,6 +205,8 @@
             // This is used for y axis formatting. Trade-off:
             // predictable width, medium precision is sufficient.
             values: (u, splits) => formatValuesForAxis(splits),
+            grid: gridprops,
+            ticks: tickprops,
           }
         ],
         scales: {
