@@ -1,4 +1,5 @@
 import collections
+import functools
 import logging
 import math
 import time
@@ -15,6 +16,18 @@ from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
 from conbench.job import BMRTBenchmarkResult, TBenchmarkName, bmrt_cache
+from conbench.outlier import remove_outliers_by_iqrdist
+
+"""
+Experimental: UX around 'conceptual benchmarks'
+
+Most UI routes should contain the repo specifier, and not just the benchmark
+name (scenario: same benchmark name, but two different benchmarked repositories
+-- yeah, multi-repo support is costly. maybe drop it again.)
+"""
+
+numstr8 = functools.partial(conbench.numstr.numstr, sigfigs=8)
+
 
 log = logging.getLogger(__name__)
 
@@ -134,7 +147,7 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
     # Narrow down relevant dataframes.
     dfs_by_t3: Dict[Tuple[str, str, str], pd.DataFrame] = {}
     for (ibname, case_id, context_id, hardware_id), df in bmrt_cache[
-        "dict4tdf"
+        "by_4t_df"
     ].items():
         if ibname == bname:
             dfs_by_t3[(case_id, context_id, hardware_id)] = df
@@ -157,12 +170,13 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         # Interesting: benchmark result time distribution vs. commit
         # distribution over time. assume that code evolution is highly
         # correlated with benchmark start time evolution.
-        # ignore df rows in here where results reported VSV being NAN.
-        # df = df[df["svs"].notna()]
-        df = df.dropna()  # drop all rows that have any NaN
 
-        if len(df) < 10:
-            # do this only when we have some history.
+        # Ignore df rows in here where results reported SVS being NAN.
+        # Update: do this later below where we have to dropna anyway.
+        # df = df[df["svs"].notna()]
+
+        if len(df.index) < 10:
+            # Skip if there's little history anyway.
             continue
 
         # Recency criterion.
@@ -180,17 +194,38 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         # datetimeindex back to float values. Remove 10^15 from these
         # nanoseconds-since-epoch to make the numeric values a little less
         # extreme for printing/debugging.
+
+        remove_outliers_by_iqrdist(df, "svs")
+
+        # Now it's important to drop nans again because the outliers have been
+        # marked with NaN, and any NaN will nannify the linear fit. We do not
+        # want to mutate the DF in the BMRT cache. drop nans, create explicit
+        # copy (otherwise this might be a view)
+        df = df.dropna().copy()  # drop all rows that have any NaN
+        if len(df.index) < 10:
+            # Skip if after outlier removal there's not enough history left.
+            continue
+
         tfloats = (
             np.array(df.index.to_pydatetime(), dtype=np.datetime64).astype("float")
             / 10**15
         )
         yfloats = df["svs"].values
 
+        # Note that this is a least squares fit.
         fitted_series = numpy.polynomial.Polynomial.fit(tfloats, yfloats, 1)
 
         # print(fitted_series)
         # https://numpy.org/doc/stable/reference/generated/numpy.polynomial.polynomial.Polynomial.fit.html#numpy.polynomial.polynomial.Polynomial.fit
         slope, ordinate = fitted_series.coef[1], fitted_series.coef[0]
+        # print(slope, ordinate)
+
+        # these values might be nan if the fit failed. if the input has a
+        # nan then the fit fails: clean the input! But even then maybe the
+        # fit might fail? Looks like nan has high sort order.
+        # check for this value upon data emission? No.
+        if math.isnan(slope):
+            continue
 
         # Do a 'normalization' here to find _relative change_. For the offset
         # use data from the linear fit (the constant part of the linearity).
@@ -218,7 +253,7 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
     infos_for_uplots: Dict[str, TypeUIPlotInfo] = {}
 
     # Input type equals output type, yeah
-    topn_t3_dict = get_first_n_dict_subset(relchange_by_t3_sorted, 10)
+    topn_t3_dict = get_first_n_dict_subset(relchange_by_t3_sorted, 25)
     # topn_t3 = list(relchange_by_t3_sorted.keys())[:6]
     # log.info("topn for plot: %s", topn_t3_dict)
 
@@ -228,6 +263,12 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         # (this structure is used for plotting only).
         caseid, ctxid, hwid = t3
         results = bmrt_cache["by_4t_list"][(bname, caseid, ctxid, hwid)]
+
+        # dfts = bmrt_cache["by_4t_df"][(bname, caseid, ctxid, hwid)]
+        # print()
+        # print()
+        # print((bname, caseid, ctxid, hwid))
+        # print(dfts.to_csv(na_rep="NaN", float_format=numstr8))
 
         # sanity check. there must be a considerable number of results in this
         # list because this is a top N case based on linear fit on a dataframe
@@ -262,6 +303,7 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
             "ctxid": ctxid,
             "caseid": caseid,
             "hwname": results[0].hardware_name,
+            "aux_title": f"relchange: {conbench.numstr.numstr(relchange, 3)}",
             "n_results": len(results),
             "url_to_newest_result": flask.url_for(
                 "app.benchmark-result",
@@ -423,6 +465,7 @@ class TypeUIPlotInfo(TypedDict):
     ctxid: str
     caseid: str
     hwname: str
+    aux_title: str
     n_results: int
     url_to_newest_result: str
     data_for_uplot: List[List]
@@ -543,6 +586,7 @@ def show_benchmark_results(bname: TBenchmarkName, caseid: str) -> str:
             "hwid": hwid,
             "ctxid": ctxid,
             "caseid": caseid,
+            "aux_title": "",
             "hwname": results[0].hardware_name,
             "n_results": len(results),
             "url_to_newest_result": flask.url_for(
