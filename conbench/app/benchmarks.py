@@ -306,7 +306,7 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
             "ctxid": ctxid,
             "caseid": caseid,
             "hwname": results[0].hardware_name,
-            "aux_title": f"relchange: {conbench.numstr.numstr(relchange, 3)}",
+            "aux_title": f"relchng {conbench.numstr.numstr(relchange, 3)}",
             "n_results": len(results),
             "url_to_newest_result": flask.url_for(
                 "app.benchmark-result",
