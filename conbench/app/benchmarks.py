@@ -239,11 +239,19 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         relchange_by_t3[t3] = relchange
 
     # sort by relative change, largest first.
-    relchange_by_t3_sorted: Dict[Tuple[str, str, str], float] = dict(
+    relchange_by_t3_sorted_inctrend: Dict[Tuple[str, str, str], float] = dict(
         sorted(
             relchange_by_t3.items(),
             key=lambda item: item[1],
             reverse=True,
+        )
+    )
+
+    relchange_by_t3_sorted_decrtrend: Dict[Tuple[str, str, str], float] = dict(
+        sorted(
+            relchange_by_t3.items(),
+            key=lambda item: item[1],
+            reverse=False,
         )
     )
 
@@ -253,12 +261,58 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
     #     print(t3, ": ", relchange)
 
     context_json_by_context_id: Dict[str, str] = {}
-    infos_for_uplots: Dict[str, TypeUIPlotInfo] = {}
+    infos_for_uplots_incrtrend: Dict[str, TypeUIPlotInfo]
+    infos_for_uplots_decrtrend: Dict[str, TypeUIPlotInfo]
 
     # Input type equals output type, yeah
-    topn_t3_dict = get_first_n_dict_subset(relchange_by_t3_sorted, 12)
+    topn_t3_dict_incr = get_first_n_dict_subset(relchange_by_t3_sorted_inctrend, 12)
+    topn_t3_dict_decr = get_first_n_dict_subset(relchange_by_t3_sorted_decrtrend, 12)
+
     # topn_t3 = list(relchange_by_t3_sorted.keys())[:6]
-    # log.info("topn for plot: %s", topn_t3_dict)
+    # log.info("topn for plot: %s", topn_t3_dict_incr)
+
+    infos_for_uplots_incrtrend, ctd = _build_plotinfo_from_topnt3_dict(
+        bname, topn_t3_dict_incr
+    )
+    context_json_by_context_id |= ctd
+    infos_for_uplots_decrtrend, ctd = _build_plotinfo_from_topnt3_dict(
+        bname, topn_t3_dict_decr
+    )
+    context_json_by_context_id |= ctd
+
+    log.info("generated uplot structs")
+
+    # Merge uplot info dicts together.
+    infos_for_uplots_both = infos_for_uplots_incrtrend | infos_for_uplots_decrtrend
+
+    # Need to find a way to put bytes straight into jinja template.
+    # still is still a tiny bit faster than using stdlib json.dumps()
+    infos_for_uplots_json = orjson.dumps(
+        infos_for_uplots_both, option=orjson.OPT_INDENT_2
+    ).decode("utf-8")
+
+    log.info("built plot info JSON")
+
+    return flask.render_template(
+        "c-benchmark-trends.html",
+        benchmark_name=bname,
+        bmr_cache_meta=bmrt_cache["meta"],
+        context_json_by_context_id=context_json_by_context_id,
+        # y_unit_for_all_plots="foo",
+        infos_for_uplots_incrtrend=infos_for_uplots_incrtrend,
+        infos_for_uplots_decrtrend=infos_for_uplots_decrtrend,
+        infos_for_uplots_both=infos_for_uplots_both,
+        infos_for_uplots_json=infos_for_uplots_json,
+        application=Config.APPLICATION_NAME,
+        title=Config.APPLICATION_NAME,  # type: ignore
+    )
+
+
+def _build_plotinfo_from_topnt3_dict(
+    bname: TBenchmarkName, topn_t3_dict: Dict[Tuple[str, str, str], float]
+) -> Tuple[Dict[str, "TypeUIPlotInfo"], Dict[str, str]]:
+    context_json_by_context_id: Dict[str, str] = {}
+    infos_for_uplots: Dict[str, TypeUIPlotInfo] = {}
 
     for t3, relchange in topn_t3_dict.items():
         # for (hwid, ctxid, _), results in results_by_hardware_and_context_sorted.items():
@@ -291,7 +345,6 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         for r in results:
             units_seen.add(r.unit)
 
-        # todo: need to add case id
         infos_for_uplots[f"{caseid}_{hwid}_{ctxid}"] = {
             # deduplicate with code below
             "data_for_uplot": [
@@ -301,10 +354,10 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
                     for r in results
                 ],
             ],
-            # Rely on at least one result being in the list.
             "hwid": hwid,
             "ctxid": ctxid,
             "caseid": caseid,
+            # Rely on at least one result being in the list.
             "hwname": results[0].hardware_name,
             "aux_title": f"relchng {conbench.numstr.numstr(relchange, 3)}",
             "n_results": len(results),
@@ -315,26 +368,7 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
             "unit": maybe_longer_unit(newest_result.unit),
         }
 
-    log.info("generated uplot structs")
-    # Need to find a way to put bytes straight into jinja template.
-    # still is still a tiny bit faster than using stdlib json.dumps()
-    infos_for_uplots_json = orjson.dumps(
-        infos_for_uplots, option=orjson.OPT_INDENT_2
-    ).decode("utf-8")
-
-    log.info("built plot info JSON")
-
-    return flask.render_template(
-        "c-benchmark-trends.html",
-        benchmark_name=bname,
-        bmr_cache_meta=bmrt_cache["meta"],
-        context_json_by_context_id=context_json_by_context_id,
-        # y_unit_for_all_plots="foo",
-        infos_for_uplots=infos_for_uplots,
-        infos_for_uplots_json=infos_for_uplots_json,
-        application=Config.APPLICATION_NAME,
-        title=Config.APPLICATION_NAME,  # type: ignore
-    )
+    return infos_for_uplots, context_json_by_context_id
 
 
 @app.route("/c-benchmarks/<bname>", methods=["GET"])  # type: ignore
