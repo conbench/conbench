@@ -175,7 +175,8 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         # Update: do this later below where we have to dropna anyway.
         # df = df[df["svs"].notna()]
 
-        if len(df.index) < 10:
+        # count(): number of non-NaN values
+        if df["svs"].count() < 10:
             # Skip if there's little history anyway.
             continue
 
