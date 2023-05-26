@@ -141,6 +141,13 @@ div.cb-tinyplot div.hardware {
   padding-left: 5px;
 }
 
+div.cb-tinyplot div.auxtitle {
+  font-family: var(--bs-font-monospace);
+  font-size: 11px;
+  padding-left: 10px;
+}
+
+
 div.cb-tinyplot div.context {
   font-family: var(--bs-font-monospace);
   font-size: 11px;
@@ -150,6 +157,7 @@ div.cb-tinyplot div.context {
 div.cb-tinyplot div.results {
   font-family: var(--bs-font-monospace);
   font-size: 11px;
+  margin-right: 2px;
 }
 
 div.cb-tinyplot a {
