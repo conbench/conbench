@@ -195,13 +195,15 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         # nanoseconds-since-epoch to make the numeric values a little less
         # extreme for printing/debugging.
 
+        # Do not modify dataframe objects in BMRT cache.
+        df = df.copy()
         remove_outliers_by_iqrdist(df, "svs")
 
         # Now it's important to drop nans again because the outliers have been
         # marked with NaN, and any NaN will nannify the linear fit. We do not
         # want to mutate the DF in the BMRT cache. drop nans, create explicit
         # copy (otherwise this might be a view)
-        df = df.dropna().copy()  # drop all rows that have any NaN
+        df = df.dropna()  # drop all rows that have any NaN
         if len(df.index) < 10:
             # Skip if after outlier removal there's not enough history left.
             continue
