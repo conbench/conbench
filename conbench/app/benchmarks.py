@@ -586,6 +586,7 @@ def show_benchmark_results(bname: TBenchmarkName, caseid: str) -> str:
             "hwid": hwid,
             "ctxid": ctxid,
             "caseid": caseid,
+            "aux_title": "",
             "hwname": results[0].hardware_name,
             "n_results": len(results),
             "url_to_newest_result": flask.url_for(
