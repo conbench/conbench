@@ -4,19 +4,24 @@
     benchmark <strong>'{{ benchmark_name }}'</strong> / trends
   </h3>
   <span class="fs-4"><code>{{ this_case_text_id }}</code></span>
-  <div class="mt-5">
-    <h5 class="mb-3">
-      Unique case/hardware/context combinations, rel change (desc)
+  <div class="mt-3">
+    <h4 class="mb-3">
+      Trend: increasing <i class="bi bi-arrow-up-right"></i>
+    </h4>
+    <p>
+      Top 12 case/hardware/context combinations with increasing measurement results.
+      <br>
+      Sorted by relchng metric
       <sup><i style="font-size: 12px"
    class="bi bi-info-circle"
    data-bs-toggle="tooltip"
-   data-bs-title="Benchmark results, grouped by unique (case, hardware, context) combinations. ">
-      </i></sup>
-    </h5>
+   data-bs-title="Relative change from linear regression on recent results, after outlier removal">
+      </i></sup>,  descending
+    </p>
     <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
-    <div class="row gy-5">
-      {% for cch, plotinfo in infos_for_uplots.items() %}
-        <div class="col-6" style="width: 600px">
+    <div class="row gx-2 gy-2">
+      {% for cch, plotinfo in infos_for_uplots_incrtrend.items() %}
+        <div class="col" style="width: 410px;">
           <div class="cb-tinyplot pt-1 shadow">
             <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
             <div class="d-flex">
@@ -24,7 +29,7 @@
                    data-bs-toggle="tooltip"
                    data-bs-title="Hardware"
                    data-bs-delay='{"show":700,"hide":150}'>
-                <i class="bi bi-cpu"></i> {{ plotinfo.hwname[:25] }}
+                <i class="bi bi-cpu"></i> {{ plotinfo.hwname[:20] }}
               </div>
               <div class="context"
                    data-bs-toggle="tooltip"
@@ -33,20 +38,70 @@
                 <i class="bi bi-sliders2"></i> <a href="#"
     data-bs-toggle="offcanvas"
     data-bs-target="#offcanvasContextDict-{{ plotinfo.ctxid }}"
-    aria-controls="offcanvasContextDict-{{ plotinfo.ctxid }}">{{ plotinfo.ctxid[:7] }}</a>
+    aria-controls="offcanvasContextDict-{{ plotinfo.ctxid }}">{{ plotinfo.ctxid[:5] }}</a>
               </div>
-              <div class="hardware">{{ plotinfo.aux_title }}</div>
+              <div class="auxtitle">{{ plotinfo.aux_title }}</div>
               <div class="ms-auto ps-2 results">
-                {{ plotinfo.n_results }} results <a href="{{ plotinfo.url_to_newest_result }}">(full history)</a>
+                <!--  {{ plotinfo.n_results }} --><a href="{{ plotinfo.url_to_newest_result }}">full history</a>
               </div>
             </div>
-            <div class="cb-plot-{{ cch }}" style="width: 550px"></div>
+            <div class="cb-plot-{{ cch }}" style="width: 410px"></div>
           </div>
         </div>
       {% endfor %}
     </div>
-    <div style="font-family: 'Roboto Mono';">.</div>
   </div>
+  <!-- now the same structure again, for decreasing trend (todo: deduplicate code)-->
+  <div class="mt-5">
+    <h4 class="mb-3">
+      Trend: decreasing <i class="bi bi-arrow-down-right"></i>
+    </h4>
+    <p>
+      Top 12 case/hardware/context combinations with decreasing measurement results.
+      <br>
+      Sorted by relchng metric
+      <sup><i style="font-size: 12px"
+   class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="Relative change from linear regression on recent results, after outlier removal">
+      </i></sup>,  descending
+    </p>
+    <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
+    <div class="row gx-2 gy-2">
+      {% for cch, plotinfo in infos_for_uplots_decrtrend.items() %}
+        <div class="col" style="width: 410px;">
+          <div class="cb-tinyplot pt-1 shadow">
+            <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
+            <div class="d-flex">
+              <div class="hardware"
+                   data-bs-toggle="tooltip"
+                   data-bs-title="Hardware"
+                   data-bs-delay='{"show":700,"hide":150}'>
+                <i class="bi bi-cpu"></i> {{ plotinfo.hwname[:20] }}
+              </div>
+              <div class="context"
+                   data-bs-toggle="tooltip"
+                   data-bs-title="Context"
+                   data-bs-delay='{"show":700,"hide":150}'>
+                <i class="bi bi-sliders2"></i> <a href="#"
+    data-bs-toggle="offcanvas"
+    data-bs-target="#offcanvasContextDict-{{ plotinfo.ctxid }}"
+    aria-controls="offcanvasContextDict-{{ plotinfo.ctxid }}">{{ plotinfo.ctxid[:5] }}</a>
+              </div>
+              <div class="auxtitle">{{ plotinfo.aux_title }}</div>
+              <div class="ms-auto ps-2 results">
+                <!--  {{ plotinfo.n_results }} --><a href="{{ plotinfo.url_to_newest_result }}">full history</a>
+              </div>
+            </div>
+            <div class="cb-plot-{{ cch }}" style="width: 410px"></div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  <!-- font load hack -- not needed anymore I think? -->
+  <div style="font-family: 'Roboto Mono';">.</div>
+  <!-- content for offcanvas, invisible by default -->
   {% for ctxid, context_json in context_json_by_context_id.items() %}
     <div class="offcanvas offcanvas-start"
          data-bs-scroll="true"
@@ -114,17 +169,36 @@
       if (switchToScientifcNotation(values)) {
         return 60;
       }
-      return 45;
+      return 41;
     }
 
     function renderPlots() {
 
+      let gridprops = {
+        show: true,
+        stroke: "#ddd",
+        width: 1,
+        dash: [],
+      }
+
+      let tickprops = {
+        show: true,
+        stroke: "#ddd",
+        width: 1,
+        dash: [],
+        size: 10,
+      }
+
       function generateUPlotOpts(yValues, unitStr) {
+
+
+
       return {
         title: "",
         class: "cb-uplot",
-        width: 550,
-        height: 270,
+        width: 410,
+        height: 250,
+        padding: [0, 15, 0, 0], // https://github.com/leeoniya/uPlot/issues/804
         cursor: {
           show: false,
         },
@@ -158,6 +232,8 @@
         axes: [
           {
             //label: "date",
+            grid: gridprops,
+            ticks: tickprops,
             labelFont: "bold 12px 'Roboto Mono'",
             font: "11px 'Roboto Mono'",
             stroke: "#812570", // dark magenta
@@ -175,16 +251,19 @@
           },
           {
             label: unitStr,
-            labelFont: "bold 12px 'Roboto Mono'",
+            labelFont: "bold 11px 'Roboto Mono'",
             font: "11px  'Roboto Mono'",
+            gap: 1, // space between tick and label
             stroke: "#812570", // dark magenta
             scale: "y",
             // give y axis labels some space
-            //size: 57,
+            labelSize: 20, // this determines the distance between y axis label and left bound, think: padding
             size: yAxisLabelSpace(yValues),
             // This is used for y axis formatting. Trade-off:
             // predictable width, medium precision is sufficient.
             values: (u, splits) => formatValuesForAxis(splits),
+            grid: gridprops,
+            ticks: tickprops,
           }
         ],
         scales: {
@@ -196,14 +275,14 @@
               // meaningful -- if the relative change is very small then
               // it will be rather invisible in a plot like this, which
               // is the goal.
-              return [0, datamax * 1.2];
+              return [0, datamax * 1.05];
             },
 
           }
         },
       }};
 
-      {% for cch, plotinfo in infos_for_uplots.items() %}
+      {% for cch, plotinfo in infos_for_uplots_both.items() %}
         // About plot_info_by_cch[xxx]["data_for_uplot"]:
         // 2-tuple. First item: array of time values, second item:
         // array of ordinate values.

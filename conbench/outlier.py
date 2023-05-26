@@ -7,7 +7,7 @@ log = logging.getLogger(__name__)
 
 
 def remove_outliers_by_iqrdist(
-    df: pd.DataFrame, colname: str, iqdistance=7, keep_last_n=2
+    df: pd.DataFrame, colname: str, iqdistance=10, keep_last_n=2
 ) -> pd.DataFrame:
     """
     Inspect column `colname` for extreme outliers.
@@ -68,6 +68,9 @@ def remove_outliers_by_iqrdist(
 
     Return a DataFrame with only the outlier rows before replacement, i.e.
     these rows contain the outlier values.
+
+    TODO? maybe do asymmetric outlier detection using knowledge of "worse" vs
+    "better"?
     """
     assert len(df) > 5
 
@@ -93,7 +96,7 @@ def remove_outliers_by_iqrdist(
     # if we mark more than 30 % of the data as outliers I don't think this is
     # cool, bail out. This kind of ignores when the input dataframe has many
     # NaNs.
-    if float(len(df_outliers.index)) / len(df.index) > 0.2:
+    if float(len(df_outliers.index)) / len(df.index) > 0.3:
         log.warn("many outliers thrown out before lin reg:\n%s\n%s", df, df_outliers)
 
     # Mutate the input dataframe: set outliers to NaN.
