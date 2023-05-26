@@ -4,15 +4,16 @@
     benchmark <strong>'{{ benchmark_name }}'</strong> / trends
   </h3>
   <span class="fs-4"><code>{{ this_case_text_id }}</code></span>
-  <div class="mt-5">
-    <h5 class="mb-3">
-      Unique case/hardware/context combinations, rel change (desc)
-      <sup><i style="font-size: 12px"
+  <div class="mt-3">
+  <h4 class="mb-3">Trend: increasing <i class="bi bi-arrow-up-right"></i> </h4>
+    Top 12 case/hardware/context combinations with increasing measurement results. <br>
+    Sorted by relchng metric
+    <sup><i style="font-size: 12px"
    class="bi bi-info-circle"
    data-bs-toggle="tooltip"
-   data-bs-title="Benchmark results, grouped by unique (case, hardware, context) combinations. ">
-      </i></sup>
-    </h5>
+   data-bs-title="Relative change from linear regression on recent results, after outlier removal">
+      </i></sup>,  descending
+    </p>
     <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
     <div class="row gx-2 gy-2">
       {% for cch, plotinfo in infos_for_uplots.items() %}
