@@ -30,8 +30,8 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
     test_status_repo = "conbench/benchalerts"
     test_status_commit = "f6e70aeb29ce07c40eed0c0175e9dced488ed6ee"
 
-    monkeypatch.setenv("CONBENCH_URL", "https://conbench.ursa.dev/")
-    velox_commit = "892e4002690c869c31a942cbaf80f6dc7830581f"
+    monkeypatch.setenv("CONBENCH_URL", "https://velox-conbench.voltrondata.run/")
+    velox_commit = "c76715c9db1eea7cf3f32dca6fe78fc35c4f3ecd"
 
     github_run_id = os.getenv("GITHUB_RUN_ID", "2974120883")
     build_url = f"https://github.com/{test_status_repo}/actions/runs/{github_run_id}"
@@ -65,7 +65,7 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
     pipeline_steps = [
         steps.GetConbenchZComparisonStep(
             commit_hash=velox_commit,
-            baseline_run_type=steps.BaselineRunCandidates.fork_point,
+            baseline_run_type=steps.BaselineRunCandidates.parent,
             z_score_threshold=None,
         ),
         steps.GitHubCheckStep(
