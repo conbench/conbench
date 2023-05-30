@@ -8,14 +8,16 @@ This package is intended to make the following steps easier in CI. Before these 
 it is assumed that an execution environment has performed a run of benchmarks and
 submitted the results to Conbench.
 
-- Hit the Conbench API to understand if there were any:
+- Hit the Conbench API, which uses the [lookback z-score
+  method](https://conbench.github.io/conbench/pages/lookback_zscore.html) to understand
+  if there were any:
     - errors
     - regressions (with configuration for how these regressions may be detected)
     - improvements (with configuration for how these improvements may be detected)
 - Format and submit a summary of these findings to various places (again, with
   configuration):
-    - GitHub Status on a commit
     - GitHub Check on a commit with a Markdown summary
+    - Comment on a GitHub pull request
 
 In the future, there will be more places to submit alerts/reports/summaries, and more
 configuration possible.
@@ -100,7 +102,6 @@ follow these instructions.
     we don't need GitHub to push webhook events to the App.
 1. For full use of this package, the App requires the following permissions:
     - Repository > Checks > Read and Write
-    - Repository > Commit statuses > Read and Write
     - Repository > Pull requests > Read and Write
 1. After creating the App, save the App ID for later.
 1. For the App's photo, use [this

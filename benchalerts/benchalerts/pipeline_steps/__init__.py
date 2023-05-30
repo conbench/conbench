@@ -7,8 +7,6 @@ from .github import (
     GitHubCheckErrorHandler,
     GitHubCheckStep,
     GitHubPRCommentAboutCheckStep,
-    GitHubStatusErrorHandler,
-    GitHubStatusStep,
 )
 
 __all__ = [
@@ -18,6 +16,4 @@ __all__ = [
     "GitHubCheckErrorHandler",
     "GitHubCheckStep",
     "GitHubPRCommentAboutCheckStep",
-    "GitHubStatusErrorHandler",
-    "GitHubStatusStep",
 ]

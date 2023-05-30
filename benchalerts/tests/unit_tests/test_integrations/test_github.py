@@ -14,7 +14,7 @@
 
 import pytest
 
-from benchalerts.integrations.github import CheckStatus, GitHubRepoClient, StatusState
+from benchalerts.integrations.github import CheckStatus, GitHubRepoClient
 
 from ..mocks import MockAdapter
 
@@ -40,26 +40,6 @@ class TestGitHubRepoClient:
     def test_comment_with_hash_fails_with_no_matching_prs(self, github_auth):
         with pytest.raises(ValueError, match="pull request"):
             self.gh.create_pull_request_comment(comment="test", commit_hash="no_prs")
-
-    def test_update_commit_status(self, github_auth):
-        res = self.gh.update_commit_status(
-            commit_hash="abc",
-            title="tests",
-            description="Testing something",
-            state=StatusState.SUCCESS,
-            details_url="https://conbench.biz/",
-        )
-        assert res["description"] == "Testing something"
-
-    def test_update_commit_status_bad_state(self, github_auth):
-        with pytest.raises(TypeError, match="StatusState"):
-            self.gh.update_commit_status(
-                commit_hash="abc",
-                title="tests",
-                description="Testing something",
-                state="sorta working",
-                details_url="https://conbench.biz/",
-            )
 
     @pytest.mark.parametrize("in_progress", [True, False])
     def test_update_check(self, github_auth, in_progress):
