@@ -9,7 +9,7 @@ it is assumed that an execution environment has performed a run of benchmarks an
 submitted the results to Conbench.
 
 - Hit the Conbench API, which uses the [lookback z-score
-  method](https://conbench.github.io/conbench/pages/lookback_zscore.html) to understand
+  method](https://conbench.github.io/conbench/pages/lookback_zscore.html), to understand
   if there were any:
     - errors
     - regressions (with configuration for how these regressions may be detected)
