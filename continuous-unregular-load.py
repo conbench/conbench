@@ -1,8 +1,12 @@
+import datetime
 import logging
 import os
 import queue
 import time
+import uuid
 from threading import Thread
+
+import random
 
 import requests
 
@@ -13,6 +17,8 @@ logging.basicConfig(
     datefmt="%y%m%d-%H:%M:%S",
 )
 
+RANDOM_RUN_IDS = [uuid.uuid4().hex for _ in range(10)]
+
 
 # base_url = "http://127.0.0.1:8000/api"
 # if os.environ.get("CONBENCH_BASE_URL"):
@@ -21,19 +27,23 @@ base_url = f"{os.environ['CONBENCH_BASE_URL']}"
 
 session = requests.Session()
 
+# The number is the desired target rate, in 1/s.
+
 targets = [
-    ("/api/ping/", "GET", 2.0),
-    ("/", "GET", 2.0),
-    ("/runs/7838-426c-88c1-01d854d8ee72/", "GET", 0.5),
+    # ("/api/ping/", "GET", 0.5),
+    # ("/", "GET", 1.0),
+    (f"/runs/{RANDOM_RUN_IDS[0]}/", "GET", 1.0),
+    (f"/api/compare/runs/{RANDOM_RUN_IDS[0]}...{RANDOM_RUN_IDS[3]}/", "GET", 1.0),
+    ("/api/benchmark-results/", "POST", 3.0),
     (
-        "compare/benchmarks/fd773f3414b04ca783c97925fe05c2c5...40872ceb41094f1ea509b19ccb762fb8/",
+        "/compare/benchmarks/fd773f3414b04ca783c97925fe05c2c5...40872ceb41094f1ea509b19ccb762fb8/",
         "GET",
         0.2,
     ),
-    ("/batches/0d32f00ea4884aaea10454cf61f7e91f/", "GET", 0.1),
-    ("/benchmarks/4a175cbb62cb473389e78174e5dc9991/", "GET", 0.1),
-    ("/benchmarks/35b0b18277a24bbda262ecd66bf5ad42/", "GET", 0.5),
-    ("/login/", "GET", 0.05),
+    # ("/batches/0d32f00ea4884aaea10454cf61f7e91f/", "GET", 0.1),
+    # ("/benchmarks/4a175cbb62cb473389e78174e5dc9991/", "GET", 0.1),
+    # ("/benchmarks/35b0b18277a24bbda262ecd66bf5ad42/", "GET", 0.5),
+    # ("/login/", "GET", 0.05),
 ]
 
 
@@ -126,11 +136,25 @@ def _task_consumer_iteration():
 
     methodstring = target[1]
     url = base_url + target[0]
+
+    reqargs = {
+        "url": url,
+        "timeout": (1.05, 5),
+    }
+
+    if methodstring == "POST":
+        # For now, POST implies: posting benchmark result
+        reqargs["json"] = gen_bmresult()
     try:
-        reqmethod_str_map[methodstring](url, timeout=(1.05, 5))
+        resp = reqmethod_str_map[methodstring](**reqargs)
         HTTP_REQUESTS_MADE_COUNTER += 1
     except requests.exceptions.RequestException as exc:
         log.info("request %s failed with %s", target, exc)
+
+    if str(resp.status_code).startswith("4"):
+        log.info(
+            "request %s failed with resp: %s, %s", target, resp.status_code, resp.text
+        )
 
 
 def _task_creator_iteration():
@@ -188,6 +212,64 @@ def login():
     r = session.post(url, json=data, timeout=(3, 5))
     assert str(r.status_code).startswith("2"), f"login failed:\n{r.text}"
     log.info("login succeeded")
+
+
+def gen_bmresult():
+    """
+    Generate dictionary that complies with the BenchmarkResultCreate schema.
+    """
+
+    benchmark_name = "fozzelbenchmark"
+    return {
+        "context": {
+            "arrow_compiler_flags": "-fvisibility-inlines-hidden",
+            "benchmark_language": "yes",
+        },
+        "github": {
+            "commit": "4d31b1ef70be330356ed9119f63931f8fd90e6d1",
+            "repository": "https://github.com/apache/arrow",
+        },
+        "info": {
+            "arrow_compiler_id": "GNU",
+            "arrow_compiler_version": "9.4.0",
+        },
+        "batch_id": "foo",  # why is that required?
+        "run_id": random.choice(RANDOM_RUN_IDS),
+        "run_name": "rname",
+        "stats": {
+            "data": [1, 2, 3],
+            "iterations": 3,
+            "time_unit": "s",
+            "times": [],
+            "unit": "s",
+        },
+        "tags": {
+            "compression": random.choice(["a", "b", "c"]),
+            "name": benchmark_name,
+        },
+        "timestamp": str(datetime.datetime.now() - datetime.timedelta(hours=3)),
+        "validation": {"type": "pandas.testing", "success": True},
+        "machine_info": {
+            # Some projects set massive machine names. See how the UI deals
+            # with that.
+            "name": "3wrn5-lf0jw",
+            "architecture_name": "aarch64",
+            "cpu_core_count": "16",
+            "cpu_frequency_max_hz": "0",
+            "cpu_l1d_cache_bytes": "65536",
+            "cpu_l1i_cache_bytes": "65536",
+            "cpu_l2_cache_bytes": "1048576",
+            "cpu_l3_cache_bytes": "33554432",
+            "cpu_model_name": "",
+            "cpu_thread_count": "16",
+            "gpu_count": "0",
+            "gpu_product_names": [],
+            "kernel_name": "4.14.248-189.473.amzn2.aarch64",
+            "memory_bytes": "64424509440",
+            "os_name": "Linux",
+            "os_version": "4.14.248-189.473.amzn2.aarch64-aarch64-with-glibc2.17",
+        },
+    }
 
 
 if __name__ == "__main__":
