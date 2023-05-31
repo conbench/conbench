@@ -158,7 +158,7 @@ _STARTED = False
 BMRT_CACHE_SIZE = 0.3 * 10**6
 if Config.TESTING:
     # quicker update in testing
-    BMRT_CACHE_SIZE = 0.05 * 10**6
+    BMRT_CACHE_SIZE = 0.3 * 10**6
 
 
 # Fetching one million items from a sample DB takes ~1 minute on my machine
@@ -319,7 +319,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
     Immediately return after having spawned a thread triggers periodic action.
     """
     first_sleep_seconds = 3
-    min_delay_between_runs_seconds = 120
+    min_delay_between_runs_seconds = 5  # 120
 
     if Config.TESTING:
         first_sleep_seconds = 2
@@ -363,7 +363,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
             # this thing here. So, if the last iteration lasted for e.g. ~60
             # seconds, then keep waiting for ~five minutes until triggering the
             # next run.
-            delay_s = max(min_delay_between_runs_seconds, 5 * last_call_duration_s)
+            delay_s = 2  # max(min_delay_between_runs_seconds, 5 * last_call_duration_s)
             log.info("BMRT cache: trigger next fetch in %.3f s", delay_s)
 
     if not Config.CREATE_ALL_TABLES:
