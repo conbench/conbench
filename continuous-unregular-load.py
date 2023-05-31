@@ -32,14 +32,14 @@ session = requests.Session()
 targets = [
     # ("/api/ping/", "GET", 0.5),
     # ("/", "GET", 1.0),
-    (f"/runs/{RANDOM_RUN_IDS[0]}/", "GET", 1.0),
-    (f"/api/compare/runs/{RANDOM_RUN_IDS[0]}...{RANDOM_RUN_IDS[3]}/", "GET", 1.0),
-    ("/api/benchmark-results/", "POST", 3.0),
-    (
-        "/compare/benchmarks/fd773f3414b04ca783c97925fe05c2c5...40872ceb41094f1ea509b19ccb762fb8/",
-        "GET",
-        0.2,
-    ),
+    # (f"/runs/{RANDOM_RUN_IDS[0]}/", "GET", 0.1),
+    # (f"/api/compare/runs/{RANDOM_RUN_IDS[0]}...{RANDOM_RUN_IDS[3]}/", "GET", 1.0),
+    ("/api/benchmark-results/", "POST", 10.0),
+    # (
+    #     "/compare/benchmarks/fd773f3414b04ca783c97925fe05c2c5...40872ceb41094f1ea509b19ccb762fb8/",
+    #     "GET",
+    #     0.2,
+    # ),
     # ("/batches/0d32f00ea4884aaea10454cf61f7e91f/", "GET", 0.1),
     # ("/benchmarks/4a175cbb62cb473389e78174e5dc9991/", "GET", 0.1),
     # ("/benchmarks/35b0b18277a24bbda262ecd66bf5ad42/", "GET", 0.5),
@@ -73,7 +73,7 @@ def main():
     t_creator.start()
 
     # Start N task consumer threads, each also running an infinite loop.
-    t_consumers = [Thread(target=task_consumer) for _ in range(2)]
+    t_consumers = [Thread(target=task_consumer) for _ in range(10)]
 
     for thread in t_consumers:
         thread.start()
@@ -132,14 +132,14 @@ def _task_consumer_iteration():
         # log.info("thread did not have to do work")
         return
 
-    log.info("making request")
+    # log.info("making request")
 
     methodstring = target[1]
     url = base_url + target[0]
 
     reqargs = {
         "url": url,
-        "timeout": (1.05, 5),
+        "timeout": (1.05, 35),
     }
 
     if methodstring == "POST":
@@ -150,6 +150,8 @@ def _task_consumer_iteration():
         HTTP_REQUESTS_MADE_COUNTER += 1
     except requests.exceptions.RequestException as exc:
         log.info("request %s failed with %s", target, exc)
+        # Response object is not defined. Error out.
+        return
 
     if str(resp.status_code).startswith("4"):
         log.info(
@@ -237,7 +239,7 @@ def gen_bmresult():
         "run_id": random.choice(RANDOM_RUN_IDS),
         "run_name": "rname",
         "stats": {
-            "data": [1, 2, 3],
+            "data": [1.1111, 2.22222, 3.33333],
             "iterations": 3,
             "time_unit": "s",
             "times": [],
