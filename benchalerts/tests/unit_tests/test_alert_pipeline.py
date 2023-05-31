@@ -43,22 +43,12 @@ def test_reasonable_pipeline(conbench_env, github_auth):
                 github_client=github_client,
                 external_id="123",
             ),
-            steps.GitHubStatusStep(
-                commit_hash=commit_hash,
-                comparison_step_name="z_500",
-                github_client=github_client,
-            ),
             steps.GitHubPRCommentAboutCheckStep(
                 pr_number=1, github_client=github_client
             ),
         ],
         error_handlers=[
             steps.GitHubCheckErrorHandler(
-                commit_hash=commit_hash,
-                github_client=github_client,
-                build_url=build_url,
-            ),
-            steps.GitHubStatusErrorHandler(
                 commit_hash=commit_hash,
                 github_client=github_client,
                 build_url=build_url,
@@ -71,14 +61,13 @@ def test_reasonable_pipeline(conbench_env, github_auth):
         "z_none",
         "z_500",
         "GitHubCheckStep",
-        "GitHubStatusStep",
         "GitHubPRCommentAboutCheckStep",
     ]:
         assert res[step_name]
 
     # now force an error to test error handling
     pipeline.steps.append(
-        steps.GitHubStatusStep(
+        steps.GitHubCheckStep(
             commit_hash=commit_hash,
             comparison_step_name="doesnt_exist",
             github_client=github_client,

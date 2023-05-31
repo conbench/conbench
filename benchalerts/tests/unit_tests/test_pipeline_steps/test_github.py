@@ -8,8 +8,6 @@ from benchalerts.pipeline_steps.github import (
     GitHubCheckErrorHandler,
     GitHubCheckStep,
     GitHubPRCommentAboutCheckStep,
-    GitHubStatusErrorHandler,
-    GitHubStatusStep,
 )
 
 from ..mocks import (
@@ -65,31 +63,6 @@ def test_GitHubCheckStep(
     assert gh_res
     assert full_comparison == mock_comparison_info
     check_posted_markdown(caplog, [(expected_check_summary, expected_check_details)])
-
-
-@pytest.mark.parametrize(
-    "mock_comparison_info",
-    [
-        "errors_baselines",
-        "errors_nobaselines",
-        "noerrors_nobaselines",
-        "regressions",
-        "noregressions",
-        "nocommit",
-        "noruns",
-        "noresults",
-    ],
-    indirect=["mock_comparison_info"],
-)
-@pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)
-def test_GitHubStatusStep(mock_comparison_info: FullComparisonInfo, github_auth: str):
-    step = GitHubStatusStep(
-        commit_hash="abc",
-        github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
-        comparison_step_name="comparison_step",
-    )
-    res = step.run_step({"comparison_step": mock_comparison_info})
-    assert res
 
 
 @pytest.mark.parametrize(
@@ -153,19 +126,3 @@ def test_GitHubCheckErrorHandler(caplog: pytest.LogCaptureFixture, github_auth: 
     )
     handler.handle_error(exc=exc, traceback=traceback)
     check_posted_markdown(caplog, [("summary_builderror", "details_builderror")])
-
-
-@pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)
-def test_GitHubStatusErrorHandler(github_auth: str):
-    try:
-        1 / 0
-    except Exception as e:
-        exc = e
-        traceback = format_exc()
-
-    handler = GitHubStatusErrorHandler(
-        commit_hash="abc",
-        github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
-        build_url="https://google.com",
-    )
-    handler.handle_error(exc=exc, traceback=traceback)

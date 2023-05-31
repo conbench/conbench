@@ -15,7 +15,6 @@
 import datetime
 import enum
 import os
-import textwrap
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import jwt
@@ -97,14 +96,6 @@ class GitHubAppClient(BaseClient):
 
         token_info = self.post(f"/installations/{install_id}/access_tokens")
         return token_info["token"]
-
-
-# used as inputs to some GitHubRepoClient methods
-class StatusState(str, enum.Enum):
-    ERROR = "error"
-    FAILURE = "failure"
-    PENDING = "pending"
-    SUCCESS = "success"
 
 
 # used as inputs to some GitHubRepoClient methods
@@ -207,53 +198,6 @@ class GitHubRepoClient(BaseClient):
             + comment
         )
         return self.post(f"/issues/{pull_number}/comments", json={"body": comment})
-
-    def update_commit_status(
-        self,
-        commit_hash: str,
-        title: str,
-        description: str,
-        state: StatusState,
-        details_url: Optional[str] = None,
-    ) -> dict:
-        """Update the GitHub status of a commit.
-
-        A commit may have many statuses, each with their own title. Updating a previous
-        status with the same title for a given commit will result in overwriting that
-        status on that commit.
-
-        Parameters
-        ----------
-        commit_hash
-            The 40-character hash of the commit to update.
-        title
-            The title of the status. Subsequent updates with the same title will update
-            the same status.
-        description
-            The short description of the status.
-        state
-            The overall status of the commit. Must be one of the StatusState enum
-            values.
-        details_url
-            A URL to be linked to when clicking on status Details. Default None.
-
-        Returns
-        -------
-        dict
-            GitHub's details about the new status.
-        """
-        if not isinstance(state, StatusState):
-            fatal_and_log("state must be a StatusState", etype=TypeError)
-
-        json = {
-            "state": state.value,
-            "description": textwrap.shorten(description, 140),
-            "context": title,
-        }
-        if details_url:
-            json["target_url"] = details_url
-
-        return self.post(f"/statuses/{commit_hash}", json=json)
 
     def update_check(
         self,
