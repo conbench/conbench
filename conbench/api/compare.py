@@ -1,6 +1,7 @@
 import collections
 import logging
 import math
+import threading
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 import flask as f
@@ -18,6 +19,17 @@ log = logging.getLogger(__name__)
 
 DEFAULT_PAIRWISE_PERCENT_THRESHOLD = 5.0
 DEFAULT_Z_SCORE_THRESHOLD = 5.0
+
+
+# Context: https://github.com/voltrondata-labs/arrow-benchmarks-ci/issues/124
+# The compare endpoint can be rather resource-heavy. This here is a pragmatic
+# QoS solution / DoS protection: only ever have one of the request-handling
+# threads work on an /api/compare/... request.
+# Under a lot of API pressure this helps keep the system going. In that case,
+# however, individual requests may be responded to after a longer waiting time.
+# In those contexts, it makes sense to apply large HTTP request timeout
+# constants.
+_semaphore_compare_get = threading.BoundedSemaphore(1)
 
 
 def _parse_two_ids_or_abort(compare_ids: str) -> Tuple[str, str]:
@@ -227,7 +239,7 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
         return benchmark_result
 
     @maybe_login_required
-    def get(self, compare_ids: str) -> f.Response:
+    def get(self, compare_ids) -> f.Response:
         """
         ---
         description: |
@@ -289,6 +301,14 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
         tags:
           - Comparisons
         """
+        # Note(JP): a threading.BoundedSemaphore acquired and released with a
+        # context manager. Assumes the web application to be deployed in a
+        # model with N request-handling threads per process.
+        with _semaphore_compare_get:
+            return self._get(compare_ids)
+
+    @maybe_login_required
+    def _get(self, compare_ids: str) -> f.Response:
         baseline_result_id, contender_result_id = _parse_two_ids_or_abort(compare_ids)
         threshold, threshold_z = _get_threshold_args_from_request()
         baseline_result = self._get_a_result(baseline_result_id)
@@ -432,6 +452,13 @@ class CompareRunsAPI(ApiEndpoint):
         tags:
           - Comparisons
         """
+        # Note(JP): a threading.BoundedSemaphore acquired and released with a
+        # context manager. Assumes the web application to be deployed in a
+        # model with N request-handling threads per process.
+        with _semaphore_compare_get:
+            return self._get(compare_ids)
+
+    def _get(self, compare_ids) -> f.Response:
         baseline_run_id, contender_run_id = _parse_two_ids_or_abort(compare_ids)
         threshold, threshold_z = _get_threshold_args_from_request()
         baseline_results = self._get_all_results_for_a_run(baseline_run_id)
