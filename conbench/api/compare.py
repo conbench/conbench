@@ -239,7 +239,7 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
         return benchmark_result
 
     @maybe_login_required
-    def get(self, compare_ids) -> f.Response:
+    def get(self, compare_ids: str) -> f.Response:
         """
         ---
         description: |
@@ -307,7 +307,6 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
         with _semaphore_compare_get:
             return self._get(compare_ids)
 
-    @maybe_login_required
     def _get(self, compare_ids: str) -> f.Response:
         baseline_result_id, contender_result_id = _parse_two_ids_or_abort(compare_ids)
         threshold, threshold_z = _get_threshold_args_from_request()
@@ -412,7 +411,7 @@ class CompareRunsAPI(ApiEndpoint):
         return joined_results
 
     @maybe_login_required
-    def get(self, compare_ids) -> f.Response:
+    def get(self, compare_ids: str) -> f.Response:
         """
         ---
         description: |
@@ -458,7 +457,7 @@ class CompareRunsAPI(ApiEndpoint):
         with _semaphore_compare_get:
             return self._get(compare_ids)
 
-    def _get(self, compare_ids) -> f.Response:
+    def _get(self, compare_ids: str) -> f.Response:
         baseline_run_id, contender_run_id = _parse_two_ids_or_abort(compare_ids)
         threshold, threshold_z = _get_threshold_args_from_request()
         baseline_results = self._get_all_results_for_a_run(baseline_run_id)
