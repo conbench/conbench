@@ -20,6 +20,13 @@ export IMAGE_SPEC="${DOCKER_REGISTRY}/${CB_WEBAPP_IMAGE_NAME}:${BUILDKITE_COMMIT
 # NAMESPACE (indicating the k8s namespace to deploy into)
 # ...
 
+# The following three environment variables _may_ be set, for configuring that
+# part of the Conbench-flavored kube-prometheus stack that used Prometheus'
+# remote_write protocol to forward data to a long-term storage/alerting system.
+# PROM_REMOTE_WRITE_ENDPOINT_URL
+# PROM_REMOTE_WRITE_API_TOKEN
+# PROM_REMOTE_WRITE_USERNAME
+
 build_and_push() {
   set -x
   make set-build-info
@@ -159,6 +166,23 @@ deploy() {
   # k8s/kube-prometheus/deploy-or-update.sh explain relevant concepts. Notably,
   # `k8s/kube-prometheus/deploy-or-update.sh` itself is tested in Conbench repo
   # CI as part of the minikube flow.
+
+  # Prepare environment variables for configuring the remote_write forwarding
+  # component of the system.
+  if [[ -z "${PROM_REMOTE_WRITE_ENDPOINT_URL}" ]]; then
+    echo "env var PROM_REMOTE_WRITE_ENDPOINT_URL not configured"
+  else
+    export PROM_REMOTE_WRITE_PASSWORD_FILE_PATH="__prw_api_token"
+    # hard-code this additional label for now to be vd-2
+    PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="vd-2"
+    echo "PROM_REMOTE_WRITE_USERNAME: $PROM_REMOTE_WRITE_USERNAME"
+    echo "PROM_REMOTE_WRITE_ENDPOINT_URL: $PROM_REMOTE_WRITE_ENDPOINT_URL"
+    echo "PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE: $PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE"
+    echo "PROM_REMOTE_WRITE_PASSWORD_FILE_PATH: $PROM_REMOTE_WRITE_PASSWORD_FILE_PATH"
+    echo "$PROM_REMOTE_WRITE_API_TOKEN" > "$PROM_REMOTE_WRITE_PASSWORD_FILE_PATH"
+    stat $PROM_REMOTE_WRITE_PASSWORD_FILE_PATH
+  fi
+
   set +x
   make jsonnet-kube-prom-manifests
   echo "vd-2: run k8s/kube-prometheus/deploy-or-update.sh, and pray that this does not impede the robustness of our deploy pipeline"
