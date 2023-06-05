@@ -134,6 +134,15 @@ local kp =
                   '__name__',
                 ],
               },
+              {
+                // keep all metrics that have the container=conbench label set.
+                // I hope that the configs here are additive. That is, if the
+                // rule above drops data before this rule here is evaluated
+                // then this doesn't work.
+                action: 'keep',
+                regex: 'conbench',
+                sourceLabels: ['container'],
+              },
             ],
           }],
         },
