@@ -29,7 +29,7 @@ set -o xtrace
 # Design goal: can be run multiple times against the same k8s cluster
 #     with the following behavior:
 #     - if kube-prometheus stack changed, an update is performed
-#       (here we largely rely on the promised of the kube-prometheus project)
+#       (here we largely rely on the promises of the kube-prometheus project)
 #     -
 #
 
