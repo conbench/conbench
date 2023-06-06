@@ -123,25 +123,24 @@ local kp =
             // stack magic adds a `container=conbench` k/v pair to all
             // metrics it scraped from conbench webapp containers.
             writeRelabelConfigs: [
+              // these rules are processed in order:
+              // https://github.com/prometheus/prometheus/issues/11120
               {
                 // The "keep" strategy is documented with
-                // "Drop targets for which regex does not match the concatenated source_labels."
+                // "Drop targets for which regex does not match the
+                //  concatenated source_labels."
+                // Keep any metric that has 'conbench' in its name or that
+                // has the container=conbench label set.
+                // With more than one item in `sourceLabels` a string is built
+                // from those values, separated with ';' and that is what the
+                // regex is matched against.
                 action: 'keep',
-                regex: 'flask_.*|conbench_.*',
+                regex: '.*conbench.*',
                 sourceLabels: [
-                  // In the Prometheus ecosystem this is a special label name.
-                  // The value of this label contains the name of the metric.
+                  // Special label name, the name of the metric.
                   '__name__',
+                  'container',
                 ],
-              },
-              {
-                // keep all metrics that have the container=conbench label set.
-                // I hope that the configs here are additive. That is, if the
-                // rule above drops data before this rule here is evaluated
-                // then this doesn't work.
-                action: 'keep',
-                regex: 'conbench',
-                sourceLabels: ['container'],
               },
             ],
           }],
