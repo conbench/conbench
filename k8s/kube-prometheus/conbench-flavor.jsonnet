@@ -46,7 +46,7 @@ local kp =
         // isDefault: true. The other values are copy/pasted from the build
         // output. This is not ideal. Also see
         // https://github.com/prometheus-operator/kube-prometheus/issues/2131
-        datasources+:: [{
+        datasources: [{
           access: 'proxy',
           orgId: 1,
           editable: false,
