@@ -42,6 +42,20 @@ local kp =
           // `bash build.sh conbench-flavor.jsonnet`
           'conbench-grafana-dashboard.json': (importstr 'conbench-grafana-dashboard.json'),
         },
+        // The following data source config object is here "only" to set
+        // isDefault: true. The other values are copy/pasted from the build
+        // output. This is not ideal. Also see
+        // https://github.com/prometheus-operator/kube-prometheus/issues/2131
+        datasources+:: [{
+          access: 'proxy',
+          orgId: 1,
+          editable: false,
+          name: 'prometheus',
+          type: 'prometheus',
+          url: 'http://prometheus-k8s.monitoring.svc:9090',
+          version: 1,
+          isDefault: true,
+        }],
         config: {
           // http://docs.grafana.org/installation/configuration/
           sections: {
