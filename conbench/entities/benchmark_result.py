@@ -688,10 +688,11 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
             # If user provides aggregates, then it's unclear what they
             # mean.
             for k in agg_keys:
-                if stats_usergiven.get(k) is not None:
-                    raise BenchmarkResultValidationError(
-                        f"one data point from one iteration: property `{k}` "
-                        "is unexpected"
+                val = stats_usergiven.get(k)
+                if val is not None:
+                    log.warning(
+                        f"one data point from one iteration: stats property `{k}={val}` "
+                        "is unexpected (do not store in DB)"
                     )
 
         if stats_usergiven["iterations"] > 1:
@@ -708,10 +709,11 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     if len(samples) == 2:
         # If user provides aggregates, then it's unclear what they mean.
         for k in agg_keys:
-            if stats_usergiven.get(k) is not None:
-                raise BenchmarkResultValidationError(
-                    f"with two provided data points, the property `{k}` "
-                    "is unexpected"
+            val = stats_usergiven.get(k)
+            if val is not None:
+                log.warning(
+                    f"with two data points the stats property `{k}={val}` "
+                    "is unexpected (do not store in DB)"
                 )
 
     return result_data_for_db

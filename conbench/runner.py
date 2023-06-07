@@ -429,6 +429,14 @@ class Conbench(Connection, MixinPython, MixinR):
 
         q1, q3 = np.percentile(data, [25, 75])
 
+        # Note(JP): sending e.g. iqr and q1 for iterations == 1 does not
+        # make sense. The aggregates should be built by the API implementation
+        # unless we have more data here than we send, in which case
+        # `iterations` should be larger than 1 (or larger than 2). Also see
+        # https://github.com/voltrondata-labs/arrow-benchmarks-ci/issues/129
+        # https://github.com/conbench/conbench/issues/1298
+        # https://github.com/conbench/conbench/issues/533
+        # https://github.com/conbench/conbench/pull/1127
         result = {
             "data": [fmt.format(x) for x in data],
             "times": [fmt.format(x) for x in times],
