@@ -1164,3 +1164,37 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         else:
             for k in aggkeys:
                 assert resp.json["stats"][k] is None
+
+    @pytest.mark.parametrize(
+        "samples",
+        [(1,), (3, 5), (3, 5, 7)],
+    )
+    @pytest.mark.parametrize(
+        "uekey",
+        ["iqr", "q1", "q3", "median", "stdev"],
+    )
+    def test_create_result_unexpected_stats_keys(self, client, uekey, samples):
+        self.authenticate(client)
+
+        result = _fixtures.VALID_RESULT_PAYLOAD.copy()
+        result["stats"] = {
+            "data": samples,
+            "times": [],  # key must be there as of now, validate more, change this.
+            "unit": "s",
+            "time_unit": "s",
+            "iterations": len(samples),
+            # Set some bogus aggregate.
+            uekey: 3,
+        }
+
+        resp = client.post("/api/benchmark-results/", json=result)
+        assert resp.status_code == 201, resp.text
+        bmrid = resp.json["id"]
+
+        resp = client.get(f"/api/benchmark-results/{bmrid}/")
+        assert resp.status_code == 200, resp.text
+
+        bmrdict = resp.json
+
+        if len(samples) < 3:
+            assert bmrdict["stats"][uekey] is None
