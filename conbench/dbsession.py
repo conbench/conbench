@@ -32,8 +32,8 @@ def _get_session():
         if "Working outside of application context" in str(exc):
             # Note(JP):  In the special case of pytest-initiated DB interaction
             # via code that should only be called from HTTP request handlers
-            # (but isn't) then there is no request context or not even Flask
-            # application object. For example from test code we call right into
+            # (but isn't) then there is no request context or not even a Flask
+            # application context. For example from test code we call right into
             # functions in entities/_entity.py; and these are totally meant to
             # operate in request context usually.
             if os.environ.get("PYTEST_CURRENT_TEST"):
@@ -85,13 +85,16 @@ class flask_scoped_session(scoped_session):
             self.init_app(app)
 
     def init_app(self, app):
-        """Setup scoped session creation and teardown for the passed ``app``.
-
-        :param app: a :class:`~flask.Flask` application
-        """
         app.scoped_session = self
 
         @app.teardown_appcontext
         def remove_scoped_session(*args, **kwargs):
-            # pylint: disable=missing-docstring,unused-argument,unused-variable
+            # Note(JP): despite the name of the decorator above, this runs
+            # after every request. From the Flask docs: "After the request is
+            # dispatched and a response is generated and sent, the request
+            # context is popped, which then pops the application context.
+            # Immediately before they are popped, the teardown_request() and
+            # teardown_appcontext() functions are executed". The remove method
+            # is documented here:
+            # https://docs.sqlalchemy.org/en/14/orm/contextual.html#sqlalchemy.orm.scoped_session.remove
             app.scoped_session.remove()
