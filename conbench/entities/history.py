@@ -11,8 +11,9 @@ import numpy as np
 import pandas as pd
 import sqlalchemy as s
 
+from conbench.dbsession import current_session
+
 from ..config import Config
-from ..db import Session
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import CantFindAncestorCommitsError, Commit
 from ..entities.hardware import Hardware
@@ -162,7 +163,7 @@ def get_history_for_cchr(
     # repo=="" might even yield something).
 
     history = (
-        Session.query(
+        current_session.query(
             BenchmarkResult,
             Hardware.hash.label("hardware_hash"),
             Commit.sha.label("commit_hash"),
@@ -357,7 +358,7 @@ def _query_and_calculate_distribution_stats(
 
     # Get the last DISTRIBUTION_COMMITS ancestor commits of the baseline commit
     commits = (
-        Session.query(commits)
+        current_session.query(commits)
         .order_by(commits.c.commit_order.desc())
         .limit(Config.DISTRIBUTION_COMMITS)
         .subquery()
@@ -365,7 +366,7 @@ def _query_and_calculate_distribution_stats(
 
     # Find all historic results in the distribution to analyze
     history = (
-        Session.query(
+        current_session.query(
             # we can use the `defer` method to not select all columns
             BenchmarkResult,
             Hardware.hash.label("hardware_hash"),
@@ -392,7 +393,7 @@ def _query_and_calculate_distribution_stats(
     else:
         # filter to *any* case/context attached to this Run
         these_cases_and_contexts = (
-            Session.query(BenchmarkResult.case_id, BenchmarkResult.context_id)
+            current_session.query(BenchmarkResult.case_id, BenchmarkResult.context_id)
             .filter(BenchmarkResult.run_id == contender_run_id)
             .distinct()
             .subquery()
@@ -442,7 +443,7 @@ def execute_history_query_get_dataframe(statement) -> Tuple[pd.DataFrame, Dict]:
 
     Previously, we did
 
-        df = pd.read_sql(statement, Session.connection())
+        df = pd.read_sql(statement, current_session.connection())
 
     which unpacked individual BenchmarkResult columns into dataframe columns.
 
@@ -463,7 +464,7 @@ def execute_history_query_get_dataframe(statement) -> Tuple[pd.DataFrame, Dict]:
     creates in this function should be smallish (from a mem consumption point
     of view).
     """
-    row_iterator = Session.execute(statement)
+    row_iterator = current_session.execute(statement)
     rows_by_bmrid = {}
     bmrs_by_bmrid: Dict[str, BenchmarkResult] = {}
 
