@@ -9,12 +9,15 @@ Also see https://github.com/dtheodor/flask-sqlalchemy-session/issues/14
 Provides an SQLAlchemy scoped session that creates unique sessions per Flask
 request.
 """
+import os
+
 from werkzeug.local import LocalProxy
 from flask import _app_ctx_stack, current_app
 from sqlalchemy.orm import scoped_session
 
-
-import os
+# This is the SQLAlchemy session object which is meant to be used outside
+# HTTP request context.
+from conbench.db import _session
 
 
 __all__ = ["current_session", "flask_scoped_session"]
@@ -27,6 +30,13 @@ def _get_session():
     # pylint: disable=missing-docstring, protected-access
     context = _app_ctx_stack.top
     if context is None:
+        # Note(JP): in our pytest test suite we do database interaction with
+        # tooling in entities/_entity.py which is meant to operate in a request
+        # context; when used in the test suite there is however no
+        # request/application context.
+        if os.environ.get("PYTEST_CURRENT_TEST"):
+            return _session
+
         raise RuntimeError(
             "Cannot access current_session when outside of an application " "context."
         )
