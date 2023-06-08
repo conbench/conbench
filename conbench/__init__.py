@@ -104,6 +104,7 @@ def _init_flask_application(app):
     import flask
     import flask_swagger_ui
     import werkzeug.exceptions
+
     from conbench.dbsession import flask_scoped_session
 
     from .api import api
@@ -283,9 +284,12 @@ def dict_or_objattrs_to_nonsensitive_string(obj):
     return json.dumps(sanitized, sort_keys=True, default=str, indent=2)
 
 
-from .config import Config
+# Leaving the `os.environ.get("FLASK_APP", None)` in here although I really
+# don't quite understand intent and purpose.
+if os.environ.get("FLASK_APP", None):
+    from .config import Config
 
-application = create_application(Config)
+    application = create_application(Config)
 
 # Note(JP): when FLASK_APP is set then this here is not executed, but instead
 # gunicorn loads into the app using a stringified import instruction such as
