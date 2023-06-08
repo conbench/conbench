@@ -16,9 +16,8 @@ from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, relationship
 
-from conbench.dbsession import current_session
-
 import conbench.util
+from conbench.dbsession import current_session
 from conbench.numstr import numstr
 
 from ..entities._entity import (

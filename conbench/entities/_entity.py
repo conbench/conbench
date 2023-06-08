@@ -8,13 +8,11 @@ from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.orm import declarative_base, mapped_column
 from sqlalchemy.orm.exc import NoResultFound
 
-
-from conbench.dbsession import current_session
-
 # Use stdlib once that's there:
 # https://github.com/python/cpython/issues/102461
 from uuid_extensions import uuid7
 
+from conbench.dbsession import current_session
 
 Base = declarative_base()
 NotNull = functools.partial(mapped_column, nullable=False)

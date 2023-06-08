@@ -11,9 +11,8 @@ import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from conbench.dbsession import current_session
-
 import conbench.util
+from conbench.dbsession import current_session
 
 from ..entities._entity import (
     Base,

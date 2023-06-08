@@ -5,10 +5,9 @@ import sys
 import orjson
 import psycopg2
 import sqlalchemy.exc
+import sqlalchemy.orm
 import tenacity
 from sqlalchemy import create_engine
-import sqlalchemy.orm
-
 
 from .config import Config
 

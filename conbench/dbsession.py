@@ -11,14 +11,13 @@ request.
 """
 import os
 
-from werkzeug.local import LocalProxy
 from flask import _app_ctx_stack, current_app
 from sqlalchemy.orm import scoped_session
+from werkzeug.local import LocalProxy
 
 # This is the SQLAlchemy session object which is meant to be used outside
 # HTTP request context.
 from conbench.db import _session
-
 
 __all__ = ["current_session", "flask_scoped_session"]
 

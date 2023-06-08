@@ -7,9 +7,8 @@ from urllib.parse import urlparse
 import flask
 from sqlalchemy import select
 
-from conbench.dbsession import current_session
-
 import conbench.util
+from conbench.dbsession import current_session
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate

@@ -12,9 +12,8 @@ import requests
 import sqlalchemy as s
 from sqlalchemy.orm import Mapped, Query, relationship
 
-from conbench.dbsession import current_session
-
 from conbench import metrics, util
+from conbench.dbsession import current_session
 
 from ..config import Config
 from ..entities._entity import (

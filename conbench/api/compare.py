@@ -346,6 +346,9 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
         return f.jsonify(comparator._dict_for_api_json)
 
 
+# from filprofiler.api import profile as filprofile
+
+
 class CompareRunsAPI(ApiEndpoint):
     @staticmethod
     def _get_all_results_for_a_run(run_id: str) -> List[BenchmarkResult]:

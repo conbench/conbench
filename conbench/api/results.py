@@ -5,9 +5,8 @@ import flask_login
 import orjson
 from sqlalchemy import select
 
-from conbench.dbsession import current_session
-
 import conbench.metrics
+from conbench.dbsession import current_session
 
 from ..api import rule
 from ..api._docs import spec
