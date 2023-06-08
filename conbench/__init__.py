@@ -285,21 +285,11 @@ def dict_or_objattrs_to_nonsensitive_string(obj):
 
 
 # Leaving the `os.environ.get("FLASK_APP", None)` in here although I really
-# don't quite understand intent and purpose.
+# don't quite understand intent and purpose. Update: so this is to distinguish
+# legacy CLI entrypoint from Flask web application entry point. Wow. OK.
+# gunicorn is configured with wsgi_app = "conbench:application" and this will
+# fail if the code below doesn't execute.
 if os.environ.get("FLASK_APP", None):
     from .config import Config
 
     application = create_application(Config)
-
-# Note(JP): when FLASK_APP is set then this here is not executed, but instead
-# gunicorn loads into the app using a stringified import instruction such as
-# `conbench:application` (codified in the gunicorn cmd line args). see
-# .flaskenv used by `$ flask run` Note(JP): oh wow, this is probably how with
-# the gunicorn deployment we never ran this Session.remove() between requests.
-# if os.environ.get("FLASK_APP", None):
-#     from .config import Config
-#     from .db import Session
-#     application = create_application(Config)
-#     @application.teardown_appcontext
-#     def cleanup(_):
-#         Session.remove()
