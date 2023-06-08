@@ -140,6 +140,8 @@ class TestUserPut(_asserts.PutEnforcer):
         data = self.valid_payload
         response = client.put(f"/api/users/{self.fixture_user.id}/", json=data)
 
+        dbsession.commit()
+
         # after
         after = User.one(id=self.fixture_user.id)
         self.assert_200_ok(response, _expected_entity(after))
