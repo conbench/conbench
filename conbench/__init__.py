@@ -104,11 +104,12 @@ def _init_flask_application(app):
     import flask
     import flask_swagger_ui
     import werkzeug.exceptions
+    from conbench.dbsession import flask_scoped_session
 
     from .api import api
     from .app import app as blueprint_app
     from .config import Config
-    from .db import configure_engine, create_all
+    from .db import configure_engine, create_all, session_maker
 
     # Note(JP): maybe this bootstrap extension doesn't do too much work for us.
     # We use `quick_form()` here and there, and that is tied to bootstrap 3.
@@ -125,6 +126,16 @@ def _init_flask_application(app):
         config={"app_name": Config.APPLICATION_NAME},
     )
     configure_engine(app.config["SQLALCHEMY_DATABASE_URI"])
+
+    # This is a tiny helper that manages a per-request SQLAlchemy session which
+    # can be obtained via `current_session` (from flask_sqlalchemy_session
+    # import current_session) within a request context. Via the
+    # `@app.teardown_appcontext` interface, such a session is guaranteed to get
+    # its `remove()` method called when leaving a request context. That's the
+    # recommended pattern to make sure a fresh SQLAlchemy session is is used
+    # for each HTTP request.
+    # https://docs.sqlalchemy.org/en/20/orm/contextual.html#using-thread-local-scope-with-web-applications
+    flask_scoped_session(session_maker, app)
 
     # Do not create all tables when running alembic migrations in
     # production (CREATE_ALL_TABLES=false) using k8s migration job
@@ -272,16 +283,19 @@ def dict_or_objattrs_to_nonsensitive_string(obj):
     return json.dumps(sanitized, sort_keys=True, default=str, indent=2)
 
 
+from .config import Config
+
+application = create_application(Config)
+
 # Note(JP): when FLASK_APP is set then this here is not executed, but instead
 # gunicorn loads into the app using a stringified import instruction such as
-# `conbench:application` (codified in the gunicorn cmd line args).
-# see .flaskenv used by `$ flask run`
-if os.environ.get("FLASK_APP", None):
-    from .config import Config
-    from .db import Session
-
-    application = create_application(Config)
-
-    @application.teardown_appcontext
-    def cleanup(_):
-        Session.remove()
+# `conbench:application` (codified in the gunicorn cmd line args). see
+# .flaskenv used by `$ flask run` Note(JP): oh wow, this is probably how with
+# the gunicorn deployment we never ran this Session.remove() between requests.
+# if os.environ.get("FLASK_APP", None):
+#     from .config import Config
+#     from .db import Session
+#     application = create_application(Config)
+#     @application.teardown_appcontext
+#     def cleanup(_):
+#         Session.remove()
