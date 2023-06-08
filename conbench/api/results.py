@@ -5,12 +5,13 @@ import flask_login
 import orjson
 from sqlalchemy import select
 
+from conbench.dbsession import current_session
+
 import conbench.metrics
 
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
-from ..db import Session
 from ..entities._entity import NotFound
 from ..entities.benchmark_result import (
     BenchmarkResult,
@@ -183,7 +184,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
                     "issue 978)"
                 )
 
-            benchmark_results = Session.scalars(
+            benchmark_results = current_session.scalars(
                 select(BenchmarkResult).where(BenchmarkResult.run_id.in_(run_ids))
             ).all()
 

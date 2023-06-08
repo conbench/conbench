@@ -12,10 +12,11 @@ import requests
 import sqlalchemy as s
 from sqlalchemy.orm import Mapped, Query, relationship
 
+from conbench.dbsession import current_session
+
 from conbench import metrics, util
 
 from ..config import Config
-from ..db import Session
 from ..entities._entity import (
     Base,
     EntityMixin,
@@ -214,7 +215,7 @@ class Commit(Base, EntityMixin):
             raise CantFindAncestorCommitsError("fork_point_commit timestamp is null")
 
         # Get default branch commits before/including the fork point
-        query = Session.query(
+        query = current_session.query(
             Commit.id.label("ancestor_id"),
             Commit.timestamp.label("ancestor_timestamp"),
             s.sql.expression.literal(True, s.Boolean).label("on_default_branch"),
@@ -227,7 +228,7 @@ class Commit(Base, EntityMixin):
 
         # If this commit is on a non-default branch, add all commits since the fork point
         if self != fork_point_commit:
-            branch_query = Session.query(
+            branch_query = current_session.query(
                 Commit.id.label("ancestor_id"),
                 Commit.timestamp.label("ancestor_timestamp"),
                 s.sql.expression.literal(False, s.Boolean).label("on_default_branch"),

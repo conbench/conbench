@@ -11,9 +11,10 @@ import sqlalchemy as s
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from conbench.dbsession import current_session
+
 import conbench.util
 
-from ..db import Session
 from ..entities._entity import (
     Base,
     EntityExists,
@@ -195,11 +196,11 @@ class Run(Base, EntityMixin):
                 Run.timestamp.desc(),  # then latest Run timestamp
             )
         )
-        matching_benchmark_results = Session.execute(baseline_run_query).all()
+        matching_benchmark_results = current_session.execute(baseline_run_query).all()
 
         valid_cases_and_contexts = set(
             row.tuple()
-            for row in Session.execute(
+            for row in current_session.execute(
                 s.select(BenchmarkResult.case_id, BenchmarkResult.context_id).filter(
                     BenchmarkResult.run_id == self.id
                 )
@@ -218,7 +219,7 @@ class Run(Base, EntityMixin):
             )
 
         # Figure out a list of commits that were skipped in the search for a baseline
-        commit_hashes_searched = Session.scalars(
+        commit_hashes_searched = current_session.scalars(
             s.select(Commit.sha)
             .select_from(ancestor_commits)
             .join(Commit, Commit.id == ancestor_commits.c.ancestor_id)
@@ -271,7 +272,7 @@ class Run(Base, EntityMixin):
         if self.commit:
             query = query.filter(Commit.repository == self.commit.repository)
 
-        latest_commit = Session.scalars(
+        latest_commit = current_session.scalars(
             query.order_by(s.desc(Commit.timestamp)).limit(1)
         ).first()
         candidates["latest_default"] = self._search_for_baseline_run(latest_commit)
@@ -389,7 +390,7 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
         log.info("Ignored IntegrityError while inserting Commit: %s", exc)
         # Look up the Commit entity again because this function must return the
         # commit ID (DB primary key).
-        Session.rollback()
+        current_session.rollback()
         commit = Commit.first(
             sha=ghcommit["commit_hash"], repository=ghcommit["repo_url"]
         )

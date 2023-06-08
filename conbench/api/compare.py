@@ -8,9 +8,10 @@ import flask as f
 import sigfig
 import sqlalchemy as s
 
+from conbench.dbsession import current_session
+
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
-from ..db import Session
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.history import _less_is_better, set_z_scores
 from ..hacks import set_display_benchmark_name, set_display_case_permutation
@@ -351,7 +352,7 @@ class CompareRunsAPI(ApiEndpoint):
         """Get all benchmark results for a run. Abort if the run doesn't exist or if
         there are no results for the run.
         """
-        result = Session.scalars(
+        result = current_session.scalars(
             s.select(BenchmarkResult).where(BenchmarkResult.run_id == run_id)
         ).all()
 

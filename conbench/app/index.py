@@ -7,13 +7,14 @@ from urllib.parse import urlparse
 import flask
 from sqlalchemy import select
 
+from conbench.dbsession import current_session
+
 import conbench.util
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app.results import RunMixin
 from ..config import Config
-from ..db import Session
 from ..entities.run import Run
 
 log = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class Index(AppEndpoint, RunMixin):
 
         # Following
         # https://docs.sqlalchemy.org/en/20/orm/queryguide/select.html#selecting-orm-entities
-        runs = Session.scalars(
+        runs = current_session.scalars(
             select(Run).order_by(Run.timestamp.desc()).limit(1000)
         ).all()
 

@@ -16,8 +16,9 @@ from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, relationship
 
+from conbench.dbsession import current_session
+
 import conbench.util
-from conbench.db import Session
 from conbench.numstr import numstr
 
 from ..entities._entity import (
@@ -831,7 +832,9 @@ def validate_run_result_consistency(userres: Any) -> None:
     Be sure to call this (latest) right before writing a BenchmarkResult object
     into the database, and after having created the Run object in the database.
     """
-    run = Session.scalars(select(Run).where(Run.id == userres["run_id"])).first()
+    run = current_session.scalars(
+        select(Run).where(Run.id == userres["run_id"])
+    ).first()
 
     if run is None:
         return
