@@ -2,6 +2,7 @@ import copy
 from datetime import datetime
 from typing import Dict, List, Tuple
 
+from ...db import _session as dbsession
 from ...entities.benchmark_result import BenchmarkResult
 from ...entities.commit import Commit
 from ...entities.run import SchemaGitHubCreate
@@ -293,7 +294,9 @@ def benchmark_result(
     if error is not None:
         data["error"] = error
 
-    return BenchmarkResult.create(data)
+    result = BenchmarkResult.create(data)
+    dbsession.commit()
+    return result
 
 
 def gen_fake_data(

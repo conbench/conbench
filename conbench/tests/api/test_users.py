@@ -4,6 +4,7 @@ import pytest
 
 from ...api._examples import _api_user_entity
 from ...config import TestConfig
+from ...db import _session as dbsession
 from ...entities._entity import NotFound
 from ...entities.user import User
 from ...tests.api import _asserts
@@ -116,6 +117,8 @@ class TestUserPut(_asserts.PutEnforcer):
         # update name
         data = {"name": "Updated name"}
         response = client.put(f"/api/users/{self.fixture_user.id}/", json=data)
+
+        dbsession.commit()
 
         # after
         after = User.one(id=self.fixture_user.id)

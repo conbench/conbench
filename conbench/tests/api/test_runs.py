@@ -489,26 +489,34 @@ class TestRunPut(_asserts.PutEnforcer):
         _fixtures.benchmark_result(sha=_fixtures.PARENT)
         # This writes to the database.
         benchmark_result = _fixtures.benchmark_result()
-        return benchmark_result.run
+        run = benchmark_result.run
+        return run
 
     def test_update_allowed_fields(self, client):
         self.authenticate(client)
 
         # before
-        before = self._create_entity_to_update()
+        run_before = self._create_entity_to_update()
         for key in self.valid_payload.keys():
-            assert getattr(before, key) is None
+            assert getattr(run_before, key) is None
 
-        # after
-        response = client.put(f"/api/runs/{before.id}/", json=self.valid_payload)
-        after = Run.one(id=before.id)
-        self.assert_200_ok(response, _expected_entity(after))
+        # mutate run in db
+        resp = client.put(f"/api/runs/{run_before.id}/", json=self.valid_payload)
+        assert resp.status_code == 200, resp.status_code
+
+        # receive (hopefully) mutated run from db
+        resp = client.get(f"/api/runs/{run_before.id}/")
+        assert resp.status_code == 200, resp.status_code
+
+        run_after_mod = resp.json
 
         for key, value in self.valid_payload.items():
-            if key == "finished_timestamp":
-                assert tznaive_dt_to_aware_iso8601_for_api(getattr(after, key)) == value
-            else:
-                assert getattr(after, key) == value
+            # if key == "finished_timestamp":
+            #     assert (
+            #         tznaive_dt_to_aware_iso8601_for_api(run_after_mod.get(key)) == value
+            #     )
+            # else:
+            assert run_after_mod.get(key) == value
 
     @pytest.mark.parametrize(
         "timeinput, timeoutput",
