@@ -11,13 +11,13 @@ request.
 """
 import os
 
-from flask import _app_ctx_stack, current_app
+from flask import current_app
 from sqlalchemy.orm import scoped_session
 from werkzeug.local import LocalProxy
 
 # This is the SQLAlchemy session object which is meant to be used outside
 # HTTP request context.
-from conbench.db import _session
+from conbench.db import _session as out_of_req_context_db_session
 
 __all__ = ["current_session", "flask_scoped_session"]
 
@@ -26,19 +26,21 @@ from threading import get_ident as get_cur_thread
 
 
 def _get_session():
-    # pylint: disable=missing-docstring, protected-access
-    context = _app_ctx_stack.top
-    if context is None:
-        # Note(JP): in our pytest test suite we do database interaction with
-        # tooling in entities/_entity.py which is meant to operate in a request
-        # context; when used in the test suite there is however no
-        # request/application context.
-        if os.environ.get("PYTEST_CURRENT_TEST"):
-            return _session
+    try:
+        current_app._get_current_object()
+    except RuntimeError as exc:
+        if "Working outside of application context" in str(exc):
+            # Note(JP):  In the special case of pytest-initiated DB interaction
+            # via code that should only be called from HTTP request handlers
+            # (but isn't) then there is no request context or not even Flask
+            # application object. For example from test code we call right into
+            # functions in entities/_entity.py; and these are totally meant to
+            # operate in request context usually.
+            if os.environ.get("PYTEST_CURRENT_TEST"):
+                return out_of_req_context_db_session
+        # re-raise all other exceptions
+        raise
 
-        raise RuntimeError(
-            "Cannot access current_session when outside of an application " "context."
-        )
     app = current_app._get_current_object()
     if not hasattr(app, "scoped_session"):
         raise AttributeError(
