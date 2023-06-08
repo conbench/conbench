@@ -12,7 +12,7 @@ from sqlalchemy.orm.exc import NoResultFound
 # https://github.com/python/cpython/issues/102461
 from uuid_extensions import uuid7
 
-from conbench.db import Session
+from conbench.dbsession import current_session
 
 Base = declarative_base()
 NotNull = functools.partial(mapped_column, nullable=False)
@@ -75,16 +75,16 @@ class EntityMixin(Generic[T]):
 
     @classmethod
     def count(cls):
-        return Session.query(cls).count()
+        return current_session.query(cls).count()
 
     @classmethod
     def distinct(cls, column, filters):
-        q = Session.query(distinct(column))
+        q = current_session.query(distinct(column))
         return q.filter(*filters).all()
 
     @classmethod
     def search(cls, filters, joins=None, order_by=None, limit=None):
-        q = Session.query(cls)
+        q = current_session.query(cls)
         if joins:
             for join in joins:
                 q = q.join(join)
@@ -112,10 +112,10 @@ class EntityMixin(Generic[T]):
         # interface, the object will stay around in 2.0 but will no longer be
         # part of documentation nor will it be supported for the most part. The
         # select() construct now suits both the Core and ORM use cases, which
-        # when invoked via the Session.execute() method will return
+        # when invoked via the current_session.execute() method will return
         # ORM-oriented results, that is, ORM objects if that’s what was
         # requested.""
-        query = Session.query(cls)
+        query = current_session.query(cls)
         if filter_args:
             query = query.filter(*filter_args)
         if kwargs:
@@ -128,23 +128,23 @@ class EntityMixin(Generic[T]):
 
     @classmethod
     def get(cls, _id):
-        return Session().get(cls, _id)
+        return current_session.get(cls, _id)
 
     @classmethod
     def one(cls, **kwargs):
         try:
-            return Session.query(cls).filter_by(**kwargs).one()
+            return current_session.query(cls).filter_by(**kwargs).one()
         except NoResultFound:
             raise NotFound()
 
     @classmethod
     def first(cls, **kwargs):
-        return Session.scalars(select(cls).filter_by(**kwargs)).first()
+        return current_session.scalars(select(cls).filter_by(**kwargs)).first()
 
     @classmethod
     def delete_all(cls):
-        Session.query(cls).delete()
-        Session.commit()
+        current_session.query(cls).delete()
+        current_session.commit()
 
     @classmethod
     def create(cls, data):
@@ -156,13 +156,13 @@ class EntityMixin(Generic[T]):
     def upsert_do_nothing(cls, row_list: List[dict]):
         """Try to insert rows. If there is a conflict on any row, ignore that row."""
         statement = postgresql_insert(cls).values(row_list).on_conflict_do_nothing()
-        Session.execute(statement)
-        Session.commit()
+        current_session.execute(statement)
+        current_session.commit()
 
     @classmethod
     def bulk_save_objects(self, bulk):
-        Session.bulk_save_objects(bulk)
-        Session.commit()
+        current_session.bulk_save_objects(bulk)
+        current_session.commit()
 
     def update(self, data):
         for field, value in data.items():
@@ -170,12 +170,12 @@ class EntityMixin(Generic[T]):
         self.save()
 
     def save(self):
-        Session.add(self)
-        Session.commit()
+        current_session.add(self)
+        current_session.commit()
 
     def delete(self):
-        Session.delete(self)
-        Session.commit()
+        current_session.delete(self)
+        current_session.commit()
 
     @classmethod
     def get_or_create(cls: Type[T], props: Dict) -> T:
@@ -188,16 +188,16 @@ class EntityMixin(Generic[T]):
         """
 
         def _fetch_first():
-            return Session.scalars(select(cls).filter_by(**props)).first()
+            return current_session.scalars(select(cls).filter_by(**props)).first()
 
         result = _fetch_first()
         if result is not None:
             return result
 
         obj = cls(**props)
-        Session.add(obj)
+        current_session.add(obj)
         try:
-            Session.commit()
+            current_session.commit()
             return obj
         except sqlalchemy.exc.IntegrityError as exc:
             if "violates unique constraint" not in str(exc):
@@ -206,7 +206,7 @@ class EntityMixin(Generic[T]):
         # When we end up here it means that a unique key constraint was
         # violated. We did hit a narrow race condition: query failed, creation
         # failed. Query again.
-        Session.rollback()
+        current_session.rollback()
         result = _fetch_first()
         assert result is not None
         return result

@@ -2,7 +2,8 @@ import pytest
 
 from .. import create_application
 from ..config import TestConfig
-from ..db import Session, configure_engine, create_all, drop_all, empty_db_tables
+from ..db import _session as Session
+from ..db import configure_engine, create_all, drop_all, empty_db_tables
 
 pytest.register_assert_rewrite("conbench.tests.api._asserts")
 pytest.register_assert_rewrite("conbench.tests.app._asserts")

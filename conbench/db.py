@@ -5,15 +5,19 @@ import sys
 import orjson
 import psycopg2
 import sqlalchemy.exc
+import sqlalchemy.orm
 import tenacity
 from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
 
 from .config import Config
 
 engine = None
-session_maker = sessionmaker(future=True)
-Session = scoped_session(session_maker)
+session_maker = sqlalchemy.orm.sessionmaker()
+
+# Module-global sqlalchemy session object, do not re-use in other modules.
+# This is for DB interaction that happens outside of HTTP request processing
+# context.
+_session = sqlalchemy.orm.scoped_session(session_maker)
 
 
 log = logging.getLogger(__name__)
@@ -29,12 +33,11 @@ if "pytest" in sys.modules:
 
 
 def configure_engine(url):
-    global engine, session_maker, Session
+    global engine, session_maker
 
     logfunc("create sqlalchemy DB engine")
     engine = create_engine(
         url,
-        future=True,
         echo=False,
         pool_pre_ping=True,
         # As of today some requests take a (too) long while to generate a
@@ -109,10 +112,10 @@ def empty_db_tables():
     tables = get_tables_in_cleanup_order()
 
     for table in tables:
-        Session.execute(table.delete())
+        _session.execute(table.delete())
         log.debug("deleted table: %s", table)
 
-    Session.commit()
+    _session.commit()
     log.debug("all deletions committed: %s", table)
 
 
@@ -164,5 +167,5 @@ def create_all():
 def drop_all():
     from .entities._entity import Base
 
-    Session.close()
+    _session.close()
     Base.metadata.drop_all(engine)

@@ -9,12 +9,12 @@ from typing import Dict, List, NewType, Tuple, TypedDict, cast
 
 import pandas as pd
 import sqlalchemy
-from sqlalchemy.orm import selectinload
+import sqlalchemy.orm
 
 import conbench.metrics
 import conbench.util
 from conbench.config import Config
-from conbench.db import Session
+from conbench.db import session_maker
 from conbench.entities.benchmark_result import (
     BenchmarkResult,
     ui_mean_and_uncertainty,
@@ -164,6 +164,20 @@ if Config.TESTING:
 # Fetching one million items from a sample DB takes ~1 minute on my machine
 # (the `results = Session.scalars(....all())` call takes that long.
 def _fetch_and_cache_most_recent_results() -> None:
+    # https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.sessionmaker.begin
+
+    # This pattern is weird, see https://github.com/sqlalchemy/sqlalchemy/issues/6519
+    # not trivial!
+    dbsession = session_maker()
+    with dbsession:
+        with dbsession.begin():
+            _fetch_and_cache_most_recent_results_guts(dbsession)
+            # commits transaction, closes session
+
+
+def _fetch_and_cache_most_recent_results_guts(
+    dbsession: sqlalchemy.orm.session.Session,
+):
     log.debug(
         "BMRT cache: keys in cache: %s",
         len(bmrt_cache["by_id"]),
@@ -183,7 +197,7 @@ def _fetch_and_cache_most_recent_results() -> None:
     # independent cursors." -- seems to result in overall less queries.
     query_statement = (
         sqlalchemy.select(BenchmarkResult)
-        .options(selectinload(BenchmarkResult.run))
+        .options(sqlalchemy.orm.selectinload(BenchmarkResult.run))
         .order_by(BenchmarkResult.timestamp.desc())
         .limit(int(BMRT_CACHE_SIZE))
     ).execution_options(yield_per=2000)
@@ -193,7 +207,7 @@ def _fetch_and_cache_most_recent_results() -> None:
     # of the memory-saving exercise. The following line of code does not do
     # much of the work yet; that begins once the iterator is consumed (maybe it
     # fetches the first chunk?).
-    result_rows_iterator = Session.scalars(query_statement)
+    result_rows_iterator = dbsession.scalars(query_statement)
 
     by_id_dict: Dict[str, BMRTBenchmarkResult] = {}
     by_name_dict: Dict[TBenchmarkName, List[BMRTBenchmarkResult]] = defaultdict(list)

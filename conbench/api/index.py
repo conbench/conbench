@@ -6,12 +6,14 @@ import flask_login
 import marshmallow
 from sqlalchemy.sql import text
 
+from conbench.dbsession import current_session
+
 from ..api import api, rule
 from ..api._docs import api_server_url, spec
 from ..api._endpoint import ApiEndpoint
 from ..buildinfo import BUILD_INFO
 from ..config import Config
-from ..db import Session, empty_db_tables
+from ..db import empty_db_tables
 
 log = logging.getLogger(__name__)
 
@@ -167,7 +169,9 @@ class PingAPI(ApiEndpoint):
                 # dev/from-scratch deployments? Update(JP): pragmatic solution:
                 # do not query in TESTING mode.
                 alembic_version = list(
-                    Session.execute(text("SELECT version_num FROM alembic_version"))
+                    current_session.execute(
+                        text("SELECT version_num FROM alembic_version")
+                    )
                 )[0][0]
             except Exception as exc:
                 # Reduce noise: do not log full error, and also only on debug
