@@ -151,8 +151,11 @@ deploy() {
   # https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#failed-deployment
   kubectl rollout status deployment/conbench-deployment
 
-  if [[ "$EKS_CLUSTER" != "vd-2" ]]; then
-    echo "non-vd-2: skip kube-prometheus deploy/update"
+  if [[ "$EKS_CLUSTER" == "vd-2" ]]; then
+    export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="vd-2"
+  elif [[ "$EKS_CLUSTER" == "ursa-2" ]]; then
+    export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="ursa-2"
+    echo "skip kube-prometheus deploy/update"
     return 0
   fi
 
@@ -174,7 +177,7 @@ deploy() {
   else
     export PROM_REMOTE_WRITE_PASSWORD_FILE_PATH="__prw_api_token"
     # hard-code this additional label for now to be vd-2
-    export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="vd-2"
+
     echo "PROM_REMOTE_WRITE_USERNAME: $PROM_REMOTE_WRITE_USERNAME"
     echo "PROM_REMOTE_WRITE_ENDPOINT_URL: $PROM_REMOTE_WRITE_ENDPOINT_URL"
     echo "PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE: $PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE"

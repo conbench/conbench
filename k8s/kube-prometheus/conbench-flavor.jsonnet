@@ -30,7 +30,7 @@ local kp =
         // to act on it, but will fail with errors like
         // `User \"system:serviceaccount:monitoring:prometheus-k8s\" cannot list resource ...`
         // Also see https://github.com/prometheus-operator/kube-prometheus/blob/main/docs/monitoring-other-namespaces.md
-        namespaces: ['default', 'kube-system', 'monitoring', 'staging'],
+        namespaces: ['default', 'kube-system', 'monitoring', 'staging', 'velox'],
       },
       common+: {
         namespace: 'monitoring',
@@ -63,9 +63,11 @@ local kp =
             // Configure Grafana to be available under sub path instead of
             // root.
             server: {
-              domain: 'conbench.local',
-              serve_from_sub_path: true,
+              // this was an attempt to get /grafana served locally via minikube stack
+              // domain: 'conbench.local',
               // root_url: 'http://conbench.local/grafana/',
+              // with the following setup 'cb-staging.xxx.run/grafana' works
+              serve_from_sub_path: true,
               root_url: '%(protocol)s://%(domain)s:%(http_port)s/grafana/',
             },
           },
