@@ -30,6 +30,7 @@ import time
 import selenium.common.exceptions
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
@@ -240,7 +241,9 @@ def _get_driver():
 
     log.info("set up chromedriver with capabilities %s", wd_options.to_capabilities())
 
-    driver = webdriver.Chrome(ChromeDriverManager().install(), options=wd_options)
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()), options=wd_options
+    )
     # The waiter is only optionally used later.
     # waiter = WebDriverWait(driver, 30)
     # Piggy-back waiter object on driver object, use a somewhat unique name
