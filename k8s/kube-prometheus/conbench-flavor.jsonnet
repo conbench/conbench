@@ -30,7 +30,7 @@ local kp =
         // to act on it, but will fail with errors like
         // `User \"system:serviceaccount:monitoring:prometheus-k8s\" cannot list resource ...`
         // Also see https://github.com/prometheus-operator/kube-prometheus/blob/main/docs/monitoring-other-namespaces.md
-        namespaces: ['default', 'kube-system', 'monitoring', 'staging', 'velox'],
+        namespaces: ['default', 'kube-system', 'monitoring', 'staging'],
       },
       common+: {
         namespace: 'monitoring',
