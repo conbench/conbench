@@ -63,9 +63,11 @@ local kp =
             // Configure Grafana to be available under sub path instead of
             // root.
             server: {
-              domain: 'conbench.local',
-              serve_from_sub_path: true,
+              // this was an attempt to get /grafana served locally via minikube stack
+              // domain: 'conbench.local',
               // root_url: 'http://conbench.local/grafana/',
+              // with the following setup 'cb-staging.xxx.run/grafana' works
+              serve_from_sub_path: true,
               root_url: '%(protocol)s://%(domain)s:%(http_port)s/grafana/',
             },
           },
