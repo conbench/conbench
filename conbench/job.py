@@ -155,7 +155,7 @@ bmrt_cache: CacheDict = {
 SHUTDOWN = False
 _STARTED = False
 
-BMRT_CACHE_SIZE = 0.3 * 10**6
+BMRT_CACHE_SIZE = 0.5 * 10**6
 if Config.TESTING:
     # quicker update in testing
     BMRT_CACHE_SIZE = 0.05 * 10**6
@@ -223,6 +223,9 @@ def _fetch_and_cache_most_recent_results_guts(
         # iteration here (e.g. 0.1 s). We will see. Better would be do do the
         # update from a separate process, and share the outcome via shared mem
         # (e.g. SHM, but anything goes as long as we don't re-serialize).
+        # Update: by now the BMRT cache update takes about ~30 s and there's
+        # no rush. Spread out the CPU work a little more.
+        time.sleep(0.1)
 
         # Keep track of the first (newest) and last (oldest) result
         # while consuming the iterator. If n=1 they are the same.
