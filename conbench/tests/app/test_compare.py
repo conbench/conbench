@@ -86,6 +86,13 @@ class TestCompareRuns(_asserts.GetEnforcer):
         run_id = _fixtures.VALID_RESULT_PAYLOAD["run_id"]
         return f"{run_id}...{run_id}"
 
+    def test_data_shows_up(self, client):
+        ids = self._create(client)
+        self.authenticate(client)
+        response = client.get(self.url.format(ids))
+        self.assert_page(response, "")
+        assert "0.03637 s" in response.text
+
     def test_flash_messages(self, client):
         self.authenticate(client)
         response = client.get(
