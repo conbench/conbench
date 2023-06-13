@@ -165,7 +165,7 @@ div.cb-tinyplot a {
 }
 
 div.cb-tinyplot {
-  background-color: #f3f3f3;
+  background-color: #f8f9fa;
   /* make div as wide as content, not as wide as wrapper */
   display: inline-block;
 
