@@ -96,9 +96,6 @@
                                     0.004733,
                                 ],
                                 "unit": "s",
-                                "z_improvement": False,
-                                "z_regression": False,
-                                "z_score": None,
                             },
                             "tags": {
                                 "compression": "snappy",
@@ -169,9 +166,6 @@
                                         0.004733,
                                     ],
                                     "unit": "s",
-                                    "z_improvement": False,
-                                    "z_regression": False,
-                                    "z_score": None,
                                 },
                                 "tags": {
                                     "compression": "snappy",
@@ -242,9 +236,6 @@
                                     0.004733,
                                 ],
                                 "unit": "s",
-                                "z_improvement": False,
-                                "z_regression": False,
-                                "z_score": None,
                             },
                             "tags": {
                                 "compression": "snappy",
