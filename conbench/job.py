@@ -223,9 +223,8 @@ def _fetch_and_cache_most_recent_results_guts(
         # iteration here (e.g. 0.1 s). We will see. Better would be do do the
         # update from a separate process, and share the outcome via shared mem
         # (e.g. SHM, but anything goes as long as we don't re-serialize).
-        # Update: by now the BMRT cache update takes about ~30 s and there's
-        # no rush. Spread out the CPU work a little more.
-        time.sleep(0.1)
+        # Update: Spread out the CPU work a little more.
+        time.sleep(0.0001)
 
         # Keep track of the first (newest) and last (oldest) result
         # while consuming the iterator. If n=1 they are the same.
@@ -247,6 +246,15 @@ def _fetch_and_cache_most_recent_results_guts(
         case_text_id = " ".join(get_case_kvpair_strings(casedict))
 
         bmrrun = result.run
+
+        # Skip results that have not been obtained for the default code branch.
+        bmrcommit = bmrrun.commit
+        if bmrcommit is None:
+            continue
+
+        if not bmrcommit.on_default_branch:
+            continue
+
         bmr = BMRTBenchmarkResult(
             id=str(result.id),
             benchmark_name=benchmark_name,

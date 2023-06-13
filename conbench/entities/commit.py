@@ -5,6 +5,7 @@ import os
 import threading
 import time
 from datetime import datetime, timedelta
+from functools import cached_property
 from typing import Dict, List, Optional, TypedDict
 
 import flask as f
@@ -62,17 +63,23 @@ class Commit(Base, EntityMixin):
     # that parent/child relationship better?
     parent: Mapped[Optional[str]] = Nullable(s.String(50))
 
-    # This is meant to be the URL to the repository without trailing slash.
-    # Should be renamed to repo_url. Seemingly this can be an empty string,
-    # too. We should transition to a state where this is known to be a URL.
+    # Note(JP): This is meant to be the URL to the repository without trailing
+    # slash. Should be renamed to repo_url. Seemingly this can be an empty
+    # string, too. We should transition to a state where this is known to be a
+    # URL.
     repository: Mapped[str] = NotNull(s.String(300))
 
+    # truncation intended?
     message: Mapped[str] = NotNull(s.String(250))
+
     author_name: Mapped[str] = NotNull(s.String(100))
+
+    # That's probably github-oriented
     author_login: Mapped[Optional[str]] = Nullable(s.String(50))
 
     # I think this is guaranteed to be a URL. Is it?
     author_avatar: Mapped[Optional[str]] = Nullable(s.String(100))
+
     # Note(JP): tz-naive datetime, git commit author date, in UTC.
     # Edit: adding the type Optional[datetime] is not sufficient because
     # further down we use `.label()` which seems to be sqlalchemy-specific
@@ -91,6 +98,25 @@ class Commit(Base, EntityMixin):
             return self
         else:
             return Commit.first(sha=self.fork_point_sha, repository=self.repository)
+
+    @cached_property
+    def on_default_branch(self) -> bool:
+        """
+        Note(JP): weird: we have user-given data about whether a benchmark
+        result has been obtained for a commit on the default branch or not (In
+        the commit info object that a user can provide, we specify that "Set
+        this to `null` or leave this out to indicate that this benchmark result
+        has been obtained for the default branch."). But here we don't make
+        this easily accessible.
+
+        And then we have (potentially?) GitHub's view on whether a commit is on
+        the default branch or not. But we also don't make this easily
+        accessible.
+
+        This method is an attempt to make "this" easily accessible. But: what
+        if both are in conflict? Can they be?
+        """
+        return self.sha == self.fork_point_sha
 
     @property
     def repo_url(self) -> Optional[str]:
@@ -717,11 +743,12 @@ class GitHubHTTPApiClient:
 
     def get_fork_point_sha(self, name: str, sha: str) -> Optional[str]:
         """
-        Get the most common ancestor commit between an arbitrary SHA and the default
-        branch.
+        Get the most common ancestor commit between an arbitrary SHA and the
+        default branch.
 
-        Returns ``None`` if sha is not supplied or if GitHub can't find it, otherwise
-        returns the fork point sha, called the "merge base" in git-speak.
+        Returns ``None`` if sha is not supplied or if GitHub can't find it,
+        otherwise returns the fork point sha, called the "merge base" in
+        git-speak.
         """
         if sha in self.test_commits:
             # they're on the default branch, so sha==fork_point_sha

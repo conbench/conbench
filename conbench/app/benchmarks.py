@@ -152,13 +152,17 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         if ibname == bname:
             dfs_by_t3[(case_id, context_id, hardware_id)] = df
 
-    log.info("built dfs_by_t3")
+    log.info("built dfs_by_t3, len: %s", len(dfs_by_t3))
+
+    # This might be one of the most inefficient methods to get the point of
+    # time of the newest result, but shrug for now.
+    t_newest = time_of_newest_of_many_results(bmrt_cache["by_benchmark_name"][bname])
 
     # Do this trend analysis only for those timeseries that are recent.
-    # Criterion here for now: simple cutoff relative to _now_. TODO:
-    # relative to newest result for this conceptual benchmark.
+    # Criterion here for now: simple cutoff relative to the time of the newest
+    # result for this conceptual benchmark.
 
-    now = time.time()
+    reftime = t_newest
     relchange_by_t3: Dict[Tuple[str, str, str], float] = {}
     for t3, df in dfs_by_t3.items():
         # Note(JP): make a linear regression: derive a slope value. this is
@@ -182,7 +186,7 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
 
         # Recency criterion.
         newest_timestamp = df.index[-1].timestamp()
-        if now - newest_timestamp > 86400 * 30:
+        if reftime - newest_timestamp > 86400 * 30:
             continue
 
         # TODO: basic outlier detection before the fit.
@@ -261,24 +265,28 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
     #     print(t3, ": ", relchange)
 
     context_json_by_context_id: Dict[str, str] = {}
+    case_json_by_case_id: Dict[str, str] = {}
     infos_for_uplots_incrtrend: Dict[str, TypeUIPlotInfo]
     infos_for_uplots_decrtrend: Dict[str, TypeUIPlotInfo]
 
     # Input type equals output type, yeah
-    topn_t3_dict_incr = get_first_n_dict_subset(relchange_by_t3_sorted_inctrend, 12)
-    topn_t3_dict_decr = get_first_n_dict_subset(relchange_by_t3_sorted_decrtrend, 12)
+    topn_t3_dict_incr = get_first_n_dict_subset(relchange_by_t3_sorted_inctrend, 15)
+    topn_t3_dict_decr = get_first_n_dict_subset(relchange_by_t3_sorted_decrtrend, 15)
 
     # topn_t3 = list(relchange_by_t3_sorted.keys())[:6]
     # log.info("topn for plot: %s", topn_t3_dict_incr)
 
-    infos_for_uplots_incrtrend, ctd = _build_plotinfo_from_topnt3_dict(
+    infos_for_uplots_incrtrend, ctd, cased = _build_plotinfo_from_topnt3_dict(
         bname, topn_t3_dict_incr
     )
     context_json_by_context_id |= ctd
-    infos_for_uplots_decrtrend, ctd = _build_plotinfo_from_topnt3_dict(
+    case_json_by_case_id |= cased
+
+    infos_for_uplots_decrtrend, ctd, cased = _build_plotinfo_from_topnt3_dict(
         bname, topn_t3_dict_decr
     )
     context_json_by_context_id |= ctd
+    case_json_by_case_id |= cased
 
     log.info("generated uplot structs")
 
@@ -298,6 +306,7 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         benchmark_name=bname,
         bmr_cache_meta=bmrt_cache["meta"],
         context_json_by_context_id=context_json_by_context_id,
+        case_json_by_case_id=case_json_by_case_id,
         # y_unit_for_all_plots="foo",
         infos_for_uplots_incrtrend=infos_for_uplots_incrtrend,
         infos_for_uplots_decrtrend=infos_for_uplots_decrtrend,
@@ -310,8 +319,9 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
 
 def _build_plotinfo_from_topnt3_dict(
     bname: TBenchmarkName, topn_t3_dict: Dict[Tuple[str, str, str], float]
-) -> Tuple[Dict[str, "TypeUIPlotInfo"], Dict[str, str]]:
+) -> Tuple[Dict[str, "TypeUIPlotInfo"], Dict[str, str], Dict[str, str]]:
     context_json_by_context_id: Dict[str, str] = {}
+    case_json_by_case_id: Dict[str, str] = {}
     infos_for_uplots: Dict[str, TypeUIPlotInfo] = {}
 
     for t3, relchange in topn_t3_dict.items():
@@ -338,6 +348,10 @@ def _build_plotinfo_from_topnt3_dict(
         # in better UX.
         context_json_by_context_id[ctxid] = orjson.dumps(
             results[0].context_dict, option=orjson.OPT_INDENT_2
+        ).decode("utf-8")
+
+        case_json_by_case_id[caseid] = orjson.dumps(
+            results[0].case_dict, option=orjson.OPT_INDENT_2
         ).decode("utf-8")
 
         units_seen = set()
@@ -368,7 +382,7 @@ def _build_plotinfo_from_topnt3_dict(
             "unit": maybe_longer_unit(newest_result.unit),
         }
 
-    return infos_for_uplots, context_json_by_context_id
+    return infos_for_uplots, context_json_by_context_id, case_json_by_case_id
 
 
 @app.route("/c-benchmarks/<bname>", methods=["GET"])  # type: ignore

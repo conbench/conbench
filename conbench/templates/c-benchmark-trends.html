@@ -1,16 +1,15 @@
 {% extends "app.html" %}
 {% block app_content %}
-  <h3>
-    benchmark <strong>'{{ benchmark_name }}'</strong> / trends
-  </h3>
+  <h2>
+    Trends for benchmark <strong>'{{ benchmark_name }}'</strong>
+  </h2>
   <span class="fs-4"><code>{{ this_case_text_id }}</code></span>
   <div class="mt-3">
     <h4 class="mb-3">
-      Trend: increasing <i class="bi bi-arrow-up-right"></i>
+      increasing <i class="bi bi-arrow-up-right"></i>
     </h4>
     <p>
-      Top 12 case/hardware/context combinations with increasing measurement results.
-      <br>
+      Top N case/hardware/context combinations with increasing measurement results.
       Sorted by relchng metric
       <sup><i style="font-size: 12px"
    class="bi bi-info-circle"
@@ -19,10 +18,10 @@
       </i></sup>,  descending
     </p>
     <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
-    <div class="row gx-2 gy-2">
+    <div class="row gx-2 gy-4">
       {% for cch, plotinfo in infos_for_uplots_incrtrend.items() %}
         <div class="col" style="width: 410px;">
-          <div class="cb-tinyplot pt-1 shadow">
+          <div class="cb-tinyplot pt-1 shadow-sm">
             <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
             <div class="d-flex">
               <div class="hardware"
@@ -54,23 +53,22 @@
   <!-- now the same structure again, for decreasing trend (todo: deduplicate code)-->
   <div class="mt-5">
     <h4 class="mb-3">
-      Trend: decreasing <i class="bi bi-arrow-down-right"></i>
+      decreasing <i class="bi bi-arrow-down-right"></i>
     </h4>
     <p>
-      Top 12 case/hardware/context combinations with decreasing measurement results.
-      <br>
+      Top N case/hardware/context combinations with decreasing measurement results.
       Sorted by relchng metric
       <sup><i style="font-size: 12px"
    class="bi bi-info-circle"
    data-bs-toggle="tooltip"
    data-bs-title="Relative change from linear regression on recent results, after outlier removal">
-      </i></sup>,  descending
+      </i></sup>,  ascending
     </p>
     <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
-    <div class="row gx-2 gy-2">
+    <div class="row gx-2 gy-4">
       {% for cch, plotinfo in infos_for_uplots_decrtrend.items() %}
         <div class="col" style="width: 410px;">
-          <div class="cb-tinyplot pt-1 shadow">
+          <div class="cb-tinyplot pt-1 shadow-sm">
             <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
             <div class="d-flex">
               <div class="hardware"
@@ -251,7 +249,7 @@
           },
           {
             label: unitStr,
-            labelFont: "bold 11px 'Roboto Mono'",
+            labelFont: "11px 'Roboto Mono'",
             font: "11px  'Roboto Mono'",
             gap: 1, // space between tick and label
             stroke: "#812570", // dark magenta
