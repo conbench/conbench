@@ -1,3 +1,46 @@
+{% macro tinyplotgutter(infos_for_uplots) -%}
+  <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
+  <div class="row gx-2 gy-4">
+    {% for cch, plotinfo in infos_for_uplots.items() %}
+      <div class="col" style="width: 410px;">
+        <div class="cb-tinyplot pt-1 shadow-sm">
+          <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
+          <div class="d-flex">
+            <div class="context"
+                 data-bs-toggle="tooltip"
+                 data-bs-title="Case"
+                 data-bs-delay='{"show":100,"hide":50}'>
+              <a href="#"
+                 data-bs-toggle="offcanvas"
+                 data-bs-target="#offcanvasCaseDict-{{ plotinfo.caseid }}"
+                 aria-controls="offcanvasContextDict-{{ plotinfo.caseid }}"><i class="bi bi-briefcase"></i></a>
+            </div>
+            <div class="hardware"
+                 data-bs-toggle="tooltip"
+                 data-bs-title="Hardware: {{ plotinfo.hwname[:30] }}"
+                 data-bs-delay='{"show":700,"hide":150}'>
+              <i class="bi bi-cpu"></i>
+            </div>
+            <div class="context"
+                 data-bs-toggle="tooltip"
+                 data-bs-title="Context"
+                 data-bs-delay='{"show":700,"hide":150}'>
+              <a href="#"
+                 data-bs-toggle="offcanvas"
+                 data-bs-target="#offcanvasContextDict-{{ plotinfo.ctxid }}"
+                 aria-controls="offcanvasContextDict-{{ plotinfo.ctxid }}"><i class="bi bi-sliders2"></i></a>
+            </div>
+            <div class="auxtitle">{{ plotinfo.aux_title }}</div>
+            <div class="ms-auto ps-2 results">
+              <!--  {{ plotinfo.n_results }} --><a href="{{ plotinfo.url_to_newest_result }}">full history</a>
+            </div>
+          </div>
+          <div class="cb-plot-{{ cch }}" style="width: 410px"></div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{%- endmacro %}
 {% extends "app.html" %}
 {% block app_content %}
   <h2>
@@ -17,38 +60,7 @@
    data-bs-title="Relative change from linear regression on recent results, after outlier removal">
       </i></sup>,  descending
     </p>
-    <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
-    <div class="row gx-2 gy-4">
-      {% for cch, plotinfo in infos_for_uplots_incrtrend.items() %}
-        <div class="col" style="width: 410px;">
-          <div class="cb-tinyplot pt-1 shadow-sm">
-            <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
-            <div class="d-flex">
-              <div class="hardware"
-                   data-bs-toggle="tooltip"
-                   data-bs-title="Hardware"
-                   data-bs-delay='{"show":700,"hide":150}'>
-                <i class="bi bi-cpu"></i> {{ plotinfo.hwname[:20] }}
-              </div>
-              <div class="context"
-                   data-bs-toggle="tooltip"
-                   data-bs-title="Context"
-                   data-bs-delay='{"show":700,"hide":150}'>
-                <i class="bi bi-sliders2"></i> <a href="#"
-    data-bs-toggle="offcanvas"
-    data-bs-target="#offcanvasContextDict-{{ plotinfo.ctxid }}"
-    aria-controls="offcanvasContextDict-{{ plotinfo.ctxid }}">{{ plotinfo.ctxid[:5] }}</a>
-              </div>
-              <div class="auxtitle">{{ plotinfo.aux_title }}</div>
-              <div class="ms-auto ps-2 results">
-                <!--  {{ plotinfo.n_results }} --><a href="{{ plotinfo.url_to_newest_result }}">full history</a>
-              </div>
-            </div>
-            <div class="cb-plot-{{ cch }}" style="width: 410px"></div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
+    {{ tinyplotgutter(infos_for_uplots_incrtrend) }}
   </div>
   <!-- now the same structure again, for decreasing trend (todo: deduplicate code)-->
   <div class="mt-5">
@@ -64,38 +76,7 @@
    data-bs-title="Relative change from linear regression on recent results, after outlier removal">
       </i></sup>,  ascending
     </p>
-    <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
-    <div class="row gx-2 gy-4">
-      {% for cch, plotinfo in infos_for_uplots_decrtrend.items() %}
-        <div class="col" style="width: 410px;">
-          <div class="cb-tinyplot pt-1 shadow-sm">
-            <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
-            <div class="d-flex">
-              <div class="hardware"
-                   data-bs-toggle="tooltip"
-                   data-bs-title="Hardware"
-                   data-bs-delay='{"show":700,"hide":150}'>
-                <i class="bi bi-cpu"></i> {{ plotinfo.hwname[:20] }}
-              </div>
-              <div class="context"
-                   data-bs-toggle="tooltip"
-                   data-bs-title="Context"
-                   data-bs-delay='{"show":700,"hide":150}'>
-                <i class="bi bi-sliders2"></i> <a href="#"
-    data-bs-toggle="offcanvas"
-    data-bs-target="#offcanvasContextDict-{{ plotinfo.ctxid }}"
-    aria-controls="offcanvasContextDict-{{ plotinfo.ctxid }}">{{ plotinfo.ctxid[:5] }}</a>
-              </div>
-              <div class="auxtitle">{{ plotinfo.aux_title }}</div>
-              <div class="ms-auto ps-2 results">
-                <!--  {{ plotinfo.n_results }} --><a href="{{ plotinfo.url_to_newest_result }}">full history</a>
-              </div>
-            </div>
-            <div class="cb-plot-{{ cch }}" style="width: 410px"></div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
+    {{ tinyplotgutter(infos_for_uplots_decrtrend) }}
   </div>
   <!-- font load hack -- not needed anymore I think? -->
   <div style="font-family: 'Roboto Mono';">.</div>
@@ -116,6 +97,31 @@
       <div class="offcanvas-body offcanvas-cb-context">
         <code>
           <pre style="">{{context_json}}</pre>
+        </code>
+      </div>
+    </div>
+  {% endfor %}
+  <!-- also content for offcanvas, invisible by default -->
+  {% for caseid, case_json in case_json_by_case_id.items() %}
+    <div class="offcanvas offcanvas-start"
+         data-bs-scroll="true"
+         tabindex="-1"
+         id="offcanvasCaseDict-{{ caseid }}"
+         aria-labelledby="offcanvasCaseDictLabel-{{ caseid }}">
+      <div class="offcanvas-header">
+        <span class="offcanvas-title" id="offcanvasCaseDictLabel-{{ caseid }}">
+          Benchmark <strong>{{ benchmark_name }}</strong>
+          <br>
+          case permutation {{ caseid[:10] }}:
+        </span>
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="offcanvas"
+                aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body offcanvas-cb-case">
+        <code>
+          <pre style="">{{case_json}}</pre>
         </code>
       </div>
     </div>
