@@ -1,20 +1,17 @@
 {% macro tinyplotgutter(infos_for_uplots) -%}
-<!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
-<div class="row gx-2 gy-4">
-  {% for cch, plotinfo in infos_for_uplots.items() %}
-    <div class="col" style="width: 410px;">
-      <div class="cb-tinyplot pt-1 shadow-sm">
-        <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
-        <div class="d-flex">
-          <div class="hardware"
-                data-bs-toggle="tooltip"
-                data-bs-title="Hardware"
-                data-bs-delay='{"show":700,"hide":150}'>
-            <i class="bi bi-cpu"></i> {{ plotinfo.hwname[:20] }}
-          </div>
-          <div class="auxtitle">{{ plotinfo.aux_title }}</div>
-          <div class="ms-auto ps-2 results">
-            <!--  {{ plotinfo.n_results }} --><a href="{{ plotinfo.url_to_newest_result }}">full history</a>
+  <!--  Strategy: BS gutters, see https://getbootstrap.com/docs/5.2/layout/gutters/  -->
+  <div class="row gx-2 gy-4">
+    {% for cch, plotinfo in infos_for_uplots.items() %}
+      <div class="col" style="width: 410px;">
+        <div class="cb-tinyplot pt-1 shadow-sm">
+          <!--https://getbootstrap.com/docs/5.3/utilities/flex/#auto-margins-->
+          <div class="d-flex">
+            <div class="hardware"
+                 data-bs-toggle="tooltip"
+                 data-bs-title="Hardware"
+                 data-bs-delay='{"show":700,"hide":150}'>
+              <i class="bi bi-cpu"></i> {{ plotinfo.hwname[:20] }}
+            </div>
             <div class="context"
                  data-bs-toggle="tooltip"
                  data-bs-title="Context"
@@ -24,13 +21,16 @@
     data-bs-target="#offcanvasContextDict-{{ plotinfo.ctxid }}"
     aria-controls="offcanvasContextDict-{{ plotinfo.ctxid }}"><i class="bi bi-sliders2"></i></a>
             </div>
+            <div class="auxtitle">{{ plotinfo.aux_title }}</div>
+            <div class="ms-auto ps-2 results">
+              <!--  {{ plotinfo.n_results }} --><a href="{{ plotinfo.url_to_newest_result }}">full history</a>
+            </div>
           </div>
+          <div class="cb-plot-{{ cch }}" style="width: 410px"></div>
         </div>
-        <div class="cb-plot-{{ cch }}" style="width: 410px"></div>
       </div>
-    </div>
-  {% endfor %}
-</div>
+    {% endfor %}
+  </div>
 {%- endmacro %}
 
 {% extends "app.html" %}
@@ -52,7 +52,7 @@
    data-bs-title="Relative change from linear regression on recent results, after outlier removal">
       </i></sup>,  descending
     </p>
-    {{ tinyplotgutter(infos_for_uplots_incrtrend)}}
+    {{ tinyplotgutter(infos_for_uplots_incrtrend) }}
   </div>
   <!-- now the same structure again, for decreasing trend (todo: deduplicate code)-->
   <div class="mt-5">
@@ -68,8 +68,7 @@
    data-bs-title="Relative change from linear regression on recent results, after outlier removal">
       </i></sup>,  ascending
     </p>
-    {{ tinyplotgutter(infos_for_uplots_decrtrend)}}
-
+    {{ tinyplotgutter(infos_for_uplots_decrtrend) }}
   </div>
   <!-- font load hack -- not needed anymore I think? -->
   <div style="font-family: 'Roboto Mono';">.</div>
