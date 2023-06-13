@@ -265,8 +265,8 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
     infos_for_uplots_decrtrend: Dict[str, TypeUIPlotInfo]
 
     # Input type equals output type, yeah
-    topn_t3_dict_incr = get_first_n_dict_subset(relchange_by_t3_sorted_inctrend, 12)
-    topn_t3_dict_decr = get_first_n_dict_subset(relchange_by_t3_sorted_decrtrend, 12)
+    topn_t3_dict_incr = get_first_n_dict_subset(relchange_by_t3_sorted_inctrend, 15)
+    topn_t3_dict_decr = get_first_n_dict_subset(relchange_by_t3_sorted_decrtrend, 15)
 
     # topn_t3 = list(relchange_by_t3_sorted.keys())[:6]
     # log.info("topn for plot: %s", topn_t3_dict_incr)
