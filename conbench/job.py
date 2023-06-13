@@ -246,6 +246,15 @@ def _fetch_and_cache_most_recent_results_guts(
         case_text_id = " ".join(get_case_kvpair_strings(casedict))
 
         bmrrun = result.run
+
+        # Skip results that have not been obtained for the default code branch.
+        bmrcommit = bmrrun.commit
+        if bmrcommit is None:
+            continue
+
+        if not bmrcommit.on_default_branch:
+            continue
+
         bmr = BMRTBenchmarkResult(
             id=str(result.id),
             benchmark_name=benchmark_name,
