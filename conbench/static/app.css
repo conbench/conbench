@@ -157,7 +157,7 @@ div.cb-tinyplot div.auxtitle {
 div.cb-tinyplot div.context {
   font-family: var(--bs-font-monospace);
   font-size: 11px;
-  padding-left: 15px;
+  padding-left: 3px;
 }
 
 div.cb-tinyplot div.results {
