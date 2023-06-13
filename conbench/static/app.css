@@ -11,6 +11,12 @@ html {
   font-size: 12px;
 }
 
+/*
+:root {
+ --bs-tooltip-padding-x: 5px;
+ --bs-tooltip-border-radius: 0px;
+}
+*/
 
 .c-bench-scrollbar {
   /* Foreground, Background */
@@ -226,11 +232,13 @@ table.dataTable td {
   color: #737373;
 }
 
+/*
 .tooltip-inner {
   background-color: #282828;
   max-width: 250px;
   width: 250px;
 }
+
 
 .tooltip.bottom .tooltip-arrow {
   top: 0;
@@ -239,6 +247,7 @@ table.dataTable td {
   border-bottom-color: #282828;
   border-width: 0 5px 5px;
 }
+*/
 
 .carousel-control.left,.carousel-control.right {
   background:none;
