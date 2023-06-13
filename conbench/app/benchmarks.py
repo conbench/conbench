@@ -152,13 +152,17 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         if ibname == bname:
             dfs_by_t3[(case_id, context_id, hardware_id)] = df
 
-    log.info("built dfs_by_t3")
+    log.info("built dfs_by_t3, len: %s", len(dfs_by_t3))
+
+    # This might be one of the most inefficient methods to get the point of
+    # time of the newest result, but shrug for now.
+    t_newest = time_of_newest_of_many_results(bmrt_cache["by_benchmark_name"][bname])
 
     # Do this trend analysis only for those timeseries that are recent.
-    # Criterion here for now: simple cutoff relative to _now_. TODO:
-    # relative to newest result for this conceptual benchmark.
+    # Criterion here for now: simple cutoff relative to the time of the newest
+    # result for this conceptual benchmark.
 
-    now = time.time()
+    reftime = t_newest
     relchange_by_t3: Dict[Tuple[str, str, str], float] = {}
     for t3, df in dfs_by_t3.items():
         # Note(JP): make a linear regression: derive a slope value. this is
@@ -182,7 +186,7 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
 
         # Recency criterion.
         newest_timestamp = df.index[-1].timestamp()
-        if now - newest_timestamp > 86400 * 30:
+        if reftime - newest_timestamp > 86400 * 30:
             continue
 
         # TODO: basic outlier detection before the fit.
