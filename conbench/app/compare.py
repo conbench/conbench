@@ -9,7 +9,7 @@ import flask as f
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin, simple_bar_plot
-from ..app._util import augment, error_page
+from ..app._util import error_page
 from ..app.results import BenchmarkResultMixin, RunMixin
 from ..app.types import HighlightInHistPlot
 from ..config import Config
@@ -73,35 +73,35 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             )
             # log.info("compare view: generated history plot", plot_history)
 
-        if comparisons and self.type != "benchmark-result":
-            comparisons_by_id = {
-                c["contender"]["benchmark_result_id"]: c
-                for c in comparisons
-                if c["contender"]
-            }
-            if self.type == "run":
-                benchmarks, response = self._get_benchmarks(run_id=contender_id)
-            if response.status_code != 200:
-                self.flash("Error getting benchmark results.")
-                return self.redirect("app.index")
-            for benchmark in benchmarks:
-                augment(benchmark)
-            (
-                biggest_changes,
-                biggest_changes_ids,
-                biggest_changes_names,
-            ) = self.get_biggest_changes(benchmarks)
-            outlier_urls = [
-                comparisons_by_id.get(x, {}).get("compare_benchmarks_url", "")
-                for x in biggest_changes_ids
-            ]
-            # Note(JP): I think this has been broken for a while. Just
-            # rediscovering this -- do we really want to
-            # show multiple history plots when we compare two runs?
-            plot_history = [
-                self.get_history_plot(b, contender_run, i)
-                for i, b in enumerate(biggest_changes)
-            ]
+        # if comparisons and self.type != "benchmark-result":
+        #     comparisons_by_id = {
+        #         c["contender"]["benchmark_result_id"]: c
+        #         for c in comparisons
+        #         if c["contender"]
+        #     }
+        #     if self.type == "run":
+        #         benchmarks, response = self._get_benchmarks(run_id=contender_id)
+        #     if response.status_code != 200:
+        #         self.flash("Error getting benchmark results.")
+        #         return self.redirect("app.index")
+        #     for benchmark in benchmarks:
+        #         augment(benchmark)
+        #     (
+        #         biggest_changes,
+        #         biggest_changes_ids,
+        #         biggest_changes_names,
+        #     ) = self.get_biggest_changes(benchmarks)
+        #     outlier_urls = [
+        #         comparisons_by_id.get(x, {}).get("compare_benchmarks_url", "")
+        #         for x in biggest_changes_ids
+        #     ]
+        #     # Note(JP): I think this has been broken for a while. Just
+        #     # rediscovering this -- do we really want to
+        #     # show multiple history plots when we compare two runs?
+        #     plot_history = [
+        #         self.get_history_plot(b, contender_run, i)
+        #         for i, b in enumerate(biggest_changes)
+        #     ]
 
         return self.render_template(
             self.html,

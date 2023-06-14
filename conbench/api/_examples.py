@@ -52,9 +52,6 @@ def _api_benchmark_entity(
             "q1": None,
             "q3": None,
             "stdev": None,
-            "z_score": None,
-            "z_regression": False,
-            "z_improvement": False,
         }
     elif error:
         stats = {
@@ -71,9 +68,6 @@ def _api_benchmark_entity(
             "q1": None,
             "q3": None,
             "stdev": None,
-            "z_score": None,
-            "z_regression": False,
-            "z_improvement": False,
         }
     else:
         stats = {
@@ -112,9 +106,6 @@ def _api_benchmark_entity(
             "q1": 0.0065005,
             "q3": 0.036942,
             "stdev": 0.04919372267316679,
-            "z_score": None,
-            "z_regression": False,
-            "z_improvement": False,
         }
     return {
         "id": benchmark_result_id,

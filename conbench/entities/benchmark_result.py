@@ -330,10 +330,6 @@ class BenchmarkResult(Base, EntityMixin):
                 "q1": to_float(benchmark_result.q1),
                 "q3": to_float(benchmark_result.q3),
                 "iqr": to_float(benchmark_result.iqr),
-                # TODO: remove these.
-                "z_score": None,
-                "z_regression": False,
-                "z_improvement": False,
             },
             "error": benchmark_result.error,
             "links": {

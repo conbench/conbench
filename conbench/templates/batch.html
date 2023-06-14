@@ -59,7 +59,6 @@
         <th scope="col">Benchmark (suite) name</th>
         <th scope="col" style="width: 35%">Benchmark result (case permutation is shown)</th>
         <th scope="col">Mean</th>
-        <th scope="col" style="white-space: nowrap;">Z-Score</th>
       </tr>
     </thead>
     <tbody>
@@ -76,17 +75,6 @@
             </a>
           </td>
           <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
-          {% if benchmark.stats.z_score is not none %}
-            {% if benchmark.stats.z_regression %}
-              <td style="color: #ff7c43;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
-            {% elif benchmark.stats.z_improvement %}
-              <td style="color: #61B329;">{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
-            {% else %}
-              <td>{{ "%.3f"|format(benchmark.stats.z_score) }}</td>
-            {% endif %}
-          {% else %}
-            <td></td>
-          {% endif %}
         </tr>
       {% endfor %}
     </tbody>

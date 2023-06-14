@@ -85,8 +85,6 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": 2.5,
                 "stdev": 1.0,
                 "times": [],
-                "z_score": None,
-                "z_regression": False,
                 "unit": "i/s",
             }
         )
@@ -132,8 +130,6 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": 25.0,
                 "stdev": 10.0,
                 "times": [],
-                "z_score": None,
-                "z_regression": False,
             }
         )
 
@@ -178,8 +174,6 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": 25.0,
                 "stdev": 10.0,
                 "times": [],
-                "z_score": None,
-                "z_improvement": False,
                 "unit": "i/s",
             }
         )
@@ -225,8 +219,6 @@ class TestBenchmarkGet(_asserts.GetEnforcer):
                 "q3": 2.5,
                 "stdev": 1.0,
                 "times": [],
-                "z_score": None,
-                "z_improvement": False,
             }
         )
 

@@ -49,7 +49,7 @@ class TimeSeriesPlotMixin:
             [
                 (abs(float(b["stats"]["z_score"])), b["id"])
                 for b in benchmarks
-                if b["stats"]["z_regression"] or b["stats"]["z_improvement"]
+                if b["stats"].get("z_regression") or b["stats"].get("z_improvement")
             ],
             reverse=True,
         )[:3]
