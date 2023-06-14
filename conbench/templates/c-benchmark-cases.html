@@ -1,8 +1,8 @@
 {% extends "app.html" %}
 {% block app_content %}
-  <h2>
+  <h1>
     benchmark <strong>{{ benchmark_name }}</strong>
-  </h2>
+  </h1>
   <div class="mt-3">
     <h3>insights</h3>
     <a href="{{ url_for('app.show_trends_for_benchmark', bname=benchmark_name) }}">recent trends</a>

@@ -1,10 +1,24 @@
 body,
 html {
-  height: 100%;
-  overflow-x: hidden;
-  padding-bottom: 15px;
-  color: #777777;
-  font-size: 14px;
+  padding-bottom: 25px;
+}
+
+
+/* .value table * {
+  border: none !important;
+} */
+
+/* Remove blue outline from active/focus input field,
+   e.g. datatables search field
+*/
+.form-control:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+select:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .c-bench-landing div.card {
@@ -38,6 +52,7 @@ html {
 
 div.case-param-title code {
   color: #fff;
+  font-size: 0.8rem;
 }
 
 div.case-param-title {
@@ -102,7 +117,7 @@ table.c-bench-caseperm-table th {
 
 span.case-parm-value {
   font-family: monospace;
-  font-size: 12px;
+  font-size: 0.7rem;
   padding: 0px;
   padding-left: 2px;
   margin-left: 0px;
@@ -187,33 +202,163 @@ div.cb-tinyplot {
   box-shadow: none;
 }
 
-/* fix datatable sorting icons */
-table.dataTable thead .sorting,
-table.dataTable thead .sorting_asc,
-table.dataTable thead .sorting_desc {
-  background : none;
+table.dataTable a {
+  /* color: #38BDD1; */
+  color: #4981C8;
+
 }
 
-/* Remove border around and within pagination bar
-   in a datatables presentation */
-.dataTables_paginate .page-link {
-  border: none;
+table.dataTable  {
+
+}
+
+
+.pagination {
+  --bs-pagination-active-bg: #47509E55;
+}
+
+div.dataTables_info {
+  font-size: 12px;
 }
 
 /*
-table.dataTable td {
-  font-size: 13.4px;
-}
 
-.breadcrumb a {
-  color: #1F77B4;
-}
-
+dark green #005050
+dark blue #201D38
 */
+
+th.cb-colgroup-run {
+  background-color: #00505033;
+  /* border-bottom: 3px #812570 solid !important; */
+}
+
+th.cb-colgroup-commit {
+  /* background-color: #4981C822; */
+  background-color: #201D3833;
+
+
+  /* border-bottom: 3px #005050 solid !important; */
+  /* border-bottom: 3px #4981C8 solid !important; */
+
+
+}
+
+div.dataTables_length label {
+ font-size: 12px;
+}
+
+div.dataTables_length label select {
+  font-size: 12px;
+  outline: 0;
+  border-radius: 0;
+  border-width: 0 0 1px;
+  border-color :#005050;
+}
+
+div.dataTables_filter label {
+  font-size: 12px;
+  margin-left: 10px;
+ }
+
+ div.dataTables_filter label input {
+   font-size: 12px;
+   outline: 0;
+   border-radius: 0;
+   border-width: 0 0 1px;
+   border-color :#005050;
+ }
+
+
+/* table.dataTable thead th {
+  border-bottom: 0px #C440C3 solid !important;
+} */
+
+/* Remove border around and within pagination bar
+   in a datatables presentation. Also, remove outline upon button click.
+*/
+.dataTables_paginate .page-link {
+  border: none;
+  outline: none !important;
+  box-shadow: none;
+}
+
+/* th:first-child {
+  border-bottom: 4px solid #dddddd;
+} */
+
+/* table thead tr {
+  border-bottom: 3px black;
+} */
+
+.table>thead>tr>th {
+  vertical-align: top;
+}
+
+nav.navbar {
+  background-color: #201D38;
+}
+
+div.cb-bm-summary {
+  background-color: #f3f3f3;
+  padding: 15px;
+}
+
+ol.breadcrumb a {
+  color: #4981C8;
+  font-family: monospace;
+}
+
+.border-danger {
+  /* VD Dark Magenta
+  border-color: #812570 !important;*/
+  border-color: #C440C3 !important;
+}
+
+div.dataTables_filter input {
+  box-shadow: none;
+}
+
+
+.custom-search-box{
+  /*
+  Note(JP): the `box-sizing: border-box` is so that padding of the outer
+  container is respected when calculating the actual width of the input field.
+  Also see https://github.com/twbs/bootstrap/issues/1058#issuecomment-5110547
+
+  I think it makes most sense to set a column-specific width for these search
+  boxes. Setting this to 90 % by default works around a per-browser absolute
+  default (about ~150 px on Chrome, different on other browsers).
+
+  For setting a column-specific width see below, e.g. va `th.commit-col
+  input.custom-search-box { ... }`.
+  */
+  box-sizing: border-box;
+  width: 90%;
+  height: 25px;
+  /* border: 1px solid #ccc;
+  border-radius: 4px; */
+
+  outline: 0;
+  border-radius: 0;
+  border-width: 0 0 1px;
+  border-color :#00505066;
+  background-color: transparent;
+
+  margin-top: 5px;
+}
+
+
+
+
+
+/*----------------*/
+
+
 [data-href] {
   cursor: pointer;
 }
 
+/*
 .table.dataTable a {
   color: #1F77B4;
 }
@@ -226,7 +371,7 @@ table.dataTable td {
 .table.dataTable caption {
   color: #1F77B4;
 }
-
+*/
 .submenu {
   color: #1F77B4;
 }
@@ -295,12 +440,13 @@ table.dataTable td {
   overflow: hidden;
 }
 
+/*
 .table-entry {
   width: -moz-fit-content;
   width: fit-content;
   padding: 3px;
 }
-
+*/
 .hide-text{
    display: none;
 }
@@ -311,28 +457,7 @@ table.dataTable td {
   padding: 3px;
 }
 
-.custom-search-box{
-  /*
-  Note(JP): the `box-sizing: border-box` is so that padding of the outer
-  container is respected when calculating the actual width of the input field.
-  Also see https://github.com/twbs/bootstrap/issues/1058#issuecomment-5110547
-
-  I think it makes most sense to set a column-specific width for these search
-  boxes. Setting this to 90 % by default works around a per-browser absolute
-  default (about ~150 px on Chrome, different on other browsers).
-
-  For setting a column-specific width see below, e.g. va `th.commit-col
-  input.custom-search-box { ... }`.
-  */
-  box-sizing: border-box;
-  width: 90%;
-  height: 25px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  margin-top: 5px;
-}
-
-
+/*
 th.commit-col input.custom-search-box {
   width: 64px;
 }
@@ -340,15 +465,15 @@ th.commit-col input.custom-search-box {
 th.reason-col select.custom-search-box {
   width: 70px;
 }
+*/
 
-.table>thead>tr>th {
-  vertical-align: top;
-}
 
+
+/*
 select.custom-search-box {
   background: #eee;
 }
-
+ */
 
 
 .message-header{
