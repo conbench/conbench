@@ -52,6 +52,7 @@ select:focus {
 
 div.case-param-title code {
   color: #fff;
+  font-size: 0.8rem;
 }
 
 div.case-param-title {
@@ -116,7 +117,7 @@ table.c-bench-caseperm-table th {
 
 span.case-parm-value {
   font-family: monospace;
-  font-size: 12px;
+  font-size: 0.7rem;
   padding: 0px;
   padding-left: 2px;
   margin-left: 0px;
