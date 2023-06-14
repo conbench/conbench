@@ -49,13 +49,17 @@ div.case-param-title {
 
 div.case-param-values {
   color: #000000bb;
-  max-height: 60px;
+  max-height: 120px;
   overflow: auto;
   overflow-wrap: break-word;
   line-height: 110%;
   padding-left: 4px;
   padding-right: 5px;
   padding-bottom: 3px;
+}
+
+div.case-param-values .valcount {
+  color: #00000077;
 }
 
 /*
