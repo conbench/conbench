@@ -52,26 +52,31 @@
                   <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarToggler">
+                  <!-- ms-auto for right alignment -->
+                  <ul class="nav navbar-nav me-auto">
+                    <li class="nav-item ">
+                      <a class="nav-link" href="/">CI runs</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="/c-benchmarks">benchmarks</a>
+                    </li>
+                  </ul>
                   {% if current_user.is_anonymous %}
-                    <!-- ms-auto for right alignment -->
-                    <ul class="nav navbar-nav ms-auto">
-                      <li class="nav-item">
-                        <a class="btn btn-outline-light" href="{{ url_for('app.login') }}">Login</a>
-                      </li>
-                    </ul>
+                    <span class="nav navbar-nav">
+                      <a class="btn btn-outline-light" href="{{ url_for('app.login') }}">login</a>
+                    </span>
                   {% else %}
-                    <!-- ms-auto for right alignment -->
-                    <ul class="nav navbar-nav ms-auto">
+                    <span class="nav navbar-nav">
+                      <a class="nav-link" href="{{ url_for('app.users') }}">users</a>
+                    </span>
+                    <!-- lets show hardware/platform again when use case is clearer
                       <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('app.users') }}">Users</a>
+                        <a class="nav-link" href="{{ url_for('app.hardwares') }}">hardware</a>
                       </li>
-                      <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('app.hardwares') }}">Hardware</a>
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('app.logout') }}">Logout ({{ current_user.email }})</a>
-                      </li>
-                    </ul>
+                       -->
+                    <span class="nav navbar-nav">
+                      <a class="nav-link" href="{{ url_for('app.logout') }}">logout ({{ current_user.email }})</a>
+                    </span>
                   {% endif %}
                 </div>
               </div>
