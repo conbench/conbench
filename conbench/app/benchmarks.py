@@ -164,6 +164,12 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
 
     reftime = t_newest
     relchange_by_t3: Dict[Tuple[str, str, str], float] = {}
+
+    # Note that below we operate on one DF per each of T timeseries. We call
+    # remove_outliers_by_iqrdist() and Polynomial.fit() T times, and create
+    # many copies of smallish dataframes. It is probably a lot faster by
+    # preparing one tidy dataframe that then does outlier removal as well as
+    # linear fit in "one line of Python", for each column in the df.
     for t3, df in dfs_by_t3.items():
         # Note(JP): make a linear regression: derive a slope value. this is
         # mainly about the sign of the slope. that means: we can work with the
@@ -205,21 +211,22 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
         remove_outliers_by_iqrdist(df, "svs")
 
         # Now it's important to drop nans again because the outliers have been
-        # marked with NaN, and any NaN will nannify the linear fit. We do not
-        # want to mutate the DF in the BMRT cache. drop nans, create explicit
-        # copy (otherwise this might be a view)
-        df = df.dropna()  # drop all rows that have any NaN
+        # marked with NaN, and the linear regression method chosen below does
+        # not tolerate NaN in input.
+        df = df.dropna()
         if len(df.index) < 10:
-            # Skip if after outlier removal there's not enough history left.
+            # Skip if after outlier removal there's little history left.
             continue
 
-        tfloats = (
-            np.array(df.index.to_pydatetime(), dtype=np.datetime64).astype("float")
-            / 10**15
-        )
+        # The .astype(float) conversion from a pandas DateTimeIndex yields
+        # numbers proportional to time, but not in unit 'seconds'. The division
+        # is not necessary for obtaining a meaningful fit. It's just so that
+        # numbers are not so huge when printing/debugging. Also see
+        # https://stackoverflow.com/a/46501718
+        tfloats = df.index.values.astype(float)  # / 10**15
         yfloats = df["svs"].values
 
-        # Note that this is a least squares fit.
+        # Least squares linear fit using modern numpy API.
         fitted_series = numpy.polynomial.Polynomial.fit(tfloats, yfloats, 1)
 
         # print(fitted_series)

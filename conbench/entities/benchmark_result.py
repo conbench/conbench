@@ -681,12 +681,16 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
 
     if len(samples) == 1:
         if stats_usergiven["iterations"] == 1:
-            # If user provides aggregates, then it's unclear what they
-            # mean.
+            # If user provides aggregates, then it's unclear what they mean.
+            # That is, this set of user-given data is inconsistent. Ignore
+            # parts of it. Tighter API specification / strictness would be
+            # better when starting from scratch. But there are legacy clients
+            # out there sending such data and we want to accept the 'ok' parts
+            # about that ('be liberal in what you accept', well well).
             for k in agg_keys:
                 val = stats_usergiven.get(k)
                 if val is not None:
-                    log.warning(
+                    log.debug(
                         f"one data point from one iteration: stats property `{k}={val}` "
                         "is unexpected (do not store in DB)"
                     )
@@ -715,7 +719,13 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     return result_data_for_db
 
 
-def floatcomp_with_leeway(v1: float, v2: float, sigfigs=5):
+def floatcomp_with_leeway(v1: float, v2: float, sigfigs=2):
+    """
+    Confirm that two float values are roughly the same. Do that by reducing
+    both to just S significant digits and then confirm that they don't deviate.
+    This is as of the time of writing only used for generating warning log
+    msgs.
+    """
     v1s = numstr(v1, sigfigs=sigfigs)
     v2s = numstr(v2, sigfigs=sigfigs)
     return abs(float(v1s) - float(v2s)) < 10**-10
@@ -787,7 +797,7 @@ def validate_and_augment_result_tags(userres: Any):
         # in the API spec. Maybe in the future we want to reject such
         # requests with a Bad Request response.
         if value == "" or value is None:
-            log.warning("drop tag key/value pair: `%s`, `%s`", key, value)
+            log.debug("drop tag key/value pair: `%s`, `%s`", key, value)
             # Remove current key/value pair, proceed with next key. This
             # mutates the dictionary `data["tags"]`; for keeping this a
             # sane operation the loop iterates over a copy of key/value
