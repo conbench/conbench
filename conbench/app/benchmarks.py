@@ -213,7 +213,12 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
             # Skip if after outlier removal there's not enough history left.
             continue
 
-        tfloats = df.index.values.astype(float) / 10**15
+        # The .astype(float) conversion from a pandas DateTimeIndex yields
+        # numbers proportional to time, but not in unit 'seconds'. The division
+        # is not necessary for obtaining a meaningful fit. It's just so that
+        # numbers are not so huge when printing/debugging. Also see
+        # https://stackoverflow.com/a/46501718
+        tfloats = df.index.values.astype(float)  # / 10**15
         yfloats = df["svs"].values
 
         fitted_series = numpy.polynomial.Polynomial.fit(tfloats, yfloats, 1)
