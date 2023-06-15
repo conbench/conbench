@@ -715,7 +715,13 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     return result_data_for_db
 
 
-def floatcomp_with_leeway(v1: float, v2: float, sigfigs=5):
+def floatcomp_with_leeway(v1: float, v2: float, sigfigs=2):
+    """
+    Confirm that two float values are roughly the same. Do that by reducing
+    both to just S significant digits and then confirm that they don't deviate.
+    This is as of the time of writing only used for generating warning log
+    msgs.
+    """
     v1s = numstr(v1, sigfigs=sigfigs)
     v2s = numstr(v2, sigfigs=sigfigs)
     return abs(float(v1s) - float(v2s)) < 10**-10
