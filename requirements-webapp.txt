@@ -19,7 +19,7 @@ numpy
 oauthlib
 openapi-spec-validator
 orjson
-pandas
+pandas>=2
 prometheus-client
 prometheus-flask-exporter
 psutil

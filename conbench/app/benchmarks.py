@@ -213,13 +213,9 @@ def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
             # Skip if after outlier removal there's not enough history left.
             continue
 
-        tfloats = (
-            np.array(df.index.to_pydatetime(), dtype=np.datetime64).astype("float")
-            / 10**15
-        )
+        tfloats = df.index.values.astype(float) / 10**15
         yfloats = df["svs"].values
 
-        # Note that this is a least squares fit.
         fitted_series = numpy.polynomial.Polynomial.fit(tfloats, yfloats, 1)
 
         # print(fitted_series)
