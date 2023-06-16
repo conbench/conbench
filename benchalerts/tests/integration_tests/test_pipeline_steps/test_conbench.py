@@ -17,6 +17,7 @@ from benchclients.conbench import LegacyConbenchClient
 
 from benchalerts.pipeline_steps.conbench import (
     BaselineRunCandidates,
+    GetConbenchZComparisonForRunsStep,
     GetConbenchZComparisonStep,
 )
 
@@ -24,39 +25,31 @@ ConbenchClient = LegacyConbenchClient
 
 
 @pytest.mark.parametrize(
-    ["conbench_url", "commit_hash", "baseline_type", "expected_len", "expected_bip"],
+    ["conbench_url", "commit_hash", "expected_len"],
     [
         # baseline is parent
         (
             "https://conbench.ursa.dev/",
             "bc7de406564fa7b2bcb9bf055cbaba31ca0ca124",
-            BaselineRunCandidates.parent,
             8,
-            True,
         ),
         # baseline is not parent
         (
             "https://velox-conbench.voltrondata.run",
             "2319922d288c519baa3bffe59c0bedbcb6c827cd",
-            BaselineRunCandidates.fork_point,
             1,
-            False,
         ),
         # no baseline
         (
             "https://velox-conbench.voltrondata.run",
             "b74e7045fade737e39b0f9867bc8b8b23fe00b78",
-            BaselineRunCandidates.latest_default,
             1,
-            None,
         ),
         # errors
         (
             "https://conbench.ursa.dev",
             "9fa34df27eb1445ac11b0ab0298d421b04be80f7",
-            BaselineRunCandidates.parent,
             7,
-            True,
         ),
     ],
 )
@@ -64,9 +57,7 @@ def test_GetConbenchZComparisonStep(
     monkeypatch: pytest.MonkeyPatch,
     conbench_url: str,
     commit_hash: str,
-    baseline_type: BaselineRunCandidates,
     expected_len: int,
-    expected_bip: bool,
 ):
     if "ursa" in conbench_url:
         pytest.skip(
@@ -76,21 +67,27 @@ def test_GetConbenchZComparisonStep(
     cb = ConbenchClient()
     step = GetConbenchZComparisonStep(
         commit_hash=commit_hash,
-        baseline_run_type=baseline_type,
+        baseline_run_type=BaselineRunCandidates.parent,
         conbench_client=cb,
     )
-    pytest.skip("Will fail until #1078 is deployed to these conbench instances")
     full_comparison = step.run_step(previous_outputs={})
     assert len(full_comparison.run_comparisons) == expected_len
     for run in full_comparison.run_comparisons:
-        assert run.baseline_is_parent is expected_bip
         assert run.contender_link
         assert run.contender_id
         if run.compare_results:
             assert run.run_compare_link
             for benchmark in run.compare_results:
-                # new compare result format
-                if "analysis" in benchmark:
-                    assert benchmark["contender"]["run_id"]
-                else:
-                    assert benchmark["contender_run_id"]
+                assert benchmark["contender"]["run_id"]
+
+
+def test_no_runs_found(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("CONBENCH_URL", "https://conbench.ursa.dev/")
+    cb = ConbenchClient()
+    step = GetConbenchZComparisonForRunsStep(
+        run_ids=["not found"],
+        baseline_run_type=BaselineRunCandidates.parent,
+        conbench_client=cb,
+    )
+    full_comparison = step.run_step(previous_outputs={})
+    assert full_comparison.run_comparisons == []

@@ -4,7 +4,7 @@ Conbench analyzed the 2 benchmark runs on commit `abc`.
 
 These are errors that were caught while running the benchmarks. You can click each link to go to the Conbench entry for that benchmark, which might have more information about what the error was.
 
-- Some Run Reason Run at [2021-02-04 17:22:05.225583](http://localhost/runs/some_contender)
+- Some Run Reason Run on `some-machine-name` at [2021-02-04 17:22:05.225583](http://localhost/runs/some_contender)
   - [file-write](http://localhost/benchmark-results/some-benchmark-uuid-2)
   - [file-write](http://localhost/benchmark-results/some-benchmark-uuid-2)
 

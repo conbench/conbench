@@ -28,8 +28,8 @@ class _Pluralizer:
         return "s" if self.plural else ""
 
 
-def _run_bullet(reason: str, time: str, link: str) -> str:
-    return f"- {reason.title()} Run at [{time}]({link})"
+def _run_bullet(reason: str, time: str, link: str, hardware: str) -> str:
+    return f"- {reason.title()} Run on `{hardware}` at [{time}]({link})"
 
 
 def _list_results(
@@ -52,6 +52,7 @@ def _list_results(
                 benchmark_result.run_reason,
                 benchmark_result.run_time,
                 benchmark_result.run_link,
+                benchmark_result.run_hardware,
             )
             previous_run_id = benchmark_result.run_id
         out += f"\n  - [{benchmark_result.name}]({benchmark_result.link})"
@@ -161,6 +162,7 @@ def github_check_summary(
             comparison.contender_reason,
             comparison.contender_datetime,
             comparison.contender_link,
+            comparison.contender_hardware_name,
         )
 
     return summary
