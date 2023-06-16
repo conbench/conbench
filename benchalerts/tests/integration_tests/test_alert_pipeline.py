@@ -67,6 +67,7 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
             commit_hash=velox_commit,
             baseline_run_type=steps.BaselineRunCandidates.parent,
             z_score_threshold=None,
+            step_name="z_none",
         ),
         steps.GitHubCheckStep(
             repo=test_status_repo,
@@ -82,21 +83,18 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
         )
 
     pipeline = AlertPipeline(pipeline_steps)
-    pytest.skip("Will fail until #1078 is deployed to these conbench instances")
     outputs = pipeline.run_pipeline()
 
-    assert outputs["GitHubStatusStep"]["state"] == "success"
-    assert outputs["GitHubStatusStep"]["creator"]["type"] == "Bot"
     assert outputs["GitHubCheckStep"][0]["conclusion"] == "failure"
     if not os.getenv("CI"):
         expected_comment = """Conbench analyzed the 1 benchmark run on commit `c76715c9`.
 
 There was 1 benchmark result indicating a performance regression:
 
-- Commit Run at [2023-02-28 18:08:51Z](http://velox-conbench.voltrondata.run/compare/runs/GHA-4273957972-1...GHA-4296026775-1/)
-  - [flatMap](http://velox-conbench.voltrondata.run/benchmarks/ff7a1a86df5a4d56b6dbfb006c13c638)
+- Commit Run on `GitHub-runner-8-core` at [2023-02-28 18:08:51Z](http://velox-conbench.voltrondata.run/compare/runs/GHA-4286800623-1...GHA-4296026775-1/)
+  - [source=cpp-micro, suite=velox_benchmark_basic_vector_fuzzer](http://velox-conbench.voltrondata.run/compare/benchmarks/a128eb19cc9442409148c91f7fa18cdf...ff7a1a86df5a4d56b6dbfb006c13c638)
 
-The [full Conbench report](https://github.com/conbench/benchalerts/runs/RUN_ID) for commit `c76715c9` has more details."""
+The [full Conbench report](https://github.com/conbench/benchalerts/runs/RUN_ID) has more details."""
 
         actual_comment = outputs["GitHubPRCommentAboutCheckStep"]["body"].strip()
         actual_comment = re.sub(

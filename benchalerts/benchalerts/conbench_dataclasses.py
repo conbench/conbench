@@ -17,6 +17,7 @@ class BenchmarkResultInfo:
     run_id: str
     run_reason: str
     run_time: str
+    run_hardware: str
     run_link: str
 
 
@@ -80,6 +81,7 @@ class RunComparisonInfo:
                     run_id=self.contender_id,
                     run_reason=self.contender_reason,
                     run_time=self.contender_datetime,
+                    run_hardware=self.contender_hardware_name,
                     run_link=self.run_compare_link,
                 )
                 for comparison in self.compare_results
@@ -100,6 +102,7 @@ class RunComparisonInfo:
                     run_id=self.contender_id,
                     run_reason=self.contender_reason,
                     run_time=self.contender_datetime,
+                    run_hardware=self.contender_hardware_name,
                     run_link=self.contender_link,
                 )
                 for benchmark_result in self.benchmark_results
@@ -117,6 +120,11 @@ class RunComparisonInfo:
         """The contender run datetime."""
         dt: str = self.contender_info["timestamp"]
         return dt.replace("T", " ")
+
+    @property
+    def contender_hardware_name(self) -> str:
+        """The contender run machine."""
+        return self.contender_info["hardware"]["name"]
 
     @property
     def contender_link(self) -> str:
