@@ -10,12 +10,12 @@ import bokeh.models
 import bokeh.plotting
 
 from conbench import util
+from conbench.numstr import numstr
 from conbench.api.history import get_history_for_benchmark
 from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.entities.history import HistorySample, HistorySampleZscoreStats
 
 from ..hacks import sorted_data
-from ..units import formatter_for_unit
 from .types import BokehPlotJSONOrError, HighlightInHistPlot
 
 log = logging.getLogger(__name__)
@@ -145,6 +145,20 @@ def get_display_unit(unit):
         return unit
 
 
+def fmt_number_and_unit(value: float, unit: str):
+    """
+    Use this for on-hover data point display, so that it shows with unit.
+    """
+    return f"{numstr(v, sigfigs=5)} {unit}"
+
+
+def fmt_number_for_bokeh_plot(value: float):
+    """
+    Use this for the Bokeh data source, cut unnecessary precision.
+    """
+    return numstr(value, sigfigs=8)
+
+
 def get_date_format():
     date_format = "%Y-%m-%d"
     return bokeh.models.DatetimeTickFormatter(
@@ -167,14 +181,13 @@ def simple_bar_plot(benchmarks, height=400, width=400, vbar_width=0.7):
         We really need to rebuild this function. It's so cryptic. Moving this
         into simple_bar_plot() because that seems to be the only consumer.
         """
-        unit_fmt = formatter_for_unit(unit)
         cases, points, means = [], [], []
         points_formated, units_formatted = [], set()
 
         for *values, point in data:
             cases.append(values)
             points.append(point)
-            formatted = unit_fmt(float(point), unit)
+            formatted = fmt_number_and_unit(float(point), unit)
             means.append(formatted)
             formated_point, formatted_unit = formatted.split(" ", 1)
             points_formated.append(formated_point)
