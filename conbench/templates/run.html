@@ -1,12 +1,11 @@
 {% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item active">Run</li>
-      {% if run_id %}<li class="breadcrumb-item active" aria-current="page">{{ run_id }}</li>{% endif %}
-    </ol>
-  </nav>
+ <h4>
+  CI run {{ run_id[:20] }}...
+ </h4>
+
+  <h5>Compare</h5>
   {% for link in comparisons %}
     <p class="fs-6">
       <i class="bi bi-file-diff"></i> <a href="{{ link.url }}">{{ link.text }}</a> {{ link.badge | safe }}
