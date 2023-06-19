@@ -85,15 +85,16 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
                 # error out just trying to display a word.
                 comparison_info["latest_default"].recommended = True
 
-        (
-            biggest_changes,
-            biggest_changes_ids,
-            biggest_changes_names,
-        ) = self.get_biggest_changes(benchmarks)
-        plot_history = [
-            self.get_history_plot(b, contender_run, i)
-            for i, b in enumerate(biggest_changes)
-        ]
+        # (
+        #     biggest_changes,
+        #     biggest_changes_ids,
+        #     biggest_changes_names,
+        # ) = self.get_biggest_changes(benchmarks)
+
+        # plot_history = [
+        #     self.get_history_plot(b, contender_run, i)
+        #     for i, b in enumerate(biggest_changes)
+        # ]
 
         return self.render_template(
             "run.html",
@@ -107,9 +108,9 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             run=contender_run,
             form=form,
             resources=bokeh.resources.CDN.render(),
-            plot_history=plot_history,
-            outlier_names=biggest_changes_names,
-            outlier_ids=biggest_changes_ids,
+            # plot_history=plot_history,
+            # outlier_names=biggest_changes_names,
+            # outlier_ids=biggest_changes_ids,
             search_value=f.request.args.get("search"),
         )
 

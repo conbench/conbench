@@ -11,44 +11,7 @@
       <i class="bi bi-file-diff"></i> <a href="{{ link.url }}">{{ link.text }}</a> {{ link.badge | safe }}
     </p>
   {% endfor %}
-  {% if plot_history %}
-    <div class="col-md-12">
-      <h6>Top Outliers</h6>
-      <div id="bokeh-carousel"
-           style="visibility: hidden"
-           class="carousel slide"
-           data-ride="carousel">
-        <div class="carousel-inner" role="listbox">
-          <ol class="carousel-indicators">
-            {% if plot_history|length > 1 %}
-              {% for plot in plot_history %}
-                {% if loop.index == 1 %}
-                  <li data-target="#bokeh-carousel" data-slide-to="0" class="active"></li>
-                {% else %}
-                  <li data-target="#bokeh-carousel" data-slide-to="{{ loop.index - 1 }}"></li>
-                {% endif %}
-              {% endfor %}
-            {% endif %}
-          </ol>
-          {% for plot in plot_history %}
-            <div class="item {% if loop.index == 1 %}active{% endif %}">
-              <div align="center">
-                <a href="{{ url_for('app.benchmark-result', benchmark_result_id=outlier_ids[loop.index - 1]) }}">
-                  {{ outlier_names[loop.index - 1] }}
-                </a>
-              </div>
-              <div id="plot-history-{{ loop.index - 1 }}" align="center"></div>
-            </div>
-          {% endfor %}
-          {% if plot_history|length > 1 %}
-            <br>
-            <br>
-            <br>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  {% endif %}
+
   <div class="col-md-12">
     <h4>Benchmark results in Run</h4>
     <table id="benchmarks" class="table table-hover">
