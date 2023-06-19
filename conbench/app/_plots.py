@@ -161,39 +161,42 @@ def get_date_format():
     )
 
 
-def _simple_source(data, unit):
-    unit_fmt = formatter_for_unit(unit)
-    cases, points, means = [], [], []
-    points_formated, units_formatted = [], set()
-
-    for *values, point in data:
-        cases.append(values)
-        points.append(point)
-        formatted = unit_fmt(float(point), unit)
-        means.append(formatted)
-        formated_point, formatted_unit = formatted.split(" ", 1)
-        points_formated.append(formated_point)
-        units_formatted.add(formatted_unit)
-
-    unit_formatted = units_formatted.pop() if len(units_formatted) == 1 else None
-    if unit_formatted:
-        points = points_formated
-
-    axis_unit = unit_formatted if unit_formatted is not None else unit
-    if axis_unit == unit:
-        axis_unit = get_display_unit(unit)
-
-    # remove redundant tags from labels
-    len_cases = len(cases)
-    counts = collections.Counter([tag for case in cases for tag in case])
-    stripped = [[tag for tag in case if counts[tag] != len_cases] for case in cases]
-    cases = ["-".join(tags) for tags in stripped]
-
-    source_data = dict(x=cases, y=points, means=means)
-    return bokeh.models.ColumnDataSource(data=source_data), axis_unit
-
-
 def simple_bar_plot(benchmarks, height=400, width=400, vbar_width=0.7):
+    def _simple_source(data, unit):
+        """
+        We really need to rebuild this function. It's so cryptic. Moving this
+        into simple_bar_plot() because that seems to be the only consumer.
+        """
+        unit_fmt = formatter_for_unit(unit)
+        cases, points, means = [], [], []
+        points_formated, units_formatted = [], set()
+
+        for *values, point in data:
+            cases.append(values)
+            points.append(point)
+            formatted = unit_fmt(float(point), unit)
+            means.append(formatted)
+            formated_point, formatted_unit = formatted.split(" ", 1)
+            points_formated.append(formated_point)
+            units_formatted.add(formatted_unit)
+
+        unit_formatted = units_formatted.pop() if len(units_formatted) == 1 else None
+        if unit_formatted:
+            points = points_formated
+
+        axis_unit = unit_formatted if unit_formatted is not None else unit
+        if axis_unit == unit:
+            axis_unit = get_display_unit(unit)
+
+        # remove redundant tags from labels
+        len_cases = len(cases)
+        counts = collections.Counter([tag for case in cases for tag in case])
+        stripped = [[tag for tag in case if counts[tag] != len_cases] for case in cases]
+        cases = ["-".join(tags) for tags in stripped]
+
+        source_data = dict(x=cases, y=points, means=means)
+        return bokeh.models.ColumnDataSource(data=source_data), axis_unit
+
     if len(benchmarks) > 30:
         return None
     if len(benchmarks) == 1:
