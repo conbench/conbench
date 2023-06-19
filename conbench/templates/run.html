@@ -13,12 +13,12 @@
   {% endfor %}
 
   <div class="col-md-12">
-    <h4>Benchmark results in Run</h4>
-    <table id="benchmarks" class="table table-hover">
+    <h5>Benchmark results in this CI run</h5>
+    <table id="benchmarks" class="table table-hover small">
       <thead>
         <tr>
           <th scope="col">Date</th>
-          <th scope="col" style="width: 80px">Lang</th>
+          <th scope="col" style="width: 70px">Lang</th>
           <th scope="col" style="width: 80px">Benchmark name</th>
           <th scope="col">Case permutation</th>
           <th scope="col" style="width: 55px">Mean</th>
@@ -28,7 +28,7 @@
       <tbody>
         {% for benchmark in benchmarks %}
           <tr>
-            <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
+            <td style="white-space: nowrap;"><code>{{ benchmark.display_timestamp }}</code></td>
             <td>{{ benchmark.display_language }}</td>
             <td>
               <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">{{ benchmark.display_bmname }}</a>
@@ -53,20 +53,11 @@
         </tbody>
       </table>
     </div>
+    <!-- why would the run detail page be rendered w/o a run? -->
     {% if run %}
-      <br />
-      <form method="post" id="run-form">
-        {{ form.hidden_tag() }}
-        <input class="btn btn-danger"
-               id="delete"
-               name="delete"
-               type="button"
-               value="Delete Run" />
-      </form>
-      <br />
+      <h5>Details</h5>
       <div class="col-md-12">
         <ul class="list-group">
-          <li class="list-group-item list-group-item-secondary">Run details:</li>
           <li class="list-group-item">
             Commit:
             <div align="right" style="display:inline-block; float: right;">
@@ -82,7 +73,7 @@
             <div align="right" style="display:inline-block; float: right;">{{ run.finished_timestamp }}</div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
-            Error Type:
+            Error:
             <div align="right" style="display:inline-block; float: right;">{{ run.error_type }}</div>
           </li>
           {% if run.error_info %}
@@ -111,6 +102,17 @@
           {% endif %}
         </ul>
       </div>
+      <br />
+      <form method="post" id="run-form">
+        {{ form.hidden_tag() }}
+        <input class="btn btn-danger"
+               id="delete"
+               name="delete"
+               type="button"
+               value="Delete Run" />
+      </form>
+      <br />
+
     {% endif %}
   {% endblock %}
   {% block scripts %}

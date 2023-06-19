@@ -154,11 +154,7 @@ div.offcanvas-cb-context pre {
 } */
 
 
-/* spacing between DT items */
-div.dataTables_filter label {
-  font-size: 12px;
-  margin-left: 10px;
- }
+
 
 div.cb-tinyplot div.hardware {
   font-family: var(--bs-font-monospace);
@@ -202,6 +198,12 @@ div.cb-tinyplot {
   box-shadow: none;
 }
 
+/* spacing between DT items */
+div.dataTables_filter label {
+  font-size: 12px;
+  margin-left: 10px;
+ }
+
 table.dataTable a {
   /* color: #38BDD1; */
   color: #4981C8;
@@ -212,7 +214,6 @@ table.dataTable  {
 
 }
 
-
 .pagination {
   --bs-pagination-active-bg: #47509E55;
 }
@@ -222,7 +223,6 @@ div.dataTables_info {
 }
 
 /*
-
 dark green #005050
 dark blue #201D38
 */
@@ -235,12 +235,8 @@ th.cb-colgroup-run {
 th.cb-colgroup-commit {
   /* background-color: #4981C822; */
   background-color: #201D3833;
-
-
   /* border-bottom: 3px #005050 solid !important; */
   /* border-bottom: 3px #4981C8 solid !important; */
-
-
 }
 
 div.dataTables_length label {
