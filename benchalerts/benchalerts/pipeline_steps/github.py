@@ -133,8 +133,8 @@ class GitHubPRCommentAboutCheckStep(AlertPipelineStep):
         The name for this step. If not given, will default to this class's name.
     alerter
         Advanced usage; should not be necessary in most cases. An optional Alerter
-        instance to use to format the GitHub Check's status, title, summary, and
-        details. If not provided, will default to ``Alerter()``.
+        instance to use to format the comment. If not provided, will default to
+        ``Alerter()``.
 
     Returns
     -------
