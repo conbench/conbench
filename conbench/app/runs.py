@@ -93,9 +93,6 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             run=rundict,
             form=form,
             resources=bokeh.resources.CDN.render(),
-            # plot_history=plot_history,
-            # outlier_names=biggest_changes_names,
-            # outlier_ids=biggest_changes_ids,
             search_value=f.request.args.get("search"),
         )
 
