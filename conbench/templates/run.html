@@ -121,7 +121,7 @@
         // Take rather precise control of layouting elements, put bottom elements
         // into a mult-col single row, using BS's grid system.
         "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
-        "order": [[5, 'asc']],
+        "order": [[0, 'asc']],
         "columnDefs": [{ "orderable": false, "targets": [4] }],
         initComplete: function () {
             var api = this.api();
@@ -133,19 +133,13 @@
     column_search_implementation($('#benchmarks'));
 
     $(document).ready(function () {
-        {% if run_id %}
         $("#run-form").find("#delete").attr("type", "button");
         $("#run-form").find("#delete").attr("data-bs-toggle", "modal");
         $("#run-form").find("#delete").attr("data-bs-target", "#confirm-delete");
         $("#run-form").find("#delete").attr("data-cbcustom-form-id", "#run-form");
-        $("#run-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.run', run_id=run_id) }}");
-        $("#run-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete run: <strong>{{ run_id }}</strong></li></ul>");
-        {% endif %}
+        $("#run-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.run', run_id=run.id) }}");
+        $("#run-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete run: <strong>{{ run.id }}</strong></li></ul>");
     });
 
-    $(document).ready(function () {
-        {% for plot in plot_history %}Bokeh.embed.embed_item({{ plot | safe }});{% endfor %}
-    document.getElementById("bokeh-carousel").style.visibility = "visible";
-    });
     </script>
   {% endblock %}
