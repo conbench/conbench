@@ -44,23 +44,23 @@ _default_hyperlink_text = {
 #   (imported name has type "Type[conbench.app.runs.Run]", local name has
 #     type "Type[conbench.entities.run.Run]")  [assignment]
 class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
-    def page(self, benchmarks, contender_run, form, run_id):
+    def page(self, benchmark_results, rundict, form):
         if not flask_login.current_user.is_authenticated:
             delattr(form, "delete")
 
         # For each candidate baseline type, if a baseline run exists for this contender
         # run, store information to fill in the HTML hyperlink for that comparison.
         comparison_info: Dict[str, _RunComparisonLinker] = {}
-        if contender_run:
+
+        # Why would that ever be called without rundict being defined?
+        if rundict:
             for key in ["parent", "fork_point", "latest_default"]:
-                baseline_id = contender_run["candidate_baseline_runs"][key][
-                    "baseline_run_id"
-                ]
+                baseline_id = rundict["candidate_baseline_runs"][key]["baseline_run_id"]
                 if baseline_id:
                     comparison_info[key] = _RunComparisonLinker(
                         url=f.url_for(
                             "app.compare-runs",
-                            compare_ids=f"{baseline_id}...{contender_run['id']}",
+                            compare_ids=f"{baseline_id}...{rundict['id']}",
                         ),
                         text=_default_hyperlink_text[key],
                         recommended=False,
@@ -69,10 +69,7 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
         if len(comparison_info) > 1:
             # Figure out which baseline is "recommended".
             # (The run will definitely have a commit in this case.)
-            if (
-                contender_run["commit"]["sha"]
-                == contender_run["commit"]["fork_point_sha"]
-            ):
+            if rundict["commit"]["sha"] == rundict["commit"]["fork_point_sha"]:
                 # On the default branch, so the parent run is recommended.
                 comparison_info["parent"].recommended = True
             elif "fork_point" in comparison_info:
@@ -85,27 +82,15 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
                 # error out just trying to display a word.
                 comparison_info["latest_default"].recommended = True
 
-        # (
-        #     biggest_changes,
-        #     biggest_changes_ids,
-        #     biggest_changes_names,
-        # ) = self.get_biggest_changes(benchmarks)
-
-        # plot_history = [
-        #     self.get_history_plot(b, contender_run, i)
-        #     for i, b in enumerate(biggest_changes)
-        # ]
-
         return self.render_template(
             "run.html",
             application=Config.APPLICATION_NAME,
             title="Run",
-            benchmarks=benchmarks,
+            benchmarks=benchmark_results,
             comparisons=sorted(
                 comparison_info.values(), key=lambda x: x.recommended, reverse=True
             ),
-            run_id=run_id,
-            run=contender_run,
+            run=rundict,
             form=form,
             resources=bokeh.resources.CDN.render(),
             # plot_history=plot_history,
@@ -116,17 +101,17 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
 
     @authorize_or_terminate
     def get(self, run_id):
-        contender_run = self.get_display_run(run_id)
-        benchmarks, response = self._get_benchmarks(run_id)
+        rundict = self.get_display_run(run_id)
+        benchmark_results, response = self._get_benchmarks(run_id)
         if response.status_code != 200:
             self.flash("Error getting benchmarks.")
             return self.redirect("app.index")
 
-        contexts = self.get_contexts(benchmarks)
-        for benchmark in benchmarks:
-            augment(benchmark, contexts)
+        contexts = self.get_contexts(benchmark_results)
+        for r in benchmark_results:
+            augment(r, contexts)
 
-        return self.page(benchmarks, contender_run, DeleteForm(), run_id)
+        return self.page(benchmark_results, rundict, DeleteForm())
 
     def _get_benchmarks(self, run_id):
         response = self.api_get("api.benchmarks", run_id=run_id)
