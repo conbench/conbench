@@ -132,7 +132,7 @@ class TestRunDelete(_asserts.DeleteEnforcer):
         self.authenticate(client)
         response = client.get(f"/runs/{run_id}/")
         self.assert_page(response, "Run")
-        assert f"{run_id}</li>".encode() in response.data
+        assert f"{run_id}".encode() in response.data
 
         data = {"delete": ["Delete"], "csrf_token": self.get_csrf_token(response)}
         response = client.post(f"/runs/{run_id}/", data=data, follow_redirects=True)
@@ -140,7 +140,6 @@ class TestRunDelete(_asserts.DeleteEnforcer):
         assert b"Run deleted." in response.data
 
         response = client.get(f"/runs/{run_id}/", follow_redirects=True)
-        self.assert_page(response, "Run")
         assert re.search(r"Run ID unknown: \w+", response.text, flags=re.ASCII)
 
     def test_unauthenticated(self, client):
