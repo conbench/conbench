@@ -1,4 +1,9 @@
 {% extends "app.html" %}
 {% block app_content %}
-  <div class="fs-5 alert alert-{{ alert_level }}" role="alert">{{ error_message }}</div>
+  {# when not providing an error message this template
+     can still be used for displaying a flash message
+   #}
+  {% if error_message %}
+    <div class="fs-5 alert alert-{{ alert_level }}" role="alert">{{ error_message }}</div>
+  {% endif %}
 {% endblock %}
