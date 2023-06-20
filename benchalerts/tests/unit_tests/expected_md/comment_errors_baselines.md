@@ -15,3 +15,5 @@ There were 3 benchmark results indicating a performance regression:
 - and 1 more (see the report linked below)
 
 The [full Conbench report](https://github.com/github/hello-world/runs/4) has more details.
+
+This message was generated from pytest.

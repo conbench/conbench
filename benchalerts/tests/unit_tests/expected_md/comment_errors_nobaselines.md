@@ -9,3 +9,5 @@ There were 2 benchmark results with an error:
 There weren't enough matching historic benchmark results to make a call on whether there were regressions.
 
 The [full Conbench report](https://github.com/github/hello-world/runs/4) has more details.
+
+This message was generated from pytest.

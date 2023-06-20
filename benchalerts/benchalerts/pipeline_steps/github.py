@@ -7,13 +7,7 @@ from benchclients.logging import fatal_and_log, log
 from ..alert_pipeline import AlertPipelineErrorHandler, AlertPipelineStep
 from ..conbench_dataclasses import FullComparisonInfo
 from ..integrations.github import CheckStatus, GitHubRepoClient
-from ..message_formatting import (
-    _clean,
-    _Pluralizer,
-    github_check_details,
-    github_check_summary,
-    pr_comment_link_to_check,
-)
+from ..message_formatting import Alerter
 
 
 class GitHubCheckStep(AlertPipelineStep):
@@ -44,6 +38,10 @@ class GitHubCheckStep(AlertPipelineStep):
         "external_id" property of the posted GitHub Check, but do nothing else.
     build_url
         An optional build URL to include in the GitHub Check.
+    alerter
+        Advanced usage; should not be necessary in most cases. An optional Alerter
+        instance to use to format the GitHub Check's status, title, summary, and
+        details. If not provided, will default to ``Alerter()``.
 
     Returns
     -------
@@ -76,6 +74,7 @@ class GitHubCheckStep(AlertPipelineStep):
         step_name: Optional[str] = None,
         external_id: Optional[str] = None,
         build_url: Optional[str] = None,
+        alerter: Optional[Alerter] = None,
     ) -> None:
         super().__init__(step_name=step_name)
         self.github_client = github_client or GitHubRepoClient(repo=repo or "")
@@ -88,6 +87,7 @@ class GitHubCheckStep(AlertPipelineStep):
         self.comparison_step_name = comparison_step_name
         self.external_id = external_id
         self.build_url = build_url
+        self.alerter = alerter or Alerter()
 
     def run_step(
         self, previous_outputs: Dict[str, Any]
@@ -99,57 +99,15 @@ class GitHubCheckStep(AlertPipelineStep):
         res = self.github_client.update_check(
             name="Conbench performance report",
             commit_hash=self.commit_hash,
-            status=self._default_check_status(full_comparison),
-            title=self._default_check_title(full_comparison),
-            summary=self._default_check_summary(full_comparison),
-            details=self._default_check_details(full_comparison),
+            status=self.alerter.github_check_status(full_comparison),
+            title=self.alerter.github_check_title(full_comparison),
+            summary=self.alerter.github_check_summary(full_comparison, self.build_url),
+            details=self.alerter.github_check_details(full_comparison),
             details_url=full_comparison.app_url,
             external_id=self.external_id,
         )
         log.debug(res)
         return res, full_comparison
-
-    # TODO: a way to override the following behavior
-    # (see https://github.com/conbench/conbench/issues/774)
-
-    @staticmethod
-    def _default_check_status(full_comparison: FullComparisonInfo) -> CheckStatus:
-        """Return a different status based on errors and regressions."""
-        if full_comparison.results_with_errors:
-            # results with errors require action
-            return CheckStatus.ACTION_REQUIRED
-        elif full_comparison.results_with_z_regressions:
-            # no errors, but results with regressions are still a failure
-            return CheckStatus.FAILURE
-        elif full_comparison.has_any_z_analyses:
-            # we analyzed z-scores and didn't find errors or regressions
-            return CheckStatus.SUCCESS
-        elif full_comparison.has_any_contender_results:
-            # we have results but couldn't analyze z-scores (normal at beginning of history)
-            return CheckStatus.SKIPPED
-        else:
-            # we don't have results; this requires action
-            return CheckStatus.ACTION_REQUIRED
-
-    @staticmethod
-    def _default_check_title(full_comparison: FullComparisonInfo) -> str:
-        if full_comparison.results_with_errors:
-            return "Some benchmarks had errors"
-        elif not full_comparison.has_any_z_analyses:
-            return "Could not do the lookback z-score analysis"
-        else:
-            pluralizer = _Pluralizer(full_comparison.results_with_z_regressions)
-            s = pluralizer.s
-            return (
-                f"Found {len(full_comparison.results_with_z_regressions)} regression{s}"
-            )
-
-    def _default_check_summary(self, full_comparison: FullComparisonInfo) -> str:
-        return github_check_summary(full_comparison, build_url=self.build_url)
-
-    @staticmethod
-    def _default_check_details(full_comparison: FullComparisonInfo) -> Optional[str]:
-        return github_check_details(full_comparison)
 
 
 class GitHubPRCommentAboutCheckStep(AlertPipelineStep):
@@ -173,6 +131,10 @@ class GitHubPRCommentAboutCheckStep(AlertPipelineStep):
         to "GitHubCheckStep" (which was the default if no name was given to that step).
     step_name
         The name for this step. If not given, will default to this class's name.
+    alerter
+        Advanced usage; should not be necessary in most cases. An optional Alerter
+        instance to use to format the GitHub Check's status, title, summary, and
+        details. If not provided, will default to ``Alerter()``.
 
     Returns
     -------
@@ -205,28 +167,25 @@ class GitHubPRCommentAboutCheckStep(AlertPipelineStep):
         github_client: Optional[GitHubRepoClient] = None,
         check_step_name: str = "GitHubCheckStep",
         step_name: Optional[str] = None,
+        alerter: Optional[Alerter] = None,
     ) -> None:
         super().__init__(step_name=step_name)
         self.pr_number = pr_number
         self.github_client = github_client or GitHubRepoClient(repo=repo or "")
         self.check_step_name = check_step_name
+        self.alerter = alerter or Alerter()
 
     def run_step(self, previous_outputs: Dict[str, Any]) -> dict:
         check_details, full_comparison = previous_outputs[self.check_step_name]
 
         res = self.github_client.create_pull_request_comment(
-            comment=self._default_comment(
+            comment=self.alerter.github_pr_comment(
                 full_comparison=full_comparison,
                 check_link=check_details["html_url"],
             ),
             pull_number=self.pr_number,
         )
         return res
-
-    @staticmethod
-    def _default_comment(full_comparison: FullComparisonInfo, check_link: str) -> str:
-        """Construct a PR comment that summarizes and links to a GitHub Check."""
-        return pr_comment_link_to_check(full_comparison, check_link)
 
 
 class GitHubCheckErrorHandler(AlertPipelineErrorHandler):
@@ -278,7 +237,7 @@ class GitHubCheckErrorHandler(AlertPipelineErrorHandler):
         res = self.github_client.update_check(
             name="Conbench performance report",
             commit_hash=self.commit_hash,
-            summary=_clean(
+            summary=Alerter.clean(
                 """
                 The CI build running the regression analysis failed. This does not
                 necessarily mean this commit has benchmark regressions, but there is an

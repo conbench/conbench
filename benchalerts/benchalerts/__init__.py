@@ -15,5 +15,6 @@
 from . import pipeline_steps
 from ._version import __version__
 from .alert_pipeline import AlertPipeline
+from .message_formatting import Alerter
 
-__all__ = ["__version__", "AlertPipeline", "pipeline_steps"]
+__all__ = ["__version__", "Alerter", "AlertPipeline", "pipeline_steps"]

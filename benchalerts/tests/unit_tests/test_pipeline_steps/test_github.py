@@ -1,7 +1,9 @@
 from traceback import format_exc
+from typing import Optional
 
 import pytest
 
+from benchalerts import Alerter
 from benchalerts.conbench_dataclasses import FullComparisonInfo
 from benchalerts.integrations.github import GitHubRepoClient
 from benchalerts.pipeline_steps.github import (
@@ -17,6 +19,20 @@ from ..mocks import (
     check_posted_markdown,
     response_dir,
 )
+
+
+class MockAlerter(Alerter):
+    def github_check_summary(
+        self, full_comparison: FullComparisonInfo, build_url: Optional[str]
+    ) -> str:
+        old_message = super().github_check_summary(full_comparison, build_url)
+        return old_message + "\n\nThis message was generated from pytest."
+
+    def github_pr_comment(
+        self, full_comparison: FullComparisonInfo, check_link: str
+    ) -> str:
+        old_message = super().github_pr_comment(full_comparison, check_link)
+        return old_message + "\n\nThis message was generated from pytest."
 
 
 @pytest.mark.parametrize(
@@ -49,6 +65,7 @@ def test_GitHubCheckStep(
                 comparison_step_name="comparison_step",
                 external_id="123",
                 build_url="https://austin.something",
+                alerter=MockAlerter(),
             )
         return
 
@@ -58,6 +75,7 @@ def test_GitHubCheckStep(
         comparison_step_name="comparison_step",
         external_id="123",
         build_url="https://austin.something",
+        alerter=MockAlerter(),
     )
     gh_res, full_comparison = step.run_step({"comparison_step": mock_comparison_info})
     assert gh_res
@@ -94,6 +112,7 @@ def test_GitHubPRCommentAboutCheckStep(
         pr_number=1,
         github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
         check_step_name="check_step",
+        alerter=MockAlerter(),
     )
     res = step.run_step(
         previous_outputs={"check_step": (mock_check_response, mock_comparison_info)}
