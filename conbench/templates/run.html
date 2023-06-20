@@ -1,19 +1,15 @@
 {% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
- <h4>
-  CI run {{ run.id[:20] }}
- </h4>
-
- <div class="mt-5">
-  <h5>Compare</h5>
-  {% for link in comparisons %}
-    <p class="fs-6">
-      <i class="bi bi-file-diff"></i> <a href="{{ link.url }}">{{ link.text }}</a> {{ link.badge | safe }}
-    </p>
-  {% endfor %}
-</div>
-
+  <h4>CI run {{ run.id[:20] }}</h4>
+  <div class="mt-5">
+    <h5>Compare</h5>
+    {% for link in comparisons %}
+      <p class="fs-6">
+        <i class="bi bi-file-diff"></i> <a href="{{ link.url }}">{{ link.text }}</a> {{ link.badge | safe }}
+      </p>
+    {% endfor %}
+  </div>
   <div class="col-md-12 mt-5">
     <h5>Benchmark results in this CI run</h5>
     <table id="benchmarks" class="table table-hover small">
@@ -55,55 +51,55 @@
     </div>
     <!-- why would the run detail page be rendered w/o a run? -->
     {% if run %}
-    <div class="mt-5">
-      <h5>CI run details</h5>
-      <div class="col-md-12">
-        <ul class="list-group">
-          <li class="list-group-item">
-            For commit:
-            <div align="right" style="display:inline-block; float: right;">
-              <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
-            </div>
-          </li>
-          <li class="list-group-item" style="overflow-y: auto;">
-            Created at:
-            <div align="right" style="display:inline-block; float: right;">{{ run.timestamp }}</div>
-          </li>
-          <li class="list-group-item" style="overflow-y: auto;">
-            Finished at:
-            <div align="right" style="display:inline-block; float: right;">{{ run.finished_timestamp }}</div>
-          </li>
-          <li class="list-group-item" style="overflow-y: auto;">
-            Error:
-            <div align="right" style="display:inline-block; float: right;">{{ run.error_type }}</div>
-          </li>
-          {% if run.error_info %}
-            <li class="list-group-item active">Error Info</li>
-            {% for k,v in run.error_info.items() %}
-              <li class="list-group-item" style="overflow-y: auto;">
-                <b>{{ k }}</b>
-                {% if v is not none %}
-                  <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-                {% endif
-                %}
-              </li>
-            {% endfor %}
-          {% endif %}
-          {% if run.info %}
-            <li class="list-group-item active">Info</li>
-            {% for k,v in run.info.items() %}
-              <li class="list-group-item" style="overflow-y: auto;">
-                <b>{{ k }}</b>
-                {% if v is not none %}
-                  <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-                {% endif
-                %}
-              </li>
-            {% endfor %}
-          {% endif %}
-        </ul>
+      <div class="mt-5">
+        <h5>CI run details</h5>
+        <div class="col-md-12">
+          <ul class="list-group">
+            <li class="list-group-item">
+              For commit:
+              <div align="right" style="display:inline-block; float: right;">
+                <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
+              </div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              Created at:
+              <div align="right" style="display:inline-block; float: right;">{{ run.timestamp }}</div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              Finished at:
+              <div align="right" style="display:inline-block; float: right;">{{ run.finished_timestamp }}</div>
+            </li>
+            <li class="list-group-item" style="overflow-y: auto;">
+              Error:
+              <div align="right" style="display:inline-block; float: right;">{{ run.error_type }}</div>
+            </li>
+            {% if run.error_info %}
+              <li class="list-group-item active">Error Info</li>
+              {% for k,v in run.error_info.items() %}
+                <li class="list-group-item" style="overflow-y: auto;">
+                  <b>{{ k }}</b>
+                  {% if v is not none %}
+                    <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+                  {% endif
+                  %}
+                </li>
+              {% endfor %}
+            {% endif %}
+            {% if run.info %}
+              <li class="list-group-item active">Info</li>
+              {% for k,v in run.info.items() %}
+                <li class="list-group-item" style="overflow-y: auto;">
+                  <b>{{ k }}</b>
+                  {% if v is not none %}
+                    <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+                  {% endif
+                  %}
+                </li>
+              {% endfor %}
+            {% endif %}
+          </ul>
+        </div>
       </div>
-    </div>
       <br />
       <form method="post" id="run-form">
         {{ form.hidden_tag() }}
@@ -114,7 +110,6 @@
                value="Delete Run" />
       </form>
       <br />
-
     {% endif %}
   {% endblock %}
   {% block scripts %}
