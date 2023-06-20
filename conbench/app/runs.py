@@ -10,7 +10,7 @@ import wtforms as w
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin
-from ..app._util import augment
+from ..app._util import augment, error_page
 from ..app.results import ContextMixin, RunMixin
 from ..config import Config
 
@@ -99,7 +99,14 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
     @authorize_or_terminate
     def get(self, run_id):
         rundict = self.get_display_run(run_id)
+
+        if rundict is None:
+            # Rely on get_display_run to have set flash msg state (err msg for
+            # user). Show that msg by rendering the err page templ
+            return error_page()
+
         benchmark_results, response = self._get_benchmarks(run_id)
+
         if response.status_code != 200:
             self.flash("Error getting benchmarks.")
             return self.redirect("app.index")

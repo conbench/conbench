@@ -6,12 +6,15 @@ from ..config import Config
 from ..hacks import set_display_benchmark_name, set_display_case_permutation
 
 
-def error_page(msg: str, alert_level="danger", subtitle="") -> str:
+def error_page(msg="", alert_level="danger", subtitle="") -> str:
     """
-    Generate HTML text which shows an error page, presenting an error
-    message.
+    Generate HTML text which shows an error page, presenting an error message.
 
     This is OK to be delivered in a status-200 HTTP response for now.
+
+    When msg is not provided (empty string) then this serves as a tool to
+    expose current flash messages via a simple template (this will leave the
+    app_content block empty).
     """
     # add more as desired
     assert alert_level in ("info", "danger", "primary", "warning")
@@ -19,7 +22,7 @@ def error_page(msg: str, alert_level="danger", subtitle="") -> str:
         "error.html",
         error_message=msg,
         application=Config.APPLICATION_NAME,
-        # The (sub)title of the page
+        # The (sub)title of the page (legacy, what's that for?)
         title=subtitle,
         alert_level=alert_level,
     )
