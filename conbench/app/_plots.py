@@ -13,9 +13,9 @@ from conbench import util
 from conbench.api.history import get_history_for_benchmark
 from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.entities.history import HistorySample, HistorySampleZscoreStats
+from conbench.numstr import numstr
 
 from ..hacks import sorted_data
-from ..units import formatter_for_unit
 from .types import BokehPlotJSONOrError, HighlightInHistPlot
 
 log = logging.getLogger(__name__)
@@ -145,6 +145,20 @@ def get_display_unit(unit):
         return unit
 
 
+def fmt_number_and_unit(value: float, unit: str):
+    """
+    Use this for on-hover data point display, so that it shows with unit.
+    """
+    return f"{numstr(value, sigfigs=5)} {unit}"
+
+
+def fmt_number_for_bokeh_plot(value: float):
+    """
+    Use this for the Bokeh data source, cut unnecessary precision.
+    """
+    return numstr(value, sigfigs=8)
+
+
 def get_date_format():
     date_format = "%Y-%m-%d"
     return bokeh.models.DatetimeTickFormatter(
@@ -161,39 +175,41 @@ def get_date_format():
     )
 
 
-def _simple_source(data, unit):
-    unit_fmt = formatter_for_unit(unit)
-    cases, points, means = [], [], []
-    points_formated, units_formatted = [], set()
-
-    for *values, point in data:
-        cases.append(values)
-        points.append(point)
-        formatted = unit_fmt(float(point), unit)
-        means.append(formatted)
-        formated_point, formatted_unit = formatted.split(" ", 1)
-        points_formated.append(formated_point)
-        units_formatted.add(formatted_unit)
-
-    unit_formatted = units_formatted.pop() if len(units_formatted) == 1 else None
-    if unit_formatted:
-        points = points_formated
-
-    axis_unit = unit_formatted if unit_formatted is not None else unit
-    if axis_unit == unit:
-        axis_unit = get_display_unit(unit)
-
-    # remove redundant tags from labels
-    len_cases = len(cases)
-    counts = collections.Counter([tag for case in cases for tag in case])
-    stripped = [[tag for tag in case if counts[tag] != len_cases] for case in cases]
-    cases = ["-".join(tags) for tags in stripped]
-
-    source_data = dict(x=cases, y=points, means=means)
-    return bokeh.models.ColumnDataSource(data=source_data), axis_unit
-
-
 def simple_bar_plot(benchmarks, height=400, width=400, vbar_width=0.7):
+    def _simple_source(data, unit):
+        """
+        We really need to rebuild this function. It's so cryptic. Moving this
+        into simple_bar_plot() because that seems to be the only consumer.
+        """
+        cases, points, means = [], [], []
+        points_formated, units_formatted = [], set()
+
+        for *values, point in data:
+            cases.append(values)
+            points.append(point)
+            formatted = fmt_number_and_unit(float(point), unit)
+            means.append(formatted)
+            formated_point, formatted_unit = formatted.split(" ", 1)
+            points_formated.append(formated_point)
+            units_formatted.add(formatted_unit)
+
+        unit_formatted = units_formatted.pop() if len(units_formatted) == 1 else None
+        if unit_formatted:
+            points = points_formated
+
+        axis_unit = unit_formatted if unit_formatted is not None else unit
+        if axis_unit == unit:
+            axis_unit = get_display_unit(unit)
+
+        # remove redundant tags from labels
+        len_cases = len(cases)
+        counts = collections.Counter([tag for case in cases for tag in case])
+        stripped = [[tag for tag in case if counts[tag] != len_cases] for case in cases]
+        cases = ["-".join(tags) for tags in stripped]
+
+        source_data = dict(x=cases, y=points, means=means)
+        return bokeh.models.ColumnDataSource(data=source_data), axis_unit
+
     if len(benchmarks) > 30:
         return None
     if len(benchmarks) == 1:
@@ -231,29 +247,6 @@ def simple_bar_plot(benchmarks, height=400, width=400, vbar_width=0.7):
     return p
 
 
-# Using `Optional[float]` here only because of BenchmarkResult.mean being
-# nullable as of today.
-def _should_format(floats: List[Optional[float]], unit):
-    unit_fmt = formatter_for_unit(unit)
-
-    units_formatted = set()
-    for f in floats:
-        if f is None:
-            # I think in legacy code this would have simply blown up in a
-            # `float(None)`
-            continue
-        units_formatted.add(unit_fmt(f, unit).split(" ", 1)[1])
-
-    unit_formatted = units_formatted.pop() if len(units_formatted) == 1 else None
-
-    should = unit_formatted is not None
-    axis_unit = unit_formatted if unit_formatted is not None else unit
-    if axis_unit == unit:
-        axis_unit = get_display_unit(unit)
-
-    return should, axis_unit
-
-
 def _insert_nans(some_list: list, indexes: List[int]):
     """Insert nans into a list before the given indexes."""
     for ix in sorted(indexes, reverse=True):
@@ -265,16 +258,11 @@ def _insert_nans(some_list: list, indexes: List[int]):
 def _source(
     samples: List[HistorySample],
     unit,
-    formatted=False,
-    distribution_mean=False,
+    distribution_mean=False,  # what is this parameter's original intent?
     alert_min=False,
     alert_max=False,
     break_line_indexes: Optional[List[int]] = None,
 ):
-    # Note(JP): important magic: if not specified otherwise, this extracts
-    # the mean-over-time.
-    unit_fmt = formatter_for_unit(unit)
-
     # TODO: These commit message prefixes end up in the on-hover tooltip.
     # Change this to use short commit hashes. The long commit message prefix
     # does not unambiguously specify the commit. Ideally link to the commit, in
@@ -297,46 +285,39 @@ def _source(
     # Include timezone information. This shows UTC for the %Z.
     date_strings = [d.strftime("%Y-%m-%d %H:%M %Z") for d in datetimes]
 
-    points, values_with_unit = [], []
+    values_to_plot: List[float] = []
 
     if alert_min:
-        for x in samples:
-            alert = 5 * float(x.zscorestats.rolling_stddev)
-            points.append(float(x.zscorestats.rolling_mean) - alert)
-            values_with_unit.append(unit_fmt(points[-1], unit))
+        # for 'lower boundary' vis, has its own problems. also see
+        # https://github.com/conbench/conbench/issues/1252
+        for s in samples:
+            alert = 5 * float(s.zscorestats.rolling_stddev)
+            values_to_plot.append(float(s.zscorestats.rolling_mean) - alert)
 
     elif alert_max:
-        for x in samples:
-            alert = 5 * float(x.zscorestats.rolling_stddev)
-            points.append(float(x.zscorestats.rolling_mean) + alert)
-            values_with_unit.append(unit_fmt(points[-1], unit))
+        for s in samples:
+            alert = 5 * float(s.zscorestats.rolling_stddev)
+            values_to_plot.append(float(s.zscorestats.rolling_mean) + alert)
+
+    elif distribution_mean:
+        values_to_plot = [s.zscorestats.rolling_mean for s in samples]
+        values_with_unit = [
+            fmt_number_and_unit(float(s.zscorestats.rolling_mean), unit)
+            for s in samples
+            if s.zscorestats.rolling_mean
+        ]
 
     else:
-        # Note(JP): Review the `values_with_unit` construction. It's largely
-        # legacy code.
-        if distribution_mean:
-            points = [x.zscorestats.rolling_mean for x in samples]
-            values_with_unit = [
-                unit_fmt(float(x.zscorestats.rolling_mean), unit)
-                for x in samples
-                if x.zscorestats.rolling_mean
-            ]
+        # This seems to be the 'normal' code path (not the special case)/
+        # For plotting SVS over time.
+        values_to_plot = [s.svs for s in samples]
 
-        else:
-            # Again, non-obvious purpose of this function: if not specified
-            # otherwise, this extracts the multisample mean-over-time.
-            points = [x.svs for x in samples]
-            values_with_unit = [unit_fmt(float(x.svs), unit) for x in samples if x.svs]
-
-    if formatted:
-        # Note(JP): why would we want to calculate the raw numeric data from
-        # the tooltip string labels?
-        points = [x.split(" ")[0] for x in values_with_unit]
+    values_with_unit: List[str] = [fmt_number_and_unit(x, unit) for x in values_to_plot]
 
     dsdict = {
         "x": datetimes,
         # Note(JP): maybe rename `points` into `y_values_for_plotting`
-        "y": points,
+        "y": values_to_plot,
         # List of human-readable date strings, corresponding to
         # the `datetimes` objects for the time axis
         "date_strings": date_strings,
@@ -347,7 +328,7 @@ def _source(
         "relative_benchmark_urls": [
             f"/benchmark-results/{s.benchmark_result_id}" for s in samples
         ],
-        # Stringified values (truncated, with unit)
+        # Stringified values (truncated, with unit, for on-hover)
         "values_with_unit": values_with_unit,
     }
 
@@ -363,7 +344,9 @@ def _source(
         for s in samples:
             # Terminology: subsample? itersample? rawsample?
             subsamples = s.data
-            strings.append(", ".join(unit_fmt(ss, unit) for ss in subsamples))
+            strings.append(
+                ", ".join(fmt_number_and_unit(ss, unit) for ss in subsamples)
+            )
 
         dsdict["multisample_strings_with_unit"] = strings
 
@@ -536,14 +519,17 @@ def time_series_plot(
     if len(units) != 1:
         raise HistoryUserFacingError(f"heterogenous set of units: {units}")
 
+    # The unit string for the axis label may be different (longer, for example)
     unit = units.pop()
+    unit_str_for_plot_axis_label = get_display_unit(unit)
 
     with_dist = [s for s in samples if s.zscorestats.rolling_mean]
     inliers = [s for s in samples if not s.zscorestats.is_outlier]
     outliers = [s for s in samples if s.zscorestats.is_outlier]
 
     has_outliers = len(outliers) > 0
-    formatted, axis_unit = _should_format([s.svs for s in samples], unit)
+
+    # formatted,  = _should_format([s.svs for s in samples], unit)
     # log.info("formatted: %s, axis_unit: %s", formatted, axis_unit)
 
     dist_change_indexes = [
@@ -554,13 +540,14 @@ def time_series_plot(
 
     # Note(JP): `samples` is an ordered list of dicts, each dict has a `mean`
     # key which is extracted here by default.
-    source_mean_over_time = _source(inliers, unit, formatted=formatted)
-    source_outlier_mean_over_time = _source(outliers, unit, formatted=formatted)
-    source_unfiltered_mean_over_time = _source(samples, unit, formatted=formatted)
+    source_mean_over_time = _source(inliers, unit)
+    source_outlier_mean_over_time = _source(outliers, unit)
+    source_unfiltered_mean_over_time = _source(samples, unit)
 
     source_min_over_time = bokeh.models.ColumnDataSource(
         data=dict(
             # Insert NaNs to break the line at distribution changes
+            # (documented Bokeh feature for adding a gap to a line plot)
             x=_insert_nans(
                 util.tznaive_iso8601_to_tzaware_dt(
                     [s.commit_timestamp.isoformat() for s in inliers]
@@ -582,21 +569,18 @@ def time_series_plot(
     source_rolling_mean_over_time = _source(
         with_dist,
         unit,
-        formatted=formatted,
         distribution_mean=True,
         break_line_indexes=dist_change_indexes,
     )
     source_rolling_alert_min_over_time = _source(
         with_dist,
         unit,
-        formatted=formatted,
         alert_min=True,
         break_line_indexes=dist_change_indexes,
     )
     source_rolling_alert_max_over_time = _source(
         with_dist,
         unit,
-        formatted=formatted,
         alert_max=True,
         break_line_indexes=dist_change_indexes,
     )
@@ -672,7 +656,7 @@ def time_series_plot(
 
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
-    p.yaxis.axis_label = axis_unit
+    p.yaxis.axis_label = unit_str_for_plot_axis_label
     p.xaxis.axis_label = "date of commit associated with the benchmark result"
 
     multisample, multisample_count = _inspect_for_multisample(samples)
@@ -754,9 +738,7 @@ def time_series_plot(
     (
         source_current_bm_mean,
         source_current_bm_min,
-    ) = get_source_for_single_benchmark_result(
-        current_benchmark_result, run, formatted, unit
-    )
+    ) = get_source_for_single_benchmark_result(current_benchmark_result, run, unit)
 
     if highlight_result_in_hist is not None:
         hs = highlight_result_in_hist[0]
@@ -874,9 +856,7 @@ def time_series_plot(
     # to add a new type for stream-lining this.
 
 
-def get_source_for_single_benchmark_result(
-    current_benchmark_result, cur_run, formatted, unit
-):
+def get_source_for_single_benchmark_result(current_benchmark_result, cur_run, unit):
     # Edge case: this may be failed or the commit time might be unknown, in
     # which case we do not show a data point (for now).
     # source_current_bm_min = None
@@ -923,7 +903,6 @@ def get_source_for_single_benchmark_result(
     source_current_bm_mean = _source(
         [dummy_hs_for_current_svs],
         unit,
-        formatted=formatted,
     )
 
     # Create same dummy structure, only difference: set min as single value
@@ -934,7 +913,6 @@ def get_source_for_single_benchmark_result(
     source_current_bm_min = _source(
         [dummy_hs_for_min],
         unit,
-        formatted=formatted,
     )
 
     return source_current_bm_mean, source_current_bm_min
