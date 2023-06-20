@@ -5,31 +5,31 @@
   CI run {{ run.id[:20] }}
  </h4>
 
+ <div class="mt-5">
   <h5>Compare</h5>
   {% for link in comparisons %}
     <p class="fs-6">
       <i class="bi bi-file-diff"></i> <a href="{{ link.url }}">{{ link.text }}</a> {{ link.badge | safe }}
     </p>
   {% endfor %}
+</div>
 
-  <div class="col-md-12">
+  <div class="col-md-12 mt-5">
     <h5>Benchmark results in this CI run</h5>
     <table id="benchmarks" class="table table-hover small">
       <thead>
         <tr>
-          <th scope="col">Date</th>
-          <th scope="col" style="width: 70px">Lang</th>
-          <th scope="col" style="width: 80px">Benchmark name</th>
-          <th scope="col">Case permutation</th>
-          <th scope="col" style="width: 55px">Mean</th>
-          <th scope="col" style="width: 55px">Error</th>
+          <th scope="col">benchmark start time</th>
+          <th scope="col" style="width: 120px">benchmark name</th>
+          <th scope="col">case permutation</th>
+          <th scope="col" style="width: 55px">mean</th>
+          <th scope="col" style="width: 55px">error</th>
         </tr>
       </thead>
       <tbody>
         {% for benchmark in benchmarks %}
           <tr>
-            <td style="white-space: nowrap;"><code>{{ benchmark.display_timestamp }}</code></td>
-            <td>{{ benchmark.display_language }}</td>
+            <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
             <td>
               <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">{{ benchmark.display_bmname }}</a>
             </td>
@@ -55,21 +55,22 @@
     </div>
     <!-- why would the run detail page be rendered w/o a run? -->
     {% if run %}
-      <h5>Details</h5>
+    <div class="mt-5">
+      <h5>CI run details</h5>
       <div class="col-md-12">
         <ul class="list-group">
           <li class="list-group-item">
-            Commit:
+            For commit:
             <div align="right" style="display:inline-block; float: right;">
               <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
             </div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
-            Timestamp:
+            Created at:
             <div align="right" style="display:inline-block; float: right;">{{ run.timestamp }}</div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
-            Finished Timestamp:
+            Finished at:
             <div align="right" style="display:inline-block; float: right;">{{ run.finished_timestamp }}</div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
@@ -102,6 +103,7 @@
           {% endif %}
         </ul>
       </div>
+    </div>
       <br />
       <form method="post" id="run-form">
         {{ form.hidden_tag() }}
