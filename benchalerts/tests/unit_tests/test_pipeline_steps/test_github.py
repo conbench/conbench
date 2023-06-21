@@ -25,14 +25,14 @@ class MockAlerter(Alerter):
     def github_check_summary(
         self, full_comparison: FullComparisonInfo, build_url: Optional[str]
     ) -> str:
-        previous_message = super().github_check_summary(full_comparison, build_url)
-        return previous_message + "\n\nThis message was generated from pytest."
+        base_message = super().github_check_summary(full_comparison, build_url)
+        return base_message + "\n\nThis message was generated from pytest."
 
     def github_pr_comment(
         self, full_comparison: FullComparisonInfo, check_link: str
     ) -> str:
-        previous_message = super().github_pr_comment(full_comparison, check_link)
-        return previous_message + "\n\nThis message was generated from pytest."
+        base_message = super().github_pr_comment(full_comparison, check_link)
+        return base_message + "\n\nThis message was generated from pytest."
 
 
 @pytest.mark.parametrize(
