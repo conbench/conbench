@@ -1,209 +1,268 @@
 {% extends "app.html" %}
 {% block app_content %}
-  <div class="d-flex">
-    <div class="p-0">
-      <h3>Comparison</h3>
-    </div>
-  </div>
-  <hr class="border border-danger border-1 opacity-50">
   {% if baseline_run and contender_run %}
     <div class="row row-cols-1 row-cols-md-2 g-4 mt-3 mb-5">
       <div class="col">
-        <div class="card text-bg-dark mb-3">
-          <div class="card-header">Contender</div>
-          <div class="card-body">
-            <h5 class="card-title"></h5>
-            <p class="card-text">
-              <a href="{{ url_for('app.run', run_id=contender_id) }}">Run {{ contender_id[:8] + "..." }}</a>
-              for commit {{ contender_run.commit.html_anchor_and_msg|safe }} submitted on  {{ contender_run.timestamp }}.
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="col">
         <div class="card text-bg-light mb-3">
-          <div class="card-header">Baseline / Reference</div>
-          <div class="card-body text-dark">
-            <h5 class="card-title"></h5>
-            <p class="card-text">
-              <a href="{{ url_for('app.run', run_id=baseline_id) }}">Run {{ baseline_id[:8] + "..." }}</a>
-              for commit {{ baseline_run.commit.html_anchor_and_msg|safe }} submitted on  {{ baseline_run.timestamp }}.
-            </p>
-          </div>
+          <div class="card-header">
+            Contender
+            <sup><i class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="A set of benchmark results. To be compared against a reference set.">
+            </i>
+          </sup>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title"></h5>
+          <p class="card-text">
+            <ul>
+              <li>
+                Benchmark results submitted as part of CI run
+                <a href="{{ url_for('app.run', run_id=contender_id) }}">{{ contender_id[:9] }}</a>
+                at {{ contender_run.timestamp }}
+              </li>
+              <li>Benchmarked code: commit {{ contender_run.commit.html_anchor_and_msg|safe }}</li>
+            </ul>
+          </p>
         </div>
       </div>
     </div>
-  {% endif %}
-  {% if plot_history %}
-    <div class="col-md-12">
-      <h6>Top Outliers</h6>
-      <div id="bokeh-carousel"
-           style="visibility: hidden"
-           class="carousel slide"
-           data-ride="carousel">
-        <div class="carousel-inner" role="listbox">
-          <ol class="carousel-indicators">
-            {% if plot_history|length > 1 %}
-              {% for plot in plot_history %}
-                {% if loop.index == 1 %}
-                  <li data-target="#bokeh-carousel" data-slide-to="0" class="active"></li>
-                {% else %}
-                  <li data-target="#bokeh-carousel" data-slide-to="{{ loop.index - 1 }}"></li>
-                {% endif %}
-              {% endfor %}
-            {% endif %}
-          </ol>
-          {% for plot in plot_history %}
-            <div class="item  {% if loop.index == 1 %}active{% endif %} ">
-              <div align="center">
-                <a href="{{ outlier_urls[loop.index - 1] }}">{{ outlier_names[loop.index - 1] }}</a>
-              </div>
-              <div id="plot-history-{{ loop.index - 1 }}" align="center"></div>
-            </div>
-          {% endfor %}
-          {% if plot_history|length > 1 %}
-            <br>
-            <br>
-            <br>
-          {% endif %}
-        </div>
+    <div class="col">
+      <div class="card text-bg-light mb-3">
+        <div class="card-header">
+          Baseline
+          <sup><i class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="Set of reference benchmark results that the contender data is compared against.">
+          </i>
+        </sup>
       </div>
-    </div>
-  {% endif %}
-  <div class="row">
-    <div class="col-md-12">
-      <table id="benchmarks"
-             class="table table-striped table-bordered table-hover">
-        <caption>
-          {% if comparisons %}
-            <span id="comparisons-tooltip"
-                  data-toggle="tooltip"
-                  data-html="true"
-                  data-placement="bottom"
-                  title=" Based on the z-score, {{ regressions }} of these {{ comparisons|length }} benchmarks were regressions, and {{ improvements }} were improvements.">
-              Comparisons
-              <span class="glyphicon glyphicon-arrow-down"></span> <b>{{ (100 * regressions / comparisons|length) | round(2) }}%</b>
-              <span class="glyphicon glyphicon-arrow-up"></span> <b>{{ (100 * improvements / comparisons|length) | round(2) }}%</b>
-            </span>
-          {% else %}
-            Comparisons
-          {% endif %}
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col" style="white-space: nowrap;">Z-Score</th>
-            <th scope="col">Change</th>
-            <th scope="col">Lang</th>
-            <th scope="col">Batch</th>
-            <th scope="col">Benchmark</th>
-            <th scope="col">Baseline</th>
-            <th scope="col">Contender</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for c in comparisons %}
-            {% if (c.contender is not none) and (c.baseline is not none) %}
-              <tr>
-                {% if c.analysis.lookback_z_score.z_score is not none %}
-                  {% if c.analysis.lookback_z_regression_indicated %}
-                    <td style="color: #ff7c43;">{{ c.analysis.lookback_z_score.z_score }}</td>
-                  {% elif c.contender_z_improvement %}
-                    <td style="color: #61B329;">{{ c.analysis.lookback_z_score.z_score }}</td>
-                  {% else %}
-                    <td>{{ c.analysis.lookback_z_score.z_score }}</td>
-                  {% endif %}
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if c.analysis.pairwise.percent_change %}
-                  <td>{{ c.analysis.pairwise.percent_change }}%</td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                <td>{{ c.baseline.language }}</td>
-                <td>
-                  <div>{{ c.baseline.benchmark_name }}</div>
-                </td>
-                <td>
-                  <a href="{{ c.compare_benchmarks_url }}">
-                    <div>{{ c.baseline.case_permutation }}</div>
-                  </a>
-                </td>
-                {% if c.baseline.error is not none %}
-                  <td>
-                    <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.baseline.benchmark_result_id) }}">Error</a>
-                  </td>
-                {% else %}
-                  <td style="white-space: nowrap;">{{ c.baseline.single_value_summary }} {{ c.unit }}</td>
-                {% endif %}
-                {% if c.contender.error is not none %}
-                  <td>
-                    <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.contender.benchmark_result_id) }}">Error</a>
-                  </td>
-                {% else %}
-                  <td style="white-space: nowrap;">{{ c.contender.single_value_summary }} {{ c.unit }}</td>
-                {% endif %}
-              </tr>
-            {% endif %}
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="card-body text-dark">
+        <h5 class="card-title"></h5>
+        <p class="card-text">
+          <ul>
+            <li>
+              Benchmark results submitted as part of CI run
+              <a href="{{ url_for('app.run', run_id=baseline_id) }}">{{ baseline_id[:9] }}</a>
+              at {{ baseline_run.timestamp }}
+            </li>
+            <li>Benchmarked code: commit {{ baseline_run.commit.html_anchor_and_msg|safe }}</li>
+          </ul>
+        </p>
+      </div>
     </div>
   </div>
-  <hr />
-  <h4>Compare current contender run with another run:</h4>
-  <br>
-  <form>
-    <div class="form-group">
-      <label for="commit-date">Baseline Commit Date</label>
-      <input type="date" id="commit-date" name="commit-date" value="">
+</div>
+{% endif %}
+<p>
+  The <code>change</code> column below shows the direct comparison between matching benchmark results.
+</p>
+<p>
+  The <code>z-score</code> column shows how a contender benchmark result performs in view of a historical ensemble of comparable
+  benchmark results (in this case, the reference run contains only the newest of the results in that ensemble;
+  all other results were submitted via different CI runs in the past).
+</p>
+<p>
+  When <code>change</code> and <code>z-score</code> have a negative sign then this is defined as degradation;
+  a positive sign corresponds to an improvement (this directionality is automatically derived from the unit string and may be wrong).
+</p>
+<p>
+  The <code>change</code> and <code>z-score</code> columns may provide contradicting opinions about improvement vs. degradation.
+  The lookback z-score method (documented
+  <a href="https://github.com/conbench/conbench/blob/52cf34f96cb471f493dc201b0a57ece6132eb10d/docs/pages/lookback_zscore.md">here</a>)
+  is supposed to provide the more credible result.
+</p>
+{% if plot_history %}
+  <div class="col-md-12">
+    <h6>Top Outliers</h6>
+    <div id="bokeh-carousel"
+         style="visibility: hidden"
+         class="carousel slide"
+         data-ride="carousel">
+      <div class="carousel-inner" role="listbox">
+        <ol class="carousel-indicators">
+          {% if plot_history|length > 1 %}
+            {% for plot in plot_history %}
+              {% if loop.index == 1 %}
+                <li data-target="#bokeh-carousel" data-slide-to="0" class="active"></li>
+              {% else %}
+                <li data-target="#bokeh-carousel" data-slide-to="{{ loop.index - 1 }}"></li>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        </ol>
+        {% for plot in plot_history %}
+          <div class="item  {% if loop.index == 1 %}active{% endif %} ">
+            <div align="center">
+              <a href="{{ outlier_urls[loop.index - 1] }}">{{ outlier_names[loop.index - 1] }}</a>
+            </div>
+            <div id="plot-history-{{ loop.index - 1 }}" align="center"></div>
+          </div>
+        {% endfor %}
+        {% if plot_history|length > 1 %}
+          <br>
+          <br>
+          <br>
+        {% endif %}
+      </div>
     </div>
-    <div class="form-group">
-      <label for="baseline-commit">Baseline Commit</label>
-      <select class="custom-select" name="baseline-commit" id="baseline-commit">
-        <option value="" selected="selected">Please select baseline commit date</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="hardware">Hardware</label>
-      <select class="custom-select" name="hardware" id="hardware">
-        <option value="" selected="selected">Please select baseline commit first</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="run-name">Run Name</label>
-      <select class="custom-select" name="run-name" id="run-name">
-        <option value="" selected="selected">Please select hardware first</option>
-      </select>
-    </div>
-  </form>
-  <form name="compare-runs" id="compare-runs"  method="get" action="">
-    <button type="submit" class="btn btn-primary">Submit</button>
-  </form>
+  </div>
+{% endif %}
+<div class="row">
+  <div class="col-md-12">
+    <table class="run-compare-bmresult-table table table-hover table-borderless small"
+           style="width:100%;
+                  display: none">
+      <thead>
+        <tr>
+          <th scope="col">benchmark name</th>
+          <!-- this should show a context column because there might bei
+            results that have the same benchmark name and case permutation, but
+            then differ in context. before, we showed a language column. but
+            that is just one context parameter. one could argue that it's fine
+            to not show this. outfall is: duplicate-looking rows. for
+            deduplication: click into detailed result view.
+            -->
+          <th scope="col">case permutation</th>
+          <th scope="col">baseline result</th>
+          <th scope="col">contender result</th>
+          <th scope="col">change</th>
+          <th scope="col">z-score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in comparisons %}
+          {% if (c.contender is not none) and (c.baseline is not none) %}
+            <tr>
+              <td>
+                <div>{{ c.baseline.benchmark_name }}</div>
+              </td>
+              <td>
+                <a href="{{ c.compare_benchmarks_url }}">
+                  <div>{{ c.baseline.case_permutation }}</div>
+                </a>
+              </td>
+              {% if c.baseline.error is not none %}
+                <td>
+                  <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.baseline.benchmark_result_id) }}">error</a>
+                </td>
+              {% else %}
+                <td class="font-monospace">{{ c.baseline.single_value_summary }} {{ c.unit }}</td>
+              {% endif %}
+              {% if c.contender.error is not none %}
+                <td>
+                  <a href="{{ url_for('app.benchmark-result', benchmark_result_id=c.contender.benchmark_result_id) }}">error</a>
+                </td>
+              {% else %}
+                <td class="font-monospace">{{ c.contender.single_value_summary }} {{ c.unit }}</td>
+              {% endif %}
+              {% if c.analysis.pairwise.percent_change %}
+                <td class="font-monospace"
+                    data-order="{{ c.analysis.pairwise.percent_change }}">
+                  {{ c.analysis.pairwise.percent_change }} %
+                </td>
+              {% else %}
+                <td></td>
+              {% endif %}
+              {% if c.analysis.lookback_z_score.z_score is not none %}
+                <td class="font-monospace"
+                    data-order="{{ c.analysis.lookback_z_score.z_score }}">
+                  {{ c.analysis.lookback_z_score.z_score }}
+                </td>
+              {% else %}
+                <td></td>
+              {% endif %}
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<hr />
+<h4>Compare current contender run with another run:</h4>
+<br>
+<form>
+  <div class="form-group">
+    <label for="commit-date">Baseline Commit Date</label>
+    <input type="date" id="commit-date" name="commit-date" value="">
+  </div>
+  <div class="form-group">
+    <label for="baseline-commit">Baseline Commit</label>
+    <select class="custom-select" name="baseline-commit" id="baseline-commit">
+      <option value="" selected="selected">Please select baseline commit date</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="hardware">Hardware</label>
+    <select class="custom-select" name="hardware" id="hardware">
+      <option value="" selected="selected">Please select baseline commit first</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="run-name">Run Name</label>
+    <select class="custom-select" name="run-name" id="run-name">
+      <option value="" selected="selected">Please select hardware first</option>
+    </select>
+  </div>
+</form>
+<form name="compare-runs" id="compare-runs"  method="get" action="">
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
 {% endblock %}
 {% block scripts %}
   {{ super() }}
   {{ resources | safe }}
   <script type="text/javascript">
-    var table = $('#benchmarks').dataTable( {
-      "responsive": true,
-      "order": [[0, 'asc']],
-      "columnDefs": [{ "orderable": false, "targets": [5, 6] }]
-    });
+    // var table = $('#benchmarks').dataTable( {
+    //   "responsive": true,
+    //   "order": [[0, 'asc']],
+    //   "columnDefs": [{ "orderable": false, "targets": [5, 6] }]
+    // });
+
+    // Enable bootstrap tooltips on this page.
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
 
-    $(document).ready(function() {
-      $('#comparisons-tooltip').tooltip()
-    });
 
-    {% if plot_history %}
-      $(document).ready(function() {
-        {% for plot in plot_history %}Bokeh.embed.embed_item({{ plot | safe }});{% endfor %}
-        document.getElementById("bokeh-carousel").style.visibility = "visible";
-      });
-    {% endif %}
+    $('table.run-compare-bmresult-table').DataTable({
+            // Note(JP): this enables a special, simple plugin called
+            // `conditionalPaging` which must be included, e.g. via the dist URLs
+            // published in https://cdn.datatables.net/plug-ins/1.13.3/features/.
+            // kudos to https://stackoverflow.com/a/29639664/145400
+          "conditionalPaging": true,
+          // hide the "Showing 1 to 12 of 12 entries" element
+          "bInfo" : true,
+          "responsive": true,
+            // the default default seems to be the first item in lengthMenu.
+          "lengthMenu": [ 5, 10, 50, 75, 100, 250, 750 ],
+            // but when pageLength is also set, then _this_ is the default.
+          "pageLength": 50,
+            // Take rather precise control of layouting elements, put bottom elements
+            // into a mult-col single row, using BS's grid system.
+          "dom": '<"row"<"d-flex flex-row-reverse p-0"fl>>rt<"row p-2"<"col-6"i><".col-6"p>>',
+          "language": {
+            "search": '',
+            "searchPlaceholder": "search all columns",
+            "lengthMenu": "show _MENU_ results",
+          },
 
+          // default sort order: by z-score count, lowest first (regressions first)
+          "order": [[5, 'asc']],
+          "columnDefs": [{ "orderable": true }],
+          initComplete: function () {
+            var api = this.api();
+                // reveal only after DOM modification is complete (reduce loading
+                // layout shift artifacts)
+            $('table.run-compare-bmresult-table').show();
+            api.columns.adjust();
+            $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
+          },
+        });
 
+    // Note(JP): maybe this is for the "compare current contender run to
+    // another run" form. Who uses that? Why is this workflow important?
     window.onload = function () {
       var commitHardwareRunMap = {{ commit_hardware_run_map|tojson|safe }};
       var commitDate = document.getElementById("commit-date");

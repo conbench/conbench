@@ -23,6 +23,9 @@ class Hardware(Base, EntityMixin):
     id: Mapped[str] = NotNull(s.String(50), primary_key=True, default=genprimkey)
     name: Mapped[str] = NotNull(s.Text)
     type: Mapped[str] = NotNull(s.String(50))
+
+    # Note(JP): hash seems to be what we want to use for checking if two
+    # results are hardware-comparable.
     hash: Mapped[str] = NotNull(s.String(1000))
 
     __mapper_args__ = {"polymorphic_on": type, "polymorphic_identity": "hardware"}
@@ -52,6 +55,8 @@ class Machine(Hardware):
     gpu_count = Nullable(s.Integer, check("gpu_count>=0"), default=0)
     gpu_product_names = Nullable(postgresql.ARRAY(s.Text), default=[])
 
+    # Note(JP): I think this complexity should go away.
+    # also see https://github.com/conbench/conbench/issues/1281
     __mapper_args__ = {"polymorphic_identity": "machine"}
 
     @classmethod

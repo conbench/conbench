@@ -580,7 +580,7 @@ def ui_mean_and_uncertainty(values: List[float], unit: str):
     stdem = stdev / math.sqrt(len(values))
 
     # This generates a string like '3.1 ± 0.7'
-    mean_uncertainty_str = sigfig.round(mean, uncertainty=stdem)
+    mean_uncertainty_str = sigfig.round(mean, uncertainty=stdem, warn=False)
     return f"({mean_uncertainty_str}) {unit}"
 
 
