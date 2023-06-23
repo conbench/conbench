@@ -303,6 +303,8 @@ class CompareBenchmarkResults(Compare):
 
 class CompareRuns(Compare):
     type = "run"
+    # non-intuitive name for a template supposed to render the "compare two
+    # runs" view.
     html = "compare-list.html"
     title = "Compare Runs"
     api_endpoint_name = "api.compare-runs"
