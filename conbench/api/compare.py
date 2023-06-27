@@ -5,10 +5,10 @@ import threading
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 import flask as f
-import sigfig
 import sqlalchemy as s
 
 from conbench.dbsession import current_session
+from conbench.numstr import numstr
 
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
@@ -72,9 +72,18 @@ def _get_threshold_args_from_request() -> Tuple[Optional[float], Optional[float]
     return threshold, threshold_z
 
 
-def _round(value: float) -> float:
-    """Round a float to 4 significant figures, or NaN if the input is NaN."""
-    return value if math.isnan(value) else sigfig.round(value, sigfigs=4, warn=False)
+def _round(value: float) -> Optional[float]:
+    """
+    Round a float to 4 significant figures, or NaN if the input is NaN
+
+    Note(JP): Returning math.nan translates to `null` in JSON output, but to
+    empty string "" in naive jinja template interpolation. Using `None` achieves
+    `null` in JSON, too, but can better we dealt with in jinja template
+    interpolation. For the UI we should really do
+    https://github.com/conbench/conbench/issues/1334 though.
+
+    """
+    return None if math.isnan(value) else float(numstr(value, sigfigs=4))
 
 
 if TYPE_CHECKING:
@@ -222,6 +231,8 @@ class BenchmarkResultComparator:
             "contender": self.result_info(self.contender),
             "analysis": {
                 "pairwise": self.pairwise_analysis,
+                # Watch out: self.lookback_z_score_analysis can be dict or
+                # None, and both needs to be handled in the UI (for now).
                 "lookback_z_score": self.lookback_z_score_analysis,
             },
         }
