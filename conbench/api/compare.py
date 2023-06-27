@@ -192,12 +192,13 @@ class BenchmarkResultComparator:
         if self.less_is_better:
             relative_change = relative_change * -1
 
-        percent_change = _round(relative_change * 100.0)
+        percent_change = relative_change * 100.0
         regression_indicated = -percent_change > self.threshold
         improvement_indicated = percent_change > self.threshold
 
+        percent_change_for_output = _round(relative_change * 100.0)
         return {
-            "percent_change": percent_change,
+            "percent_change": percent_change_for_output,
             "percent_threshold": self.threshold,
             "regression_indicated": regression_indicated,
             "improvement_indicated": improvement_indicated,
