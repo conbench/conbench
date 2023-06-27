@@ -33,17 +33,10 @@ matching fields between baseline and contender are aligned and mismatched fields
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item active">Compare</li>
-      <li class="breadcrumb-item active">
-        <a href="{{ compare_runs_url }}">Runs</a>
-      </li>
-      <li class="breadcrumb-item active">
-        <a href="{{ compare_batches_url }}">Batches</a>
-      </li>
-      <li class="breadcrumb-item active">Benchmarks</li>
       <li class="breadcrumb-item active" aria-current="page">
-        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline_id) }}">Baseline</a>
+        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline_id) }}">baseline result</a>
         ...
-        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender_id) }}">Contender</a>
+        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender_id) }}">reference result</a>
       </li>
     </ol>
   </nav>
