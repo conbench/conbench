@@ -128,15 +128,15 @@
                   {{ c.analysis.pairwise.percent_change }} %
                 </td>
               {% else %}
-                <td></td>
+                <td data-order="99999999">n/a</td>
               {% endif %}
-              {% if c.analysis.lookback_z_score.z_score is not none %}
+              {% if c.analysis.lookback_z_score is not none %}
                 <td class="font-monospace"
                     data-order="{{ c.analysis.lookback_z_score.z_score }}">
                   {{ c.analysis.lookback_z_score.z_score }}
                 </td>
               {% else %}
-                <td></td>
+                <td data-order="99999999">n/a</td>
               {% endif %}
             </tr>
           {% endif %}
