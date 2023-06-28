@@ -33,17 +33,10 @@ matching fields between baseline and contender are aligned and mismatched fields
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item active">Compare</li>
-      <li class="breadcrumb-item active">
-        <a href="{{ compare_runs_url }}">Runs</a>
-      </li>
-      <li class="breadcrumb-item active">
-        <a href="{{ compare_batches_url }}">Batches</a>
-      </li>
-      <li class="breadcrumb-item active">Benchmarks</li>
       <li class="breadcrumb-item active" aria-current="page">
-        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline_id) }}">Baseline</a>
+        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline_id) }}">baseline result</a>
         ...
-        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender_id) }}">Contender</a>
+        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender_id) }}">contender result</a>
       </li>
     </ol>
   </nav>
@@ -71,7 +64,13 @@ matching fields between baseline and contender are aligned and mismatched fields
         <ul class="list-group">
           <li class="list-group-item active">Baseline</li>
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>run</b>
+            <b>result ID</b>
+            <div align="right" style="display:inline-block; float: right;">
+              <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline.id) }}">{{ baseline.id }}</a>
+            </div>
+          </li>
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>submitted as part of CI run</b>
             <div align="right" style="display:inline-block; float: right;">
               <a href="{{ url_for('app.run', run_id=baseline.run_id) }}">{{ baseline.run_id }}</a>
             </div>
@@ -84,9 +83,7 @@ matching fields between baseline and contender are aligned and mismatched fields
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
             <b>case permutation</b>
-            <div align="right" style="display:inline-block; float: right;">
-              <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline.id) }}">{{ baseline.display_case_perm }}</a>
-            </div>
+            <div align="right" style="display:inline-block; float: right;">{{ baseline.display_case_perm }}</div>
           </li>
           {% if baseline_run %}
             {% if baseline_run.commit.url %}
@@ -162,7 +159,13 @@ matching fields between baseline and contender are aligned and mismatched fields
         <ul class="list-group">
           <li class="list-group-item active">Contender</li>
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>run</b>
+            <b>result ID</b>
+            <div align="right" style="display:inline-block; float: right;">
+              <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender.id) }}">{{ contender.id }}</a>
+            </div>
+          </li>
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>submitted as part of CI run</b>
             <div align="right" style="display:inline-block; float: right;">
               <a href="{{ url_for('app.run', run_id=contender.run_id) }}">{{ contender.run_id }}</a>
             </div>
@@ -175,9 +178,7 @@ matching fields between baseline and contender are aligned and mismatched fields
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
             <b>case permutation</b>
-            <div align="right" style="display:inline-block; float: right;">
-              <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender.id) }}">{{ contender.display_case_perm }}</a>
-            </div>
+            <div align="right" style="display:inline-block; float: right;">{{ contender.display_case_perm }}</div>
           </li>
           {% if contender_run %}
             {% if contender_run.commit.url %}

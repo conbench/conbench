@@ -1,7 +1,7 @@
 {% extends "app.html" %}
 {% block app_content %}
   {% if baseline_run and contender_run %}
-    <div class="row row-cols-1 row-cols-md-2 g-4 mt-3 mb-5">
+    <div class="row row-cols-md-2 g-4 mb-2">
       <div class="col">
         <div class="card text-bg-light mb-3">
           <div class="card-header">
@@ -55,59 +55,44 @@
 </div>
 {% endif %}
 <p>
-  The <code>change</code> column below shows the direct comparison between matching benchmark results.
+  <a data-bs-toggle="collapse"
+     href="#collapseHelpblock"
+     role="button"
+     aria-expanded="false"
+     aria-controls="collapseHelpblock">toggle help for using the table below</a>
 </p>
-<p>
-  The <code>z-score</code> column shows how a contender benchmark result performs in view of a historical ensemble of comparable
-  benchmark results (in this case, the reference run contains only the newest of the results in that ensemble;
-  all other results were submitted via different CI runs in the past).
-</p>
-<p>
-  When <code>change</code> and <code>z-score</code> have a negative sign then this is defined as degradation;
-  a positive sign corresponds to an improvement (this directionality is automatically derived from the unit string and may be wrong).
-</p>
-<p>
-  The <code>change</code> and <code>z-score</code> columns may provide contradicting opinions about improvement vs. degradation.
-  The lookback z-score method (documented
-  <a href="https://github.com/conbench/conbench/blob/52cf34f96cb471f493dc201b0a57ece6132eb10d/docs/pages/lookback_zscore.md">here</a>)
-  is supposed to provide the more credible result.
-</p>
-{% if plot_history %}
-  <div class="col-md-12">
-    <h6>Top Outliers</h6>
-    <div id="bokeh-carousel"
-         style="visibility: hidden"
-         class="carousel slide"
-         data-ride="carousel">
-      <div class="carousel-inner" role="listbox">
-        <ol class="carousel-indicators">
-          {% if plot_history|length > 1 %}
-            {% for plot in plot_history %}
-              {% if loop.index == 1 %}
-                <li data-target="#bokeh-carousel" data-slide-to="0" class="active"></li>
-              {% else %}
-                <li data-target="#bokeh-carousel" data-slide-to="{{ loop.index - 1 }}"></li>
-              {% endif %}
-            {% endfor %}
-          {% endif %}
-        </ol>
-        {% for plot in plot_history %}
-          <div class="item  {% if loop.index == 1 %}active{% endif %} ">
-            <div align="center">
-              <a href="{{ outlier_urls[loop.index - 1] }}">{{ outlier_names[loop.index - 1] }}</a>
-            </div>
-            <div id="plot-history-{{ loop.index - 1 }}" align="center"></div>
-          </div>
-        {% endfor %}
-        {% if plot_history|length > 1 %}
-          <br>
-          <br>
-          <br>
-        {% endif %}
-      </div>
-    </div>
+<div class="collapse mb-3" id="collapseHelpblock">
+  <div class="card card-body">
+    <p>
+      Each row in the table below represents a comparison. The outcome of that comparison is summarized by two metrics: <code>change</code> and <code>z-score</code>.
+    </p>
+    <p>
+      There are no definite guidelines for interpretation. However, a
+      rather ignorant rule of thumb is that a <code>z-score</code> value of <code>-5</code> or smaller may indicate an actual performance regression
+      and should lead to brief human review.
+      A good method for such review is to click the link in the corresponding row; it leads to a visual representation of
+      the contender benchmark result, the baseline benchmark result, and the comparable historical ensemble.
+      That type of visualization usually allows a human to assess how significant a change really is.
+    </p>
+    <p>
+      The <code>change</code> column compares two matching benchmark results and expresses the difference in percent.
+    </p>
+    <p>
+      The <code>z-score</code> column shows how the contender benchmark result performs in view of a larger historical ensemble of comparable
+      benchmark results (in this case, the reference run contains only the newest of the results in that ensemble;
+      all other results were submitted via different CI runs in the past).
+    </p>
+    <p>
+      Whether the contender does better or worse than the reference is indicated by sign:
+      a negative sign (for both, <code>change</code> and <code>z-score</code>) reflects the direction of degradation, a positive sign reflects the direction of improvement.
+      The directionality is derived from the user-given unit (units other than s, i/s, B/s are <a href="https://github.com/conbench/conbench/issues/1335">not yet well supported</a>).
+    </p>
+    <p>
+      Further methodological details are described in the
+      <a href="https://github.com/conbench/conbench/blob/52cf34f96cb471f493dc201b0a57ece6132eb10d/docs/pages/lookback_zscore.md">lookback z-score method documentation</a>.
+    </p>
   </div>
-{% endif %}
+</div>
 <div class="row">
   <div class="col-md-12">
     <table class="run-compare-bmresult-table table table-hover table-borderless small"
@@ -123,7 +108,7 @@
             to not show this. outfall is: duplicate-looking rows. for
             deduplication: click into detailed result view.
             -->
-          <th scope="col">case permutation</th>
+          <th scope="col">case (and link to direct comparison)</th>
           <th scope="col">baseline result</th>
           <th scope="col">contender result</th>
           <th scope="col">change</th>
@@ -162,15 +147,15 @@
                   {{ c.analysis.pairwise.percent_change }} %
                 </td>
               {% else %}
-                <td></td>
+                <td data-order="99999999">n/a</td>
               {% endif %}
-              {% if c.analysis.lookback_z_score.z_score is not none %}
+              {% if c.analysis.lookback_z_score is not none %}
                 <td class="font-monospace"
                     data-order="{{ c.analysis.lookback_z_score.z_score }}">
                   {{ c.analysis.lookback_z_score.z_score }}
                 </td>
               {% else %}
-                <td></td>
+                <td data-order="99999999">n/a</td>
               {% endif %}
             </tr>
           {% endif %}
@@ -238,14 +223,14 @@
             // the default default seems to be the first item in lengthMenu.
           "lengthMenu": [ 5, 10, 50, 75, 100, 250, 750 ],
             // but when pageLength is also set, then _this_ is the default.
-          "pageLength": 50,
+          "pageLength": 10,
             // Take rather precise control of layouting elements, put bottom elements
             // into a mult-col single row, using BS's grid system.
           "dom": '<"row"<"d-flex flex-row-reverse p-0"fl>>rt<"row p-2"<"col-6"i><".col-6"p>>',
           "language": {
             "search": '',
             "searchPlaceholder": "search all columns",
-            "lengthMenu": "show _MENU_ results",
+            "lengthMenu": "show _MENU_ entries",
           },
 
           // default sort order: by z-score count, lowest first (regressions first)

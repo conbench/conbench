@@ -693,8 +693,14 @@ def _add_rolling_stats_columns_to_df(
 
 
 def _less_is_better(unit) -> bool:
+    # For some units, "more is better":
     if unit in ["B/s", "i/s"]:
         return False
+
+    # Legacy decision was to simply return `True` here -- assuming
+    # duration/seconds. However, this is error-prone and may lead to rather
+    # ugly UX in the core value proposition of Conbench. This needs a better
+    # solution. Also see https://github.com/conbench/conbench/issues/1335
     return True
 
 
