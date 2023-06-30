@@ -137,13 +137,16 @@ class ResultTimeseries:
 # Think: do work in a child process, provide dictionary via shared memory to
 # parent, maybe via https://pypi.org/project/shared-memory-dict/ this is _not_
 # as stdlib pickling dict
-# https://github.com/luizalabs/shared-memory-dict/issues/10
+# https://github.com/luizalabs/shared-memory-dict/issues/10 This initial state
+# might result in exceptions raised in certain request handlers; healing after
+# first update.
 bmrt_cache: CacheDict = {
     "by_id": {},
     "by_benchmark_name": {},
     "by_case_id": {},
     "by_4t_list": {},
     "by_4t_df": {},
+    "by_run_id": {},
     "meta": CacheUpdateMetaInfo(
         newest_result_time_str="n/a",
         oldest_result_time_str="n/a",
@@ -212,6 +215,7 @@ def _fetch_and_cache_most_recent_results_guts(
     by_id_dict: Dict[str, BMRTBenchmarkResult] = {}
     by_name_dict: Dict[TBenchmarkName, List[BMRTBenchmarkResult]] = defaultdict(list)
     by_case_id_dict: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
+    by_run_id_dict: Dict[str, List[BMRTBenchmarkResult]] = defaultdict(list)
 
     first_result = None
     last_result = None
@@ -235,6 +239,23 @@ def _fetch_and_cache_most_recent_results_guts(
         # For now: put both, failed and non-failed results into the cache.
         # It would be a nice code simplification to only consider succeeded
         # ones, but then we miss out on reporting about the failed ones.
+
+        # Important decision for now: skip results that have not been obtained
+        # for the default code branch.
+        bmrrun = result.run
+        bmrcommit = bmrrun.commit
+
+        if bmrcommit is None:
+            continue
+
+        if not bmrcommit.on_default_branch:
+            continue
+
+        # The str() indirections below are here to quickly make sure that there
+        # is no more SQLAlchemy magic associated to objects we store here.
+        # Maybe that is not needed but instead of making that experiment I took
+        # the quick way.
+
         # Note: with named types it's here not enough to to # type: ...
         # but an explicit cast is required? perf impact? dunno.
         # Related: https://github.com/python/typing/discussions/1146
@@ -244,16 +265,6 @@ def _fetch_and_cache_most_recent_results_guts(
         # it should also work as a proper identifier (like primary key).
         casedict = result.case.to_dict()
         case_text_id = " ".join(get_case_kvpair_strings(casedict))
-
-        bmrrun = result.run
-
-        # Skip results that have not been obtained for the default code branch.
-        bmrcommit = bmrrun.commit
-        if bmrcommit is None:
-            continue
-
-        if not bmrcommit.on_default_branch:
-            continue
 
         bmr = BMRTBenchmarkResult(
             id=str(result.id),
@@ -285,12 +296,9 @@ def _fetch_and_cache_most_recent_results_guts(
             run_reason=bmrrun.reason if bmrrun.reason else "n/a",
         )
 
-        # The str() indirections below (and above) are here to quickly make
-        # sure that there is no more SQLAlchemy magic associated to objects we
-        # store here (no more mapping to columns). Maybe that is not needed
-        # but instead of making that experiment I took the quick way.
         by_id_dict[str(result.id)] = bmr
         by_name_dict[benchmark_name].append(bmr)
+        by_run_id_dict[str(result.run_id)].append(bmr)
 
         # Add a property on the Case object, on the fly.
         # Build the textual representation of this case which should also
@@ -321,6 +329,7 @@ def _fetch_and_cache_most_recent_results_guts(
     bmrt_cache["by_case_id"] = by_case_id_dict
     bmrt_cache["by_4t_df"] = dict4tdf
     bmrt_cache["by_4t_list"] = bmrlist_by_4tuple
+    bmrt_cache["by_run_id"] = by_run_id_dict
     bmrt_cache["meta"] = CacheUpdateMetaInfo(
         newest_result_time_str=first_result.ui_time_started_at,
         covered_timeframe_days_approx=str(
