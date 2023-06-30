@@ -72,7 +72,7 @@ class Index(AppEndpoint, RunMixin):
             # ~10 runs, and that is provided by this approach.
             result_count = "n/a"
             if r.id in bmrt_cache["by_run_id"]:
-                result_count = str(len(bmrt_cache["by_run_id"]))
+                result_count = str(len(bmrt_cache["by_run_id"][r.id]))
 
             rd = RunForDisplay(
                 ctime_for_table=r.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"),
