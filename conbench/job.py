@@ -121,6 +121,7 @@ class CacheDict(TypedDict):
     by_id: Dict[str, BMRTBenchmarkResult]
     by_benchmark_name: Dict[TBenchmarkName, List[BMRTBenchmarkResult]]
     by_case_id: Dict[str, List[BMRTBenchmarkResult]]
+    by_run_id: Dict[str, List[BMRTBenchmarkResult]]
     by_4t_df: TDict4tdf
     by_4t_list: TDict4tlist
     meta: CacheUpdateMetaInfo
