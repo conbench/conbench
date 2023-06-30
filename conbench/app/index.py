@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 import conbench.util
 from conbench.dbsession import current_session
+from conbench.job import bmrt_cache
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
@@ -61,18 +62,29 @@ class Index(AppEndpoint, RunMixin):
         reponame_runs_map: Dict[str, List[RunForDisplay]] = defaultdict(list)
 
         for r in runs:
+            # Feed per-run result count from BMRT cache so that at least for
+            # the last few runs (or all of them; depends on usage pattern) the
+            # data is ~correct. At the boundary, the count is permanently wrong
+            # (single run partially represented in BMRT cache, true for
+            # probably just one of many runs). That's fine, the UI does not
+            # claim real-time truth in that regard. In the vast majority of the
+            # cases we want a ~correct result count per run only for the last
+            # ~10 runs, and that is provided by this approach.
+            result_count = "n/a"
+            if r.id in bmrt_cache["by_run_id"]:
+                result_count = str(len(bmrt_cache["by_run_id"]))
+
             rd = RunForDisplay(
                 ctime_for_table=r.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"),
                 commit_message_short=conbench.util.short_commit_msg(
                     r.commit.message if r.commit else ""
                 ),
-                # Temporary band-aid; we cannot fetch all last-1000-run-related
-                # BenchmarkResult objects each time we render the landing page.
-                # See https://github.com/conbench/conbench/issues/977 However,
-                # we will find a pragmatic way to still display a per-run
-                # result count (estimate). I want to leave this code intact for
-                # now and display a placeholder.
-                result_count="",
+                # We cannot fetch all last-1000-run-related BenchmarkResult
+                # objects each time we render the landing page. See
+                # https://github.com/conbench/conbench/issues/977 However, we
+                # use a pragmatic way to still display a per-run result
+                # count (estimate).
+                result_count=result_count,
                 run=r,
             )
 
