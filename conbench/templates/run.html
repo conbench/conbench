@@ -4,46 +4,40 @@
   <h1>CI run {{ run.id[:20] }}</h1>
 
   <div class="mt-2">
-    <h4>Details</h4>
+    Benchmarked code:<br>
     <ul>
       <li>
-        for commit: <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
+        repository {{ run.commit.repository }}
       </li>
       <li>
-        created at: {{ run.timestamp }}
+        commit <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
       </li>
-      <li>
-        finished at: {{ run.finished_timestamp }}
-      </li>
-      <li>
-        error: <pre>{{ run.error_type }}</pre>
-      </li>
-      {% if run.error_info %}
-        <li>
-          error detail: <br>
-          <pre>
-            {% for k,v in run.error_info.items() %}
-              {{ k }}:{{ v }}
-            {% endfor %}
-          </pre>
-        </li>
-      {% endif %}
+    </ul>
+    Created at: <code>{{ run.timestamp }}</code>, finished at: <code>{{ run.finished_timestamp }}</code><br>
+    Error: <code>{{ run.error_type }}</code><br>
 
-      {% if run.info %}
-        <li>
-          run info: <br>
-          <pre>
-            {% for k,v in run.info.items()() %}
-              {{ k }}:{{ v }}
-            {% endfor %}
-          </pre>
-        </li>
-      {% endif %}
+    {% if run.error_info %}
+      error detail: <br>
+      <pre>
+        {% for k,v in run.error_info.items() %}
+          {{ k }}:{{ v }}
+        {% endfor %}
+      </pre>
+    {% endif %}
+
+    {% if run.info %}
+      run info: <br>
+      <pre>
+        {% for k,v in run.info.items() %}
+          {{ k }}:{{ v }}
+        {% endfor %}
+      </pre>
+    {% endif %}
     </ul>
 </div>
 
-  <div class="mt-4">
-    <h3>Compare results</h3>
+  <div class="mt-5">
+    <h3>Compare</h3>
     <p>Compare the results obtained in the displayed CI run to previously obtained results:</p>
     {% for link in comparisons %}
       <p class="fs-6">
@@ -55,9 +49,12 @@
     {% endfor %}
   </div>
 
-  <div class="mt-4">
-    <h3>Results in this CI run</h3>
-    <table id="benchmarks" class="table table-hover small">
+  <div class="mt-5">
+    <h3>Results</h3>
+    <p>
+      All benchmark results that have submitted for this CI run:
+    </p>
+    <table class="table results-in-run-table table-hover table-borderless small">
       <thead>
         <tr>
           <th scope="col">benchmark start time</th>
@@ -94,7 +91,6 @@
         </tbody>
       </table>
     </div>
-
 
   <div class="mt-4">
     <form method="post" id="run-form">
