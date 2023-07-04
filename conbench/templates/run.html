@@ -47,7 +47,10 @@
     <p>Compare the results obtained in the displayed CI run to previously obtained results:</p>
     {% for link in comparisons %}
       <p class="fs-6">
-        <i class="bi bi-file-diff"></i> <a href="{{ link.url }}">{{ link.text }}</a> {{ link.badge | safe }}
+        <i class="bi bi-file-diff"></i> <a href="{{ link.url }}">{{ link.text }}</a>
+        {% if link.badge %}
+        <span class="badge bg-info">{{link.badge}}</span>
+        {% endif %}
       </p>
     {% endfor %}
   </div>
