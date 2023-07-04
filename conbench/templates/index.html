@@ -1,111 +1,111 @@
 {% extends "app.html" %}
 {% block app_content %}
-<h1>CI runs</h1>
-<div class="mt-4">
-  {% for reponame, runobjs in repo_runs_map.items() %}
-    <div class="row mb-5">
-      <h4>
-        Recent  CI runs for <strong>{{ reponame }}</strong>
-      </h4>
-      <!-- <hr class="border border-danger border-1 opacity-50"> -->
-      <!-- https://getbootstrap.com/docs/5.2/content/tables/#responsive-tables -->
-      <div class="table-responsive" style="margin-bottom: 50px">
-        <!-- wow, the width:100% on the table below is really important, otherwise
+  <h1>CI runs</h1>
+  <div class="mt-4">
+    {% for reponame, runobjs in repo_runs_map.items() %}
+      <div class="row mb-5">
+        <h4>
+          Recent  CI runs for <strong>{{ reponame }}</strong>
+        </h4>
+        <!-- <hr class="border border-danger border-1 opacity-50"> -->
+        <!-- https://getbootstrap.com/docs/5.2/content/tables/#responsive-tables -->
+        <div class="table-responsive" style="margin-bottom: 50px">
+          <!-- wow, the width:100% on the table below is really important, otherwise
      datatables might miscalculate the column widths, but only when using
      colspan in the header. I got that pointer in this thread:
      https://datatables.net/forums/discussion/comment/144435/#Comment_144435
      but otherwise spent way too much time debugging. This structure repeats,
      and only the _first_ table had properties
 -->
-        <table class="cb-runs-table table table-hover table-borderless small"
-               style="width:100%;
-                      display: none">
-          <thead>
-            {# https://datatables.net/examples/basic_init/complex_header.html #}
-            <tr>
-              <th scope="colgroup" colspan="4" style="padding-bottom:0;" class="">Run</th>
-              <th scope="colgroup" colspan="3" class="">Commit</th>
-            </tr>
-            <tr>
-              <!-- add tooltip, saying that this is DB insertion time -->
-              <th scope="col" style="width: 180px" class="cb-colgroup-run">creation time</th>
-              <th scope="col" class="cb-colgroup-run">results</th>
-              <th scope="col" class="reason-col cb-colgroup-run">reason</th>
-              <th scope="col" style="width: 150px" class="cb-colgroup-run">hardware</th>
-              <th scope="col" style="width: 170px" class="cb-colgroup-commit">author</th>
-              <th scope="col" class="commit-col cb-colgroup-commit" style="width: 90px">hash</th>
-              <th scope="col" class="cb-colgroup-commit">message</th>
-            </tr>
-          </thead>
-          <tbody class="table-group-divider">
-            {% for r in runobjs %}
-              <tr class="no-border">
-                <td>
-                  <code><a href="{{ url_for('app.run', run_id=r.run.id) }}">{{ r.ctime_for_table }}</a></code>
-                  {% if r.run.has_errors or r.run.error_info %}
-                    <i class="bi bi-exclamation-circle text-danger"
-                       data-toggle="tooltip"
-                       data-placement="top"
-                       title="This Run contains a benchmark result with an error, or is otherwise labeled as errored"></i>
-                  {% endif %}
-                </td>
-                <td>{{ r.result_count }}</td>
-                <td>
-                  {% if r.run.reason %}
-                    <div class="table-entry">{{ r.run.reason }}</div>
-                  {% else %}
-                    <div class="table-entry"></div>
-                  {% endif %}
-                </td>
-                <td>
-                  <span class="table-entry text-truncate d-inline-block"
-                        style="max-width: 140px">{{ r.run.hardware.name }}</span>
-                </td>
-                <td>
-                  <div class="table-entry">
-                    {% if r.run.commit is not none %}
-                      {% if r.run.commit.author_avatar_url is not none %}
-                        <img alt="avatar"
-                             src="{{ r.run.commit.author_avatar_url  }}"
-                             height="25"
-                             style="border-radius: 50%">
-                        &nbsp;
+          <table class="cb-runs-table table table-hover table-borderless small"
+                 style="width:100%;
+                        display: none">
+            <thead>
+              {# https://datatables.net/examples/basic_init/complex_header.html #}
+              <tr>
+                <th scope="colgroup" colspan="4" style="padding-bottom:0;" class="">Run</th>
+                <th scope="colgroup" colspan="3" class="">Commit</th>
+              </tr>
+              <tr>
+                <!-- add tooltip, saying that this is DB insertion time -->
+                <th scope="col" style="width: 180px" class="cb-colgroup-run">creation time</th>
+                <th scope="col" class="cb-colgroup-run">results</th>
+                <th scope="col" class="reason-col cb-colgroup-run">reason</th>
+                <th scope="col" style="width: 150px" class="cb-colgroup-run">hardware</th>
+                <th scope="col" style="width: 170px" class="cb-colgroup-commit">author</th>
+                <th scope="col" class="commit-col cb-colgroup-commit" style="width: 90px">hash</th>
+                <th scope="col" class="cb-colgroup-commit">message</th>
+              </tr>
+            </thead>
+            <tbody class="table-group-divider">
+              {% for r in runobjs %}
+                <tr class="no-border">
+                  <td>
+                    <code><a href="{{ url_for('app.run', run_id=r.run.id) }}">{{ r.ctime_for_table }}</a></code>
+                    {% if r.run.has_errors or r.run.error_info %}
+                      <i class="bi bi-exclamation-circle text-danger"
+                         data-toggle="tooltip"
+                         data-placement="top"
+                         title="This Run contains a benchmark result with an error, or is otherwise labeled as errored"></i>
+                    {% endif %}
+                  </td>
+                  <td>{{ r.result_count }}</td>
+                  <td>
+                    {% if r.run.reason %}
+                      <div class="table-entry">{{ r.run.reason }}</div>
+                    {% else %}
+                      <div class="table-entry"></div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="table-entry text-truncate d-inline-block"
+                          style="max-width: 140px">{{ r.run.hardware.name }}</span>
+                  </td>
+                  <td>
+                    <div class="table-entry">
+                      {% if r.run.commit is not none %}
+                        {% if r.run.commit.author_avatar_url is not none %}
+                          <img alt="avatar"
+                               src="{{ r.run.commit.author_avatar_url  }}"
+                               height="25"
+                               style="border-radius: 50%">
+                          &nbsp;
+                        {% endif %}
+                        {{ r.run.commit.author_name }}
+                      {% else %}
+                        n/a
                       {% endif %}
-                      {{ r.run.commit.author_name }}
+                    </div>
+                  </td>
+                  <td>
+                    {% if r.run.commit is not none %}
+                      {% if r.run.commit.commit_url is not none %}
+                        <code><a href="{{ r.run.commit.commit_url }}">{{ r.run.commit.hash[:7] }}</a></code>
+                      {% else %}
+                        {# is this a valid scenario? when there's a hash, but no url? #}
+                        {{ r.run.commit.hash[:7] }}
+                      {% endif %}
+                      <!--NOTE: enable full commit has search while maintaining partial hash display -->
+                      <p style="display:none">{{ r.run.commit.hash }}</p>
                     {% else %}
                       n/a
                     {% endif %}
-                  </div>
-                </td>
-                <td>
-                  {% if r.run.commit is not none %}
-                    {% if r.run.commit.commit_url is not none %}
-                      <code><a href="{{ r.run.commit.commit_url }}">{{ r.run.commit.hash[:7] }}</a></code>
+                  </td>
+                  <td>
+                    {% if r.run.commit is not none %}
+                      {{ r.commit_message_short }}
                     {% else %}
-                      {# is this a valid scenario? when there's a hash, but no url? #}
-                      {{ r.run.commit.hash[:7] }}
+                      n/a
                     {% endif %}
-                    <!--NOTE: enable full commit has search while maintaining partial hash display -->
-                    <p style="display:none">{{ r.run.commit.hash }}</p>
-                  {% else %}
-                    n/a
-                  {% endif %}
-                </td>
-                <td>
-                  {% if r.run.commit is not none %}
-                    {{ r.commit_message_short }}
-                  {% else %}
-                    n/a
-                  {% endif %}
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  {% endfor %}
-</div>
+    {% endfor %}
+  </div>
 {% endblock %}
 {% block scripts %}
   {{ super() }}
