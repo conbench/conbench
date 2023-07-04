@@ -1,18 +1,13 @@
 {% extends "app.html" %}
 {% block app_content %}
-  <p>
-    <strong>{{ benchmarks_by_name | length }}</strong> unique benchmark names seen
-    across the <strong>{{ bmr_cache_meta.n_results }}</strong> most recently submitted results
-    <br>
-    between
-    {{ bmr_cache_meta.oldest_result_time_str }} to
-    {{ bmr_cache_meta.newest_result_time_str }}
-    (~{{ bmr_cache_meta.covered_timeframe_days_approx }} days).
-  </p>
+<h1>
+  benchmarks
+</h1>
+<div class="mt-3">
   <div class="c-bench-landing row row-cols-1 row-cols-md-3 g-4">
     <div class="col">
       <div class="card">
-        <div class="card-body overflow-auto c-bench-scrollbar"
+        <div class="card-body overflow-auto c-bench-scrollbar shadow-sm"
              style="max-height: 450px">
           <h5 class="card-title">by name</h5>
           {% for benchmark_name, results in benchmarks_by_name_sorted_alphabetically.items() %}
@@ -25,7 +20,7 @@
     </div>
     <div class="col">
       <div class="card">
-        <div class="card-body overflow-auto c-bench-scrollbar"
+        <div class="card-body overflow-auto c-bench-scrollbar shadow-sm"
              style="max-height: 450px">
           <h5 class="card-title">by most recent result</h5>
           {% for result in newest_result_for_each_benchmark_name_topN %}
@@ -38,7 +33,7 @@
     </div>
     <div class="col">
       <div class="card">
-        <div class="card-body overflow-auto c-bench-scrollbar"
+        <div class="card-body overflow-auto c-bench-scrollbar shadow-sm"
              style="max-height: 450px">
           <h5 class="card-title">
             by results per case and recency
@@ -58,7 +53,7 @@
     </div>
     <div class="col">
       <div class="card">
-        <div class="card-body overflow-auto c-bench-scrollbar"
+        <div class="card-body overflow-auto c-bench-scrollbar shadow-sm"
              style="max-height: 450px">
           <h5 class="card-title">by result count</h5>
           {% for benchmark_name, results in benchmarks_by_name_sorted_by_resultcount.items() %}
@@ -70,7 +65,18 @@
       </div>
     </div>
   </div>
-{% endblock %}
+  <div class="mt-5">
+  <p>
+    {{ benchmarks_by_name | length }}</strong> unique benchmark names seen across the {{ bmr_cache_meta.n_results }} newest results
+    between
+    <code>{{ bmr_cache_meta.oldest_result_time_str }}</code> and
+    <code>{{ bmr_cache_meta.newest_result_time_str }}</code>
+    (~{{ bmr_cache_meta.covered_timeframe_days_approx }} days).
+  </p>
+  </div>
+  {% endblock %}
+
+
 {% block scripts %}
   {{ super() }}
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.7/jquery.timeago.min.js"></script>
