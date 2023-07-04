@@ -2,8 +2,48 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
   <h1>CI run {{ run.id[:20] }}</h1>
-  <div class="mt-5">
-    <h3>Compare</h3>
+
+  <div class="mt-2">
+    <h4>Details</h4>
+    <ul>
+      <li>
+        for commit: <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
+      </li>
+      <li>
+        created at: {{ run.timestamp }}
+      </li>
+      <li>
+        finished at: {{ run.finished_timestamp }}
+      </li>
+      <li>
+        error: <pre>{{ run.error_type }}</pre>
+      </li>
+      {% if run.error_info %}
+        <li>
+          error detail: <br>
+          <pre>
+            {% for k,v in run.error_info.items() %}
+              {{ k }}:{{ v }}
+            {% endfor %}
+          </pre>
+        </li>
+      {% endif %}
+
+      {% if run.info %}
+        <li>
+          run info: <br>
+          <pre>
+            {% for k,v in run.info.items()() %}
+              {{ k }}:{{ v }}
+            {% endfor %}
+          </pre>
+        </li>
+      {% endif %}
+    </ul>
+</div>
+
+  <div class="mt-4">
+    <h3>Compare results</h3>
     <p>Compare the results obtained in the displayed CI run to previously obtained results:</p>
     {% for link in comparisons %}
       <p class="fs-6">
@@ -11,8 +51,9 @@
       </p>
     {% endfor %}
   </div>
-  <div class="col-md-12 mt-5">
-    <h3>Benchmark results in this CI run</h3>
+
+  <div class="mt-4">
+    <h3>Results in this CI run</h3>
     <table id="benchmarks" class="table table-hover small">
       <thead>
         <tr>
@@ -50,68 +91,18 @@
         </tbody>
       </table>
     </div>
-    <!-- why would the run detail page be rendered w/o a run? -->
-    {% if run %}
-      <div class="mt-5">
-        <h5>CI run details</h5>
-        <div class="col-md-12">
-          <ul class="list-group">
-            <li class="list-group-item">
-              For commit:
-              <div align="right" style="display:inline-block; float: right;">
-                <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
-              </div>
-            </li>
-            <li class="list-group-item" style="overflow-y: auto;">
-              Created at:
-              <div align="right" style="display:inline-block; float: right;">{{ run.timestamp }}</div>
-            </li>
-            <li class="list-group-item" style="overflow-y: auto;">
-              Finished at:
-              <div align="right" style="display:inline-block; float: right;">{{ run.finished_timestamp }}</div>
-            </li>
-            <li class="list-group-item" style="overflow-y: auto;">
-              Error:
-              <div align="right" style="display:inline-block; float: right;">{{ run.error_type }}</div>
-            </li>
-            {% if run.error_info %}
-              <li class="list-group-item active">Error Info</li>
-              {% for k,v in run.error_info.items() %}
-                <li class="list-group-item" style="overflow-y: auto;">
-                  <b>{{ k }}</b>
-                  {% if v is not none %}
-                    <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-                  {% endif
-                  %}
-                </li>
-              {% endfor %}
-            {% endif %}
-            {% if run.info %}
-              <li class="list-group-item active">Info</li>
-              {% for k,v in run.info.items() %}
-                <li class="list-group-item" style="overflow-y: auto;">
-                  <b>{{ k }}</b>
-                  {% if v is not none %}
-                    <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
-                  {% endif
-                  %}
-                </li>
-              {% endfor %}
-            {% endif %}
-          </ul>
-        </div>
-      </div>
-      <br />
-      <form method="post" id="run-form">
-        {{ form.hidden_tag() }}
-        <input class="btn btn-danger"
-               id="delete"
-               name="delete"
-               type="button"
-               value="Delete Run" />
-      </form>
-      <br />
-    {% endif %}
+
+
+  <div class="mt-4">
+    <form method="post" id="run-form">
+      {{ form.hidden_tag() }}
+      <input class="btn btn-outline-info btn-sm"
+             id="delete"
+             name="delete"
+             type="button"
+             value="Delete Run" />
+    </form>
+  </div>
   {% endblock %}
   {% block scripts %}
     {{ super() }}
