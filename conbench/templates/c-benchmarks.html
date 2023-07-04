@@ -1,81 +1,75 @@
 {% extends "app.html" %}
 {% block app_content %}
-<h1>
-  benchmarks
-</h1>
-<div class="mt-3">
-  <div class="c-bench-landing row row-cols-1 row-cols-md-3 g-4">
-    <div class="col">
-      <div class="card">
-        <div class="card-body overflow-auto c-bench-scrollbar shadow-sm"
-             style="max-height: 450px">
-          <h5 class="card-title">by name</h5>
-          {% for benchmark_name, results in benchmarks_by_name_sorted_alphabetically.items() %}
-            <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
-            ({{ results|length }} results)
-            <br>
-          {% endfor %}
+  <h1>benchmarks</h1>
+  <div class="mt-3">
+    <div class="c-bench-landing row row-cols-1 row-cols-md-3 g-4">
+      <div class="col">
+        <div class="card">
+          <div class="card-body overflow-auto c-bench-scrollbar shadow-sm"
+               style="max-height: 450px">
+            <h5 class="card-title">by name</h5>
+            {% for benchmark_name, results in benchmarks_by_name_sorted_alphabetically.items() %}
+              <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
+              ({{ results|length }} results)
+              <br>
+            {% endfor %}
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col">
-      <div class="card">
-        <div class="card-body overflow-auto c-bench-scrollbar shadow-sm"
-             style="max-height: 450px">
-          <h5 class="card-title">by most recent result</h5>
-          {% for result in newest_result_for_each_benchmark_name_topN %}
-            <strong><a href="{{ url_for('app.show_benchmark_cases', bname=result.benchmark_name) }}">{{ result.benchmark_name }}</a></strong>
-            (<time class="timeago" datetime="{{ result.started_at_iso }}">{{ result.ui_time_started_at }}</time>)
-            <br>
-          {% endfor %}
+      <div class="col">
+        <div class="card">
+          <div class="card-body overflow-auto c-bench-scrollbar shadow-sm"
+               style="max-height: 450px">
+            <h5 class="card-title">by most recent result</h5>
+            {% for result in newest_result_for_each_benchmark_name_topN %}
+              <strong><a href="{{ url_for('app.show_benchmark_cases', bname=result.benchmark_name) }}">{{ result.benchmark_name }}</a></strong>
+              (<time class="timeago" datetime="{{ result.started_at_iso }}">{{ result.ui_time_started_at }}</time>)
+              <br>
+            {% endfor %}
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col">
-      <div class="card">
-        <div class="card-body overflow-auto c-bench-scrollbar shadow-sm"
-             style="max-height: 450px">
-          <h5 class="card-title">
-            by results per case and recency
-            <sup><i style="font-size: 12px"
+      <div class="col">
+        <div class="card">
+          <div class="card-body overflow-auto c-bench-scrollbar shadow-sm"
+               style="max-height: 450px">
+            <h5 class="card-title">
+              by results per case and recency
+              <sup><i style="font-size: 12px"
    class="bi bi-info-circle"
    data-bs-toggle="tooltip"
    data-bs-title="results per case permutation, weighted by recency (see issue #1264)">
-            </i></sup>
-          </h5>
-          {% for benchmark_name, rpcr in benchmark_names_by_rpcr_sorted.items() %}
-            <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
-            (~{{ rpcr }})
-            <br>
-          {% endfor %}
+              </i></sup>
+            </h5>
+            {% for benchmark_name, rpcr in benchmark_names_by_rpcr_sorted.items() %}
+              <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
+              (~{{ rpcr }})
+              <br>
+            {% endfor %}
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col">
-      <div class="card">
-        <div class="card-body overflow-auto c-bench-scrollbar shadow-sm"
-             style="max-height: 450px">
-          <h5 class="card-title">by result count</h5>
-          {% for benchmark_name, results in benchmarks_by_name_sorted_by_resultcount.items() %}
-            <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
-            ({{ results|length }} results)
-            <br>
-          {% endfor %}
+      <div class="col">
+        <div class="card">
+          <div class="card-body overflow-auto c-bench-scrollbar shadow-sm"
+               style="max-height: 450px">
+            <h5 class="card-title">by result count</h5>
+            {% for benchmark_name, results in benchmarks_by_name_sorted_by_resultcount.items() %}
+              <strong><a href="{{ url_for('app.show_benchmark_cases', bname=benchmark_name) }}">{{ benchmark_name }}</a></strong>
+              ({{ results|length }} results)
+              <br>
+            {% endfor %}
+          </div>
         </div>
       </div>
     </div>
   </div>
   <div class="mt-5">
-    <p>{{ benchmarks_by_name | length }} unique benchmark names seen across the {{ bmr_cache_meta.n_results }} newest results
-      between
-      <code>{{ bmr_cache_meta.oldest_result_time_str }}</code> and
-      <code>{{ bmr_cache_meta.newest_result_time_str }}</code>
-      (~{{ bmr_cache_meta.covered_timeframe_days_approx }} days).
-    </p>
+    {{ benchmarks_by_name | length }} unique benchmark names seen across the {{ bmr_cache_meta.n_results }} newest results  between
+    <code>{{ bmr_cache_meta.oldest_result_time_str }}</code> and
+    <code>{{ bmr_cache_meta.newest_result_time_str }}</code> (~{{ bmr_cache_meta.covered_timeframe_days_approx }} days).
   </div>
-  {% endblock %}
-
-
+{% endblock %}
 {% block scripts %}
   {{ super() }}
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.7/jquery.timeago.min.js"></script>

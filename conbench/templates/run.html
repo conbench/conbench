@@ -2,58 +2,51 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
   <h1>CI run {{ run.id[:20] }}</h1>
-
   <div class="mt-2">
-    Benchmarked code:<br>
+    Benchmarked code:
+    <br>
     <ul>
-      <li>
-        repository {{ run.commit.repository }}
-      </li>
+      <li>repository {{ run.commit.repository }}</li>
       <li>
         commit <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
       </li>
     </ul>
-    Created at: <code>{{ run.timestamp }}</code>, finished at: <code>{{ run.finished_timestamp }}</code><br>
-    Error: <code>{{ run.error_type }}</code><br>
-
+    Created at: <code>{{ run.timestamp }}</code>, finished at: <code>{{ run.finished_timestamp }}</code>
+    <br>
+    Error: <code>{{ run.error_type }}</code>
+    <br>
     {% if run.error_info %}
-      error detail: <br>
+      error detail:
+      <br>
       <pre>
-        {% for k,v in run.error_info.items() %}
-          {{ k }}:{{ v }}
-        {% endfor %}
-      </pre>
+      {% for k,v in run.error_info.items() %}
+        {{ k }}:{{ v }}
+      {% endfor %}
+    </pre>
     {% endif %}
-
     {% if run.info %}
-      run info: <br>
+      run info:
+      <br>
       <pre>
-        {% for k,v in run.info.items() %}
-          {{ k }}:{{ v }}
-        {% endfor %}
-      </pre>
+      {% for k,v in run.info.items() %}
+        {{ k }}:{{ v }}
+      {% endfor %}
+    </pre>
     {% endif %}
-    </ul>
-</div>
-
+  </div>
   <div class="mt-5">
     <h3>Compare</h3>
     <p>Compare the results obtained in the displayed CI run to previously obtained results:</p>
     {% for link in comparisons %}
       <p class="fs-6">
         <i class="bi bi-file-diff"></i> <a href="{{ link.url }}">{{ link.text }}</a>
-        {% if link.badge %}
-        <span class="badge bg-info">{{link.badge}}</span>
-        {% endif %}
+        {% if link.badge %}<span class="badge bg-info">{{ link.badge }}</span>{% endif %}
       </p>
     {% endfor %}
   </div>
-
   <div class="mt-5">
     <h3>Results</h3>
-    <p>
-      All benchmark results that have submitted for this CI run:
-    </p>
+    <p>All benchmark results that have submitted for this CI run:</p>
     <table class="table results-in-run-table table-hover table-borderless small">
       <thead>
         <tr>
@@ -91,23 +84,21 @@
         </tbody>
       </table>
     </div>
-
-  <div class="mt-4">
-    <form method="post" id="run-form">
-      {{ form.hidden_tag() }}
-      <input class="btn btn-outline-info btn-sm"
-             id="delete"
-             name="delete"
-             type="button"
-             value="Delete Run" />
-    </form>
-  </div>
+    <div class="mt-4">
+      <form method="post" id="run-form">
+        {{ form.hidden_tag() }}
+        <input class="btn btn-outline-info btn-sm"
+               id="delete"
+               name="delete"
+               type="button"
+               value="Delete Run" />
+      </form>
+    </div>
   {% endblock %}
   {% block scripts %}
     {{ super() }}
     {{ resources | safe }}
     <script type="text/javascript">
-
     // var table = $('#benchmarks').dataTable({
     //     "responsive": true,
     //     // Take rather precise control of layouting elements, put bottom elements
