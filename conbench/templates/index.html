@@ -1,12 +1,11 @@
 {% extends "app.html" %}
 {% block app_content %}
-  <h1 class="display-3 text-center"
-      style="margin: 40px 0 30px 0;
-             font-weight: 50">/ˈkɒnbɛnʧ/</h1>
+<h1>CI runs</h1>
+<div class="mt-4">
   {% for reponame, runobjs in repo_runs_map.items() %}
     <div class="row mb-5">
       <h4>
-        Recent runs for <strong>{{ reponame }}</strong>
+        Recent  CI runs for <strong>{{ reponame }}</strong>
       </h4>
       <!-- <hr class="border border-danger border-1 opacity-50"> -->
       <!-- https://getbootstrap.com/docs/5.2/content/tables/#responsive-tables -->
@@ -106,6 +105,7 @@
       </div>
     </div>
   {% endfor %}
+</div>
 {% endblock %}
 {% block scripts %}
   {{ super() }}
