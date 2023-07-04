@@ -66,14 +66,8 @@
                       <a class="btn btn-outline-light" href="{{ url_for('app.login') }}">login</a>
                     </span>
                   {% else %}
-                    <span class="nav navbar-nav">
-                      <a class="nav-link" href="{{ url_for('app.users') }}">users</a>
-                    </span>
-                    <!-- lets show hardware/platform again when use case is clearer
-                      <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('app.hardwares') }}">hardware</a>
-                      </li>
-                       -->
+
+
                     <span class="nav navbar-nav">
                       <a class="nav-link" href="{{ url_for('app.logout') }}">logout ({{ current_user.email }})</a>
                     </span>
@@ -131,7 +125,15 @@
               <br>
               <hr>
               <div style="display:inline-block; float: right; color: #918d8c;">
-                Conbench {{ version_string_footer }} | <a href="https://github.com/conbench/conbench" target="_blank">github</a> | <a href="/api/docs" target="_blank">api docs</a>
+                conbench {{ version_string_footer }} |
+                <a href="https://github.com/conbench/conbench" target="_blank">github</a>
+                | <a href="/api/docs" target="_blank">api docs</a>
+                {% if not current_user.is_anonymous %}
+                | <a class="nav-link" href="{{ url_for('app.users') }}">users</a>
+                <!-- lets show hardware/platform again when use case is clearer
+                <a class="nav-link" href="{{ url_for('app.hardwares') }}">hardware</a>
+                -->
+                {% endif %}
               </div>
             </div>
           {% endblock %}
