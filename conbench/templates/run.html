@@ -2,36 +2,47 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
   <h1>CI run {{ run.id[:20] }}</h1>
-  <div class="mt-2">
-    Benchmarked code:
+  <div class="mt-4 cb-run-details-panel shadow-sm">
+    benchmarked code:
     <br>
     <ul>
-      <li>repository {{ run.commit.repository }}</li>
       <li>
-        commit <a href="{{ run.commit.url }}">{{ run.commit.display_message }}</a>
+        repository <code>{{ run.commit.display_repository }}</code>
       </li>
+      <li>commit {{ run.commit.html_anchor_and_msg | safe }}</li>
     </ul>
-    Created at: <code>{{ run.timestamp }}</code>, finished at: <code>{{ run.finished_timestamp }}</code>
+    created at: <code>{{ run.timestamp }}</code>, finished at: <code>{{ run.finished_timestamp }}</code>
     <br>
-    Error: <code>{{ run.error_type }}</code>
+    error: <code>{{ run.error_type }}</code>
     <br>
     {% if run.error_info %}
       error detail:
-      <br>
-      <pre>
-      {% for k,v in run.error_info.items() %}
-        {{ k }}:{{ v }}
-      {% endfor %}
-    </pre>
+      <a href="#"
+         class="dead-stock-params-toggle"
+         data-bs-toggle="collapse"
+         data-bs-target="#collapseErrorDetail"
+         aria-expanded="false"
+         aria-controls="collapseErrorDetail">toggle view</a>
+      <div class="collapse" id="collapseErrorDetail">
+        <div class="cb-infobox">
+          <pre>{{run.error_info_doc_for_ui}}</pre>
+        </div>
+      </div>
     {% endif %}
+    <br>
     {% if run.info %}
-      run info:
-      <br>
-      <pre>
-      {% for k,v in run.info.items() %}
-        {{ k }}:{{ v }}
-      {% endfor %}
-    </pre>
+      run information:
+      <a href="#"
+         class="dead-stock-params-toggle"
+         data-bs-toggle="collapse"
+         data-bs-target="#collapseRunInfo"
+         aria-expanded="false"
+         aria-controls="collapseRunInfo">toggle view</a>
+      <div class="collapse" id="collapseRunInfo">
+        <div class="cb-infobox">
+          <pre>{{run.info_json_doc_for_ui}}</pre>
+        </div>
+      </div>
     {% endif %}
   </div>
   <div class="mt-5">
@@ -46,7 +57,7 @@
   </div>
   <div class="mt-5">
     <h3>Results</h3>
-    <p> {{  benchmarks | length }} benchmark result(s) submitted for this CI run:</p>
+    <p>{{  benchmarks | length }} benchmark result(s) submitted for this CI run:</p>
     <div class="mt-5">
       <table class="table table-hover table-borderless results-in-run-table small"
              style="width:100%;
@@ -62,8 +73,8 @@
             <th scope="col" style="width: 10%">
               rel err
               <sup><i class="bi bi-info-circle"
-     data-bs-toggle="tooltip"
-     data-bs-title=" Relative standard error: standard error of the mean in relationship to the mean value. Only built when at least three samples are reported by this result. ">
+   data-bs-toggle="tooltip"
+   data-bs-title=" Relative standard error: standard error of the mean in relationship to the mean value. Only built when at least three samples are reported by this result. ">
               </i></sup>
             </th>
           </tr>
@@ -76,17 +87,16 @@
               <td class="font-monospace">
                 <a href="{{ url_for('app.benchmark-result', benchmark_result_id=result.id) }}">{{ result.id [:9] }}</a>
               </td>
-              <td class="font-monospace">{{ result.display_case_perm}}</td>
+              <td class="font-monospace">{{ result.display_case_perm }}</td>
               <!--<td class="font-monospace">n/a</td>-->
               <td class="font-monospace">
-
                 {% if result.error %}
-                <i class="bi bi-exclamation-circle text-danger"
-                   data-toggle="tooltip"
-                   data-placement="top"
-                   title="This result reported an error"></i>
+                  <i class="bi bi-exclamation-circle text-danger"
+                     data-toggle="tooltip"
+                     data-placement="top"
+                     title="This result reported an error"></i>
                 {% else %}
-                {{ result.display_mean }}
+                  {{ result.display_mean }}
                 {% endif %}
               </td>
               <td class="font-monospace">n/a</td>
@@ -95,26 +105,22 @@
         </tbody>
       </table>
     </div>
-
-
-
-
-    </div>
-    <div class="mt-4">
-      <form method="post" id="run-form">
-        {{ form.hidden_tag() }}
-        <input class="btn btn-outline-info btn-sm"
-               id="delete"
-               name="delete"
-               type="button"
-               value="Delete Run" />
-      </form>
-    </div>
-  {% endblock %}
-  {% block scripts %}
-    {{ super() }}
-    {{ resources | safe }}
-    <script type="text/javascript">
+  </div>
+  <div class="mt-4">
+    <form method="post" id="run-form">
+      {{ form.hidden_tag() }}
+      <input class="btn btn-outline-info btn-sm"
+             id="delete"
+             name="delete"
+             type="button"
+             value="Delete Run" />
+    </form>
+  </div>
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  {{ resources | safe }}
+  <script type="text/javascript">
     // var table = $('#benchmarks').dataTable({
     //     "responsive": true,
     //     // Take rather precise control of layouting elements, put bottom elements
@@ -185,5 +191,5 @@
         $("#run-form").find("#delete").attr("data-cbcustom-message", "delete run: {{ run.id }}");
     });
 
-    </script>
-  {% endblock %}
+  </script>
+{% endblock %}
