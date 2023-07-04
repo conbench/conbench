@@ -111,18 +111,64 @@
     {{ super() }}
     {{ resources | safe }}
     <script type="text/javascript">
-    var table = $('#benchmarks').dataTable({
-        "responsive": true,
+
+    // var table = $('#benchmarks').dataTable({
+    //     "responsive": true,
+    //     // Take rather precise control of layouting elements, put bottom elements
+    //     // into a mult-col single row, using BS's grid system.
+    //     "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
+    //     "order": [[0, 'asc']],
+    //     "columnDefs": [{ "orderable": false, "targets": [4] }],
+    //     initComplete: function () {
+    //         var api = this.api();
+    //         //api.columns.adjust();
+    //         $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
+    //     },
+    // });
+
+    // var table = $('#benchmarks').dataTable( {
+    //   "responsive": true,
+    //   "order": [[0, 'asc']],
+    //   "columnDefs": [{ "orderable": false, "targets": [5, 6] }]
+    // });
+
+    // Enable bootstrap tooltips on this page.
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+    $('table.results-in-run-table').DataTable({
+        // Note(JP): this enables a special, simple plugin called
+        // `conditionalPaging` which must be included, e.g. via the dist URLs
+        // published in https://cdn.datatables.net/plug-ins/1.13.3/features/.
+        // kudos to https://stackoverflow.com/a/29639664/145400
+      "conditionalPaging": true,
+      // hide the "Showing 1 to 12 of 12 entries" element
+      "bInfo" : true,
+      "responsive": true,
+        // the default default seems to be the first item in lengthMenu.
+      "lengthMenu": [ 5, 10, 50, 75, 100, 250, 750 ],
+        // but when pageLength is also set, then _this_ is the default.
+      "pageLength": 10,
         // Take rather precise control of layouting elements, put bottom elements
         // into a mult-col single row, using BS's grid system.
-        "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
-        "order": [[0, 'asc']],
-        "columnDefs": [{ "orderable": false, "targets": [4] }],
-        initComplete: function () {
-            var api = this.api();
-            //api.columns.adjust();
-            $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
-        },
+      "dom": '<"row"<"d-flex flex-row-reverse p-0"fl>>rt<"row p-2"<"col-6"i><".col-6"p>>',
+      "language": {
+        "search": '',
+        "searchPlaceholder": "search all columns",
+        "lengthMenu": "show _MENU_ results",
+      },
+
+      // default sort order: by z-score count, lowest first (regressions first)
+      "order": [[0, 'asc']],
+      "columnDefs": [{ "orderable": true }],
+      initComplete: function () {
+        var api = this.api();
+            // reveal only after DOM modification is complete (reduce loading
+            // layout shift artifacts)
+        $('table.results-in-run-table').show();
+        api.columns.adjust();
+        $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
+      },
     });
 
     column_search_implementation($('#benchmarks'));
