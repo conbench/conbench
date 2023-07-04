@@ -22,7 +22,21 @@ select:focus {
 }
 
 .c-bench-landing div.card {
-  font-size: 12px;
+  font-size: 0.81rem;
+  border-radius: 0;
+  border: 1px solid #4981C8aa;
+}
+
+.c-bench-landing div.card a {
+  color: #4981C8;
+  font-family: monospace;
+  font-weight: normal;
+  text-decoration: none;
+}
+
+.c-bench-landing div.card a:hover {
+  font-weight: bold;
+
 }
 
 /*

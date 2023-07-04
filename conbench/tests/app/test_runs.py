@@ -29,10 +29,6 @@ class TestRunGet(_asserts.GetEnforcer):
         """
         response_text = " ".join(response_text.split())
         expected_text = _default_hyperlink_text[candidate_baseline_type] + "</a>"
-        if recommended:
-            expected_text = (
-                expected_text + ' <span class="badge bg-primary">Recommended</span>'
-            )
 
         if baseline_id and contender_id:
             assert (
@@ -41,6 +37,9 @@ class TestRunGet(_asserts.GetEnforcer):
             )
         else:
             assert expected_text not in response_text
+
+        if recommended:
+            assert "recommended</span>" in response_text
 
     def test_get_run_without_commit(self, client):
         self.authenticate(client)

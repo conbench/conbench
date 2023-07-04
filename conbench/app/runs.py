@@ -27,7 +27,7 @@ class _RunComparisonLinker:
     @property
     def badge(self) -> str:
         if self.recommended:
-            return '<span class="badge bg-primary">Recommended</span>'
+            return "recommended"
         else:
             return ""
 
