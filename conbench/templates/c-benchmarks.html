@@ -66,13 +66,12 @@
     </div>
   </div>
   <div class="mt-5">
-  <p>
-    {{ benchmarks_by_name | length }}</strong> unique benchmark names seen across the {{ bmr_cache_meta.n_results }} newest results
-    between
-    <code>{{ bmr_cache_meta.oldest_result_time_str }}</code> and
-    <code>{{ bmr_cache_meta.newest_result_time_str }}</code>
-    (~{{ bmr_cache_meta.covered_timeframe_days_approx }} days).
-  </p>
+    <p>{{ benchmarks_by_name | length }} unique benchmark names seen across the {{ bmr_cache_meta.n_results }} newest results
+      between
+      <code>{{ bmr_cache_meta.oldest_result_time_str }}</code> and
+      <code>{{ bmr_cache_meta.newest_result_time_str }}</code>
+      (~{{ bmr_cache_meta.covered_timeframe_days_approx }} days).
+    </p>
   </div>
   {% endblock %}
 
