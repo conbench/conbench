@@ -1,9 +1,10 @@
 {% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
-  <h4>CI run {{ run.id[:20] }}</h4>
+  <h1>CI run {{ run.id[:20] }}</h1>
   <div class="mt-5">
-    <h5>Compare</h5>
+    <h3>Compare</h3>
+    <p>Compare the results obtained in the displayed CI run to previously obtained results:</p>
     {% for link in comparisons %}
       <p class="fs-6">
         <i class="bi bi-file-diff"></i> <a href="{{ link.url }}">{{ link.text }}</a> {{ link.badge | safe }}
@@ -11,7 +12,7 @@
     {% endfor %}
   </div>
   <div class="col-md-12 mt-5">
-    <h5>Benchmark results in this CI run</h5>
+    <h3>Benchmark results in this CI run</h3>
     <table id="benchmarks" class="table table-hover small">
       <thead>
         <tr>
