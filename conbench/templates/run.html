@@ -139,7 +139,7 @@
         $("#run-form").find("#delete").attr("data-bs-target", "#confirm-delete");
         $("#run-form").find("#delete").attr("data-cbcustom-form-id", "#run-form");
         $("#run-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.run', run_id=run.id) }}");
-        $("#run-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete run: <strong>{{ run.id }}</strong></li></ul>");
+        $("#run-form").find("#delete").attr("data-cbcustom-message", "delete run: {{ run.id }}");
     });
 
     </script>
