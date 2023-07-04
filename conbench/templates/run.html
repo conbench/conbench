@@ -46,43 +46,59 @@
   </div>
   <div class="mt-5">
     <h3>Results</h3>
-    <p>All benchmark results that have submitted for this CI run:</p>
-    <table class="table results-in-run-table table-hover table-borderless small">
-      <thead>
-        <tr>
-          <th scope="col">benchmark start time</th>
-          <th scope="col" style="width: 120px">benchmark name</th>
-          <th scope="col">case permutation</th>
-          <th scope="col" style="width: 55px">mean</th>
-          <th scope="col" style="width: 55px">error</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for benchmark in benchmarks %}
+    <p> {{  benchmarks | length }} benchmark result(s) submitted for this CI run:</p>
+    <div class="mt-5">
+      <table class="table table-hover table-borderless results-in-run-table small"
+             style="width:100%;
+                    display: none">
+        <thead>
           <tr>
-            <td style="white-space: nowrap;">{{ benchmark.display_timestamp }}</td>
-            <td>
-              <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id) }}">{{ benchmark.display_bmname }}</a>
-            </td>
-            <td>
-              <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">{{
-              benchmark.display_case_perm }}</a>
-            </td>
-            <td style="white-space: nowrap;">{{ benchmark.display_mean }}</td>
-            <td>
-              {% if benchmark.error %}
-                <a href="{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}">
-                  <i class="glyphicon glyphicon-exclamation-sign text-danger"
-                     data-toggle="tooltip"
-                     data-placement="top"
-                     title="Has error">
-                  </i><span>Error</span></a>
+            <th scope="col" style="width: 120px">benchmark name</th>
+            <th scope="col" style="width: 150px">start time (UTC)</th>
+            <th scope="col">result</th>
+            <th scope="col">case permutation</th>
+            <!--<th scope="col" style="width: 10%">measurements</th>-->
+            <th scope="col" style="width: 8%">measurement</th>
+            <th scope="col" style="width: 10%">
+              rel err
+              <sup><i class="bi bi-info-circle"
+     data-bs-toggle="tooltip"
+     data-bs-title=" Relative standard error: standard error of the mean in relationship to the mean value. Only built when at least three samples are reported by this result. ">
+              </i></sup>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for result in benchmarks %}
+            <tr>
+              <td class="font-monospace">{{ result.display_bmname  }}</td>
+              <td class="font-monospace">{{ result.display_timestamp[:-4] }}</td>
+              <td class="font-monospace">
+                <a href="{{ url_for('app.benchmark-result', benchmark_result_id=result.id) }}">{{ result.id [:9] }}</a>
+              </td>
+              <td class="font-monospace">{{ result.display_case_perm}}</td>
+              <!--<td class="font-monospace">n/a</td>-->
+              <td class="font-monospace">
+
+                {% if result.error %}
+                <i class="bi bi-exclamation-circle text-danger"
+                   data-toggle="tooltip"
+                   data-placement="top"
+                   title="This result reported an error"></i>
+                {% else %}
+                {{ result.display_mean }}
                 {% endif %}
               </td>
+              <td class="font-monospace">n/a</td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
+    </div>
+
+
+
+
     </div>
     <div class="mt-4">
       <form method="post" id="run-form">
