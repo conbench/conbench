@@ -129,6 +129,13 @@ table.c-bench-caseperm-table th {
   font-size: 12px;
 }
 
+
+div.cb-run-details-panel {
+  background-color: #00505033;
+  padding: 15px;
+
+}
+
 span.case-parm-value {
   font-family: monospace;
   font-size: 0.7rem;
