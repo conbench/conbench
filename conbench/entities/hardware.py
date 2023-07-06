@@ -114,10 +114,12 @@ class Cluster(Hardware):
 
     @classmethod
     def upsert(cls, **kwargs):
-        cluster = cls.first(name=kwargs["name"], info=kwargs["info"])
-        if cluster:
-            cluster.update(dict(optional_info=kwargs["optional_info"]))
-        else:
+        cluster = cls.first(
+            name=kwargs["name"],
+            info=kwargs["info"],
+            optional_info=kwargs["optional_info"],
+        )
+        if not cluster:
             cluster = cls.create(kwargs)
         return cluster
 
