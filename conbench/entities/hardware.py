@@ -1,3 +1,4 @@
+import abc
 import hashlib
 import json
 
@@ -30,12 +31,12 @@ class Hardware(Base, EntityMixin):
 
     __mapper_args__ = {"polymorphic_on": type, "polymorphic_identity": "hardware"}
 
-    @classmethod
-    def create(cls, data):
-        hardware = cls(**data)
-        hardware.hash = hardware.generate_hash()
-        hardware.save()
-        return hardware
+    @abc.abstractmethod
+    def generate_hash(self):
+        pass
+
+    def post_init_pre_add(self):
+        self.hash = self.generate_hash()
 
 
 class Machine(Hardware):
@@ -58,13 +59,6 @@ class Machine(Hardware):
     # Note(JP): I think this complexity should go away.
     # also see https://github.com/conbench/conbench/issues/1281
     __mapper_args__ = {"polymorphic_identity": "machine"}
-
-    @classmethod
-    def upsert(cls, **kwargs):
-        machine = cls.first(**kwargs)
-        if not machine:
-            machine = cls.create(kwargs)
-        return machine
 
     def generate_hash(self):
         return (
@@ -111,17 +105,6 @@ class Cluster(Hardware):
     optional_info = Nullable(postgresql.JSONB)
 
     __mapper_args__ = {"polymorphic_identity": "cluster"}
-
-    @classmethod
-    def upsert(cls, **kwargs):
-        cluster = cls.first(
-            name=kwargs["name"],
-            info=kwargs["info"],
-            optional_info=kwargs["optional_info"],
-        )
-        if not cluster:
-            cluster = cls.create(kwargs)
-        return cluster
 
     def generate_hash(self):
         return (

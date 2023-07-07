@@ -180,11 +180,12 @@ class EntityMixin(Generic[T]):
     @classmethod
     def get_or_create(cls: Type[T], props: Dict) -> T:
         """
-        Try to create, but expect conflict (work with unique constraint on
-        name/tags).
+        Try to create, but expect conflict (work with unique constraint on name/tags).
 
-        Return (newly created, or previously existing) object, or raise an
-        exception.
+        Return (newly created, or previously existing) object, or raise an exception.
+
+        If there is no unique constraint on the keys of props, race conditions will
+        result in duplicated rows, but should not fail. This should be rare.
         """
 
         def _fetch_first():
@@ -195,6 +196,7 @@ class EntityMixin(Generic[T]):
             return result
 
         obj = cls(**props)
+        obj.post_init_pre_add()
         current_session.add(obj)
         try:
             current_session.commit()
@@ -210,6 +212,12 @@ class EntityMixin(Generic[T]):
         result = _fetch_first()
         assert result is not None
         return result
+
+    def post_init_pre_add(self):
+        """Override this method to do any initialization before adding to the session
+        when using get_or_create().
+        """
+        pass
 
 
 class EntitySerializer:
