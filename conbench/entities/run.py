@@ -118,7 +118,7 @@ class Run(Base, EntityMixin):
             if "machine_info" in data
             else (Cluster, "cluster_info")
         )
-        hardware = hardware_type.upsert(**data.pop(field_name))
+        hardware = hardware_type.get_or_create(data.pop(field_name))
 
         user_given_commit_info: Optional[TypeCommitInfoGitHub] = data.pop(
             "github", None

@@ -606,6 +606,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
         hardware_id = benchmark_result.run.hardware.id
+        hardware_hash = benchmark_result.run.hardware.hash
 
         # Post benchmarks for cluster-1 with different optional_info but the same cluster name and info
         payload = copy.deepcopy(self.valid_payload_for_cluster)
@@ -614,11 +615,16 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         response = client.post("/api/benchmarks/", json=payload)
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
-        assert benchmark_result.run.hardware.id == hardware_id
+
+        # Confirm that a new hardware was created with new optional info...
+        assert benchmark_result.run.hardware.id != hardware_id
         assert (
             benchmark_result.run.hardware.optional_info
             == payload["cluster_info"]["optional_info"]
         )
+
+        # ...but the hash is the same since we didn't modify the cluster name or info
+        assert benchmark_result.run.hardware.hash == hardware_hash
 
     def test_create_benchmark_for_cluster_with_info_changed(self, client):
         # Post benchmarks for cluster-1
