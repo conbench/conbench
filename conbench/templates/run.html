@@ -108,12 +108,14 @@
   </div>
   <div class="mt-4">
     <form method="post" id="run-form">
+      {% if not current_user.is_anonymous %}
       {{ form.hidden_tag() }}
       <input class="btn btn-outline-info btn-sm"
              id="delete"
              name="delete"
              type="button"
              value="Delete Run" />
+      {% endif %}
     </form>
   </div>
 {% endblock %}
@@ -121,26 +123,6 @@
   {{ super() }}
   {{ resources | safe }}
   <script type="text/javascript">
-    // var table = $('#benchmarks').dataTable({
-    //     "responsive": true,
-    //     // Take rather precise control of layouting elements, put bottom elements
-    //     // into a mult-col single row, using BS's grid system.
-    //     "dom": 'lfrt<"row"<"col-6"i><".col-6"p>>',
-    //     "order": [[0, 'asc']],
-    //     "columnDefs": [{ "orderable": false, "targets": [4] }],
-    //     initComplete: function () {
-    //         var api = this.api();
-    //         //api.columns.adjust();
-    //         $('.pagination').addClass('pagination-sm'); // add BS class for smaller pagination bar
-    //     },
-    // });
-
-    // var table = $('#benchmarks').dataTable( {
-    //   "responsive": true,
-    //   "order": [[0, 'asc']],
-    //   "columnDefs": [{ "orderable": false, "targets": [5, 6] }]
-    // });
-
     // Enable bootstrap tooltips on this page.
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
