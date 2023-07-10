@@ -215,11 +215,11 @@
     <form method="post" id="delete-form">
       {{ delete_form.hidden_tag() }}
       {% if not current_user.is_anonymous %}
-      <input class="btn btn-danger"
-             id="delete"
-             name="delete"
-             type="button"
-             value="Delete benchmark result" />
+        <input class="btn btn-danger"
+               id="delete"
+               name="delete"
+               type="button"
+               value="Delete benchmark result" />
       {% endif %}
     </form>
   </div>

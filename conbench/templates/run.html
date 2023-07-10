@@ -109,12 +109,12 @@
   <div class="mt-4">
     <form method="post" id="run-form">
       {% if not current_user.is_anonymous %}
-      {{ form.hidden_tag() }}
-      <input class="btn btn-outline-info btn-sm"
-             id="delete"
-             name="delete"
-             type="button"
-             value="Delete Run" />
+        {{ form.hidden_tag() }}
+        <input class="btn btn-outline-info btn-sm"
+               id="delete"
+               name="delete"
+               type="button"
+               value="Delete Run" />
       {% endif %}
     </form>
   </div>
