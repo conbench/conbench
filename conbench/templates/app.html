@@ -126,7 +126,7 @@
                 <a href="https://github.com/conbench/conbench" target="_blank">github</a>
                 | <a href="/api/docs" target="_blank">api docs</a>
                 {% if not current_user.is_anonymous %}
-                  | <a class="nav-link" href="{{ url_for('app.users') }}">users</a>
+                  | <a href="{{ url_for('app.users') }}">users</a>
                   <!-- lets show hardware/platform again when use case is clearer
                 <a class="nav-link" href="{{ url_for('app.hardwares') }}">hardware</a>
                 -->
