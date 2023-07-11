@@ -35,7 +35,8 @@ class Hardware(Base, EntityMixin):
     def generate_hash(self):
         pass
 
-    def post_init_pre_add(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.hash = self.generate_hash()
 
 

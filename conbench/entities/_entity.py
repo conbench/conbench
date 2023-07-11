@@ -196,7 +196,6 @@ class EntityMixin(Generic[T]):
             return result
 
         obj = cls(**props)
-        obj.post_init_pre_add()
         current_session.add(obj)
         try:
             current_session.commit()
@@ -212,12 +211,6 @@ class EntityMixin(Generic[T]):
         result = _fetch_first()
         assert result is not None
         return result
-
-    def post_init_pre_add(self):
-        """Override this method to do any initialization before adding to the session
-        when using get_or_create().
-        """
-        pass
 
 
 class EntitySerializer:
