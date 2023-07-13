@@ -88,7 +88,7 @@
   <div class="row result-raw-data-container">
     <div class="col-md-6">
       <ul class="list-group">
-        <li class="list-group-item list-group-item-primary">Benchmark details</li>
+        <li class="list-group-item list-group-item-primary">Result details</li>
         <li class="list-group-item" style="overflow-y: auto;">
           <b>Benchmark name</b>
           <div align="right" style="display:inline-block; float: right;">
@@ -139,7 +139,7 @@
           {% endfor %}
         {% endif %}
         {% if benchmark.stats %}
-          <li class="list-group-item list-group-item-primary">Result</li>
+          <li class="list-group-item list-group-item-primary">Measurement result</li>
           <li class="list-group-item" style="overflow-y: auto;">
             timestamp (usually the start time)
             <div align="right" style="display:inline-block; float: right;"><code>{{ benchmark.display_timestamp }}</code></div>
@@ -151,7 +151,7 @@
             </li>
           {% endfor %}
         {% endif %}
-        <li class="list-group-item list-group-item-primary">Tags</li>
+        <li class="list-group-item list-group-item-primary"> Raw tags (case permutation + name)</li>
         {% for k,v in benchmark.tags.items() %}
           <li class="list-group-item" style="overflow-y: auto;">
             <b>{{ k }}</b>
