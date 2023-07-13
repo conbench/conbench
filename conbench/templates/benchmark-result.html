@@ -90,31 +90,19 @@
       <ul class="list-group">
         <li class="list-group-item list-group-item-primary">Result details</li>
         <li class="list-group-item" style="overflow-y: auto;">
-          <b>Benchmark name</b>
-          <div align="right" style="display:inline-block; float: right;">
-            <a href="{{ url_for('app.batch', batch_id=benchmark.batch_id ) }}">{{ benchmark.display_bmname }}</a>
-          </div>
+          <b><base href="">benchmark name</b>
+          <div align="right" style="display:inline-block; float: right;"><code>{{ benchmark.display_bmname }}</code></a></div>
         </li>
         <li class="list-group-item" style="overflow-y: auto;">
-          <b>Benchmark case permutation</b>
-          <div align="right" style="display:inline-block; float: right;">{{ benchmark.display_case_perm }}</div>
+          <b>case parameter permutation</b>
+          <div align="right" style="display:inline-block; float: right;"><code>{{ benchmark.display_case_perm }}</code></div>
         </li>
         <li class="list-group-item" style="overflow-y: auto;">
-          <b>Run ID</b>
+          <b>submitted as part of CI run</b>
           <div align="right" style="display:inline-block; float: right;">
-            <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">{{ benchmark.run_id }}</a>
-          </div>
-        </li>
-        <li class="list-group-item" style="overflow-y: auto;">
-          <b>Run name</b>
-          <div align="right" style="display:inline-block; float: right;">
-            {% if run.name %}{{ run.name }}{% endif %}
-          </div>
-        </li>
-        <li class="list-group-item" style="overflow-y: auto;">
-          <b>Run reason</b>
-          <div align="right" style="display:inline-block; float: right;">
-            {% if run.reason %}{{ run.reason }}{% endif %}
+            <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">{{ benchmark.run_id }}</a> with name
+            <code>{% if run.name %}{{ run.name }}{% endif %}</code> and reason
+            <code>{% if run.reason %}{{ run.reason }}{% endif %}</code>
           </div>
         </li>
         {% if benchmark.error %}
