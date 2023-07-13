@@ -1,43 +1,47 @@
 {% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
-
-
   <h4>
-   <strong>{{ benchmark.display_bmname }}</strong> / result {{ result.id[:15] }}...
+    <strong>{{ benchmark.display_bmname }}</strong> / result {{ result.id[:15] }}...
   </h4>
-
   <span class="fs-5"><code>{{ benchmark.display_case_perm }}</code></span>
   <div class="row">
     <div class="col-md-3 mt-3 p-3">
       <h4>summary</h4>
       <div class="mt-3 cb-bm-summary small shadow-sm">
         <div class="cb-bmr-summary-item">
-          <strong>status</strong><br>
-          <code>{% if result.is_failed %} failed {% else %} success {%endif%}</code>
+          <strong>status</strong>
+          <br>
+          <code>
+            {% if result.is_failed %}
+              failed
+            {% else %}
+              success
+            {% endif %}
+          </code>
         </div>
-
         <div class="cb-bmr-summary-item">
-          <strong>data</strong><br>
+          <strong>data</strong>
+          <br>
           <code>{{ result.ui_mean_and_uncertainty }}</code>
         </div>
-
         <div class="cb-bmr-summary-item">
-          <strong>benchmark date</strong><br>
+          <strong>benchmark date</strong>
+          <br>
           <code>{{ result.timestamp.strftime("%Y-%m-%d") }}</code>
         </div>
-
         <div class="cb-bmr-summary-item">
-          <strong>benchmarked code</strong><br>
+          <strong>benchmarked code</strong>
+          <br>
           <code>
             <a href="{{ result.run.commit.repo_url }}">{{ result.run.commit.repo_url }}</a>,
-            commit {{result.ui_commit_url_anchor() |safe }}
+            commit {{ result.ui_commit_url_anchor() |safe }}
             ({{ result.run.commit.timestamp.strftime("%Y-%m-%d") }})
           </code>
         </div>
-
         <div class="cb-bmr-summary-item">
-          <strong>hardware name</strong><br>
+          <strong>hardware name</strong>
+          <br>
           <code>{{ result.run.hardware.name }}</code>
         </div>
       </div>
@@ -49,8 +53,8 @@
     <div class="col-md-1"></div>
     <div class="col-md-8 mt-3 p-3">
       {% if history_plot_info.jsondoc is not none %}
-      <h4>historical evolution</h4>
-      <div class="mt-1" id="plot-history-0"></div>
+        <h4>historical evolution</h4>
+        <div class="mt-1" id="plot-history-0"></div>
         <div class="small">
           <div class="conbench-histplot-run-details" style="display: none;">
             <br />
@@ -66,17 +70,16 @@
             This plot shows the current result in historical context.
             The time axis shows the commit date (corresponds to code evolution).
             Think: along the plot everything is held constant except for the benchmarked code.
-            Click a data point (grey) in the plot to see a corresponding result summary.</div>
+            Click a data point (grey) in the plot to see a corresponding result summary.
+          </div>
         </div>
-    {% else %}
-      <div class="alert alert-info" role="alert">
-        Cannot display history plot for this benchmark result: {{ history_plot_info.reason_why_no_plot }}
-      </div>
-    {% endif %}
-
+      {% else %}
+        <div class="alert alert-info" role="alert">
+          Cannot display history plot for this benchmark result: {{ history_plot_info.reason_why_no_plot }}
+        </div>
+      {% endif %}
     </div>
   </div>
-
   <hr class="border border-danger border-1 opacity-50">
   <h4>raw data</h4>
   <div class="row">
@@ -90,19 +93,27 @@
       <ul class="list-group">
         <li class="list-group-item list-group-item-primary">Result details</li>
         <li class="list-group-item" style="overflow-y: auto;">
-          <b><base href="">benchmark name</b>
-          <div align="right" style="display:inline-block; float: right;"><code>{{ benchmark.display_bmname }}</code></a></div>
+          <b>benchmark name</b>
+          <div align="right" style="display:inline-block; float: right;">
+            <code>{{ benchmark.display_bmname }}</code>
+          </div>
         </li>
         <li class="list-group-item" style="overflow-y: auto;">
           <b>case parameter permutation</b>
-          <div align="right" style="display:inline-block; float: right;"><code>{{ benchmark.display_case_perm }}</code></div>
+          <div align="right" style="display:inline-block; float: right;">
+            <code>{{ benchmark.display_case_perm }}</code>
+          </div>
         </li>
         <li class="list-group-item" style="overflow-y: auto;">
           <b>submitted as part of CI run</b>
           <div align="right" style="display:inline-block; float: right;">
             <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">{{ benchmark.run_id }}</a> with name
-            <code>{% if run.name %}{{ run.name }}{% endif %}</code> and reason
-            <code>{% if run.reason %}{{ run.reason }}{% endif %}</code>
+            <code>
+              {% if run.name %}{{ run.name }}{% endif %}
+            </code> and reason
+            <code>
+              {% if run.reason %}{{ run.reason }}{% endif %}
+            </code>
           </div>
         </li>
         {% if benchmark.error %}
@@ -130,18 +141,22 @@
           <li class="list-group-item list-group-item-primary">Measurement result</li>
           <li class="list-group-item" style="overflow-y: auto;">
             timestamp (usually the start time)
-            <div align="right" style="display:inline-block; float: right;"><code>{{ benchmark.display_timestamp }}</code></div>
+            <div align="right" style="display:inline-block; float: right;">
+              <code>{{ benchmark.display_timestamp }}</code>
+            </div>
           </li>
           {% for k,v in benchmark.stats.items() %}
             {% if v is not none %}
               <li class="list-group-item" style="overflow-y: auto;">
                 {{ k }}
-                <div align="right" style="display:inline-block; float: right;"><code>{{ v }}</code></div>
+                <div align="right" style="display:inline-block; float: right;">
+                  <code>{{ v }}</code>
+                </div>
               </li>
             {% endif %}
           {% endfor %}
         {% endif %}
-        <li class="list-group-item list-group-item-primary"> Raw tags (case permutation + name)</li>
+        <li class="list-group-item list-group-item-primary">Raw tags (case permutation + name)</li>
         {% for k,v in benchmark.tags.items() %}
           <li class="list-group-item" style="overflow-y: auto;">
             <b>{{ k }}</b>
@@ -212,18 +227,23 @@
             </li>
           {% endif %}
         {% endif %}
-        <li class="list-group-item list-group-item-primary">Hardware (checksum is constant between results in history plot above)</li>
+        <li class="list-group-item list-group-item-primary">
+          Hardware (checksum is constant between results in history plot above)
+        </li>
         <li class="list-group-item" style="overflow-y: auto;">
           <b>checksum</b>
-          <div align="right" style="display:inline-block; float: right;"><code>{{ result.run.hardware.hash }}</code></div>
+          <div align="right" style="display:inline-block; float: right;">
+            <code>{{ result.run.hardware.hash }}</code>
+          </div>
         </li>
         {% for k,v in run.hardware.items() %}
           <li class="list-group-item" style="overflow-y: auto;">
             <b>{{ k }}</b>
-            <div align="right" style="display:inline-block; float: right;"><code>{{ v }}</code></div>
+            <div align="right" style="display:inline-block; float: right;">
+              <code>{{ v }}</code>
+            </div>
           </li>
         {% endfor %}
-
         <li class="list-group-item list-group-item-primary">Context (constant between results in history plot above)</li>
         {% for k,v in benchmark.context.items() %}
           <li class="list-group-item" style="overflow-y: auto;">
@@ -232,7 +252,9 @@
           </li>
         {% endfor %}
         {% if benchmark.info and benchmark.info|length > 1 %}
-          <li class="list-group-item list-group-item-primary">Additional context (may vary between results in history plot above)</li>
+          <li class="list-group-item list-group-item-primary">
+            Additional context (may vary between results in history plot above)
+          </li>
           {% for k,v in benchmark.info.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
