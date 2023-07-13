@@ -482,6 +482,7 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
         // TODO? show run timestamp, not only commit timestamp.
         var newHtml = \
             '<li>Result view: <a href="' + run_report_relurl + '">' + run_report_relurl + '</a></li>' +
+            '<li>Compare view (current and selected result): TODO' + "</li>" +
             '<li>Commit: ' + commit_repo_string + '</li>' +
             '<li>Commit message (truncated): ' + run_commit_msg_pfx + '</li>' +
             "<li>Commit timestamp: " + run_date_string + "</li>" +
