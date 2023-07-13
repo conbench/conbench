@@ -138,10 +138,10 @@ class Commit(Base, EntityMixin):
     def commit_url(self) -> Optional[str]:
         """
         Return a URL string pointing to the commit, or None. The returned
-        string is guaranteed to start with 'http' and is guanrateed to not have
+        string is guaranteed to start with 'http' and is guaranteed to not have
         a trailing slash.
 
-        The `None` case is here because I think the database may contain emtpy
+        The `None` case is here because I think the database may contain empty
         strings.
 
         The URL path construction via /commit/{hash} is as of today
