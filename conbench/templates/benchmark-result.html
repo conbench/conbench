@@ -141,8 +141,8 @@
         {% if benchmark.stats %}
           <li class="list-group-item list-group-item-primary">Result</li>
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>timestamp (start time)</b>
-            <div align="right" style="display:inline-block; float: right;">{{ benchmark.display_timestamp }}</div>
+            timestamp (usually the start time)
+            <div align="right" style="display:inline-block; float: right;"><code>{{ benchmark.display_timestamp }}</code></div>
           </li>
           {% for k,v in benchmark.stats.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
@@ -226,7 +226,7 @@
         {% for k,v in run.hardware.items() %}
           <li class="list-group-item" style="overflow-y: auto;">
             <b>{{ k }}</b>
-            <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+            <div align="right" style="display:inline-block; float: right;"><code>{{ v }}</code></div>
           </li>
         {% endfor %}
 
