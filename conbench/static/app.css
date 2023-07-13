@@ -174,8 +174,22 @@ div.offcanvas-cb-context pre {
   font-family: monospace;
 } */
 
+div.result-raw-data-container code {
+  color: #812570aa;
+}
 
+div.cb-bmr-summary-item {
+  padding-bottom: 13px;
+}
 
+div.cb-bmr-summary-item a {
+  text-decoration: none;
+}
+
+div.cb-bmr-summary-item a:hover {
+  font-weight: bold;
+
+}
 
 div.cb-tinyplot div.hardware {
   font-family: var(--bs-font-monospace);

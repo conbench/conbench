@@ -515,8 +515,13 @@ class BenchmarkResult(Base, EntityMixin):
 
         return f"{hw.id[:4]}: " + hw.name
 
+    def ui_commit_url_anchor(self) -> str:
+        if self.run.commit is None:
+            return '<a href="#">n/a</a>'
+        return f'<a href="{self.run.commit.commit_url}">{self.run.commit.hash[:7]}</a>'
 
-def ui_rel_sem(values: List[float]):
+
+def ui_rel_sem(values: List[float]) -> Tuple[str, str]:
     """
     The first string in the tuple is a stringified float for sorting in a
     table. The second string in the tuple is for display in the table, with
@@ -546,22 +551,31 @@ def ui_rel_sem(values: List[float]):
     return (errstr, f"{errstr} %")
 
 
-def ui_mean_and_uncertainty(values: List[float], unit: str):
+def ui_mean_and_uncertainty(values: List[float], unit: str) -> str:
     """
-    Build human-readable text conveying the data point acquired here.
+    Build human-readable text conveying the data acquired here.
 
-    If this is a multi-sample data point then return notation like string like
-    '3.1 ± 0.7'.
+    The returned string
+
+        - includes a unit.
+        - limits the number of significant digits.
+
+    If this is a multi-sample data point then return notation like
+    string like '3.1 ± 0.7'.
 
         mean_unc_str = sigfig.round(mean, uncertainty=stdem)
 
     It's difficult to write code like this because of
-    https://github.com/conbench/conbench/issues/813 and related discussions.
+    https://github.com/conbench/conbench/issues/813
+    and related discussions; I think we should really make it so that
+    each element in self.data is of type float.
 
-    Note that sigfig.round is incredibly CPU intense (takes 10 seconds to run
-    on 60000 benchmark results on my beefy CPU). Do not call this for many
-    benchmark results, only for a smaller set that must be displayed.
     """
+
+    # Is this distinction helpful?
+    # if is_failed:
+    #    return "failed"
+
     if not values:
         return "no data"
 

@@ -264,7 +264,9 @@ class BenchmarkResultView(
             "benchmark-result.html",
             application=Config.APPLICATION_NAME,
             title="Benchmark",
+            # old and new, use `result` in template if possible.
             benchmark=result_dict,
+            result=result_obj,
             run=run,
             delete_form=delete_form,
             update_form=update_form,

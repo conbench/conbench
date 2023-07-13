@@ -482,6 +482,7 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
         // TODO? show run timestamp, not only commit timestamp.
         var newHtml = \
             '<li>Result view: <a href="' + run_report_relurl + '">' + run_report_relurl + '</a></li>' +
+            '<li>Compare view (current and selected result): TODO' + "</li>" +
             '<li>Commit: ' + commit_repo_string + '</li>' +
             '<li>Commit message (truncated): ' + run_commit_msg_pfx + '</li>' +
             "<li>Commit timestamp: " + run_date_string + "</li>" +
@@ -507,7 +508,7 @@ def time_series_plot(
     current_benchmark_result: BenchmarkResult,
     run,
     height=420,
-    width=1100,
+    width=800,
     highlight_result_in_hist: Optional[Tuple[HistorySample, str]] = None,
 ):
     # log.info(
@@ -657,7 +658,7 @@ def time_series_plot(
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
     p.yaxis.axis_label = unit_str_for_plot_axis_label
-    p.xaxis.axis_label = "date of commit associated with the benchmark result"
+    p.xaxis.axis_label = ""
 
     multisample, multisample_count = _inspect_for_multisample(samples)
     label = "result (n=1)"
