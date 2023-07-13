@@ -508,7 +508,7 @@ def time_series_plot(
     current_benchmark_result: BenchmarkResult,
     run,
     height=420,
-    width=1100,
+    width=800,
     highlight_result_in_hist: Optional[Tuple[HistorySample, str]] = None,
 ):
     # log.info(
