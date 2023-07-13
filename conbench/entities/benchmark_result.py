@@ -515,8 +515,11 @@ class BenchmarkResult(Base, EntityMixin):
 
         return f"{hw.id[:4]}: " + hw.name
 
+    def ui_commit_url_anchor(self) -> str:
+        return f'<a href="{self.run.commit.commit_url}">{self.run.commit.hash[:7]}</a>'
 
-def ui_rel_sem(values: List[float]):
+
+def ui_rel_sem(values: List[float]) -> str:
     """
     The first string in the tuple is a stringified float for sorting in a
     table. The second string in the tuple is for display in the table, with
