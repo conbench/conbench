@@ -62,6 +62,10 @@ class Machine(Hardware):
     __mapper_args__ = {"polymorphic_identity": "machine"}
 
     def generate_hash(self):
+        # Note(JP): this should simply be the digest of a popular hash
+        # function. With the custom scheme below it's difficult to use this
+        # hash programmatically as it has unpredictable length, charset, etc
+        # (user-given data is in it).
         return (
             self.name
             + "-"
@@ -108,6 +112,10 @@ class Cluster(Hardware):
     __mapper_args__ = {"polymorphic_identity": "cluster"}
 
     def generate_hash(self):
+        # Note(JP): this should simply be the digest of a popular hash
+        # function. With the custom scheme below it's difficult to use this
+        # hash programmatically as it has unpredictable length, charset, etc
+        # (user-given data is in it).
         return (
             self.name
             + "-"
