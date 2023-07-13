@@ -206,14 +206,15 @@
             </li>
           {% endif %}
         {% endif %}
-        <li class="list-group-item list-group-item-primary">Hardware</li>
+        <li class="list-group-item list-group-item-primary">Hardware (checksum is constant between results in history plot above)</li>
         {% for k,v in run.hardware.items() %}
           <li class="list-group-item" style="overflow-y: auto;">
             <b>{{ k }}</b>
             <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
           </li>
         {% endfor %}
-        <li class="list-group-item list-group-item-primary">Context</li>
+
+        <li class="list-group-item list-group-item-primary">Context (constant between results in history plot above)</li>
         {% for k,v in benchmark.context.items() %}
           <li class="list-group-item" style="overflow-y: auto;">
             <b>{{ k }}</b>
@@ -221,7 +222,7 @@
           </li>
         {% endfor %}
         {% if benchmark.info and benchmark.info|length > 1 %}
-          <li class="list-group-item list-group-item-primary">Additional Context Details</li>
+          <li class="list-group-item list-group-item-primary">Additional context (may vary between results in history plot above)</li>
           {% for k,v in benchmark.info.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
