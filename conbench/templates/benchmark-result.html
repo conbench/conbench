@@ -133,10 +133,12 @@
             <div align="right" style="display:inline-block; float: right;"><code>{{ benchmark.display_timestamp }}</code></div>
           </li>
           {% for k,v in benchmark.stats.items() %}
-            <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              {% if v is not none %}<div align="right" style="display:inline-block; float: right;">{{ v }}</div>{% endif %}
-            </li>
+            {% if v is not none %}
+              <li class="list-group-item" style="overflow-y: auto;">
+                {{ k }}
+                <div align="right" style="display:inline-block; float: right;"><code>{{ v }}</code></div>
+              </li>
+            {% endif %}
           {% endfor %}
         {% endif %}
         <li class="list-group-item list-group-item-primary"> Raw tags (case permutation + name)</li>
