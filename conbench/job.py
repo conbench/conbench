@@ -1,4 +1,5 @@
 import dataclasses
+import hashlib
 import logging
 import signal
 import threading
@@ -68,7 +69,7 @@ class BMRTBenchmarkResult:
     unit: str
     benchmark_name: str
     started_at: float
-    hardware_id: str
+    hardware_checksum: str
     hardware_name: str
     case_text_id: str
     case_dict: Dict[str, str]
@@ -275,7 +276,20 @@ def _fetch_and_cache_most_recent_results_guts(
             svs=result.svs,  # float(result.mean) if result.mean else None,
             svs_type=result.svs_type,
             unit=str(result.unit) if result.unit else "n/a",
-            hardware_id=str(bmrrun.hardware.id),
+            # Current `hardware.hash` is a string (not byte sequence), and does
+            # not have a predictable charset. I hoped it would be just the
+            # hexdigest of a popular hash function. What we have contains
+            # user-given data, i.e. the string is brittle to work with in code
+            # and generated documents. E.g. may not work in JavaScript var
+            # declaration statements). Translate this Conbench business logic
+            # "hardware hash" into one with predictable charset. This is for
+            # grouping/sorting purposes, and for building UI. Use MD5 (fast,
+            # unlikely collision, good enough). Can clean up when reworking
+            # hardware/platform/env:
+            # https://github.com/conbench/conbench/issues/1340
+            hardware_checksum=hashlib.md5(
+                bmrrun.hardware.hash.encode("utf-8")
+            ).hexdigest(),
             hardware_name=str(bmrrun.hardware.name),
             case_id=str(result.case_id),
             context_id=str(result.context_id),
@@ -426,10 +440,10 @@ def _generate_tsdf_per_4tuple(
 
     for bname, results in by_name_dict.items():
         # The magic time series 4-tuple is
-        # bname, caseid, hwid, ctxid
+        # bname, caseid, hwchecksum, ctxid
         by_ts_tuple: Dict[Tuple, List[BMRTBenchmarkResult]] = defaultdict(list)
         for r in results:
-            by_ts_tuple[(r.case_id, r.context_id, r.hardware_id)].append(r)
+            by_ts_tuple[(r.case_id, r.context_id, r.hardware_checksum)].append(r)
         by_name_dict_with_timeseries_tuplekeys[bname] = by_ts_tuple
 
     t3 = time.monotonic()
@@ -440,14 +454,14 @@ def _generate_tsdf_per_4tuple(
     # Brutal, slow, approach: (ideally we find a way to represent all data in a
     # single dataframe with decent multi-index -- that could be a major speedup
     # for timeseries analysis on all of these series in a bulk.) one dataframe
-    # per 4-tuple: (bname, case_id, context_id, hardware_id).
+    # per 4-tuple: (bname, case_id, context_id, hardware_checksum).
     # I have seen this below DF construction loop to take 3 seconds for 2*10^5
     # results.
     for bname, unsorted_timeseries in by_name_dict_with_timeseries_tuplekeys.items():
         for (
             case_id,
             context_id,
-            hardware_id,
+            hardware_checksum,
         ), usresults in unsorted_timeseries.items():
             # Think: `usresults` is a list not yet sorted by time.
 
@@ -467,8 +481,10 @@ def _generate_tsdf_per_4tuple(
             # Sort by time.
             df = df.sort_index()
             df.index.rename("time", inplace=True)
-            tsdf_by_4tuple[(bname, case_id, context_id, hardware_id)] = df
-            bmrlist_by_4tuple[(bname, case_id, context_id, hardware_id)] = usresults
+            tsdf_by_4tuple[(bname, case_id, context_id, hardware_checksum)] = df
+            bmrlist_by_4tuple[
+                (bname, case_id, context_id, hardware_checksum)
+            ] = usresults
 
     t4 = time.monotonic()
     log.info("BMRT cache pop: quadratic sort loop took %.3f s", t3 - t2)
