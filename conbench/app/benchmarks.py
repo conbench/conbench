@@ -146,11 +146,11 @@ def list_benchmarks() -> str:
 def show_trends_for_benchmark(bname: TBenchmarkName) -> str:
     # Narrow down relevant dataframes.
     dfs_by_t3: Dict[Tuple[str, str, str], pd.DataFrame] = {}
-    for (ibname, case_id, context_id, hardware_id), df in bmrt_cache[
+    for (ibname, case_id, context_id, hardware_checksum), df in bmrt_cache[
         "by_4t_df"
     ].items():
         if ibname == bname:
-            dfs_by_t3[(case_id, context_id, hardware_id)] = df
+            dfs_by_t3[(case_id, context_id, hardware_checksum)] = df
 
     log.info("built dfs_by_t3, len: %s", len(dfs_by_t3))
 
@@ -332,16 +332,16 @@ def _build_plotinfo_from_topnt3_dict(
     infos_for_uplots: Dict[str, TypeUIPlotInfo] = {}
 
     for t3, relchange in topn_t3_dict.items():
-        # for (hwid, ctxid, _), results in results_by_hardware_and_context_sorted.items():
+        # for (hwchecksum, ctxid, _), results in results_by_hardware_and_context_sorted.items():
         # Only include those cases where there are at least three results.
         # (this structure is used for plotting only).
-        caseid, ctxid, hwid = t3
-        results = bmrt_cache["by_4t_list"][(bname, caseid, ctxid, hwid)]
+        caseid, ctxid, hwchecksum = t3
+        results = bmrt_cache["by_4t_list"][(bname, caseid, ctxid, hwchecksum)]
 
-        # dfts = bmrt_cache["by_4t_df"][(bname, caseid, ctxid, hwid)]
+        # dfts = bmrt_cache["by_4t_df"][(bname, caseid, ctxid, hwchecksum)]
         # print()
         # print()
-        # print((bname, caseid, ctxid, hwid))
+        # print((bname, caseid, ctxid, hwchecksum))
         # print(dfts.to_csv(na_rep="NaN", float_format=numstr8))
 
         # sanity check. there must be a considerable number of results in this
@@ -366,7 +366,7 @@ def _build_plotinfo_from_topnt3_dict(
         for r in results:
             units_seen.add(r.unit)
 
-        infos_for_uplots[f"{caseid}_{hwid}_{ctxid}"] = {
+        infos_for_uplots[f"{caseid}_{hwchecksum}_{ctxid}"] = {
             # deduplicate with code below
             "data_for_uplot": [
                 [int(r.started_at) for r in results],
@@ -375,7 +375,7 @@ def _build_plotinfo_from_topnt3_dict(
                     for r in results
                 ],
             ],
-            "hwid": hwid,
+            "hwchecksum": hwchecksum,
             "ctxid": ctxid,
             "caseid": caseid,
             # Rely on at least one result being in the list.
@@ -493,7 +493,9 @@ def show_benchmark_cases(bname: TBenchmarkName) -> str:
     for case_id, results in results_by_case_id.items():
         # The indirection through `.run` here is an architecture / DB schema
         # smell I think. This might fetch run dynamically from the DB>
-        hardware_count_per_case_id[case_id] = len(set([r.hardware_id for r in results]))
+        hardware_count_per_case_id[case_id] = len(
+            set([r.hardware_checksum for r in results])
+        )
 
     last_result_per_case_id: Dict[str, BMRTBenchmarkResult] = {}
 
@@ -519,7 +521,7 @@ def show_benchmark_cases(bname: TBenchmarkName) -> str:
 
 
 class TypeUIPlotInfo(TypedDict):
-    hwid: str
+    hwchecksum: str
     ctxid: str
     caseid: str
     hwname: str
@@ -566,12 +568,12 @@ def show_benchmark_results(bname: TBenchmarkName, caseid: str) -> str:
         # The indirection through `result.run.hardware` here is an architecture
         # / DB schema smell I think. This might fetch run dynamically from the
         # DB. Store hardware name in dictionary key, for convenience.
-        hwid, hwname, ctxid = (
-            result.hardware_id,
+        hwchecksum, hwname, ctxid = (
+            result.hardware_checksum,
             result.hardware_name,
             result.context_id,
         )
-        results_by_hardware_and_context[(hwid, ctxid, hwname)].append(result)
+        results_by_hardware_and_context[(hwchecksum, ctxid, hwname)].append(result)
 
     # Make it so that infos_for_uplots is sorted by result count, i.e. show
     # most busy plots first. Instead, it might make sense to sort by recency!
@@ -600,7 +602,11 @@ def show_benchmark_results(bname: TBenchmarkName, caseid: str) -> str:
     # context_dicts_by_context_id: Dict[str, Dict[str, str]] = {}
     context_json_by_context_id: Dict[str, str] = {}
 
-    for (hwid, ctxid, _), results in results_by_hardware_and_context_sorted.items():
+    for (
+        hwchecksum,
+        ctxid,
+        _,
+    ), results in results_by_hardware_and_context_sorted.items():
         # Only include those cases where there are at least three results.
         # (this structure is used for plotting only).
         if len(results) < 3:
@@ -620,7 +626,7 @@ def show_benchmark_results(bname: TBenchmarkName, caseid: str) -> str:
         for r in results:
             units_seen.add(r.unit)
 
-        infos_for_uplots[f"{hwid}_{ctxid}"] = {
+        infos_for_uplots[f"{hwchecksum}_{ctxid}"] = {
             "data_for_uplot": [
                 # Send timestamp with 1 second resolution.
                 [int(r.started_at) for r in results],
@@ -641,7 +647,7 @@ def show_benchmark_results(bname: TBenchmarkName, caseid: str) -> str:
                 ],
             ],
             # Rely on at least one result being in the list.
-            "hwid": hwid,
+            "hwchecksum": hwchecksum,
             "ctxid": ctxid,
             "caseid": caseid,
             "aux_title": "",
