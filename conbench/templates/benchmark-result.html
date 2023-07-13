@@ -7,51 +7,67 @@
    <strong>{{ benchmark.display_bmname }}</strong> / result {{ result.id[:15] }}...
   </h4>
 
-
-
+  <span class="fs-5"><code>{{ benchmark.display_case_perm }}</code></span>
   <div class="row">
-    <div class="col-md-4 mt-5 p-3">
-      <div class="row cb-bm-summary small">
-        <dt class="col-sm-4">status</dt>
-        <dd class="col-sm-8"><code>{% if result.is_failed() %} failed {% else %} success {%endif%}</code></dd>
+    <div class="col-md-3 mt-3 p-3">
+      <h4>summary</h4>
+      <div class="mt-3 cb-bm-summary small shadow-sm">
+        <div class="cb-bmr-summary-item">
+          <strong>status</strong><br>
+          <code>{% if result.is_failed %} failed {% else %} success {%endif%}</code>
+        </div>
 
-        <dt class="col-sm-4">data</dt>
-        <dd class="col-sm-8"><code>{{ result.ui_mean_and_uncertainty }}</code></dd>
+        <div class="cb-bmr-summary-item">
+          <strong>data</strong><br>
+          <code>{{ result.ui_mean_and_uncertainty }}</code>
+        </div>
 
-        <dt class="col-sm-4">benchmark date</dt>
-        <dd class="col-sm-8"><code>{{ result.timestamp.strftime("%Y-%m-%d") }}</code></dd>
+        <div class="cb-bmr-summary-item">
+          <strong>benchmark date</strong><br>
+          <code>{{ result.timestamp.strftime("%Y-%m-%d") }}</code>
+        </div>
 
-        <dt class="col-sm-4">commit date </dt>
-        <dd class="col-sm-8"><code>{{ result.run.commit.timestamp.strftime("%Y-%m-%d") }}</code></dd>
+        <div class="cb-bmr-summary-item">
+          <strong>benchmarked code</strong><br>
+          <code>
+            <a href="{{ result.run.commit.repo_url }}">{{ result.run.commit.repo_url }}</a>,
+            commit {{result.ui_commit_url_anchor() |safe }}
+            ({{ result.run.commit.timestamp.strftime("%Y-%m-%d") }})
+          </code>
+        </div>
 
-        <dt class="col-sm-4">commit hash</dt>
-        <dd class="col-sm-8"><code>{{ result.run.commit.hash[:8]}}</code></dd>
-
-        <dt class="col-sm-4">repo</dt>
-        <dd class="col-sm-8"><code>{{ result.run.commit.repo_url }}</code></dd>
-
-        <dt class="col-sm-4">hardware</dt>
-        <dd class="col-sm-8 text-truncate"><code>{{ result.run.hardware.name }}</code></dd>
+        <div class="cb-bmr-summary-item">
+          <strong>hardware name</strong><br>
+          <code>{{ result.run.hardware.name }}</code>
+        </div>
+      </div>
+      <div class="text-muted fst-italic mt-1 small">
+        A brief summary for this result.
+        Find more detail in the raw data below.
       </div>
     </div>
+    <div class="col-md-1"></div>
     <div class="col-md-8 mt-3 p-3">
       {% if history_plot_info.jsondoc is not none %}
-      <div class="mt-4" id="plot-history-0"></div>
-      <div class="row">
-        <div class="col-md-12 pl-5 small">
-          Click on a benchmark result (grey point) in the plot to see a corresponding benchmark result summary.
+      <h4>historical evolution</h4>
+      <div class="mt-1" id="plot-history-0"></div>
+        <div class="small">
           <div class="conbench-histplot-run-details" style="display: none;">
             <br />
             <div class="panel panel-success">
-              <div class="panel-heading">Summary for selected benchmark (green data point in plot)</div>
+              <div class="panel-heading">Summary for selected result (green point in plot):</div>
               <div class="panel-body">
                 <ul class="ul-histplot-run-details">
                 </ul>
               </div>
             </div>
           </div>
+          <div class="text-muted fst-italic">
+            This plot shows the current result in historical context.
+            The time axis shows the commit date (corresponds to code evolution).
+            Think: along the plot everything is held constant except for the benchmarked code.
+            Click a data point (grey) in the plot to see a corresponding result summary.</div>
         </div>
-      </div>
     {% else %}
       <div class="alert alert-info" role="alert">
         Cannot display history plot for this benchmark result: {{ history_plot_info.reason_why_no_plot }}
