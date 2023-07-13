@@ -658,7 +658,7 @@ def time_series_plot(
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
     p.yaxis.axis_label = unit_str_for_plot_axis_label
-    p.xaxis.axis_label = "date of commit associated with the benchmark result"
+    p.xaxis.axis_label = ""
 
     multisample, multisample_count = _inspect_for_multisample(samples)
     label = "result (n=1)"
