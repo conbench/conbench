@@ -546,7 +546,7 @@ def ui_rel_sem(values: List[float]):
     return (errstr, f"{errstr} %")
 
 
-def ui_mean_and_uncertainty(values: List[float], unit: str):
+def ui_mean_and_uncertainty(values: List[float], unit: str) -> str:
     """
     Build human-readable text conveying the data acquired here.
 
@@ -567,37 +567,30 @@ def ui_mean_and_uncertainty(values: List[float], unit: str):
 
     """
 
-    if self.is_failed():
-        return "failed"
+    # Is this distinction helpful?
+    # if is_failed:
+    #    return "failed"
 
-    samples = self.data
-
-    if samples is None:
+    if not values:
         return "no data"
 
-    # otherwise: `TypeError: can't convert type 'NoneType' to numerator/denominator`
-    # in statistics.stdev(samples)
-    samples = [s for s in samples if s is not None]
-
-    if len(samples) < 3:
-        # Show each sample.
-        return "; ".join(
-            str(sigfig.round(s, sigfigs=4)) + " " + self.unit for s in samples
-        )
+    if len(values) < 3:
+        # Show each sample with five significant figures.
+        return "; ".join(f"{numstr(v, sigfigs=5)} {unit}" for v in values)
 
     # Build sample standard deviation. Maybe we can also use the pre-built
     # value, but trust needs to be established first.
-    stdev = float(statistics.stdev(samples))
-    mean = float(statistics.mean(samples))
+    stdev = statistics.stdev(values)
+    mean = statistics.mean(values)
+
     # Calculate standard error of the mean for canonical scientific
     # notation of the result. Make float from Decimal, otherwise
     # TypeError: unsupported operand type(s) for /: 'decimal.Decimal' and 'float'
-    stdem = stdev / math.sqrt(len(samples))
+    stdem = stdev / math.sqrt(len(values))
 
-    # minstr = f"min: {sigfig.round(min, 3)} s"
     # This generates a string like '3.1 ± 0.7'
-    mean_uncertainty_str = sigfig.round(mean, uncertainty=stdem)
-    return f"({mean_uncertainty_str}) {self.unit}"
+    mean_uncertainty_str = sigfig.round(mean, uncertainty=stdem, warn=False)
+    return f"({mean_uncertainty_str}) {unit}"
 
 
 def validate_and_aggregate_samples(stats_usergiven: Any):
