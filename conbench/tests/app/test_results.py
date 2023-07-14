@@ -76,6 +76,23 @@ class TestBenchmarkResultGet(_asserts.GetEnforcer):
         resp = client.get(f"benchmark-results/{bmr_id}/")
         assert resp.status_code == 200, resp.text
 
+    def test_get_result_without_commit(self, client):
+        self.authenticate(client)
+
+        # Post a benchmark without a commit
+        payload = _fixtures.VALID_RESULT_PAYLOAD.copy()
+        del payload["github"]
+        post_response = client.post("/api/benchmarks/", json=payload)
+        assert post_response.status_code == 201
+
+        # Ensure the run doesn't have a commit
+        run_response = client.get(f'/api/runs/{payload["run_id"]}/')
+        assert run_response.status_code == 200
+        assert run_response.json["commit"] is None
+
+        # Ensure the result page looks as expected
+        self._assert_view(client, post_response.json["id"])
+
 
 class TestBenchmarkResultDelete(_asserts.DeleteEnforcer):
     def test_authenticated(self, client):
