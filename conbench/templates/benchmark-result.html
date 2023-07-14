@@ -33,11 +33,15 @@
         <div class="cb-bmr-summary-item">
           <strong>benchmarked code</strong>
           <br>
-          <code>
-            <a href="{{ result.run.commit.repo_url }}">{{ result.run.commit.repo_url }}</a>,
-            commit {{ result.ui_commit_url_anchor() |safe }}
-            ({{ result.run.commit.timestamp.strftime("%Y-%m-%d") }})
-          </code>
+          {% if result.run.commit is not none %}
+            <code>
+              <a href="{{ result.run.commit.repo_url }}">{{ result.run.commit.repo_url }}</a>,
+              commit {{ result.ui_commit_url_anchor() |safe }}
+              ({{ result.run.commit.timestamp.strftime("%Y-%m-%d") }})
+            </code>
+          {% else %}
+            commit info unavailable
+          {% endif %}
         </div>
         <div class="cb-bmr-summary-item">
           <strong>hardware name</strong>
