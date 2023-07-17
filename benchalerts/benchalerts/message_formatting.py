@@ -59,6 +59,20 @@ def _list_results(
     return out
 
 
+def _all_runs(full_comparison: FullComparisonInfo) -> str:
+    """Create a Markdown list of all runs analyzed."""
+    out = "## All benchmark runs analyzed:\n"
+    for comparison in full_comparison.run_comparisons:
+        out += "\n"
+        out += _run_bullet(
+            comparison.contender_reason,
+            comparison.contender_datetime,
+            comparison.contender_link,
+            comparison.contender_hardware_name,
+        )
+    return out
+
+
 class Alerter:
     """A class to generate default messages and statuses for alerting. You can override
     any methods for your project's custom settings.
@@ -147,7 +161,7 @@ class Alerter:
             if build_url:
                 summary += f" See the [build logs]({build_url}) for more information."
             # exit early
-            return summary
+            return summary + "\n\n" + _all_runs(full_comparison)
 
         if full_comparison.results_with_errors:
             summary += self.clean(
@@ -177,7 +191,7 @@ class Alerter:
                 """
             )
             # exit early
-            return summary
+            return summary + "\n\n" + _all_runs(full_comparison)
 
         pluralizer = _Pluralizer(full_comparison.results_with_z_regressions)
         were = pluralizer.were
@@ -194,17 +208,7 @@ class Alerter:
             summary += "### Benchmarks with regressions:"
             summary += _list_results(full_comparison.results_with_z_regressions)
 
-        summary += "## All benchmark runs analyzed:\n"
-        for comparison in full_comparison.run_comparisons:
-            summary += "\n"
-            summary += _run_bullet(
-                comparison.contender_reason,
-                comparison.contender_datetime,
-                comparison.contender_link,
-                comparison.contender_hardware_name,
-            )
-
-        return summary
+        return summary + _all_runs(full_comparison)
 
     def github_check_details(
         self, full_comparison: FullComparisonInfo
