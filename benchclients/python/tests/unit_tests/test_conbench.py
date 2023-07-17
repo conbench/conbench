@@ -17,13 +17,11 @@ from benchclients.conbench import ConbenchClientException
 
 from benchclients import ConbenchClient
 
-from .mocks import MockAdapter
-
 
 class TestConbenchClient:
     @property
     def cb(self):
-        return ConbenchClient(adapter=MockAdapter())
+        return ConbenchClient()
 
     def test_conbench_fails_missing_env(self, missing_conbench_env):
         with pytest.raises(ConbenchClientException, match="CONBENCH_URL"):
