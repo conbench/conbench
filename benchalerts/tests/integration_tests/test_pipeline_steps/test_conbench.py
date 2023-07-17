@@ -13,15 +13,12 @@
 # limitations under the License.
 
 import pytest
-from benchclients.conbench import LegacyConbenchClient
 
 from benchalerts.pipeline_steps.conbench import (
     BaselineRunCandidates,
     GetConbenchZComparisonForRunsStep,
     GetConbenchZComparisonStep,
 )
-
-ConbenchClient = LegacyConbenchClient
 
 
 @pytest.mark.parametrize(
@@ -64,11 +61,8 @@ def test_GetConbenchZComparisonStep(
             "https://github.com/conbench/conbench/issues/745 means timeouts cause this to fail"
         )
     monkeypatch.setenv("CONBENCH_URL", conbench_url)
-    cb = ConbenchClient()
     step = GetConbenchZComparisonStep(
-        commit_hash=commit_hash,
-        baseline_run_type=BaselineRunCandidates.parent,
-        conbench_client=cb,
+        commit_hash=commit_hash, baseline_run_type=BaselineRunCandidates.parent
     )
     full_comparison = step.run_step(previous_outputs={})
     assert len(full_comparison.run_comparisons) == expected_len
@@ -83,11 +77,8 @@ def test_GetConbenchZComparisonStep(
 
 def test_no_runs_found(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("CONBENCH_URL", "https://conbench.ursa.dev/")
-    cb = ConbenchClient()
     step = GetConbenchZComparisonForRunsStep(
-        run_ids=["not found"],
-        baseline_run_type=BaselineRunCandidates.parent,
-        conbench_client=cb,
+        run_ids=["not found"], baseline_run_type=BaselineRunCandidates.parent
     )
     full_comparison = step.run_step(previous_outputs={})
     assert full_comparison.run_comparisons == []
