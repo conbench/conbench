@@ -3,14 +3,12 @@
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-import requests
-from benchclients.conbench import LegacyConbenchClient
+from benchclients.conbench import ConbenchClient
+from benchclients.http import RetryingHTTPClientNonRetryableResponse
 from benchclients.logging import log
 
 from ..alert_pipeline import AlertPipelineStep
 from ..conbench_dataclasses import FullComparisonInfo, RunComparisonInfo
-
-ConbenchClient = LegacyConbenchClient
 
 
 class BaselineRunCandidates(Enum):
@@ -72,7 +70,7 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
         run_ids: List[str],
         baseline_run_type: BaselineRunCandidates,
         z_score_threshold: Optional[float] = None,
-        conbench_client: Optional[LegacyConbenchClient] = None,
+        conbench_client: Optional[ConbenchClient] = None,
         step_name: Optional[str] = None,
     ) -> None:
         super().__init__(step_name)
@@ -97,8 +95,8 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
         """
         try:
             contender_info = self.conbench_client.get(f"/runs/{run_id}/")
-        except requests.HTTPError as e:
-            if e.response.status_code == 404:
+        except RetryingHTTPClientNonRetryableResponse as e:
+            if e.error_response.status_code == 404:
                 log.info(
                     f"Conbench couldn't find run {run_id}; not including it for analysis"
                 )
@@ -184,7 +182,7 @@ class GetConbenchZComparisonStep(GetConbenchZComparisonForRunsStep):
         commit_hash: str,
         baseline_run_type: BaselineRunCandidates,
         z_score_threshold: Optional[float] = None,
-        conbench_client: Optional[LegacyConbenchClient] = None,
+        conbench_client: Optional[ConbenchClient] = None,
         step_name: Optional[str] = None,
     ) -> None:
         super().__init__(

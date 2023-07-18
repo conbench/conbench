@@ -1,11 +1,8 @@
 import logging
 import os
-from typing import Optional
 
 import requests
-from requests.adapters import HTTPAdapter
 
-from .base import BaseClient
 from .http import (
     RetryingHTTPClient,
     RetryingHTTPClientBadCredentials,
@@ -57,7 +54,7 @@ class ConbenchClient(RetryingHTTPClient):
 
     timeout_login_request = (3.5, 10)
 
-    def __init__(self, default_retry_for_seconds=None, adapter=None):
+    def __init__(self, default_retry_for_seconds=None):
         # If this library is embedded into a Python program that has stdlib
         # logging not set up yet (no root logger configured) then this call
         # sets up a root logger with handlers. This is a noop if the calling
@@ -69,10 +66,6 @@ class ConbenchClient(RetryingHTTPClient):
         )
 
         url = self._read_base_url_from_env_or_raise()
-
-        if adapter:
-            # Let's phase this out.
-            log.info("ignoring adapter: %s", adapter)
 
         # Construct the HTTP API base URL without a trailing slash, something
         # like https://conbench.ursa.dev/api
@@ -176,36 +169,3 @@ class ConbenchClient(RetryingHTTPClient):
 
         # Rely on the details to have been logged previously
         raise RetryingHTTPClientLoginError("login failed (see logs), giving up")
-
-
-class LegacyConbenchClient(BaseClient):
-    """A client to interact with a Conbench server.
-    Parameters
-    ----------
-    adapter
-        A requests adapter to mount to the requests session. If not given, one will be
-        created with a backoff retry strategy.
-    Environment variables
-    ---------------------
-    CONBENCH_URL
-        The URL of the Conbench server. Required.
-    CONBENCH_EMAIL
-        The email to use for Conbench login. Only required for GETting if the server is private.
-    CONBENCH_PASSWORD
-        The password to use for Conbench login. Only required for GETting if the server is private.
-    """
-
-    def __init__(self, adapter: Optional[HTTPAdapter] = None):
-        url = os.getenv("CONBENCH_URL")
-        if not url:
-            raise Exception("Environment variable CONBENCH_URL not found")
-
-        super().__init__(adapter=adapter)
-        self.base_url = url + "/api"
-
-        login_creds = {
-            "email": os.getenv("CONBENCH_EMAIL"),
-            "password": os.getenv("CONBENCH_PASSWORD"),
-        }
-        if login_creds["email"] and login_creds["password"]:
-            self.post("/login/", json=login_creds)

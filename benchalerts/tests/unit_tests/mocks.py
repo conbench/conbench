@@ -18,6 +18,7 @@ from typing import List, Tuple
 
 import pytest
 import requests
+from benchclients.conbench import ConbenchClient
 from requests.adapters import HTTPAdapter
 
 from benchclients import log
@@ -81,6 +82,15 @@ class MockAdapter(HTTPAdapter):
             raise Exception(f"Mock response not found at {response_path}")
 
         return MockResponse.from_file(response_path)
+
+
+class MockConbenchClient(ConbenchClient):
+    def __init__(self):
+        super().__init__()
+        self.session.mount("https://", MockAdapter())
+
+    def _login_or_raise(self) -> None:
+        pass
 
 
 def check_posted_markdown(

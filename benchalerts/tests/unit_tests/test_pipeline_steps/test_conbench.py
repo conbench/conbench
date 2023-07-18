@@ -1,5 +1,4 @@
 import pytest
-from benchclients.conbench import LegacyConbenchClient
 
 from benchalerts.pipeline_steps.conbench import (
     BaselineRunCandidates,
@@ -7,9 +6,7 @@ from benchalerts.pipeline_steps.conbench import (
     GetConbenchZComparisonStep,
 )
 
-from ..mocks import MockAdapter
-
-ConbenchClient = LegacyConbenchClient
+from ..mocks import MockConbenchClient
 
 
 def test_GetConbenchZComparisonForRunsStep(conbench_env):
@@ -17,7 +14,7 @@ def test_GetConbenchZComparisonForRunsStep(conbench_env):
         run_ids=["some_contender"],
         baseline_run_type=BaselineRunCandidates.fork_point,
         z_score_threshold=500,
-        conbench_client=ConbenchClient(adapter=MockAdapter()),
+        conbench_client=MockConbenchClient(),
     )
     res = step.run_step(previous_outputs={})
     assert res
@@ -29,7 +26,7 @@ def test_runs_comparison_fails_when_no_baseline(
     step = GetConbenchZComparisonForRunsStep(
         run_ids=["contender_wo_base"],
         baseline_run_type=BaselineRunCandidates.fork_point,
-        conbench_client=ConbenchClient(adapter=MockAdapter()),
+        conbench_client=MockConbenchClient(),
     )
     res = step.run_step(previous_outputs={})
     assert res
@@ -40,7 +37,7 @@ def test_runs_comparison_without_commit(conbench_env, caplog: pytest.LogCaptureF
     step = GetConbenchZComparisonForRunsStep(
         run_ids=["no_commit"],
         baseline_run_type=BaselineRunCandidates.latest_default,
-        conbench_client=ConbenchClient(adapter=MockAdapter()),
+        conbench_client=MockConbenchClient(),
     )
     res = step.run_step(previous_outputs={})
     assert res
@@ -50,7 +47,7 @@ def test_runs_comparison_skips_runs_not_found(conbench_env):
     step = GetConbenchZComparisonForRunsStep(
         run_ids=["contender_wo_base", "not_found"],
         baseline_run_type=BaselineRunCandidates.latest_default,
-        conbench_client=ConbenchClient(adapter=MockAdapter()),
+        conbench_client=MockConbenchClient(),
     )
     res = step.run_step(previous_outputs={})
     assert len(res.run_comparisons) == 1
@@ -61,7 +58,7 @@ def test_GetConbenchZComparisonStep(conbench_env):
         commit_hash="abc",
         baseline_run_type=BaselineRunCandidates.fork_point,
         z_score_threshold=500,
-        conbench_client=ConbenchClient(adapter=MockAdapter()),
+        conbench_client=MockConbenchClient(),
     )
     res = step.run_step(previous_outputs={})
     assert res
@@ -71,7 +68,7 @@ def test_comparison_doesnt_fail_when_no_runs(conbench_env):
     step = GetConbenchZComparisonStep(
         commit_hash="no_runs",
         baseline_run_type=BaselineRunCandidates.fork_point,
-        conbench_client=ConbenchClient(adapter=MockAdapter()),
+        conbench_client=MockConbenchClient(),
     )
     res = step.run_step(previous_outputs={})
     assert res
@@ -83,7 +80,7 @@ def test_comparison_warns_when_no_baseline(
     step = GetConbenchZComparisonStep(
         commit_hash="no_baseline",
         baseline_run_type=BaselineRunCandidates.fork_point,
-        conbench_client=ConbenchClient(adapter=MockAdapter()),
+        conbench_client=MockConbenchClient(),
     )
     res = step.run_step(previous_outputs={})
     assert res
