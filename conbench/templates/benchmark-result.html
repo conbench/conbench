@@ -112,8 +112,13 @@
           <b>submitted as part of CI run</b>
           <div align="right" style="display:inline-block; float: right;">
             <a href="{{ url_for('app.run', run_id=benchmark.run_id) }}">{{ benchmark.run_id }}</a>
-            <br> name: <code> {% if run.name %}{{ run.name }}{% endif %} </code>
-            <br> reason:
+            <br>
+            name:
+            <code>
+              {% if run.name %}{{ run.name }}{% endif %}
+            </code>
+            <br>
+            reason:
             <code>
               {% if run.reason %}{{ run.reason }}{% endif %}
             </code>
