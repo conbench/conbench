@@ -32,7 +32,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
+
+# from webdriver_manager.chrome import ChromeDriverManager
 
 # from selenium.webdriver.support.ui import WebDriverWait
 # from selenium.webdriver.common.by import By
@@ -241,9 +242,15 @@ def _get_driver():
 
     log.info("set up chromedriver with capabilities %s", wd_options.to_capabilities())
 
+    # A temporary fix for our CI (and linux devs :-) until
+    # https://github.com/SergeyPirogov/webdriver_manager/issues/536 is resolved
+    # upstream. Also see https://github.com/conbench/conbench/issues/1364.
+    # driver = webdriver.Chrome(service=Service(cdm.install()), options=wd_options)
     driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()), options=wd_options
+        service=Service(executable_path="/chromedriver-linux64/chromedriver"),
+        options=wd_options,
     )
+
     # The waiter is only optionally used later.
     # waiter = WebDriverWait(driver, 30)
     # Piggy-back waiter object on driver object, use a somewhat unique name
