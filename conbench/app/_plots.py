@@ -254,6 +254,18 @@ def _insert_nans(some_list: list, indexes: List[int]):
     return some_list
 
 
+def _truncate_commit_msg(msg: str) -> str:
+    """
+    Conditionally truncate commit msg.
+
+    Note: I think we might have similar code elsewhere, ideally reconcile.
+    """
+    if len(msg) > 77:
+        return msg[:75] + ".."
+
+    return msg
+
+
 @no_type_check
 def _source(
     samples: List[HistorySample],
@@ -263,11 +275,9 @@ def _source(
     alert_max=False,
     break_line_indexes: Optional[List[int]] = None,
 ):
-    # TODO: These commit message prefixes end up in the on-hover tooltip.
-    # Change this to use short commit hashes. The long commit message prefix
-    # does not unambiguously specify the commit. Ideally link to the commit, in
-    # the tooltip?
-    commit_messages = [s.commit_msg for s in samples]
+    # These commit message prefixes end up (among others) in the on-hover
+    # tooltip in the history plot.
+    commit_messages = [_truncate_commit_msg(s.commit_msg) for s in samples]
 
     # The `timestamp` property corresponds to the UTC-local commit time
     # (example value: 2022-03-03T19:48:06). That is, each string is ISO 8601
@@ -314,6 +324,8 @@ def _source(
 
     values_with_unit: List[str] = [fmt_number_and_unit(x, unit) for x in values_to_plot]
 
+    # This structure is after all available in a JavaScript hook, search for
+    # cb_data.source.data.
     dsdict = {
         "x": datetimes,
         # Note(JP): maybe rename `points` into `y_values_for_plotting`
@@ -330,6 +342,8 @@ def _source(
         ],
         # Stringified values (truncated, with unit, for on-hover)
         "values_with_unit": values_with_unit,
+        # Explicit structure for hover
+        "commit_msgs_for_hover": commit_messages,
     }
 
     multisample, _ = _inspect_for_multisample(samples)
@@ -833,6 +847,7 @@ def time_series_plot(
             tooltips=[
                 ("commit date", "$x{%F}"),
                 ("value", "@values_with_unit"),
+                ("commit msg", "@commit_msgs_for_hover"),
             ],
             formatters={"$x": "datetime"},
             renderers=hover_renderers,
