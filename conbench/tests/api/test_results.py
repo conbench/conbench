@@ -1196,3 +1196,39 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
 
         if len(samples) < 3:
             assert bmrdict["stats"][uekey] is None
+
+    def test_create_result_bad_unit(self, client):
+        self.authenticate(client)
+        result = _fixtures.VALID_RESULT_PAYLOAD.copy()
+
+        result["stats"] = {
+            "data": (3, 5),
+            "times": [],  # key must be there as of now, validate more, change this.
+            "unit": "kg",
+            "time_unit": "foobar",
+            # also see https://github.com/conbench/conbench/issues/813
+            # https://github.com/conbench/conbench/issues/533
+            "iterations": 2,  # number not yet validated, change this
+        }
+
+        resp = client.post("/api/benchmark-results/", json=result)
+        assert resp.status_code == 400, resp.text
+        assert "invalid unit string `kg`" in resp.text
+
+    def test_special_unit_b_s(self, client):
+        self.authenticate(client)
+        result = _fixtures.VALID_RESULT_PAYLOAD.copy()
+
+        result["stats"] = {
+            "data": (3, 5),
+            "times": [],  # key must be there as of now, validate more, change this.
+            "unit": "b/s",  # means B/s, is rewritten
+            "time_unit": "foobar",
+            # also see https://github.com/conbench/conbench/issues/813
+            # https://github.com/conbench/conbench/issues/533
+            "iterations": 2,  # number not yet validated, change this
+        }
+
+        resp = client.post("/api/benchmark-results/", json=result)
+        assert resp.status_code == 201, resp.text
+        assert resp.json["stats"]["unit"] == "B/s", resp.json
