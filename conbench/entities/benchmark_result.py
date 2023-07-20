@@ -16,6 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, relationship
 
+import conbench.units
 import conbench.util
 from conbench.dbsession import current_session
 from conbench.numstr import numstr
@@ -598,12 +599,39 @@ def ui_mean_and_uncertainty(values: List[float], unit: str) -> str:
     return f"({mean_uncertainty_str}) {unit}"
 
 
+def validate_augment_unit_string(u: str) -> str:
+    """
+    Raise BenchmarkResultValidationError for invalid unit string.
+
+    Return augmented unit string, to be inserted into database.
+    """
+    if u == "b/s":
+        # Rewrite short variant here for a legacy client, see
+        # https://github.com/conbench/conbench/issues/1335
+        # We might need/want to do a database migration where we rewrite
+        # b/s to B/s.
+        u = "B/s"
+
+    if u not in conbench.units.KNOWN_UNITS:
+        raise BenchmarkResultValidationError(
+            f"invalid unit string `{u}`, pick one of: {conbench.units.KNOWN_UNIT_SYMBOLS_STR}"
+        )
+
+    return u
+
+
 def validate_and_aggregate_samples(stats_usergiven: Any):
     """
     Raises BenchmarkResultValidationError upon logical inconsistencies.
 
+    `stats_usergiven` is deserialized JSON, validated against
+    `BenchmarkResultStatsSchema(marshmallow.Schema)`.
+
     Only run this for the 'success' case, i.e. when the input is a list longer
     than zero, and each item is a number (not math.nan).
+
+    Validate the user-given unit string also only in case of success, i.e.
+    allow for 'bad units' to be submitted with 'errored' results.
 
     This returns a dictionary with key/value pairs meant for DB insertion,
     top-level for BenchmarkResult.
@@ -625,6 +653,10 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     # First copy the entire stats data structure (this includes times, data,
     # mean, min, ...). Later: selectively overwrite/augment.
     result_data_for_db = stats_usergiven.copy()
+
+    result_data_for_db["unit"] = validate_augment_unit_string(
+        result_data_for_db["unit"]
+    )
 
     # And because numbers might have been provided as strings, make sure to
     # normalize to List[float] here.
