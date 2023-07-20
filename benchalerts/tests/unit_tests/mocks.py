@@ -27,6 +27,10 @@ response_dir = pathlib.Path(__file__).parent / "mocked_responses"
 
 
 class MockResponse(requests.Response):
+    """Construct a mocked requests.Response object by reading a specially-formatted
+    JSON file.
+    """
+
     def __init__(self, status_code, data=None):
         super().__init__()
         self.status_code = status_code
@@ -41,6 +45,22 @@ class MockResponse(requests.Response):
 
 
 class MockAdapter(HTTPAdapter):
+    """Mount this adapter to a requests session to intercept all requests and
+    return mocked responses, constructed from JSON files.
+
+    All JSON files are in the tests/unit_tests/mocked_responses/ directory. The first
+    part of the filename is the HTTP method, the second is a key referring to a certain
+    base URL, and the rest is the path of the request URL, with special characters
+    replaced by underscores. Examples:
+
+    - GET https://conbench.biz/api/runs/?sha=abc -> GET_conbench_runs_sha_abc.json
+    - POST https://api.github.com/repos/some/repo/issues/1/comments ->
+        POST_github_issues_1_comments.json
+
+    This is intended to intercept ALL requests, and will raise an exception if the
+    request does not match any JSON file following the above format.
+    """
+
     @staticmethod
     def clean_base_url(url: str) -> str:
         bases = {
@@ -85,11 +105,20 @@ class MockAdapter(HTTPAdapter):
 
 
 class MockConbenchClient(ConbenchClient):
+    """A ConbenchClient that uses MockAdapter to intercept all requests and return
+    mocked responses, constructed from JSON files.
+    """
+
     def __init__(self):
         super().__init__()
         self.session.mount("https://", MockAdapter())
 
     def _login_or_raise(self) -> None:
+        # Since we mock all requests, logging in won't change any state, so let's skip
+        # logging in. Logging in should be tested in the benchclients library already.
+        #
+        # (Also, as of this comment, the parent method sets up a new requests session,
+        # which would mean we'd lose our MockAdapter.)
         pass
 
 
