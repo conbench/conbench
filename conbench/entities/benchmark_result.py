@@ -912,19 +912,28 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
             # present?
             "description": conbench.util.dedent_rejoin(
                 """
-                A list of benchmark results (e.g. durations, throughput). This
-                will be used as the main + only metric for regression and
-                improvement. The values should be ordered in the order the
-                iterations were executed (the first element is the first
-                iteration, the second element is the second iteration, etc.).
-                If an iteration did not complete but others did and you want to
-                send partial data, mark each iteration that didn't complete as
-                `null`.
+                A list of measurement results (e.g. duration, throughput).
 
-                You may populate both this field and the "error" field in the top level
-                of the benchmark result payload. In that case, this field measures
-                the metric's values before the error occurred. These values will not be
-                compared to non-errored values in analyses and comparisons.
+                Each value in this list is meant to correspond to one
+                repetition of ideally the exact same measurement.
+
+                We recommend to repeat a measurement N times (3-6) for enabling
+                systematic stability analysis.
+
+                Values are expected to be ordered in the order the
+                iterations/repetitions were executed (the first element
+                corresponds to the first repetition, the second element is the
+                second repetition, etc.).
+
+                Values must be numeric or `null`: if one repetition failed but
+                others did not you can mark the failed repetition as `null`.
+
+                Note that you may populate both this field and the "error"
+                field in the top level of the benchmark result payload.
+
+                If any of the values in `data` is `null` or if the `error`
+                field is set then Conbench will not include any of the reported
+                data in automated analyses.
                 """
             )
         },
@@ -957,7 +966,9 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
         # strings are/were allowed to be injected. TODO: be more strict.
         # Require users to provide a unit (non-zero length string)./
         required=True,
-        metadata={"description": "The unit of the data object (e.g. seconds, B/s)"},
+        metadata={
+            "description": "The unit of the measurement result (object (e.g. seconds, B/s)"
+        },
     )
     time_unit = marshmallow.fields.String(
         required=True,
