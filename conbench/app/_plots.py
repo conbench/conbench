@@ -276,7 +276,7 @@ def _source(
     break_line_indexes: Optional[List[int]] = None,
 ):
     # These commit message prefixes end up (among others) in the on-hover
-    # tooltip in the history plot. Truncate further?
+    # tooltip in the history plot.
     commit_messages = [_truncate_commit_msg(s.commit_msg) for s in samples]
 
     # The `timestamp` property corresponds to the UTC-local commit time
