@@ -70,6 +70,8 @@ def set_display_time(benchmark):
 
 def set_display_mean(benchmark):
     """
+    this needs to go away. :)
+
     Unclear in which context this is being consumed: where is this displayed?
     Does it make sense to limit this to a certain number of significant digits?
 
@@ -86,6 +88,8 @@ def set_display_mean(benchmark):
     unit = benchmark["stats"]["unit"]
     mean = float(benchmark["stats"]["mean"])
     benchmark["display_mean"] = f"{numstr(mean, sigfigs=4)} {unit}"
+    # for html5 data order attr
+    benchmark["mean_value"] = mean
 
 
 def set_display_error(benchmark):
