@@ -112,7 +112,8 @@ class TimeSeriesPlotMixin:
                     "you asked to highlight the benchmark result with ID "
                     f"<kbd>{highlight_other_result.bmrid}</kbd> in this view. "
                     "However, that result is not part of the history of the "
-                    f"result <kbd>{current_benchmark_result.id}</kbd>",
+                    f"result <kbd>{current_benchmark_result.id}</kbd>. The "
+                    "two results are not directly comparable.",
                 )
             highlight_other = (
                 s_by_id[highlight_other_result.bmrid],

@@ -1,10 +1,11 @@
 {% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
-  <h4>
-    <strong>{{ benchmark.display_bmname }}</strong> / result {{ result.id }}
-  </h4>
-  <span class="fs-5"><code>{{ benchmark.display_case_perm }}</code></span>
+  {{ utils.view_entity_title("benchmark result",  result.id) }}
+  <div>
+    <strong>{{ benchmark.display_bmname }}</strong> /
+    <code>{{ benchmark.display_case_perm }}</code>
+  </div>
   <div class="row">
     <div class="col-md-3 mt-3 p-3">
       <h4>summary</h4>
