@@ -30,16 +30,10 @@ matching fields between baseline and contender are aligned and mismatched fields
   {% endif %}
 {% endmacro %}
 {% block app_content %}
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item active">Compare</li>
-      <li class="breadcrumb-item active" aria-current="page">
-        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline_id) }}">baseline result</a>
-        ...
-        <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender_id) }}">contender result</a>
-      </li>
-    </ol>
-  </nav>
+
+{{ utils.view_entity_title("comparing two results", "") }}
+
+
   <div class="row">
     <div class="col-md-6">
       <!-- what kind of plot is this supposed to be, especially given that
