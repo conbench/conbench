@@ -1,7 +1,7 @@
 {% extends "app.html" %}
 {% block app_content %}
   <h1>CI runs</h1>
-  <div class="mt-4">
+  <div class="mt-3">
     {% for reponame, runobjs in repo_runs_map.items() %}
       <div class="row mb-5">
         <h4>

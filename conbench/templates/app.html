@@ -1,3 +1,4 @@
+{% import "utils.jinja" as utils %}
 {% block doc -%}
   <!DOCTYPE html>
   <html lang="en">
@@ -103,7 +104,7 @@
             </div>
           {% endblock %}
           {% block content %}
-            <div class="container mt-5">
+            <div class="container mt-4">
               <!-- https://flask.palletsprojects.com/en/2.2.x/patterns/flashing/#flashing-with-categories -->
               {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
