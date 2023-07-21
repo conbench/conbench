@@ -274,6 +274,7 @@ def _source(
     alert_min=False,
     alert_max=False,
     break_line_indexes: Optional[List[int]] = None,
+    reference_benchmark_result: Optional[BenchmarkResult] = None,
 ):
     # These commit message prefixes end up (among others) in the on-hover
     # tooltip in the history plot.
@@ -345,6 +346,12 @@ def _source(
         # Explicit structure for hover
         "commit_msgs_for_hover": commit_messages,
     }
+
+    if reference_benchmark_result:
+        dsdict["rel_resresrmp_urls"] = [
+            f"/compare/benchmark-results/{reference_benchmark_result.id}...{s.benchmark_result_id}"
+            for s in samples
+        ]
 
     multisample, _ = _inspect_for_multisample(samples)
     if multisample:
@@ -463,7 +470,20 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
         code=f"""
 
         const i = cb_data.source.selected.indices[0];
-        const run_report_relurl = cb_data.source.data['relative_benchmark_urls'][i];
+        const url_bmr = cb_data.source.data['relative_benchmark_urls'][i];
+
+        var url_resrescmp = "#";
+        var url_resrescmp_title = "n/a";
+
+        if (cb_data.source.data['rel_resresrmp_urls'] !== undefined) {{
+            url_resrescmp = cb_data.source.data['rel_resresrmp_urls'][i];
+            url_resrescmp_title = "compare"
+        }}
+
+        //const url_resrescmp =
+        //const url_resrescmp = "foo";
+        console.log(url_resrescmp);
+
         const run_date_string = cb_data.source.data['date_strings'][i];
         // Remove first character, the hashtag
         const run_commit_hash_short = cb_data.source.data['commit_hashes_short'][i].substring(1);
@@ -495,8 +515,8 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
 
         // TODO? show run timestamp, not only commit timestamp.
         var newHtml = \
-            '<li>Result view: <a href="' + run_report_relurl + '">' + run_report_relurl + '</a></li>' +
-            '<li>Compare view (current and selected result): TODO' + "</li>" +
+            '<li>Result view: <a href="' + url_bmr + '">' + url_bmr + '</a></li>' +
+            '<li>Compare view (current and selected result):  <a href="' + url_resrescmp + '">' + url_resrescmp_title + '</a>' + "</li>" +
             '<li>Commit: ' + commit_repo_string + '</li>' +
             '<li>Commit message (truncated): ' + run_commit_msg_pfx + '</li>' +
             "<li>Commit timestamp: " + run_date_string + "</li>" +
@@ -555,9 +575,16 @@ def time_series_plot(
 
     # Note(JP): `samples` is an ordered list of dicts, each dict has a `mean`
     # key which is extracted here by default.
-    source_mean_over_time = _source(inliers, unit)
+    source_mean_over_time = _source(
+        inliers,
+        unit,
+    )
     source_outlier_mean_over_time = _source(outliers, unit)
-    source_unfiltered_mean_over_time = _source(samples, unit)
+    source_unfiltered_mean_over_time = _source(
+        samples,
+        unit,
+        reference_benchmark_result=current_benchmark_result,
+    )
 
     source_min_over_time = bokeh.models.ColumnDataSource(
         data=dict(
