@@ -887,6 +887,12 @@ def time_series_plot(
     p.legend.location = "top_left"
     p.legend.label_text_font_size = "12px"
 
+    # y range should not go into the negative, but it should also not
+    # always start at 0. Inspect `source_rolling_alert_min_over_time` which
+    # should conceptually hold the minimal value across all sources.
+    if min(source_rolling_alert_min_over_time.data["y"]) < 0:
+        p.y_range.start = 0  # type: ignore
+
     # Change the number of expected/desired date x ticks. There is otherwise
     # only very few of them (like 4). Also see
     # https://github.com/bokeh/bokeh/issues/665 and
