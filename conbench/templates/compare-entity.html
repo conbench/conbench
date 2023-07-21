@@ -73,6 +73,8 @@ matching fields between baseline and contender are aligned and mismatched fields
         <ul class="list-group">
           <li class="list-group-item list-group-item-secondary">overview</li>
           <li class="list-group-item" style="overflow-y: auto;">
+            <b>time of benchmark</b>
+            <div align="right" style="display:inline-block; float: right;">{{ baseline.display_timestamp }}</div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
             <b>submitted as part of CI run</b>
@@ -144,11 +146,6 @@ matching fields between baseline and contender are aligned and mismatched fields
               <div align="right" style="display:inline-block; float: right;">{{ baseline_run.hardware.name }}</div>
             </li>
           {% endif %}
-          <li class="list-group-item active">Result</li>
-          <li class="list-group-item" style="overflow-y: auto;">
-            <b>timestamp</b>
-            <div align="right" style="display:inline-block; float: right;">{{ baseline.display_timestamp }}</div>
-          </li>
           {% for k,v in baseline.stats.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
@@ -165,6 +162,8 @@ matching fields between baseline and contender are aligned and mismatched fields
         <ul class="list-group">
           <li class="list-group-item list-group-item-secondary">overview</li>
           <li class="list-group-item" style="overflow-y: auto;">
+            <b>time of benchmark</b>
+            <div align="right" style="display:inline-block; float: right;">{{ contender.display_timestamp }}</div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
             <b>submitted as part of CI run</b>
@@ -236,11 +235,6 @@ matching fields between baseline and contender are aligned and mismatched fields
               <div align="right" style="display:inline-block; float: right;">{{ contender_run.hardware.name }}</div>
             </li>
           {% endif %}
-          <li class="list-group-item active">Result</li>
-          <li class="list-group-item" style="overflow-y: auto;">
-            <b>timestamp</b>
-            <div align="right" style="display:inline-block; float: right;">{{ contender.display_timestamp }}</div>
-          </li>
           {% for k,v in contender.stats.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
