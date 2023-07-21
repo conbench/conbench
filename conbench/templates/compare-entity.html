@@ -146,11 +146,14 @@ matching fields between baseline and contender are aligned and mismatched fields
               <div align="right" style="display:inline-block; float: right;">{{ baseline_run.hardware.name }}</div>
             </li>
           {% endif %}
+          <li class="list-group-item list-group-item-secondary">measurement result</li>
           {% for k,v in baseline.stats.items() %}
+            {% if v is not none %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
-              {% if v is not none %}<div align="right" style="display:inline-block; float: right;">{{ v }}</div>{% endif %}
+              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
             </li>
+            {% endif %}
           {% endfor %}
           {{ sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display=baseline, run_to_display=baseline_run) }}
         </ul>
@@ -235,11 +238,14 @@ matching fields between baseline and contender are aligned and mismatched fields
               <div align="right" style="display:inline-block; float: right;">{{ contender_run.hardware.name }}</div>
             </li>
           {% endif %}
+          <li class="list-group-item list-group-item-secondary">measurement result</li>
           {% for k,v in contender.stats.items() %}
+            {% if v is not none %}
             <li class="list-group-item" style="overflow-y: auto;">
               <b>{{ k }}</b>
-              {% if v is not none %}<div align="right" style="display:inline-block; float: right;">{{ v }}</div>{% endif %}
+              <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
             </li>
+            {% endif %}
           {% endfor %}
           {{ sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display=contender, run_to_display=contender_run) }}
         </ul>
