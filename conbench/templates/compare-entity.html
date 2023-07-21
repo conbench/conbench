@@ -49,10 +49,22 @@ matching fields between baseline and contender are aligned and mismatched fields
         let's maybe re-activate it when we understand its value better.
       -->
   </div>
-  <div align="center">{{ baseline.display_bmname }}, {{ baseline.display_case_perm }}</div>
-  <div id="plot-history-0" align="center"></div>
-  <br />
-  <div class="row">
+  <h4>historical context</h4>
+
+
+  {% if benchmark_result_history_plot_info.reason_why_no_plot %}
+    <p>Cannot display history plot: {{benchmark_result_history_plot_info.reason_why_no_plot | safe }}</p>
+  {% else %}
+
+    Both results have been obtained for <span>
+      <strong>{{ baseline.display_bmname }}</strong> /
+      <code>{{ baseline.display_case_perm }}</code>
+    </span>; the following plot highlights both of them in context of other directly comparable results:
+    <div id="plot-history-0" align="center"></div>
+  {% endif %}
+
+
+
     {% if baseline %}
       <div class="col-md-6">
         <ul class="list-group">
