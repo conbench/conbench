@@ -89,7 +89,7 @@
               </td>
               <td class="font-monospace">{{ result.display_case_perm }}</td>
               <!--<td class="font-monospace">n/a</td>-->
-              <td class="font-monospace">
+              <td class="font-monospace" data-order="{{ result.mean_value }}">
                 {% if result.error %}
                   <i class="bi bi-exclamation-circle text-danger"
                      data-toggle="tooltip"
