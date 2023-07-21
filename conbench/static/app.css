@@ -36,7 +36,6 @@ select:focus {
 
 .c-bench-landing div.card a:hover {
   font-weight: bold;
-
 }
 
 /*
@@ -130,8 +129,24 @@ table.c-bench-caseperm-table th {
 }
 
 
+div.cb-title h1 {
+  /* reduce default mb*/
+  margin-bottom: 0.1rem;
+}
+
+div.cb-title div.cb-subtitle {
+  /* fine-tune alignment*/
+  margin-left: 3px;
+}
+
+div.cb-title hr {
+  color: #812570;
+  border-top: 1px solid;
+
+}
+
 div.cb-run-details-panel {
-  background-color: #00505033;
+  background-color: #00505019;
   padding: 15px;
 
 }
