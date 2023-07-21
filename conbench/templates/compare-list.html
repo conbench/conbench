@@ -1,7 +1,6 @@
 {% extends "app.html" %}
 {% block app_content %}
-{{ utils.view_entity_title("comparing result sets", "") }}
-
+  {{ utils.view_entity_title("comparing result sets", "") }}
   {% if baseline_run and contender_run %}
     <div class="row row-cols-md-2 g-4 mb-2">
       <div class="col">

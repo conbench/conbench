@@ -1,7 +1,7 @@
 {% extends "app.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 {% block app_content %}
-{{ utils.view_entity_title("benchmark result",  result.id) }}
+  {{ utils.view_entity_title("benchmark result",  result.id) }}
   <div>
     <strong>{{ benchmark.display_bmname }}</strong> /
     <code>{{ benchmark.display_case_perm }}</code>
