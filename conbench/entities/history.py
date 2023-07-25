@@ -126,6 +126,12 @@ class HistorySample:
         # Rename SVS for clarity for external consumption.
         d["single_value_summary"] = d.pop("svs")
         d["single_value_summary_type"] = d.pop("svs_type")
+
+        # Remove new props for now (needs test suite adjustment, and so far
+        # usage of new props is internal).
+        d.pop("ts_fingerprint")
+        d.pop("benchmark_name")
+        d.pop("case_text_id")
         return d
 
 

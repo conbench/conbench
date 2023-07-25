@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Callable
+from typing import Callable, cast
 
 import numpy as np
 import pandas as pd
@@ -8,6 +8,7 @@ import sigfig
 import sqlalchemy as s
 
 from ...db import _session as Session
+from conbench.types import TBenchmarkName
 from ...entities.commit import Commit
 from ...entities.history import (
     _detect_shifts_with_trimmed_estimators,
@@ -155,6 +156,7 @@ def test_get_history():
         }
 
         actual_history = get_history_for_cchr(
+            cast(TBenchmarkName, str(benchmark_result.case.name)),
             benchmark_result.case_id,
             benchmark_result.context_id,
             benchmark_result.run.hardware.hash,
