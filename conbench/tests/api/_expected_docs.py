@@ -1661,6 +1661,25 @@
                 "tags": ["Hardware"],
             }
         },
+        "/api/history/download/{benchmark_result_id}/": {
+            "get": {
+                "description": "Download time series",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "benchmark_result_id",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "responses": {
+                    "200": {"$ref": "#/components/responses/HistoryList"},
+                    "401": {"$ref": "#/components/responses/401"},
+                    "404": {"$ref": "#/components/responses/404"},
+                },
+                "tags": ["History"],
+            }
+        },
         "/api/history/{benchmark_result_id}/": {
             "get": {
                 "description": "Get benchmark history.",
