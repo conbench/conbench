@@ -266,7 +266,7 @@ def _fetch_and_cache_most_recent_results_guts(
         # A textual representation of the case permutation. As it is 'complete'
         # it should also work as a proper identifier (like primary key).
         casedict = result.case.to_dict()
-        case_text_id = " ".join(get_case_kvpair_strings(casedict))
+        case_text_id = result.case.text_id
 
         bmr = BMRTBenchmarkResult(
             id=str(result.id),
