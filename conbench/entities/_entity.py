@@ -134,8 +134,8 @@ class EntityMixin(Generic[T]):
     def one(cls, **kwargs):
         try:
             return current_session.query(cls).filter_by(**kwargs).one()
-        except NoResultFound:
-            raise NotFound()
+        except NoResultFound as exc:
+            raise NotFound from exc
 
     @classmethod
     def first(cls, **kwargs):
