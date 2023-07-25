@@ -6,7 +6,7 @@ import threading
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, NewType, Tuple, TypedDict, cast
+from typing import Dict, List, Tuple, TypedDict, cast
 
 import pandas as pd
 import sqlalchemy
@@ -21,7 +21,7 @@ from conbench.entities.benchmark_result import (
     ui_mean_and_uncertainty,
     ui_rel_sem,
 )
-from conbench.hacks import get_case_kvpair_strings
+from conbench.types import TBenchmarkName
 
 # A memory profiler, and a CPU profiler that are both tested to work well
 # with the process/threading model used here.
@@ -102,9 +102,6 @@ class BMRTBenchmarkResult:
             datetime.fromtimestamp(self.started_at)
         )
 
-
-# Do this for case ID, etc, too.
-TBenchmarkName = NewType("TBenchmarkName", str)
 
 # This type is used often. It's the famous 4-tuple defining a timeseries. Or
 # maybe turn this into a namedtuple or sth like this. Watch out a bit for mem

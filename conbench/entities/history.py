@@ -12,6 +12,7 @@ import pandas as pd
 import sqlalchemy as s
 
 from conbench.dbsession import current_session
+from conbench.types import TBenchmarkName
 
 from ..config import Config
 from ..entities.benchmark_result import BenchmarkResult
