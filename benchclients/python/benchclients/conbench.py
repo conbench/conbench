@@ -49,8 +49,10 @@ class ConbenchClient(RetryingHTTPClient):
     # https://github.com/conbench/conbench/issues/806. One such
     # context-specific timeout constant is for a login request, see below.
     # Note: for now, this `timeout_long_running_requests` timeout constant
-    # applies to all requests unless specified otherwise.
-    timeout_long_running_requests = (3.5, 120)
+    # applies to all requests unless specified otherwise. This should be
+    # aligned with other timeout constants:
+    # https://github.com/conbench/conbench/issues/1384
+    timeout_long_running_requests = (3.5, 150)
 
     timeout_login_request = (3.5, 10)
 
