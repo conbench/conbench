@@ -2,16 +2,18 @@ import copy
 import dataclasses
 import datetime
 import decimal
+import hashlib
 import logging
 import math
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
 import sqlalchemy as s
 
 from conbench.dbsession import current_session
+from conbench.types import TBenchmarkName
 
 from ..config import Config
 from ..entities.benchmark_result import BenchmarkResult
@@ -65,9 +67,16 @@ class HistorySampleZscoreStats:
     is_outlier: bool
 
 
+# It stands to reason that we should move away from HistorySample to
+# BMRTBenchmarkResult -- it's the ~third iteration for this kind of thing, and
+# I think BMRTBenchmarkResult has nicer/more complete logic, better interface.
+# E.g. `data` -> result.measurements.
 @dataclasses.dataclass
 class HistorySample:
     benchmark_result_id: str
+    benchmark_name: TBenchmarkName
+    ts_fingerprint: str
+    case_text_id: str
     case_id: str
     context_id: str
     # Is this `mean` really optional? When would this be None? this is
@@ -117,6 +126,12 @@ class HistorySample:
         # Rename SVS for clarity for external consumption.
         d["single_value_summary"] = d.pop("svs")
         d["single_value_summary_type"] = d.pop("svs_type")
+
+        # Remove new props for now (needs test suite adjustment, and so far
+        # usage of new props is internal).
+        d.pop("ts_fingerprint")
+        d.pop("benchmark_name")
+        d.pop("case_text_id")
         return d
 
 
@@ -125,9 +140,11 @@ def get_history_for_benchmark(benchmark_result_id: str) -> List[HistorySample]:
     # input benchmark result ID. This database lookup may raise the `NotFound`
     # exception.
 
-    benchmark_result: BenchmarkResult = BenchmarkResult.one(id=benchmark_result_id)
+    result: BenchmarkResult = BenchmarkResult.one(id=benchmark_result_id)
 
-    if benchmark_result.run.commit is None:
+    benchmark_name = cast(TBenchmarkName, str(result.case.name))
+
+    if result.run.commit is None:
         # Alternatively, raise an exception here -- allowing to inform the
         # user that conceptually there will never be history for this
         # benchmark result, because it's not associated with repo/commit
@@ -135,15 +152,22 @@ def get_history_for_benchmark(benchmark_result_id: str) -> List[HistorySample]:
         return []
 
     return get_history_for_cchr(
-        benchmark_result.case_id,
-        benchmark_result.context_id,
-        benchmark_result.run.hardware.hash,
-        benchmark_result.run.commit.repository,
+        # this is technically represented in "case", but we want to explicitly
+        # store the benchmark name on the resulting objects
+        benchmark_name,
+        result.case_id,
+        result.context_id,
+        result.run.hardware.hash,
+        result.run.commit.repository,
     )
 
 
 def get_history_for_cchr(
-    case_id: str, context_id: str, hardware_hash: str, repo_url: str
+    benchmark_name: TBenchmarkName,
+    case_id: str,
+    context_id: str,
+    hardware_hash: str,
+    repo_url: str,
 ) -> List[HistorySample]:
     """
     Given a case/context/hardware/repo, return all non-errored BenchmarkResults
@@ -161,6 +185,18 @@ def get_history_for_cchr(
     # string for example (there may be stray "no context" objects in the
     # database that have the repo set to an empty string, i.e. the filter for
     # repo=="" might even yield something).
+
+    # The goal here is to have an identifier that represents a timeseries (as
+    # opposed to a single result). We may want to first-class this general
+    # idea. Also see https://github.com/conbench/conbench/issues/862. This
+    # fingerprint hashing approach has / will have similarities to Prometheus
+    # Fingerprint/FastFingerprint. Let's think about likelihood for collisions,
+    # and if there can be a fallout at all.
+    ts_fingerprint = hashlib.md5(
+        (benchmark_name + case_id + context_id + hardware_hash + repo_url).encode(
+            "utf-8"
+        )
+    ).hexdigest()
 
     history = (
         current_session.query(
@@ -238,7 +274,10 @@ def get_history_for_cchr(
         samples.append(
             HistorySample(
                 benchmark_result_id=sample.benchmark_result_id,
+                benchmark_name=benchmark_name,
+                ts_fingerprint=ts_fingerprint,
                 case_id=result.case_id,
+                case_text_id=result.case.text_id,
                 context_id=result.context_id,
                 # Keep exposing the `mean` property like before. This was meant
                 # to be the single value summary, guaranteed to have a value
@@ -440,6 +479,11 @@ def execute_history_query_get_dataframe(statement) -> Tuple[pd.DataFrame, Dict]:
     Think: this function returns a timeseries: one BenchmarkResult(+additional
     info) per point in time, and the `BenchmarkResult(+additional info)` is
     spread across two objects.
+
+    Note(JP): I once understood this but now I wonder: is this generating
+    a dataframe for one meaningful timeseries (for one ts_fingerprint) or
+    does this contain rows for various different timeseries (hence grouping
+    would be necessary later on when further processing this)?
 
     Previously, we did
 

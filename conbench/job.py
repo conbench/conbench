@@ -6,7 +6,7 @@ import threading
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, NewType, Tuple, TypedDict, cast
+from typing import Dict, List, Tuple, TypedDict, cast
 
 import pandas as pd
 import sqlalchemy
@@ -21,7 +21,7 @@ from conbench.entities.benchmark_result import (
     ui_mean_and_uncertainty,
     ui_rel_sem,
 )
-from conbench.hacks import get_case_kvpair_strings
+from conbench.types import TBenchmarkName
 
 # A memory profiler, and a CPU profiler that are both tested to work well
 # with the process/threading model used here.
@@ -102,9 +102,6 @@ class BMRTBenchmarkResult:
             datetime.fromtimestamp(self.started_at)
         )
 
-
-# Do this for case ID, etc, too.
-TBenchmarkName = NewType("TBenchmarkName", str)
 
 # This type is used often. It's the famous 4-tuple defining a timeseries. Or
 # maybe turn this into a namedtuple or sth like this. Watch out a bit for mem
@@ -266,7 +263,7 @@ def _fetch_and_cache_most_recent_results_guts(
         # A textual representation of the case permutation. As it is 'complete'
         # it should also work as a proper identifier (like primary key).
         casedict = result.case.to_dict()
-        case_text_id = " ".join(get_case_kvpair_strings(casedict))
+        case_text_id = result.case.text_id
 
         bmr = BMRTBenchmarkResult(
             id=str(result.id),
@@ -365,7 +362,7 @@ def _fetch_and_cache_most_recent_results_guts(
 
 def _periodically_fetch_last_n_benchmark_results() -> None:
     """
-    Immediately return after having spawned a thread triggers periodic action.
+    Return right after having spawned a thread that triggers periodic action.
     """
     first_sleep_seconds = 3
     min_delay_between_runs_seconds = 120
@@ -408,10 +405,9 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
 
             last_call_duration_s = time.monotonic() - t0
 
-            # Generally we want to spent the majority of the time _not_ doing
-            # this thing here. So, if the last iteration lasted for e.g. ~60
-            # seconds, then keep waiting for ~five minutes until triggering the
-            # next run.
+            # Goal: spend the majority of the time _not_ doing this thing here.
+            # So, if the last iteration lasted for e.g. ~60 seconds, then keep
+            # waiting for ~five minutes until triggering the next run.
             delay_s = max(min_delay_between_runs_seconds, 5 * last_call_duration_s)
             log.info("BMRT cache: trigger next fetch in %.3f s", delay_s)
 
@@ -440,7 +436,7 @@ def _generate_tsdf_per_4tuple(
 
     for bname, results in by_name_dict.items():
         # The magic time series 4-tuple is
-        # bname, caseid, hwchecksum, ctxid
+        # bname, caseid, hwchecksum, ctxid (plus repo, i.e. 5 tuple)
         by_ts_tuple: Dict[Tuple, List[BMRTBenchmarkResult]] = defaultdict(list)
         for r in results:
             by_ts_tuple[(r.case_id, r.context_id, r.hardware_checksum)].append(r)

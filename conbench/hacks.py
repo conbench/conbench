@@ -6,7 +6,7 @@ from conbench.entities.benchmark_result import BenchmarkResult
 log = logging.getLogger(__name__)
 
 
-def get_case_kvpair_strings(tags: Dict[str, str]) -> List[str]:
+def _get_case_kvpair_strings(tags: Dict[str, str]) -> List[str]:
     """
     Build and and return a sorted list of strings, each item reflecting a
     (label/tag) key/value pair, all of which together define the "case
@@ -66,7 +66,7 @@ def set_display_case_permutation(bmresult: Dict | BenchmarkResult):
         if "name" not in tags:
             log.warning("dict bm result w/o name in tags")
 
-    caseperm_string_chunks = get_case_kvpair_strings(tags)
+    caseperm_string_chunks = _get_case_kvpair_strings(tags)
 
     result = ", ".join(caseperm_string_chunks)
     if len(caseperm_string_chunks) == 0:
@@ -110,7 +110,7 @@ def sorted_data(benchmarks):
             continue
 
         tags = benchmark["tags"]
-        case = get_case_kvpair_strings(tags)
+        case = _get_case_kvpair_strings(tags)
         case.append(benchmark["stats"]["mean"])
         data.append(case)
 

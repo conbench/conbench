@@ -14,6 +14,7 @@ from conbench.api.history import get_history_for_benchmark
 from conbench.entities.benchmark_result import BenchmarkResult
 from conbench.entities.history import HistorySample, HistorySampleZscoreStats
 from conbench.numstr import numstr
+from conbench.types import TBenchmarkName
 
 from ..hacks import sorted_data
 from .types import BokehPlotJSONOrError, HighlightInHistPlot
@@ -924,6 +925,9 @@ def get_source_for_single_benchmark_result(current_benchmark_result, cur_run, un
 
     dummy_hs_for_current_svs = HistorySample(
         mean=current_benchmark_result.mean,
+        benchmark_name=TBenchmarkName("dummy"),
+        ts_fingerprint="dummy",
+        case_text_id="dummy",
         svs=current_benchmark_result.svs,
         svs_type=current_benchmark_result.svs_type,
         commit_msg=cur_run["commit"]["message"],
