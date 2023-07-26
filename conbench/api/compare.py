@@ -2,6 +2,7 @@ import collections
 import logging
 import math
 import threading
+from contextlib import contextmanager
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 import flask as f
@@ -12,6 +13,7 @@ from conbench.numstr import numstr
 
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
+from ..api._resp import resp429
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.history import _less_is_better, set_z_scores
 from ..hacks import set_display_benchmark_name, set_display_case_permutation
@@ -31,6 +33,20 @@ DEFAULT_Z_SCORE_THRESHOLD = 5.0
 # In those contexts, it makes sense to apply large HTTP request timeout
 # constants.
 _semaphore_compare_get = threading.BoundedSemaphore(1)
+
+
+@contextmanager
+def _sem_acquire(sem: threading.BoundedSemaphore, timeout: float):
+    """
+    The stdlib-provided context manager does not allow for setting a timeout.
+    Build our own context manager that.
+    """
+    acquired = sem.acquire(timeout=timeout)
+    try:
+        yield acquired
+    finally:
+        if acquired:
+            sem.release()
 
 
 def _parse_two_ids_or_abort(compare_ids: str) -> Tuple[str, str]:
@@ -317,8 +333,11 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
         # Note(JP): a threading.BoundedSemaphore acquired and released with a
         # context manager. Assumes the web application to be deployed in a
         # model with N request-handling threads per process.
-        with _semaphore_compare_get:
-            return self._get(compare_ids)
+        with _sem_acquire(_semaphore_compare_get, 0.1) as acquired:
+            if acquired:
+                return self._get(compare_ids)
+
+            return resp429("doing other /compare work, retry soon")
 
     def _get(self, compare_ids: str) -> f.Response:
         baseline_result_id, contender_result_id = _parse_two_ids_or_abort(compare_ids)
@@ -469,9 +488,12 @@ class CompareRunsAPI(ApiEndpoint):
         """
         # Note(JP): a threading.BoundedSemaphore acquired and released with a
         # context manager. Assumes the web application to be deployed in a
-        # model with N request-handling threads per process.
-        with _semaphore_compare_get:
-            return self._get(compare_ids)
+        # model with N request-handling threads per process. Wait in line for
+        # a small number of seconds
+        with _sem_acquire(_semaphore_compare_get, 0.1) as acquired:
+            if acquired:
+                return self._get(compare_ids)
+            return resp429("doing other /compare work, retry soon")
 
     def _get(self, compare_ids: str) -> f.Response:
         baseline_run_id, contender_run_id = _parse_two_ids_or_abort(compare_ids)
