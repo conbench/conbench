@@ -398,8 +398,7 @@ class RetryingHTTPClient(ABC):
         status code alone?
         """
         if code == 429:
-            # Not yet emitted by Conbench, but that's the canonical way to
-            # signal "back off, retry soon".
+            # Canonical way to signal "back off, retry soon".
             return True
 
         # Retry upon any 5xx response, later maybe fine-tune by specific status
