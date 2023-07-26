@@ -362,7 +362,7 @@ def _fetch_and_cache_most_recent_results_guts(
 
 def _periodically_fetch_last_n_benchmark_results() -> None:
     """
-    Immediately return after having spawned a thread triggers periodic action.
+    Return right after having spawned a thread that triggers periodic action.
     """
     first_sleep_seconds = 3
     min_delay_between_runs_seconds = 120
@@ -405,10 +405,9 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
 
             last_call_duration_s = time.monotonic() - t0
 
-            # Generally we want to spent the majority of the time _not_ doing
-            # this thing here. So, if the last iteration lasted for e.g. ~60
-            # seconds, then keep waiting for ~five minutes until triggering the
-            # next run.
+            # Goal: spend the majority of the time _not_ doing this thing here.
+            # So, if the last iteration lasted for e.g. ~60 seconds, then keep
+            # waiting for ~five minutes until triggering the next run.
             delay_s = max(min_delay_between_runs_seconds, 5 * last_call_duration_s)
             log.info("BMRT cache: trigger next fetch in %.3f s", delay_s)
 
@@ -437,7 +436,7 @@ def _generate_tsdf_per_4tuple(
 
     for bname, results in by_name_dict.items():
         # The magic time series 4-tuple is
-        # bname, caseid, hwchecksum, ctxid
+        # bname, caseid, hwchecksum, ctxid (plus repo, i.e. 5 tuple)
         by_ts_tuple: Dict[Tuple, List[BMRTBenchmarkResult]] = defaultdict(list)
         for r in results:
             by_ts_tuple[(r.case_id, r.context_id, r.hardware_checksum)].append(r)
