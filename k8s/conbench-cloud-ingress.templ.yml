@@ -32,10 +32,16 @@ metadata:
     # will be ignored." That is preclisely what we want, a no-brainer
     # configuration parameter that disallows serving traffic via non-TLS.
     alb.ingress.kubernetes.io/ssl-redirect: '443'
-    # This is here mainly to take active control. Must be shorter than the
-    # timeout constant of the other end, see
-    # https://github.com/conbench/conbench/issues/1156
-    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=50
+    # The ALB "idle timeout" Must be shorter than the TCP conn
+    # keepalive-related timeout constant of the other end, see
+    # https://github.com/conbench/conbench/issues/1156 -- Note that this is
+    # also what is elsewhere called a "request timeout", ALB sends a 504
+    # Gateway Timeout if the back-end does not return a response in this time
+    # window. That is, let's pick this to be longer than the timeout constant
+    # we use in reasonable clients. For example: client: 150 s, ALB idle
+    # timeout: 160 s, gunicorn keepalive timeout: 170 s gunicorn worker
+    # timeout: 180 s. Also see https://github.com/conbench/conbench/issues/1384
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=160
     alb.ingress.kubernetes.io/certificate-arn: <CERTIFICATE_ARN>
   labels:
     app: conbench-ingress

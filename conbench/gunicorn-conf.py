@@ -42,12 +42,14 @@ threads = 15
 # process per gunicorn, and a single HTTP request could render a single process
 # occupied. Keep a large value for now, for the case where all threads in the
 # process process genuine requests (which all take a while to respond to)
-timeout = 120
+timeout = 180
 
-# Also see https://github.com/conbench/conbench/issues/1156 I picked 70 because
-# that's longer than 60 (some cloud load balancers default to this). but it's
-# shorter than nginx' default of 75 seconds.
-keepalive = 70
+# Also see https://github.com/conbench/conbench/issues/1156; this must be
+# longer than ALB's idle timeout (if ALB is right in front of gunicorn, which
+# it is in our case -- ideally there should be nginx inbetween). Assume
+# ALB idle timeout is 160 s. Also see
+# https://github.com/conbench/conbench/issues/1384
+keepalive = 170
 
 # Reduce this from the default (1000), and have gunicorn reject further
 # TCP connections. This makes sense in terms of back-pressure.
