@@ -7,8 +7,9 @@ import pytest
 import sigfig
 import sqlalchemy as s
 
-from ...db import _session as Session
 from conbench.types import TBenchmarkName
+
+from ...db import _session as Session
 from ...entities.commit import Commit
 from ...entities.history import (
     _detect_shifts_with_trimmed_estimators,
