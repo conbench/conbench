@@ -151,13 +151,6 @@ deploy() {
   # https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#failed-deployment
   kubectl rollout status deployment/conbench-deployment
 
-  if [[ "$EKS_CLUSTER" == "vd-2" ]]; then
-    export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="vd-2"
-  elif [[ "$EKS_CLUSTER" == "ursa-2" ]]; then
-    export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="ursa-2"
-    echo "skip kube-prometheus deploy/update"
-    return 0
-  fi
 
   # Note(JP): let's do a bit of magic. In the special case of working against
   # vd-2 (specific EKS cluster in a specific AWS account, powering two specific
@@ -170,13 +163,18 @@ deploy() {
   # `k8s/kube-prometheus/deploy-or-update.sh` itself is tested in Conbench repo
   # CI as part of the minikube flow.
 
+  if [[ "$EKS_CLUSTER" == "vd-2" ]]; then
+    export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="vd-2"
+  elif [[ "$EKS_CLUSTER" == "ursa-2" ]]; then
+    export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="ursa-2"
+  fi
+
   # Prepare environment variables for configuring the remote_write forwarding
   # component of the system.
   if [[ -z "${PROM_REMOTE_WRITE_ENDPOINT_URL}" ]]; then
     echo "env var PROM_REMOTE_WRITE_ENDPOINT_URL not configured"
   else
     export PROM_REMOTE_WRITE_PASSWORD_FILE_PATH="__prw_api_token"
-    # hard-code this additional label for now to be vd-2
 
     echo "PROM_REMOTE_WRITE_USERNAME: $PROM_REMOTE_WRITE_USERNAME"
     echo "PROM_REMOTE_WRITE_ENDPOINT_URL: $PROM_REMOTE_WRITE_ENDPOINT_URL"
@@ -188,7 +186,7 @@ deploy() {
 
   set +x
   make jsonnet-kube-prom-manifests
-  echo "vd-2: run k8s/kube-prometheus/deploy-or-update.sh, and pray that this does not impede the robustness of our deploy pipeline"
+  echo "run k8s/kube-prometheus/deploy-or-update.sh, and pray that this does not impede the robustness of our deploy pipeline"
   export CONBENCH_REPO_ROOT_DIR="$(pwd)"
   bash k8s/kube-prometheus/deploy-or-update.sh
 }
