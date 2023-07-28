@@ -115,19 +115,22 @@ div.case-param-panel {
   border: 1px solid #4981C8aa;
 }
 
+table.results-in-run-table tbody tr td,
 table.c-bench-caseperm-table tbody tr td {
   font-family: var(--bs-font-monospace);
-  font-size: 12px;
+  font-size: 0.8rem;
 }
 
+/*
 table.c-bench-caseperm-table td.casepermstring {
   font-size: 12px;
 }
 
+
 table.c-bench-caseperm-table th {
   font-size: 12px;
 }
-
+*/
 
 div.cb-title h1 {
   /* reduce default mb*/
@@ -260,8 +263,8 @@ table.dataTable a {
 
 }
 
-table.dataTable  {
-
+.brutal-break {
+  word-break: break-all;
 }
 
 .pagination {
