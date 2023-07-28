@@ -19,7 +19,7 @@ from sqlalchemy.orm import Mapped, relationship
 import conbench.units
 import conbench.util
 from conbench.dbsession import current_session
-from conbench.numstr import numstr
+from conbench.numstr import numstr, numstr_dyn
 
 from ..entities._entity import (
     Base,
@@ -581,8 +581,8 @@ def ui_mean_and_uncertainty(values: List[float], unit: str) -> str:
         return "no data"
 
     if len(values) < 3:
-        # Show each sample with five significant figures.
-        return "; ".join(f"{numstr(v, sigfigs=5)} {unit}" for v in values)
+        # Show each sample with fewish significant figures.
+        return "; ".join(f"{numstr_dyn(v)} {unit}" for v in values)
 
     # Build sample standard deviation. Maybe we can also use the pre-built
     # value, but trust needs to be established first.
