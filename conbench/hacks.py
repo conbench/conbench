@@ -90,13 +90,10 @@ def set_display_benchmark_name(bmresult):
     tags = bmresult["tags"] if is_api else bmresult.case.tags
     name = tags.get("name") if is_api else bmresult.case.name
 
-    # If `suite` is a key in the tags, then use its value for `name`, ignore
-    # name.
-    bmname = tags.get("suite", name)
     if is_api:
-        bmresult["display_bmname"] = bmname
+        bmresult["display_bmname"] = name
     else:
-        bmresult.display_bmname = bmname
+        bmresult.display_bmname = name
 
 
 def sorted_data(benchmarks):
