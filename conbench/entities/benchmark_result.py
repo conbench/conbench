@@ -370,6 +370,9 @@ class BenchmarkResult(Base, EntityMixin):
         if self.error is not None:
             return True
 
+        if do_iteration_samples_look_like_error(self.data):
+            return True
+
         return False
 
     @property
