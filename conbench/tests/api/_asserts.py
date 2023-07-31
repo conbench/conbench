@@ -23,7 +23,7 @@ class ApiEndpointTest:
         return _create_fixture_user()
 
     def assert_200_ok(self, r, expected=None, contains=None):
-        assert r.status_code == 200, r.status_code
+        assert r.status_code == 200, f"unepxected code: {r.status_code} -- \n{r.text}"
         assert r.content_type == "application/json", r.content_type
         if expected is not None:
             assert r.json == expected

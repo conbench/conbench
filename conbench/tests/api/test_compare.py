@@ -313,6 +313,8 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
         expected["contender"].update({"single_value_summary": 20.0})
         expected["analysis"]["pairwise"] = None
         expected["analysis"]["lookback_z_score"] = None
+        expected["unit"] = None
+        expected["less_is_better"] = None
 
         self.assert_200_ok(response, expected)
 
@@ -488,7 +490,8 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             ],
         )
         expected[0]["analysis"]["lookback_z_score"] = None
-        expected[1]["unit"] = "unknown"
+        expected[1]["unit"] = None
+        expected[1]["less_is_better"] = None
         expected[1]["baseline"].update({"single_value_summary": None, "error": error})
         expected[1]["contender"].update({"single_value_summary": None, "error": error})
         expected[1]["analysis"]["pairwise"] = None
