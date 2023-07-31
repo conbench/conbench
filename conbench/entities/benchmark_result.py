@@ -522,6 +522,17 @@ class BenchmarkResult(Base, EntityMixin):
             return '<a href="#">n/a</a>'
         return f'<a href="{self.run.commit.commit_url}">{self.run.commit.hash[:7]}</a>'
 
+    @functools.cached_property
+    def unitsymbol(self) -> Optional[conbench.units.TUnit]:
+        """Return unit symbol or None if result indicates failure."""
+        if self.is_failed:
+            return None
+
+        # Not None, and not an empty string.
+        assert self.unit
+
+        return conbench.units.legacy_convert(self.unit)
+
 
 def ui_rel_sem(values: List[float]) -> Tuple[str, str]:
     """
