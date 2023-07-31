@@ -91,15 +91,13 @@ class BenchmarkResult(Base, EntityMixin):
     info: Mapped[Info] = relationship("Info", lazy="joined")
     context: Mapped[Context] = relationship("Context", lazy="joined")
 
-    # Note(JP): `unit` can I think never be `None`. The column does not need to
-    # be / should not be nullable. But it is. Reflect in the type annotation
-    # that this always is populated: `str`, not `Optional[str]`. This
-    # user-given property is required via the JSON schema and currently
-    # documented with "The unit of the data object (e.g. seconds, B/s)".
-    # Interesting: where do we systematically keep track of "less is better" or
-    # "more is better"? I think we derive this from the unit, which is
-    # fundamentally error-prone. Should be a user-given property.
-    unit: Mapped[str] = Nullable(s.Text)
+    # Note(JP): `unit` can I think be null/none for errored benchmark results
+    # (where no Stats structure was provided). When a stats structure was
+    # provided then it is a string. Legacy DB might contain empty strings, but
+    # now we have validation in the insert path that this is one of the allowed
+    # unit symbol strings. Related:
+    # https://github.com/conbench/conbench/issues/1335
+    unit: Mapped[Optional[str]] = Nullable(s.Text)
 
     time_unit: Mapped[Optional[str]] = Nullable(s.Text)
 
