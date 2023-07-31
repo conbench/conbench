@@ -1,6 +1,6 @@
 import flask as f
 
-from conbench.numstr import numstr
+from conbench.numstr import numstr_dyn
 
 from ..config import Config
 from ..hacks import set_display_benchmark_name, set_display_case_permutation
@@ -78,16 +78,13 @@ def set_display_mean(benchmark):
     This probably should be transitioned to SVS (not just mean). And depending
     on the context we may want to show/reveal raw data (with needless
     precision) _or_ limit precision (via sigfigs count) meaningfully.
-
-    Update: seems to be shown in a tabular view where a per-result value
-    is shown. 4 sigfigs are enough then.
     """
     if not benchmark["stats"]["mean"]:
         return ""
 
     unit = benchmark["stats"]["unit"]
     mean = float(benchmark["stats"]["mean"])
-    benchmark["display_mean"] = f"{numstr(mean, sigfigs=4)} {unit}"
+    benchmark["display_mean"] = f"{numstr_dyn(mean)} {unit}"
     # for html5 data order attr
     benchmark["mean_value"] = mean
 

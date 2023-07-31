@@ -120,10 +120,10 @@
         {% for c in comparisons %}
           {% if (c.contender is not none) and (c.baseline is not none) %}
             <tr>
-              <td>
+              <td class="brutal-break">
                 <div>{{ c.baseline.benchmark_name }}</div>
               </td>
-              <td>
+              <td class="brutal-break">
                 <a href="{{ c.compare_benchmarks_url }}">
                   <div>{{ c.baseline.case_permutation }}</div>
                 </a>
@@ -235,6 +235,14 @@
           // default sort order: by z-score count, lowest first (regressions first)
           "order": [[5, 'asc']],
           "columnDefs": [{ "orderable": true }],
+          "columns": [
+            { "width": "25%" }, // force max 20 %, also requires brutal-break
+            null, // you get the rest (case perm string), also requires brutal-break
+            { "width": "12%" },
+            { "width": "12%" },
+            { "width": "9%" },
+            { "width": "7%" }
+          ],
           initComplete: function () {
             var api = this.api();
                 // reveal only after DOM modification is complete (reduce loading

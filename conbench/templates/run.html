@@ -64,13 +64,12 @@
                     display: none">
         <thead>
           <tr>
-            <th scope="col" style="width: 120px">benchmark name</th>
-            <th scope="col" style="width: 150px">start time (UTC)</th>
+            <th scope="col">benchmark name</th>
+            <th scope="col">start time (UTC)</th>
             <th scope="col">result</th>
             <th scope="col">case permutation</th>
-            <!--<th scope="col" style="width: 10%">measurements</th>-->
-            <th scope="col" style="width: 8%">measurement</th>
-            <th scope="col" style="width: 10%">
+            <th scope="col">measurement</th>
+            <th scope="col">
               rel err
               <sup><i class="bi bi-info-circle"
    data-bs-toggle="tooltip"
@@ -82,12 +81,12 @@
         <tbody>
           {% for result in benchmarks %}
             <tr>
-              <td class="font-monospace">{{ result.display_bmname  }}</td>
+              <td class="font-monospace brutal-break">{{ result.display_bmname  }}</td>
               <td class="font-monospace">{{ result.display_timestamp[:-4] }}</td>
               <td class="font-monospace">
                 <a href="{{ url_for('app.benchmark-result', benchmark_result_id=result.id) }}">{{ result.id [:9] }}</a>
               </td>
-              <td class="font-monospace">{{ result.display_case_perm }}</td>
+              <td class="font-monospace brutal-break">{{ result.display_case_perm }}</td>
               <!--<td class="font-monospace">n/a</td>-->
               <td class="font-monospace" data-order="{{ result.mean_value }}">
                 {% if result.error %}
@@ -151,7 +150,17 @@
 
       // default sort order: by z-score count, lowest first (regressions first)
       "order": [[0, 'asc']],
-      "columnDefs": [{ "orderable": true }],
+      "columnDefs": [
+        { "orderable": true },
+      ],
+      "columns": [
+        { "width": "20%" }, // force max 20 %, also requires brutal-break
+        { "width": "15%" },
+        { "width": "9%" },
+        null,               // you get the rest (case perm string), also requires brutal-break
+        { "width": "12%" },
+        { "width": "7%" }
+      ],
       initComplete: function () {
         var api = this.api();
             // reveal only after DOM modification is complete (reduce loading

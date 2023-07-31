@@ -52,9 +52,55 @@ import numpy as np
 # import sigfig
 
 
+def numstr_dyn(v: Union[float, int]) -> str:
+    """
+    Turn number into string. Limit the count of significant figures.
+    Dynamically switch to scientific notation for large numbers (larger 10**6)
+    and small numbers (smaller 10**-6).
+
+    Regarding precision: this is so far meant to be used in
+    overview/summary/tabular representation where the 'rough' measurement
+    result should be presented in a canonical/non-cryptical way. Higher
+    precision / raw data is available to the user elsewhere. precision/sigfigs
+    is no argument to this function at this point to hopefully achieve
+    consistency across UI.
+
+    >>> numstr.numstr_dyn(1.290823987290392)
+    '1.29082'
+    >>> numstr.numstr_dyn(1239127)
+    '1.24e+06'
+    >>> numstr.numstr_dyn(0.000000000023823987290392)
+    '2.38e-11'
+    >>> numstr.numstr_dyn(123912)
+    '123912'
+
+    """
+    if 10**6 > v > 10**-6:
+        return numstr(v, 6)
+    return numstr_exp(v, 2)
+
+
+def numstr_exp(v: Union[float, int], sigfigs: int = 2) -> str:
+    """
+    Turn number into string with scientific notation, limiting the count of
+    significant figures.
+
+    Examples:
+
+    >>> numstr.numstr_sn(123902901380912893, 2)
+    '1.24e+17'
+
+    The example shows that these may be considered three significant digits.
+
+    Trim "-" is documented with "trim trailing zeros and any trailing decimal
+    point"
+    """
+    return np.format_float_scientific(v, precision=sigfigs, trim="-", exp_digits=1)
+
+
 def numstr(v: Union[float, int], sigfigs: int = 5) -> str:
     """
-    Turn number into string while limiting the number of significant figures.
+    Turn number into string while limiting the count of significant figures.
 
     Examples:
 
