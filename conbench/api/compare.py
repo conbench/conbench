@@ -138,7 +138,11 @@ class BenchmarkResultComparator:
     ) -> None:
         # What do we know here? Is one of baseline and contender guaranteed
         # to not be None?
-        assert any([baseline, contender])
+
+        do_comparison = True
+
+        if not all([baseline, contender]):
+            do_comparison = False
 
         # Can/should we assume that only non-errored results are added into a
         # comparator? Then we can assume that the unit is set. Turns out: no,
@@ -146,26 +150,37 @@ class BenchmarkResultComparator:
         # `baseline` for example be an errored benchmark result while contender
         # is `None`?
 
+        if baseline and baseline.is_failed:
+            do_comparison = False
+
+        if contender and contender.is_failed:
+            do_comparison = False
+
         # `self.unit` is `None` for all cases except for when both contender
         # and baseline are non-failed results and have the same unit; then it's
         # that unit.
         self.unit: Optional[conbench.units.TUnit] = None
 
-        # Verify for the case where both are non-failed results that they have
-        # equal units
-        if baseline and contender:
-            if not any([baseline.is_failed, contender.is_failed]):
-                assert baseline.unit
-                assert contender.unit
-                if baseline.unit != contender.unit:
-                    raise UnmatchingUnitsError(
-                        "Benchmark units do not match. Benchmark result with ID "
-                        f"'{baseline.id}' has unit '{baseline.unit}' and benchmark result "
-                        f"with ID '{contender.id}' has unit '{contender.unit}'."
-                    )
-                # Take `baseline.unitsymbol` here to get the TUnit type.
-                assert baseline.unitsymbol
-                self.unit = baseline.unitsymbol
+        if do_comparison:
+            assert baseline
+            assert contender
+            assert baseline.unit
+            assert contender.unit
+
+            if baseline.unit != contender.unit:
+                raise UnmatchingUnitsError(
+                    "Benchmark units do not match. Benchmark result with ID "
+                    f"'{baseline.id}' has unit '{baseline.unit}' and benchmark result "
+                    f"with ID '{contender.id}' has unit '{contender.unit}'."
+                )
+
+            # Take `baseline.unitsymbol` here to get the TUnit type.
+            assert baseline.unitsymbol
+            self.unit = baseline.unitsymbol
+
+        # Signal to the mathy methods if all conditions are met for performing
+        # numeric comparison.
+        self.do_comparison = do_comparison
 
         self.baseline = baseline
         self.contender = contender
@@ -208,14 +223,17 @@ class BenchmarkResultComparator:
 
     @property
     def pairwise_analysis(self) -> Optional[dict]:
-        # Note: either can have an error. That's fine as long as they both have an SVS.
-        if (
-            self.baseline is None
-            or self.contender is None
-            or math.isnan(self.baseline.svs)
-            or math.isnan(self.contender.svs)
-            or self.baseline.svs == 0  # don't divide by zero
-        ):
+        if not self.do_comparison:
+            return None
+
+        assert self.baseline
+        assert self.contender
+
+        if self.baseline.svs == 0:
+            # Don't divide by zero.
+            # On the other hand maybe we should not have results
+            # reporting zero of anything:
+            # https://github.com/conbench/conbench/issues/532
             return None
 
         relative_change = (self.contender.svs - self.baseline.svs) / abs(
@@ -238,11 +256,13 @@ class BenchmarkResultComparator:
 
     @property
     def lookback_z_score_analysis(self) -> Optional[dict]:
-        if (
-            self.contender is None
-            or self.contender.z_score is None
-            or math.isnan(self.contender.z_score)
-        ):
+        if not self.do_comparison:
+            return None
+
+        assert self.baseline
+        assert self.contender
+
+        if self.contender.z_score is None or math.isnan(self.contender.z_score):
             return None
 
         regression_indicated = -self.contender.z_score > self.threshold_z
