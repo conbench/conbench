@@ -361,10 +361,10 @@ class BenchmarkResult(Base, EntityMixin):
         The criteria are conventions that we (hopefully) apply consistently
         across components.
         """
-        if self.data is None:
+        if self.unit is None:
             return True
 
-        if do_iteration_samples_look_like_error(self.data):
+        if self.data is None:
             return True
 
         if self.error is not None:
