@@ -4,7 +4,7 @@ import math
 import statistics
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import flask as f
 import marshmallow
@@ -464,7 +464,7 @@ class BenchmarkResult(Base, EntityMixin):
 
         # The following two asserts explicitly document two assumptions that we
         # rely on to be valid after is_failed returned False. Also, these the
-        # first assert statements is piicked up by mypy for type inference.
+        # first assert statements is picked up by mypy for type inference.
         # Note that `assert all(d is not None for d in self.data)` did not help
         # mypy narrow down the type. See
         # https://github.com/python/mypy/issues/15180. To keep keep the
@@ -564,7 +564,7 @@ def ui_rel_sem(values: List[float]) -> Tuple[str, str]:
     return (errstr, f"{errstr} %")
 
 
-def ui_mean_and_uncertainty(values: List[float], unit: str) -> str:
+def ui_mean_and_uncertainty(values: List[float], unit: Optional[str]) -> str:
     """
     Build human-readable text conveying the data acquired here.
 
@@ -592,6 +592,10 @@ def ui_mean_and_uncertainty(values: List[float], unit: str) -> str:
     if not values:
         return "no data"
 
+    # Make sure that this is a non-empty string now (it can be passed as `None`
+    # for an errored result, represented by `values` being empty in this case).
+    assert unit
+
     if len(values) < 3:
         # Show each sample with fewish significant figures.
         return "; ".join(f"{numstr_dyn(v)} {unit}" for v in values)
@@ -611,7 +615,7 @@ def ui_mean_and_uncertainty(values: List[float], unit: str) -> str:
     return f"({mean_uncertainty_str}) {unit}"
 
 
-def validate_augment_unit_string(u: str) -> str:
+def validate_augment_unit_string(u: str) -> conbench.units.TUnit:
     """
     Raise BenchmarkResultValidationError for invalid unit string.
 
@@ -629,7 +633,7 @@ def validate_augment_unit_string(u: str) -> str:
             f"invalid unit string `{u}`, pick one of: {conbench.units.KNOWN_UNIT_SYMBOLS_STR}"
         )
 
-    return u
+    return cast(conbench.units.TUnit, u)
 
 
 def validate_and_aggregate_samples(stats_usergiven: Any):
