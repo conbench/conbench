@@ -569,12 +569,12 @@ def time_series_plot(
     # key which is extracted here by default.
     source_mean_over_time = _source(
         inliers,
-        unit,
+        unit_symbol,
     )
-    source_outlier_mean_over_time = _source(outliers, unit)
+    source_outlier_mean_over_time = _source(outliers, unit_symbol)
     source_unfiltered_mean_over_time = _source(
         samples,
-        unit,
+        unit_symbol,
         reference_benchmark_result=current_benchmark_result,
     )
 
@@ -602,19 +602,19 @@ def time_series_plot(
     # width.
     source_rolling_mean_over_time = _source(
         with_dist,
-        unit,
+        unit_symbol,
         distribution_mean=True,
         break_line_indexes=dist_change_indexes,
     )
     source_rolling_alert_min_over_time = _source(
         with_dist,
-        unit,
+        unit_symbol,
         alert_min=True,
         break_line_indexes=dist_change_indexes,
     )
     source_rolling_alert_max_over_time = _source(
         with_dist,
-        unit,
+        unit_symbol,
         alert_max=True,
         break_line_indexes=dist_change_indexes,
     )
@@ -772,7 +772,9 @@ def time_series_plot(
     (
         source_current_bm_mean,
         source_current_bm_min,
-    ) = get_source_for_single_benchmark_result(current_benchmark_result, run, unit)
+    ) = get_source_for_single_benchmark_result(
+        current_benchmark_result, run, unit_symbol
+    )
 
     if highlight_result_in_hist is not None:
         hs = highlight_result_in_hist[0]
