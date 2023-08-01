@@ -12,6 +12,7 @@ import orjson
 import pandas as pd
 
 import conbench.numstr
+import conbench.units
 from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
 from conbench.config import Config
@@ -701,10 +702,16 @@ _UNIT_REPLACE_MAP = {"s": "seconds", "i/s": "iterations / second"}
 def maybe_longer_unit(unit: str) -> str:
     """
     A longer unit reads better on the ordinate of a plot.
+
+    There is conbench.units.longform(). For tinyplots it maybe makes sense to
+    have a translation layer in addition to what conbench.units provides, for
+    better usage of space.
+
     """
     if unit in _UNIT_REPLACE_MAP:
         return _UNIT_REPLACE_MAP[unit]
-    return unit
+
+    return conbench.units.longform(conbench.units.legacy_convert(unit))
 
 
 def avg_starttime_of_newest_n_percent_of_results(
