@@ -207,7 +207,7 @@ jobs:
         id: minikube
         uses: medyagh/setup-minikube@e1ee887a96c50e34066a4bf9f172eb94ae69d454
         with:
-          kubernetes-version: v1.23.16
+          kubernetes-version: v1.26.7
           # By convention, both locally and in CI we call this mk-conbench.
           start-args: '--profile mk-conbench --extra-config=kubelet.cgroup-driver=systemd'
           cpus: max
