@@ -9,6 +9,7 @@ import bokeh.events
 import bokeh.models
 import bokeh.plotting
 
+import conbench.units
 from conbench import util
 from conbench.api.history import get_history_for_benchmark
 from conbench.entities.benchmark_result import BenchmarkResult
@@ -136,17 +137,6 @@ class TimeSeriesPlotMixin:
         return BokehPlotJSONOrError(jsondoc, None)
 
 
-def get_display_unit(unit):
-    if unit == "s":
-        return "seconds"
-    elif unit == "B/s":
-        return "bytes/second"
-    elif unit == "i/s":
-        return "items/second"
-    else:
-        return unit
-
-
 def fmt_number_and_unit(value: float, unit: str):
     """
     Use this for on-hover data point display, so that it shows with unit.
@@ -200,8 +190,8 @@ def simple_bar_plot(benchmarks, height=400, width=400, vbar_width=0.7):
             points = points_formated
 
         axis_unit = unit_formatted if unit_formatted is not None else unit
-        if axis_unit == unit:
-            axis_unit = get_display_unit(unit)
+        # if axis_unit == unit:
+        #     axis_unit = get_display_unit(unit)
 
         # remove redundant tags from labels
         len_cases = len(cases)
@@ -557,8 +547,8 @@ def time_series_plot(
         raise HistoryUserFacingError(f"heterogenous set of units: {units}")
 
     # The unit string for the axis label may be different (longer, for example)
-    unit = units.pop()
-    unit_str_for_plot_axis_label = get_display_unit(unit)
+    unit_symbol = conbench.units.legacy_convert(units.pop())
+    unit_str_for_plot_axis_label = conbench.units.longform(unit_symbol)
 
     with_dist = [s for s in samples if s.zscorestats.rolling_mean]
     inliers = [s for s in samples if not s.zscorestats.is_outlier]
@@ -579,12 +569,12 @@ def time_series_plot(
     # key which is extracted here by default.
     source_mean_over_time = _source(
         inliers,
-        unit,
+        unit_symbol,
     )
-    source_outlier_mean_over_time = _source(outliers, unit)
+    source_outlier_mean_over_time = _source(outliers, unit_symbol)
     source_unfiltered_mean_over_time = _source(
         samples,
-        unit,
+        unit_symbol,
         reference_benchmark_result=current_benchmark_result,
     )
 
@@ -612,19 +602,19 @@ def time_series_plot(
     # width.
     source_rolling_mean_over_time = _source(
         with_dist,
-        unit,
+        unit_symbol,
         distribution_mean=True,
         break_line_indexes=dist_change_indexes,
     )
     source_rolling_alert_min_over_time = _source(
         with_dist,
-        unit,
+        unit_symbol,
         alert_min=True,
         break_line_indexes=dist_change_indexes,
     )
     source_rolling_alert_max_over_time = _source(
         with_dist,
-        unit,
+        unit_symbol,
         alert_max=True,
         break_line_indexes=dist_change_indexes,
     )
@@ -782,7 +772,9 @@ def time_series_plot(
     (
         source_current_bm_mean,
         source_current_bm_min,
-    ) = get_source_for_single_benchmark_result(current_benchmark_result, run, unit)
+    ) = get_source_for_single_benchmark_result(
+        current_benchmark_result, run, unit_symbol
+    )
 
     if highlight_result_in_hist is not None:
         hs = highlight_result_in_hist[0]
