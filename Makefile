@@ -314,7 +314,7 @@ jsonnet-kube-prom-manifests:
 	cd _kpbuild/cb-kube-prometheus && echo '{"version": 1, "dependencies": [], "legacyImports": true}' > jsonnetfile.json
 	cd _kpbuild/cb-kube-prometheus && \
 		time docker run --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
-			sh -c 'jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@158cb5422ebe95 && chmod -R 777 *'
+			sh -c 'jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@d3889807798d && chmod -R 777 *'
 	cd _kpbuild/cb-kube-prometheus && /bin/ls -ahl
 	cp k8s/kube-prometheus/conbench-flavor.jsonnet _kpbuild/cb-kube-prometheus
 	cp k8s/kube-prometheus/conbench-grafana-dashboard.json _kpbuild/cb-kube-prometheus
@@ -343,7 +343,7 @@ jsonnet-kube-prom-manifests:
 				_kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
 		fi
 	cd _kpbuild/cb-kube-prometheus && \
-		wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/158cb5422ebe95/build.sh -O build.sh
+		wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/d3889807798d/build.sh -O build.sh
 	cd _kpbuild/cb-kube-prometheus && \
 		time docker run  --rm -v $$(pwd):$$(pwd) --workdir $$(pwd) quay.io/coreos/jsonnet-ci \
 			sh -c 'bash build.sh conbench-flavor.jsonnet && chmod -R 777 *'
