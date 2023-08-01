@@ -98,6 +98,7 @@ class HistorySample:
     # math.nan is allowed for representing a failed iteration.
     data: List[float]
     times: List[float]
+    # TODO: make this type TUnit
     unit: str
     hardware_hash: str
     repository: str

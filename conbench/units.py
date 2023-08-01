@@ -38,6 +38,7 @@ class TUnitDef(TypedDict):
     less_is_better: bool
 
 
+# slash ("/"") or "per"? We will see.
 KNOWN_UNITS: Dict[TUnit, TUnitDef] = {
     "B/s": {
         "long": "bytes per second",
@@ -62,32 +63,36 @@ KNOWN_UNITS: Dict[TUnit, TUnitDef] = {
 }
 
 
-KNOWN_UNIT_SYMBOLS = list(KNOWN_UNITS.keys())
-KNOWN_UNIT_SYMBOLS_STR = ", ".join(KNOWN_UNIT_SYMBOLS)
-KNOWN_UNITS_LONG: Dict[TUnit, str] = {k: v["long"] for k, v in KNOWN_UNITS.items()}
+_KNOWN_UNIT_SYMBOLS = list(KNOWN_UNITS.keys())
+KNOWN_UNIT_SYMBOLS_STR = ", ".join(_KNOWN_UNIT_SYMBOLS)
+_KNOWN_UNITS_LONG: Dict[TUnit, str] = {k: v["long"] for k, v in KNOWN_UNITS.items()}
 _KNOWN_UNITS_LIB: Dict[TUnit, bool] = {
     k: v["less_is_better"] for k, v in KNOWN_UNITS.items()
 }
 
 
-def legacy_convert(symbol: str) -> TUnit:
+def longform(symbol: TUnit) -> str:
+    return _KNOWN_UNITS_LONG[symbol]
+
+
+def legacy_convert(s: str) -> TUnit:
     """
-    Confirm that the passed symbol (type str) is an allowed symbol, return it
-    as type TUnit, for strictness. Raise AssertionError otherwise.
+    Confirm that the passed symbol (type str) is an allowed symbol. Return it
+    as type TUnit. Raise AssertionError otherwise.
 
     Related: https://github.com/conbench/conbench/issues/1335
 
     Also for now transparently rewrite `b/s` -- Legacy DB state allows for that
     for now to our knowledge.
     """
-    if symbol == "b/s":
+    if s == "b/s":
         return "B/s"
 
-    assert symbol in KNOWN_UNITS
-    return cast(TUnit, symbol)
+    assert s in KNOWN_UNITS
+    return cast(TUnit, s)
 
 
-def less_is_better(unit_symbol: TUnit) -> bool:
+def less_is_better(symbol: TUnit) -> bool:
     """
     Return less_is_better boolean for a given unit symbol (the short version,
     such as 'B/s', 's', ...). Allowed symbols are the keys in KNOWN_UNITS above.
@@ -95,4 +100,4 @@ def less_is_better(unit_symbol: TUnit) -> bool:
     Related:
     https://github.com/conbench/conbench/issues/1335
     """
-    return _KNOWN_UNITS_LIB[unit_symbol]
+    return _KNOWN_UNITS_LIB[symbol]
