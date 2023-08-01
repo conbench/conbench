@@ -51,7 +51,7 @@ def _list_results(
                 benchmark_result.run_hardware,
             )
             previous_run_id = benchmark_result.run_id
-        out += f"\n  - [{benchmark_result.name}]({benchmark_result.link})"
+        out += f"\n  - [{benchmark_result.display_name}]({benchmark_result.link})"
 
     if out:
         out += "\n\n"
