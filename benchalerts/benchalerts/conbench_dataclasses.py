@@ -10,7 +10,7 @@ from benchclients.logging import log
 class BenchmarkResultInfo:
     """Track and organize specific info about one BenchmarkResult."""
 
-    name: str
+    display_name: str
     link: str
     has_error: bool
     has_z_regression: bool
@@ -53,6 +53,20 @@ class RunComparisonInfo:
     compare_results: Optional[List[dict]] = None
     benchmark_results: Optional[List[dict]] = None
 
+    @staticmethod
+    def _result_display_name_from_compare_dict(result: dict) -> str:
+        """Generate a name for a benchmark result to be displayed in a notification list.
+
+        Given: the compare endpoint's payload's "contender" key dict:
+        https://conbench.ursa.dev/api/redoc#tag/Comparisons/paths/~1api~1compare~1benchmark-results~1%7Bcompare_ids%7D~1/get
+        """
+        display_name = f'`{result["benchmark_name"]}`'
+        if result["language"] and result["language"] != "unknown":
+            display_name += f' ({result["language"]})'
+        if result["case_permutation"] != "no-permutations":
+            display_name += f' with {result["case_permutation"]}'
+        return display_name
+
     @property
     def contender_benchmark_result_info(self) -> List[BenchmarkResultInfo]:
         """A clean list of dataclasses corresponding to useful information about each
@@ -62,7 +76,9 @@ class RunComparisonInfo:
             assert self.run_compare_link
             return [
                 BenchmarkResultInfo(
-                    name=comparison["contender"]["case_permutation"],
+                    display_name=self._result_display_name_from_compare_dict(
+                        comparison["contender"]
+                    ),
                     link=self.make_benchmark_result_link(
                         contender_result_id=comparison["contender"][
                             "benchmark_result_id"
@@ -90,7 +106,7 @@ class RunComparisonInfo:
         elif self.benchmark_results:
             return [
                 BenchmarkResultInfo(
-                    name=benchmark_result["tags"].get(
+                    display_name=benchmark_result["tags"].get(
                         "name", str(benchmark_result["tags"])
                     ),
                     link=self.make_benchmark_result_link(

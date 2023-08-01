@@ -92,7 +92,7 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
 There was 1 benchmark result indicating a performance regression:
 
 - Commit Run on `GitHub-runner-8-core` at [2023-02-28 18:08:51Z](http://velox-conbench.voltrondata.run/compare/runs/GHA-4286800623-1...GHA-4296026775-1/)
-  - [source=cpp-micro, suite=velox_benchmark_basic_vector_fuzzer](http://velox-conbench.voltrondata.run/compare/benchmarks/a128eb19cc9442409148c91f7fa18cdf...ff7a1a86df5a4d56b6dbfb006c13c638)
+  - [`velox_benchmark_basic_vector_fuzzer` (C++) with source=cpp-micro, suite=velox_benchmark_basic_vector_fuzzer](http://velox-conbench.voltrondata.run/compare/benchmarks/a128eb19cc9442409148c91f7fa18cdf...ff7a1a86df5a4d56b6dbfb006c13c638)
 
 The [full Conbench report](https://github.com/conbench/benchalerts/runs/RUN_ID) has more details."""
 
