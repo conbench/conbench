@@ -130,7 +130,7 @@ deploy() {
     sed "s|{{CONBENCH_WEBAPP_IMAGE_SPEC}}|${IMAGE_SPEC}|g" | kubectl apply -f -
 
 
-  if [[ "$EKS_CLUSTER" == "vd-2" ]]; then
+  if [[ "$EKS_CLUSTER" == "vd-2" || "$EKS_CLUSTER" == "ursa-2" ]]; then
     # (Re-)apply ALB ingress config. Note(JP): if this results in re-creation
     # of the ALB then we need to out-of-band update an A record in Route53,
     # because we do not yet use k8s externalDNS features.
@@ -142,7 +142,7 @@ deploy() {
     kubectl apply -f k8s/conbench-service.yml
     kubectl apply -f k8s/conbench-service-monitor.yml
   else
-    echo "non-vd-2: skip k8s ingress and service patch (rely on name to still match: 'conbench-service')"
+    echo "skip k8s ingress and service patch (rely on name to still match: 'conbench-service')"
   fi
 
   # Note(JP); this might be nonobvious, but `rollout status` waits for
