@@ -25,7 +25,20 @@ https://forum.thefreedictionary.com/postst144586_singular-or-plural.aspx
 # unit, and unit properties.
 # TODO: allow for extending this via config.
 
-KNOWN_UNITS = {
+from typing import Dict, Literal, TypedDict, cast
+
+# These are the symbols. We could call this type UnitSymbol, but we can
+# have the convention that whenever "unit" pops up in the code base it means
+# the short version, the symbol.
+TUnit = Literal["B/s", "s", "ns", "i/s"]
+
+
+class TUnitDef(TypedDict):
+    long: str
+    less_is_better: bool
+
+
+KNOWN_UNITS: Dict[TUnit, TUnitDef] = {
     "B/s": {
         "long": "bytes per second",
         "less_is_better": False,
@@ -35,6 +48,8 @@ KNOWN_UNITS = {
         "less_is_better": True,
     },
     "ns": {
+        # This is here for legacy reasons, but maybe if it wasn't we would
+        # have added this in addition to `s`
         "long": "nanoseconds",
         "less_is_better": True,
     },
@@ -49,3 +64,35 @@ KNOWN_UNITS = {
 
 KNOWN_UNIT_SYMBOLS = list(KNOWN_UNITS.keys())
 KNOWN_UNIT_SYMBOLS_STR = ", ".join(KNOWN_UNIT_SYMBOLS)
+KNOWN_UNITS_LONG: Dict[TUnit, str] = {k: v["long"] for k, v in KNOWN_UNITS.items()}
+_KNOWN_UNITS_LIB: Dict[TUnit, bool] = {
+    k: v["less_is_better"] for k, v in KNOWN_UNITS.items()
+}
+
+
+def legacy_convert(symbol: str) -> TUnit:
+    """
+    Confirm that the passed symbol (type str) is an allowed symbol, return it
+    as type TUnit, for strictness. Raise AssertionError otherwise.
+
+    Related: https://github.com/conbench/conbench/issues/1335
+
+    Also for now transparently rewrite `b/s` -- Legacy DB state allows for that
+    for now to our knowledge.
+    """
+    if symbol == "b/s":
+        return "B/s"
+
+    assert symbol in KNOWN_UNITS
+    return cast(TUnit, symbol)
+
+
+def less_is_better(unit_symbol: TUnit) -> bool:
+    """
+    Return less_is_better boolean for a given unit symbol (the short version,
+    such as 'B/s', 's', ...). Allowed symbols are the keys in KNOWN_UNITS above.
+
+    Related:
+    https://github.com/conbench/conbench/issues/1335
+    """
+    return _KNOWN_UNITS_LIB[unit_symbol]

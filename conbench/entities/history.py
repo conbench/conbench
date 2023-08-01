@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import sqlalchemy as s
 
+import conbench.units
 from conbench.dbsession import current_session
 from conbench.types import TBenchmarkName
 
@@ -736,18 +737,6 @@ def _add_rolling_stats_columns_to_df(
     return df
 
 
-def _less_is_better(unit) -> bool:
-    # For some units, "more is better":
-    if unit in ["B/s", "i/s"]:
-        return False
-
-    # Legacy decision was to simply return `True` here -- assuming
-    # duration/seconds. However, this is error-prone and may lead to rather
-    # ugly UX in the core value proposition of Conbench. This needs a better
-    # solution. Also see https://github.com/conbench/conbench/issues/1335
-    return True
-
-
 def _calculate_z_score(
     data_point: Optional[float],
     unit: Optional[str],
@@ -763,9 +752,13 @@ def _calculate_z_score(
     ):
         z_score = (data_point - dist_mean) / dist_stddev
     else:
-        z_score = None
+        return None
 
-    if z_score and _less_is_better(unit):
+    # Note(JP): can `unit` here be `None`, really? That should not be the case.
+    # A z-score calculation requires the happy path.
+    assert unit is not None
+    us = conbench.units.legacy_convert(unit)
+    if z_score and conbench.units.less_is_better(us):
         z_score = z_score * -1
 
     return z_score

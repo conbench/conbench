@@ -4,7 +4,7 @@ import math
 import statistics
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import flask as f
 import marshmallow
@@ -91,15 +91,13 @@ class BenchmarkResult(Base, EntityMixin):
     info: Mapped[Info] = relationship("Info", lazy="joined")
     context: Mapped[Context] = relationship("Context", lazy="joined")
 
-    # Note(JP): `unit` can I think never be `None`. The column does not need to
-    # be / should not be nullable. But it is. Reflect in the type annotation
-    # that this always is populated: `str`, not `Optional[str]`. This
-    # user-given property is required via the JSON schema and currently
-    # documented with "The unit of the data object (e.g. seconds, B/s)".
-    # Interesting: where do we systematically keep track of "less is better" or
-    # "more is better"? I think we derive this from the unit, which is
-    # fundamentally error-prone. Should be a user-given property.
-    unit: Mapped[str] = Nullable(s.Text)
+    # Note(JP): `unit` can I think be null/none for errored benchmark results
+    # (where no Stats structure was provided). When a stats structure was
+    # provided then it is a string. Legacy DB might contain empty strings, but
+    # now we have validation in the insert path that this is one of the allowed
+    # unit symbol strings. Related:
+    # https://github.com/conbench/conbench/issues/1335
+    unit: Mapped[Optional[str]] = Nullable(s.Text)
 
     time_unit: Mapped[Optional[str]] = Nullable(s.Text)
 
@@ -363,13 +361,16 @@ class BenchmarkResult(Base, EntityMixin):
         The criteria are conventions that we (hopefully) apply consistently
         across components.
         """
+        if self.unit is None:
+            return True
+
         if self.data is None:
             return True
 
-        if do_iteration_samples_look_like_error(self.data):
+        if self.error is not None:
             return True
 
-        if self.error is not None:
+        if do_iteration_samples_look_like_error(self.data):
             return True
 
         return False
@@ -463,7 +464,7 @@ class BenchmarkResult(Base, EntityMixin):
 
         # The following two asserts explicitly document two assumptions that we
         # rely on to be valid after is_failed returned False. Also, these the
-        # first assert statements is piicked up by mypy for type inference.
+        # first assert statements is picked up by mypy for type inference.
         # Note that `assert all(d is not None for d in self.data)` did not help
         # mypy narrow down the type. See
         # https://github.com/python/mypy/issues/15180. To keep keep the
@@ -521,6 +522,17 @@ class BenchmarkResult(Base, EntityMixin):
             return '<a href="#">n/a</a>'
         return f'<a href="{self.run.commit.commit_url}">{self.run.commit.hash[:7]}</a>'
 
+    @functools.cached_property
+    def unitsymbol(self) -> Optional[conbench.units.TUnit]:
+        """Return unit symbol or None if result indicates failure."""
+        if self.is_failed:
+            return None
+
+        # Not None, and not an empty string.
+        assert self.unit
+
+        return conbench.units.legacy_convert(self.unit)
+
 
 def ui_rel_sem(values: List[float]) -> Tuple[str, str]:
     """
@@ -552,7 +564,7 @@ def ui_rel_sem(values: List[float]) -> Tuple[str, str]:
     return (errstr, f"{errstr} %")
 
 
-def ui_mean_and_uncertainty(values: List[float], unit: str) -> str:
+def ui_mean_and_uncertainty(values: List[float], unit: Optional[str]) -> str:
     """
     Build human-readable text conveying the data acquired here.
 
@@ -580,6 +592,10 @@ def ui_mean_and_uncertainty(values: List[float], unit: str) -> str:
     if not values:
         return "no data"
 
+    # Make sure that this is a non-empty string now (it can be passed as `None`
+    # for an errored result, represented by `values` being empty in this case).
+    assert unit
+
     if len(values) < 3:
         # Show each sample with fewish significant figures.
         return "; ".join(f"{numstr_dyn(v)} {unit}" for v in values)
@@ -599,7 +615,7 @@ def ui_mean_and_uncertainty(values: List[float], unit: str) -> str:
     return f"({mean_uncertainty_str}) {unit}"
 
 
-def validate_augment_unit_string(u: str) -> str:
+def validate_augment_unit_string(u: str) -> conbench.units.TUnit:
     """
     Raise BenchmarkResultValidationError for invalid unit string.
 
@@ -617,7 +633,7 @@ def validate_augment_unit_string(u: str) -> str:
             f"invalid unit string `{u}`, pick one of: {conbench.units.KNOWN_UNIT_SYMBOLS_STR}"
         )
 
-    return u
+    return cast(conbench.units.TUnit, u)
 
 
 def validate_and_aggregate_samples(stats_usergiven: Any):

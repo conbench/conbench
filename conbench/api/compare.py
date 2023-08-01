@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 import flask as f
 import sqlalchemy as s
 
+import conbench.units
 from conbench.dbsession import current_session
 from conbench.numstr import numstr
 
@@ -15,7 +16,7 @@ from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..api._resp import resp429
 from ..entities.benchmark_result import BenchmarkResult
-from ..entities.history import _less_is_better, set_z_scores
+from ..entities.history import set_z_scores
 from ..hacks import set_display_benchmark_name, set_display_case_permutation
 
 log = logging.getLogger(__name__)
@@ -135,18 +136,51 @@ class BenchmarkResultComparator:
         threshold: Optional[float],
         threshold_z: Optional[float],
     ) -> None:
-        if (
-            baseline
-            and baseline.unit
-            and contender
-            and contender.unit
-            and baseline.unit != contender.unit
-        ):
-            raise UnmatchingUnitsError(
-                "Benchmark units do not match. Benchmark result with ID "
-                f"'{baseline.id}' has unit '{baseline.unit}' and benchmark result "
-                f"with ID '{contender.id}' has unit '{contender.unit}'."
-            )
+        # What do we know here? Is one of baseline and contender guaranteed
+        # to not be None?
+
+        do_comparison = True
+
+        if not all([baseline, contender]):
+            do_comparison = False
+
+        # Can/should we assume that only non-errored results are added into a
+        # comparator? Then we can assume that the unit is set. Turns out: no,
+        # either might be errored. Thinking about possible code paths. Can
+        # `baseline` for example be an errored benchmark result while contender
+        # is `None`?
+
+        if baseline and baseline.is_failed:
+            do_comparison = False
+
+        if contender and contender.is_failed:
+            do_comparison = False
+
+        # `self.unit` is `None` for all cases except for when both contender
+        # and baseline are non-failed results and have the same unit; then it's
+        # that unit.
+        self.unit: Optional[conbench.units.TUnit] = None
+
+        if do_comparison:
+            assert baseline
+            assert contender
+            assert baseline.unit
+            assert contender.unit
+
+            if baseline.unit != contender.unit:
+                raise UnmatchingUnitsError(
+                    "Benchmark units do not match. Benchmark result with ID "
+                    f"'{baseline.id}' has unit '{baseline.unit}' and benchmark result "
+                    f"with ID '{contender.id}' has unit '{contender.unit}'."
+                )
+
+            # Take `baseline.unitsymbol` here to get the TUnit type.
+            assert baseline.unitsymbol
+            self.unit = baseline.unitsymbol
+
+        # Signal to the mathy methods if all conditions are met for performing
+        # numeric comparison.
+        self.do_comparison = do_comparison
 
         self.baseline = baseline
         self.contender = contender
@@ -160,16 +194,13 @@ class BenchmarkResultComparator:
         )
 
     @property
-    def unit(self) -> str:
-        if self.baseline and self.baseline.unit:
-            return self.baseline.unit
-        if self.contender and self.contender.unit:
-            return self.contender.unit
-        return "unknown"
-
-    @property
-    def less_is_better(self) -> bool:
-        return _less_is_better(self.unit)
+    def less_is_better(self) -> Optional[bool]:
+        """
+        This is only defined when this comparison has a unit.
+        """
+        if self.unit is None:
+            return None
+        return conbench.units.less_is_better(self.unit)
 
     @staticmethod
     def result_info(result: Optional["AugmentedBenchmarkResult"]) -> Optional[dict]:
@@ -192,14 +223,17 @@ class BenchmarkResultComparator:
 
     @property
     def pairwise_analysis(self) -> Optional[dict]:
-        # Note: either can have an error. That's fine as long as they both have an SVS.
-        if (
-            self.baseline is None
-            or self.contender is None
-            or math.isnan(self.baseline.svs)
-            or math.isnan(self.contender.svs)
-            or self.baseline.svs == 0  # don't divide by zero
-        ):
+        if not self.do_comparison:
+            return None
+
+        assert self.baseline
+        assert self.contender
+
+        if self.baseline.svs == 0:
+            # Don't divide by zero.
+            # On the other hand maybe we should not have results
+            # reporting zero of anything:
+            # https://github.com/conbench/conbench/issues/532
             return None
 
         relative_change = (self.contender.svs - self.baseline.svs) / abs(
@@ -222,11 +256,13 @@ class BenchmarkResultComparator:
 
     @property
     def lookback_z_score_analysis(self) -> Optional[dict]:
-        if (
-            self.contender is None
-            or self.contender.z_score is None
-            or math.isnan(self.contender.z_score)
-        ):
+        if not self.do_comparison:
+            return None
+
+        assert self.baseline
+        assert self.contender
+
+        if self.contender.z_score is None or math.isnan(self.contender.z_score):
             return None
 
         regression_indicated = -self.contender.z_score > self.threshold_z
@@ -242,6 +278,9 @@ class BenchmarkResultComparator:
     @property
     def _dict_for_api_json(self) -> dict:
         return {
+            # How is 'unit' here specified? Let's specify it: If both results
+            # are not failed and have the same unit then this here is the unit
+            # symbol. Else it's null/None.
             "unit": self.unit,
             "less_is_better": self.less_is_better,
             "baseline": self.result_info(self.baseline),
