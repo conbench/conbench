@@ -342,6 +342,16 @@ jsonnet-kube-prom-manifests:
 			sed -i.bak "s|PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE|$${PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE}|g" \
 				_kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
 		fi
+	@if [ -z "$${KUBE_PROM_ADDITIONAL_NAMESPACE_STRING:=}" ]; then \
+			echo "KUBE_PROM_ADDITIONAL_NAMESPACE_STRING not set, use: 'default'"; \
+			sed -i.bak "s|KUBE_PROM_ADDITIONAL_NAMESPACE_STRING|'default'|g" \
+				_kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
+		else \
+			echo "KUBE_PROM_ADDITIONAL_NAMESPACE_STRING set, use in JSONNET: $$KUBE_PROM_ADDITIONAL_NAMESPACE_STRING" && \
+			sed -i.bak "s|KUBE_PROM_ADDITIONAL_NAMESPACE_STRING|$${KUBE_PROM_ADDITIONAL_NAMESPACE_STRING}|g" \
+				_kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet; \
+		fi
+	cat _kpbuild/cb-kube-prometheus/conbench-flavor.jsonnet
 	cd _kpbuild/cb-kube-prometheus && \
 		wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/d3889807798d/build.sh -O build.sh
 	cd _kpbuild/cb-kube-prometheus && \

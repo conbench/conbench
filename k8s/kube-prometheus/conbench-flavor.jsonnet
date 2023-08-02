@@ -30,7 +30,15 @@ local kp =
         // to act on it, but will fail with errors like
         // `User \"system:serviceaccount:monitoring:prometheus-k8s\" cannot list resource ...`
         // Also see https://github.com/prometheus-operator/kube-prometheus/blob/main/docs/monitoring-other-namespaces.md
-        namespaces: ['default', 'kube-system', 'monitoring', 'staging'],
+        // Deployment will fail if this contains a namespace that does not exist
+        // in the target environment.
+        // Note(JP): once again, string templating in this file is certainly
+        // not super cute. Set KUBE_PROM_ADDITIONAL_NAMESPACE_STRING, the way
+        // it's written below it's not optional to replace that placeholder.
+        // Minimally, replace it with e.g. "'default'" or "'default',
+        // 'staging'". Also note that in Conbench's CI pipeline a Makefile
+        // target is doing that replacement right before JSONNET build.
+        namespaces: ['kube-system', 'monitoring', KUBE_PROM_ADDITIONAL_NAMESPACE_STRING],
       },
       common+: {
         namespace: 'monitoring',
