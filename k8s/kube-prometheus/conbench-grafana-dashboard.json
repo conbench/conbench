@@ -257,6 +257,7 @@
             "pointSize": 5,
             "scaleDistribution": {
               "log": 2,
+              "log": 10,
               "type": "log"
             },
             "showPoints": "auto",
