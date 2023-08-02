@@ -84,6 +84,9 @@ def legacy_convert(s: str) -> TUnit:
 
     Also for now transparently rewrite `b/s` -- Legacy DB state allows for that
     for now to our knowledge.
+
+    Removing this method: make it so that the type TUnit comes 'straight from
+    the database'.
     """
     if s == "b/s":
         return "B/s"
