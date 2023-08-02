@@ -1157,7 +1157,7 @@
     "list": [
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "5m",
           "value": "5m"
         },
@@ -1190,7 +1190,7 @@
       },
       {
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "default",
           "value": "default"
         },
@@ -1209,9 +1209,9 @@
       },
       {
         "current": {
-          "selected": true,
-          "text": "vd-2",
-          "value": "vd-2"
+          "selected": false,
+          "text": ".*",
+          "value": ".*"
         },
         "hide": 0,
         "includeAll": false,
@@ -1220,7 +1220,7 @@
         "name": "cluster",
         "options": [
           {
-            "selected": true,
+            "selected": false,
             "text": "vd-2",
             "value": "vd-2"
           },
@@ -1230,7 +1230,7 @@
             "value": "ursa-2"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": ".*",
             "value": ".*"
           }
@@ -1242,9 +1242,9 @@
       },
       {
         "current": {
-          "selected": true,
-          "text": "staging",
-          "value": "staging"
+          "selected": false,
+          "text": "default",
+          "value": "default"
         },
         "hide": 0,
         "includeAll": false,
@@ -1253,12 +1253,12 @@
         "name": "namespace",
         "options": [
           {
-            "selected": true,
+            "selected": false,
             "text": "staging",
             "value": "staging"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "default",
             "value": "default"
           },
