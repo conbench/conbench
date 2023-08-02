@@ -165,8 +165,14 @@ deploy() {
 
   if [[ "$EKS_CLUSTER" == "vd-2" ]]; then
     export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="vd-2"
+    # The k8s namespaces that the Conbench web application lives in on this EKS
+    # cluster. This is EKS-cluster-specific config, i.e. not Conbench
+    # deployment-specific config. Namespaces monitored here are going to be
+    # monitored by kube-prometheus.
+    export KUBE_PROM_ADDITIONAL_NAMESPACE_STRING="'default', 'staging'"
   elif [[ "$EKS_CLUSTER" == "ursa-2" ]]; then
     export PROM_REMOTE_WRITE_CLUSTER_LABEL_VALUE="ursa-2"
+    export KUBE_PROM_ADDITIONAL_NAMESPACE_STRING="'default', 'velox'"
   fi
 
   # Prepare environment variables for configuring the remote_write forwarding
