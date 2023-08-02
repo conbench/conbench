@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 11,
+  "id": 27,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -90,7 +90,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
+        "h": 6,
         "w": 12,
         "x": 0,
         "y": 0
@@ -232,6 +232,98 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "Based on a counter that is incremented right before attempting to make an HTTP request, i.e. this rate includes failed requests.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "series",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 31,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "log": 2,
+              "type": "log"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "hertz"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (repourl) (rate(conbench_benchmark_results_ingested_total{namespace=~\"$namespace\", cluster=~\"$cluster\"}[$timewindow]))",
+          "legendFormat": "{{repourl}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "per-repo benchmark result ingest rate [1/s], $timewindow mean",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "\n",
       "fieldConfig": {
         "defaults": {
@@ -318,97 +410,6 @@
         }
       ],
       "title": "Rate of exceptions thrown by request handlers [1/s], $timewindow mean",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "description": "Based on a counter that is incremented right before attempting to make an HTTP request, i.e. this rate includes failed requests.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "series",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "bars",
-            "fillOpacity": 100,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "hertz"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 9
-      },
-      "id": 15,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (repourl) (rate(conbench_benchmark_results_ingested_total{namespace=~\"$namespace\", cluster=~\"$cluster\"}[$timewindow]))",
-          "legendFormat": "{{repourl}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "per-repo benchmark result ingest rate [1/s], $timewindow mean",
       "type": "timeseries"
     },
     {
@@ -558,10 +559,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 5,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 13
       },
       "id": 9,
       "options": {
@@ -662,7 +663,7 @@
           "unit": "s"
         }
       },
-      "pluginVersion": "9.3.2",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -741,10 +742,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 5,
         "w": 12,
         "x": 0,
-        "y": 23
+        "y": 18
       },
       "id": 11,
       "options": {
@@ -773,6 +774,101 @@
         }
       ],
       "title": "GitHub HTTP API request error rate [1/s], $timewindow mean",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "The rate of GitHub HTTP API responses received with status code 403. Some of these errors may have been retried.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "semi-dark-red",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "series",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 3,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "hertz"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(conbench_github_httpapi_403responses_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[$timewindow]))",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GitHub HTTP API 403 error rate [1/s], $timewindow mean",
       "type": "timeseries"
     },
     {
@@ -845,7 +941,7 @@
           "unit": "s"
         }
       },
-      "pluginVersion": "9.3.2",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -868,18 +964,19 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "The rate of GitHub HTTP API responses received with status code 403. Some of these errors may have been retried.",
+      "description": "This is a gauge. Last update wins. -1 means: not seen an HTTP response yet carrying the x-ratelimit-remaining header. Each process reports this. Processes might die.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "semi-dark-red",
-            "mode": "fixed"
+            "mode": "palette-classic"
           },
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "series",
             "axisLabel": "",
             "axisPlacement": "auto",
+            "axisSoftMax": 6000,
+            "axisSoftMin": -1,
             "barAlignment": 0,
             "drawStyle": "line",
             "fillOpacity": 0,
@@ -905,7 +1002,9 @@
               "mode": "off"
             }
           },
+          "decimals": 0,
           "mappings": [],
+          "min": -1,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -919,7 +1018,7 @@
               }
             ]
           },
-          "unit": "hertz"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -927,12 +1026,14 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 29
+        "y": 28
       },
-      "id": 12,
+      "id": 10,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "last"
+          ],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -949,13 +1050,13 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(conbench_github_httpapi_403responses_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[$timewindow]))",
-          "legendFormat": "__auto",
+          "expr": "conbench_github_httpapi_quota_remaining{cluster=~\"$cluster\",namespace=~\"$namespace\"} > -1",
+          "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "GitHub HTTP API 403 error rate [1/s], $timewindow mean",
+      "title": "GitHub HTTP API quota left (x-ratelimit-remaining header value last seen)",
       "type": "timeseries"
     },
     {
@@ -1028,7 +1129,7 @@
           "unit": "s"
         }
       },
-      "pluginVersion": "9.5.0-cloud.4.a016665c",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -1045,106 +1146,6 @@
       ],
       "title": "/api GET requests: response generation duration, event rate [1/s]. Observation period: $timewindow",
       "type": "heatmap"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "description": "This is a gauge. Last update wins. -1 means: not seen an HTTP response yet carrying the x-ratelimit-remaining header. Each process reports this. Processes might die.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "series",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "axisSoftMax": 6000,
-            "axisSoftMin": -1,
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 3,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 0,
-          "mappings": [],
-          "min": -1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 35
-      },
-      "id": 10,
-      "options": {
-        "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "conbench_github_httpapi_quota_remaining{cluster=~\"$cluster\",namespace=~\"$namespace\"} > -1",
-          "legendFormat": "{{instance}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "GitHub HTTP API quota left (x-ratelimit-remaining header value last seen)",
-      "type": "timeseries"
     }
   ],
   "refresh": "30s",
@@ -1288,6 +1289,6 @@
   "timezone": "",
   "title": "Conbench / Web application overview",
   "uid": "b13a04d1c1424f4daa7b08c33d45ad51",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
