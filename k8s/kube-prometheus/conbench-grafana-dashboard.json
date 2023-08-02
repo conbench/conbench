@@ -117,7 +117,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "conbench_bmrt_cache_last_update_seconds{namespace=~\"$namespace\"} > 0",
+          "expr": "conbench_bmrt_cache_last_update_seconds{namespace=~\"$namespace\", cluster=~\"$cluster\"} > 0",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -210,7 +210,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(http_request_total{namespace=~\"$namespace\"}[$timewindow]))",
+          "expr": "sum(rate(http_request_total{namespace=~\"$namespace\", cluster=~\"$cluster\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -311,7 +311,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "rate(http_request_exceptions_total{namespace=~\"$namespace\"}[$timewindow]) > 0",
+          "expr": "rate(http_request_exceptions_total{namespace=~\"$namespace\", cluster=~\"$cluster\"}[$timewindow]) > 0",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -402,7 +402,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (repourl) (rate(conbench_benchmark_results_ingested_total{namespace=~\"$namespace\"}[$timewindow]))",
+          "expr": "sum by (repourl) (rate(conbench_benchmark_results_ingested_total{namespace=~\"$namespace\", cluster=~\"$cluster\"}[$timewindow]))",
           "legendFormat": "{{repourl}}",
           "range": true,
           "refId": "A"
@@ -492,7 +492,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (status) (rate(http_request_total{namespace=~\"$namespace\",status!=\"200\"}[$timewindow]))",
+          "expr": "sum by (status) (rate(http_request_total{namespace=~\"$namespace\",cluster=~\"$cluster\",status!=\"200\"}[$timewindow]))",
           "legendFormat": "{{status}}",
           "range": true,
           "refId": "A"
@@ -583,7 +583,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(conbench_github_httpapi_requests_total{namespace=~\"$namespace\"}[$timewindow]))",
+          "expr": "sum(rate(conbench_github_httpapi_requests_total{namespace=~\"$namespace\", cluster=~\"$cluster\"}[$timewindow]))",
           "legendFormat": "",
           "range": true,
           "refId": "A"
@@ -670,7 +670,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method=\"GET\",http_handler_name=\"app.index\",status=\"200\"}[$timewindow]))",
+          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\",method=\"GET\",http_handler_name=\"app.index\",status=\"200\"}[$timewindow]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "range": true,
@@ -766,7 +766,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(conbench_github_httpapi_requests_failed_total{namespace=~\"$namespace\"}[$timewindow]))",
+          "expr": "sum(rate(conbench_github_httpapi_requests_failed_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -853,7 +853,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method!=\"GET\",http_handler_name=~\"api.*\"}[$timewindow]))",
+          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\",method!=\"GET\",http_handler_name=~\"api.*\"}[$timewindow]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "range": true,
@@ -949,7 +949,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(conbench_github_httpapi_403responses_total[$timewindow]))",
+          "expr": "sum(rate(conbench_github_httpapi_403responses_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[$timewindow]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1036,7 +1036,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\",method=\"GET\",http_handler_name=~\"api.*\",http_handler_name!=\"api.ping\",status!~\"3..\"}[$timewindow]))",
+          "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\",method=\"GET\",http_handler_name=~\"api.*\",http_handler_name!=\"api.ping\",status!~\"3..\"}[$timewindow]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "range": true,
@@ -1137,7 +1137,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "conbench_github_httpapi_quota_remaining{namespace=~\"$namespace\"} > -1",
+          "expr": "conbench_github_httpapi_quota_remaining{cluster=~\"$cluster\",namespace=~\"$namespace\"} > -1",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -1210,6 +1210,39 @@
       {
         "current": {
           "selected": true,
+          "text": "vd-2",
+          "value": "vd-2"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [
+          {
+            "selected": true,
+            "text": "vd-2",
+            "value": "vd-2"
+          },
+          {
+            "selected": false,
+            "text": "ursa-2",
+            "value": "ursa-2"
+          },
+          {
+            "selected": false,
+            "text": ".*",
+            "value": ".*"
+          }
+        ],
+        "query": "vd-2, ursa-2, .*",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": true,
           "text": "staging",
           "value": "staging"
         },
@@ -1231,11 +1264,16 @@
           },
           {
             "selected": false,
+            "text": "velox",
+            "value": "velox"
+          },
+          {
+            "selected": false,
             "text": ".*",
             "value": ".*"
           }
         ],
-        "query": "staging, default, .*",
+        "query": "staging, default, velox, .*",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
