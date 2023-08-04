@@ -1016,9 +1016,14 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
         # I think in marshmallow terms this unfortunately means that empty
         # strings are/were allowed to be injected. TODO: be more strict.
         # Require users to provide a unit (non-zero length string)./
+        # Update: validation for units is now done strictly for non-errored
+        # results.
         required=True,
         metadata={
-            "description": "The unit of the measurement result (object (e.g. seconds, B/s)"
+            "description": (
+                "Unit of the numbers in `data`. Allowed values: "
+                + KNOWN_UNIT_SYMBOLS_STR
+            )
         },
     )
     time_unit = marshmallow.fields.String(
