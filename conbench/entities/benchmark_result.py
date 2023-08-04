@@ -987,24 +987,27 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
         },
     )
     times = marshmallow.fields.List(
+        # https://github.com/conbench/conbench/issues/1399
         marshmallow.fields.Decimal(allow_none=True),
-        required=True,
+        required=False,
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                A list of benchmark durations. If `data` is a duration measure,
-                this should be a duplicate of that object. The values should be
-                ordered in the order the iterations were executed (the first
-                element is the first iteration, the second element is the
-                second iteration, etc.). If an iteration did not complete but
-                others did and you want to send partial data, mark each
-                iteration that didn't complete as `null`.
+                Here, you can provide a list of benchmark durations. That can
+                make sense if `data` is not a duration measure.
 
-                You may populate both this field and the "error" field in the top level
-                of the benchmark result payload. In that case, this field measures
-                how long the benchmark took to run before the error occurred. These
-                values will not be compared to non-errored values in analyses and
-                comparisons.
+                Optional. If provided, must be a list of numbers. `null` is
+                allowed to represent a failed repetition.
+
+                The values should be ordered in the order the repetitions
+                executed (the first element corresponds to the first
+                repetition, the second element to the second repetition, etc).
+
+                The `time_unit` field (see below) should be provided, too.
+
+                Consider this as metadata. You can discover this field later
+                via API and UI, however Conbench as of today does not do
+                validation or analysis on the data.
                 """
             )
         },
@@ -1019,7 +1022,10 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
         },
     )
     time_unit = marshmallow.fields.String(
-        required=True,
+        # TODO/future: make this be intransparent metadata, and then later
+        # maybe offer custom metrics from that metadata.
+        # https://github.com/conbench/conbench/issues/1399
+        required=False,
         metadata={
             "description": "The unit of the times object (e.g. seconds, nanoseconds)"
         },
