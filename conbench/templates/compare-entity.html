@@ -138,6 +138,10 @@ matching fields between baseline and contender are aligned and mismatched fields
             <b>hardware</b>
             <div align="right" style="display:inline-block; float: right;">{{ baseline_run.hardware.name }}</div>
           </li>
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>hardware checksum</b>
+            <div align="right" style="display:inline-block; float: right;">{{ baseline_hardware_checksum }}</div>
+          </li>
         {% endif %}
         <li class="list-group-item list-group-item-secondary">measurement result</li>
         {% for k,v in baseline.stats.items() %}
@@ -231,6 +235,10 @@ matching fields between baseline and contender are aligned and mismatched fields
           <li class="list-group-item" style="overflow-y: auto;">
             <b>hardware</b>
             <div align="right" style="display:inline-block; float: right;">{{ contender_run.hardware.name }}</div>
+          </li>
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>hardware checksum</b>
+            <div align="right" style="display:inline-block; float: right;">{{ contender_hardware_checksum }}</div>
           </li>
         {% endif %}
         <li class="list-group-item list-group-item-secondary">measurement result</li>

@@ -389,7 +389,6 @@ def _api_hardware_entity(
                 "list": "http://localhost/api/hardware/",
                 "self": "http://localhost/api/hardware/%s/" % hardware_id,
             },
-            "checksum": "diana-2-2-4-17179869184",
         }
     else:
         result = {

@@ -103,7 +103,7 @@ class Machine(Hardware):
             # result-result compare view in the UI and that is currently fed
             # from the API (API layer indirection: see
             # https://github.com/conbench/conbench/issues/1394).
-            "checksum": self.hash,
+            # "checksum": self.hash,
             "links": {
                 "list": f.url_for("api.hardwares", _external=True),
                 "self": f.url_for("api.hardware", hardware_id=self.id, _external=True),
@@ -138,7 +138,7 @@ class Cluster(Hardware):
             "info": self.info,
             "optional_info": self.optional_info,
             # See above; https://github.com/conbench/conbench/issues/1394
-            "checksum": self.hash,
+            # "checksum": self.hash,
         }
 
 
