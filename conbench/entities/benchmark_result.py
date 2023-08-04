@@ -689,15 +689,6 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     # See https://github.com/conbench/conbench/issues/1169
     result_data_for_db["mean"] = np.mean(samples)
 
-    if len(samples) >= 2:
-        # There is a special case where for one sample the iteration count
-        # may be larger than one, see below.
-        if stats_usergiven["iterations"] != len(samples):
-            raise BenchmarkResultValidationError(
-                f'iterations count ({ stats_usergiven["iterations"] }) does '
-                f"not match sample count ({len(samples)})"
-            )
-
     if len(samples) >= 3:
         # See https://github.com/conbench/conbench/issues/802 and
         # https://github.com/conbench/conbench/issues/1118
