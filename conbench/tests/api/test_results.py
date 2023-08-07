@@ -731,6 +731,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
                 "os_name": ["Missing data for required field."],
                 "os_version": ["Field may not be null."],
             },
+            "stats": {"extra": ["Unknown field."]},
         }
         self.assert_400_bad_request(response, message)
 
