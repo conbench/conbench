@@ -1120,9 +1120,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         result = _fixtures.VALID_RESULT_PAYLOAD.copy()
         result["stats"] = {
             "data": samples,
-            "times": [],  # key must be there as of now, validate more, change this.
             "unit": "s",
-            "time_unit": "s",
             # also see https://github.com/conbench/conbench/issues/813
             # https://github.com/conbench/conbench/issues/533
             "iterations": len(samples),
@@ -1159,9 +1157,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         result = _fixtures.VALID_RESULT_PAYLOAD.copy()
         result["stats"] = {
             "data": samples,
-            "times": [],  # key must be there as of now, validate more, change this.
             "unit": "s",
-            "time_unit": "s",
             "iterations": len(samples),
             # Set some bogus aggregate.
             uekey: 3,
@@ -1185,9 +1181,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
 
         result["stats"] = {
             "data": (3, 5),
-            "times": [],  # key must be there as of now, validate more, change this.
             "unit": "kg",
-            "time_unit": "foobar",
             # also see https://github.com/conbench/conbench/issues/813
             # https://github.com/conbench/conbench/issues/533
             "iterations": 2,  # number not yet validated, change this
@@ -1203,9 +1197,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
 
         result["stats"] = {
             "data": (3, 5),
-            "times": [],  # key must be there as of now, validate more, change this.
             "unit": "b/s",  # means B/s, is rewritten
-            "time_unit": "foobar",
             # also see https://github.com/conbench/conbench/issues/813
             # https://github.com/conbench/conbench/issues/533
             "iterations": 2,  # number not yet validated, change this
