@@ -1115,7 +1115,7 @@
             "BenchmarkResultStats": {
                 "properties": {
                     "data": {
-                        "description": 'A list of measurement results (e.g. duration, throughput).  Each value in this list is meant to correspond to one repetition of ideally the exact same measurement.  We recommend to repeat a measurement N times (3-6) for enabling systematic stability analysis.  Values are expected to be ordered in the order the iterations/repetitions were executed (the first element corresponds to the first repetition, the second element is the second repetition, etc.).  Values must be numeric or `null`: if one repetition failed but others did not you can mark the failed repetition as `null`.  Note that you may populate both this field and the "error" field in the top level of the benchmark result payload.  If any of the values in `data` is `null` or if the `error` field is set then Conbench will not include any of the reported data in automated analyses.',
+                        "description": 'A list of measurement results (e.g. duration, throughput).  Each value in this list is meant to correspond to one repetition of ideally the exact same measurement.  We recommend to repeat a measurement N times (3-6) for enabling systematic stability analysis.  Values are expected to be ordered in the order the repetitions were executed (the first element corresponds to the first repetition, the second element is the second repetition, etc.).  Values must be numeric or `null`: if one repetition failed but others did not you can mark the failed repetition as `null`.  Note that you may populate both this field and the "error" field in the top level of the benchmark result payload.  If any of the values in `data` is `null` or if the `error` field is set then Conbench will not include any of the reported data in automated analyses.',
                         "items": {"nullable": True, "type": "number"},
                         "type": "array",
                     },
@@ -1124,7 +1124,7 @@
                         "type": "number",
                     },
                     "iterations": {
-                        "description": "Number of iterations that were executed (should be the length of `data` and `times`)",
+                        "description": "Here you can optionally store the number of microbenchmark iterations executed (per repetition). Treated as metadata. Do not store the number of repetitions here; this is reflected by the length of the `data` array.",
                         "type": "integer",
                     },
                     "max": {
@@ -1165,7 +1165,7 @@
                         "type": "array",
                     },
                     "unit": {
-                        "description": "The unit of the measurement result (object (e.g. seconds, B/s)",
+                        "description": "Unit of the numbers in `data`. Allowed values: B/s, s, ns, i/s",
                         "type": "string",
                     },
                 },

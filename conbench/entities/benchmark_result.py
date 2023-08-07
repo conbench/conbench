@@ -20,6 +20,7 @@ import conbench.units
 import conbench.util
 from conbench.dbsession import current_session
 from conbench.numstr import numstr, numstr_dyn
+from conbench.units import KNOWN_UNIT_SYMBOLS_STR
 
 from ..entities._entity import (
     Base,
@@ -969,7 +970,7 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
                 systematic stability analysis.
 
                 Values are expected to be ordered in the order the
-                iterations/repetitions were executed (the first element
+                repetitions were executed (the first element
                 corresponds to the first repetition, the second element is the
                 second repetition, etc.).
 
@@ -1016,9 +1017,14 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
         # I think in marshmallow terms this unfortunately means that empty
         # strings are/were allowed to be injected. TODO: be more strict.
         # Require users to provide a unit (non-zero length string)./
+        # Update: validation for units is now done strictly for non-errored
+        # results.
         required=True,
         metadata={
-            "description": "The unit of the measurement result (object (e.g. seconds, B/s)"
+            "description": (
+                "Unit of the numbers in `data`. Allowed values: "
+                + KNOWN_UNIT_SYMBOLS_STR
+            )
         },
     )
     time_unit = marshmallow.fields.String(
@@ -1031,9 +1037,17 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
         },
     )
     iterations = marshmallow.fields.Integer(
+        # TODO: make this not required, and clarify that these are
+        # microbenchmark iterations, stored as metadata.
+        # https://github.com/conbench/conbench/issues/1398
         required=True,
         metadata={
-            "description": "Number of iterations that were executed (should be the length of `data` and `times`)"
+            "description": (
+                "Here you can optionally store the number of microbenchmark "
+                "iterations executed (per repetition). Treated as metadata. "
+                "Do not store the number of repetitions here; this is reflected "
+                "by the length of the `data` array."
+            )
         },
     )
     min = marshmallow.fields.Decimal(
