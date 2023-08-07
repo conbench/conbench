@@ -135,7 +135,7 @@ matching fields between baseline and contender are aligned and mismatched fields
             </li>
           {% endif %}
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>hardware</b>
+            <b>hardware name</b>
             <div align="right" style="display:inline-block; float: right;">{{ baseline_run.hardware.name }}</div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
@@ -159,7 +159,7 @@ matching fields between baseline and contender are aligned and mismatched fields
   {% if contender %}
     <div class="col-md-6">
       <h5>
-        result <a href="{{ url_for('app.benchmark-result', benchmark_result_id=baseline.id) }}">{{ contender.id }}</a>
+        result <a href="{{ url_for('app.benchmark-result', benchmark_result_id=contender.id) }}">{{ contender.id }}</a>
       </h5>
       <ul class="list-group">
         <li class="list-group-item list-group-item-secondary">overview</li>
@@ -233,7 +233,7 @@ matching fields between baseline and contender are aligned and mismatched fields
             </li>
           {% endif %}
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>hardware</b>
+            <b>hardware name</b>
             <div align="right" style="display:inline-block; float: right;">{{ contender_run.hardware.name }}</div>
           </li>
           <li class="list-group-item" style="overflow-y: auto;">
