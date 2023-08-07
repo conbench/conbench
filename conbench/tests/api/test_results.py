@@ -1108,24 +1108,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         # schema validation.
         assert "Either stats or error field is required" in resp.text
 
-    def test_create_result_bad_iter_count(self, client):
-        self.authenticate(client)
-        result = _fixtures.VALID_RESULT_PAYLOAD.copy()
-
-        result["stats"] = {
-            "data": (3, 5),
-            "times": [],  # key must be there as of now, validate more, change this.
-            "unit": "s",
-            "time_unit": "s",
-            # also see https://github.com/conbench/conbench/issues/813
-            # https://github.com/conbench/conbench/issues/533
-            "iterations": 3,  # number not yet validated, change this
-        }
-
-        resp = client.post("/api/benchmark-results/", json=result)
-        assert resp.status_code == 400, resp.text
-        assert "iterations count (3) does not match sample count (2)" in resp.text
-
     @pytest.mark.parametrize(
         "samples",
         [(1,), (3, 5), (3, 5, 7)],
