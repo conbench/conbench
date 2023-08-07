@@ -714,7 +714,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
     def test_nested_schema_validation(self, client):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
-        del data["stats"]["iterations"]
         del data["github"]["commit"]
         del data["machine_info"]["os_name"]
         data["machine_info"]["os_version"] = None
@@ -732,10 +731,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
                 "os_name": ["Missing data for required field."],
                 "os_version": ["Field may not be null."],
             },
-            "stats": {
-                "extra": ["Unknown field."],
-                "iterations": ["Missing data for required field."],
-            },
+            "stats": {"extra": ["Unknown field."]},
         }
         self.assert_400_bad_request(response, message)
 
@@ -1121,9 +1117,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         result["stats"] = {
             "data": samples,
             "unit": "s",
-            # also see https://github.com/conbench/conbench/issues/813
-            # https://github.com/conbench/conbench/issues/533
-            "iterations": len(samples),
         }
 
         resp = client.post("/api/benchmark-results/", json=result)
@@ -1158,7 +1151,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         result["stats"] = {
             "data": samples,
             "unit": "s",
-            "iterations": len(samples),
             # Set some bogus aggregate.
             uekey: 3,
         }
@@ -1173,6 +1165,10 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         bmrdict = resp.json
 
         if len(samples) < 3:
+            # "be liberal in what you accept"; confirm that information has
+            # been dropped (was not put into the database): for example,
+            # when stddev is provided for two samples then it's not stored,
+            # and not returned
             assert bmrdict["stats"][uekey] is None
 
     def test_create_result_bad_unit(self, client):
@@ -1182,9 +1178,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         result["stats"] = {
             "data": (3, 5),
             "unit": "kg",
-            # also see https://github.com/conbench/conbench/issues/813
-            # https://github.com/conbench/conbench/issues/533
-            "iterations": 2,  # number not yet validated, change this
         }
 
         resp = client.post("/api/benchmark-results/", json=result)
@@ -1198,9 +1191,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         result["stats"] = {
             "data": (3, 5),
             "unit": "b/s",  # means B/s, is rewritten
-            # also see https://github.com/conbench/conbench/issues/813
-            # https://github.com/conbench/conbench/issues/533
-            "iterations": 2,  # number not yet validated, change this
         }
 
         resp = client.post("/api/benchmark-results/", json=result)

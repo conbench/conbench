@@ -1169,7 +1169,7 @@
                         "type": "string",
                     },
                 },
-                "required": ["data", "iterations", "unit"],
+                "required": ["data", "unit"],
                 "type": "object",
             },
             "BenchmarkResultUpdate": {
