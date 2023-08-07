@@ -714,7 +714,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
     def test_nested_schema_validation(self, client):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
-        del data["stats"]["iterations"]
         del data["github"]["commit"]
         del data["machine_info"]["os_name"]
         data["machine_info"]["os_version"] = None
@@ -731,10 +730,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
                 "extra": ["Unknown field."],
                 "os_name": ["Missing data for required field."],
                 "os_version": ["Field may not be null."],
-            },
-            "stats": {
-                "extra": ["Unknown field."],
-                "iterations": ["Missing data for required field."],
             },
         }
         self.assert_400_bad_request(response, message)
