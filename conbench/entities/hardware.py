@@ -98,6 +98,12 @@ class Machine(Hardware):
             "memory_bytes": self.memory_bytes,
             "gpu_count": self.gpu_count,
             "gpu_product_names": self.gpu_product_names,
+            # Note(JP): adding this to the public-facing API is not what I
+            # aimed for here, but I'd like to display that checksum in the
+            # result-result compare view in the UI and that is currently fed
+            # from the API (API layer indirection: see
+            # https://github.com/conbench/conbench/issues/1394).
+            # "checksum": self.hash,
             "links": {
                 "list": f.url_for("api.hardwares", _external=True),
                 "self": f.url_for("api.hardware", hardware_id=self.id, _external=True),
@@ -131,6 +137,8 @@ class Cluster(Hardware):
             "type": self.type,
             "info": self.info,
             "optional_info": self.optional_info,
+            # See above; https://github.com/conbench/conbench/issues/1394
+            # "checksum": self.hash,
         }
 
 

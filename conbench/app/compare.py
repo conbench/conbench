@@ -37,6 +37,8 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         baseline_run, contender_run = None, None
         biggest_changes_names, outlier_urls = None, None
         benchmark_result_history_plot_info = None
+        contender_hardware_checksum = "n/a"
+        baseline_hardware_checksum = "n/a"
 
         if comparisons and self.type == "run":
             baseline_run_id, contender_run_id = baseline_id, contender_id
@@ -61,9 +63,14 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             # `contender` is a dictionary representing the benchmark result.
             # Also inject the 'proper' benchmark result object  into
             # get_history_plot(). This is a mad way to deal with madness.
-            # We need to remove this API layer indirection:
+            # We (really!) need to remove this API layer indirection:
             # https://github.com/conbench/conbench/issues/968
             contender_benchmark_result = BenchmarkResult.one(id=contender["id"])
+            baseline_benchmark_result = BenchmarkResult.one(id=contender["id"])
+
+            contender_hardware_checksum = contender_benchmark_result.run.hardware.hash
+            baseline_hardware_checksum = baseline_benchmark_result.run.hardware.hash
+
             benchmark_result_history_plot_info = self.get_history_plot(
                 contender_benchmark_result,
                 contender_run,
@@ -73,36 +80,8 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             )
             # log.info("compare view: generated history plot", plot_history)
 
-        # if comparisons and self.type != "benchmark-result":
-        #     comparisons_by_id = {
-        #         c["contender"]["benchmark_result_id"]: c
-        #         for c in comparisons
-        #         if c["contender"]
-        #     }
-        #     if self.type == "run":
-        #         benchmarks, response = self._get_benchmarks(run_id=contender_id)
-        #     if response.status_code != 200:
-        #         self.flash("Error getting benchmark results.")
-        #         return self.redirect("app.index")
-        #     for benchmark in benchmarks:
-        #         augment(benchmark)
-        #     (
-        #         biggest_changes,
-        #         biggest_changes_ids,
-        #         biggest_changes_names,
-        #     ) = self.get_biggest_changes(benchmarks)
-        #     outlier_urls = [
-        #         comparisons_by_id.get(x, {}).get("compare_benchmarks_url", "")
-        #         for x in biggest_changes_ids
-        #     ]
-        #     # Note(JP): I think this has been broken for a while. Just
-        #     # rediscovering this -- do we really want to
-        #     # show multiple history plots when we compare two runs?
-        #     plot_history = [
-        #         self.get_history_plot(b, contender_run, i)
-        #         for i, b in enumerate(biggest_changes)
-        #     ]
-
+        # It is wild that we use this call for rendering either of two rather
+        # different templates.
         return self.render_template(
             self.html,
             application=Config.APPLICATION_NAME,
@@ -131,6 +110,8 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             info_fields=all_keys(baseline, contender, "info"),
             hardware_fields=all_keys(baseline_run, contender_run, "hardware"),
             commit_hardware_run_map=commit_hardware_run_map(),
+            contender_hardware_checksum=contender_hardware_checksum,
+            baseline_hardware_checksum=baseline_hardware_checksum,
         )
 
     def _get_benchmarks(self, run_id=None, batch_id=None):

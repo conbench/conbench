@@ -689,15 +689,6 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     # See https://github.com/conbench/conbench/issues/1169
     result_data_for_db["mean"] = np.mean(samples)
 
-    if len(samples) >= 2:
-        # There is a special case where for one sample the iteration count
-        # may be larger than one, see below.
-        if stats_usergiven["iterations"] != len(samples):
-            raise BenchmarkResultValidationError(
-                f'iterations count ({ stats_usergiven["iterations"] }) does '
-                f"not match sample count ({len(samples)})"
-            )
-
     if len(samples) >= 3:
         # See https://github.com/conbench/conbench/issues/802 and
         # https://github.com/conbench/conbench/issues/1118
@@ -741,8 +732,14 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
                         stats_usergiven,
                     )
 
+    # Clarify that these are meant as 'micro benchmark iterations', can be
+    # None or int.
+    micro_bm_iterations: Optional[int] = None
+    if stats_usergiven["iterations"] is not None:
+        micro_bm_iterations = stats_usergiven["iterations"]
+
     if len(samples) == 1:
-        if stats_usergiven["iterations"] == 1:
+        if micro_bm_iterations == 1:
             # If user provides aggregates, then it's unclear what they mean.
             # That is, this set of user-given data is inconsistent. Ignore
             # parts of it. Tighter API specification / strictness would be
@@ -757,15 +754,18 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
                         "is unexpected (do not store in DB)"
                     )
 
-        if stats_usergiven["iterations"] > 1:
+        if micro_bm_iterations and micro_bm_iterations > 1:
             # Note(JP): Do not yet handle this in a special way, but I think
             # that this here is precisely the one way to report the result of a
-            # microbenchmark with cross-repetition stats: data: length 1 (the
-            # duration of running many repetitions), and iterations: a number
-            # larger than 1, while mean, max, are now set (then these can be
-            # assumed to be derived from _within_ the microbenchmark. Note that
-            # this is a very special condition). The mean time for a single
-            # repetition now is sample/iterations.
+            # microbenchmark with cross-iteration stats: data: length 1 (the
+            # duration of one _repetition_ involving potentially many
+            # iterations, more than one). If mean, max, etc are now set then
+            # these can be assumed to be derived from _within_ the
+            # microbenchmark. For example, this could be useful for providing a
+            # standard deviation derived from 100000 iterations (where it's
+            # more or less obvious that we don't want to get 100000 raw samples
+            # submitted). At the time of writing it is unclear if we have
+            # clients / benchmark frameworks that can make use of that.
             ...
 
     if len(samples) == 2:
