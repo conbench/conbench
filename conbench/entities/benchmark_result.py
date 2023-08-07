@@ -733,11 +733,10 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
                         stats_usergiven,
                     )
 
-    # Clarify that these are meant as 'micro benchmark iterations', can be
-    # None or int.
-    micro_bm_iterations: Optional[int] = None
-    if stats_usergiven["iterations"] is not None:
-        micro_bm_iterations = stats_usergiven["iterations"]
+    # The next line explicitly encodes our updated thinking:
+    # - `iterations` key is optional
+    # - if provided, number is meant as 'micro benchmark iteration' count
+    micro_bm_iterations: Optional[int] = stats_usergiven.get("iterations")
 
     if len(samples) == 1:
         if micro_bm_iterations == 1:
@@ -1040,7 +1039,7 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
         # TODO: make this not required, and clarify that these are
         # microbenchmark iterations, stored as metadata.
         # https://github.com/conbench/conbench/issues/1398
-        required=True,
+        required=False,
         metadata={
             "description": (
                 "Here you can optionally store the number of microbenchmark "
