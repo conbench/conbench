@@ -126,9 +126,19 @@ def generate_csv_history_for_result(
     """
     input from `get_history_for_benchmark()`. Intrinsics of that function
     matter a lot; read its docstring and code. For example, two important
-    aspects about that func:
-    - results for default branch only
-    - order is not guaranteed in returned collection.
+    aspects about that func: - results for default branch only - order is not
+    guaranteed in returned collection.
+
+    Specification for this endpoint: Download current full history including
+    the benchmark result provided via ID.
+
+    Think: read the timeseries fingerprint from result with given ID, get all
+    results with the same timeseries fingerprint; construct a data file from
+    it. That file contains data for each result, but also meta data - about the
+    system emitting the file - that all results have in common
+
+    Highly experimental interface. Will change/add: file format (think: HDF5,
+    ...), set of columns, etc.
     """
 
     assert len(items) > 0
@@ -145,6 +155,7 @@ def generate_csv_history_for_result(
             "commit_hash": [i.commit_hash for i in items],
             "svs": [i.svs for i in items],
             "min": [min(i.data) for i in items],
+            # add benchmark_time
         },
         # Note(jp): also no generator expression possible. The
         # `unit="s"` is the critical ingredient to convert this list of
