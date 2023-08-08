@@ -66,8 +66,7 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             # We (really!) need to remove this API layer indirection:
             # https://github.com/conbench/conbench/issues/968
             contender_benchmark_result = BenchmarkResult.one(id=contender["id"])
-            baseline_benchmark_result = BenchmarkResult.one(id=contender["id"])
-
+            baseline_benchmark_result = BenchmarkResult.one(id=baseline["id"])
             contender_hardware_checksum = contender_benchmark_result.run.hardware.hash
             baseline_hardware_checksum = baseline_benchmark_result.run.hardware.hash
 
