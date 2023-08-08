@@ -68,7 +68,7 @@ class HistorySampleZscoreStats:
     is_outlier: bool
 
 
-# It stands to reason that we should move away from HistorySample to
+# Note(JP): It stands to reason that we should move away from HistorySample to
 # BMRTBenchmarkResult -- it's the ~third iteration for this kind of thing, and
 # I think BMRTBenchmarkResult has nicer/more complete logic, better interface.
 # E.g. `data` -> result.measurements.
@@ -188,12 +188,13 @@ def get_history_for_cchr(
     # database that have the repo set to an empty string, i.e. the filter for
     # repo=="" might even yield something).
 
-    # The goal here is to have an identifier that represents a timeseries (as
-    # opposed to a single result). We may want to first-class this general
-    # idea. Also see https://github.com/conbench/conbench/issues/862. This
-    # fingerprint hashing approach has / will have similarities to Prometheus
-    # Fingerprint/FastFingerprint. Let's think about likelihood for collisions,
-    # and if there can be a fallout at all.
+    # Note(JP): the goal here is to have an identifier that represents a
+    # timeseries (as opposed to a single result). We may want to first-class
+    # this general idea. Also see
+    # https://github.com/conbench/conbench/issues/862. This fingerprint hashing
+    # approach has / will have similarities to Prometheus
+    # Fingerprint/FastFingerprint. Later, let's think about likelihood for
+    # collisions, and if there can be a fallout at all.
     ts_fingerprint = hashlib.md5(
         (benchmark_name + case_id + context_id + hardware_hash + repo_url).encode(
             "utf-8"
