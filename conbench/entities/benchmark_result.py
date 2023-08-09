@@ -1161,7 +1161,10 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
             )
         },
     )
-    batch_id = marshmallow.fields.String(required=True)
+    batch_id = marshmallow.fields.String(
+        # this lacks specification and should probably not be required
+        required=True
+    )
 
     # `AwareDateTime` with `default_timezone` set to UTC: naive datetimes are
     # set this timezone.
