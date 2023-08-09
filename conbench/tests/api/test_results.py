@@ -378,9 +378,10 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         _fixtures.VALID_RESULT_PAYLOAD_WITH_ITERATION_ERROR
     )
     required_fields = [
-        "batch_id",
+        "batch_id",  # why is this required?
         "context",
-        "info",
+        # should this be optional in the future? grouping results in a run can
+        # be convenient, but should not be necessary.
         "run_id",
         "tags",
         "timestamp",
