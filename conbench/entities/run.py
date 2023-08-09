@@ -42,6 +42,29 @@ from ..entities.hardware import (
 log = logging.getLogger(__name__)
 
 
+# This is used in two places.
+github_commit_info_descr = conbench.util.dedent_rejoin(
+    """
+    GitHub-flavored commit information.
+
+    Use this object to tell Conbench with which specific state of benchmarked
+    code (repository identifier, commit hash) the BenchmarkResult is
+    associated.
+
+    This property is optional. If not provided, it means that this benchmark
+    result is not associated with any particular state of benchmarked code.
+
+    Not associating a benchmark result with commit information has special,
+    limited purpose (pre-merge benchmarks, testing). It generally means that
+    this benchmark result will not be considered for time series analysis along
+    a commit tree.
+
+    TODO: allow for associating a benchmark result with a repository (URL), w/o
+    providing commit information (cf. issue #1165).
+    """
+)
+
+
 @dataclasses.dataclass
 class _CandidateBaselineSearchResult:
     """Information about the search for a candidate baseline run, and the result of the
@@ -698,18 +721,7 @@ class _RunFacadeSchemaCreate(marshmallow.Schema):
     github = marshmallow.fields.Nested(
         SchemaGitHubCreate(),
         required=False,
-        metadata={
-            "description": conbench.util.dedent_rejoin(
-                """
-                Use this object to tell Conbench with which commit the
-                Run/BenchmarkResult is associated.
-
-                This field can be left out for testing purposes. Note however
-                that commit information is required for powering valuable
-                Conbench capabilities.
-                """
-            )
-        },
+        metadata={"description": github_commit_info_descr},
     )
     machine_info = marshmallow.fields.Nested(MachineSchema().create, required=False)
     cluster_info = marshmallow.fields.Nested(ClusterSchema().create, required=False)

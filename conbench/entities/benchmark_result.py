@@ -1121,6 +1121,8 @@ hardware/case/context)? That is, when evaluating whether future results are regr
 or improvements, should we treat data from before this result as incomparable?
 """
 
+from conbench.entities.run import github_commit_info_descr
+
 
 class _BenchmarkResultCreateSchema(marshmallow.Schema):
     run_id = marshmallow.fields.String(
@@ -1298,7 +1300,11 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
             "description": "Benchmark results validation metadata (e.g., errors, validation types)."
         },
     )
-    github = marshmallow.fields.Nested(SchemaGitHubCreate(), required=False)
+    github = marshmallow.fields.Nested(
+        SchemaGitHubCreate(),
+        required=False,
+        metadata={"description": github_commit_info_descr},
+    )
     change_annotations = marshmallow.fields.Dict(
         required=False, metadata={"description": CHANGE_ANNOTATIONS_DESC}
     )
