@@ -1276,7 +1276,9 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
     optional_benchmark_info = marshmallow.fields.Dict(
         required=False,
         metadata={
-            "description": "Optional information about Benchmark results (e.g., telemetry links, logs links). These are unique to each benchmark that is run, but are information that aren't reasonably expected to impact benchmark performance. Helpful for adding debugging or additional links and context for a benchmark (free-form JSON)"
+            # TODO: remove this.
+            # https://github.com/conbench/conbench/issues/1424
+            "description": "Deprecated. Use `info` instead."
         },
     )
     # Note, this mypy error is interesting: Incompatible types in assignment
