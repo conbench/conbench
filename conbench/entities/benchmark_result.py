@@ -1289,9 +1289,29 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
         },
     )
     info = marshmallow.fields.Dict(
-        required=True,
+        required=False,
         metadata={
-            "description": "Additional information about the context the benchmark was run in that is not expected to have an impact on benchmark performance (e.g. benchmark language version, compiler version). This information is expected to be the same across a number of benchmarks. (free-form JSON)"
+            "description": conbench.util.dedent_rejoin(
+                """
+                Optional.
+
+                Arbitrary metadata associated with this
+                benchmark result.
+
+                Ignored when assembling timeseries across results (differences
+                do not break history).
+
+                Must be a JSON object if provided. A flat string-string mapping
+                is recommended (not yet enforced).
+
+                This can be useful for example for storing URLs pointing to
+                build artifacts. You can also use this to store environmental
+                properties that you potentially would like to review later (a
+                compiler version, or runtime version), and generally any kind
+                of information that can later be useful for debugging
+                unexpected measurements.
+                """
+            )
         },
     )
     validation = marshmallow.fields.Dict(
