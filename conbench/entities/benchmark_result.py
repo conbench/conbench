@@ -1285,7 +1285,21 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
     context = marshmallow.fields.Dict(  # type: ignore[assignment]
         required=True,
         metadata={
-            "description": "Information about the context the benchmark was run in (e.g. compiler flags, benchmark langauge) that are reasonably expected to have an impact on benchmark performance. This information is expected to be the same across a number of benchmarks. (free-form JSON)"
+            "description": conbench.util.dedent_rejoin(
+                """
+                Required. Must be a JSON object (empty dictionary is allowed).
+
+                Relevant benchmark context (other than hardware/platform
+                details and benchmark case parameters).
+
+                Conbench requires this object to remain constant when doing
+                automated timeseries analysis (this breaks history).
+
+                Use this to store for example compiler flags or a runtime
+                version that you expect to have significant impact on
+                measurement results.
+                """
+            )
         },
     )
     info = marshmallow.fields.Dict(
