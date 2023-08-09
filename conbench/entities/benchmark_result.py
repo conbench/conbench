@@ -36,7 +36,7 @@ from ..entities.commit import TypeCommitInfoGitHub
 from ..entities.context import Context
 from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info
-from ..entities.run import Run, SchemaGitHubCreate
+from ..entities.run import Run, SchemaGitHubCreate, github_commit_info_descr
 
 log = logging.getLogger(__name__)
 
@@ -222,7 +222,7 @@ class BenchmarkResult(Base, EntityMixin):
         # Create related DB entities if they do not exist yet.
         case = Case.get_or_create({"name": benchmark_name, "tags": tags})
         context = Context.get_or_create({"tags": userres["context"]})
-        info = Info.get_or_create({"tags": userres["info"]})
+        info = Info.get_or_create({"tags": userres.get("info", {})})
 
         # Create a corresponding `Run` entity in the database if it doesn't
         # exist yet. Use the user-given `id` (string) as primary key. If the
@@ -1159,7 +1159,10 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
             )
         },
     )
-    batch_id = marshmallow.fields.String(required=True)
+    batch_id = marshmallow.fields.String(
+        # this lacks specification and should probably not be required
+        required=True
+    )
 
     # `AwareDateTime` with `default_timezone` set to UTC: naive datetimes are
     # set this timezone.
@@ -1274,7 +1277,9 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
     optional_benchmark_info = marshmallow.fields.Dict(
         required=False,
         metadata={
-            "description": "Optional information about Benchmark results (e.g., telemetry links, logs links). These are unique to each benchmark that is run, but are information that aren't reasonably expected to impact benchmark performance. Helpful for adding debugging or additional links and context for a benchmark (free-form JSON)"
+            # TODO: remove this.
+            # https://github.com/conbench/conbench/issues/1424
+            "description": "Deprecated. Use `info` instead."
         },
     )
     # Note, this mypy error is interesting: Incompatible types in assignment
@@ -1283,13 +1288,47 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
     context = marshmallow.fields.Dict(  # type: ignore[assignment]
         required=True,
         metadata={
-            "description": "Information about the context the benchmark was run in (e.g. compiler flags, benchmark langauge) that are reasonably expected to have an impact on benchmark performance. This information is expected to be the same across a number of benchmarks. (free-form JSON)"
+            "description": conbench.util.dedent_rejoin(
+                """
+                Required. Must be a JSON object (empty dictionary is allowed).
+
+                Relevant benchmark context (other than hardware/platform
+                details and benchmark case parameters).
+
+                Conbench requires this object to remain constant when doing
+                automated timeseries analysis (this breaks history).
+
+                Use this to store for example compiler flags or a runtime
+                version that you expect to have significant impact on
+                measurement results.
+                """
+            )
         },
     )
     info = marshmallow.fields.Dict(
-        required=True,
+        required=False,
         metadata={
-            "description": "Additional information about the context the benchmark was run in that is not expected to have an impact on benchmark performance (e.g. benchmark language version, compiler version). This information is expected to be the same across a number of benchmarks. (free-form JSON)"
+            "description": conbench.util.dedent_rejoin(
+                """
+                Optional.
+
+                Arbitrary metadata associated with this
+                benchmark result.
+
+                Ignored when assembling timeseries across results (differences
+                do not break history).
+
+                Must be a JSON object if provided. A flat string-string mapping
+                is recommended (not yet enforced).
+
+                This can be useful for example for storing URLs pointing to
+                build artifacts. You can also use this to store environmental
+                properties that you potentially would like to review later (a
+                compiler version, or runtime version), and generally any kind
+                of information that can later be useful for debugging
+                unexpected measurements.
+                """
+            )
         },
     )
     validation = marshmallow.fields.Dict(
@@ -1298,7 +1337,11 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
             "description": "Benchmark results validation metadata (e.g., errors, validation types)."
         },
     )
-    github = marshmallow.fields.Nested(SchemaGitHubCreate(), required=False)
+    github = marshmallow.fields.Nested(
+        SchemaGitHubCreate(),
+        required=False,
+        metadata={"description": github_commit_info_descr},
+    )
     change_annotations = marshmallow.fields.Dict(
         required=False, metadata={"description": CHANGE_ANNOTATIONS_DESC}
     )

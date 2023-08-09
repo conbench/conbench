@@ -1055,16 +1055,19 @@
                         "description": "Precisely one of `machine_info` and `cluster_info` must be provided. The data is however ignored when the Run (referred to by `run_id`) was previously created.",
                     },
                     "context": {
-                        "description": "Information about the context the benchmark was run in (e.g. compiler flags, benchmark langauge) that are reasonably expected to have an impact on benchmark performance. This information is expected to be the same across a number of benchmarks. (free-form JSON)",
+                        "description": "Required. Must be a JSON object (empty dictionary is allowed).  Relevant benchmark context (other than hardware/platform details and benchmark case parameters).  Conbench requires this object to remain constant when doing automated timeseries analysis (this breaks history).  Use this to store for example compiler flags or a runtime version that you expect to have significant impact on measurement results.",
                         "type": "object",
                     },
                     "error": {
                         "description": 'Details about an error that occurred while the benchmark was running (free-form JSON).  You may populate both this field and the "data" field of the "stats" object. In that case, the "data" field measures the metric\'s values before the error occurred. Those values will not be compared to non-errored values in analyses and comparisons.',
                         "type": "object",
                     },
-                    "github": {"$ref": "#/components/schemas/SchemaGitHubCreate"},
+                    "github": {
+                        "allOf": [{"$ref": "#/components/schemas/SchemaGitHubCreate"}],
+                        "description": "GitHub-flavored commit information.  Use this object to tell Conbench with which specific state of benchmarked code (repository identifier, commit hash) the BenchmarkResult is associated.  This property is optional. If not provided, it means that this benchmark result is not associated with any particular state of benchmarked code.  Not associating a benchmark result with commit information has special, limited purpose (pre-merge benchmarks, testing). It generally means that this benchmark result will not be considered for time series analysis along a commit tree.  TODO: allow for associating a benchmark result with a repository (URL), w/o providing commit information (cf. issue #1165).",
+                    },
                     "info": {
-                        "description": "Additional information about the context the benchmark was run in that is not expected to have an impact on benchmark performance (e.g. benchmark language version, compiler version). This information is expected to be the same across a number of benchmarks. (free-form JSON)",
+                        "description": "Optional.  Arbitrary metadata associated with this benchmark result.  Ignored when assembling timeseries across results (differences do not break history).  Must be a JSON object if provided. A flat string-string mapping is recommended (not yet enforced).  This can be useful for example for storing URLs pointing to build artifacts. You can also use this to store environmental properties that you potentially would like to review later (a compiler version, or runtime version), and generally any kind of information that can later be useful for debugging unexpected measurements.",
                         "type": "object",
                     },
                     "machine_info": {
@@ -1072,7 +1075,7 @@
                         "description": "Precisely one of `machine_info` and `cluster_info` must be provided. The data is however ignored when the Run (referred to by `run_id`) was previously created.",
                     },
                     "optional_benchmark_info": {
-                        "description": "Optional information about Benchmark results (e.g., telemetry links, logs links). These are unique to each benchmark that is run, but are information that aren't reasonably expected to impact benchmark performance. Helpful for adding debugging or additional links and context for a benchmark (free-form JSON)",
+                        "description": "Deprecated. Use `info` instead.",
                         "type": "object",
                     },
                     "run_id": {
@@ -1102,14 +1105,7 @@
                         "type": "object",
                     },
                 },
-                "required": [
-                    "batch_id",
-                    "context",
-                    "info",
-                    "run_id",
-                    "tags",
-                    "timestamp",
-                ],
+                "required": ["batch_id", "context", "run_id", "tags", "timestamp"],
                 "type": "object",
             },
             "BenchmarkResultStats": {
@@ -1322,7 +1318,7 @@
                     },
                     "github": {
                         "allOf": [{"$ref": "#/components/schemas/SchemaGitHubCreate"}],
-                        "description": "Use this object to tell Conbench with which commit the Run/BenchmarkResult is associated.  This field can be left out for testing purposes. Note however that commit information is required for powering valuable Conbench capabilities.",
+                        "description": "GitHub-flavored commit information.  Use this object to tell Conbench with which specific state of benchmarked code (repository identifier, commit hash) the BenchmarkResult is associated.  This property is optional. If not provided, it means that this benchmark result is not associated with any particular state of benchmarked code.  Not associating a benchmark result with commit information has special, limited purpose (pre-merge benchmarks, testing). It generally means that this benchmark result will not be considered for time series analysis along a commit tree.  TODO: allow for associating a benchmark result with a repository (URL), w/o providing commit information (cf. issue #1165).",
                     },
                     "id": {"type": "string"},
                     "info": {"description": "Run's metadata", "type": "object"},

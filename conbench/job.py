@@ -68,6 +68,7 @@ class BMRTBenchmarkResult:
     svs_type: str
     unit: str
     benchmark_name: str
+    # POSIX timestamp
     started_at: float
     hardware_checksum: str
     hardware_name: str

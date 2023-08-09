@@ -46,7 +46,7 @@ class ApiEndpointTest:
         assert r.json is None, r.json
 
     def assert_400_bad_request(self, r, message):
-        assert r.status_code == 400, r.status_code
+        assert r.status_code == 400, f"{r.status_code}\n{r.text}"
         assert r.content_type == "application/json", r.content_type
         assert r.json == {
             "code": 400,
