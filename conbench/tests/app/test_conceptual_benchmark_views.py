@@ -19,9 +19,17 @@ benchmark_result_dict = {
     "batch_id": "1",
     "timestamp": "2020-11-25T21:02:44Z",
     "context": {},
-    # "info": {},
-    # "machine_info": {"foo": "bar"}, this should work, relax constraints
+    # something like "machine_info": {"foo": "bar"} should work, relax
+    # constraints.
     "machine_info": _fixtures.MACHINE_INFO,
+    # This is special repo/commit data that makes the web application use mock
+    # commit data (instead of reaching out to the GitHub HTTP API). The goal
+    # here is to use a commit that looks like it's on 'the default branch',
+    # because only such results are entering the BMRT cache as of now.
+    "github": {
+        "commit": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+        "repository": "https://github.com/org/repo",
+    },
     "stats": {
         "data": [
             "0.099094",
@@ -48,11 +56,14 @@ class TestCBenchmarks(_asserts.AppEndpointTest):
         self.logout(client)
         assert_response_is_login_page(client.get(relpath, follow_redirects=True))
 
-    def test_cbench_no_data(self, client):
+    def test_cbench_cache_population(self, client):
         self.authenticate(client)
         resp = client.post("/api/benchmark-results/", json=benchmark_result_dict)
         assert resp.status_code == 201, resp.text
 
         conbench.job.start_jobs()
-        time.sleep(10)
+        time.sleep(2)
         conbench.job.stop_jobs_join()
+
+        resp = client.get("/c-benchmarks/")
+        assert "fun-benchmark" in resp.text
