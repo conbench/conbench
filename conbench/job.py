@@ -157,6 +157,8 @@ bmrt_cache: CacheDict = {
 
 SHUTDOWN = False
 _STARTED = False
+_THREADS = []
+
 
 BMRT_CACHE_SIZE = 0.8 * 10**6
 if Config.TESTING:
@@ -420,11 +422,14 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
         )
         return
 
-    threading.Thread(target=_run_forever).start()
-    # Do not attempt to explicitly join thread. Terminate thread cleanly as
-    # part of gunicorn's worker process shutdown -- therefore the signal
-    # handler-based logic below which injects a shutdown signal into the
-    # thread.
+    t = threading.Thread(target=_run_forever)
+    t.start()
+    return t
+    # GOal: terminate thread cleanly as part of gunicorn's worker process
+    # shutdown. For that, we use signal handler-based logic below which injects
+    # a shutdown signal into the thread, after which it is 'known' / assumed to
+    # quickly terminate. The returned thread object can be used to explicitly
+    # join the thread.
 
 
 def _generate_tsdf_per_4tuple(
@@ -520,9 +525,25 @@ def _generate_tsdf_per_4tuple(
 
 def start_jobs():
     log.info("start job: periodic BMRT cache population")
-    _periodically_fetch_last_n_benchmark_results()
+    _THREADS.append(_periodically_fetch_last_n_benchmark_results())
     log.info("start job: metrics.periodically_set_q_rem()")
-    conbench.metrics.periodically_set_q_rem()
+    _THREADS.append(conbench.metrics.periodically_set_q_rem())
+
+
+def stop_jobs_join():
+    """
+    For clean shutdown, explicitly waits for threads to terminate.
+
+    I've added this for the test suite where we may go through multiple
+    start/stop cycles. This is not really great because this mode of operation
+    deviates from "prod".
+    """
+    log.info("stop_jobs_join(): set shutdown flag")
+    global SHUTDOWN
+    SHUTDOWN = True
+    for t in _THREADS:
+        log.info("join %s", t)
+        t.join()
 
 
 def shutdown_handler(sig, frame):
