@@ -36,7 +36,7 @@ from ..entities.commit import TypeCommitInfoGitHub
 from ..entities.context import Context
 from ..entities.hardware import ClusterSchema, MachineSchema
 from ..entities.info import Info
-from ..entities.run import Run, SchemaGitHubCreate
+from ..entities.run import Run, SchemaGitHubCreate, github_commit_info_descr
 
 log = logging.getLogger(__name__)
 
@@ -1120,8 +1120,6 @@ Currently-recognized keys that change Conbench behavior:
 hardware/case/context)? That is, when evaluating whether future results are regressions
 or improvements, should we treat data from before this result as incomparable?
 """
-
-from conbench.entities.run import github_commit_info_descr
 
 
 class _BenchmarkResultCreateSchema(marshmallow.Schema):
