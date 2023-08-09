@@ -222,7 +222,7 @@ class BenchmarkResult(Base, EntityMixin):
         # Create related DB entities if they do not exist yet.
         case = Case.get_or_create({"name": benchmark_name, "tags": tags})
         context = Context.get_or_create({"tags": userres["context"]})
-        info = Info.get_or_create({"tags": userres["info"]})
+        info = Info.get_or_create({"tags": userres.get("info", {})})
 
         # Create a corresponding `Run` entity in the database if it doesn't
         # exist yet. Use the user-given `id` (string) as primary key. If the
