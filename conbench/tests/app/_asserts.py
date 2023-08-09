@@ -16,11 +16,13 @@ class AppEndpointTest:
     def login(self, client, email, password):
         response = client.get("/login/")
         csrf_token = self.get_csrf_token(response)
-        return client.post(
+        resp = client.post(
             "/login/",
             data=dict(email=email, password=password, csrf_token=csrf_token),
             follow_redirects=True,
         )
+        assert resp.status_code == 200, f"got {resp.status_code}:\n" + resp.text
+        return resp
 
     def logout(self, client):
         client.get("/logout/")
