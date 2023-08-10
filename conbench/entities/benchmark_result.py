@@ -1161,6 +1161,7 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
     )
     batch_id = marshmallow.fields.String(
         # this lacks specification and should probably not be required
+        # see https://github.com/conbench/conbench/issues/880
         required=True
     )
 
