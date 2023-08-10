@@ -416,14 +416,6 @@ def _periodically_fetch_last_n_benchmark_results() -> threading.Thread:
             delay_s = max(min_delay_between_runs_seconds, 5 * last_call_duration_s)
             log.info("BMRT cache: trigger next fetch in %.3f s", delay_s)
 
-    if not Config.CREATE_ALL_TABLES:
-        # This needs to be done more cleanly -- when running the DB migration,
-        # the app should not even initialize so far.
-        log.info(
-            "BMRT cache: CREATE_ALL_TABLES is false, assume migration; disable cache job"
-        )
-        return
-
     t = threading.Thread(target=_run_forever, name="bmrt-cache-refresh")
     t.start()
     return t
@@ -526,8 +518,16 @@ def _generate_tsdf_per_4tuple(
 
 
 def start_jobs():
-    log.info("start job: periodic BMRT cache population")
-    _THREADS.append(_periodically_fetch_last_n_benchmark_results())
+    if not Config.CREATE_ALL_TABLES:
+        # This needs to be done more cleanly -- when running the DB migration,
+        # the app should not even initialize so far.
+        log.info(
+            "BMRT cache: CREATE_ALL_TABLES is false, assume migration; do not start job"
+        )
+    else:
+        log.info("start job: periodic BMRT cache population")
+        _THREADS.append(_periodically_fetch_last_n_benchmark_results())
+
     log.info("start job: metrics.periodically_set_q_rem()")
     _THREADS.append(conbench.metrics.periodically_set_q_rem())
 
