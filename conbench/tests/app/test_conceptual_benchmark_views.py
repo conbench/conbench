@@ -1,5 +1,3 @@
-import time
-
 import pytest
 
 import conbench.job
@@ -32,13 +30,11 @@ benchmark_result_dict = {
     },
     "stats": {
         "data": [
-            "0.099094",
-            "0.037129",
+            "1.1",
         ],
         "unit": "s",
     },
     "tags": {
-        "p1": "v1",
         "name": "fun-benchmark",
     },
 }
@@ -56,14 +52,36 @@ class TestCBenchmarks(_asserts.AppEndpointTest):
         self.logout(client)
         assert_response_is_login_page(client.get(relpath, follow_redirects=True))
 
-    def test_cbench_cache_population(self, client):
+    def test_cache_population(self, client):
         self.authenticate(client)
+
+        # First, insert a special result.
         resp = client.post("/api/benchmark-results/", json=benchmark_result_dict)
         assert resp.status_code == 201, resp.text
 
+        # Probe behavior without BMRT cache population.
+        resp = client.get("/c-benchmarks/")
+        assert "0 unique benchmark names seen across the 0 newest results" in resp.text
+
+        # Then, force a single BMRT cache population. It's a WIP interface
+        # for testing, but at least it's reasonably snappy (see timestamps
+        # below):
+        # [230810-09:09:46.744] [1] [conbench.job] INFO: start job: periodic BMRT cache population
+        # [230810-09:09:46.745] [1] [conbench.job] INFO: start job: metrics.periodically_set_q_rem()
+        # [230810-09:09:46.748] [1] [conbench.metrics] INFO: periodically_set_q_rem(): initiate
+        # [230810-09:09:46.753] [1] [conbench.job] INFO: BMRT cache pop: quadratic sort loop took 0.000 s
+        # [230810-09:09:46.753] [1] [conbench.job] INFO: BMRT cache pop: df constr took 0.001 s (1 time series)
+        # [230810-09:09:46.753] [1] [conbench.job] INFO: BMRT cache population done (1 results, took 0.007 s)
+        # [230810-09:09:46.753] [1] [conbench.job] INFO: BMRT cache: trigger next fetch in 20.000 s
+        # [230810-09:09:46.753] [1] [conbench.job] INFO: stop_jobs_join(): set shutdown flag
+        # [230810-09:09:46.753] [1] [conbench.job] INFO: join <Thread(bmrt-cache-refresh, started 140561314998016)>
+        # [230810-09:09:46.763] [1] [conbench.job] INFO: join <Thread(metrics-gauge-set, started 140561306605312)>
+        # [230810-09:09:46.799] [1] [conbench.job] INFO: all threads joined
+
         conbench.job.start_jobs()
-        time.sleep(2)
+        conbench.job.wait_for_first_bmrt_cache_population()
         conbench.job.stop_jobs_join()
 
         resp = client.get("/c-benchmarks/")
         assert "fun-benchmark" in resp.text
+        assert "1 unique benchmark names seen across the 1 newest results" in resp.text
