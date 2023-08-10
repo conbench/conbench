@@ -175,7 +175,7 @@ def http_handler_name(r: flask.Request) -> str:
 gauge_gh_api_rem_set = {"first_value_seen": False}
 
 
-def periodically_set_q_rem() -> None:
+def periodically_set_q_rem() -> threading.Thread:
     """
     This function immediately returns after having spawned a thread.
 

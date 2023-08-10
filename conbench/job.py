@@ -364,7 +364,7 @@ def _fetch_and_cache_most_recent_results_guts(
     )
 
 
-def _periodically_fetch_last_n_benchmark_results() -> None:
+def _periodically_fetch_last_n_benchmark_results() -> threading.Thread:
     """
     Return right after having spawned a thread that triggers periodic action.
     """
