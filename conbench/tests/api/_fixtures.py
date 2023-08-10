@@ -254,6 +254,8 @@ def benchmark_result(
     However, in general, this approach might divert the test suite form
     real-world relevance: our users cannot directly write to the database,
     either.
+
+    Now tracked here: https://github.com/conbench/conbench/issues/1431
     """
 
     data = copy.deepcopy(VALID_RESULT_PAYLOAD)
