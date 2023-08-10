@@ -205,7 +205,7 @@ def periodically_set_q_rem() -> None:
                     log.debug("periodically_set_q_rem(): shut down")
                     return
 
-                time.sleep(0.1)
+                time.sleep(0.05)
 
             if gauge_gh_api_rem_set["first_value_seen"]:
                 # This process set an actual, meaningful value. Stop
@@ -217,6 +217,6 @@ def periodically_set_q_rem() -> None:
 
     # Create a threaddy zombie, no need to join it. It likely terminates
     # itself. If it doesn't that's OK, too.
-    t = threading.Thread(target=func)
+    t = threading.Thread(target=func, name="metrics-gauge-set")
     t.start()
     return t

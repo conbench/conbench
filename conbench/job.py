@@ -158,6 +158,7 @@ bmrt_cache: CacheDict = {
 SHUTDOWN = False
 _STARTED = False
 _THREADS = []
+_FIRST_REFRESH_DONE_EVENT = threading.Event()
 
 
 BMRT_CACHE_SIZE = 0.8 * 10**6
@@ -371,7 +372,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
     min_delay_between_runs_seconds = 120
 
     if Config.TESTING:
-        first_sleep_seconds = 2
+        first_sleep_seconds = 0
         min_delay_between_runs_seconds = 20
 
     def _run_forever():
@@ -389,7 +390,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
                     log.debug("_run_forever: shut down")
                     return
 
-                time.sleep(0.1)
+                time.sleep(0.01)
 
             t0 = time.monotonic()
 
@@ -406,6 +407,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
             # yappi.stop()
             # yappi_print_threads_stats()
 
+            _FIRST_REFRESH_DONE_EVENT.set()
             last_call_duration_s = time.monotonic() - t0
 
             # Goal: spend the majority of the time _not_ doing this thing here.
@@ -422,7 +424,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
         )
         return
 
-    t = threading.Thread(target=_run_forever)
+    t = threading.Thread(target=_run_forever, name="bmrt-cache-refresh")
     t.start()
     return t
     # GOal: terminate thread cleanly as part of gunicorn's worker process
@@ -530,6 +532,20 @@ def start_jobs():
     _THREADS.append(conbench.metrics.periodically_set_q_rem())
 
 
+def wait_for_first_bmrt_cache_population(timeout=20):
+    """
+    Wait (block) until the first BMRT cache population loop iteration to has
+    completed, or raise a timeout error after deadline.
+
+    Once the event is set from the producing thread this will return
+    immediately for all consuming threads (the 'event set' state can be checked
+    multiple times from multiple threads just fine; resetting state would
+    require the producer to call .clear()).
+    """
+    _FIRST_REFRESH_DONE_EVENT.wait(timeout)
+    return None
+
+
 def stop_jobs_join():
     """
     For clean shutdown, explicitly waits for threads to terminate.
@@ -544,6 +560,8 @@ def stop_jobs_join():
     for t in _THREADS:
         log.info("join %s", t)
         t.join()
+
+    log.info("all threads joined")
 
 
 def shutdown_handler(sig, frame):
