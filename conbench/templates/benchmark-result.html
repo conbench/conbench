@@ -3,7 +3,8 @@
 {% block app_content %}
   {{ utils.view_entity_title("benchmark result",  result.id) }}
   <div>
-    <strong>{{ benchmark.display_bmname }}</strong> /
+    <strong>{{ benchmark.display_bmname }}</strong>
+    <br>
     <code>{{ benchmark.display_case_perm }}</code>
   </div>
   <div class="row">
@@ -86,8 +87,10 @@
       {% endif %}
     </div>
   </div>
-  <hr class="border border-danger border-1 opacity-50">
   <h4>raw data</h4>
+  <div class="text-muted fst-italic mt-1 small">
+    Everything else that the API client communicated about this benchmark result.
+  </div>
   <div class="row">
     <div class="col-md-8 mt-3">
       {{ wtf.quick_form(update_form, id="update-form", button_map={'toggle_distribution_change': update_button_color}) }}
@@ -97,7 +100,7 @@
   <div class="row result-raw-data-container">
     <div class="col-md-6">
       <ul class="list-group">
-        <li class="list-group-item list-group-item-primary">Result details</li>
+        <li class="list-group-item list-group-item-primary">overview</li>
         <li class="list-group-item" style="overflow-y: auto;">
           <b>benchmark name</b>
           <div align="right" style="display:inline-block; float: right;">
@@ -148,7 +151,13 @@
           {% endfor %}
         {% endif %}
         {% if benchmark.stats %}
-          <li class="list-group-item list-group-item-primary">Measurement result</li>
+          <li class="list-group-item list-group-item-primary">
+            measurement
+            <sup><i class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="at the heart of the benchmark result is the measurement itself">
+            </i></sup>
+          </li>
           <li class="list-group-item" style="overflow-y: auto;">
             timestamp (usually the start time)
             <div align="right" style="display:inline-block; float: right;">
@@ -166,20 +175,36 @@
             {% endif %}
           {% endfor %}
         {% endif %}
-        <li class="list-group-item list-group-item-primary">Raw tags (case permutation + name)</li>
+        <li class="list-group-item list-group-item-primary">
+          tags
+          <sup><i class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="'tags' contains the case parameter permutation as well as the benchmark name">
+          </i></sup>
+        </li>
         {% for k,v in benchmark.tags.items() %}
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>{{ k }}</b>
-            <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+            {{ k }}
+            <div align="right" style="display:inline-block; float: right;">
+              <code>{{ v }}</code>
+            </div>
           </li>
         {% endfor %}
         {% if benchmark.optional_benchmark_info %}
-          <li class="list-group-item list-group-item-primary">Additional Benchmark Details</li>
+          <li class="list-group-item list-group-item-primary">
+            "optional info"
+            <sup><i class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="Does not break history. Extension to 'info' (consolidation tracked in issue #1426)">
+            </i></sup>
+          </li>
           {% for k,v in benchmark.optional_benchmark_info.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
+              {{ k }}
               {% if v is not none %}
-                <div align="right" style="display:inline-block; float: right;">{{ v | urlize(target="_blank") }}</div>
+                <div align="right" style="display:inline-block; float: right;">
+                  <code>{{ v | urlize(target="_blank") }}</code>
+                </div>
               {% endif %}
             </li>
           {% endfor %}
@@ -198,9 +223,9 @@
     <div class="col-md-6">
       <ul class="list-group">
         {% if run and run.commit.url %}
-          <li class="list-group-item list-group-item-primary">Commit</li>
+          <li class="list-group-item list-group-item-primary">commit</li>
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>commit</b>
+            commit
             <div class="ellipsis-500"
                  align="right"
                  style="display:inline-block;
@@ -214,61 +239,79 @@
           </li>
           {% if run.commit.display_timestamp %}
             <li class="list-group-item" style="overflow-y: auto;">
-              <b>date</b>
+              date
               <div align="right" style="display:inline-block; float: right;">{{ run.commit.display_timestamp }}</div>
             </li>
           {% endif %}
           {% if run.commit.display_message %}
             <li class="list-group-item" style="overflow-y: auto;">
-              <b>author</b>
+              author
               <div align="right" style="display:inline-block; float: right;">{{ run.commit.author_name }}</div>
             </li>
           {% endif %}
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>repository</b>
+            repository
             <div align="right" style="display:inline-block; float: right;">
               <a href="{{ run.commit.repository }}">{{ run.commit.display_repository }}</a>
             </div>
           </li>
           {% if run.commit.branch %}
             <li class="list-group-item" style="overflow-y: auto;">
-              <b>branch</b>
+              branch
               <div align="right" style="display:inline-block; float: right;">{{ run.commit.branch }}</div>
             </li>
           {% endif %}
         {% endif %}
         <li class="list-group-item list-group-item-primary">
-          Hardware (checksum is constant among results in history plot above)
+          platform/hardware
+          <sup><i class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="breaks history: checksum is constant among results in history plot above">
+          </i></sup>
         </li>
         <li class="list-group-item" style="overflow-y: auto;">
-          <b>checksum</b>
+          checksum
           <div align="right" style="display:inline-block; float: right;">
             <code>{{ result.run.hardware.hash }}</code>
           </div>
         </li>
         {% for k,v in run.hardware.items() %}
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>{{ k }}</b>
+            {{ k }}
             <div align="right" style="display:inline-block; float: right;">
               <code>{{ v }}</code>
             </div>
           </li>
         {% endfor %}
-        <li class="list-group-item list-group-item-primary">Context (constant among results in history plot above)</li>
+        <li class="list-group-item list-group-item-primary">
+          context
+          <sup><i class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="breaks history: context is constant among results in history plot above">
+          </i></sup>
+        </li>
         {% for k,v in benchmark.context.items() %}
           <li class="list-group-item" style="overflow-y: auto;">
-            <b>{{ k }}</b>
-            <div align="right" style="display:inline-block; float: right;">{{ v }}</div>
+            {{ k }}
+            <div align="right" style="display:inline-block; float: right;">
+              <code>{{ v }}</code>
+            </div>
           </li>
         {% endfor %}
         {% if benchmark.info and benchmark.info|length > 1 %}
           <li class="list-group-item list-group-item-primary">
-            Additional context (may vary among results in history plot above)
+            info
+            <sup><i class="bi bi-info-circle"
+   data-bs-toggle="tooltip"
+   data-bs-title="does not break history: arbitrary metadata, may vary among results in history plot above">
+            </i></sup>
           </li>
           {% for k,v in benchmark.info.items() %}
             <li class="list-group-item" style="overflow-y: auto;">
-              <b>{{ k }}</b>
-              <div align="right" style="display:inline-block; float: right;">{{ v | urlize(target="_blank") }}</div>
+              {{ k }}
+              <div align="right" style="display:inline-block; float: right;">
+                <code>{{ v | urlize(target="_blank") }}</code>
+              </div>
             </li>
           {% endfor %}
         {% endif %}
@@ -299,6 +342,10 @@
       $("#delete-form").find("#delete").attr("data-cbcustom-form-id", "#delete-form");
       $("#delete-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.benchmark-result', benchmark_result_id=benchmark.id) }}");
       $("#delete-form").find("#delete").attr("data-cbcustom-message", "<ul><li>Delete benchmark result: <strong>{{ benchmark.id }}</strong></li></ul>");
+
+      // Enable bootstrap tooltips on this page.
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
     });
 
     {% if history_plot_info.jsondoc %}
