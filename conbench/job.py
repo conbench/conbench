@@ -157,6 +157,9 @@ bmrt_cache: CacheDict = {
 
 SHUTDOWN = False
 _STARTED = False
+_THREADS = []
+_FIRST_REFRESH_DONE_EVENT = threading.Event()
+
 
 BMRT_CACHE_SIZE = 0.8 * 10**6
 if Config.TESTING:
@@ -361,7 +364,7 @@ def _fetch_and_cache_most_recent_results_guts(
     )
 
 
-def _periodically_fetch_last_n_benchmark_results() -> None:
+def _periodically_fetch_last_n_benchmark_results() -> threading.Thread:
     """
     Return right after having spawned a thread that triggers periodic action.
     """
@@ -369,7 +372,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
     min_delay_between_runs_seconds = 120
 
     if Config.TESTING:
-        first_sleep_seconds = 2
+        first_sleep_seconds = 0
         min_delay_between_runs_seconds = 20
 
     def _run_forever():
@@ -387,7 +390,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
                     log.debug("_run_forever: shut down")
                     return
 
-                time.sleep(0.1)
+                time.sleep(0.01)
 
             t0 = time.monotonic()
 
@@ -404,6 +407,7 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
             # yappi.stop()
             # yappi_print_threads_stats()
 
+            _FIRST_REFRESH_DONE_EVENT.set()
             last_call_duration_s = time.monotonic() - t0
 
             # Goal: spend the majority of the time _not_ doing this thing here.
@@ -412,19 +416,14 @@ def _periodically_fetch_last_n_benchmark_results() -> None:
             delay_s = max(min_delay_between_runs_seconds, 5 * last_call_duration_s)
             log.info("BMRT cache: trigger next fetch in %.3f s", delay_s)
 
-    if not Config.CREATE_ALL_TABLES:
-        # This needs to be done more cleanly -- when running the DB migration,
-        # the app should not even initialize so far.
-        log.info(
-            "BMRT cache: CREATE_ALL_TABLES is false, assume migration; disable cache job"
-        )
-        return
-
-    threading.Thread(target=_run_forever).start()
-    # Do not attempt to explicitly join thread. Terminate thread cleanly as
-    # part of gunicorn's worker process shutdown -- therefore the signal
-    # handler-based logic below which injects a shutdown signal into the
-    # thread.
+    t = threading.Thread(target=_run_forever, name="bmrt-cache-refresh")
+    t.start()
+    return t
+    # GOal: terminate thread cleanly as part of gunicorn's worker process
+    # shutdown. For that, we use signal handler-based logic below which injects
+    # a shutdown signal into the thread, after which it is 'known' / assumed to
+    # quickly terminate. The returned thread object can be used to explicitly
+    # join the thread.
 
 
 def _generate_tsdf_per_4tuple(
@@ -519,10 +518,50 @@ def _generate_tsdf_per_4tuple(
 
 
 def start_jobs():
-    log.info("start job: periodic BMRT cache population")
-    _periodically_fetch_last_n_benchmark_results()
+    if not Config.CREATE_ALL_TABLES:
+        # This needs to be done more cleanly -- when running the DB migration,
+        # the app should not even initialize so far.
+        log.info(
+            "BMRT cache: CREATE_ALL_TABLES is false, assume migration; do not start job"
+        )
+    else:
+        log.info("start job: periodic BMRT cache population")
+        _THREADS.append(_periodically_fetch_last_n_benchmark_results())
+
     log.info("start job: metrics.periodically_set_q_rem()")
-    conbench.metrics.periodically_set_q_rem()
+    _THREADS.append(conbench.metrics.periodically_set_q_rem())
+
+
+def wait_for_first_bmrt_cache_population(timeout=20):
+    """
+    Wait (block) until the first BMRT cache population loop iteration to has
+    completed, or raise a timeout error after deadline.
+
+    Once the event is set from the producing thread this will return
+    immediately for all consuming threads (the 'event set' state can be checked
+    multiple times from multiple threads just fine; resetting state would
+    require the producer to call .clear()).
+    """
+    _FIRST_REFRESH_DONE_EVENT.wait(timeout)
+    return None
+
+
+def stop_jobs_join():
+    """
+    For clean shutdown, explicitly waits for threads to terminate.
+
+    I've added this for the test suite where we may go through multiple
+    start/stop cycles. This is not really great because this mode of operation
+    deviates from "prod".
+    """
+    log.info("stop_jobs_join(): set shutdown flag")
+    global SHUTDOWN
+    SHUTDOWN = True
+    for t in _THREADS:
+        log.info("join %s", t)
+        t.join()
+
+    log.info("all threads joined")
 
 
 def shutdown_handler(sig, frame):

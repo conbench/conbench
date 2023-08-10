@@ -175,7 +175,7 @@ def http_handler_name(r: flask.Request) -> str:
 gauge_gh_api_rem_set = {"first_value_seen": False}
 
 
-def periodically_set_q_rem() -> None:
+def periodically_set_q_rem() -> threading.Thread:
     """
     This function immediately returns after having spawned a thread.
 
@@ -196,7 +196,7 @@ def periodically_set_q_rem() -> None:
         log.info("periodically_set_q_rem(): initiate")
         while True:
             # Delay for a bit until setting the gauge next time. But don't just
-            # sleep, to a busy sleep (responsive sleep loop that inspects
+            # sleep, do a busy sleep (responsive sleep loop that inspects
             # SHUTDOWN often_.
             deadline = time.monotonic() + 3
             while time.monotonic() < deadline:
@@ -205,7 +205,7 @@ def periodically_set_q_rem() -> None:
                     log.debug("periodically_set_q_rem(): shut down")
                     return
 
-                time.sleep(0.2)
+                time.sleep(0.05)
 
             if gauge_gh_api_rem_set["first_value_seen"]:
                 # This process set an actual, meaningful value. Stop
@@ -217,4 +217,6 @@ def periodically_set_q_rem() -> None:
 
     # Create a threaddy zombie, no need to join it. It likely terminates
     # itself. If it doesn't that's OK, too.
-    threading.Thread(target=func).start()
+    t = threading.Thread(target=func, name="metrics-gauge-set")
+    t.start()
+    return t
