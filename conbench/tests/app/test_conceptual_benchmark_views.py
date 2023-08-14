@@ -1,5 +1,6 @@
 import pytest
 
+import conbench.bmrt
 import conbench.job
 
 from ...tests.api import _fixtures
@@ -79,7 +80,7 @@ class TestCBenchmarks(_asserts.AppEndpointTest):
         # [230810-09:09:46.799] [1] [conbench.job] INFO: all threads joined
 
         conbench.job.start_jobs()
-        conbench.job.wait_for_first_bmrt_cache_population()
+        conbench.bmrt.wait_for_first_bmrt_cache_population()
         conbench.job.stop_jobs_join()
 
         resp = client.get("/c-benchmarks/")
