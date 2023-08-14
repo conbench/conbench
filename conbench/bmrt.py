@@ -159,28 +159,42 @@ class CacheDict(TypedDict):
     meta: CacheUpdateMetaInfo
 
 
-# Think: do work in a child process, provide dictionary via shared memory to
-# parent, maybe via https://pypi.org/project/shared-memory-dict/ this is _not_
-# as stdlib pickling dict
+# Think: future: do work in a child process, provide dictionary via shared
+# memory to parent, maybe via https://pypi.org/project/shared-memory-dict/ this
+# is _not_ as stdlib pickling dict
 # https://github.com/luizalabs/shared-memory-dict/issues/10 This initial state
 # might result in exceptions raised in certain request handlers; healing after
 # first update.
-bmrt_cache: CacheDict = {
-    "by_id": {},
-    "by_benchmark_name": {},
-    "by_case_id": {},
-    "by_4t_list": {},
-    "by_4t_df": {},
-    "by_run_id": {},
-    "meta": CacheUpdateMetaInfo(
+
+bmrt_cache: CacheDict = {}
+
+_FIRST_REFRESH_DONE_EVENT = threading.Event()
+
+
+def reinit():
+    keys = (
+        "by_id",
+        "by_benchmark_name",
+        "by_case_id",
+        "by_4t_list",
+        "by_4t_df",
+        "by_run_id",
+    )
+
+    for k in keys:
+        bmrt_cache[k] = {}
+
+    bmrt_cache["meta"] = CacheUpdateMetaInfo(
         newest_result_time_str="n/a",
         oldest_result_time_str="n/a",
         n_results=0,
         covered_timeframe_days_approx="n/a",
-    ),
-}
+    )
 
-_FIRST_REFRESH_DONE_EVENT = threading.Event()
+
+# Set initial state during import of this module. Rely on this happening once
+# during Pythons import machinery: re-import does not have this side effect.
+reinit()
 
 
 def wait_for_first_bmrt_cache_population(timeout=20):
