@@ -16,7 +16,6 @@ import conbench.metrics
 import conbench.util
 from conbench.config import Config
 
-
 original_sigint_handler = signal.getsignal(signal.SIGINT)
 original_sigquit_handler = signal.getsignal(signal.SIGQUIT)
 

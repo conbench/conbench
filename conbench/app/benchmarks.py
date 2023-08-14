@@ -15,8 +15,8 @@ import conbench.numstr
 import conbench.units
 from conbench.app import app
 from conbench.app._endpoint import authorize_or_terminate
-from conbench.config import Config
 from conbench.bmrt import BMRTBenchmarkResult, TBenchmarkName, bmrt_cache
+from conbench.config import Config
 from conbench.outlier import remove_outliers_by_iqrdist
 
 """

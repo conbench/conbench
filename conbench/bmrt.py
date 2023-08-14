@@ -53,7 +53,6 @@ from conbench.entities.benchmark_result import (
 )
 from conbench.types import TBenchmarkName
 
-
 # A memory profiler, and a CPU profiler that are both tested to work well
 # with the process/threading model used here.
 # from filprofiler.api import profile as filprofile

@@ -8,8 +8,8 @@ import flask
 from sqlalchemy import select
 
 import conbench.util
-from conbench.dbsession import current_session
 from conbench.bmrt import bmrt_cache
+from conbench.dbsession import current_session
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
