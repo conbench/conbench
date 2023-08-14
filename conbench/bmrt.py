@@ -159,6 +159,15 @@ class CacheDict(TypedDict):
     meta: CacheUpdateMetaInfo
 
 
+_init_metainfo = CacheUpdateMetaInfo(
+    newest_result_time_str="n/a",
+    oldest_result_time_str="n/a",
+    n_results=0,
+    covered_timeframe_days_approx="n/a",
+)
+
+_FIRST_REFRESH_DONE_EVENT = threading.Event()
+
 # Think: future: do work in a child process, provide dictionary via shared
 # memory to parent, maybe via https://pypi.org/project/shared-memory-dict/ this
 # is _not_ as stdlib pickling dict
@@ -166,30 +175,25 @@ class CacheDict(TypedDict):
 # might result in exceptions raised in certain request handlers; healing after
 # first update.
 
-bmrt_cache: CacheDict = {}
-
-_FIRST_REFRESH_DONE_EVENT = threading.Event()
+# For now the idea is not re-create the wrapping dict during lifetime of the
+# cache.
+bmrt_cache: CacheDict = {
+    "by_id": {},
+    "by_benchmark_name": {},
+    "by_case_id": {},
+    "by_4t_list": {},
+    "by_4t_df": {},
+    "by_run_id": {},
+    "meta": _init_metainfo,
+}
 
 
 def reinit():
-    keys = (
-        "by_id",
-        "by_benchmark_name",
-        "by_case_id",
-        "by_4t_list",
-        "by_4t_df",
-        "by_run_id",
-    )
-
-    for k in keys:
-        bmrt_cache[k] = {}
-
-    bmrt_cache["meta"] = CacheUpdateMetaInfo(
-        newest_result_time_str="n/a",
-        oldest_result_time_str="n/a",
-        n_results=0,
-        covered_timeframe_days_approx="n/a",
-    )
+    for k in bmrt_cache:
+        if k == "meta":
+            bmrt_cache[k] = _init_metainfo
+        else:
+            bmrt_cache[k] = {}
 
 
 # Set initial state during import of this module. Rely on this happening once
