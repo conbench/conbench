@@ -1,25 +1,19 @@
+from typing import Dict
+
 import flask as f
 import flask_login
 
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
-from ..entities._entity import EntityExists, NotFound
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
-from ..entities.run import Run, RunFacadeSchema, RunSerializer
+from ..entities.run import RunFacadeSchema, RunSerializer
 
 
 class RunEntityAPI(ApiEndpoint):
     serializer = RunSerializer()
     schema = RunFacadeSchema()
-
-    def _get(self, run_id):
-        try:
-            run = Run.one(id=run_id)
-        except NotFound:
-            self.abort_404_not_found()
-        return run
 
     @maybe_login_required
     def get(self, run_id):
@@ -69,16 +63,18 @@ class RunEntityAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        run = self._get(run_id)
-        return self.serializer.one._dump(run, get_baseline_runs=True)
+        any_result = BenchmarkResult.first(run_id=run_id)
+        if not any_result:
+            self.abort_404_not_found()
+        return self.serializer.one._dump(any_result, get_baseline_runs=True)
 
     @flask_login.login_required
     def put(self, run_id):
         """
         ---
-        description: Edit a run.
+        description: Deprecated. This endpoint is a no-op, despite returning a 200.
         responses:
-            "200": "RunEntityWithoutBaselines"
+            "200": "RunCreated"
             "401": "401"
             "404": "404"
         parameters:
@@ -93,16 +89,13 @@ class RunEntityAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        run = self._get(run_id)
-        data = self.validate(self.schema.update)
-        run.update(data)
-        return self.serializer.one.dump(run)
+        return {}
 
     @flask_login.login_required
     def delete(self, run_id):
         """
         ---
-        description: Delete a run.
+        description: Deprecated. This endpoint is a no-op, despite returning a 204.
         responses:
             "204": "204"
             "401": "401"
@@ -115,11 +108,6 @@ class RunEntityAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        benchmark_results = BenchmarkResult.all(run_id=run_id)
-        for benchmark_result in benchmark_results:
-            benchmark_result.delete()
-        run = self._get(run_id)
-        run.delete()
         return self.response_204_no_content()
 
 
@@ -131,7 +119,7 @@ class RunListAPI(ApiEndpoint):
     def get(self):
         """
         ---
-        description: Get a list of runs.
+        description: Get a list of runs corresponding to the last 1000 benchmark results
         responses:
             "200": "RunList"
             "401": "401"
@@ -145,16 +133,33 @@ class RunListAPI(ApiEndpoint):
         """
         if sha_arg := f.request.args.get("sha"):
             shas = sha_arg.split(",")
-            runs = Run.search(filters=[Commit.sha.in_(shas)], joins=[Commit])
+            filters = [Commit.sha.in_(shas)]
+            joins = [Commit]
         else:
-            runs = Run.all(order_by=Run.timestamp.desc(), limit=1000)
-        return self.serializer.many.dump(runs)
+            filters = []
+            joins = None
+
+        results = BenchmarkResult.search(
+            filters=filters,
+            joins=joins,
+            order_by=BenchmarkResult.timestamp.desc(),
+            limit=1000,
+        )
+        random_result_for_each_run_id: Dict[str, BenchmarkResult] = {}
+        for result in results:
+            if result.run_id not in random_result_for_each_run_id:
+                random_result_for_each_run_id[result.run_id] = result
+
+        return [
+            self.serializer.one._dump(result, get_baseline_runs=False)
+            for result in random_result_for_each_run_id.values()
+        ]
 
     @flask_login.login_required
     def post(self):
         """
         ---
-        description: Create a run.
+        description: Deprecated. This endpoint is a no-op, despite returning a 201.
         responses:
             "201": "RunCreated"
             "400": "400"
@@ -166,14 +171,7 @@ class RunListAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        data = self.validate(self.schema.create)
-
-        try:
-            run = Run.create(data)
-        except EntityExists as exc:
-            return f.jsonify(error=409, description=str(exc)), 409
-
-        return self.response_201_created(self.serializer.one.dump(run))
+        return self.response_201_created({})
 
 
 run_entity_view = RunEntityAPI.as_view("run")

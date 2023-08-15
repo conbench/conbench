@@ -1,27 +1,18 @@
 import dataclasses
 import logging
 import time
-from datetime import datetime, timezone
-from typing import Dict, List, Optional, Sequence, Tuple
+from datetime import timezone
+from typing import TYPE_CHECKING, Dict, Optional, Sequence, Tuple
 from urllib.parse import urlparse
 
 import flask as f
 import marshmallow
 import sqlalchemy as s
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 import conbench.util
 from conbench.dbsession import current_session
 
-from ..entities._entity import (
-    Base,
-    EntityExists,
-    EntityMixin,
-    EntitySerializer,
-    NotNull,
-    Nullable,
-)
+from ..entities._entity import EntitySerializer
 from ..entities.commit import (
     CantFindAncestorCommitsError,
     Commit,
@@ -31,13 +22,14 @@ from ..entities.commit import (
     get_github_commit_metadata,
 )
 from ..entities.hardware import (
-    Cluster,
     ClusterSchema,
     Hardware,
     HardwareSerializer,
-    Machine,
     MachineSchema,
 )
+
+if TYPE_CHECKING:
+    from ..entities.benchmark_result import BenchmarkResult
 
 log = logging.getLogger(__name__)
 
@@ -84,241 +76,169 @@ class _CandidateBaselineSearchResult:
         return dataclasses.asdict(self)
 
 
-class Run(Base, EntityMixin):
-    __tablename__ = "run"
-    # TODO: use default uuid7 primary key
-    id: Mapped[str] = NotNull(s.String(50), primary_key=True)
-    name: Mapped[Optional[str]] = Nullable(s.String(250))
-    reason: Mapped[Optional[str]] = Nullable(s.String(250))
-    # Naive datetime object, to be interpreted in UTC. `timestamp`  is never
-    # set by API clients, i.e. the `server_default=s.sql.func.now()` is always
-    # taking effect. That also means that this property reflects the point in
-    # time of DB insertion (that should be documented in the API schema for Run
-    # objects). A more explicit way to code that would be in the create()
-    # method. The point in time by convention is stored in UTC _without_
-    # timezone information. Is a wrong point in time stored when
-    # `s.sql.func.now()` returns a non-UTC tz-aware timestamp on a DB server
-    # that does not have its system time in UTC? That should not happen, as is
-    # hopefully confirmed by the test
-    # `test_auto_generated_run_timestamp_value()`.
-    timestamp: Mapped[datetime] = NotNull(
-        s.DateTime(timezone=False), server_default=s.sql.func.now()
-    )
-    # tz-naive timestamp expected to refer to UTC time.
-    finished_timestamp: Mapped[Optional[datetime]] = Nullable(
-        s.DateTime(timezone=False)
-    )
-    info: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
-    error_info: Mapped[Optional[dict]] = Nullable(postgresql.JSONB)
-    error_type: Mapped[Optional[str]] = Nullable(s.String(250))
+def _search_for_baseline_run(
+    contender_run_id: str,
+    contender_run_reason: str,
+    contender_hardware_checksum: str,
+    baseline_commit: Optional[Commit],
+    commit_limit: int = 20,
+) -> _CandidateBaselineSearchResult:
+    """Search for and return information about a baseline run of a contender run, where
+    the baseline run:
 
-    # The type annotation makes this a nullable many-to-one relationship.
-    # https://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#nullable-many-to-one
-    # A nullable many-to-one relationship between Commit (one) and potentially
-    # many Runs, but a run can also _not_ point to a commit.
-    commit_id: Mapped[Optional[str]] = mapped_column(s.ForeignKey("commit.id"))
-    commit: Mapped[Optional[Commit]] = relationship(
-        "Commit", lazy="joined", back_populates="runs"
-    )
+    - is on the given baseline_commit, or in its git ancestry (up to
+        ``commit_limit`` commits ago)
+    - matches the contender run's hardware checksum
+    - has a BenchmarkResult with the case_id/context_id of any of the contender
+        run's BenchmarkResults
 
-    has_errors: Mapped[bool] = NotNull(s.Boolean, default=False)
-    hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
-    hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
+    Always returns a _CandidateBaselineSearchResult, and if there are no matches for
+    some reason, that reason will be in its ``error`` attribute. If there are multiple
+    matches, prefer a baseline run with the same reason as the contender run, and then
+    use the baseline run with the most-recent commit, finally tiebreaking by choosing
+    the baseline run with the latest BenchmarkResult.timestamp.
+    """
+    from ..entities.benchmark_result import BenchmarkResult
 
-    # Follow https://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#one-to-many.
-    # There is a one-to-many relationship between Run (one) and BenchmarkResult
-    # (0, 1, many).
-    # Ignorantly importing BenchmarkResult results in circular import err.
-    results: Mapped[List["BenchmarkResult"]] = relationship(  # type: ignore # noqa
-        back_populates="run", lazy="select"
-    )
-
-    @staticmethod
-    def create(data) -> "Run":
-        # create Hardware entity it it does not yet exist in database.
-        hardware_type, field_name = (
-            (Machine, "machine_info")
-            if "machine_info" in data
-            else (Cluster, "cluster_info")
-        )
-        hardware = hardware_type.get_or_create(data.pop(field_name))
-
-        user_given_commit_info: Optional[TypeCommitInfoGitHub] = data.pop(
-            "github", None
-        )
-
-        commit_for_run = None
-        if user_given_commit_info is not None:
-            commit_for_run = commit_fetch_info_and_create_in_db_if_not_exists(
-                user_given_commit_info
-            )
-
-        run = Run(**data, commit=commit_for_run, hardware_id=hardware.id)
-        try:
-            run.save()
-        except s.exc.IntegrityError as exc:
-            if "unique constraint" in str(exc) and "run_pkey" in str(exc):
-                raise EntityExists(
-                    f"conflict: a Run with ID {data['id']} already exists"
-                )
-            else:
-                raise
-
-        return run
-
-    def _search_for_baseline_run(
-        self, baseline_commit: Optional[Commit], commit_limit: int = 20
-    ) -> _CandidateBaselineSearchResult:
-        """Search for and return information about a baseline run of this (contender)
-        run, where the baseline run:
-
-        - is on the given baseline_commit, or in its git ancestry (up to
-          ``commit_limit`` commits ago)
-        - matches the contender run's hardware
-        - has a BenchmarkResult with the case_id/context_id of any of the contender
-          run's BenchmarkResults
-
-        Always returns a _CandidateBaselineSearchResult, and if there are no matches for
-        some reason, that reason will be in its ``error`` attribute. If there are
-        multiple matches, prefer a baseline run with the same reason as the contender
-        run, and then use the baseline run with the most-recent commit, finally
-        tiebreaking by choosing the baseline run with the latest Run.timestamp.
-        """
-        from ..entities.benchmark_result import BenchmarkResult
-
-        if not baseline_commit:
-            return _CandidateBaselineSearchResult(
-                error="this baseline commit type does not exist for this run"
-            )
-
-        try:
-            ancestor_commits = (
-                baseline_commit.commit_ancestry_query.order_by(s.desc("commit_order"))
-                .limit(commit_limit)
-                .subquery()
-            )
-        except CantFindAncestorCommitsError as e:
-            return _CandidateBaselineSearchResult(
-                error=f"could not find the baseline commit's ancestry because {e}"
-            )
-
-        baseline_run_query = (
-            s.select(
-                Run.id, Commit.sha, BenchmarkResult.case_id, BenchmarkResult.context_id
-            )
-            .select_from(BenchmarkResult)
-            .join(Run, Run.id == BenchmarkResult.run_id)
-            .join(Hardware, Hardware.id == Run.hardware_id)
-            .join(Commit, Commit.id == Run.commit_id)
-            .join(ancestor_commits, ancestor_commits.c.ancestor_id == Commit.id)
-            .filter(Hardware.hash == self.hardware.hash, Run.id != self.id)
-            .order_by(
-                s.desc(Run.reason == self.reason),  # Prefer this Run's run_reason,
-                ancestor_commits.c.commit_order.desc(),  # then latest commit,
-                Run.timestamp.desc(),  # then latest Run timestamp
-            )
-        )
-        matching_benchmark_results = current_session.execute(baseline_run_query).all()
-
-        valid_cases_and_contexts = set(
-            row.tuple()
-            for row in current_session.execute(
-                s.select(BenchmarkResult.case_id, BenchmarkResult.context_id).filter(
-                    BenchmarkResult.run_id == self.id
-                )
-            ).all()
-        )
-
-        for row in matching_benchmark_results:
-            baseline_run_id, baseline_commit_hash, case_id, context_id = row.tuple()
-            if (case_id, context_id) in valid_cases_and_contexts:
-                # Continue onward with the first one that matches a case_id/context_id
-                # of this run
-                break
-        else:
-            return _CandidateBaselineSearchResult(
-                error="no matching baseline run was found"
-            )
-
-        # Figure out a list of commits that were skipped in the search for a baseline
-        commit_hashes_searched = current_session.scalars(
-            s.select(Commit.sha)
-            .select_from(ancestor_commits)
-            .join(Commit, Commit.id == ancestor_commits.c.ancestor_id)
-            .order_by(ancestor_commits.c.commit_order.desc())
-        ).all()
-        index_of_baseline = commit_hashes_searched.index(baseline_commit_hash)
-        commits_skipped = commit_hashes_searched[:index_of_baseline]
-
+    if not baseline_commit:
         return _CandidateBaselineSearchResult(
-            baseline_run_id=baseline_run_id, commits_skipped=commits_skipped
+            error="this baseline commit type does not exist for this run"
         )
 
-    def get_candidate_baseline_runs(self) -> Dict[str, dict]:
-        """Return information about a few different candidate baseline runs, including
-        on the parent commit, fork-point commit, and head-of-default-branch commit.
+    try:
+        ancestor_commits = (
+            baseline_commit.commit_ancestry_query.order_by(s.desc("commit_order"))
+            .limit(commit_limit)
+            .subquery()
+        )
+    except CantFindAncestorCommitsError as e:
+        return _CandidateBaselineSearchResult(
+            error=f"could not find the baseline commit's ancestry because {e}"
+        )
 
-        See docstring of _search_for_baseline_run() for how these are found.
-        """
-        candidates: Dict[str, _CandidateBaselineSearchResult] = {}
+    baseline_run_query = (
+        s.select(
+            BenchmarkResult.run_id,
+            Commit.sha,
+            BenchmarkResult.case_id,
+            BenchmarkResult.context_id,
+        )
+        .select_from(BenchmarkResult)
+        .join(Hardware, Hardware.id == BenchmarkResult.hardware_id)
+        .join(Commit, Commit.id == BenchmarkResult.commit_id)
+        .join(ancestor_commits, ancestor_commits.c.ancestor_id == Commit.id)
+        .filter(
+            Hardware.hash == contender_hardware_checksum,
+            BenchmarkResult.run_id != contender_run_id,
+        )
+        .order_by(
+            # Prefer this Run's run_reason,
+            s.desc(BenchmarkResult.run_reason == contender_run_reason),
+            ancestor_commits.c.commit_order.desc(),  # then latest commit,
+            BenchmarkResult.timestamp.desc(),  # then latest BenchmarkResult timestamp
+        )
+    )
+    matching_benchmark_results = current_session.execute(baseline_run_query).all()
 
-        # The direct, single parent in the git graph
-        if not self.commit:
-            candidates["parent"] = _CandidateBaselineSearchResult(
-                error="the contender run is not connected to the git graph"
+    valid_cases_and_contexts = set(
+        row.tuple()
+        for row in current_session.execute(
+            s.select(BenchmarkResult.case_id, BenchmarkResult.context_id).filter(
+                BenchmarkResult.run_id == contender_run_id
             )
-        else:
-            candidates["parent"] = self._search_for_baseline_run(
-                self.commit.get_parent_commit()
-            )
+        ).all()
+    )
 
-        # If this is a PR run, the PR's fork point commit on the default branch
-        if not self.commit:
-            candidates["fork_point"] = _CandidateBaselineSearchResult(
-                error="the contender run is not connected to the git graph"
-            )
-        elif self.commit.sha == self.commit.fork_point_sha:
-            candidates["fork_point"] = _CandidateBaselineSearchResult(
-                error="the contender run is already on the default branch"
-            )
-        else:
-            candidates["fork_point"] = self._search_for_baseline_run(
-                self.commit.get_fork_point_commit()
-            )
+    for row in matching_benchmark_results:
+        baseline_run_id, baseline_commit_hash, case_id, context_id = row.tuple()
+        if (case_id, context_id) in valid_cases_and_contexts:
+            # Continue onward with the first one that matches a case_id/context_id
+            # of this run
+            break
+    else:
+        return _CandidateBaselineSearchResult(
+            error="no matching baseline run was found"
+        )
 
-        # The latest commit on the default branch that Conbench knows about
-        query = s.select(Commit).filter(Commit.sha == Commit.fork_point_sha)
+    # Figure out a list of commits that were skipped in the search for a baseline
+    commit_hashes_searched = current_session.scalars(
+        s.select(Commit.sha)
+        .select_from(ancestor_commits)
+        .join(Commit, Commit.id == ancestor_commits.c.ancestor_id)
+        .order_by(ancestor_commits.c.commit_order.desc())
+    ).all()
+    index_of_baseline = commit_hashes_searched.index(baseline_commit_hash)
+    commits_skipped = commit_hashes_searched[:index_of_baseline]
 
-        # TODO: how do we filter by repository if there's no commit?
-        # (For now we just choose the latest commit of any repository.)
-        if self.commit:
-            query = query.filter(Commit.repository == self.commit.repository)
+    return _CandidateBaselineSearchResult(
+        baseline_run_id=baseline_run_id, commits_skipped=commits_skipped
+    )
 
-        latest_commit = current_session.scalars(
-            query.order_by(s.desc(Commit.timestamp)).limit(1)
-        ).first()
-        candidates["latest_default"] = self._search_for_baseline_run(latest_commit)
 
-        return {
-            candidate_type: candidate._dict_for_api_json()
-            for candidate_type, candidate in candidates.items()
-        }
+def get_candidate_baseline_runs(
+    contender_benchmark_result: "BenchmarkResult",
+) -> Dict[str, dict]:
+    """Given a benchmark result from a contender run, return information about a few
+    different candidate baseline runs, including on the parent commit, fork-point
+    commit, and head-of-default-branch commit.
 
-    @property
-    def associated_commit_repo_url(self) -> str:
-        """
-        Always return a string. Return URL or "n/a".
+    See docstring of _search_for_baseline_run() for how these are found.
+    """
+    contender_commit = contender_benchmark_result.commit
+    candidates: Dict[str, _CandidateBaselineSearchResult] = {}
 
-        This is for those consumers that absolutely need to have a string type
-        representation.
-        """
-        if self.commit and self.commit.repo_url is not None:
-            return self.commit.repo_url
+    # The direct, single parent in the git graph
+    if not contender_commit:
+        candidates["parent"] = _CandidateBaselineSearchResult(
+            error="the contender run is not connected to the git graph"
+        )
+    else:
+        candidates["parent"] = _search_for_baseline_run(
+            baseline_commit=contender_commit.get_parent_commit(),
+            contender_run_id=contender_benchmark_result.run_id,
+            contender_run_reason=contender_benchmark_result.run_reason,
+            contender_hardware_checksum=contender_benchmark_result.hardware.hash,
+        )
 
-        # This means that the Run is not associated with any commit, or it is
-        # associated with a legacy/invalid commit object in the database, one
-        # that does not have a repository URL set.
-        return "n/a"
+    # If this is a PR run, the PR's fork point commit on the default branch
+    if not contender_commit:
+        candidates["fork_point"] = _CandidateBaselineSearchResult(
+            error="the contender run is not connected to the git graph"
+        )
+    elif contender_commit.sha == contender_commit.fork_point_sha:
+        candidates["fork_point"] = _CandidateBaselineSearchResult(
+            error="the contender run is already on the default branch"
+        )
+    else:
+        candidates["fork_point"] = _search_for_baseline_run(
+            baseline_commit=contender_commit.get_fork_point_commit(),
+            contender_run_id=contender_benchmark_result.run_id,
+            contender_run_reason=contender_benchmark_result.run_reason,
+            contender_hardware_checksum=contender_benchmark_result.hardware.hash,
+        )
+
+    # The latest commit on the default branch that Conbench knows about
+    query = s.select(Commit).filter(Commit.sha == Commit.fork_point_sha)
+
+    # TODO: how do we filter by repository if there's no commit?
+    # (For now we just choose the latest commit of any repository.)
+    if contender_commit:
+        query = query.filter(Commit.repository == contender_commit.repository)
+
+    latest_commit = current_session.scalars(
+        query.order_by(s.desc(Commit.timestamp)).limit(1)
+    ).first()
+    candidates["latest_default"] = _search_for_baseline_run(
+        baseline_commit=latest_commit,
+        contender_run_id=contender_benchmark_result.run_id,
+        contender_run_reason=contender_benchmark_result.run_reason,
+        contender_hardware_checksum=contender_benchmark_result.hardware.hash,
+    )
+
+    return {
+        candidate_type: candidate._dict_for_api_json()
+        for candidate_type, candidate in candidates.items()
+    }
 
 
 def commit_fetch_info_and_create_in_db_if_not_exists(
@@ -436,50 +356,59 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
 
 
 class _Serializer(EntitySerializer):
-    def _dump(self, run: Run, get_baseline_runs: bool = False):
-        if run.commit:
-            commit = CommitSerializer().one.dump(run.commit)
-            commit.pop("links", None)
+    def _dump(
+        self, benchmark_result: "BenchmarkResult", get_baseline_runs: bool = False
+    ):
+        if benchmark_result.commit:
+            commit_dict = CommitSerializer().one.dump(benchmark_result.commit)
+            commit_dict.pop("links", None)
             commit_link = f.url_for(
-                "api.commit", commit_id=commit["id"], _external=True
+                "api.commit", commit_id=commit_dict["id"], _external=True
             )
         else:
-            commit = None
+            commit_dict = None
             commit_link = None
 
-        hardware = HardwareSerializer().one.dump(run.hardware)
-        hardware.pop("links", None)
-        result = {
-            "id": run.id,
-            "name": run.name,
-            "reason": run.reason,
+        hardware_dict = HardwareSerializer().one.dump(benchmark_result.hardware)
+        hardware_dict.pop("links", None)
+        out_dict = {
+            "id": benchmark_result.run_id,
+            "tags": benchmark_result.run_tags,
+            "reason": benchmark_result.run_reason,
+            "name": benchmark_result.run_tags.get("name"),
             "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
-                run.timestamp
-            ),
-            "finished_timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
-                run.finished_timestamp
+                benchmark_result.run_tags["timestamp"]
             )
-            if run.finished_timestamp
+            if "timestamp" in benchmark_result.run_tags
             else None,
-            "info": run.info,
-            "error_info": run.error_info,
-            "error_type": run.error_type,
-            "commit": commit,
-            "hardware": hardware,
-            "has_errors": run.has_errors,
+            "finished_timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
+                benchmark_result.run_tags["finished_timestamp"]
+            )
+            if "finished_timestamp" in benchmark_result.run_tags
+            else None,
+            "info": benchmark_result.run_tags.get("info"),
+            "error_info": benchmark_result.run_tags.get("error_info"),
+            "error_type": benchmark_result.run_tags.get("error_type"),
+            "commit": commit_dict,
+            "hardware": hardware_dict,
+            "has_errors": benchmark_result.run_tags.get("has_errors"),
             "links": {
                 "list": f.url_for("api.runs", _external=True),
-                "self": f.url_for("api.run", run_id=run.id, _external=True),
+                "self": f.url_for(
+                    "api.run", run_id=benchmark_result.run_id, _external=True
+                ),
                 "hardware": f.url_for(
-                    "api.hardware", hardware_id=hardware["id"], _external=True
+                    "api.hardware", hardware_id=hardware_dict["id"], _external=True
                 ),
             },
         }
         if commit_link:
-            result["links"]["commit"] = commit_link
+            out_dict["links"]["commit"] = commit_link
         if get_baseline_runs:
-            result["candidate_baseline_runs"] = run.get_candidate_baseline_runs()
-        return result
+            out_dict["candidate_baseline_runs"] = get_candidate_baseline_runs(
+                benchmark_result
+            )
+        return out_dict
 
 
 class RunSerializer:

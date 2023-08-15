@@ -12,13 +12,11 @@ import numpy as np
 import sigfig
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
-from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, relationship
 
 import conbench.units
 import conbench.util
-from conbench.dbsession import current_session
 from conbench.numstr import numstr, numstr_dyn
 from conbench.units import KNOWN_UNIT_SYMBOLS_STR
 
@@ -32,11 +30,15 @@ from ..entities._entity import (
     to_float,
 )
 from ..entities.case import Case
-from ..entities.commit import TypeCommitInfoGitHub
+from ..entities.commit import Commit, TypeCommitInfoGitHub
 from ..entities.context import Context
-from ..entities.hardware import ClusterSchema, MachineSchema
+from ..entities.hardware import Cluster, ClusterSchema, Hardware, Machine, MachineSchema
 from ..entities.info import Info
-from ..entities.run import Run, SchemaGitHubCreate, github_commit_info_descr
+from ..entities.run import (
+    SchemaGitHubCreate,
+    commit_fetch_info_and_create_in_db_if_not_exists,
+    github_commit_info_descr,
+)
 
 log = logging.getLogger(__name__)
 
@@ -52,24 +54,23 @@ class BenchmarkResult(Base, EntityMixin):
     info_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("info.id"))
     context_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("context.id"))
 
-    # Follow
-    # https://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#one-to-many
-    # There is a one-to-many relationship between Run (one) and BenchmarkResult
-    # (0, 1, many). Result is child. Run is parent. Child has column with
-    # foreign key, pointing to parent.
-    run_id: Mapped[str] = NotNull(s.Text, s.ForeignKey("run.id"))
+    # An arbitrary string to group results by CI run. There are no assertions that this
+    # string is non-empty.
+    run_id: Mapped[str] = NotNull(s.Text)
+    # Arbitrary tags for this CI run. Can be empty but not null.
+    run_tags: Mapped[dict] = NotNull(postgresql.JSONB)
+    # A special tag that's often used in the UI, API, and DB queries.
+    run_reason: Mapped[Optional[str]] = Nullable(s.Text)
 
-    # Between Run (one) and Result (many) there is a one-to-many relationship
-    # that we want to tell SQLAlchemy af ew things about via the following
-    # `relationship()` call. Note that `lazy="select"` is a sane default here.
-    # It means that another SELECT statement is issued upon attribute access
-    # time. `select=immediate` would mean that items are to be loaded from the
-    # DBas the parent is loaded, using a separate SELECT statement _per child_
-    # (which did bite us, in particular for those Run entities associated with
-    # O(1000) Result entities, i.e. hundreds of thousands of SELECT queries
-    # were emitted for building the landing page. A joined query can always be
-    # performed on demand.
-    run: Mapped[Run] = relationship("Run", lazy="select", back_populates="results")
+    # The type annotation makes this a nullable many-to-one relationship.
+    # https://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#nullable-many-to-one
+    # A nullable many-to-one relationship between Commit (one) and potentially
+    # many results, but a result can also _not_ point to a commit.
+    commit_id: Mapped[Optional[str]] = Nullable(s.ForeignKey("commit.id"))
+    commit: Mapped[Optional[Commit]] = relationship("Commit", lazy="joined")
+
+    hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
+    hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
 
     # `data` holds the numeric values derived from N repetitions of the same
     # measurement (experiment). These can be empty lists. An item in the list
@@ -154,14 +155,13 @@ class BenchmarkResult(Base, EntityMixin):
 
         Attempt to write result to database.
 
-        Create associated Run, Case, Context, Info entities in DB if required.
+        Create associated Case, Context, Info entities in DB if required.
 
         Raises BenchmarkResultValidationError, exc message is expected to be
         emitted to the HTTP client in a Bad Request response.
         """
 
         validate_and_augment_result_tags(userres)
-        validate_run_result_consistency(userres)
 
         # The dict that is used for DB insertion later, populated below.
         result_data_for_db: Dict = {}
@@ -223,38 +223,27 @@ class BenchmarkResult(Base, EntityMixin):
         case = Case.get_or_create({"name": benchmark_name, "tags": tags})
         context = Context.get_or_create({"tags": userres["context"]})
         info = Info.get_or_create({"tags": userres.get("info", {})})
-
-        # Create a corresponding `Run` entity in the database if it doesn't
-        # exist yet. Use the user-given `id` (string) as primary key. If the
-        # Run is already known in the database then only update the
-        # `has_errors` property, if necessary. All other run-specific
-        # properties provided as part of this BenchmarkResultCreate structure
-        # (like `machine_info` and `run_name`) get silently ignored.
-        run = Run.first(id=userres["run_id"])
-        if run:
-            if "error" in userres:
-                run.has_errors = True
-                run.save()
+        if "machine_info" in userres:
+            hardware = Machine.get_or_create(userres["machine_info"])
         else:
-            hardware_info_field = (
-                "machine_info" if "machine_info" in userres else "cluster_info"
+            hardware = Cluster.get_or_create(userres["cluster_info"])
+
+        user_given_commit_info: Optional[TypeCommitInfoGitHub] = userres.get("github")
+        commit = None
+        if user_given_commit_info is not None:
+            commit = commit_fetch_info_and_create_in_db_if_not_exists(
+                user_given_commit_info
             )
-            Run.create(
-                {
-                    "id": userres["run_id"],
-                    "name": userres.pop("run_name", None),
-                    "reason": userres.pop("run_reason", None),
-                    "github": userres.pop("github", None),
-                    hardware_info_field: userres.pop(hardware_info_field),
-                    "has_errors": "error" in userres,
-                }
-            )
-            # The above's `create()` might fail (race condition), in which case
-            # we can re-read, but then we also have to call
-            # `validate_run_result_consistency(userres)` one more time (because
-            # _we_ are not the ones who created the Run).
 
         result_data_for_db["run_id"] = userres["run_id"]
+        result_data_for_db["run_tags"] = userres.get("run_tags") or {}
+        result_data_for_db["run_reason"] = userres.get("run_reason")
+
+        # Legacy behavior: divert run_name into run_tags, if name is not already present
+        # in run_tags.
+        if "run_name" in userres and "name" not in result_data_for_db["run_tags"]:
+            result_data_for_db["run_tags"]["name"] = userres["run_name"]
+
         result_data_for_db["batch_id"] = userres["batch_id"]
 
         # At this point `data["timestamp"]` is expected to be a tz-aware
@@ -272,6 +261,8 @@ class BenchmarkResult(Base, EntityMixin):
         )
         result_data_for_db["info_id"] = info.id
         result_data_for_db["context_id"] = context.id
+        result_data_for_db["hardware_id"] = hardware.id
+        result_data_for_db["commit_id"] = commit.id if commit else None
         benchmark_result = BenchmarkResult(**result_data_for_db)
         benchmark_result.save()
 
@@ -308,6 +299,10 @@ class BenchmarkResult(Base, EntityMixin):
         return {
             "id": benchmark_result.id,
             "run_id": benchmark_result.run_id,
+            "run_tags": benchmark_result.run_tags,
+            "run_reason": benchmark_result.run_reason,
+            "commit_id": benchmark_result.commit_id,
+            "hardware_id": benchmark_result.hardware_id,
             "batch_id": benchmark_result.batch_id,
             "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
                 benchmark_result.timestamp
@@ -346,9 +341,6 @@ class BenchmarkResult(Base, EntityMixin):
                     "api.context",
                     context_id=benchmark_result.context_id,
                     _external=True,
-                ),
-                "run": f.url_for(
-                    "api.run", run_id=benchmark_result.run_id, _external=True
                 ),
             },
         }
@@ -508,20 +500,17 @@ class BenchmarkResult(Base, EntityMixin):
         """
         Return hardware-representing short string, including user-given name
         and ID prefix.
-
-        The indirection here through `self.run` is interesting, might trigger
-        database interaction.
         """
-        hw = self.run.hardware
+        hw = self.hardware
         if len(hw.name) > 15:
             return f"{hw.id[:4]}: " + hw.name[:15]
 
         return f"{hw.id[:4]}: " + hw.name
 
     def ui_commit_url_anchor(self) -> str:
-        if self.run.commit is None:
+        if self.commit is None:
             return '<a href="#">n/a</a>'
-        return f'<a href="{self.run.commit.commit_url}">{self.run.commit.hash[:7]}</a>'
+        return f'<a href="{self.commit.commit_url}">{self.commit.hash[:7]}</a>'
 
     @functools.cached_property
     def unitsymbol(self) -> Optional[conbench.units.TUnit]:
@@ -533,6 +522,22 @@ class BenchmarkResult(Base, EntityMixin):
         assert self.unit
 
         return conbench.units.legacy_convert(self.unit)
+
+    @property
+    def associated_commit_repo_url(self) -> str:
+        """
+        Always return a string. Return URL or "n/a".
+
+        This is for those consumers that absolutely need to have a string type
+        representation.
+        """
+        if self.commit and self.commit.repo_url is not None:
+            return self.commit.repo_url
+
+        # This means that the result is not associated with any commit, or it is
+        # associated with a legacy/invalid commit object in the database, one
+        # that does not have a repository URL set.
+        return "n/a"
 
 
 def ui_rel_sem(values: List[float]) -> Tuple[str, str]:
@@ -886,53 +891,6 @@ def validate_and_augment_result_tags(userres: Any):
             )
 
 
-def validate_run_result_consistency(userres: Any) -> None:
-    """
-    Read Run from database, based on userres["run_id"].
-
-    Check for consistency between Result data and Run data.
-
-    Raise BenchmarkResultValidationError in case there is a mismatch.
-
-    This is a noop if the Run does not exist yet.
-
-    Be sure to call this (latest) right before writing a BenchmarkResult object
-    into the database, and after having created the Run object in the database.
-    """
-    run = current_session.scalars(
-        select(Run).where(Run.id == userres["run_id"])
-    ).first()
-
-    if run is None:
-        return
-
-    # TODO: specification -- if userres.get("github") is None and if the Run
-    # has associated commit information -- then consider this as a conflict or
-    # not? what about branch name and PR number?
-
-    # The property should not be called "github", this confuses me each
-    # time I deal with that. This is the "github-flavored commit info".
-
-    gh_commit_info: Optional[TypeCommitInfoGitHub] = userres.get("github")
-    if gh_commit_info is not None:
-        chrun = run.commit.hash if run.commit else None
-        chresult = gh_commit_info["commit_hash"]
-        if chrun != chresult:
-            raise BenchmarkResultValidationError(
-                f"Result refers to commit hash '{chresult}', but Run '{run.id}' "
-                f"refers to commit hash '{chrun}'"
-            )
-
-        # Cannot do this yet, this is too complicated as of None/empty
-        # string confusion repo_url_run = run.commit.repo_url
-        # repo_url_result = userres["github"]["repository"] if
-        # repo_url_run != repo_url_result: raise
-        #     BenchmarkResultValidationError( f"Result refers to
-        #         repository URL '{repo_url_result}', but Run
-        #         '{run.id}' " f"refers to repository URL
-        #     '{repo_url_run}'" )
-
-
 s.Index("benchmark_result_run_id_index", BenchmarkResult.run_id)
 s.Index("benchmark_result_case_id_index", BenchmarkResult.case_id)
 
@@ -1109,6 +1067,7 @@ class BenchmarkResultSerializer:
     many = _Serializer(many=True)
 
 
+# This is used in two places below.
 CHANGE_ANNOTATIONS_DESC = """Post-analysis annotations about this BenchmarkResult that
 give details about whether it represents a change, outlier, etc. in the overall
 distribution of BenchmarkResults.
@@ -1128,9 +1087,35 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Identifier for a Run (required). This can be the ID of a known
-                Run (as returned by /api/runs) or a new ID in which case a new
-                Run entity is created in the database.
+                Unique identifier for a "run" of benchmarks (typically a single run of a
+                CI pipeline) on a single commit and hardware. Required.
+
+                The Conbench UI and API make several assumptions that all benchmark
+                results with the same `run_id` share the same `run_tags`, `run_reason`,
+                hardware, and commit. There is no technical enforcement of this on the
+                server side, so some behavior may not work as intended if this
+                assumption is broken by the client.
+                """
+            )
+        },
+    )
+    run_tags = marshmallow.fields.Dict(
+        required=False,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                An optional mapping of arbitrary keys and values that describe the CI
+                run. These are used to group and filter runs in the UI and API. Do not
+                include `run_reason` here; it should be provided below.
+
+                For legacy reasons, if `run_name` is given when POSTing a benchmark
+                result, it will be added to `run_tags` automatically under the `name`
+                key. This will be its new permanent home.
+
+                The Conbench UI and API make several assumptions that all benchmark
+                results with the same `run_id` share the same `run_tags`. There is no
+                technical enforcement of this on the server side, so some behavior may
+                not work as intended if this assumption is broken by the client.
                 """
             )
         },
@@ -1138,14 +1123,7 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
     run_name = marshmallow.fields.String(
         required=False,
         metadata={
-            "description": conbench.util.dedent_rejoin(
-                """
-                Name for the Run (optional, does not need to be unique). Can be
-                useful for implementing a custom naming convention. For
-                organizing your benchmarks, and for enhanced search &
-                discoverability. Ignored when Run was previously created.
-                """
-            )
+            "description": "A legacy attribute. Use `run_tags` instead. Optional."
         },
     )
     run_reason = marshmallow.fields.String(
@@ -1153,8 +1131,14 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Reason for the Run (optional, does not need to be unique).
-                Ignored when Run was previously created.
+                Reason for the run (optional, does not need to be unique). A
+                low-cardinality tag like `"commit"` or `"pull-request"`, used to group
+                and filter runs, with special treatment in the UI and API.
+
+                The Conbench UI and API make several assumptions that all benchmark
+                results with the same `run_id` share the same `run_reason`. There is no
+                technical enforcement of this on the server side, so some behavior may
+                not work as intended if this assumption is broken by the client.
                 """
             )
         },
@@ -1193,9 +1177,12 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Precisely one of `machine_info` and `cluster_info` must be
-                provided. The data is however ignored when the Run (referred to
-                by `run_id`) was previously created.
+                Precisely one of `machine_info` and `cluster_info` must be provided.
+
+                The Conbench UI and API make several assumptions that all benchmark
+                results with the same `run_id` share the same hardware. There is no
+                technical enforcement of this on the server side, so some behavior may
+                not work as intended if this assumption is broken by the client.
                 """
             )
         },
@@ -1206,9 +1193,12 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Precisely one of `machine_info` and `cluster_info` must be
-                provided. The data is however ignored when the Run (referred to
-                by `run_id`) was previously created.
+                Precisely one of `machine_info` and `cluster_info` must be provided.
+
+                The Conbench UI and API make several assumptions that all benchmark
+                results with the same `run_id` share the same hardware. There is no
+                technical enforcement of this on the server side, so some behavior may
+                not work as intended if this assumption is broken by the client.
                 """
             )
         },
