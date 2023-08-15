@@ -14,7 +14,6 @@ from ..app.results import BenchmarkResultMixin, RunMixin
 from ..app.types import HighlightInHistPlot
 from ..config import Config
 from ..entities.benchmark_result import BenchmarkResult
-from ..entities.run import commit_hardware_run_map
 
 log = logging.getLogger(__name__)
 
@@ -108,7 +107,6 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             context_fields=all_keys(baseline, contender, "context"),
             info_fields=all_keys(baseline, contender, "info"),
             hardware_fields=all_keys(baseline_run, contender_run, "hardware"),
-            commit_hardware_run_map=commit_hardware_run_map(),
             contender_hardware_checksum=contender_hardware_checksum,
             baseline_hardware_checksum=baseline_hardware_checksum,
         )
