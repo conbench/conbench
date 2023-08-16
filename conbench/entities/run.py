@@ -5,7 +5,6 @@ from datetime import timezone
 from typing import TYPE_CHECKING, Dict, Optional, Sequence, Tuple
 from urllib.parse import urlparse
 
-import flask as f
 import marshmallow
 import sqlalchemy as s
 
@@ -362,12 +361,8 @@ class _Serializer(EntitySerializer):
         if benchmark_result.commit:
             commit_dict = CommitSerializer().one.dump(benchmark_result.commit)
             commit_dict.pop("links", None)
-            commit_link = f.url_for(
-                "api.commit", commit_id=commit_dict["id"], _external=True
-            )
         else:
             commit_dict = None
-            commit_link = None
 
         hardware_dict = HardwareSerializer().one.dump(benchmark_result.hardware)
         hardware_dict.pop("links", None)
@@ -375,35 +370,12 @@ class _Serializer(EntitySerializer):
             "id": benchmark_result.run_id,
             "tags": benchmark_result.run_tags,
             "reason": benchmark_result.run_reason,
-            "name": benchmark_result.run_tags.get("name"),
             "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
-                benchmark_result.run_tags["timestamp"]
-            )
-            if "timestamp" in benchmark_result.run_tags
-            else None,
-            "finished_timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
-                benchmark_result.run_tags["finished_timestamp"]
-            )
-            if "finished_timestamp" in benchmark_result.run_tags
-            else None,
-            "info": benchmark_result.run_tags.get("info"),
-            "error_info": benchmark_result.run_tags.get("error_info"),
-            "error_type": benchmark_result.run_tags.get("error_type"),
+                benchmark_result.timestamp
+            ),
             "commit": commit_dict,
             "hardware": hardware_dict,
-            "has_errors": benchmark_result.run_tags.get("has_errors"),
-            "links": {
-                "list": f.url_for("api.runs", _external=True),
-                "self": f.url_for(
-                    "api.run", run_id=benchmark_result.run_id, _external=True
-                ),
-                "hardware": f.url_for(
-                    "api.hardware", hardware_id=hardware_dict["id"], _external=True
-                ),
-            },
         }
-        if commit_link:
-            out_dict["links"]["commit"] = commit_link
         if get_baseline_runs:
             out_dict["candidate_baseline_runs"] = get_candidate_baseline_runs(
                 benchmark_result

@@ -30,9 +30,16 @@ from ..entities._entity import (
     to_float,
 )
 from ..entities.case import Case
-from ..entities.commit import Commit, TypeCommitInfoGitHub
+from ..entities.commit import Commit, CommitSerializer, TypeCommitInfoGitHub
 from ..entities.context import Context
-from ..entities.hardware import Cluster, ClusterSchema, Hardware, Machine, MachineSchema
+from ..entities.hardware import (
+    Cluster,
+    ClusterSchema,
+    Hardware,
+    HardwareSerializer,
+    Machine,
+    MachineSchema,
+)
 from ..entities.info import Info
 from ..entities.run import (
     SchemaGitHubCreate,
@@ -57,8 +64,9 @@ class BenchmarkResult(Base, EntityMixin):
     # An arbitrary string to group results by CI run. There are no assertions that this
     # string is non-empty.
     run_id: Mapped[str] = NotNull(s.Text)
-    # Arbitrary tags for this CI run. Can be empty but not null.
-    run_tags: Mapped[dict] = NotNull(postgresql.JSONB)
+    # Arbitrary tags for this CI run. Can be empty but not null. Has to be a flat
+    # str/str mapping, and no key can be an empty string.
+    run_tags: Mapped[Dict[str, str]] = NotNull(postgresql.JSONB)
     # A special tag that's often used in the UI, API, and DB queries.
     run_reason: Mapped[Optional[str]] = Nullable(s.Text)
 
@@ -296,13 +304,23 @@ class BenchmarkResult(Base, EntityMixin):
         # the tags as injected.
         tags = {"name": case.name}
         tags.update(case.tags)
+
+        if benchmark_result.commit:
+            commit_dict = CommitSerializer().one.dump(benchmark_result.commit)
+            commit_dict.pop("links", None)
+        else:
+            commit_dict = None
+
+        hardware_dict = HardwareSerializer().one.dump(benchmark_result.hardware)
+        hardware_dict.pop("links", None)
+
         return {
             "id": benchmark_result.id,
             "run_id": benchmark_result.run_id,
             "run_tags": benchmark_result.run_tags,
             "run_reason": benchmark_result.run_reason,
-            "commit_id": benchmark_result.commit_id,
-            "hardware_id": benchmark_result.hardware_id,
+            "commit": commit_dict,
+            "hardware": hardware_dict,
             "batch_id": benchmark_result.batch_id,
             "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
                 benchmark_result.timestamp
@@ -1087,14 +1105,20 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Unique identifier for a "run" of benchmarks (typically a single run of a
-                CI pipeline) on a single commit and hardware. Required.
+                Arbitrary identifier that you can use to group benchmark results.
+                Typically used for a "run" of benchmarks (i.e. a single run of a CI
+                pipeline) on a single commit and hardware. Required.
 
-                The Conbench UI and API make several assumptions that all benchmark
-                results with the same `run_id` share the same `run_tags`, `run_reason`,
-                hardware, and commit. There is no technical enforcement of this on the
-                server side, so some behavior may not work as intended if this
-                assumption is broken by the client.
+                The API does not ensure uniqueness (and, correspondingly, does not
+                detect collisions). If your use case relies on this grouping construct
+                then use a client-side ID generation scheme with negligible likelihood
+                for collisions (e.g., UUID type 4 or similar).
+
+                The Conbench UI and API assume that all benchmark results with the same
+                `run_id` share the same `run_tags`, `run_reason`, hardware, and commit.
+                There is no technical enforcement of this on the server side, so some
+                behavior may not work as intended if this assumption is broken by the
+                client.
                 """
             )
         },
@@ -1112,10 +1136,10 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
                 result, it will be added to `run_tags` automatically under the `name`
                 key. This will be its new permanent home.
 
-                The Conbench UI and API make several assumptions that all benchmark
-                results with the same `run_id` share the same `run_tags`. There is no
-                technical enforcement of this on the server side, so some behavior may
-                not work as intended if this assumption is broken by the client.
+                The Conbench UI and API assume that all benchmark results with the same
+                `run_id` share the same `run_tags`. There is no technical enforcement of
+                this on the server side, so some behavior may not work as intended if
+                this assumption is broken by the client.
                 """
             )
         },
@@ -1135,10 +1159,10 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
                 low-cardinality tag like `"commit"` or `"pull-request"`, used to group
                 and filter runs, with special treatment in the UI and API.
 
-                The Conbench UI and API make several assumptions that all benchmark
-                results with the same `run_id` share the same `run_reason`. There is no
-                technical enforcement of this on the server side, so some behavior may
-                not work as intended if this assumption is broken by the client.
+                The Conbench UI and API assume that all benchmark results with the same
+                `run_id` share the same `run_reason`. There is no technical enforcement
+                of this on the server side, so some behavior may not work as intended if
+                this assumption is broken by the client.
                 """
             )
         },
@@ -1179,10 +1203,10 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
                 """
                 Precisely one of `machine_info` and `cluster_info` must be provided.
 
-                The Conbench UI and API make several assumptions that all benchmark
-                results with the same `run_id` share the same hardware. There is no
-                technical enforcement of this on the server side, so some behavior may
-                not work as intended if this assumption is broken by the client.
+                The Conbench UI and API assume that all benchmark results with the same
+                `run_id` share the same hardware. There is no technical enforcement of
+                this on the server side, so some behavior may not work as intended if
+                this assumption is broken by the client.
                 """
             )
         },
@@ -1195,10 +1219,10 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
                 """
                 Precisely one of `machine_info` and `cluster_info` must be provided.
 
-                The Conbench UI and API make several assumptions that all benchmark
-                results with the same `run_id` share the same hardware. There is no
-                technical enforcement of this on the server side, so some behavior may
-                not work as intended if this assumption is broken by the client.
+                The Conbench UI and API assume that all benchmark results with the same
+                `run_id` share the same hardware. There is no technical enforcement of
+                this on the server side, so some behavior may not work as intended if
+                this assumption is broken by the client.
                 """
             )
         },
@@ -1336,6 +1360,22 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
     change_annotations = marshmallow.fields.Dict(
         required=False, metadata={"description": CHANGE_ANNOTATIONS_DESC}
     )
+
+    @marshmallow.validates_schema
+    def validate_run_tags_schema(self, data, **kwargs):
+        if "run_tags" not in data:
+            return
+
+        if not isinstance(data["run_tags"], dict):
+            raise marshmallow.ValidationError("run_tags must be a map object")
+
+        for key, value in data["run_tags"].items():
+            if not isinstance(key, str) or len(key) == 0:
+                raise marshmallow.ValidationError(
+                    "run_tags keys must be non-empty strings"
+                )
+            if not isinstance(value, str):
+                raise marshmallow.ValidationError("run_tags values must be strings")
 
     @marshmallow.validates_schema
     def validate_hardware_info_fields(self, data, **kwargs):
