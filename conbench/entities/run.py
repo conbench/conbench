@@ -78,7 +78,7 @@ class _CandidateBaselineSearchResult:
 
 def _search_for_baseline_run(
     contender_run_id: str,
-    contender_run_reason: str,
+    contender_run_reason: Optional[str],
     contender_hardware_checksum: str,
     baseline_commit: Optional[Commit],
     commit_limit: int = 20,

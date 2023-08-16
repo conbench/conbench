@@ -20,7 +20,6 @@ from ..config import Config
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import CantFindAncestorCommitsError, Commit
 from ..entities.hardware import Hardware
-from ..entities.run import Run
 
 log = logging.getLogger(__name__)
 
@@ -209,11 +208,10 @@ def get_history_for_cchr(
             Commit.repository,
             Commit.message.label("commit_message"),
             Commit.timestamp.label("commit_timestamp"),
-            Run.name.label("run_name"),
+            BenchmarkResult.run_tags["name"].label("run_name"),
         )
-        .join(Run, Run.id == BenchmarkResult.run_id)
-        .join(Hardware, Hardware.id == Run.hardware_id)
-        .join(Commit, Commit.id == Run.commit_id)
+        .join(Hardware, Hardware.id == BenchmarkResult.hardware_id)
+        .join(Commit, Commit.id == BenchmarkResult.commit_id)
         .filter(
             BenchmarkResult.case_id == case_id,
             BenchmarkResult.context_id == context_id,
@@ -345,6 +343,7 @@ def set_z_scores(
 
     distribution_stats = _query_and_calculate_distribution_stats(
         contender_run_id=contender_run_id,
+        hardware_checksum=contender_benchmark_results[0].hardware.hash,
         baseline_commit=baseline_commit,
         case_id=case_id,
         context_id=context_id,
@@ -364,6 +363,7 @@ def set_z_scores(
 
 def _query_and_calculate_distribution_stats(
     contender_run_id: str,
+    hardware_checksum: str,
     baseline_commit: Commit,
     case_id: Optional[str],
     context_id: Optional[str],
@@ -373,7 +373,7 @@ def _query_and_calculate_distribution_stats(
 
     - are associated with any of the last DISTRIBUTION_COMMITS commits in the
       baseline_commit's git ancestry (inclusive)
-    - match the contender run's hardware
+    - match the hardware checksum
     - have no errors
 
     The calculations are grouped by case and context, returning a dict that looks like:
@@ -390,8 +390,6 @@ def _query_and_calculate_distribution_stats(
     For further detail on the stats columns, see the docs of
     ``_add_rolling_stats_columns_to_df()``.
     """
-    contender_run = Run.get(contender_run_id)
-
     try:
         commits = baseline_commit.commit_ancestry_query.subquery()
     except CantFindAncestorCommitsError as e:
@@ -416,13 +414,9 @@ def _query_and_calculate_distribution_stats(
             commits.c.ancestor_timestamp.label("commit_timestamp"),
         )
         .select_from(BenchmarkResult)
-        .join(Run, Run.id == BenchmarkResult.run_id)
-        .join(Hardware, Hardware.id == Run.hardware_id)
-        .join(commits, commits.c.ancestor_id == Run.commit_id)
-        .filter(
-            BenchmarkResult.error.is_(None),
-            Hardware.hash == contender_run.hardware.hash,
-        )
+        .join(Hardware, Hardware.id == BenchmarkResult.hardware_id)
+        .join(commits, commits.c.ancestor_id == BenchmarkResult.commit_id)
+        .filter(BenchmarkResult.error.is_(None), Hardware.hash == hardware_checksum)
     )
 
     # Filter to the correct case(s)/context(s)

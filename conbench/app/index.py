@@ -1,3 +1,4 @@
+import datetime
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
@@ -5,17 +6,15 @@ from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 import flask
-from sqlalchemy import select
 
 import conbench.util
-from conbench.bmrt import bmrt_cache
-from conbench.dbsession import current_session
 
+from ..api.runs import get_all_run_info
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app.results import RunMixin
 from ..config import Config
-from ..entities.run import Run
+from ..entities.benchmark_result import BenchmarkResult
 
 log = logging.getLogger(__name__)
 
@@ -49,46 +48,36 @@ class Index(AppEndpoint, RunMixin):
         if resp is not None:
             return resp
 
-        # Following
-        # https://docs.sqlalchemy.org/en/20/orm/queryguide/select.html#selecting-orm-entities
-        runs = current_session.scalars(
-            select(Run).order_by(Run.timestamp.desc()).limit(1000)
-        ).all()
-
-        # Note(JP): group runs by associated commit.repository value. Note that
-        # consistency between benchmark results in the run is currently not
-        # granted: https://github.com/conbench/conbench/issues/864
-
+        # Get run info from benchmark results in the last 30 days.
+        all_run_info = get_all_run_info(
+            min_time=datetime.datetime.utcnow() - datetime.timedelta(days=30),
+            max_time=datetime.datetime.utcnow(),
+        )
+        # Note(JP): group runs by associated commit.repository value.
         reponame_runs_map: Dict[str, List[RunForDisplay]] = defaultdict(list)
 
-        for r in runs:
-            # Feed per-run result count from BMRT cache so that at least for
-            # the last few runs (or all of them; depends on usage pattern) the
-            # data is ~correct. At the boundary, the count is permanently wrong
-            # (single run partially represented in BMRT cache, true for
-            # probably just one of many runs). That's fine, the UI does not
-            # claim real-time truth in that regard. In the vast majority of the
-            # cases we want a ~correct result count per run only for the last
-            # ~10 runs, and that is provided by this approach.
-            result_count = "n/a"
-            if r.id in bmrt_cache["by_run_id"]:
-                result_count = str(len(bmrt_cache["by_run_id"][r.id]))
+        for benchmark_result, count, any_failures in all_run_info:
+            # Note: At the "30d ago" boundary, the count is permanently wrong (single
+            # run partially represented in DB query result, true for just one of many
+            # runs). That's fine, the UI does not claim real-time truth in that regard.
+            # In the vast majority of the cases we get a correct result count per run.
+            result_count = str(count)
 
             rd = RunForDisplay(
-                ctime_for_table=r.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"),
-                commit_message_short=conbench.util.short_commit_msg(
-                    r.commit.message if r.commit else ""
+                ctime_for_table=benchmark_result.timestamp.strftime(
+                    "%Y-%m-%d %H:%M:%S UTC"
                 ),
-                # We cannot fetch all last-1000-run-related BenchmarkResult
-                # objects each time we render the landing page. See
-                # https://github.com/conbench/conbench/issues/977 However, we
-                # use a pragmatic way to still display a per-run result
-                # count (estimate).
+                commit_message_short=conbench.util.short_commit_msg(
+                    benchmark_result.commit.message if benchmark_result.commit else ""
+                ),
                 result_count=result_count,
-                run=r,
+                any_benchmark_results_failed=any_failures,
+                result=benchmark_result,
             )
 
-            rname = repo_url_to_display_name(r.associated_commit_repo_url)
+            rname = repo_url_to_display_name(
+                benchmark_result.associated_commit_repo_url
+            )
             reponame_runs_map[rname].append(rd)
 
         # A quick decision for now, not set in stone: get a stable sort order
@@ -141,11 +130,12 @@ class RunForDisplay:
     ctime_for_table: str
     commit_message_short: str
     result_count: str | int
-    # Expose the raw Run object (but this needs to be used with a lot of
-    # care, in the template -- for VSCode supporting Python variable types and
-    # auot-completion in a jinja2 template see
+    any_benchmark_results_failed: bool
+    # Expose the (earliest) raw BenchmarkResult object (but this needs to be used with a
+    # lot of care, in the template -- for VSCode supporting Python variable types and
+    # auto-completion in a jinja2 template see
     # https://github.com/microsoft/pylance-release/discussions/4090)
-    run: Run
+    result: BenchmarkResult
 
 
 view = Index.as_view("index")

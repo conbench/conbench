@@ -1,4 +1,5 @@
-from typing import Dict
+import datetime
+from typing import Dict, List, Optional, Tuple
 
 import flask as f
 import flask_login
@@ -9,6 +10,49 @@ from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
 from ..entities.run import RunFacadeSchema, RunSerializer
+
+
+def get_all_run_info(
+    min_time: datetime.datetime,
+    max_time: datetime.datetime,
+    commit_hashes: Optional[List[str]] = None,
+) -> List[Tuple[BenchmarkResult, int, bool]]:
+    """Get info about each run in a time range.
+
+    Query the database for all benchmark results (optionally filtered to certain commit
+    hashes) in a time range, and return a list of tuples, each corresponding to one
+    run_id. The tuples contain:
+
+    - the earliest BenchmarkResult for that run (by its timestamp)
+    - the number of benchmark results seen for that run
+    - whether any benchmark results are "failed" in that run
+
+    This powers the "list runs" API endpoint and the "recent runs" list on the home page.
+    """
+    run_info: Dict[str, Tuple[BenchmarkResult, int, bool]] = {}  # keyed by run_id
+
+    joins = []
+    filters = [
+        BenchmarkResult.timestamp >= min_time,
+        BenchmarkResult.timestamp <= max_time,
+    ]
+    if commit_hashes:
+        joins.append(Commit)
+        filters.append(Commit.sha.in_(commit_hashes))
+
+    for result in BenchmarkResult.search(filters=filters, joins=joins):
+        run_id = result.run_id
+        if run_id not in run_info:
+            run_info[run_id] = (result, 1, result.is_failed)
+        else:
+            old_result, old_count, old_failed = run_info[run_id]
+            run_info[run_id] = (
+                result if result.timestamp < old_result.timestamp else old_result,
+                old_count + 1,
+                old_failed or result.is_failed,
+            )
+
+    return list(run_info.values())
 
 
 class RunEntityAPI(ApiEndpoint):
@@ -119,7 +163,7 @@ class RunListAPI(ApiEndpoint):
     def get(self):
         """
         ---
-        description: Get a list of runs corresponding to the last 1000 benchmark results
+        description: Get a list of runs from the last 30 days of benchmark results.
         responses:
             "200": "RunList"
             "401": "401"
@@ -131,28 +175,16 @@ class RunListAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        if sha_arg := f.request.args.get("sha"):
-            shas = sha_arg.split(",")
-            filters = [Commit.sha.in_(shas)]
-            joins = [Commit]
-        else:
-            filters = []
-            joins = None
-
-        results = BenchmarkResult.search(
-            filters=filters,
-            joins=joins,
-            order_by=BenchmarkResult.timestamp.desc(),
-            limit=1000,
-        )
-        random_result_for_each_run_id: Dict[str, BenchmarkResult] = {}
-        for result in results:
-            if result.run_id not in random_result_for_each_run_id:
-                random_result_for_each_run_id[result.run_id] = result
+        sha_arg: Optional[str] = f.request.args.get("sha")
+        commit_hashes = sha_arg.split(",") if sha_arg else None
 
         return [
             self.serializer.one._dump(result, get_baseline_runs=False)
-            for result in random_result_for_each_run_id.values()
+            for result, _, _ in get_all_run_info(
+                min_time=datetime.datetime.utcnow() - datetime.timedelta(days=30),
+                max_time=datetime.datetime.utcnow(),
+                commit_hashes=commit_hashes,
+            )
         ]
 
     @flask_login.login_required
