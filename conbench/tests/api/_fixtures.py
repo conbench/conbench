@@ -50,6 +50,7 @@ VALID_RESULT_PAYLOAD = {
     "run_id": "2a5709d179f349cba69ed242be3e6321",
     "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
     "run_reason": "commit",
+    "run_tags": {"arbitrary": "tags"},
     "batch_id": "7b2fdd9f929d47b9960152090d47f8e6",
     "timestamp": "2020-11-25T21:02:44Z",
     "context": {

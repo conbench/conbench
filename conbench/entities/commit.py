@@ -85,10 +85,6 @@ class Commit(Base, EntityMixin):
     # further down we use `.label()` which seems to be sqlalchemy-specific
     timestamp: Mapped[Optional[datetime]] = Nullable(s.DateTime(timezone=False))
 
-    # Form a one-to-many relationship between Commit (one) and potentially
-    # many Runs.
-    runs: Mapped[List["Run"]] = relationship(back_populates="commit")  # type: ignore  # noqa
-
     def get_parent_commit(self):
         # Hm -- should this not be done with a foreign key relationship?
         return Commit.first(sha=self.parent, repository=self.repository)

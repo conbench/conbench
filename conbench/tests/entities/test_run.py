@@ -1,6 +1,7 @@
 import logging
 
 from ..api import _fixtures
+from ...entities.run import get_candidate_baseline_runs
 
 log = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ DEFAULT_BRANCH_PLACEHOLDER = {
 
 def test_get_candidate_baseline_runs():
     commits, benchmark_results = _fixtures.gen_fake_data()
-    runs = [result.run for result in benchmark_results]
+    run_ids = [result.run_id for result in benchmark_results]
     # Corresponding to these fake runs:
     expected_baseline_run_dicts = [
         # run 0, commit 11111
@@ -27,7 +28,7 @@ def test_get_candidate_baseline_runs():
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[9].id,
+                "baseline_run_id": run_ids[9],
                 "commits_skipped": [],
             },
         },
@@ -35,13 +36,13 @@ def test_get_candidate_baseline_runs():
         {
             "parent": {
                 "error": None,
-                "baseline_run_id": runs[0].id,
+                "baseline_run_id": run_ids[0],
                 "commits_skipped": [],
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[9].id,
+                "baseline_run_id": run_ids[9],
                 "commits_skipped": [],
             },
         },
@@ -49,17 +50,17 @@ def test_get_candidate_baseline_runs():
         {
             "parent": {
                 "error": None,
-                "baseline_run_id": runs[1].id,
+                "baseline_run_id": run_ids[1],
                 "commits_skipped": [],
             },
             "fork_point": {
                 "error": None,
-                "baseline_run_id": runs[1].id,
+                "baseline_run_id": run_ids[1],
                 "commits_skipped": [],
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[15].id,
+                "baseline_run_id": run_ids[15],
                 "commits_skipped": [],
             },
         },
@@ -67,17 +68,17 @@ def test_get_candidate_baseline_runs():
         {
             "parent": {
                 "error": None,
-                "baseline_run_id": runs[2].id,
+                "baseline_run_id": run_ids[2],
                 "commits_skipped": [],
             },
             "fork_point": {
                 "error": None,
-                "baseline_run_id": runs[1].id,
+                "baseline_run_id": run_ids[1],
                 "commits_skipped": [],
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[15].id,
+                "baseline_run_id": run_ids[15],
                 "commits_skipped": [],
             },
         },
@@ -85,17 +86,17 @@ def test_get_candidate_baseline_runs():
         {
             "parent": {
                 "error": None,
-                "baseline_run_id": runs[1].id,
+                "baseline_run_id": run_ids[1],
                 "commits_skipped": ["ccccc", "33333"],
             },
             "fork_point": {
                 "error": None,
-                "baseline_run_id": runs[1].id,
+                "baseline_run_id": run_ids[1],
                 "commits_skipped": ["33333"],
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[15].id,
+                "baseline_run_id": run_ids[15],
                 "commits_skipped": [],
             },
         },
@@ -103,13 +104,13 @@ def test_get_candidate_baseline_runs():
         {
             "parent": {
                 "error": None,
-                "baseline_run_id": runs[1].id,
+                "baseline_run_id": run_ids[1],
                 "commits_skipped": ["33333"],
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[9].id,
+                "baseline_run_id": run_ids[9],
                 "commits_skipped": [],
             },
         },
@@ -117,17 +118,17 @@ def test_get_candidate_baseline_runs():
         {
             "parent": {
                 "error": None,
-                "baseline_run_id": runs[5].id,
+                "baseline_run_id": run_ids[5],
                 "commits_skipped": ["eeeee"],
             },
             "fork_point": {
                 "error": None,
-                "baseline_run_id": runs[5].id,
+                "baseline_run_id": run_ids[5],
                 "commits_skipped": [],
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[15].id,
+                "baseline_run_id": run_ids[15],
                 "commits_skipped": [],
             },
         },
@@ -135,17 +136,17 @@ def test_get_candidate_baseline_runs():
         {
             "parent": {
                 "error": None,
-                "baseline_run_id": runs[6].id,
+                "baseline_run_id": run_ids[6],
                 "commits_skipped": [],
             },
             "fork_point": {
                 "error": None,
-                "baseline_run_id": runs[5].id,
+                "baseline_run_id": run_ids[5],
                 "commits_skipped": [],
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[15].id,
+                "baseline_run_id": run_ids[15],
                 "commits_skipped": [],
             },
         },
@@ -153,13 +154,13 @@ def test_get_candidate_baseline_runs():
         {
             "parent": {
                 "error": None,
-                "baseline_run_id": runs[5].id,
+                "baseline_run_id": run_ids[5],
                 "commits_skipped": ["55555"],
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[9].id,
+                "baseline_run_id": run_ids[9],
                 "commits_skipped": [],
             },
         },
@@ -167,13 +168,13 @@ def test_get_candidate_baseline_runs():
         {
             "parent": {
                 "error": None,
-                "baseline_run_id": runs[5].id,
+                "baseline_run_id": run_ids[5],
                 "commits_skipped": ["55555"],
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[8].id,
+                "baseline_run_id": run_ids[8],
                 "commits_skipped": [],
             },
         },
@@ -255,24 +256,24 @@ def test_get_candidate_baseline_runs():
         {
             "parent": {
                 "error": None,
-                "baseline_run_id": runs[5].id,
+                "baseline_run_id": run_ids[5],
                 "commits_skipped": ["55555"],
             },
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
                 "error": None,
-                "baseline_run_id": runs[9].id,
+                "baseline_run_id": run_ids[9],
                 "commits_skipped": [],
             },
         },
     ]
-    assert len(runs) == len(expected_baseline_run_dicts), "you should test all runs"
+    assert len(run_ids) == len(expected_baseline_run_dicts), "you should test all runs"
 
     failures = []
-    for ix, (run, expected_baseline_run_dict) in enumerate(
-        zip(runs, expected_baseline_run_dicts)
+    for ix, (result, expected_baseline_run_dict) in enumerate(
+        zip(benchmark_results, expected_baseline_run_dicts)
     ):
-        actual_baseline_run_dict = run.get_candidate_baseline_runs()
+        actual_baseline_run_dict = get_candidate_baseline_runs(result)
         if actual_baseline_run_dict != expected_baseline_run_dict:
             failures.append(ix)
             log.info(
@@ -291,17 +292,17 @@ def test_get_candidate_baseline_runs():
         reason="nightly",
         commit=commits["44444"],
     )
-    actual_baseline_run_dict = runs[-1].get_candidate_baseline_runs()
+    actual_baseline_run_dict = get_candidate_baseline_runs(benchmark_results[-1])
     assert actual_baseline_run_dict == {
         "parent": {
             "error": None,
-            "baseline_run_id": new_benchmark_result.run.id,
+            "baseline_run_id": new_benchmark_result.run_id,
             "commits_skipped": ["55555"],
         },
         "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
         "latest_default": {
             "error": None,
-            "baseline_run_id": new_benchmark_result.run.id,
+            "baseline_run_id": new_benchmark_result.run_id,
             "commits_skipped": ["66666", "55555"],
         },
     }
@@ -312,9 +313,9 @@ def test_get_candidate_baseline_runs():
         results=[1, 2, 3],
         no_github=True,
     )
-    assert benchmark_result_missing_commit.run.commit is None
-    actual_baseline_run_dict = (
-        benchmark_result_missing_commit.run.get_candidate_baseline_runs()
+    assert benchmark_result_missing_commit.commit is None
+    actual_baseline_run_dict = get_candidate_baseline_runs(
+        benchmark_result_missing_commit
     )
     assert actual_baseline_run_dict == {
         "parent": {
@@ -329,7 +330,7 @@ def test_get_candidate_baseline_runs():
         },
         "latest_default": {
             "error": None,
-            "baseline_run_id": runs[9].id,  # latest with same reason (commit)
+            "baseline_run_id": run_ids[9],  # latest with same reason (commit)
             "commits_skipped": [],
         },
     }

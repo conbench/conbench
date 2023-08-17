@@ -492,8 +492,6 @@ def show_benchmark_cases(bname: TBenchmarkName) -> str:
 
     hardware_count_per_case_id = {}
     for case_id, results in results_by_case_id.items():
-        # The indirection through `.run` here is an architecture / DB schema
-        # smell I think. This might fetch run dynamically from the DB>
         hardware_count_per_case_id[case_id] = len(
             set([r.hardware_checksum for r in results])
         )
@@ -566,9 +564,7 @@ def show_benchmark_results(bname: TBenchmarkName, caseid: str) -> str:
 
     # Build up timeseries of results (group results, don't sort them yet).
     for result in matching_results:
-        # The indirection through `result.run.hardware` here is an architecture
-        # / DB schema smell I think. This might fetch run dynamically from the
-        # DB. Store hardware name in dictionary key, for convenience.
+        # Store hardware name in dictionary key, for convenience.
         hwchecksum, hwname, ctxid = (
             result.hardware_checksum,
             result.hardware_name,

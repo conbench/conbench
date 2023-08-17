@@ -5,8 +5,8 @@ import pytest
 from conbench.util import tznaive_dt_to_aware_iso8601_for_api
 
 from ...api._examples import _api_run_entity
+from ...entities.benchmark_result import BenchmarkResult
 from ...entities._entity import NotFound
-from ...entities.run import Run
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
@@ -17,26 +17,18 @@ DEFAULT_BRANCH_PLACEHOLDER = {
 }
 
 
-def _expected_entity(run: Run, candidate_baseline_runs=None):
-    parent = run.commit.get_parent_commit() if run.commit else None
-    has_errors = False
+def _expected_entity(result: BenchmarkResult, candidate_baseline_runs=None):
+    parent = result.commit.get_parent_commit() if result.commit else None
     entity = _api_run_entity(
-        run.id,
-        run.name,
-        run.reason,
-        run.commit_id,
+        result.run_id,
+        result.run_tags,
+        result.run_reason,
+        result.commit_id,
         parent.id if parent else None,
-        run.hardware_id,
-        run.hardware.name,
-        run.hardware.type,
-        tznaive_dt_to_aware_iso8601_for_api(run.timestamp),
-        has_errors,
-        tznaive_dt_to_aware_iso8601_for_api(run.finished_timestamp)
-        if run.finished_timestamp
-        else None,
-        run.info,
-        run.error_info,
-        run.error_type,
+        result.hardware_id,
+        result.hardware.name,
+        result.hardware.type,
+        tznaive_dt_to_aware_iso8601_for_api(result.timestamp),
     )
     if candidate_baseline_runs:
         entity["candidate_baseline_runs"] = candidate_baseline_runs
@@ -61,31 +53,31 @@ class TestRunGet(_asserts.GetEnforcer):
                 sha=_fixtures.PARENT,
                 language=language,
             )
-            return contender.run, baseline.run
+            return contender, baseline
         else:
             contender = _fixtures.benchmark_result()
-        return contender.run
+        return contender
 
     def test_get_run(self, client):
         # change anything about the context so we get only one baseline
         language, name = _uuid(), _uuid()
 
         self.authenticate(client)
-        run, baseline = self._create(baseline=True, name=name, language=language)
-        response = client.get(f"/api/runs/{run.id}/")
+        result, baseline = self._create(baseline=True, name=name, language=language)
+        response = client.get(f"/api/runs/{result.run_id}/")
         self.assert_200_ok(
             response,
             _expected_entity(
-                run,
+                result,
                 candidate_baseline_runs={
                     "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
                     "latest_default": {
-                        "baseline_run_id": baseline.id,
-                        "commits_skipped": [run.commit.sha],
+                        "baseline_run_id": baseline.run_id,
+                        "commits_skipped": [result.commit.sha],
                         "error": None,
                     },
                     "parent": {
-                        "baseline_run_id": baseline.id,
+                        "baseline_run_id": baseline.run_id,
                         "commits_skipped": [],
                         "error": None,
                     },
@@ -96,10 +88,9 @@ class TestRunGet(_asserts.GetEnforcer):
     def test_get_run_without_commit(self, client):
         self.authenticate(client)
         result = _fixtures.benchmark_result(no_github=True)
-        run = result.run
-        response = client.get(f"/api/runs/{run.id}/")
+        response = client.get(f"/api/runs/{result.run_id}/")
         expected = _expected_entity(
-            run,
+            result,
             candidate_baseline_runs={
                 "fork_point": {
                     "baseline_run_id": None,
@@ -119,7 +110,6 @@ class TestRunGet(_asserts.GetEnforcer):
             },
         )
         expected["commit"] = None
-        expected["links"].pop("commit")
         self.assert_200_ok(response, expected)
 
     def test_get_run_should_not_prefer_test_runs_as_baseline(self, client):
@@ -129,24 +119,23 @@ class TestRunGet(_asserts.GetEnforcer):
         language, name = _uuid(), _uuid()
 
         self.authenticate(client)
-        run, baseline = self._create(baseline=True, name=name, language=language)
-        baseline.name = "testing"
-        baseline.reason = "test"
+        result, baseline = self._create(baseline=True, name=name, language=language)
+        baseline.run_reason = "test"
         baseline.save()
-        response = client.get(f"/api/runs/{run.id}/")
+        response = client.get(f"/api/runs/{result.run_id}/")
         self.assert_200_ok(
             response,
             _expected_entity(
-                run,
+                result,
                 candidate_baseline_runs={
                     "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
                     "latest_default": {
-                        "baseline_run_id": baseline.id,
-                        "commits_skipped": [run.commit.sha],
+                        "baseline_run_id": baseline.run_id,
+                        "commits_skipped": [result.commit.sha],
                         "error": None,
                     },
                     "parent": {
-                        "baseline_run_id": baseline.id,
+                        "baseline_run_id": baseline.run_id,
                         "commits_skipped": [],
                         "error": None,
                     },
@@ -159,42 +148,46 @@ class TestRunGet(_asserts.GetEnforcer):
         language, name_1, name_2 = _uuid(), _uuid(), _uuid()
 
         self.authenticate(client)
-        run_1, baseline_1 = self._create(baseline=True, name=name_1, language=language)
-        run_2, baseline_2 = self._create(baseline=True, name=name_2, language=language)
-        response = client.get(f"/api/runs/{run_1.id}/")
+        result_1, baseline_1 = self._create(
+            baseline=True, name=name_1, language=language
+        )
+        result_2, baseline_2 = self._create(
+            baseline=True, name=name_2, language=language
+        )
+        response = client.get(f"/api/runs/{result_1.run_id}/")
         self.assert_200_ok(
             response,
             _expected_entity(
-                run_1,
+                result_1,
                 candidate_baseline_runs={
                     "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
                     "latest_default": {
-                        "baseline_run_id": baseline_1.id,
-                        "commits_skipped": [run_1.commit.sha],
+                        "baseline_run_id": baseline_1.run_id,
+                        "commits_skipped": [result_1.commit.sha],
                         "error": None,
                     },
                     "parent": {
-                        "baseline_run_id": baseline_1.id,
+                        "baseline_run_id": baseline_1.run_id,
                         "commits_skipped": [],
                         "error": None,
                     },
                 },
             ),
         )
-        response = client.get(f"/api/runs/{run_2.id}/")
+        response = client.get(f"/api/runs/{result_2.run_id}/")
         self.assert_200_ok(
             response,
             _expected_entity(
-                run_2,
+                result_2,
                 candidate_baseline_runs={
                     "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
                     "latest_default": {
-                        "baseline_run_id": baseline_2.id,
-                        "commits_skipped": [run_2.commit.sha],
+                        "baseline_run_id": baseline_2.run_id,
+                        "commits_skipped": [result_2.commit.sha],
                         "error": None,
                     },
                     "parent": {
-                        "baseline_run_id": baseline_2.id,
+                        "baseline_run_id": baseline_2.run_id,
                         "commits_skipped": [],
                         "error": None,
                     },
@@ -243,7 +236,7 @@ class TestRunGet(_asserts.GetEnforcer):
             "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
             "latest_default": {
                 "baseline_run_id": baseline_run_id_1,
-                "commits_skipped": [a_contender_result.run.commit.sha],
+                "commits_skipped": [a_contender_result.commit.sha],
                 "error": None,
             },
             "parent": {
@@ -315,27 +308,24 @@ class TestRunGet(_asserts.GetEnforcer):
             hardware_name=machine_1,
         )
 
-        contender_run = contender.run
-        baseline_run = baseline.run
-
-        response = client.get(f"/api/runs/{contender_run.id}/")
+        response = client.get(f"/api/runs/{contender.run_id}/")
         self.assert_200_ok(
             response,
             _expected_entity(
-                contender_run,
+                contender,
                 candidate_baseline_runs={
                     "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
                     "latest_default": {
-                        "baseline_run_id": baseline_run.id,
+                        "baseline_run_id": baseline.run_id,
                         "commits_skipped": [
-                            contender.run.commit.sha,
-                            parent.run.commit.sha,
+                            contender.commit.sha,
+                            parent.commit.sha,
                         ],
                         "error": None,
                     },
                     "parent": {
-                        "baseline_run_id": baseline_run.id,
-                        "commits_skipped": [parent.run.commit.sha],
+                        "baseline_run_id": baseline.run_id,
+                        "commits_skipped": [parent.commit.sha],
                         "error": None,
                     },
                 },
@@ -372,35 +362,30 @@ class TestRunGet(_asserts.GetEnforcer):
             hardware_name=machine_1,
         )
 
-        testing_run = testing.run
-        testing_run.name = "testing"
-        testing_run.reason = "test"
-        testing_run.save()
+        testing.run_reason = "test"
+        testing.save()
 
-        contender_run = contender.run
-        baseline_run = baseline.run
-
-        response = client.get(f"/api/runs/{contender_run.id}/")
+        response = client.get(f"/api/runs/{contender.run_id}/")
         self.assert_200_ok(
             response,
             _expected_entity(
-                contender_run,
+                contender,
                 candidate_baseline_runs={
                     "fork_point": DEFAULT_BRANCH_PLACEHOLDER,
                     "latest_default": {
-                        "baseline_run_id": baseline_run.id,
+                        "baseline_run_id": baseline.run_id,
                         "commits_skipped": [
-                            contender.run.commit.sha,
-                            parent.run.commit.sha,
-                            testing.run.commit.sha,
+                            contender.commit.sha,
+                            parent.commit.sha,
+                            testing.commit.sha,
                         ],
                         "error": None,
                     },
                     "parent": {
-                        "baseline_run_id": baseline_run.id,
+                        "baseline_run_id": baseline.run_id,
                         "commits_skipped": [
-                            parent.run.commit.sha,
-                            testing.run.commit.sha,
+                            parent.commit.sha,
+                            testing.commit.sha,
                         ],
                         "error": None,
                     },
@@ -416,34 +401,34 @@ class TestRunList(_asserts.ListEnforcer):
     def _create(self):
         _fixtures.benchmark_result(sha=_fixtures.PARENT)
         benchmark_result = _fixtures.benchmark_result()
-        return benchmark_result.run
+        return benchmark_result
 
     def test_run_list(self, client):
         self.authenticate(client)
-        run = self._create()
+        result = self._create()
         response = client.get("/api/runs/")
-        self.assert_200_ok(response, contains=_expected_entity(run))
+        self.assert_200_ok(response, contains=_expected_entity(result))
 
     def test_run_list_filter_by_sha(self, client):
         sha = _fixtures.CHILD
         self.authenticate(client)
-        run = self._create()
+        result = self._create()
         response = client.get(f"/api/runs/?sha={sha}")
-        self.assert_200_ok(response, contains=_expected_entity(run))
+        self.assert_200_ok(response, contains=_expected_entity(result))
 
     def test_run_list_filter_by_multiple_sha(self, client):
         sha1 = _fixtures.CHILD
         sha2 = _fixtures.PARENT
         self.authenticate(client)
         _fixtures.benchmark_result(sha=_fixtures.PARENT)
-        run_1 = _fixtures.benchmark_result()
+        result_1 = _fixtures.benchmark_result()
         _fixtures.benchmark_result(sha=_fixtures.CHILD)
-        run_2 = _fixtures.benchmark_result()
+        result_2 = _fixtures.benchmark_result()
         response = client.get(f"/api/runs/?sha={sha1},{sha2}")
 
-        self.assert_200_ok(response, contains=_expected_entity(run_1.run))
+        self.assert_200_ok(response, contains=_expected_entity(result_1))
 
-        self.assert_200_ok(response, contains=_expected_entity(run_2.run))
+        self.assert_200_ok(response, contains=_expected_entity(result_2))
 
     def test_run_list_filter_by_sha_no_match(self, client):
         sha = "some unknown sha"
@@ -454,6 +439,8 @@ class TestRunList(_asserts.ListEnforcer):
 
 
 class TestRunDelete(_asserts.DeleteEnforcer):
+    """Deprecated at this time; always returns a 204"""
+
     url = "api/runs/{}/"
 
     def test_delete_run(self, client):
@@ -462,18 +449,23 @@ class TestRunDelete(_asserts.DeleteEnforcer):
         run_id = benchmark_result.run_id
 
         # can get before delete
-        Run.one(id=run_id)
+        BenchmarkResult.one(run_id=run_id)
 
         # delete
         response = client.delete(f"/api/runs/{run_id}/")
         self.assert_204_no_content(response)
 
-        # cannot get after delete
-        with pytest.raises(NotFound):
-            Run.one(id=run_id)
+        # can still get after delete
+        BenchmarkResult.one(run_id=run_id)
+
+    # def test_unknown(self, client):
+    #     """Don't run this test from the parent class."""
+    #     pass
 
 
 class TestRunPut(_asserts.PutEnforcer):
+    """Deprecated at this time; always returns a 200"""
+
     url = "/api/runs/{}/"
     valid_payload = {
         "finished_timestamp": "2022-11-25T21:02:45Z",
@@ -482,41 +474,25 @@ class TestRunPut(_asserts.PutEnforcer):
         "error_type": "fatal",
     }
 
-    def setup_method(self):
-        Run.delete_all()
-
     def _create_entity_to_update(self):
         _fixtures.benchmark_result(sha=_fixtures.PARENT)
         # This writes to the database.
         benchmark_result = _fixtures.benchmark_result()
-        run = benchmark_result.run
-        return run
+        return benchmark_result
 
     def test_update_allowed_fields(self, client):
         self.authenticate(client)
 
         # before
-        run_before = self._create_entity_to_update()
-        for key in self.valid_payload.keys():
-            assert getattr(run_before, key) is None
+        result_before = self._create_entity_to_update()
 
-        # mutate run in db
-        resp = client.put(f"/api/runs/{run_before.id}/", json=self.valid_payload)
+        # mutate run in db (no-op)
+        resp = client.put(f"/api/runs/{result_before.run_id}/", json=self.valid_payload)
         assert resp.status_code == 200, resp.status_code
 
-        # receive (hopefully) mutated run from db
-        resp = client.get(f"/api/runs/{run_before.id}/")
+        # receive not-mutated run from db
+        resp = client.get(f"/api/runs/{result_before.run_id}/")
         assert resp.status_code == 200, resp.status_code
-
-        run_after_mod = resp.json
-
-        for key, value in self.valid_payload.items():
-            # if key == "finished_timestamp":
-            #     assert (
-            #         tznaive_dt_to_aware_iso8601_for_api(run_after_mod.get(key)) == value
-            #     )
-            # else:
-            assert run_after_mod.get(key) == value
 
     @pytest.mark.parametrize(
         "timeinput, timeoutput",
@@ -569,6 +545,8 @@ class TestRunPut(_asserts.PutEnforcer):
 
 
 class TestRunPost(_asserts.PostEnforcer):
+    """Deprecated at this time; always returns a 201"""
+
     url = "/api/runs/"
     valid_payload = _fixtures.VALID_RUN_PAYLOAD
     valid_payload_for_cluster = _fixtures.VALID_RUN_PAYLOAD_FOR_CLUSTER
@@ -586,33 +564,31 @@ class TestRunPost(_asserts.PostEnforcer):
         ]:
             self.authenticate(client)
             run_id = payload["id"]
-            assert not Run.first(id=run_id)
+            assert not BenchmarkResult.first(run_id=run_id)
             response = client.post(self.url, json=payload)
             # print(response)
             # print(response.json)
-            run = Run.one(id=run_id)
+            result = BenchmarkResult.one(run_id=run_id)
             location = f"http://localhost/api/runs/{run_id}/"
-            self.assert_201_created(response, _expected_entity(run), location)
+            self.assert_201_created(response, _expected_entity(result), location)
 
-            assert run.hardware.type == hardware_type
+            assert result.hardware.type == hardware_type
             for attr, value in payload[f"{hardware_type}_info"].items():
-                assert getattr(run.hardware, attr) == value or getattr(
-                    run.hardware, attr
+                assert getattr(result.hardware, attr) == value or getattr(
+                    result.hardware, attr
                 ) == int(value)
 
     def test_create_run_with_error(self, client):
         self.authenticate(client)
         run_id = self.valid_payload_with_error["id"]
-        assert not Run.first(id=run_id)
         response = client.post(self.url, json=self.valid_payload_with_error)
-        run = Run.one(id=run_id)
+        result = BenchmarkResult.one(run_id=run_id)
         location = f"http://localhost/api/runs/{run_id}/"
-        self.assert_201_created(response, _expected_entity(run), location)
+        self.assert_201_created(response, _expected_entity(result), location)
 
     def test_create_run_same_id(self, client):
         self.authenticate(client)
         run_id = self.valid_payload_with_error["id"]
-        assert not Run.first(id=run_id)
         resp = client.post(self.url, json=self.valid_payload_with_error)
         assert resp.status_code == 201
         resp = client.post(self.url, json=self.valid_payload_with_error)

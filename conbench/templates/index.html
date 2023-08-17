@@ -41,7 +41,7 @@
               {% for r in runobjs %}
                 <tr class="no-border">
                   <td>
-                    <code><a href="{{ url_for('app.run', run_id=result.id) }}">{{ r.ctime_for_table }}</a></code>
+                    <code><a href="{{ url_for('app.run', run_id=r.result.id) }}">{{ r.ctime_for_table }}</a></code>
                     {% if r.any_benchmark_results_failed %}
                       <i class="bi bi-exclamation-circle text-danger"
                          data-toggle="tooltip"
@@ -51,48 +51,48 @@
                   </td>
                   <td>{{ r.result_count }}</td>
                   <td>
-                    {% if result.run_reason %}
-                      <div class="table-entry">{{ result.run_reason }}</div>
+                    {% if r.result.run_reason %}
+                      <div class="table-entry">{{ r.result.run_reason }}</div>
                     {% else %}
                       <div class="table-entry"></div>
                     {% endif %}
                   </td>
                   <td>
                     <span class="table-entry text-truncate d-inline-block"
-                          style="max-width: 140px">{{ result.hardware.name }}</span>
+                          style="max-width: 140px">{{ r.result.hardware.name }}</span>
                   </td>
                   <td>
                     <div class="table-entry">
-                      {% if result.commit is not none %}
-                        {% if result.commit.author_avatar_url is not none %}
+                      {% if r.result.commit is not none %}
+                        {% if r.result.commit.author_avatar_url is not none %}
                           <img alt="avatar"
-                               src="{{ result.commit.author_avatar_url  }}"
+                               src="{{ r.result.commit.author_avatar_url  }}"
                                height="25"
                                style="border-radius: 50%">
                           &nbsp;
                         {% endif %}
-                        {{ result.commit.author_name }}
+                        {{ r.result.commit.author_name }}
                       {% else %}
                         n/a
                       {% endif %}
                     </div>
                   </td>
                   <td>
-                    {% if result.commit is not none %}
-                      {% if result.commit.commit_url is not none %}
-                        <code><a href="{{ result.commit.commit_url }}">{{ result.commit.hash[:7] }}</a></code>
+                    {% if r.result.commit is not none %}
+                      {% if r.result.commit.commit_url is not none %}
+                        <code><a href="{{ r.result.commit.commit_url }}">{{ r.result.commit.hash[:7] }}</a></code>
                       {% else %}
                         {# is this a valid scenario? when there's a hash, but no url? #}
-                        {{ result.commit.hash[:7] }}
+                        {{ r.result.commit.hash[:7] }}
                       {% endif %}
                       <!--NOTE: enable full commit has search while maintaining partial hash display -->
-                      <p style="display:none">{{ result.commit.hash }}</p>
+                      <p style="display:none">{{ r.result.commit.hash }}</p>
                     {% else %}
                       n/a
                     {% endif %}
                   </td>
                   <td>
-                    {% if result.commit is not none %}
+                    {% if r.result.commit is not none %}
                       {{ r.commit_message_short }}
                     {% else %}
                       n/a

@@ -29,18 +29,15 @@ class TestJoinResults:
         hardware.hash = "hardware 1"
         commit = FakeEntity("")
         commit.repository = "repo 1"
-        run = FakeEntity("")
-        run.hardware = hardware
-        if has_commit:
-            run.commit = commit
-        else:
-            run.commit = None
-
         result = FakeEntity(benchmark_result_id)
         result.unit = "unit 1"
         result.case_id = case_id
         result.context_id = context_id
-        result.run = run
+        result.hardware = hardware
+        if has_commit:
+            result.commit = commit
+        else:
+            result.commit = None
         return result
 
     @staticmethod

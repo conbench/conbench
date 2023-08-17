@@ -39,10 +39,6 @@ _default_hyperlink_text = {
 }
 
 
-# This class had the same name as `entities.Run`. Mypy got confused:
-#   conbench/app/__init__.py:16: error: Incompatible import of "Run"
-#   (imported name has type "Type[conbench.app.runs.Run]", local name has
-#     type "Type[conbench.entities.run.Run]")  [assignment]
 class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
     def page(self, benchmark_results, rundict, form):
         if not flask_login.current_user.is_authenticated:

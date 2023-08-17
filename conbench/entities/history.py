@@ -145,7 +145,7 @@ def get_history_for_benchmark(benchmark_result_id: str) -> List[HistorySample]:
 
     benchmark_name = cast(TBenchmarkName, str(result.case.name))
 
-    if result.run.commit is None:
+    if result.commit is None:
         # Alternatively, raise an exception here -- allowing to inform the
         # user that conceptually there will never be history for this
         # benchmark result, because it's not associated with repo/commit
@@ -158,8 +158,8 @@ def get_history_for_benchmark(benchmark_result_id: str) -> List[HistorySample]:
         benchmark_name,
         result.case_id,
         result.context_id,
-        result.run.hardware.hash,
-        result.run.commit.repository,
+        result.hardware.hash,
+        result.commit.repository,
     )
 
 
@@ -550,7 +550,7 @@ def execute_history_query_get_dataframe(statement) -> Tuple[pd.DataFrame, Dict]:
                 dict_for_df["timestamp"].append(value)
 
             # This does not need to be in the dataframe, but it's better
-            # than result.run.commit.message below
+            # than result.commit.message below
             if coldesc["name"] in ("commit_message", "commit_hash", "run_name"):
                 dict_for_df[coldesc["name"]].append(value)
 

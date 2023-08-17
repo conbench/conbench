@@ -66,8 +66,8 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             # https://github.com/conbench/conbench/issues/968
             contender_benchmark_result = BenchmarkResult.one(id=contender["id"])
             baseline_benchmark_result = BenchmarkResult.one(id=baseline["id"])
-            contender_hardware_checksum = contender_benchmark_result.run.hardware.hash
-            baseline_hardware_checksum = baseline_benchmark_result.run.hardware.hash
+            contender_hardware_checksum = contender_benchmark_result.hardware.hash
+            baseline_hardware_checksum = baseline_benchmark_result.hardware.hash
 
             benchmark_result_history_plot_info = self.get_history_plot(
                 contender_benchmark_result,

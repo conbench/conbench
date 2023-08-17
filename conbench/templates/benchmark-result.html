@@ -35,11 +35,11 @@
         <div class="cb-bmr-summary-item">
           <strong>benchmarked code</strong>
           <br>
-          {% if result.run.commit is not none %}
+          {% if result.commit is not none %}
             <code>
-              <a href="{{ result.run.commit.repo_url }}">{{ result.run.commit.repo_url }}</a>,
+              <a href="{{ result.commit.repo_url }}">{{ result.commit.repo_url }}</a>,
               commit {{ result.ui_commit_url_anchor() |safe }}
-              ({{ result.run.commit.timestamp.strftime("%Y-%m-%d") }})
+              ({{ result.commit.timestamp.strftime("%Y-%m-%d") }})
             </code>
           {% else %}
             commit info unavailable
@@ -48,7 +48,7 @@
         <div class="cb-bmr-summary-item">
           <strong>hardware name</strong>
           <br>
-          <code>{{ result.run.hardware.name }}</code>
+          <code>{{ result.hardware.name }}</code>
         </div>
       </div>
       <div class="text-muted fst-italic mt-1 small">
@@ -272,7 +272,7 @@
         <li class="list-group-item" style="overflow-y: auto;">
           checksum
           <div align="right" style="display:inline-block; float: right;">
-            <code>{{ result.run.hardware.hash }}</code>
+            <code>{{ result.hardware.hash }}</code>
           </div>
         </li>
         {% for k,v in run.hardware.items() %}
