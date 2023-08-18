@@ -956,30 +956,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
 
         assert resp.json["timestamp"] == timeoutput
 
-    def test_create_result_mismatch_run_commit_hash(self, client):
-        self.authenticate(client)
-
-        run = copy.deepcopy(_fixtures.VALID_RUN_PAYLOAD)
-        result = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
-
-        resp = client.post("/api/runs/", json=run)
-        assert resp.status_code == 201, resp.text
-
-        run_commit_hash = run["github"]["commit"]
-
-        # Make result point to run:
-        result["run_id"] = run["id"]
-
-        # Make result refer to a different commit hash:
-        badhash = run_commit_hash[:-4] + "aaaa"
-        result["github"]["commit"] = badhash
-        resp = client.post("/api/benchmark-results/", json=result)
-        assert resp.status_code == 400, resp.text
-        assert f"Result refers to commit hash '{badhash}'" in resp.text
-        assert (
-            f"Run '{run['id']}' refers to commit hash '{run_commit_hash}'" in resp.text
-        )
-
     def test_create_result_missing_stats_and_error(self, client):
         self.authenticate(client)
         result = _fixtures.VALID_RESULT_PAYLOAD.copy()

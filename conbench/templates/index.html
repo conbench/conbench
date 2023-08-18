@@ -41,7 +41,7 @@
               {% for r in runobjs %}
                 <tr class="no-border">
                   <td>
-                    <code><a href="{{ url_for('app.run', run_id=r.result.id) }}">{{ r.ctime_for_table }}</a></code>
+                    <code><a href="{{ url_for('app.run', run_id=r.result.run_id) }}">{{ r.ctime_for_table }}</a></code>
                     {% if r.any_benchmark_results_failed %}
                       <i class="bi bi-exclamation-circle text-danger"
                          data-toggle="tooltip"

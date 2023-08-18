@@ -181,8 +181,9 @@ class RunListAPI(ApiEndpoint):
         return [
             self.serializer.one._dump(result, get_baseline_runs=False)
             for result, _, _ in get_all_run_info(
-                min_time=datetime.datetime.utcnow() - datetime.timedelta(days=30),
-                max_time=datetime.datetime.utcnow(),
+                min_time=datetime.datetime.now(datetime.timezone.utc)
+                - datetime.timedelta(days=30),
+                max_time=datetime.datetime.now(datetime.timezone.utc),
                 commit_hashes=commit_hashes,
             )
         ]

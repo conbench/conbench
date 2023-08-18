@@ -11,39 +11,24 @@
       </li>
       <li>commit {{ run.commit.html_anchor_and_msg | safe }}</li>
     </ul>
-    created at: <code>{{ run.timestamp }}</code>, finished at: <code>{{ run.finished_timestamp }}</code>
+    reason: <code>{{ run.reason }}</code>
     <br>
-    error: <code>{{ run.error_type }}</code>
+    hardware name: <code>{{ run.hardware.name }}</code>
     <br>
-    {% if run.error_info %}
-      error detail:
-      <a href="#"
-         class="dead-stock-params-toggle"
-         data-bs-toggle="collapse"
-         data-bs-target="#collapseErrorDetail"
-         aria-expanded="false"
-         aria-controls="collapseErrorDetail">toggle view</a>
-      <div class="collapse" id="collapseErrorDetail">
-        <div class="cb-infobox">
-          <pre>{{run.error_info_doc_for_ui}}</pre>
-        </div>
+    first benchmark result timestamp: <code>{{ run.timestamp }}</code>
+    <br>
+    run tags:
+    <a href="#"
+       class="dead-stock-params-toggle"
+       data-bs-toggle="collapse"
+       data-bs-target="#collapseRunTags"
+       aria-expanded="false"
+       aria-controls="collapseRunTags">toggle view</a>
+    <div class="collapse" id="collapseRunTags">
+      <div class="cb-infobox">
+        <pre>{{run.tags_json_doc_for_ui}}</pre>
       </div>
-    {% endif %}
-    <br>
-    {% if run.info %}
-      run information:
-      <a href="#"
-         class="dead-stock-params-toggle"
-         data-bs-toggle="collapse"
-         data-bs-target="#collapseRunInfo"
-         aria-expanded="false"
-         aria-controls="collapseRunInfo">toggle view</a>
-      <div class="collapse" id="collapseRunInfo">
-        <div class="cb-infobox">
-          <pre>{{run.info_json_doc_for_ui}}</pre>
-        </div>
-      </div>
-    {% endif %}
+    </div>
   </div>
   <div class="mt-5">
     <h3>Compare</h3>
@@ -105,18 +90,6 @@
       </table>
     </div>
   </div>
-  <div class="mt-4">
-    <form method="post" id="run-form">
-      {% if not current_user.is_anonymous %}
-        {{ form.hidden_tag() }}
-        <input class="btn btn-outline-info btn-sm"
-               id="delete"
-               name="delete"
-               type="button"
-               value="Delete Run" />
-      {% endif %}
-    </form>
-  </div>
 {% endblock %}
 {% block scripts %}
   {{ super() }}
@@ -172,15 +145,6 @@
     });
 
     column_search_implementation($('#benchmarks'));
-
-    $(document).ready(function () {
-        $("#run-form").find("#delete").attr("type", "button");
-        $("#run-form").find("#delete").attr("data-bs-toggle", "modal");
-        $("#run-form").find("#delete").attr("data-bs-target", "#confirm-delete");
-        $("#run-form").find("#delete").attr("data-cbcustom-form-id", "#run-form");
-        $("#run-form").find("#delete").attr("data-cbcustom-href", "{{ url_for('app.run', run_id=run.id) }}");
-        $("#run-form").find("#delete").attr("data-cbcustom-message", "delete run: {{ run.id }}");
-    });
 
   </script>
 {% endblock %}

@@ -1,12 +1,9 @@
-from datetime import datetime, timedelta, timezone
-
-import pytest
+from datetime import datetime, timezone
 
 from conbench.util import tznaive_dt_to_aware_iso8601_for_api
 
 from ...api._examples import _api_run_entity
 from ...entities.benchmark_result import BenchmarkResult
-from ...entities._entity import NotFound
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
@@ -41,29 +38,38 @@ class TestRunGet(_asserts.GetEnforcer):
     url = "/api/runs/{}/"
     public = True
 
-    def _create(self, baseline=False, name=None, language=None):
-        if baseline:
-            contender = _fixtures.benchmark_result(
-                name=name,
-                sha=_fixtures.CHILD,
-                language=language,
-            )
-            baseline = _fixtures.benchmark_result(
-                name=name,
-                sha=_fixtures.PARENT,
-                language=language,
-            )
-            return contender, baseline
-        else:
-            contender = _fixtures.benchmark_result()
-        return contender
+    def _create_results(self, name=None, language=None):
+        contender = _fixtures.benchmark_result(
+            name=name,
+            sha=_fixtures.CHILD,
+            language=language,
+        )
+        baseline = _fixtures.benchmark_result(
+            name=name,
+            sha=_fixtures.PARENT,
+            language=language,
+        )
+        return contender, baseline
+
+    def test_unauthenticated(self, client, monkeypatch):
+        """Override the parent class method since there is no official Run entity."""
+        result = _fixtures.benchmark_result()
+        entity_url = self.url.format(result.run_id)
+
+        monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "off")
+        response = client.get(entity_url)
+        self.assert_401_unauthorized(response)
+
+        monkeypatch.setenv("BENCHMARKS_DATA_PUBLIC", "on")
+        response = client.get(entity_url)
+        self.assert_200_ok(response)
 
     def test_get_run(self, client):
         # change anything about the context so we get only one baseline
         language, name = _uuid(), _uuid()
 
         self.authenticate(client)
-        result, baseline = self._create(baseline=True, name=name, language=language)
+        result, baseline = self._create_results(name=name, language=language)
         response = client.get(f"/api/runs/{result.run_id}/")
         self.assert_200_ok(
             response,
@@ -119,7 +125,7 @@ class TestRunGet(_asserts.GetEnforcer):
         language, name = _uuid(), _uuid()
 
         self.authenticate(client)
-        result, baseline = self._create(baseline=True, name=name, language=language)
+        result, baseline = self._create_results(name=name, language=language)
         baseline.run_reason = "test"
         baseline.save()
         response = client.get(f"/api/runs/{result.run_id}/")
@@ -148,12 +154,8 @@ class TestRunGet(_asserts.GetEnforcer):
         language, name_1, name_2 = _uuid(), _uuid(), _uuid()
 
         self.authenticate(client)
-        result_1, baseline_1 = self._create(
-            baseline=True, name=name_1, language=language
-        )
-        result_2, baseline_2 = self._create(
-            baseline=True, name=name_2, language=language
-        )
+        result_1, baseline_1 = self._create_results(name=name_1, language=language)
+        result_2, baseline_2 = self._create_results(name=name_2, language=language)
         response = client.get(f"/api/runs/{result_1.run_id}/")
         self.assert_200_ok(
             response,
@@ -399,8 +401,15 @@ class TestRunList(_asserts.ListEnforcer):
     public = True
 
     def _create(self):
-        _fixtures.benchmark_result(sha=_fixtures.PARENT)
-        benchmark_result = _fixtures.benchmark_result()
+        # In this test class it's important to supply a timestamp of now() when creating
+        # BenchmarkResults because the list runs endpoint looks at the last 30 days of
+        # BenchmarkResults.
+        _fixtures.benchmark_result(
+            sha=_fixtures.PARENT, timestamp=datetime.now(timezone.utc).isoformat()
+        )
+        benchmark_result = _fixtures.benchmark_result(
+            timestamp=datetime.now(timezone.utc).isoformat()
+        )
         return benchmark_result
 
     def test_run_list(self, client):
@@ -420,10 +429,18 @@ class TestRunList(_asserts.ListEnforcer):
         sha1 = _fixtures.CHILD
         sha2 = _fixtures.PARENT
         self.authenticate(client)
-        _fixtures.benchmark_result(sha=_fixtures.PARENT)
-        result_1 = _fixtures.benchmark_result()
-        _fixtures.benchmark_result(sha=_fixtures.CHILD)
-        result_2 = _fixtures.benchmark_result()
+        _fixtures.benchmark_result(
+            sha=_fixtures.PARENT, timestamp=datetime.now(timezone.utc).isoformat()
+        )
+        result_1 = _fixtures.benchmark_result(
+            timestamp=datetime.now(timezone.utc).isoformat()
+        )
+        _fixtures.benchmark_result(
+            sha=_fixtures.CHILD, timestamp=datetime.now(timezone.utc).isoformat()
+        )
+        result_2 = _fixtures.benchmark_result(
+            timestamp=datetime.now(timezone.utc).isoformat()
+        )
         response = client.get(f"/api/runs/?sha={sha1},{sha2}")
 
         self.assert_200_ok(response, contains=_expected_entity(result_1))
@@ -438,7 +455,7 @@ class TestRunList(_asserts.ListEnforcer):
         self.assert_200_ok(response, [])
 
 
-class TestRunDelete(_asserts.DeleteEnforcer):
+class TestRunDelete(_asserts.ApiEndpointTest):
     """Deprecated at this time; always returns a 204"""
 
     url = "api/runs/{}/"
@@ -458,12 +475,8 @@ class TestRunDelete(_asserts.DeleteEnforcer):
         # can still get after delete
         BenchmarkResult.one(run_id=run_id)
 
-    # def test_unknown(self, client):
-    #     """Don't run this test from the parent class."""
-    #     pass
 
-
-class TestRunPut(_asserts.PutEnforcer):
+class TestRunPut(_asserts.ApiEndpointTest):
     """Deprecated at this time; always returns a 200"""
 
     url = "/api/runs/{}/"
@@ -474,17 +487,11 @@ class TestRunPut(_asserts.PutEnforcer):
         "error_type": "fatal",
     }
 
-    def _create_entity_to_update(self):
-        _fixtures.benchmark_result(sha=_fixtures.PARENT)
-        # This writes to the database.
-        benchmark_result = _fixtures.benchmark_result()
-        return benchmark_result
-
-    def test_update_allowed_fields(self, client):
+    def test_put_run(self, client):
         self.authenticate(client)
 
         # before
-        result_before = self._create_entity_to_update()
+        result_before = _fixtures.benchmark_result()
 
         # mutate run in db (no-op)
         resp = client.put(f"/api/runs/{result_before.run_id}/", json=self.valid_payload)
@@ -494,147 +501,17 @@ class TestRunPut(_asserts.PutEnforcer):
         resp = client.get(f"/api/runs/{result_before.run_id}/")
         assert resp.status_code == 200, resp.status_code
 
-    @pytest.mark.parametrize(
-        "timeinput, timeoutput",
-        [
-            ("2022-11-25 21:02:41", "2022-11-25T21:02:41Z"),
-            ("2022-11-25 22:02:42Z", "2022-11-25T22:02:42Z"),
-            ("2022-11-25T22:02:42Z", "2022-11-25T22:02:42Z"),
-            # That next pair confirms timezone conversion.
-            ("2022-11-25 23:02:00+07:00", "2022-11-25T16:02:00Z"),
-            # Confirm that fractions of seconds can be provided, but are not
-            # returned (we can dispute that of course).
-            ("2022-11-25T22:02:42.123456Z", "2022-11-25T22:02:42Z"),
-        ],
-    )
-    def test_finished_timestamp_tz(self, client, timeinput, timeoutput):
-        self.authenticate(client)
-        before = self._create_entity_to_update()
-        resp = client.put(
-            f"/api/runs/{before.id}/",
-            json={
-                "finished_timestamp": timeinput,
-            },
-        )
-        assert resp.status_code == 200, resp.text
 
-        resp = client.get(f"/api/runs/{before.id}/")
-        assert resp.json["finished_timestamp"] == timeoutput
-
-    @pytest.mark.parametrize(
-        "timeinput, expected_err",
-        # first item: bad input, second item: expected err msg
-        [
-            ("2022-11-2521:02:41x", "Not a valid datetime"),
-            ("foobar", "Not a valid datetime"),
-        ],
-    )
-    def test_finished_timestamp_invalid(
-        self, client, timeinput: str, expected_err: str
-    ):
-        self.authenticate(client)
-        run = self._create_entity_to_update()
-        resp = client.put(
-            f"/api/runs/{run.id}/",
-            json={
-                "finished_timestamp": timeinput,
-            },
-        )
-        assert resp.status_code == 400, resp.text
-        assert expected_err in resp.text
-
-
-class TestRunPost(_asserts.PostEnforcer):
+class TestRunPost(_asserts.ApiEndpointTest):
     """Deprecated at this time; always returns a 201"""
 
     url = "/api/runs/"
-    valid_payload = _fixtures.VALID_RUN_PAYLOAD
-    valid_payload_for_cluster = _fixtures.VALID_RUN_PAYLOAD_FOR_CLUSTER
-    valid_payload_with_error = _fixtures.VALID_RUN_PAYLOAD_WITH_ERROR
-    required_fields = ["id"]
-
-    # This test does not apply because we expect users to send run id when creating runs
-    def test_cannot_set_id(self, client):
-        pass
 
     def test_create_run(self, client):
-        for hardware_type, payload in [
-            ("machine", self.valid_payload),
-            ("cluster", self.valid_payload_for_cluster),
-        ]:
-            self.authenticate(client)
-            run_id = payload["id"]
-            assert not BenchmarkResult.first(run_id=run_id)
-            response = client.post(self.url, json=payload)
-            # print(response)
-            # print(response.json)
-            result = BenchmarkResult.one(run_id=run_id)
-            location = f"http://localhost/api/runs/{run_id}/"
-            self.assert_201_created(response, _expected_entity(result), location)
-
-            assert result.hardware.type == hardware_type
-            for attr, value in payload[f"{hardware_type}_info"].items():
-                assert getattr(result.hardware, attr) == value or getattr(
-                    result.hardware, attr
-                ) == int(value)
-
-    def test_create_run_with_error(self, client):
         self.authenticate(client)
-        run_id = self.valid_payload_with_error["id"]
-        response = client.post(self.url, json=self.valid_payload_with_error)
-        result = BenchmarkResult.one(run_id=run_id)
-        location = f"http://localhost/api/runs/{run_id}/"
-        self.assert_201_created(response, _expected_entity(result), location)
-
-    def test_create_run_same_id(self, client):
-        self.authenticate(client)
-        run_id = self.valid_payload_with_error["id"]
-        resp = client.post(self.url, json=self.valid_payload_with_error)
-        assert resp.status_code == 201
-        resp = client.post(self.url, json=self.valid_payload_with_error)
-        assert resp.status_code == 409, resp.text
-        assert "conflict" in resp.json["description"].lower()
-        assert resp.json["error"] == 409
-        assert run_id in resp.json["description"].lower()
-
-    def test_create_run_timestamp_not_allowed(self, client):
-        self.authenticate(client)
-        payload = self.valid_payload.copy()
-
-        # Confirm that setting the timestamp is not possible as an API client,
-        # i.e. that the resulting `timestamp` property when fetching the run
-        # details via API later on reflects the point in time of inserting this
-        # run into the DB.
-        payload["timestamp"] = "2022-12-13T13:37:00Z"
-        resp = client.post(self.url, json=payload)
-        assert resp.status_code == 400, resp.text
-        assert '{"timestamp": ["Unknown field."]}' in resp.text
-
-    def test_auto_generated_run_timestamp_value(self, client):
-        self.authenticate(client)
-        payload = self.valid_payload.copy()
-        resp = client.post(self.url, json=payload)
-        assert resp.status_code == 201, resp.text
+        payload = _fixtures.VALID_RUN_PAYLOAD
         run_id = payload["id"]
-
-        resp = client.get(f"http://localhost/api/runs/{run_id}/")
-        assert resp.status_code == 200, resp.text
-        assert "timestamp" in resp.json
-
-        # Get current point in time from test runner's perspective (tz-aware
-        # datetime object).
-        now_testrunner = datetime.now(timezone.utc)
-
-        # Get Run entity DB insertion time (set by the DB). This is also a
-        # tz-aware object because `resp.json["timestamp"]` is expected to be an
-        # ISO 8601 timestring _with_ timezone information.
-        run_time_created_in_db = datetime.fromisoformat(resp.json["timestamp"])
-
-        # Build timedelta between those two tz-aware datetime objects (that are
-        # not necessarily in the same timezone).
-        delta: timedelta = run_time_created_in_db - now_testrunner
-
-        # Convert the timedelta object to a float (number of seconds). Check
-        # for tolerance interval but use abs(), i.e. don't expect a certain
-        # order between test runner clock and db clock.
-        assert abs(delta.total_seconds()) < 5.0
+        assert not BenchmarkResult.first(run_id=run_id)
+        response = client.post(self.url, json=payload)
+        assert response.status_code == 201
+        assert response.json == {}

@@ -50,8 +50,9 @@ class Index(AppEndpoint, RunMixin):
 
         # Get run info from benchmark results in the last 30 days.
         all_run_info = get_all_run_info(
-            min_time=datetime.datetime.utcnow() - datetime.timedelta(days=30),
-            max_time=datetime.datetime.utcnow(),
+            min_time=datetime.datetime.now(datetime.timezone.utc)
+            - datetime.timedelta(days=30),
+            max_time=datetime.datetime.now(datetime.timezone.utc),
         )
         # Note(JP): group runs by associated commit.repository value.
         reponame_runs_map: Dict[str, List[RunForDisplay]] = defaultdict(list)

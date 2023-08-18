@@ -1,5 +1,5 @@
 import copy
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Tuple
 
 from ...db import _session as dbsession
@@ -235,6 +235,7 @@ def benchmark_result(
     reason=None,
     one_sample_no_mean=False,
     no_github=False,
+    timestamp=None,
 ):
     """Create BenchmarkResult and directly write to database.
 
@@ -281,6 +282,8 @@ def benchmark_result(
         data["github"]["branch"] = commit.branch
     if no_github:
         del data["github"]
+    if timestamp:
+        data["timestamp"] = timestamp
 
     # do at least a bit of what the HTTP path would do; this ensures that the
     # output type is TypeCommitInfoGitHub
@@ -428,6 +431,7 @@ def gen_fake_data(
                     name=name,
                     pull_request=commit.branch == "branch" if commit else False,
                     one_sample_no_mean=one_sample_no_mean,
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                 )
             )
         else:
@@ -438,6 +442,7 @@ def gen_fake_data(
                     name=name,
                     pull_request=commit.branch == "branch" if commit else False,
                     one_sample_no_mean=one_sample_no_mean,
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                 )
             )
 

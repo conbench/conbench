@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, TypedDict
 import flask as f
 import requests
 import sqlalchemy as s
-from sqlalchemy.orm import Mapped, Query, relationship
+from sqlalchemy.orm import Mapped, Query
 
 from conbench import metrics, util
 from conbench.dbsession import current_session

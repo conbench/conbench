@@ -3,9 +3,6 @@ from typing import Dict
 
 import bokeh
 import flask as f
-import flask_login
-import flask_wtf
-import wtforms as w
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
@@ -40,10 +37,7 @@ _default_hyperlink_text = {
 
 
 class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
-    def page(self, benchmark_results, rundict, form):
-        if not flask_login.current_user.is_authenticated:
-            delattr(form, "delete")
-
+    def page(self, benchmark_results, rundict):
         # For each candidate baseline type, if a baseline run exists for this contender
         # run, store information to fill in the HTML hyperlink for that comparison.
         comparison_info: Dict[str, _RunComparisonLinker] = {}
@@ -87,9 +81,7 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
                 comparison_info.values(), key=lambda x: x.recommended, reverse=True
             ),
             run=rundict,
-            form=form,
             resources=bokeh.resources.CDN.render(),
-            search_value=f.request.args.get("search"),
         )
 
     @authorize_or_terminate
@@ -111,38 +103,15 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
         for r in benchmark_results:
             augment(r, contexts)
 
-        return self.page(benchmark_results, rundict, DeleteForm())
+        return self.page(benchmark_results, rundict)
 
     def _get_benchmarks(self, run_id):
         response = self.api_get("api.benchmarks", run_id=run_id)
         return response.json, response
 
-    def post(self, run_id):
-        if not flask_login.current_user.is_authenticated:
-            return self.redirect("app.login")
-        form, response = DeleteForm(), None
-        if form.delete.data:
-            if form.validate_on_submit():
-                response = self.api_delete(
-                    "api.run",
-                    run_id=run_id,
-                )
-                if response.status_code == 204:
-                    self.flash("Run deleted.")
-                else:
-                    self.flash("Error deleting run.")
-        csrf = {"csrf_token": ["The CSRF token is missing."]}
-        if form.errors == csrf:
-            self.flash("The CSRF token is missing.")
-        return self.redirect("app.index")
-
-
-class DeleteForm(flask_wtf.FlaskForm):
-    delete = w.SubmitField("Delete")
-
 
 rule(
     "/runs/<run_id>/",
     view_func=ViewRun.as_view("run"),
-    methods=["GET", "POST"],
+    methods=["GET"],
 )

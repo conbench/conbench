@@ -1,7 +1,7 @@
 import logging
 
-from ..api import _fixtures
 from ...entities.run import get_candidate_baseline_runs
+from ..api import _fixtures
 
 log = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ def test_get_candidate_baseline_runs():
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": run_ids[15],
+                "baseline_run_id": run_ids[9],
                 "commits_skipped": [],
             },
         },
@@ -78,7 +78,7 @@ def test_get_candidate_baseline_runs():
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": run_ids[15],
+                "baseline_run_id": run_ids[9],
                 "commits_skipped": [],
             },
         },
@@ -96,7 +96,7 @@ def test_get_candidate_baseline_runs():
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": run_ids[15],
+                "baseline_run_id": run_ids[9],
                 "commits_skipped": [],
             },
         },
@@ -128,7 +128,7 @@ def test_get_candidate_baseline_runs():
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": run_ids[15],
+                "baseline_run_id": run_ids[9],
                 "commits_skipped": [],
             },
         },
@@ -146,7 +146,7 @@ def test_get_candidate_baseline_runs():
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": run_ids[15],
+                "baseline_run_id": run_ids[9],
                 "commits_skipped": [],
             },
         },
@@ -268,6 +268,7 @@ def test_get_candidate_baseline_runs():
         },
     ]
     assert len(run_ids) == len(expected_baseline_run_dicts), "you should test all runs"
+    log.info(list(enumerate(run_ids)))
 
     failures = []
     for ix, (result, expected_baseline_run_dict) in enumerate(

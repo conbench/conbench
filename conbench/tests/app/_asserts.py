@@ -1,6 +1,8 @@
+import datetime
 import logging
 import re
 import urllib.parse
+from copy import deepcopy
 
 from ...tests.api import _fixtures
 from ...tests.helpers import _create_fixture_user, create_random_user
@@ -82,7 +84,9 @@ class AppEndpointTest:
 
     def create_benchmark(self, client):
         self.authenticate(client)
-        response = client.post("/api/benchmarks/", json=_fixtures.VALID_RESULT_PAYLOAD)
+        payload = deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
+        payload["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        response = client.post("/api/benchmarks/", json=payload)
         assert response.status_code == 201, response.text
         benchmark_result_id = response.json["id"]
         self.logout(client)
