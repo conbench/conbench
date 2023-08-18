@@ -178,7 +178,8 @@ jobs:
             -e './benchalerts[dev]' \
             -e ./benchadapt/python \
             -e ./benchconnect \
-            -e ./benchrun/python
+            -e ./benchrun/python \
+            -e ./legacy
       - name: Test benchclients
         run: |
           pytest -vv benchclients/python/tests
@@ -197,6 +198,9 @@ jobs:
       - name: Test benchconnect
         run: |
           pytest -vv benchconnect
+      - name: Test conbenchlegacy
+        run: |
+          pytest -vv legacy
 
   cb-on-minikube:
     runs-on: ubuntu-latest
