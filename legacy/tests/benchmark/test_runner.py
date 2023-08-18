@@ -30,7 +30,9 @@ assert os.path.exists(".git"), (
     "https://github.com/conbench/conbench/issues/668"
 )
 
-pytestmark = pytest.mark.filterwarnings("ignore::conbenchlegacy.machine_info.GitParseWarning")
+pytestmark = pytest.mark.filterwarnings(
+    "ignore::conbenchlegacy.machine_info.GitParseWarning"
+)
 
 EXAMPLE = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
 EXAMPLE_WITH_CLUSTER_INFO = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD_FOR_CLUSTER)
