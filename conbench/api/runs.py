@@ -1,5 +1,7 @@
+import dataclasses
 import datetime
-from typing import Dict, List, Optional, Tuple
+import functools
+from typing import Dict, List, Optional
 
 import flask as f
 import flask_login
@@ -10,26 +12,58 @@ from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
 from ..entities.run import RunFacadeSchema, RunSerializer
+from ..util import short_commit_msg
+
+
+@dataclasses.dataclass
+class RunAggregate:
+    """Aggregated information about a run."""
+
+    earliest_result: BenchmarkResult
+    result_count: int
+    any_result_failed: bool
+
+    def update(self, new_result: BenchmarkResult):
+        """Update the aggregate information based on a new result."""
+        self.earliest_result = (
+            new_result
+            if new_result.timestamp < self.earliest_result.timestamp
+            else self.earliest_result
+        )
+        self.result_count += 1
+        self.any_result_failed = self.any_result_failed or new_result.is_failed
+
+    @functools.cached_property
+    def display_commit_time(self) -> str:
+        return self.earliest_result.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    @functools.cached_property
+    def display_commit_msg(self) -> str:
+        return short_commit_msg(
+            self.earliest_result.commit.message if self.earliest_result.commit else ""
+        )
 
 
 def get_all_run_info(
     min_time: datetime.datetime,
     max_time: datetime.datetime,
     commit_hashes: Optional[List[str]] = None,
-) -> List[Tuple[BenchmarkResult, int, bool]]:
+) -> List[RunAggregate]:
     """Get info about each run in a time range.
 
     Query the database for all benchmark results (optionally filtered to certain commit
-    hashes) in a time range, and return a list of tuples, each corresponding to one
-    run_id. The tuples contain:
+    hashes) in a time range, and return a list of RunAggregates, each corresponding to
+    one run_id.
 
-    - the earliest BenchmarkResult for that run (by its timestamp)
-    - the number of benchmark results seen for that run
-    - whether any benchmark results are "failed" in that run
+    This powers the "list runs" API endpoint and the "recent runs" list on the home
+    page.
 
-    This powers the "list runs" API endpoint and the "recent runs" list on the home page.
+    Note: At the min_time boundary, the count is permanently wrong (single run partially
+    represented in DB query result, true for just one of many runs). That's fine, the UI
+    does not claim real-time truth in that regard. In the vast majority of the cases we
+    get a correct result count per run.
     """
-    run_info: Dict[str, Tuple[BenchmarkResult, int, bool]] = {}  # keyed by run_id
+    run_info: Dict[str, RunAggregate] = {}  # keyed by run_id
 
     joins = []
     filters = [
@@ -42,14 +76,13 @@ def get_all_run_info(
 
     for result in BenchmarkResult.search(filters=filters, joins=joins):
         run_id = result.run_id
-        if run_id not in run_info:
-            run_info[run_id] = (result, 1, result.is_failed)
+        if run_id in run_info:
+            run_info[run_id].update(result)
         else:
-            old_result, old_count, old_failed = run_info[run_id]
-            run_info[run_id] = (
-                result if result.timestamp < old_result.timestamp else old_result,
-                old_count + 1,
-                old_failed or result.is_failed,
+            run_info[run_id] = RunAggregate(
+                earliest_result=result,
+                result_count=1,
+                any_result_failed=result.is_failed,
             )
 
     return list(run_info.values())
@@ -179,8 +212,8 @@ class RunListAPI(ApiEndpoint):
         commit_hashes = sha_arg.split(",") if sha_arg else None
 
         return [
-            self.serializer.one._dump(result, get_baseline_runs=False)
-            for result, _, _ in get_all_run_info(
+            self.serializer.one._dump(run.earliest_result, get_baseline_runs=False)
+            for run in get_all_run_info(
                 min_time=datetime.datetime.now(datetime.timezone.utc)
                 - datetime.timedelta(days=30),
                 max_time=datetime.datetime.now(datetime.timezone.utc),

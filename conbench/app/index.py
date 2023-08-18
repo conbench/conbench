@@ -1,20 +1,16 @@
 import datetime
 import logging
 from collections import defaultdict
-from dataclasses import dataclass
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 import flask
 
-import conbench.util
-
-from ..api.runs import get_all_run_info
+from ..api.runs import RunAggregate, get_all_run_info
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app.results import RunMixin
 from ..config import Config
-from ..entities.benchmark_result import BenchmarkResult
 
 log = logging.getLogger(__name__)
 
@@ -55,31 +51,13 @@ class Index(AppEndpoint, RunMixin):
             max_time=datetime.datetime.now(datetime.timezone.utc),
         )
         # Note(JP): group runs by associated commit.repository value.
-        reponame_runs_map: Dict[str, List[RunForDisplay]] = defaultdict(list)
+        reponame_runs_map: Dict[str, List[RunAggregate]] = defaultdict(list)
 
-        for benchmark_result, count, any_failures in all_run_info:
-            # Note: At the "30d ago" boundary, the count is permanently wrong (single
-            # run partially represented in DB query result, true for just one of many
-            # runs). That's fine, the UI does not claim real-time truth in that regard.
-            # In the vast majority of the cases we get a correct result count per run.
-            result_count = str(count)
-
-            rd = RunForDisplay(
-                ctime_for_table=benchmark_result.timestamp.strftime(
-                    "%Y-%m-%d %H:%M:%S UTC"
-                ),
-                commit_message_short=conbench.util.short_commit_msg(
-                    benchmark_result.commit.message if benchmark_result.commit else ""
-                ),
-                result_count=result_count,
-                any_benchmark_results_failed=any_failures,
-                result=benchmark_result,
-            )
-
+        for run in all_run_info:
             rname = repo_url_to_display_name(
-                benchmark_result.associated_commit_repo_url
+                run.earliest_result.associated_commit_repo_url
             )
-            reponame_runs_map[rname].append(rd)
+            reponame_runs_map[rname].append(run)
 
         # A quick decision for now, not set in stone: get a stable sort order
         # of repositories the way they are listed on that page; do this by
@@ -124,19 +102,6 @@ def repo_url_to_display_name(url: Optional[str]) -> str:
     # that `strip()` also operates on the trailing end. I think there shouldn't
     # be a trailing slash, but if it's there, remove it, too.
     return p.strip("/")
-
-
-@dataclass
-class RunForDisplay:
-    ctime_for_table: str
-    commit_message_short: str
-    result_count: str | int
-    any_benchmark_results_failed: bool
-    # Expose the (earliest) raw BenchmarkResult object (but this needs to be used with a
-    # lot of care, in the template -- for VSCode supporting Python variable types and
-    # auto-completion in a jinja2 template see
-    # https://github.com/microsoft/pylance-release/discussions/4090)
-    result: BenchmarkResult
 
 
 view = Index.as_view("index")

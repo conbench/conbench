@@ -41,8 +41,8 @@
               {% for r in runobjs %}
                 <tr class="no-border">
                   <td>
-                    <code><a href="{{ url_for('app.run', run_id=r.result.run_id) }}">{{ r.ctime_for_table }}</a></code>
-                    {% if r.any_benchmark_results_failed %}
+                    <code><a href="{{ url_for('app.run', run_id=r.earliest_result.run_id) }}">{{ r.display_commit_time }}</a></code>
+                    {% if r.any_result_failed %}
                       <i class="bi bi-exclamation-circle text-danger"
                          data-toggle="tooltip"
                          data-placement="top"
@@ -51,49 +51,49 @@
                   </td>
                   <td>{{ r.result_count }}</td>
                   <td>
-                    {% if r.result.run_reason %}
-                      <div class="table-entry">{{ r.result.run_reason }}</div>
+                    {% if r.earliest_result.run_reason %}
+                      <div class="table-entry">{{ r.earliest_result.run_reason }}</div>
                     {% else %}
                       <div class="table-entry"></div>
                     {% endif %}
                   </td>
                   <td>
                     <span class="table-entry text-truncate d-inline-block"
-                          style="max-width: 140px">{{ r.result.hardware.name }}</span>
+                          style="max-width: 140px">{{ r.earliest_result.hardware.name }}</span>
                   </td>
                   <td>
                     <div class="table-entry">
-                      {% if r.result.commit is not none %}
-                        {% if r.result.commit.author_avatar_url is not none %}
+                      {% if r.earliest_result.commit is not none %}
+                        {% if r.earliest_result.commit.author_avatar_url is not none %}
                           <img alt="avatar"
-                               src="{{ r.result.commit.author_avatar_url  }}"
+                               src="{{ r.earliest_result.commit.author_avatar_url  }}"
                                height="25"
                                style="border-radius: 50%">
                           &nbsp;
                         {% endif %}
-                        {{ r.result.commit.author_name }}
+                        {{ r.earliest_result.commit.author_name }}
                       {% else %}
                         n/a
                       {% endif %}
                     </div>
                   </td>
                   <td>
-                    {% if r.result.commit is not none %}
-                      {% if r.result.commit.commit_url is not none %}
-                        <code><a href="{{ r.result.commit.commit_url }}">{{ r.result.commit.hash[:7] }}</a></code>
+                    {% if r.earliest_result.commit is not none %}
+                      {% if r.earliest_result.commit.commit_url is not none %}
+                        <code><a href="{{ r.earliest_result.commit.commit_url }}">{{ r.earliest_result.commit.hash[:7] }}</a></code>
                       {% else %}
                         {# is this a valid scenario? when there's a hash, but no url? #}
-                        {{ r.result.commit.hash[:7] }}
+                        {{ r.earliest_result.commit.hash[:7] }}
                       {% endif %}
                       <!--NOTE: enable full commit has search while maintaining partial hash display -->
-                      <p style="display:none">{{ r.result.commit.hash }}</p>
+                      <p style="display:none">{{ r.earliest_result.commit.hash }}</p>
                     {% else %}
                       n/a
                     {% endif %}
                   </td>
                   <td>
-                    {% if r.result.commit is not none %}
-                      {{ r.commit_message_short }}
+                    {% if r.earliest_result.commit is not none %}
+                      {{ r.display_commit_msg }}
                     {% else %}
                       n/a
                     {% endif %}
