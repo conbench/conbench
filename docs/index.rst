@@ -22,7 +22,7 @@
     api_docs/benchconnect
     pages/benchrun_readme
     api_docs/benchrun
-    api_docs/conbench
+    api_docs/conbenchlegacy
 
 .. include:: ../README.md
     :parser: myst_parser.sphinx_
