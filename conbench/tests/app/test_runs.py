@@ -1,5 +1,4 @@
 import copy
-import re
 from typing import Optional
 
 from ...app.runs import _default_hyperlink_text
@@ -119,41 +118,7 @@ class TestRunGet(_asserts.GetEnforcer):
         self._assert_baseline_link(
             response.text,
             "latest_default",
-            benchmark_results[15].run_id,  # the latest default branch run in general
+            # earliest benchmark result on the latest default-branch commit
+            benchmark_results[9].run_id,
             benchmark_results[3].run_id,
         )
-
-
-class TestRunDelete(_asserts.DeleteEnforcer):
-    def test_authenticated(self, client):
-        self.create_benchmark(client)
-        run_id = _fixtures.VALID_RESULT_PAYLOAD["run_id"]
-        self.authenticate(client)
-        response = client.get(f"/runs/{run_id}/")
-        self.assert_page(response, "Run")
-        assert f"{run_id}".encode() in response.data
-
-        data = {"delete": ["Delete"], "csrf_token": self.get_csrf_token(response)}
-        response = client.post(f"/runs/{run_id}/", data=data, follow_redirects=True)
-        self.assert_page(response, "Home")
-        assert b"Run deleted." in response.data
-
-        response = client.get(f"/runs/{run_id}/", follow_redirects=True)
-        assert re.search(r"Run ID unknown: \w+", response.text, flags=re.ASCII)
-
-    def test_unauthenticated(self, client):
-        self.create_benchmark(client)
-        run_id = _fixtures.VALID_RESULT_PAYLOAD["run_id"]
-        self.logout(client)
-        data = {"delete": ["Delete"]}
-        response = client.post(f"/runs/{run_id}/", data=data, follow_redirects=True)
-        self.assert_login_page(response)
-
-    def test_no_csrf_token(self, client):
-        self.create_benchmark(client)
-        run_id = _fixtures.VALID_RESULT_PAYLOAD["run_id"]
-        self.authenticate(client)
-        data = {"delete": ["Delete"]}
-        response = client.post(f"/runs/{run_id}/", data=data, follow_redirects=True)
-        self.assert_page(response, "Home")
-        assert b"The CSRF token is missing." in response.data

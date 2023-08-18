@@ -384,7 +384,7 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
         baseline_result = self._get_a_result(baseline_result_id)
         contender_result = self._get_a_result(contender_result_id)
 
-        baseline_commit = baseline_result.run.commit
+        baseline_commit = baseline_result.commit
 
         if baseline_commit:
             set_z_scores(
@@ -456,7 +456,7 @@ class CompareRunsAPI(ApiEndpoint):
             return (
                 result.case_id,
                 result.context_id,
-                result.run.hardware.hash,
+                result.hardware.hash,
                 result.unit,
             )
 
@@ -542,7 +542,7 @@ class CompareRunsAPI(ApiEndpoint):
 
         # All baseline results share a run (and therefore a commit).
         # The baseline_results list is guaranteed to be non-empty.
-        baseline_commit = baseline_results[0].run.commit
+        baseline_commit = baseline_results[0].commit
 
         if baseline_commit:
             set_z_scores(

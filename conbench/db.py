@@ -82,7 +82,7 @@ def get_tables_in_cleanup_order():
 
     tables = delarative_base.metadata.sorted_tables
 
-    sort_by_name = ["benchmark_result", "run"]
+    sort_by_name = ["benchmark_result"]
 
     tabledict = {t.name: t for t in tables}
     sorted_tables = []

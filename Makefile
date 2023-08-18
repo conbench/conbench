@@ -34,7 +34,7 @@ tests: require-env-ghtoken set-build-info
 	docker compose down --remove-orphans && \
 	docker compose build app && \
 	docker compose run app \
-		pytest -vv -s --durations=20 conbench/tests/
+		pytest -vv --durations=20 conbench/tests/
 
 
 # Similar to `make run-app`, but with the `docker-compose.dev.yml` extension

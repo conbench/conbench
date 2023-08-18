@@ -76,6 +76,6 @@ class ApiEndpoint(flask.views.MethodView):
     def response_201_created(self, body):
         headers = {
             "Content-Type": "application/json",
-            "Location": body["links"]["self"],
+            "Location": body["links"]["self"] if "links" in body else None,
         }
         return body, 201, headers

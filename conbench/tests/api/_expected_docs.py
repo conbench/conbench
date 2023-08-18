@@ -49,17 +49,55 @@
                         "example": {
                             "batch_id": "some-batch-uuid-1",
                             "change_annotations": {},
+                            "commit": {
+                                "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                "author_login": "dianaclarke",
+                                "author_name": "Diana Clarke",
+                                "branch": "some_user_or_org:some_branch",
+                                "fork_point_sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                "id": "some-commit-uuid-1",
+                                "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                "repository": "https://github.com/org/repo",
+                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                "timestamp": "2021-02-25T01:02:51",
+                                "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
+                            },
                             "error": None,
+                            "hardware": {
+                                "architecture_name": "x86_64",
+                                "cpu_core_count": 2,
+                                "cpu_frequency_max_hz": 3500000000,
+                                "cpu_l1d_cache_bytes": 32768,
+                                "cpu_l1i_cache_bytes": 32768,
+                                "cpu_l2_cache_bytes": 262144,
+                                "cpu_l3_cache_bytes": 4194304,
+                                "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                "cpu_thread_count": 4,
+                                "gpu_count": 2,
+                                "gpu_product_names": [
+                                    "Tesla T4",
+                                    "GeForce GTX 1060 3GB",
+                                ],
+                                "id": "some-machine-uuid-1",
+                                "kernel_name": "19.6.0",
+                                "memory_bytes": 17179869184,
+                                "name": "some-machine-name",
+                                "os_name": "macOS",
+                                "os_version": "10.15.7",
+                                "type": "machine",
+                            },
                             "id": "some-benchmark-uuid-1",
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "info": "http://localhost/api/info/some-info-uuid-1/",
                                 "list": "http://localhost/api/benchmarks/",
-                                "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
                             "optional_benchmark_info": None,
                             "run_id": "some-run-uuid-1",
+                            "run_reason": "some run reason",
+                            "run_tags": {"arbitrary": "tags"},
                             "stats": {
                                 "data": [
                                     0.099094,
@@ -119,17 +157,55 @@
                             {
                                 "batch_id": "some-batch-uuid-1",
                                 "change_annotations": {},
+                                "commit": {
+                                    "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                    "author_login": "dianaclarke",
+                                    "author_name": "Diana Clarke",
+                                    "branch": "some_user_or_org:some_branch",
+                                    "fork_point_sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                    "id": "some-commit-uuid-1",
+                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                    "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                    "repository": "https://github.com/org/repo",
+                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                    "timestamp": "2021-02-25T01:02:51",
+                                    "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
+                                },
                                 "error": None,
+                                "hardware": {
+                                    "architecture_name": "x86_64",
+                                    "cpu_core_count": 2,
+                                    "cpu_frequency_max_hz": 3500000000,
+                                    "cpu_l1d_cache_bytes": 32768,
+                                    "cpu_l1i_cache_bytes": 32768,
+                                    "cpu_l2_cache_bytes": 262144,
+                                    "cpu_l3_cache_bytes": 4194304,
+                                    "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                    "cpu_thread_count": 4,
+                                    "gpu_count": 2,
+                                    "gpu_product_names": [
+                                        "Tesla T4",
+                                        "GeForce GTX 1060 3GB",
+                                    ],
+                                    "id": "some-machine-uuid-1",
+                                    "kernel_name": "19.6.0",
+                                    "memory_bytes": 17179869184,
+                                    "name": "some-machine-name",
+                                    "os_name": "macOS",
+                                    "os_version": "10.15.7",
+                                    "type": "machine",
+                                },
                                 "id": "some-benchmark-uuid-1",
                                 "links": {
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                     "info": "http://localhost/api/info/some-info-uuid-1/",
                                     "list": "http://localhost/api/benchmarks/",
-                                    "run": "http://localhost/api/runs/some-run-uuid-1/",
                                     "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                                 },
                                 "optional_benchmark_info": None,
                                 "run_id": "some-run-uuid-1",
+                                "run_reason": "some run reason",
+                                "run_tags": {"arbitrary": "tags"},
                                 "stats": {
                                     "data": [
                                         0.099094,
@@ -189,17 +265,55 @@
                         "example": {
                             "batch_id": "some-batch-uuid-1",
                             "change_annotations": {},
+                            "commit": {
+                                "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                "author_login": "dianaclarke",
+                                "author_name": "Diana Clarke",
+                                "branch": "some_user_or_org:some_branch",
+                                "fork_point_sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                "id": "some-commit-uuid-1",
+                                "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                "repository": "https://github.com/org/repo",
+                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                "timestamp": "2021-02-25T01:02:51",
+                                "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
+                            },
                             "error": None,
+                            "hardware": {
+                                "architecture_name": "x86_64",
+                                "cpu_core_count": 2,
+                                "cpu_frequency_max_hz": 3500000000,
+                                "cpu_l1d_cache_bytes": 32768,
+                                "cpu_l1i_cache_bytes": 32768,
+                                "cpu_l2_cache_bytes": 262144,
+                                "cpu_l3_cache_bytes": 4194304,
+                                "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                "cpu_thread_count": 4,
+                                "gpu_count": 2,
+                                "gpu_product_names": [
+                                    "Tesla T4",
+                                    "GeForce GTX 1060 3GB",
+                                ],
+                                "id": "some-machine-uuid-1",
+                                "kernel_name": "19.6.0",
+                                "memory_bytes": 17179869184,
+                                "name": "some-machine-name",
+                                "os_name": "macOS",
+                                "os_version": "10.15.7",
+                                "type": "machine",
+                            },
                             "id": "some-benchmark-uuid-1",
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
                                 "info": "http://localhost/api/info/some-info-uuid-1/",
                                 "list": "http://localhost/api/benchmarks/",
-                                "run": "http://localhost/api/runs/some-run-uuid-1/",
                                 "self": "http://localhost/api/benchmarks/some-benchmark-uuid-1/",
                             },
                             "optional_benchmark_info": None,
                             "run_id": "some-run-uuid-1",
+                            "run_reason": "some run reason",
+                            "run_tags": {"arbitrary": "tags"},
                             "stats": {
                                 "data": [
                                     0.099094,
@@ -718,64 +832,7 @@
                 "description": "OK",
             },
             "RunCreated": {
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "commit": {
-                                "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
-                                "author_login": "dianaclarke",
-                                "author_name": "Diana Clarke",
-                                "branch": "some_user_or_org:some_branch",
-                                "fork_point_sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                "id": "some-commit-uuid-1",
-                                "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
-                                "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                "repository": "https://github.com/org/repo",
-                                "sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                "timestamp": "2021-02-25T01:02:51",
-                                "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
-                            },
-                            "error_info": None,
-                            "error_type": None,
-                            "finished_timestamp": None,
-                            "hardware": {
-                                "architecture_name": "x86_64",
-                                "cpu_core_count": 2,
-                                "cpu_frequency_max_hz": 3500000000,
-                                "cpu_l1d_cache_bytes": 32768,
-                                "cpu_l1i_cache_bytes": 32768,
-                                "cpu_l2_cache_bytes": 262144,
-                                "cpu_l3_cache_bytes": 4194304,
-                                "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
-                                "cpu_thread_count": 4,
-                                "gpu_count": 2,
-                                "gpu_product_names": [
-                                    "Tesla T4",
-                                    "GeForce GTX 1060 3GB",
-                                ],
-                                "id": "some-machine-uuid-1",
-                                "kernel_name": "19.6.0",
-                                "memory_bytes": 17179869184,
-                                "name": "some-machine-name",
-                                "os_name": "macOS",
-                                "os_version": "10.15.7",
-                                "type": "machine",
-                            },
-                            "has_errors": False,
-                            "id": "some-run-uuid-1",
-                            "info": None,
-                            "links": {
-                                "commit": "http://localhost/api/commits/some-commit-uuid-1/",
-                                "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
-                                "list": "http://localhost/api/runs/",
-                                "self": "http://localhost/api/runs/some-run-uuid-1/",
-                            },
-                            "name": "some run name",
-                            "reason": "some run reason",
-                            "timestamp": "2021-02-04T17:22:05.225583",
-                        }
-                    }
-                },
+                "content": {"application/json": {"example": {}}},
                 "description": "Created \n\n The resulting entity URL is returned in the Location header.",
             },
             "RunEntityWithBaselines": {
@@ -815,9 +872,6 @@
                                 "timestamp": "2021-02-25T01:02:51",
                                 "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
                             },
-                            "error_info": None,
-                            "error_type": None,
-                            "finished_timestamp": None,
                             "hardware": {
                                 "architecture_name": "x86_64",
                                 "cpu_core_count": 2,
@@ -841,17 +895,9 @@
                                 "os_version": "10.15.7",
                                 "type": "machine",
                             },
-                            "has_errors": False,
                             "id": "some-run-uuid-1",
-                            "info": None,
-                            "links": {
-                                "commit": "http://localhost/api/commits/some-commit-uuid-1/",
-                                "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
-                                "list": "http://localhost/api/runs/",
-                                "self": "http://localhost/api/runs/some-run-uuid-1/",
-                            },
-                            "name": "some run name",
                             "reason": "some run reason",
+                            "tags": {"arbitrary": "tags"},
                             "timestamp": "2021-02-04T17:22:05.225583",
                         }
                     }
@@ -876,9 +922,6 @@
                                 "timestamp": "2021-02-25T01:02:51",
                                 "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
                             },
-                            "error_info": None,
-                            "error_type": None,
-                            "finished_timestamp": None,
                             "hardware": {
                                 "architecture_name": "x86_64",
                                 "cpu_core_count": 2,
@@ -902,17 +945,9 @@
                                 "os_version": "10.15.7",
                                 "type": "machine",
                             },
-                            "has_errors": False,
                             "id": "some-run-uuid-1",
-                            "info": None,
-                            "links": {
-                                "commit": "http://localhost/api/commits/some-commit-uuid-1/",
-                                "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
-                                "list": "http://localhost/api/runs/",
-                                "self": "http://localhost/api/runs/some-run-uuid-1/",
-                            },
-                            "name": "some run name",
                             "reason": "some run reason",
+                            "tags": {"arbitrary": "tags"},
                             "timestamp": "2021-02-04T17:22:05.225583",
                         }
                     }
@@ -938,9 +973,6 @@
                                     "timestamp": "2021-02-25T01:02:51",
                                     "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
                                 },
-                                "error_info": None,
-                                "error_type": None,
-                                "finished_timestamp": None,
                                 "hardware": {
                                     "architecture_name": "x86_64",
                                     "cpu_core_count": 2,
@@ -964,17 +996,9 @@
                                     "os_version": "10.15.7",
                                     "type": "machine",
                                 },
-                                "has_errors": False,
                                 "id": "some-run-uuid-1",
-                                "info": None,
-                                "links": {
-                                    "commit": "http://localhost/api/commits/some-commit-uuid-1/",
-                                    "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
-                                    "list": "http://localhost/api/runs/",
-                                    "self": "http://localhost/api/runs/some-run-uuid-1/",
-                                },
-                                "name": "some run name",
                                 "reason": "some run reason",
+                                "tags": {"arbitrary": "tags"},
                                 "timestamp": "2021-02-04T17:22:05.225583",
                             }
                         ]
@@ -1052,7 +1076,7 @@
                     },
                     "cluster_info": {
                         "allOf": [{"$ref": "#/components/schemas/ClusterCreate"}],
-                        "description": "Precisely one of `machine_info` and `cluster_info` must be provided. The data is however ignored when the Run (referred to by `run_id`) was previously created.",
+                        "description": "Precisely one of `machine_info` and `cluster_info` must be provided.  The Conbench UI and API assume that all benchmark results with the same `run_id` share the same hardware. There is no technical enforcement of this on the server side, so some behavior may not work as intended if this assumption is broken by the client.",
                     },
                     "context": {
                         "description": "Required. Must be a JSON object (empty dictionary is allowed).  Relevant benchmark context (other than hardware/platform details and benchmark case parameters).  Conbench requires this object to remain constant when doing automated timeseries analysis (this breaks history).  Use this to store for example compiler flags or a runtime version that you expect to have significant impact on measurement results.",
@@ -1072,23 +1096,27 @@
                     },
                     "machine_info": {
                         "allOf": [{"$ref": "#/components/schemas/MachineCreate"}],
-                        "description": "Precisely one of `machine_info` and `cluster_info` must be provided. The data is however ignored when the Run (referred to by `run_id`) was previously created.",
+                        "description": "Precisely one of `machine_info` and `cluster_info` must be provided.  The Conbench UI and API assume that all benchmark results with the same `run_id` share the same hardware. There is no technical enforcement of this on the server side, so some behavior may not work as intended if this assumption is broken by the client.",
                     },
                     "optional_benchmark_info": {
                         "description": "Deprecated. Use `info` instead.",
                         "type": "object",
                     },
                     "run_id": {
-                        "description": "Identifier for a Run (required). This can be the ID of a known Run (as returned by /api/runs) or a new ID in which case a new Run entity is created in the database.",
+                        "description": 'Arbitrary identifier that you can use to group benchmark results. Typically used for a "run" of benchmarks (i.e. a single run of a CI pipeline) on a single commit and hardware. Required.  The API does not ensure uniqueness (and, correspondingly, does not detect collisions). If your use case relies on this grouping construct then use a client-side ID generation scheme with negligible likelihood for collisions (e.g., UUID type 4 or similar).  The Conbench UI and API assume that all benchmark results with the same `run_id` share the same `run_tags`, `run_reason`, hardware, and commit. There is no technical enforcement of this on the server side, so some behavior may not work as intended if this assumption is broken by the client.',
                         "type": "string",
                     },
                     "run_name": {
-                        "description": "Name for the Run (optional, does not need to be unique). Can be useful for implementing a custom naming convention. For organizing your benchmarks, and for enhanced search & discoverability. Ignored when Run was previously created.",
+                        "description": "A legacy attribute. Use `run_tags` instead. Optional.",
                         "type": "string",
                     },
                     "run_reason": {
-                        "description": "Reason for the Run (optional, does not need to be unique). Ignored when Run was previously created.",
+                        "description": 'Reason for the run (optional, does not need to be unique). A low-cardinality tag like `"commit"` or `"pull-request"`, used to group and filter runs, with special treatment in the UI and API.  The Conbench UI and API assume that all benchmark results with the same `run_id` share the same `run_reason`. There is no technical enforcement of this on the server side, so some behavior may not work as intended if this assumption is broken by the client.',
                         "type": "string",
+                    },
+                    "run_tags": {
+                        "description": "An optional mapping of arbitrary keys and values that describe the CI run. These are used to group and filter runs in the UI and API. Do not include `run_reason` here; it should be provided below.  For legacy reasons, if `run_name` is given when POSTing a benchmark result, it will be added to `run_tags` automatically under the `name` key. This will be its new permanent home.  The Conbench UI and API assume that all benchmark results with the same `run_id` share the same `run_tags`. There is no technical enforcement of this on the server side, so some behavior may not work as intended if this assumption is broken by the client.",
+                        "type": "object",
                     },
                     "stats": {"$ref": "#/components/schemas/BenchmarkResultStats"},
                     "tags": {
@@ -1456,7 +1484,7 @@
                 "tags": ["Benchmarks"],
             },
             "get": {
-                "description": 'Get a specific benchmark result.\n\nThe "z_score" key in the response is deprecated and only returns null.\n',
+                "description": "Get a specific benchmark result.\n",
                 "parameters": [
                     {
                         "in": "path",
@@ -1775,7 +1803,7 @@
         },
         "/api/runs/": {
             "get": {
-                "description": "Get a list of runs.",
+                "description": "Get a list of runs from the last 30 days of benchmark results.",
                 "parameters": [
                     {"in": "query", "name": "sha", "schema": {"type": "string"}}
                 ],
@@ -1786,7 +1814,7 @@
                 "tags": ["Runs"],
             },
             "post": {
-                "description": "Create a run.",
+                "description": "Deprecated. This endpoint is a no-op, despite returning a 201.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1804,7 +1832,7 @@
         },
         "/api/runs/{run_id}/": {
             "delete": {
-                "description": "Delete a run.",
+                "description": "Deprecated. This endpoint is a no-op, despite returning a 204.",
                 "parameters": [
                     {
                         "in": "path",
@@ -1838,7 +1866,7 @@
                 "tags": ["Runs"],
             },
             "put": {
-                "description": "Edit a run.",
+                "description": "Deprecated. This endpoint is a no-op, despite returning a 200.",
                 "parameters": [
                     {
                         "in": "path",
@@ -1855,7 +1883,7 @@
                     }
                 },
                 "responses": {
-                    "200": {"$ref": "#/components/responses/RunEntityWithoutBaselines"},
+                    "200": {"$ref": "#/components/responses/RunCreated"},
                     "401": {"$ref": "#/components/responses/401"},
                     "404": {"$ref": "#/components/responses/404"},
                 },

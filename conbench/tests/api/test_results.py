@@ -6,7 +6,6 @@ import pytest
 from ...api._examples import _api_benchmark_entity
 from ...entities._entity import NotFound
 from ...entities.benchmark_result import BenchmarkResult
-from ...entities.run import Run
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
@@ -15,12 +14,31 @@ CONBENCH_REPO = "https://github.com/conbench/conbench"
 
 
 def _expected_entity(benchmark_result: BenchmarkResult, stats=None):
+    if benchmark_result.commit:
+        parent = benchmark_result.commit.get_parent_commit()
+        parent_id = parent.id if parent else None
+        commit_type = "known" if benchmark_result.commit.timestamp else "unknown"
+        branch = benchmark_result.commit.branch
+    else:
+        parent_id = None
+        commit_type = "none"
+        branch = None
+
     return _api_benchmark_entity(
         benchmark_result.id,
         benchmark_result.info_id,
         benchmark_result.context_id,
         benchmark_result.batch_id,
         benchmark_result.run_id,
+        benchmark_result.run_tags,
+        benchmark_result.run_reason,
+        benchmark_result.commit_id,
+        parent_id,
+        commit_type,
+        branch,
+        benchmark_result.hardware_id,
+        benchmark_result.hardware.name,
+        benchmark_result.hardware.type,
         benchmark_result.case.name,
         stats,
         benchmark_result.error,
@@ -401,10 +419,10 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
                 response, _expected_entity(benchmark_result), location
             )
 
-            assert benchmark_result.run.hardware.type == hardware_type
+            assert benchmark_result.hardware.type == hardware_type
             for attr, value in payload[f"{hardware_type}_info"].items():
-                assert getattr(benchmark_result.run.hardware, attr) == value or getattr(
-                    benchmark_result.run.hardware, attr
+                assert getattr(benchmark_result.hardware, attr) == value or getattr(
+                    benchmark_result.hardware, attr
                 ) == int(value)
 
     def test_create_benchmark_after_run_was_created(self, client):
@@ -429,99 +447,13 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
                 response, _expected_entity(benchmark_result), location
             )
 
-            assert benchmark_result.run.hardware.type == hardware_type
+            assert benchmark_result.hardware.type == hardware_type
             for attr, value in benchmark_results_payload[
                 f"{hardware_type}_info"
             ].items():
-                assert getattr(benchmark_result.run.hardware, attr) == value or getattr(
-                    benchmark_result.run.hardware, attr
+                assert getattr(benchmark_result.hardware, attr) == value or getattr(
+                    benchmark_result.hardware, attr
                 ) == int(value)
-
-    def test_create_benchmark_after_run_different_machine_info(self, client):
-        """
-        This test documents current behavior that I was initially only
-        suspecting and then wanted to confirm with code.
-
-        We can of course re-think the specification (expected behavior).
-
-        This is a special case in the API surface, but because it's API
-        behavior it's important that we think about specification first
-        (desired behavior), and then judge about the implementation.
-
-        I think this is an artifact of us allowing for potentially many
-        concurrent executors to submit results within a specific run without
-        requiring special coordination between those executors. That is, it is
-        expected that the submitted run metadata (like name and machine info)
-        are equivalent across all BenchmarkResult entities, and the fastest
-        submitter wins the price of DB insertion, while the other racers get
-        their info silently dropped.
-        """
-
-        def assert_machine_info_equals_hardware(hwdict, midict):
-            # Add 'type' key to machine_info dict, and intify all values
-            # that allow for doing so.
-            cmp = {"type": "machine"}
-            for k, v in midict.items():
-                try:
-                    cmp[k] = int(v)
-                except (TypeError, ValueError):
-                    cmp[k] = v
-
-            # Remove id from hardware dict.
-            ref = hwdict.copy()
-            del ref["id"]
-
-            # Compare (processed) machine info to reference
-            assert ref == cmp
-
-        self.authenticate(client)
-
-        machine_info_A = _fixtures.MACHINE_INFO.copy()
-        run_payload = _fixtures.VALID_RUN_PAYLOAD.copy()
-        run_payload["machine_info"] = machine_info_A
-        resp = client.post("/api/runs/", json=run_payload)
-        assert resp.status_code == 201, resp.text
-
-        # Read back Run details from API.
-        resp = client.get(f"/api/runs/{run_payload['id']}/")
-        assert resp.status_code == 200, resp.text
-        run_asindb = resp.json
-
-        # Confirm that the above's Run submission created a Hardware entity
-        # representing the details in `machine_info_A`.
-        assert_machine_info_equals_hardware(run_asindb["hardware"], machine_info_A)
-
-        # Create a copy of the above's machine_info example object with a
-        # different CPU model name. This is set in
-        # BenchmarkResultCreate.machine_info.cpu_model_name and will be
-        # silently dropped
-        lost_cpu_model_name = "qubit1337"
-        machine_info_B = _fixtures.MACHINE_INFO.copy()
-        machine_info_B["cpu_model_name"] = lost_cpu_model_name
-
-        # Submit BenchmarkResultCreate structure, refer to the previously
-        # submitted Run entity (via ID), but provide _different_ machine_info.
-        bmresult_payload = self.valid_payload.copy()
-        bmresult_payload["run_id"] = run_payload["id"]
-        bmresult_payload["machine_info"] = machine_info_B
-        resp = client.post("/api/benchmarks/", json=bmresult_payload)
-        assert resp.status_code == 201, resp.text
-        bid = resp.json["id"]
-
-        # Read back BenchmarkResult details from API.
-        resp = client.get(f"/api/benchmarks/{bid}/")
-        assert resp.status_code == 200, resp.text
-        bm_asindb = resp.json
-        # Confirm that this benchmark result is associated with the above's run
-        # entity.
-        assert bm_asindb["run_id"] == run_asindb["id"]
-
-        # Read back Run details again from API.
-        resp = client.get(f"/api/runs/{run_payload['id']}/")
-        assert resp.status_code == 200, resp.text
-        run_asindb2 = resp.json
-        # Confirm that machine_info_A took precedence.
-        assert_machine_info_equals_hardware(run_asindb2["hardware"], machine_info_A)
 
     def test_create_benchmark_with_error(self, client):
         self.authenticate(client)
@@ -530,21 +462,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         benchmark_result = BenchmarkResult.one(id=new_id)
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
-
-    def test_create_benchmark_with_error_after_run_was_created(self, client):
-        self.authenticate(client)
-        run_payload = _fixtures.VALID_RUN_PAYLOAD
-        benchmark_results_payload = self.valid_payload_with_error
-        benchmark_results_payload["run_id"] = run_payload["id"]
-        client.post("/api/runs/", json=run_payload)
-        assert Run.one(id=run_payload["id"]).has_errors is False
-
-        response = client.post("/api/benchmarks/", json=benchmark_results_payload)
-        new_id = response.json["id"]
-        benchmark_result = BenchmarkResult.one(id=new_id)
-        location = f"http://localhost/api/benchmarks/{new_id}/"
-        self.assert_201_created(response, _expected_entity(benchmark_result), location)
-        assert Run.one(id=run_payload["id"]).has_errors is True
 
     @pytest.mark.parametrize("with_error_property", [True, False])
     def test_create_benchmark_with_one_iteration_error(
@@ -606,8 +523,8 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         response = client.post("/api/benchmarks/", json=self.valid_payload_for_cluster)
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
-        hardware_id = benchmark_result.run.hardware.id
-        hardware_hash = benchmark_result.run.hardware.hash
+        hardware_id = benchmark_result.hardware.id
+        hardware_hash = benchmark_result.hardware.hash
 
         # Post benchmarks for cluster-1 with different optional_info but the same cluster name and info
         payload = copy.deepcopy(self.valid_payload_for_cluster)
@@ -618,14 +535,14 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         benchmark_result = BenchmarkResult.one(id=new_id)
 
         # Confirm that a new hardware was created with new optional info...
-        assert benchmark_result.run.hardware.id != hardware_id
+        assert benchmark_result.hardware.id != hardware_id
         assert (
-            benchmark_result.run.hardware.optional_info
+            benchmark_result.hardware.optional_info
             == payload["cluster_info"]["optional_info"]
         )
 
         # ...but the hash is the same since we didn't modify the cluster name or info
-        assert benchmark_result.run.hardware.hash == hardware_hash
+        assert benchmark_result.hardware.hash == hardware_hash
 
     def test_create_benchmark_for_cluster_with_info_changed(self, client):
         # Post benchmarks for cluster-1
@@ -633,7 +550,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         response = client.post("/api/benchmarks/", json=self.valid_payload_for_cluster)
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
-        hardware_id = benchmark_result.run.hardware.id
+        hardware_id = benchmark_result.hardware.id
 
         # Post benchmarks for cluster-1 with different info but the same cluster name and optional_info
         payload = copy.deepcopy(self.valid_payload_for_cluster)
@@ -642,8 +559,8 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         response = client.post("/api/benchmarks/", json=payload)
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
-        assert benchmark_result.run.hardware.id != hardware_id
-        assert benchmark_result.run.hardware.info == payload["cluster_info"]["info"]
+        assert benchmark_result.hardware.id != hardware_id
+        assert benchmark_result.hardware.info == payload["cluster_info"]["info"]
 
     def test_create_benchmark_normalizes_data(self, client):
         self.authenticate(client)
@@ -657,9 +574,9 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         assert benchmark_result_1.case_id == benchmark_result_2.case_id
         assert benchmark_result_1.info_id == benchmark_result_2.info_id
         assert benchmark_result_1.context_id == benchmark_result_2.context_id
-        assert benchmark_result_1.run.hardware_id == benchmark_result_2.run.hardware_id
+        assert benchmark_result_1.hardware_id == benchmark_result_2.hardware_id
         assert benchmark_result_1.run_id != benchmark_result_2.run_id
-        assert benchmark_result_1.run.commit_id == benchmark_result_2.run.commit_id
+        assert benchmark_result_1.commit_id == benchmark_result_2.commit_id
 
     def test_create_benchmark_can_specify_run_and_batch_id(self, client):
         self.authenticate(client)
@@ -740,36 +657,11 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         assert response.status_code == 201, (response.status_code, response.text)
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
-        assert benchmark_result.run.commit is None
-        assert benchmark_result.run.associated_commit_repo_url == "n/a"
+        assert benchmark_result.commit is None
+        assert benchmark_result.associated_commit_repo_url == "n/a"
         return benchmark_result, new_id
 
     def test_create_no_commit_context(self, client):
-        self.authenticate(client)
-        data = copy.deepcopy(self.valid_payload)
-        data["run_id"] = _uuid()
-        del data["github"]
-
-        # create benchmark without commit context
-        response = client.post("/api/benchmarks/", json=data)
-        benchmark_result, new_id = self._assert_none_commit(response)
-        location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(benchmark_result), location)
-
-        # create another benchmark without commit context
-        # (test duplicate key duplicate key -- commit_index)
-        response = client.post("/api/benchmarks/", json=data)
-        benchmark_result, new_id = self._assert_none_commit(response)
-        location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(benchmark_result), location)
-
-    # Note(JP): what does this help with, which use case does this enable? It
-    # creates quite a bit of work to support empty string values throughout the
-    # code base -- does that mean the same like not providing the data at all?
-    # Also see https://github.com/conbench/conbench/pull/889
-    # https://github.com/conbench/conbench/issues/817
-    # https://github.com/conbench/conbench/issues/818
-    def test_create_empty_commit_context(self, client):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
         data["run_id"] = _uuid()
@@ -799,9 +691,9 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
-        assert benchmark_result.run.commit.sha == "unknown commit"
-        assert benchmark_result.run.commit.repository == ARROW_REPO
-        assert benchmark_result.run.commit.parent is None
+        assert benchmark_result.commit.sha == "unknown commit"
+        assert benchmark_result.commit.repository == ARROW_REPO
+        assert benchmark_result.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
@@ -810,9 +702,9 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         response = client.post("/api/benchmarks/", json=data)
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
-        assert benchmark_result.run.commit.sha == "unknown commit"
-        assert benchmark_result.run.commit.repository == ARROW_REPO
-        assert benchmark_result.run.commit.parent is None
+        assert benchmark_result.commit.sha == "unknown commit"
+        assert benchmark_result.commit.repository == ARROW_REPO
+        assert benchmark_result.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
@@ -1063,30 +955,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         assert resp.status_code == 200, resp.text
 
         assert resp.json["timestamp"] == timeoutput
-
-    def test_create_result_mismatch_run_commit_hash(self, client):
-        self.authenticate(client)
-
-        run = copy.deepcopy(_fixtures.VALID_RUN_PAYLOAD)
-        result = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
-
-        resp = client.post("/api/runs/", json=run)
-        assert resp.status_code == 201, resp.text
-
-        run_commit_hash = run["github"]["commit"]
-
-        # Make result point to run:
-        result["run_id"] = run["id"]
-
-        # Make result refer to a different commit hash:
-        badhash = run_commit_hash[:-4] + "aaaa"
-        result["github"]["commit"] = badhash
-        resp = client.post("/api/benchmark-results/", json=result)
-        assert resp.status_code == 400, resp.text
-        assert f"Result refers to commit hash '{badhash}'" in resp.text
-        assert (
-            f"Run '{run['id']}' refers to commit hash '{run_commit_hash}'" in resp.text
-        )
 
     def test_create_result_missing_stats_and_error(self, client):
         self.authenticate(client)

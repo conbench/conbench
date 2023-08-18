@@ -242,16 +242,8 @@ def _fetch_and_cache_most_recent_results_guts(
     # smaller chunks to keep peak memory usage in check. Also see
     # https://docs.sqlalchemy.org/en/20/core/connections.html#using-server-side-cursors-a-k-a-stream-results
     # https://docs.sqlalchemy.org/en/20/orm/queryguide/api.html#fetching-large-result-sets-with-yield-per
-    # Also fetch hardware from associated Run, so that result.run is in cache,
-    # too, and so that result.run.hardware is a quick lookup. Use selectinload
-    # for fetching Run data -- "The yield_per execution option is not
-    # compatible with “subquery” eager loading loading or “joined” eager
-    # loading when using collections. It is potentially compatible with “select
-    # in” eager loading , provided the database driver supports multiple,
-    # independent cursors." -- seems to result in overall less queries.
     query_statement = (
         sqlalchemy.select(BenchmarkResult)
-        .options(sqlalchemy.orm.selectinload(BenchmarkResult.run))
         .order_by(BenchmarkResult.timestamp.desc())
         .limit(int(BMRT_CACHE_SIZE))
     ).execution_options(yield_per=2000)
@@ -293,8 +285,7 @@ def _fetch_and_cache_most_recent_results_guts(
 
         # Important decision for now: skip results that have not been obtained
         # for the default code branch.
-        bmrrun = result.run
-        bmrcommit = bmrrun.commit
+        bmrcommit = result.commit
 
         if bmrcommit is None:
             continue
@@ -337,9 +328,9 @@ def _fetch_and_cache_most_recent_results_guts(
             # hardware/platform/env:
             # https://github.com/conbench/conbench/issues/1340
             hardware_checksum=hashlib.md5(
-                bmrrun.hardware.hash.encode("utf-8")
+                result.hardware.hash.encode("utf-8")
             ).hexdigest(),
-            hardware_name=str(bmrrun.hardware.name),
+            hardware_name=str(result.hardware.name),
             case_id=str(result.case_id),
             context_id=str(result.context_id),
             run_id=str(result.run_id),
@@ -357,7 +348,7 @@ def _fetch_and_cache_most_recent_results_guts(
             ui_hardware_short=str(result.ui_hardware_short),
             ui_time_started_at=str(result.ui_time_started_at),
             ui_non_null_sample_count=result.ui_non_null_sample_count,
-            run_reason=bmrrun.reason if bmrrun.reason else "n/a",
+            run_reason=result.run_reason if result.run_reason else "n/a",
         )
 
         by_id_dict[str(result.id)] = bmr

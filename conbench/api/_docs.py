@@ -92,7 +92,7 @@ spec.components.response(
     "RunEntityWithoutBaselines", _200_ok(ex.RUN_ENTITY_WITHOUT_BASELINES)
 )
 spec.components.response("RunList", _200_ok(ex.RUN_LIST))
-spec.components.response("RunCreated", _201_created(ex.RUN_ENTITY_WITHOUT_BASELINES))
+spec.components.response("RunCreated", _201_created({}))
 spec.components.response("UserEntity", _200_ok(ex.USER_ENTITY))
 spec.components.response("UserList", _200_ok(ex.USER_LIST))
 spec.components.response("UserCreated", _201_created(ex.USER_ENTITY))

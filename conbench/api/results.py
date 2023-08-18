@@ -19,7 +19,6 @@ from ..entities.benchmark_result import (
     BenchmarkResultValidationError,
 )
 from ..entities.case import Case
-from ..entities.run import Run
 from ._resp import json_response_for_byte_sequence, resp400
 
 log = logging.getLogger(__name__)
@@ -47,8 +46,6 @@ class BenchmarkEntityAPI(ApiEndpoint, BenchmarkValidationMixin):
         ---
         description: |
             Get a specific benchmark result.
-
-            The "z_score" key in the response is deprecated and only returns null.
         responses:
             "200": "BenchmarkEntity"
             "401": "401"
@@ -189,8 +186,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
 
         elif run_reason_arg := f.request.args.get("run_reason"):
             benchmark_results = BenchmarkResult.search(
-                filters=[Run.reason == run_reason_arg],
-                joins=[Run],
+                filters=[BenchmarkResult.run_reason == run_reason_arg],
                 order_by=BenchmarkResult.timestamp.desc(),
                 limit=55000,
             )
@@ -244,9 +240,9 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             return resp400(str(exc))
 
         # Rely on the idea that the lookup
-        # `benchmark_result.run.commit.repo_url` always succeeds
+        # `benchmark_result.commit.repo_url` always succeeds
         conbench.metrics.COUNTER_BENCHMARK_RESULTS_INGESTED.labels(
-            repourl=benchmark_result.run.associated_commit_repo_url
+            repourl=benchmark_result.associated_commit_repo_url
         ).inc()
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 

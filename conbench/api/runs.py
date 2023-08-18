@@ -1,25 +1,96 @@
+import dataclasses
+import datetime
+import functools
+from typing import Dict, List, Optional
+
 import flask as f
 import flask_login
 
 from ..api import rule
 from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
-from ..entities._entity import EntityExists, NotFound
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import Commit
-from ..entities.run import Run, RunFacadeSchema, RunSerializer
+from ..entities.run import RunFacadeSchema, RunSerializer
+from ..util import short_commit_msg
+
+
+@dataclasses.dataclass
+class RunAggregate:
+    """Aggregated information about a run."""
+
+    earliest_result: BenchmarkResult
+    result_count: int
+    any_result_failed: bool
+
+    def update(self, new_result: BenchmarkResult):
+        """Update the aggregate information based on a new result."""
+        self.earliest_result = (
+            new_result
+            if new_result.timestamp < self.earliest_result.timestamp
+            else self.earliest_result
+        )
+        self.result_count += 1
+        self.any_result_failed = self.any_result_failed or new_result.is_failed
+
+    @functools.cached_property
+    def display_commit_time(self) -> str:
+        return self.earliest_result.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    @functools.cached_property
+    def display_commit_msg(self) -> str:
+        return short_commit_msg(
+            self.earliest_result.commit.message if self.earliest_result.commit else ""
+        )
+
+
+def get_all_run_info(
+    min_time: datetime.datetime,
+    max_time: datetime.datetime,
+    commit_hashes: Optional[List[str]] = None,
+) -> List[RunAggregate]:
+    """Get info about each run in a time range.
+
+    Query the database for all benchmark results (optionally filtered to certain commit
+    hashes) in a time range, and return a list of RunAggregates, each corresponding to
+    one run_id.
+
+    This powers the "list runs" API endpoint and the "recent runs" list on the home
+    page.
+
+    Note: At the min_time boundary, the count is permanently wrong (single run partially
+    represented in DB query result, true for just one of many runs). That's fine, the UI
+    does not claim real-time truth in that regard. In the vast majority of the cases we
+    get a correct result count per run.
+    """
+    run_info: Dict[str, RunAggregate] = {}  # keyed by run_id
+
+    joins = []
+    filters = [
+        BenchmarkResult.timestamp >= min_time,
+        BenchmarkResult.timestamp <= max_time,
+    ]
+    if commit_hashes:
+        joins.append(Commit)
+        filters.append(Commit.sha.in_(commit_hashes))
+
+    for result in BenchmarkResult.search(filters=filters, joins=joins):
+        run_id = result.run_id
+        if run_id in run_info:
+            run_info[run_id].update(result)
+        else:
+            run_info[run_id] = RunAggregate(
+                earliest_result=result,
+                result_count=1,
+                any_result_failed=result.is_failed,
+            )
+
+    return list(run_info.values())
 
 
 class RunEntityAPI(ApiEndpoint):
     serializer = RunSerializer()
     schema = RunFacadeSchema()
-
-    def _get(self, run_id):
-        try:
-            run = Run.one(id=run_id)
-        except NotFound:
-            self.abort_404_not_found()
-        return run
 
     @maybe_login_required
     def get(self, run_id):
@@ -69,16 +140,18 @@ class RunEntityAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        run = self._get(run_id)
-        return self.serializer.one._dump(run, get_baseline_runs=True)
+        any_result = BenchmarkResult.first(run_id=run_id)
+        if not any_result:
+            self.abort_404_not_found()
+        return self.serializer.one._dump(any_result, get_baseline_runs=True)
 
     @flask_login.login_required
     def put(self, run_id):
         """
         ---
-        description: Edit a run.
+        description: Deprecated. This endpoint is a no-op, despite returning a 200.
         responses:
-            "200": "RunEntityWithoutBaselines"
+            "200": "RunCreated"
             "401": "401"
             "404": "404"
         parameters:
@@ -93,16 +166,13 @@ class RunEntityAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        run = self._get(run_id)
-        data = self.validate(self.schema.update)
-        run.update(data)
-        return self.serializer.one.dump(run)
+        return {}
 
     @flask_login.login_required
     def delete(self, run_id):
         """
         ---
-        description: Delete a run.
+        description: Deprecated. This endpoint is a no-op, despite returning a 204.
         responses:
             "204": "204"
             "401": "401"
@@ -115,11 +185,6 @@ class RunEntityAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        benchmark_results = BenchmarkResult.all(run_id=run_id)
-        for benchmark_result in benchmark_results:
-            benchmark_result.delete()
-        run = self._get(run_id)
-        run.delete()
         return self.response_204_no_content()
 
 
@@ -131,7 +196,7 @@ class RunListAPI(ApiEndpoint):
     def get(self):
         """
         ---
-        description: Get a list of runs.
+        description: Get a list of runs from the last 30 days of benchmark results.
         responses:
             "200": "RunList"
             "401": "401"
@@ -143,18 +208,24 @@ class RunListAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        if sha_arg := f.request.args.get("sha"):
-            shas = sha_arg.split(",")
-            runs = Run.search(filters=[Commit.sha.in_(shas)], joins=[Commit])
-        else:
-            runs = Run.all(order_by=Run.timestamp.desc(), limit=1000)
-        return self.serializer.many.dump(runs)
+        sha_arg: Optional[str] = f.request.args.get("sha")
+        commit_hashes = sha_arg.split(",") if sha_arg else None
+
+        return [
+            self.serializer.one._dump(run.earliest_result, get_baseline_runs=False)
+            for run in get_all_run_info(
+                min_time=datetime.datetime.now(datetime.timezone.utc)
+                - datetime.timedelta(days=30),
+                max_time=datetime.datetime.now(datetime.timezone.utc),
+                commit_hashes=commit_hashes,
+            )
+        ]
 
     @flask_login.login_required
     def post(self):
         """
         ---
-        description: Create a run.
+        description: Deprecated. This endpoint is a no-op, despite returning a 201.
         responses:
             "201": "RunCreated"
             "400": "400"
@@ -166,14 +237,7 @@ class RunListAPI(ApiEndpoint):
         tags:
           - Runs
         """
-        data = self.validate(self.schema.create)
-
-        try:
-            run = Run.create(data)
-        except EntityExists as exc:
-            return f.jsonify(error=409, description=str(exc)), 409
-
-        return self.response_201_created(self.serializer.one.dump(run))
+        return self.response_201_created({})
 
 
 run_entity_view = RunEntityAPI.as_view("run")
