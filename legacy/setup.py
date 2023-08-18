@@ -23,6 +23,7 @@ def parse_requirements(path: str):
 
 
 requirements_cli = parse_requirements(path="requirements-cli.txt")
+requirements_dev = parse_requirements(path="requirements-dev.txt")
 
 setuptools.setup(
     name="conbenchlegacy",
@@ -45,4 +46,5 @@ setuptools.setup(
     maintainer_email="dev@arrow.apache.org",
     url="https://github.com/conbench/conbench",
     install_requires=requirements_cli,
+    extras_require={"dev": requirements_dev},
 )

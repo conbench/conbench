@@ -3,7 +3,6 @@ import os
 import unittest.mock
 
 import pytest
-
 from conbenchlegacy.util import register_benchmarks
 
 __version__ = importlib_metadata.version("conbenchlegacy")

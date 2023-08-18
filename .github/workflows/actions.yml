@@ -179,7 +179,7 @@ jobs:
             -e ./benchadapt/python \
             -e ./benchconnect \
             -e ./benchrun/python \
-            -e ./legacy
+            -e './legacy[dev]'
       - name: Test benchclients
         run: |
           pytest -vv benchclients/python/tests
