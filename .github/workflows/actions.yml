@@ -54,7 +54,7 @@ jobs:
             -e ./benchadapt/python \
             -e ./benchconnect \
             -e ./benchrun/python \
-            -e .
+            -e ./legacy
       - name: Build docs, exiting non-zero on warnings (which can be very bad)
         run: make build-docs SPHINXOPTS='-W --keep-going'
 
