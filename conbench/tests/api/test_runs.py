@@ -418,6 +418,12 @@ class TestRunList(_asserts.ListEnforcer):
         response = client.get("/api/runs/")
         self.assert_200_ok(response, contains=_expected_entity(result))
 
+    def test_run_list_different_days(self, client):
+        self.authenticate(client)
+        result = self._create()
+        response = client.get("/api/runs/?days=1")
+        self.assert_200_ok(response, contains=_expected_entity(result))
+
     def test_run_list_filter_by_sha(self, client):
         sha = _fixtures.CHILD
         self.authenticate(client)
