@@ -219,6 +219,8 @@ class RunListAPI(ApiEndpoint):
 
         days_arg: Optional[int] = f.request.args.get("days")
         days = int(days_arg) if days_arg else 14
+        if days > 30:
+            self.abort_400_bad_request("days must be no more than 30")
 
         return [
             self.serializer.one._dump(run.earliest_result, get_baseline_runs=False)
