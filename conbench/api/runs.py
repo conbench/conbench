@@ -196,7 +196,9 @@ class RunListAPI(ApiEndpoint):
     def get(self):
         """
         ---
-        description: Get a list of runs from the last 30 days of benchmark results.
+        description: |
+            Get a list of runs from the last few days of benchmark results (default 14
+            days).
         responses:
             "200": "RunList"
             "401": "401"
@@ -205,17 +207,24 @@ class RunListAPI(ApiEndpoint):
             name: sha
             schema:
               type: string
+          - in: query
+            name: days
+            schema:
+              type: integer
         tags:
           - Runs
         """
         sha_arg: Optional[str] = f.request.args.get("sha")
         commit_hashes = sha_arg.split(",") if sha_arg else None
 
+        days_arg: Optional[int] = f.request.args.get("days")
+        days = int(days_arg) if days_arg else 14
+
         return [
             self.serializer.one._dump(run.earliest_result, get_baseline_runs=False)
             for run in get_all_run_info(
                 min_time=datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(days=30),
+                - datetime.timedelta(days=days),
                 max_time=datetime.datetime.now(datetime.timezone.utc),
                 commit_hashes=commit_hashes,
             )
