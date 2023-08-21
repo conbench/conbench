@@ -1803,9 +1803,10 @@
         },
         "/api/runs/": {
             "get": {
-                "description": "Get a list of runs from the last 30 days of benchmark results.",
+                "description": "Get a list of runs from the last few days of benchmark results (default 14\ndays; no more than 30 days).\n",
                 "parameters": [
-                    {"in": "query", "name": "sha", "schema": {"type": "string"}}
+                    {"in": "query", "name": "sha", "schema": {"type": "string"}},
+                    {"in": "query", "name": "days", "schema": {"type": "integer"}},
                 ],
                 "responses": {
                     "200": {"$ref": "#/components/responses/RunList"},
