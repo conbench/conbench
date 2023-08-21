@@ -360,6 +360,9 @@ class BenchmarkResult(Base, EntityMixin):
                     context_id=benchmark_result.context_id,
                     _external=True,
                 ),
+                "run": f.url_for(
+                    "api.run", run_id=benchmark_result.run_id, _external=True
+                ),
             },
         }
 
