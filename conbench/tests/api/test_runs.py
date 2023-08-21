@@ -426,9 +426,10 @@ class TestRunList(_asserts.ListEnforcer):
 
     def test_run_list_too_many_days(self, client):
         self.authenticate(client)
-        result = self._create()
         response = client.get("/api/runs/?days=31")
-        self.assert_400_bad_request(response, "days must be no more than 30")
+        self.assert_400_bad_request(
+            response, {"_errors": ["days must be no more than 30"]}
+        )
 
     def test_run_list_filter_by_sha(self, client):
         sha = _fixtures.CHILD

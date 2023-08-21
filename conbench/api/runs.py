@@ -198,7 +198,7 @@ class RunListAPI(ApiEndpoint):
         ---
         description: |
             Get a list of runs from the last few days of benchmark results (default 14
-            days).
+            days; no more than 30 days).
         responses:
             "200": "RunList"
             "401": "401"
