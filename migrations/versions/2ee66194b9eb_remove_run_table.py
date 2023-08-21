@@ -17,11 +17,9 @@ depends_on = None
 
 
 def upgrade():
-    # TODO: data migration from run to benchmark_result goes here!
-
     op.add_column(
         "benchmark_result",
-        sa.Column("run_tags", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("run_tags", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     )
     op.add_column("benchmark_result", sa.Column("run_reason", sa.Text(), nullable=True))
     op.add_column(
@@ -29,11 +27,25 @@ def upgrade():
     )
     op.add_column(
         "benchmark_result",
-        sa.Column("hardware_id", sa.String(length=50), nullable=False),
+        sa.Column("hardware_id", sa.String(length=50), nullable=True),
     )
     op.drop_constraint("summary_run_id_fkey", "benchmark_result", type_="foreignkey")
     op.create_foreign_key(None, "benchmark_result", "hardware", ["hardware_id"], ["id"])
     op.create_foreign_key(None, "benchmark_result", "commit", ["commit_id"], ["id"])
+
+    op.execute(
+        """
+        UPDATE benchmark_result SET
+            run_tags = jsonb_build_object('name', coalesce(run.name, '')),
+            run_reason = run.reason,
+            commit_id = run.commit_id,
+            hardware_id = run.hardware_id
+        FROM run
+        WHERE benchmark_result.run_id = run.id
+        """
+    )
+    op.alter_column("benchmark_result", "run_tags", nullable=False)
+    op.alter_column("benchmark_result", "hardware_id", nullable=False)
 
     op.drop_table("run")
 
