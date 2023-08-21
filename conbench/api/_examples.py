@@ -153,6 +153,7 @@ def _api_benchmark_entity(
             "self": "http://localhost/api/benchmarks/%s/" % benchmark_result_id,
             "context": "http://localhost/api/contexts/%s/" % context_id,
             "info": "http://localhost/api/info/%s/" % info_id,
+            "run": "http://localhost/api/runs/%s/" % run_id,
         },
     }
 
