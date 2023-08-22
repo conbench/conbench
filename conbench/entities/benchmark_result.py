@@ -2,9 +2,11 @@ import functools
 import logging
 import math
 import statistics
+import time
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from urllib.parse import urlparse
 
 import flask as f
 import marshmallow
@@ -17,6 +19,7 @@ from sqlalchemy.orm import Mapped, relationship
 
 import conbench.units
 import conbench.util
+from conbench.dbsession import current_session
 from conbench.numstr import numstr, numstr_dyn
 from conbench.units import KNOWN_UNIT_SYMBOLS_STR
 
@@ -30,7 +33,13 @@ from ..entities._entity import (
     to_float,
 )
 from ..entities.case import Case
-from ..entities.commit import Commit, CommitSerializer, TypeCommitInfoGitHub
+from ..entities.commit import (
+    Commit,
+    CommitSerializer,
+    TypeCommitInfoGitHub,
+    backfill_default_branch_commits,
+    get_github_commit_metadata,
+)
 from ..entities.context import Context
 from ..entities.hardware import (
     Cluster,
@@ -41,11 +50,6 @@ from ..entities.hardware import (
     MachineSchema,
 )
 from ..entities.info import Info
-from ..entities.run import (
-    SchemaGitHubCreate,
-    commit_fetch_info_and_create_in_db_if_not_exists,
-    github_commit_info_descr,
-)
 
 log = logging.getLogger(__name__)
 
@@ -912,6 +916,120 @@ def validate_and_augment_result_tags(userres: Any):
             )
 
 
+def commit_fetch_info_and_create_in_db_if_not_exists(
+    ghcommit: TypeCommitInfoGitHub,
+) -> Commit:
+    """
+    Insert new Commit entity into database if required.
+
+    If Commit not yet known in database: fetch data about commit (and related
+    commits) from GitHub HTTP API if possible. Exceptions during this process
+    are logged and otherwise swallowed.
+
+    Return Commit.id (DB primary key) of existing Commit entity or of newly
+    created one. Expect database collision upon insert (in this case the ID for
+    the existing commit entity is returned).
+
+    Has slightly ~unpredictable run duration as of interaction with GitHub HTTP
+    API.
+    """
+
+    def _guts(cinfo: TypeCommitInfoGitHub) -> Tuple[Commit, bool]:
+        """
+        Return a Commit object or raise `sqlalchemy.exc.IntegrityError`.
+
+        The boolean return value means "created", is `False` if the first
+        query for the commit object succeeds, else `True.
+        """
+        # Try to see if commit is already database. This is an optimization, to
+        # not needlessly interact with the GitHub HTTP API in case the commit
+        # is already in the database. first(): "Return the first result of this
+        # Query or None if the result doesn’t contain any row.""
+        dbcommit = Commit.first(sha=cinfo["commit_hash"], repository=cinfo["repo_url"])
+
+        if dbcommit is not None:
+            return dbcommit, False
+
+        # Try to fetch metadata for commit via GitHub HTTP API. Fall back
+        # gracefully if that does not work.
+        gh_commit_metadata_dict = None
+        try:
+            # get_github_commit_metadata() may raise all those exceptions that can
+            # happen during an HTTP request cycle. The repository might
+            # for example not exist: Unexpected GitHub HTTP API response: <Response [404]
+            gh_commit_metadata_dict = get_github_commit_metadata(cinfo)
+        except Exception as exc:
+            log.info(
+                "treat as unknown context: error during get_github_commit_metadata(): %s",
+                exc,
+            )
+
+        if gh_commit_metadata_dict:
+            # We got data from GitHub. Insert into database.
+            dbcommit = Commit.create_github_context(
+                cinfo["commit_hash"], cinfo["repo_url"], gh_commit_metadata_dict
+            )
+
+            # The commit is known to GitHub. Fetch more data from GitHub.
+            # Gracefully degrade if that does not work.
+            try:
+                backfill_default_branch_commits(cinfo["repo_url"], dbcommit)
+            except Exception as exc:
+                # Any error during this backfilling operation should not fail
+                # the HTTP request processing (we're right now in the middle of
+                # processing an HTTP request with new benchmark run data).
+                log.info(
+                    "Could not backfill default branch commits. Ignoring error "
+                    "during backfill_default_branch_commits():  %s",
+                    exc,
+                )
+                raise
+            return dbcommit, True
+
+        # Fetching metadata from GitHub failed. Store most important bits in
+        # database.
+        dbcommit = Commit.create_unknown_context(
+            commit_hash=cinfo["commit_hash"], repo_url=cinfo["repo_url"]
+        )
+        return dbcommit, True
+
+    created: bool = False
+    t0 = time.monotonic()
+    try:
+        # `_guts()` is expected to raise IntegrityError when a concurrent racer
+        # did insert the Commit object by now. This can happen, also see
+        # https://github.com/conbench/conbench/issues/809
+        commit, created = _guts(ghcommit)
+    except s.exc.IntegrityError as exc:
+        # Expected error example:
+        #  sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) \
+        #    duplicate key value violates unique constraint "commit_index"
+        log.info("Ignored IntegrityError while inserting Commit: %s", exc)
+        # Look up the Commit entity again because this function must return the
+        # commit ID (DB primary key).
+        current_session.rollback()
+        commit = Commit.first(
+            sha=ghcommit["commit_hash"], repository=ghcommit["repo_url"]
+        )
+
+        # After IntegrityError we assume that Commit exists in DB. Encode
+        # assumption, for easier debugging.
+        assert commit is not None
+
+    d_seconds = time.monotonic() - t0
+
+    # Only log when the commit object was inserted (keep logs interesting,
+    # reduce verbosity).
+    if created:
+        log.info(
+            "commit_fetch_info_and_create_in_db_if_not_exists(%s) inserted, took %.3f s",
+            ghcommit,
+            d_seconds,
+        )
+
+    return commit
+
+
 s.Index("benchmark_result_run_id_index", BenchmarkResult.run_id)
 s.Index("benchmark_result_case_id_index", BenchmarkResult.case_id)
 
@@ -926,6 +1044,16 @@ s.Index("benchmark_result_context_id_index", BenchmarkResult.context_id)
 # We order by benchmark_result.timestamp in /api/benchmarks/ -- that wants
 # and index!
 s.Index("benchmark_result_timestamp_index", BenchmarkResult.timestamp)
+
+
+class _Serializer(EntitySerializer):
+    def _dump(self, benchmark_result):
+        return benchmark_result.to_dict_for_json_api()
+
+
+class BenchmarkResultSerializer:
+    one = _Serializer()
+    many = _Serializer(many=True)
 
 
 class BenchmarkResultStatsSchema(marshmallow.Schema):
@@ -1078,14 +1206,164 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
     )
 
 
-class _Serializer(EntitySerializer):
-    def _dump(self, benchmark_result):
-        return benchmark_result.to_dict_for_json_api()
+class SchemaGitHubCreate(marshmallow.Schema):
+    """
+    GitHub-flavored commit info object
+    """
 
+    @marshmallow.pre_load
+    def change_empty_string_to_none(self, data, **kwargs):
+        """For the specific situation of empty string being provided,
+        treat this a None, _before_ schema validation.
 
-class BenchmarkResultSerializer:
-    one = _Serializer()
-    many = _Serializer(many=True)
+        This for example alles the client to set pr_number to an empty string
+        and this has the same meaning as setting it to `null` in the JSON doc.
+
+        Otherwise, an empty string results in 'Not a valid integer' (for
+        pr_number, at least).
+        """
+        for k in ("pr_number", "branch"):
+            if data.get(k) == "":
+                data[k] = None
+
+        return data
+
+    commit = marshmallow.fields.String(
+        required=True,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                The commit hash of the benchmarked code.
+
+                Must not be an empty string.
+
+                Expected to be a known commit in the repository as specified
+                by the `repository` URL property below.
+                """
+            )
+        },
+    )
+    repository = marshmallow.fields.String(
+        # Does this allow for empty strings or not?
+        # Unclear, after reading marshmallow docs. Testes this. Yes, this
+        # allows for empty string:
+        # https://github.com/marshmallow-code/marshmallow/issues/76#issuecomment-1473348472
+        required=True,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                URL pointing to the benchmarked GitHub repository.
+
+                Must be provided in the format https://github.com/org/repo.
+
+                Trailing slashes are stripped off before database insertion.
+
+                As of the time of writing, only URLs starting with
+                "https://github.com" are allowed. Conbench interacts with the
+                GitHub HTTP API in order to fetch information about the
+                benchmarked repository. The Conbench user/operator is expected
+                to ensure that Conbench is configured with a GitHub HTTP API
+                authentication token that is privileged to read commit
+                information for the repository specified here.
+
+                Support for non-GitHub repositories (e.g. GitLab) or auxiliary
+                repositories is interesting, but not yet well specified.
+                """
+            )
+        },
+    )
+    pr_number = marshmallow.fields.Integer(
+        required=False,
+        allow_none=True,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                If set, this needs to be an integer or a stringified integer.
+
+                This is the recommended way to indicate that this benchmark
+                result has been obtained for a specific pull request branch.
+                Conbench will use this pull request number to (try to) obtain
+                branch information via the GitHub HTTP API.
+
+                Set this to `null` or leave this out to indicate that this
+                benchmark result has been obtained for the default branch.
+                """
+            )
+        },
+    )
+    branch = marshmallow.fields.String(
+        # All of these pass schema validation: empty string, non-empty-string,
+        # null
+        required=False,
+        allow_none=True,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                This is an alternative way to indicate that this benchmark
+                result has been obtained for a commit that is not on the
+                default branch. Do not use this for GitHub pull requests (use
+                the `pr_number` argument for that, see above).
+
+                If set, this needs to be a string of the form `org:branch`.
+
+                Warning: currently, if `branch` and `pr_number` are both
+                provided, there is no error and `branch` takes precedence. Only
+                use this when you know what you are doing.
+                """
+            )
+        },
+    )
+
+    @marshmallow.validates_schema
+    def validate_props(self, data, **kwargs):
+        url = data["repository"]
+
+        # Undocumented: transparently rewrite git@ to https:// URL -- let's
+        # drop this in the future. Context:
+        # https://github.com/conbench/conbench/pull/1134#discussion_r1170222541
+        if url.startswith("git@github.com:"):
+            url = url.replace("git@github.com:", "https://github.com/")
+            data["repository"] = url
+
+        if not url.startswith("https://github.com"):
+            raise marshmallow.ValidationError(
+                f"'repository' must be a URL, starting with 'https://github.com', got `{url}`"
+            )
+
+        try:
+            urlparse(url)
+        except ValueError as exc:
+            raise marshmallow.ValidationError(
+                f"'repository' failed URL validation: `{exc}`"
+            )
+
+        if not len(data["commit"]):
+            raise marshmallow.ValidationError("'commit' must be a non-empty string")
+
+    @marshmallow.post_load
+    def turn_into_predictable_return_type(self, data, **kwargs) -> TypeCommitInfoGitHub:
+        """
+        We really have to look into schema-inferred tight types, this here is a
+        quick workaround for the rest of the code base to be able to work with
+        `TypeCommitInfoGitHub`.
+        """
+
+        url: str = data["repository"].rstrip("/")
+        commit_hash: str = data["commit"]
+        # If we do not re-add this here as `None` then this property is _not_
+        # part of the output dictionary if the user left this key out of
+        # their JSON object
+        pr_number: Optional[int] = data.get("pr_number")
+        branch: Optional[str] = data.get("branch")
+
+        result: TypeCommitInfoGitHub = {
+            "repo_url": url,
+            "commit_hash": commit_hash,
+            "pr_number": pr_number,
+            "branch": branch,
+        }
+
+        return result
 
 
 # This is used in two places below.
@@ -1358,7 +1636,28 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
     github = marshmallow.fields.Nested(
         SchemaGitHubCreate(),
         required=False,
-        metadata={"description": github_commit_info_descr},
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                GitHub-flavored commit information.
+
+                Use this object to tell Conbench with which specific state of
+                benchmarked code (repository identifier, commit hash) the
+                BenchmarkResult is associated.
+
+                This property is optional. If not provided, it means that this benchmark
+                result is not associated with any particular state of benchmarked code.
+
+                Not associating a benchmark result with commit information has special,
+                limited purpose (pre-merge benchmarks, testing). It generally means that
+                this benchmark result will not be considered for time series analysis
+                along a commit tree.
+
+                TODO: allow for associating a benchmark result with a repository (URL),
+                w/o providing commit information (cf. issue #1165).
+                """
+            )
+        },
     )
     change_annotations = marshmallow.fields.Dict(
         required=False, metadata={"description": CHANGE_ANNOTATIONS_DESC}
