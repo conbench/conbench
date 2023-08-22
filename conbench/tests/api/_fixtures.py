@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 from ...db import _session as dbsession
 from ...entities.benchmark_result import BenchmarkResult
 from ...entities.commit import Commit
-from ...entities.run import SchemaGitHubCreate
+from ...entities.benchmark_result import SchemaGitHubCreate
 from ...runner import Conbench
 from ...tests.helpers import _uuid
 

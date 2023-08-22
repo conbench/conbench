@@ -1331,54 +1331,8 @@
                 "required": ["email", "name", "password", "secret"],
                 "type": "object",
             },
-            "RunCreate": {
-                "properties": {
-                    "cluster_info": {"$ref": "#/components/schemas/ClusterCreate"},
-                    "error_info": {
-                        "description": "Metadata for run's error that prevented all or some benchmarks from running",
-                        "type": "object",
-                    },
-                    "error_type": {
-                        "description": "Run's error type. Possible values: none, catastrophic, partial.\n                    None = all attempted benchmarks are good.\n                    Catastrophic =no benchmarks completed successfully.\n                    Partial = some benchmarks completed, some failed",
-                        "type": "string",
-                    },
-                    "finished_timestamp": {
-                        "description": "A datetime string indicating the time at which the run finished. Expected to be in ISO 8601 notation. Timezone-aware notation recommended. Timezone-naive strings are interpreted in UTC. Fractions of seconds can be provided but are not returned by the API. Example value: 2022-11-25T22:02:42Z",
-                        "format": "date-time",
-                        "type": "string",
-                    },
-                    "github": {
-                        "allOf": [{"$ref": "#/components/schemas/SchemaGitHubCreate"}],
-                        "description": "GitHub-flavored commit information.  Use this object to tell Conbench with which specific state of benchmarked code (repository identifier, commit hash) the BenchmarkResult is associated.  This property is optional. If not provided, it means that this benchmark result is not associated with any particular state of benchmarked code.  Not associating a benchmark result with commit information has special, limited purpose (pre-merge benchmarks, testing). It generally means that this benchmark result will not be considered for time series analysis along a commit tree.  TODO: allow for associating a benchmark result with a repository (URL), w/o providing commit information (cf. issue #1165).",
-                    },
-                    "id": {"type": "string"},
-                    "info": {"description": "Run's metadata", "type": "object"},
-                    "machine_info": {"$ref": "#/components/schemas/MachineCreate"},
-                    "name": {"type": "string"},
-                    "reason": {"type": "string"},
-                },
-                "required": ["id"],
-                "type": "object",
-            },
-            "RunUpdate": {
-                "properties": {
-                    "error_info": {
-                        "description": "Metadata for run's error that prevented all or some benchmarks from running",
-                        "type": "object",
-                    },
-                    "error_type": {
-                        "description": "Run's error type. Possible values: none, catastrophic, partial.\n                    None = all attempted benchmarks are good.\n                    Catastrophic =no benchmarks completed successfully.\n                    Partial = some benchmarks completed, some failed",
-                        "type": "string",
-                    },
-                    "finished_timestamp": {
-                        "description": "A datetime string indicating the time at which the run finished. Expected to be in ISO 8601 notation. Timezone-aware notation recommended. Timezone-naive strings are interpreted in UTC. Fractions of seconds can be provided but are not returned by the API. Example value: 2022-11-25T22:02:42Z",
-                        "format": "date-time",
-                        "type": "string",
-                    },
-                    "info": {"description": "Run's metadata", "type": "object"},
-                },
-                "type": "object",
-            },
+            "RunCreate": {"properties": {}, "type": "object"},
+            "RunUpdate": {"properties": {}, "type": "object"},
             "SchemaGitHubCreate": {
                 "properties": {
                     "branch": {
