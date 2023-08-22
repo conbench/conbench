@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
 import logging
+from datetime import datetime, timezone
 
 from conbench.util import tznaive_dt_to_aware_iso8601_for_api
 
