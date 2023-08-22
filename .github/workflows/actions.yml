@@ -54,7 +54,7 @@ jobs:
             -e ./benchadapt/python \
             -e ./benchconnect \
             -e ./benchrun/python \
-            -e .
+            -e ./legacy
       - name: Build docs, exiting non-zero on warnings (which can be very bad)
         run: make build-docs SPHINXOPTS='-W --keep-going'
 
@@ -178,7 +178,8 @@ jobs:
             -e './benchalerts[dev]' \
             -e ./benchadapt/python \
             -e ./benchconnect \
-            -e ./benchrun/python
+            -e ./benchrun/python \
+            -e './legacy[dev]'
       - name: Test benchclients
         run: |
           pytest -vv benchclients/python/tests
@@ -197,6 +198,9 @@ jobs:
       - name: Test benchconnect
         run: |
           pytest -vv benchconnect
+      - name: Test conbenchlegacy
+        run: |
+          pytest -vv legacy
 
   cb-on-minikube:
     runs-on: ubuntu-latest

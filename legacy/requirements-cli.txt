@@ -1,0 +1,6 @@
+click
+numpy
+psutil
+py-cpuinfo
+PyYAML
+requests
