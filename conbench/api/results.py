@@ -140,6 +140,10 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             to return them all in a single response; use that with caution:
             keep the number of run_ids low or equal to, unless you know better.
 
+            The `run_reason` argument can be provided to obtain benchmark
+            results for a specific run reason. Currently, this will return 55000
+            results.
+
         responses:
             "200": "BenchmarkList"
             "401": "401"
@@ -154,6 +158,10 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
               type: string
           - in: query
             name: run_id
+            schema:
+              type: string
+          - in: query
+            name: run_reason
             schema:
               type: string
         tags:
