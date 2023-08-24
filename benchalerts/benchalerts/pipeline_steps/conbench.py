@@ -104,6 +104,7 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
             raise
 
         run_comparison = RunComparisonInfo(
+            conbench_api_url=self.conbench_client._base_url,
             contender_info=contender_info,
             baseline_run_type=self.baseline_run_type.value,
         )

@@ -37,34 +37,12 @@
                 "os_version": "10.15.7",
                 "type": "machine"
             },
-            "has_errors": false,
             "id": "some_contender",
-            "links": {
-                "commit": "http://localhost/api/commits/some-commit-uuid-1/",
-                "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
-                "list": "http://localhost/api/runs/",
-                "self": "http://localhost/api/runs/some-run-uuid-1/"
-            },
-            "candidate_baseline_runs": {
-                "fork_point": {
-                    "baseline_run_id": null,
-                    "commits_skipped": null,
-                    "error": "the contender run is on the default branch"
-                },
-                "latest_default": {
-                    "baseline_run_id": null,
-                    "commits_skipped": null,
-                    "error": "the contender run is on the default branch"
-                },
-                "parent": {
-                    "baseline_run_id": null,
-                    "commits_skipped": [],
-                    "error": "the contender run is the first commit"
-                }
-            },
-            "name": "some run name",
             "reason": "some run reason",
-            "timestamp": "2021-02-04T17:22:05.225583"
+            "timestamp": "2021-02-04T17:22:05.225583",
+            "tags": {
+                "fake": "tags"
+            }
         }
     ]
 }

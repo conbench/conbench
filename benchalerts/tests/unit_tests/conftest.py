@@ -66,6 +66,9 @@ def conbench_env(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("CONBENCH_PASSWORD", "password")
 
 
+mock_conbench_api_url = "http://localhost/api"
+
+
 @pytest.fixture
 def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
     """Mock a FullComparisonInfo, like something that might be output from a
@@ -131,6 +134,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
+                    conbench_api_url=mock_conbench_api_url,
                     contender_info=_run(
                         has_errors=True, has_baseline=True, has_commit=True
                     ),
@@ -145,6 +149,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
+                    conbench_api_url=mock_conbench_api_url,
                     contender_info=_run(
                         has_errors=True, has_baseline=False, has_commit=True
                     ),
@@ -159,6 +164,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
+                    conbench_api_url=mock_conbench_api_url,
                     contender_info=_run(
                         has_errors=False, has_baseline=False, has_commit=True
                     ),
@@ -173,6 +179,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
+                    conbench_api_url=mock_conbench_api_url,
                     contender_info=_run(
                         has_errors=False, has_baseline=False, has_commit=True
                     ),
@@ -181,6 +188,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
                     benchmark_results=_results(has_errors=False),
                 ),
                 RunComparisonInfo(
+                    conbench_api_url=mock_conbench_api_url,
                     contender_info=_run(
                         has_errors=False, has_baseline=True, has_commit=True
                     ),
@@ -189,6 +197,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
                     benchmark_results=None,
                 ),
                 RunComparisonInfo(
+                    conbench_api_url=mock_conbench_api_url,
                     contender_info=_run(
                         has_errors=False, has_baseline=True, has_commit=True
                     ),
@@ -202,6 +211,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
+                    conbench_api_url=mock_conbench_api_url,
                     contender_info=_run(
                         has_errors=False, has_baseline=True, has_commit=True
                     ),
@@ -216,6 +226,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
+                    conbench_api_url=mock_conbench_api_url,
                     contender_info=_run(
                         has_errors=False, has_baseline=False, has_commit=False
                     ),
@@ -232,6 +243,7 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return FullComparisonInfo(
             [
                 RunComparisonInfo(
+                    conbench_api_url=mock_conbench_api_url,
                     contender_info=_run(
                         has_errors=False, has_baseline=False, has_commit=True
                     ),
