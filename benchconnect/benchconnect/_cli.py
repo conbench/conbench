@@ -6,7 +6,6 @@ from benchclients.logging import log
 import benchconnect._augment as _augment
 import benchconnect._finish as _finish
 import benchconnect._post as _post
-import benchconnect._put as _put
 import benchconnect._start as _start
 import benchconnect._submit as _submit
 from benchconnect.utils import ENV_VAR_HELP
@@ -25,7 +24,6 @@ def augment():
 
 
 augment.add_command(_augment.result, name="result")
-augment.add_command(_augment.run, name="run")
 
 
 @cli.group(help="Post something to a Conbench API" + ENV_VAR_HELP)
@@ -34,15 +32,6 @@ def post():
 
 
 post.add_command(_post.result, name="result")
-post.add_command(_post.run, name="run")
-
-
-@cli.group(help="Put something to a Conbench API" + ENV_VAR_HELP)
-def put():
-    pass
-
-
-put.add_command(_put.run, name="run")
 
 
 @cli.group(help="Start a stateful operation" + ENV_VAR_HELP)
