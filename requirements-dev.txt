@@ -10,7 +10,7 @@ pytest>=7.0.0
 pylint
 mypy
 myst-parser
-sphinx
+sphinx==7.1.2
 sphinx-autodoc-typehints
 types-beautifulsoup4
 types-psutil

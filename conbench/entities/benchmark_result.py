@@ -2,9 +2,11 @@ import functools
 import logging
 import math
 import statistics
+import time
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from urllib.parse import urlparse
 
 import flask as f
 import marshmallow
@@ -12,7 +14,6 @@ import numpy as np
 import sigfig
 import sqlalchemy as s
 from sqlalchemy import CheckConstraint as check
-from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, relationship
 
@@ -32,11 +33,23 @@ from ..entities._entity import (
     to_float,
 )
 from ..entities.case import Case
-from ..entities.commit import TypeCommitInfoGitHub
+from ..entities.commit import (
+    Commit,
+    CommitSerializer,
+    TypeCommitInfoGitHub,
+    backfill_default_branch_commits,
+    get_github_commit_metadata,
+)
 from ..entities.context import Context
-from ..entities.hardware import ClusterSchema, MachineSchema
+from ..entities.hardware import (
+    Cluster,
+    ClusterSchema,
+    Hardware,
+    HardwareSerializer,
+    Machine,
+    MachineSchema,
+)
 from ..entities.info import Info
-from ..entities.run import Run, SchemaGitHubCreate, github_commit_info_descr
 
 log = logging.getLogger(__name__)
 
@@ -52,24 +65,24 @@ class BenchmarkResult(Base, EntityMixin):
     info_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("info.id"))
     context_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("context.id"))
 
-    # Follow
-    # https://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#one-to-many
-    # There is a one-to-many relationship between Run (one) and BenchmarkResult
-    # (0, 1, many). Result is child. Run is parent. Child has column with
-    # foreign key, pointing to parent.
-    run_id: Mapped[str] = NotNull(s.Text, s.ForeignKey("run.id"))
+    # An arbitrary string to group results by CI run. There are no assertions that this
+    # string is non-empty.
+    run_id: Mapped[str] = NotNull(s.Text)
+    # Arbitrary tags for this CI run. Can be empty but not null. Has to be a flat
+    # str/str mapping, and no key can be an empty string.
+    run_tags: Mapped[Dict[str, str]] = NotNull(postgresql.JSONB)
+    # A special tag that's often used in the UI, API, and DB queries.
+    run_reason: Mapped[Optional[str]] = Nullable(s.Text)
 
-    # Between Run (one) and Result (many) there is a one-to-many relationship
-    # that we want to tell SQLAlchemy af ew things about via the following
-    # `relationship()` call. Note that `lazy="select"` is a sane default here.
-    # It means that another SELECT statement is issued upon attribute access
-    # time. `select=immediate` would mean that items are to be loaded from the
-    # DBas the parent is loaded, using a separate SELECT statement _per child_
-    # (which did bite us, in particular for those Run entities associated with
-    # O(1000) Result entities, i.e. hundreds of thousands of SELECT queries
-    # were emitted for building the landing page. A joined query can always be
-    # performed on demand.
-    run: Mapped[Run] = relationship("Run", lazy="select", back_populates="results")
+    # The type annotation makes this a nullable many-to-one relationship.
+    # https://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#nullable-many-to-one
+    # A nullable many-to-one relationship between Commit (one) and potentially
+    # many results, but a result can also _not_ point to a commit.
+    commit_id: Mapped[Optional[str]] = Nullable(s.ForeignKey("commit.id"))
+    commit: Mapped[Optional[Commit]] = relationship("Commit", lazy="joined")
+
+    hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
+    hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
 
     # `data` holds the numeric values derived from N repetitions of the same
     # measurement (experiment). These can be empty lists. An item in the list
@@ -154,14 +167,13 @@ class BenchmarkResult(Base, EntityMixin):
 
         Attempt to write result to database.
 
-        Create associated Run, Case, Context, Info entities in DB if required.
+        Create associated Case, Context, Info entities in DB if required.
 
         Raises BenchmarkResultValidationError, exc message is expected to be
         emitted to the HTTP client in a Bad Request response.
         """
 
         validate_and_augment_result_tags(userres)
-        validate_run_result_consistency(userres)
 
         # The dict that is used for DB insertion later, populated below.
         result_data_for_db: Dict = {}
@@ -223,38 +235,27 @@ class BenchmarkResult(Base, EntityMixin):
         case = Case.get_or_create({"name": benchmark_name, "tags": tags})
         context = Context.get_or_create({"tags": userres["context"]})
         info = Info.get_or_create({"tags": userres.get("info", {})})
-
-        # Create a corresponding `Run` entity in the database if it doesn't
-        # exist yet. Use the user-given `id` (string) as primary key. If the
-        # Run is already known in the database then only update the
-        # `has_errors` property, if necessary. All other run-specific
-        # properties provided as part of this BenchmarkResultCreate structure
-        # (like `machine_info` and `run_name`) get silently ignored.
-        run = Run.first(id=userres["run_id"])
-        if run:
-            if "error" in userres:
-                run.has_errors = True
-                run.save()
+        if "machine_info" in userres:
+            hardware = Machine.get_or_create(userres["machine_info"])
         else:
-            hardware_info_field = (
-                "machine_info" if "machine_info" in userres else "cluster_info"
+            hardware = Cluster.get_or_create(userres["cluster_info"])
+
+        user_given_commit_info: Optional[TypeCommitInfoGitHub] = userres.get("github")
+        commit = None
+        if user_given_commit_info is not None:
+            commit = commit_fetch_info_and_create_in_db_if_not_exists(
+                user_given_commit_info
             )
-            Run.create(
-                {
-                    "id": userres["run_id"],
-                    "name": userres.pop("run_name", None),
-                    "reason": userres.pop("run_reason", None),
-                    "github": userres.pop("github", None),
-                    hardware_info_field: userres.pop(hardware_info_field),
-                    "has_errors": "error" in userres,
-                }
-            )
-            # The above's `create()` might fail (race condition), in which case
-            # we can re-read, but then we also have to call
-            # `validate_run_result_consistency(userres)` one more time (because
-            # _we_ are not the ones who created the Run).
 
         result_data_for_db["run_id"] = userres["run_id"]
+        result_data_for_db["run_tags"] = userres.get("run_tags") or {}
+        result_data_for_db["run_reason"] = userres.get("run_reason")
+
+        # Legacy behavior: divert run_name into run_tags, if name is not already present
+        # in run_tags.
+        if "run_name" in userres and "name" not in result_data_for_db["run_tags"]:
+            result_data_for_db["run_tags"]["name"] = userres["run_name"]
+
         result_data_for_db["batch_id"] = userres["batch_id"]
 
         # At this point `data["timestamp"]` is expected to be a tz-aware
@@ -272,6 +273,8 @@ class BenchmarkResult(Base, EntityMixin):
         )
         result_data_for_db["info_id"] = info.id
         result_data_for_db["context_id"] = context.id
+        result_data_for_db["hardware_id"] = hardware.id
+        result_data_for_db["commit_id"] = commit.id if commit else None
         benchmark_result = BenchmarkResult(**result_data_for_db)
         benchmark_result.save()
 
@@ -305,9 +308,23 @@ class BenchmarkResult(Base, EntityMixin):
         # the tags as injected.
         tags = {"name": case.name}
         tags.update(case.tags)
+
+        if benchmark_result.commit:
+            commit_dict = CommitSerializer().one.dump(benchmark_result.commit)
+            commit_dict.pop("links", None)
+        else:
+            commit_dict = None
+
+        hardware_dict = HardwareSerializer().one.dump(benchmark_result.hardware)
+        hardware_dict.pop("links", None)
+
         return {
             "id": benchmark_result.id,
             "run_id": benchmark_result.run_id,
+            "run_tags": benchmark_result.run_tags,
+            "run_reason": benchmark_result.run_reason,
+            "commit": commit_dict,
+            "hardware": hardware_dict,
             "batch_id": benchmark_result.batch_id,
             "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
                 benchmark_result.timestamp
@@ -508,20 +525,17 @@ class BenchmarkResult(Base, EntityMixin):
         """
         Return hardware-representing short string, including user-given name
         and ID prefix.
-
-        The indirection here through `self.run` is interesting, might trigger
-        database interaction.
         """
-        hw = self.run.hardware
+        hw = self.hardware
         if len(hw.name) > 15:
             return f"{hw.id[:4]}: " + hw.name[:15]
 
         return f"{hw.id[:4]}: " + hw.name
 
     def ui_commit_url_anchor(self) -> str:
-        if self.run.commit is None:
+        if self.commit is None:
             return '<a href="#">n/a</a>'
-        return f'<a href="{self.run.commit.commit_url}">{self.run.commit.hash[:7]}</a>'
+        return f'<a href="{self.commit.commit_url}">{self.commit.hash[:7]}</a>'
 
     @functools.cached_property
     def unitsymbol(self) -> Optional[conbench.units.TUnit]:
@@ -533,6 +547,22 @@ class BenchmarkResult(Base, EntityMixin):
         assert self.unit
 
         return conbench.units.legacy_convert(self.unit)
+
+    @property
+    def associated_commit_repo_url(self) -> str:
+        """
+        Always return a string. Return URL or "n/a".
+
+        This is for those consumers that absolutely need to have a string type
+        representation.
+        """
+        if self.commit and self.commit.repo_url is not None:
+            return self.commit.repo_url
+
+        # This means that the result is not associated with any commit, or it is
+        # associated with a legacy/invalid commit object in the database, one
+        # that does not have a repository URL set.
+        return "n/a"
 
 
 def ui_rel_sem(values: List[float]) -> Tuple[str, str]:
@@ -886,51 +916,118 @@ def validate_and_augment_result_tags(userres: Any):
             )
 
 
-def validate_run_result_consistency(userres: Any) -> None:
+def commit_fetch_info_and_create_in_db_if_not_exists(
+    ghcommit: TypeCommitInfoGitHub,
+) -> Commit:
     """
-    Read Run from database, based on userres["run_id"].
+    Insert new Commit entity into database if required.
 
-    Check for consistency between Result data and Run data.
+    If Commit not yet known in database: fetch data about commit (and related
+    commits) from GitHub HTTP API if possible. Exceptions during this process
+    are logged and otherwise swallowed.
 
-    Raise BenchmarkResultValidationError in case there is a mismatch.
+    Return Commit.id (DB primary key) of existing Commit entity or of newly
+    created one. Expect database collision upon insert (in this case the ID for
+    the existing commit entity is returned).
 
-    This is a noop if the Run does not exist yet.
-
-    Be sure to call this (latest) right before writing a BenchmarkResult object
-    into the database, and after having created the Run object in the database.
+    Has slightly ~unpredictable run duration as of interaction with GitHub HTTP
+    API.
     """
-    run = current_session.scalars(
-        select(Run).where(Run.id == userres["run_id"])
-    ).first()
 
-    if run is None:
-        return
+    def _guts(cinfo: TypeCommitInfoGitHub) -> Tuple[Commit, bool]:
+        """
+        Return a Commit object or raise `sqlalchemy.exc.IntegrityError`.
 
-    # TODO: specification -- if userres.get("github") is None and if the Run
-    # has associated commit information -- then consider this as a conflict or
-    # not? what about branch name and PR number?
+        The boolean return value means "created", is `False` if the first
+        query for the commit object succeeds, else `True.
+        """
+        # Try to see if commit is already database. This is an optimization, to
+        # not needlessly interact with the GitHub HTTP API in case the commit
+        # is already in the database. first(): "Return the first result of this
+        # Query or None if the result doesn’t contain any row.""
+        dbcommit = Commit.first(sha=cinfo["commit_hash"], repository=cinfo["repo_url"])
 
-    # The property should not be called "github", this confuses me each
-    # time I deal with that. This is the "github-flavored commit info".
+        if dbcommit is not None:
+            return dbcommit, False
 
-    gh_commit_info: Optional[TypeCommitInfoGitHub] = userres.get("github")
-    if gh_commit_info is not None:
-        chrun = run.commit.hash if run.commit else None
-        chresult = gh_commit_info["commit_hash"]
-        if chrun != chresult:
-            raise BenchmarkResultValidationError(
-                f"Result refers to commit hash '{chresult}', but Run '{run.id}' "
-                f"refers to commit hash '{chrun}'"
+        # Try to fetch metadata for commit via GitHub HTTP API. Fall back
+        # gracefully if that does not work.
+        gh_commit_metadata_dict = None
+        try:
+            # get_github_commit_metadata() may raise all those exceptions that can
+            # happen during an HTTP request cycle. The repository might
+            # for example not exist: Unexpected GitHub HTTP API response: <Response [404]
+            gh_commit_metadata_dict = get_github_commit_metadata(cinfo)
+        except Exception as exc:
+            log.info(
+                "treat as unknown context: error during get_github_commit_metadata(): %s",
+                exc,
             )
 
-        # Cannot do this yet, this is too complicated as of None/empty
-        # string confusion repo_url_run = run.commit.repo_url
-        # repo_url_result = userres["github"]["repository"] if
-        # repo_url_run != repo_url_result: raise
-        #     BenchmarkResultValidationError( f"Result refers to
-        #         repository URL '{repo_url_result}', but Run
-        #         '{run.id}' " f"refers to repository URL
-        #     '{repo_url_run}'" )
+        if gh_commit_metadata_dict:
+            # We got data from GitHub. Insert into database.
+            dbcommit = Commit.create_github_context(
+                cinfo["commit_hash"], cinfo["repo_url"], gh_commit_metadata_dict
+            )
+
+            # The commit is known to GitHub. Fetch more data from GitHub.
+            # Gracefully degrade if that does not work.
+            try:
+                backfill_default_branch_commits(cinfo["repo_url"], dbcommit)
+            except Exception as exc:
+                # Any error during this backfilling operation should not fail
+                # the HTTP request processing (we're right now in the middle of
+                # processing an HTTP request with new benchmark run data).
+                log.info(
+                    "Could not backfill default branch commits. Ignoring error "
+                    "during backfill_default_branch_commits():  %s",
+                    exc,
+                )
+                raise
+            return dbcommit, True
+
+        # Fetching metadata from GitHub failed. Store most important bits in
+        # database.
+        dbcommit = Commit.create_unknown_context(
+            commit_hash=cinfo["commit_hash"], repo_url=cinfo["repo_url"]
+        )
+        return dbcommit, True
+
+    created: bool = False
+    t0 = time.monotonic()
+    try:
+        # `_guts()` is expected to raise IntegrityError when a concurrent racer
+        # did insert the Commit object by now. This can happen, also see
+        # https://github.com/conbench/conbench/issues/809
+        commit, created = _guts(ghcommit)
+    except s.exc.IntegrityError as exc:
+        # Expected error example:
+        #  sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) \
+        #    duplicate key value violates unique constraint "commit_index"
+        log.info("Ignored IntegrityError while inserting Commit: %s", exc)
+        # Look up the Commit entity again because this function must return the
+        # commit ID (DB primary key).
+        current_session.rollback()
+        commit = Commit.first(
+            sha=ghcommit["commit_hash"], repository=ghcommit["repo_url"]
+        )
+
+        # After IntegrityError we assume that Commit exists in DB. Encode
+        # assumption, for easier debugging.
+        assert commit is not None
+
+    d_seconds = time.monotonic() - t0
+
+    # Only log when the commit object was inserted (keep logs interesting,
+    # reduce verbosity).
+    if created:
+        log.info(
+            "commit_fetch_info_and_create_in_db_if_not_exists(%s) inserted, took %.3f s",
+            ghcommit,
+            d_seconds,
+        )
+
+    return commit
 
 
 s.Index("benchmark_result_run_id_index", BenchmarkResult.run_id)
@@ -947,6 +1044,16 @@ s.Index("benchmark_result_context_id_index", BenchmarkResult.context_id)
 # We order by benchmark_result.timestamp in /api/benchmarks/ -- that wants
 # and index!
 s.Index("benchmark_result_timestamp_index", BenchmarkResult.timestamp)
+
+
+class _Serializer(EntitySerializer):
+    def _dump(self, benchmark_result):
+        return benchmark_result.to_dict_for_json_api()
+
+
+class BenchmarkResultSerializer:
+    one = _Serializer()
+    many = _Serializer(many=True)
 
 
 class BenchmarkResultStatsSchema(marshmallow.Schema):
@@ -1099,16 +1206,167 @@ class BenchmarkResultStatsSchema(marshmallow.Schema):
     )
 
 
-class _Serializer(EntitySerializer):
-    def _dump(self, benchmark_result):
-        return benchmark_result.to_dict_for_json_api()
+class SchemaGitHubCreate(marshmallow.Schema):
+    """
+    GitHub-flavored commit info object
+    """
+
+    @marshmallow.pre_load
+    def change_empty_string_to_none(self, data, **kwargs):
+        """For the specific situation of empty string being provided,
+        treat this a None, _before_ schema validation.
+
+        This for example alles the client to set pr_number to an empty string
+        and this has the same meaning as setting it to `null` in the JSON doc.
+
+        Otherwise, an empty string results in 'Not a valid integer' (for
+        pr_number, at least).
+        """
+        for k in ("pr_number", "branch"):
+            if data.get(k) == "":
+                data[k] = None
+
+        return data
+
+    commit = marshmallow.fields.String(
+        required=True,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                The commit hash of the benchmarked code.
+
+                Must not be an empty string.
+
+                Expected to be a known commit in the repository as specified
+                by the `repository` URL property below.
+                """
+            )
+        },
+    )
+    repository = marshmallow.fields.String(
+        # Does this allow for empty strings or not?
+        # Unclear, after reading marshmallow docs. Testes this. Yes, this
+        # allows for empty string:
+        # https://github.com/marshmallow-code/marshmallow/issues/76#issuecomment-1473348472
+        required=True,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                URL pointing to the benchmarked GitHub repository.
+
+                Must be provided in the format https://github.com/org/repo.
+
+                Trailing slashes are stripped off before database insertion.
+
+                As of the time of writing, only URLs starting with
+                "https://github.com" are allowed. Conbench interacts with the
+                GitHub HTTP API in order to fetch information about the
+                benchmarked repository. The Conbench user/operator is expected
+                to ensure that Conbench is configured with a GitHub HTTP API
+                authentication token that is privileged to read commit
+                information for the repository specified here.
+
+                Support for non-GitHub repositories (e.g. GitLab) or auxiliary
+                repositories is interesting, but not yet well specified.
+                """
+            )
+        },
+    )
+    pr_number = marshmallow.fields.Integer(
+        required=False,
+        allow_none=True,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                If set, this needs to be an integer or a stringified integer.
+
+                This is the recommended way to indicate that this benchmark
+                result has been obtained for a specific pull request branch.
+                Conbench will use this pull request number to (try to) obtain
+                branch information via the GitHub HTTP API.
+
+                Set this to `null` or leave this out to indicate that this
+                benchmark result has been obtained for the default branch.
+                """
+            )
+        },
+    )
+    branch = marshmallow.fields.String(
+        # All of these pass schema validation: empty string, non-empty-string,
+        # null
+        required=False,
+        allow_none=True,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                This is an alternative way to indicate that this benchmark
+                result has been obtained for a commit that is not on the
+                default branch. Do not use this for GitHub pull requests (use
+                the `pr_number` argument for that, see above).
+
+                If set, this needs to be a string of the form `org:branch`.
+
+                Warning: currently, if `branch` and `pr_number` are both
+                provided, there is no error and `branch` takes precedence. Only
+                use this when you know what you are doing.
+                """
+            )
+        },
+    )
+
+    @marshmallow.validates_schema
+    def validate_props(self, data, **kwargs):
+        url = data["repository"]
+
+        # Undocumented: transparently rewrite git@ to https:// URL -- let's
+        # drop this in the future. Context:
+        # https://github.com/conbench/conbench/pull/1134#discussion_r1170222541
+        if url.startswith("git@github.com:"):
+            url = url.replace("git@github.com:", "https://github.com/")
+            data["repository"] = url
+
+        if not url.startswith("https://github.com"):
+            raise marshmallow.ValidationError(
+                f"'repository' must be a URL, starting with 'https://github.com', got `{url}`"
+            )
+
+        try:
+            urlparse(url)
+        except ValueError as exc:
+            raise marshmallow.ValidationError(
+                f"'repository' failed URL validation: `{exc}`"
+            )
+
+        if not len(data["commit"]):
+            raise marshmallow.ValidationError("'commit' must be a non-empty string")
+
+    @marshmallow.post_load
+    def turn_into_predictable_return_type(self, data, **kwargs) -> TypeCommitInfoGitHub:
+        """
+        We really have to look into schema-inferred tight types, this here is a
+        quick workaround for the rest of the code base to be able to work with
+        `TypeCommitInfoGitHub`.
+        """
+
+        url: str = data["repository"].rstrip("/")
+        commit_hash: str = data["commit"]
+        # If we do not re-add this here as `None` then this property is _not_
+        # part of the output dictionary if the user left this key out of
+        # their JSON object
+        pr_number: Optional[int] = data.get("pr_number")
+        branch: Optional[str] = data.get("branch")
+
+        result: TypeCommitInfoGitHub = {
+            "repo_url": url,
+            "commit_hash": commit_hash,
+            "pr_number": pr_number,
+            "branch": branch,
+        }
+
+        return result
 
 
-class BenchmarkResultSerializer:
-    one = _Serializer()
-    many = _Serializer(many=True)
-
-
+# This is used in two places below.
 CHANGE_ANNOTATIONS_DESC = """Post-analysis annotations about this BenchmarkResult that
 give details about whether it represents a change, outlier, etc. in the overall
 distribution of BenchmarkResults.
@@ -1128,9 +1386,41 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Identifier for a Run (required). This can be the ID of a known
-                Run (as returned by /api/runs) or a new ID in which case a new
-                Run entity is created in the database.
+                Arbitrary identifier that you can use to group benchmark results.
+                Typically used for a "run" of benchmarks (i.e. a single run of a CI
+                pipeline) on a single commit and hardware. Required.
+
+                The API does not ensure uniqueness (and, correspondingly, does not
+                detect collisions). If your use case relies on this grouping construct
+                then use a client-side ID generation scheme with negligible likelihood
+                for collisions (e.g., UUID type 4 or similar).
+
+                The Conbench UI and API assume that all benchmark results with the same
+                `run_id` share the same `run_tags`, `run_reason`, hardware, and commit.
+                There is no technical enforcement of this on the server side, so some
+                behavior may not work as intended if this assumption is broken by the
+                client.
+                """
+            )
+        },
+    )
+    run_tags = marshmallow.fields.Dict(
+        required=False,
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                An optional mapping of arbitrary keys and values that describe the CI
+                run. These are used to group and filter runs in the UI and API. Do not
+                include `run_reason` here; it should be provided below.
+
+                For legacy reasons, if `run_name` is given when POSTing a benchmark
+                result, it will be added to `run_tags` automatically under the `name`
+                key. This will be its new permanent home.
+
+                The Conbench UI and API assume that all benchmark results with the same
+                `run_id` share the same `run_tags`. There is no technical enforcement of
+                this on the server side, so some behavior may not work as intended if
+                this assumption is broken by the client.
                 """
             )
         },
@@ -1138,14 +1428,7 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
     run_name = marshmallow.fields.String(
         required=False,
         metadata={
-            "description": conbench.util.dedent_rejoin(
-                """
-                Name for the Run (optional, does not need to be unique). Can be
-                useful for implementing a custom naming convention. For
-                organizing your benchmarks, and for enhanced search &
-                discoverability. Ignored when Run was previously created.
-                """
-            )
+            "description": "A legacy attribute. Use `run_tags` instead. Optional."
         },
     )
     run_reason = marshmallow.fields.String(
@@ -1153,8 +1436,14 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Reason for the Run (optional, does not need to be unique).
-                Ignored when Run was previously created.
+                Reason for the run (optional, does not need to be unique). A
+                low-cardinality tag like `"commit"` or `"pull-request"`, used to group
+                and filter runs, with special treatment in the UI and API.
+
+                The Conbench UI and API assume that all benchmark results with the same
+                `run_id` share the same `run_reason`. There is no technical enforcement
+                of this on the server side, so some behavior may not work as intended if
+                this assumption is broken by the client.
                 """
             )
         },
@@ -1193,9 +1482,12 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Precisely one of `machine_info` and `cluster_info` must be
-                provided. The data is however ignored when the Run (referred to
-                by `run_id`) was previously created.
+                Precisely one of `machine_info` and `cluster_info` must be provided.
+
+                The Conbench UI and API assume that all benchmark results with the same
+                `run_id` share the same hardware. There is no technical enforcement of
+                this on the server side, so some behavior may not work as intended if
+                this assumption is broken by the client.
                 """
             )
         },
@@ -1206,9 +1498,12 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                Precisely one of `machine_info` and `cluster_info` must be
-                provided. The data is however ignored when the Run (referred to
-                by `run_id`) was previously created.
+                Precisely one of `machine_info` and `cluster_info` must be provided.
+
+                The Conbench UI and API assume that all benchmark results with the same
+                `run_id` share the same hardware. There is no technical enforcement of
+                this on the server side, so some behavior may not work as intended if
+                this assumption is broken by the client.
                 """
             )
         },
@@ -1341,11 +1636,48 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
     github = marshmallow.fields.Nested(
         SchemaGitHubCreate(),
         required=False,
-        metadata={"description": github_commit_info_descr},
+        metadata={
+            "description": conbench.util.dedent_rejoin(
+                """
+                GitHub-flavored commit information.
+
+                Use this object to tell Conbench with which specific state of
+                benchmarked code (repository identifier, commit hash) the
+                BenchmarkResult is associated.
+
+                This property is optional. If not provided, it means that this benchmark
+                result is not associated with any particular state of benchmarked code.
+
+                Not associating a benchmark result with commit information has special,
+                limited purpose (pre-merge benchmarks, testing). It generally means that
+                this benchmark result will not be considered for time series analysis
+                along a commit tree.
+
+                TODO: allow for associating a benchmark result with a repository (URL),
+                w/o providing commit information (cf. issue #1165).
+                """
+            )
+        },
     )
     change_annotations = marshmallow.fields.Dict(
         required=False, metadata={"description": CHANGE_ANNOTATIONS_DESC}
     )
+
+    @marshmallow.validates_schema
+    def validate_run_tags_schema(self, data, **kwargs):
+        if "run_tags" not in data:
+            return
+
+        if not isinstance(data["run_tags"], dict):
+            raise marshmallow.ValidationError("run_tags must be a map object")
+
+        for key, value in data["run_tags"].items():
+            if not isinstance(key, str) or len(key) == 0:
+                raise marshmallow.ValidationError(
+                    "run_tags keys must be non-empty strings"
+                )
+            if not isinstance(value, str):
+                raise marshmallow.ValidationError("run_tags values must be strings")
 
     @marshmallow.validates_schema
     def validate_hardware_info_fields(self, data, **kwargs):

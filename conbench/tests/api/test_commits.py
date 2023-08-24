@@ -10,7 +10,7 @@ def _expected_entity(commit, parent=None):
 def create_commit():
     _fixtures.benchmark_result(sha=_fixtures.PARENT)
     benchmark_result = _fixtures.benchmark_result()
-    return benchmark_result.run.commit
+    return benchmark_result.commit
 
 
 class TestCommitGet(_asserts.GetEnforcer):
@@ -59,8 +59,8 @@ class TestCommitList(_asserts.ListEnforcer):
         response = client.get(f"/api/commits/?commit={sha1},{sha2}")
 
         self.assert_200_ok(
-            response, contains=_expected_entity(benchmark_result_1.run.commit)
+            response, contains=_expected_entity(benchmark_result_1.commit)
         )
         self.assert_200_ok(
-            response, contains=_expected_entity(benchmark_result_2.run.commit)
+            response, contains=_expected_entity(benchmark_result_2.commit)
         )

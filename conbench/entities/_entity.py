@@ -139,7 +139,7 @@ class EntityMixin(Generic[T]):
 
     @classmethod
     def first(cls, **kwargs):
-        return current_session.scalars(select(cls).filter_by(**kwargs)).first()
+        return current_session.scalars(select(cls).filter_by(**kwargs).limit(1)).first()
 
     @classmethod
     def delete_all(cls):

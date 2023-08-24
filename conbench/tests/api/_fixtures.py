@@ -1,11 +1,10 @@
 import copy
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Tuple
 
 from ...db import _session as dbsession
-from ...entities.benchmark_result import BenchmarkResult
+from ...entities.benchmark_result import BenchmarkResult, SchemaGitHubCreate
 from ...entities.commit import Commit
-from ...entities.run import SchemaGitHubCreate
 from ...runner import Conbench
 from ...tests.helpers import _uuid
 
@@ -50,6 +49,7 @@ VALID_RESULT_PAYLOAD = {
     "run_id": "2a5709d179f349cba69ed242be3e6321",
     "run_name": "commit: 02addad336ba19a654f9c857ede546331be7b631",
     "run_reason": "commit",
+    "run_tags": {"arbitrary": "tags"},
     "batch_id": "7b2fdd9f929d47b9960152090d47f8e6",
     "timestamp": "2020-11-25T21:02:44Z",
     "context": {
@@ -234,6 +234,7 @@ def benchmark_result(
     reason=None,
     one_sample_no_mean=False,
     no_github=False,
+    timestamp=None,
 ):
     """Create BenchmarkResult and directly write to database.
 
@@ -280,6 +281,8 @@ def benchmark_result(
         data["github"]["branch"] = commit.branch
     if no_github:
         del data["github"]
+    if timestamp:
+        data["timestamp"] = timestamp
 
     # do at least a bit of what the HTTP path would do; this ensures that the
     # output type is TypeCommitInfoGitHub
@@ -427,6 +430,7 @@ def gen_fake_data(
                     name=name,
                     pull_request=commit.branch == "branch" if commit else False,
                     one_sample_no_mean=one_sample_no_mean,
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                 )
             )
         else:
@@ -437,6 +441,7 @@ def gen_fake_data(
                     name=name,
                     pull_request=commit.branch == "branch" if commit else False,
                     one_sample_no_mean=one_sample_no_mean,
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                 )
             )
 

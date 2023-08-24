@@ -160,8 +160,8 @@ def test_get_history():
             cast(TBenchmarkName, str(benchmark_result.case.name)),
             benchmark_result.case_id,
             benchmark_result.context_id,
-            benchmark_result.run.hardware.hash,
-            benchmark_result.run.commit.repository,
+            benchmark_result.hardware.hash,
+            benchmark_result.commit.repository,
         )
         actual_benchmark_result_ids = {
             row.benchmark_result_id for row in actual_history
@@ -187,7 +187,7 @@ def test_set_z_scores(
     ), "you should test all benchmark_results"
 
     for benchmark_result in benchmark_results:
-        baseline_commit = get_baseline_func(benchmark_result.run.commit)
+        baseline_commit = get_baseline_func(benchmark_result.commit)
         if baseline_commit:
             set_z_scores(
                 contender_benchmark_results=[benchmark_result],
@@ -227,7 +227,7 @@ def test_set_z_scores(
     expected_z_scores = EXPECTED_Z_SCORES[strategy_name] + [-52.9993797469743]
 
     for benchmark_result in benchmark_results:
-        baseline_commit = get_baseline_func(benchmark_result.run.commit)
+        baseline_commit = get_baseline_func(benchmark_result.commit)
         if baseline_commit:
             set_z_scores(
                 contender_benchmark_results=[benchmark_result],
@@ -264,7 +264,7 @@ def test_set_z_scores_with_distribution_change(
 
     # Mark the BenchmarkResult on commit 44444 as a distribution change
     for benchmark_result in benchmark_results:
-        if benchmark_result.run.commit.sha == "44444":
+        if benchmark_result.commit.sha == "44444":
             benchmark_result.update(
                 {"change_annotations": {"begins_distribution_change": True}}
             )
@@ -274,7 +274,7 @@ def test_set_z_scores_with_distribution_change(
     ), "you should test all benchmark_results"
 
     for benchmark_result in benchmark_results:
-        baseline_commit = get_baseline_func(benchmark_result.run.commit)
+        baseline_commit = get_baseline_func(benchmark_result.commit)
         if baseline_commit:
             set_z_scores(
                 contender_benchmark_results=[benchmark_result],

@@ -13,7 +13,6 @@ from conbench.entities import (  # noqa  # isort:skip
     context as _,
     info,
     hardware,
-    run,
     benchmark_result,
     user,
 )

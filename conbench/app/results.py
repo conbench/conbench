@@ -147,22 +147,13 @@ class RunMixin:
 
     def _augment(self, run):
         self._display_time(run, "timestamp")
-        run["display_name"] = ""
-        if run["name"]:
-            run["display_name"] = run["name"].split(":", 1)[0]
+
+        run["tags_json_doc_for_ui"] = json.dumps(run["tags"], indent=2)
 
         c = run["commit"]
         # If this run isn't associated with a commit, do no more augmentation
         if not c:
             return
-
-        run["info_json_doc_for_ui"] = ""
-        if run["info"]:
-            run["info_json_doc_for_ui"] = json.dumps(run["info"], indent=2)
-
-        run["error_info_doc_for_ui"] = ""
-        if run["error_info"]:
-            run["error_info_doc_for_ui"] = json.dumps(run["error_info"], indent=2)
 
         # Note(JP): `run["commit"]["timestamp"]` can be `None`, see
         # https://github.com/conbench/conbench/pull/651

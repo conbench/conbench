@@ -1,21 +1,16 @@
+import datetime
 import logging
 from collections import defaultdict
-from dataclasses import dataclass
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 import flask
-from sqlalchemy import select
 
-import conbench.util
-from conbench.bmrt import bmrt_cache
-from conbench.dbsession import current_session
-
+from ..api.runs import RunAggregate, get_all_run_info
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app.results import RunMixin
 from ..config import Config
-from ..entities.run import Run
 
 log = logging.getLogger(__name__)
 
@@ -49,47 +44,20 @@ class Index(AppEndpoint, RunMixin):
         if resp is not None:
             return resp
 
-        # Following
-        # https://docs.sqlalchemy.org/en/20/orm/queryguide/select.html#selecting-orm-entities
-        runs = current_session.scalars(
-            select(Run).order_by(Run.timestamp.desc()).limit(1000)
-        ).all()
+        # Get run info from benchmark results in the last 30 days.
+        all_run_info = get_all_run_info(
+            min_time=datetime.datetime.now(datetime.timezone.utc)
+            - datetime.timedelta(days=30),
+            max_time=datetime.datetime.now(datetime.timezone.utc),
+        )
+        # Note(JP): group runs by associated commit.repository value.
+        reponame_runs_map: Dict[str, List[RunAggregate]] = defaultdict(list)
 
-        # Note(JP): group runs by associated commit.repository value. Note that
-        # consistency between benchmark results in the run is currently not
-        # granted: https://github.com/conbench/conbench/issues/864
-
-        reponame_runs_map: Dict[str, List[RunForDisplay]] = defaultdict(list)
-
-        for r in runs:
-            # Feed per-run result count from BMRT cache so that at least for
-            # the last few runs (or all of them; depends on usage pattern) the
-            # data is ~correct. At the boundary, the count is permanently wrong
-            # (single run partially represented in BMRT cache, true for
-            # probably just one of many runs). That's fine, the UI does not
-            # claim real-time truth in that regard. In the vast majority of the
-            # cases we want a ~correct result count per run only for the last
-            # ~10 runs, and that is provided by this approach.
-            result_count = "n/a"
-            if r.id in bmrt_cache["by_run_id"]:
-                result_count = str(len(bmrt_cache["by_run_id"][r.id]))
-
-            rd = RunForDisplay(
-                ctime_for_table=r.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"),
-                commit_message_short=conbench.util.short_commit_msg(
-                    r.commit.message if r.commit else ""
-                ),
-                # We cannot fetch all last-1000-run-related BenchmarkResult
-                # objects each time we render the landing page. See
-                # https://github.com/conbench/conbench/issues/977 However, we
-                # use a pragmatic way to still display a per-run result
-                # count (estimate).
-                result_count=result_count,
-                run=r,
+        for run in all_run_info:
+            rname = repo_url_to_display_name(
+                run.earliest_result.associated_commit_repo_url
             )
-
-            rname = repo_url_to_display_name(r.associated_commit_repo_url)
-            reponame_runs_map[rname].append(rd)
+            reponame_runs_map[rname].append(run)
 
         # A quick decision for now, not set in stone: get a stable sort order
         # of repositories the way they are listed on that page; do this by
@@ -134,18 +102,6 @@ def repo_url_to_display_name(url: Optional[str]) -> str:
     # that `strip()` also operates on the trailing end. I think there shouldn't
     # be a trailing slash, but if it's there, remove it, too.
     return p.strip("/")
-
-
-@dataclass
-class RunForDisplay:
-    ctime_for_table: str
-    commit_message_short: str
-    result_count: str | int
-    # Expose the raw Run object (but this needs to be used with a lot of
-    # care, in the template -- for VSCode supporting Python variable types and
-    # auot-completion in a jinja2 template see
-    # https://github.com/microsoft/pylance-release/discussions/4090)
-    run: Run
 
 
 view = Index.as_view("index")

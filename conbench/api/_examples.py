@@ -31,6 +31,15 @@ def _api_benchmark_entity(
     context_id,
     batch_id,
     run_id,
+    run_tags,
+    run_reason,
+    commit_id,
+    parent_id,
+    commit_type,  # "none", "known", "unknown"
+    branch,
+    hardware_id,
+    hardware_name,
+    hardware_type,
     name,
     stats=None,
     error=None,
@@ -110,6 +119,20 @@ def _api_benchmark_entity(
     return {
         "id": benchmark_result_id,
         "run_id": run_id,
+        "run_tags": run_tags,
+        "run_reason": run_reason,
+        "commit": None
+        if commit_type == "none"
+        else _api_commit_entity(
+            commit_id,
+            parent_id,
+            branch,
+            links=False,
+            is_unknown_commit=commit_type == "unknown",
+        ),
+        "hardware": _api_hardware_entity(
+            hardware_id, hardware_name, hardware_type, links=False
+        ),
         "batch_id": batch_id,
         "timestamp": "2020-11-25T21:02:44Z",
         "stats": stats,
@@ -135,7 +158,29 @@ def _api_benchmark_entity(
     }
 
 
-def _api_commit_entity(commit_id, parent_id, links=True):
+def _api_commit_entity(
+    commit_id,
+    parent_id,
+    branch="some_user_or_org:some_branch",
+    links=True,
+    is_unknown_commit=False,
+):
+    if is_unknown_commit:
+        return {
+            "author_avatar": None,
+            "author_login": None,
+            "author_name": "",
+            "branch": None,
+            "fork_point_sha": None,
+            "id": commit_id,
+            "message": "",
+            "parent_sha": None,
+            "repository": "https://github.com/apache/arrow",
+            "sha": "unknown commit",
+            "timestamp": None,
+            "url": "https://github.com/apache/arrow/commit/unknown commit",
+        }
+
     result = {
         "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
         "author_login": "dianaclarke",
@@ -151,7 +196,7 @@ def _api_commit_entity(commit_id, parent_id, links=True):
             "list": "http://localhost/api/commits/",
             "self": "http://localhost/api/commits/%s/" % commit_id,
         },
-        "branch": "some_user_or_org:some_branch",
+        "branch": branch,
         "fork_point_sha": "02addad336ba19a654f9c857ede546331be7b631",
     }
     if parent_id:
@@ -409,7 +454,7 @@ def _api_hardware_entity(
 
 def _api_run_entity(
     run_id,
-    run_name,
+    run_tags,
     run_reason,
     commit_id,
     parent_id,
@@ -417,32 +462,16 @@ def _api_run_entity(
     hardware_name,
     hardware_type,
     now,
-    has_errors=False,
-    finished_timestamp=None,
-    info=None,
-    error_info=None,
-    error_type=None,
 ):
     result = {
         "id": run_id,
-        "name": run_name,
+        "tags": run_tags,
         "reason": run_reason,
         "timestamp": now,
-        "finished_timestamp": finished_timestamp,
-        "info": info,
-        "error_info": error_info,
-        "error_type": error_type,
         "commit": _api_commit_entity(commit_id, parent_id, links=False),
         "hardware": _api_hardware_entity(
             hardware_id, hardware_name, hardware_type, links=False
         ),
-        "has_errors": has_errors,
-        "links": {
-            "list": "http://localhost/api/runs/",
-            "self": "http://localhost/api/runs/%s/" % run_id,
-            "commit": "http://localhost/api/commits/%s/" % commit_id,
-            "hardware": "http://localhost/api/hardware/%s/" % hardware_id,
-        },
         "candidate_baseline_runs": {
             "fork_point": {
                 "baseline_run_id": None,
@@ -470,6 +499,15 @@ BENCHMARK_ENTITY = _api_benchmark_entity(
     "some-context-uuid-1",
     "some-batch-uuid-1",
     "some-run-uuid-1",
+    {"arbitrary": "tags"},
+    "some run reason",
+    "some-commit-uuid-1",
+    "some-parent-commit-uuid-1",
+    "known",
+    "some_user_or_org:some_branch",
+    "some-machine-uuid-1",
+    "some-machine-name",
+    "machine",
     "file-write",
 )
 COMMIT_ENTITY = _api_commit_entity(
@@ -531,7 +569,7 @@ INFO_ENTITY = _api_info_entity("some-info-uuid-1")
 HARDWARE_ENTITY = _api_hardware_entity("some-machine-uuid-1", "some-machine-name")
 RUN_ENTITY_WITH_BASELINES = _api_run_entity(
     "some-run-uuid-1",
-    "some run name",
+    {"arbitrary": "tags"},
     "some run reason",
     "some-commit-uuid-1",
     "some-parent-commit-uuid-1",
