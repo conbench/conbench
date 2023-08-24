@@ -30,6 +30,8 @@ class RunComparisonInfo:
 
     Parameters
     ----------
+    conbench_api_url
+        A URL to the Conbench API, ending in /api.
     contender_info
         The dict returned from Conbench when hitting /runs/{contender_run_id}. Contains
         info about the run's ID, commit, errors, links, etc.
@@ -48,6 +50,7 @@ class RunComparisonInfo:
         otherwise all this information is already in the compare_results.
     """
 
+    conbench_api_url: str
     contender_info: dict
     baseline_run_type: str
     compare_results: Optional[List[dict]] = None
@@ -194,8 +197,7 @@ class RunComparisonInfo:
     @property
     def app_url(self) -> str:
         """The base URL to use for links to the webapp, without a trailing slash."""
-        self_link: str = self.contender_info["links"]["self"]
-        return self_link.rsplit("/api/", 1)[0]
+        return self.conbench_api_url.rsplit("/api", 1)[0]
 
     @property
     def compare_path(self) -> Optional[str]:

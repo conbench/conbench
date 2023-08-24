@@ -36,15 +36,7 @@
             "os_version": "10.15.7",
             "type": "machine"
         },
-        "has_errors": false,
         "id": "some_contender",
-        "links": {
-            "baseline": "http://localhost/api/runs/some_baseline/",
-            "commit": "http://localhost/api/commits/some-commit-uuid-1/",
-            "hardware": "http://localhost/api/hardware/some-machine-uuid-1/",
-            "list": "http://localhost/api/runs/",
-            "self": "http://localhost/api/runs/some-run-uuid-1/"
-        },
         "candidate_baseline_runs": {
             "fork_point": {
                 "baseline_run_id": "some_baseline",
@@ -62,8 +54,10 @@
                 "error": null
             }
         },
-        "name": "some run name",
         "reason": "some run reason",
-        "timestamp": "2021-02-04T17:22:05.225583"
+        "timestamp": "2021-02-04T17:22:05.225583",
+        "tags": {
+            "fake": "tags"
+        }
     }
 }
