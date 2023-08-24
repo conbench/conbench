@@ -5,6 +5,8 @@ Revises: dd6597846acf
 Create Date: 2023-08-17 19:21:44.094129
 
 """
+from datetime import datetime
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
@@ -16,7 +18,13 @@ branch_labels = None
 depends_on = None
 
 
+def p(msg):
+    # I couldn't get logging to work quickly.
+    print(f"[{datetime.now().isoformat()}] {msg}")
+
+
 def upgrade():
+    p("adding columns")
     op.add_column(
         "benchmark_result",
         sa.Column("run_tags", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
@@ -29,10 +37,14 @@ def upgrade():
         "benchmark_result",
         sa.Column("hardware_id", sa.String(length=50), nullable=True),
     )
-    op.drop_constraint("summary_run_id_fkey", "benchmark_result", type_="foreignkey")
-    op.create_foreign_key(None, "benchmark_result", "hardware", ["hardware_id"], ["id"])
-    op.create_foreign_key(None, "benchmark_result", "commit", ["commit_id"], ["id"])
+    p("dropping run foreign key")
+    fks = sa.inspect(op.get_bind()).get_foreign_keys("benchmark_result")
+    p(f"{fks=}")
+    fk_name = [fk["name"] for fk in fks if fk["referred_table"] == "run"][0]
+    p(f"{fk_name=}")
+    op.drop_constraint(fk_name, "benchmark_result", type_="foreignkey")
 
+    p("backfilling")
     op.execute(
         """
         UPDATE benchmark_result SET
@@ -44,10 +56,17 @@ def upgrade():
         WHERE benchmark_result.run_id = run.id
         """
     )
+    p("creating hardware foreign key")
+    op.create_foreign_key(None, "benchmark_result", "hardware", ["hardware_id"], ["id"])
+    p("creating commit foreign key")
+    op.create_foreign_key(None, "benchmark_result", "commit", ["commit_id"], ["id"])
+    p("making run_tags not null")
     op.alter_column("benchmark_result", "run_tags", nullable=False)
+    p("making hardware_id not null")
     op.alter_column("benchmark_result", "hardware_id", nullable=False)
-
+    p("dropping run table")
     op.drop_table("run")
+    p("done")
 
 
 def downgrade():
