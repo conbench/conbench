@@ -1,7 +1,7 @@
 import uuid
 import warnings
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from . import _machine_info
 

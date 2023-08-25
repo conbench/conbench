@@ -2,7 +2,7 @@ import datetime
 import uuid
 import warnings
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, Literal, Optional, Union
+from typing import Any, Dict
 
 from . import _machine_info
 
