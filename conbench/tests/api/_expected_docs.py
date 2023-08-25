@@ -63,6 +63,7 @@
                                 "timestamp": "2021-02-25T01:02:51",
                                 "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
                             },
+                            "commit_repo_url": "https://github.com/org/repo",
                             "error": None,
                             "hardware": {
                                 "architecture_name": "x86_64",
@@ -172,6 +173,7 @@
                                     "timestamp": "2021-02-25T01:02:51",
                                     "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
                                 },
+                                "commit_repo_url": "https://github.com/org/repo",
                                 "error": None,
                                 "hardware": {
                                     "architecture_name": "x86_64",
@@ -281,6 +283,7 @@
                                 "timestamp": "2021-02-25T01:02:51",
                                 "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
                             },
+                            "commit_repo_url": "https://github.com/org/repo",
                             "error": None,
                             "hardware": {
                                 "architecture_name": "x86_64",
@@ -1091,7 +1094,7 @@
                     },
                     "github": {
                         "allOf": [{"$ref": "#/components/schemas/SchemaGitHubCreate"}],
-                        "description": "GitHub-flavored commit information.  Use this object to tell Conbench with which specific state of benchmarked code (repository identifier, commit hash) the BenchmarkResult is associated.  This property is optional. If not provided, it means that this benchmark result is not associated with any particular state of benchmarked code.  Not associating a benchmark result with commit information has special, limited purpose (pre-merge benchmarks, testing). It generally means that this benchmark result will not be considered for time series analysis along a commit tree.  TODO: allow for associating a benchmark result with a repository (URL), w/o providing commit information (cf. issue #1165).",
+                        "description": "GitHub-flavored commit information.  Use this object to tell Conbench with which specific state of benchmarked code (repository identifier, commit hash) the BenchmarkResult is associated.  The optionality of this object is deprecated. It will become required soon.",
                     },
                     "info": {
                         "description": "Optional.  Arbitrary metadata associated with this benchmark result.  Ignored when assembling timeseries across results (differences do not break history).  Must be a JSON object if provided. A flat string-string mapping is recommended (not yet enforced).  This can be useful for example for storing URLs pointing to build artifacts. You can also use this to store environmental properties that you potentially would like to review later (a compiler version, or runtime version), and generally any kind of information that can later be useful for debugging unexpected measurements.",
@@ -1341,7 +1344,7 @@
                         "type": "string",
                     },
                     "commit": {
-                        "description": "The commit hash of the benchmarked code.  Must not be an empty string.  Expected to be a known commit in the repository as specified by the `repository` URL property below.",
+                        "description": "The commit hash of the benchmarked code.  Must not be an empty string.  Expected to be a known commit in the repository as specified by the `repository` URL property below.  This property is optional. If not provided, it means that this benchmark result is not associated with a reproducible commit in the given repository.  Not associating a benchmark result with a commit hash has special, limited purpose (pre-merge benchmarks, testing). It generally means that this benchmark result will not be considered for time series analysis along a commit tree.",
                         "type": "string",
                     },
                     "pr_number": {
@@ -1354,7 +1357,7 @@
                         "type": "string",
                     },
                 },
-                "required": ["commit", "repository"],
+                "required": ["repository"],
                 "type": "object",
             },
             "UserCreate": {

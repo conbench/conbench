@@ -36,6 +36,7 @@ def _api_benchmark_entity(
     commit_id,
     parent_id,
     commit_type,  # "none", "known", "unknown"
+    commit_repo_url,
     branch,
     hardware_id,
     hardware_name,
@@ -130,6 +131,7 @@ def _api_benchmark_entity(
             links=False,
             is_unknown_commit=commit_type == "unknown",
         ),
+        "commit_repo_url": commit_repo_url,
         "hardware": _api_hardware_entity(
             hardware_id, hardware_name, hardware_type, links=False
         ),
@@ -504,6 +506,7 @@ BENCHMARK_ENTITY = _api_benchmark_entity(
     "some-commit-uuid-1",
     "some-parent-commit-uuid-1",
     "known",
+    "https://github.com/org/repo",
     "some_user_or_org:some_branch",
     "some-machine-uuid-1",
     "some-machine-name",

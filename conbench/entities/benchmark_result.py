@@ -81,6 +81,10 @@ class BenchmarkResult(Base, EntityMixin):
     commit_id: Mapped[Optional[str]] = Nullable(s.ForeignKey("commit.id"))
     commit: Mapped[Optional[Commit]] = relationship("Commit", lazy="joined")
 
+    # Non-empty URL to the repository without trailing slash.
+    # Will be made non-nullable very soon.
+    commit_repo_url: Mapped[Optional[str]] = Nullable(s.Text)
+
     hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
     hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
 
@@ -241,11 +245,14 @@ class BenchmarkResult(Base, EntityMixin):
             hardware = Cluster.get_or_create(userres["cluster_info"])
 
         user_given_commit_info: Optional[TypeCommitInfoGitHub] = userres.get("github")
+        repo_url = None
         commit = None
         if user_given_commit_info is not None:
-            commit = commit_fetch_info_and_create_in_db_if_not_exists(
-                user_given_commit_info
-            )
+            repo_url = user_given_commit_info["repo_url"]
+            if user_given_commit_info["commit_hash"] is not None:
+                commit = commit_fetch_info_and_create_in_db_if_not_exists(
+                    user_given_commit_info
+                )
 
         result_data_for_db["run_id"] = userres["run_id"]
         result_data_for_db["run_tags"] = userres.get("run_tags") or {}
@@ -275,6 +282,7 @@ class BenchmarkResult(Base, EntityMixin):
         result_data_for_db["context_id"] = context.id
         result_data_for_db["hardware_id"] = hardware.id
         result_data_for_db["commit_id"] = commit.id if commit else None
+        result_data_for_db["commit_repo_url"] = repo_url
         benchmark_result = BenchmarkResult(**result_data_for_db)
         benchmark_result.save()
 
@@ -324,6 +332,7 @@ class BenchmarkResult(Base, EntityMixin):
             "run_tags": benchmark_result.run_tags,
             "run_reason": benchmark_result.run_reason,
             "commit": commit_dict,
+            "commit_repo_url": benchmark_result.commit_repo_url,
             "hardware": hardware_dict,
             "batch_id": benchmark_result.batch_id,
             "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
@@ -556,6 +565,9 @@ class BenchmarkResult(Base, EntityMixin):
         This is for those consumers that absolutely need to have a string type
         representation.
         """
+        if self.commit_repo_url is not None:
+            return self.commit_repo_url
+
         if self.commit and self.commit.repo_url is not None:
             return self.commit.repo_url
 
@@ -933,6 +945,8 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
     Has slightly ~unpredictable run duration as of interaction with GitHub HTTP
     API.
     """
+    # Commit hash must be provided to use this function.
+    assert ghcommit["commit_hash"]
 
     def _guts(cinfo: TypeCommitInfoGitHub) -> Tuple[Commit, bool]:
         """
@@ -941,6 +955,9 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
         The boolean return value means "created", is `False` if the first
         query for the commit object succeeds, else `True.
         """
+        # Commit hash must be provided to use this function.
+        assert cinfo["commit_hash"]
+
         # Try to see if commit is already database. This is an optimization, to
         # not needlessly interact with the GitHub HTTP API in case the commit
         # is already in the database. first(): "Return the first result of this
@@ -1229,7 +1246,7 @@ class SchemaGitHubCreate(marshmallow.Schema):
         return data
 
     commit = marshmallow.fields.String(
-        required=True,
+        required=False,
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
@@ -1237,8 +1254,17 @@ class SchemaGitHubCreate(marshmallow.Schema):
 
                 Must not be an empty string.
 
-                Expected to be a known commit in the repository as specified
-                by the `repository` URL property below.
+                Expected to be a known commit in the repository as specified by the
+                `repository` URL property below.
+
+                This property is optional. If not provided, it means that this benchmark
+                result is not associated with a reproducible commit in the given
+                repository.
+
+                Not associating a benchmark result with a commit hash has special,
+                limited purpose (pre-merge benchmarks, testing). It generally means that
+                this benchmark result will not be considered for time series analysis
+                along a commit tree.
                 """
             )
         },
@@ -1337,7 +1363,7 @@ class SchemaGitHubCreate(marshmallow.Schema):
                 f"'repository' failed URL validation: `{exc}`"
             )
 
-        if not len(data["commit"]):
+        if "commit" in data and not len(data["commit"]):
             raise marshmallow.ValidationError("'commit' must be a non-empty string")
 
     @marshmallow.post_load
@@ -1349,10 +1375,10 @@ class SchemaGitHubCreate(marshmallow.Schema):
         """
 
         url: str = data["repository"].rstrip("/")
-        commit_hash: str = data["commit"]
         # If we do not re-add this here as `None` then this property is _not_
         # part of the output dictionary if the user left this key out of
         # their JSON object
+        commit_hash: Optional[str] = data.get("commit")
         pr_number: Optional[int] = data.get("pr_number")
         branch: Optional[str] = data.get("branch")
 
@@ -1645,16 +1671,8 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
                 benchmarked code (repository identifier, commit hash) the
                 BenchmarkResult is associated.
 
-                This property is optional. If not provided, it means that this benchmark
-                result is not associated with any particular state of benchmarked code.
-
-                Not associating a benchmark result with commit information has special,
-                limited purpose (pre-merge benchmarks, testing). It generally means that
-                this benchmark result will not be considered for time series analysis
-                along a commit tree.
-
-                TODO: allow for associating a benchmark result with a repository (URL),
-                w/o providing commit information (cf. issue #1165).
+                The optionality of this object is deprecated. It will become required
+                soon.
                 """
             )
         },
