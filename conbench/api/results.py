@@ -144,10 +144,10 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             results if no limit is defined.
 
             The `days` argument can be provided to limit the benchmark results from last `N` days.
-            This can be combined with other arguments, except `run_id`.
+            This can be combined with other arguments, except `run_id` and `batch_id.
 
             The `limit` argument can be provided to limit the number of results.
-            This can be combined with other arguments, except `run_id`.
+            This can be combined with other arguments, except `run_id` and `batch_id`.
 
         responses:
             "200": "BenchmarkList"
@@ -185,23 +185,21 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
 
         # setting filters for days parameter
         days_filters: list = []
-        if days_arg := f.request.args.get("days"):
+        if days := f.request.args.get("days"):
             min_time = datetime.datetime.now(
                 datetime.timezone.utc
-            ).date() - datetime.timedelta(days=days_arg)
+            ).date() - datetime.timedelta(days=int(days))
             days_filters = [
                 BenchmarkResult.timestamp >= min_time,
             ]
 
         # setting limit value
-        limit: Optional[int] = None
-        if limit_arg := f.request.args.get("limit"):
-            limit = limit_arg
+        limit: Optional[int] = f.request.args.get("limit")
 
         if name_arg := f.request.args.get("name"):
-            # TODO: This needs a limit, and sorting behavior.
             benchmark_results = BenchmarkResult.search(
                 filters=[Case.name == name_arg] + days_filters,
+                order_by=BenchmarkResult.timestamp.desc(),
                 joins=[Case],
                 limit=limit,
             )
@@ -209,8 +207,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         elif batch_id_arg := f.request.args.get("batch_id"):
             batch_ids = batch_id_arg.split(",")
             benchmark_results = BenchmarkResult.search(
-                filters=[BenchmarkResult.batch_id.in_(batch_ids)] + days_filters,
-                limit=limit,
+                filters=[BenchmarkResult.batch_id.in_(batch_ids)]
             )
 
         elif run_id_arg := f.request.args.get("run_id"):
@@ -236,7 +233,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             )
 
         else:
-            if not days_filters:
+            if not days_filters and not limit:
                 limit = 1000
             benchmark_results = BenchmarkResult.all(
                 filter_args=days_filters,
