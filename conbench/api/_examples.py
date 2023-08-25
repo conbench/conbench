@@ -135,7 +135,9 @@ def _api_benchmark_entity(
             hardware_id, hardware_name, hardware_type, links=False
         ),
         "batch_id": batch_id,
-        "timestamp": timestamp.isoformat() + "Z" if timestamp else "2020-11-25T21:02:44Z",
+        "timestamp": timestamp.isoformat() + "Z"
+        if timestamp
+        else "2020-11-25T21:02:44Z",
         "stats": stats,
         "error": error,
         "validation": validation,

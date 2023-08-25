@@ -144,7 +144,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             results if no limit is defined.
 
             The `days` argument can be provided to limit the benchmark results from last `N` days.
-            This can be combined with other arguments, except `run_id` and `batch_id.
+            This can be combined with other arguments, except `run_id` and `batch_id`.
 
             The `limit` argument can be provided to limit the number of results.
             This can be combined with other arguments, except `run_id` and `batch_id`.
