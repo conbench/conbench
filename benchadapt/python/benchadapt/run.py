@@ -4,7 +4,6 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Optional
 
 from . import _machine_info
-from .result import validate_or_remove_github_commit_key
 
 
 @dataclass
@@ -16,7 +15,7 @@ class BenchmarkRun:
     ----------
     name : str
         Name for the run. Current convention is ``f"{reason}: {github['commit']}"``.
-        If missing and ``github["commmit"]`` exists, ``name`` will be populated
+        If missing and ``github["commit"]`` exists, ``name`` will be populated
         according to that pattern (even if ``reason`` is ``None``); otherwise it will
         remain ``None``. Users should not set this manually unless they want to identify
         runs in some other fashion. Benchmark name should be specified in ``tags["name"]``.
@@ -76,7 +75,7 @@ class BenchmarkRun:
     info: Dict[str, Any] = field(default_factory=dict)
     machine_info: Dict[str, Any] = field(default_factory=_machine_info.machine_info)
     cluster_info: Dict[str, Any] = None
-    github: Optional[Dict[str, str]] = field(
+    github: Dict[str, str] = field(
         default_factory=_machine_info.gh_commit_info_from_env
     )
     finished_timestamp: str = None
@@ -94,19 +93,21 @@ class BenchmarkRun:
         should in most situations produce a reasonably useful `name`.
         """
         if not self.name:
-            if isinstance(self.github, dict):
-                if self.github.get("commit"):
-                    self.name = f"{self.reason}: {self.github['commit']}"
+            if self.github.get("commit"):
+                self.name = f"{self.reason}: {self.github['commit']}"
 
     @property
     def _github_property(self):
         return self._github_cache
 
     @_github_property.setter
-    def _github_property(self, value: Optional[Dict[str, str]]):
+    def _github_property(self, value: Dict[str, str]):
         # Better: schema validation
-        if value is not None and not isinstance(value, dict):
-            raise Exception(f"unexpected value for `github` property: {value}")
+        if not isinstance(value, dict):
+            raise TypeError(f"unexpected type for `github` property: {value}")
+
+        if "repository" not in value:
+            raise ValueError(f"missing `repository` key in `github` property: {value}")
 
         self._github_cache = value
         self._maybe_set_name()
@@ -129,8 +130,6 @@ class BenchmarkRun:
             warnings.warn(
                 "Run not publishable! `machine_info` xor `cluster_info` must be specified"
             )
-
-        validate_or_remove_github_commit_key(res_dict, strict=True)
 
         for attr in [
             "name",

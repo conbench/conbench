@@ -62,16 +62,6 @@ class TestBenchmarkRun:
         monkeypatch.setenv("CONBENCH_PROJECT_COMMIT", run_json["github"]["commit"])
         assert BenchmarkRun().github == run_json["github"]
 
-        monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY")
-        monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER")
-        monkeypatch.delenv("CONBENCH_PROJECT_COMMIT")
-
-        with pytest.raises(
-            ValueError,
-            match="dictionary does not contain commit hash / repository information",
-        ):
-            BenchmarkRun().to_publishable_dict()
-
     def test_host_detection(self, monkeypatch):
         machine_info_name = "fake-computer-name"
         monkeypatch.setenv("CONBENCH_MACHINE_INFO_NAME", machine_info_name)
@@ -82,27 +72,19 @@ class TestBenchmarkRun:
         assert run.machine_info["name"] != run_json["machine_info"]["name"]
 
     def test_name_defaulting(self, monkeypatch):
-        monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY", raising=False)
+        monkeypatch.setenv("CONBENCH_PROJECT_REPOSITORY", "http://localhost")
         monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER", raising=False)
         monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
         run = BenchmarkRun(reason=run_json["reason"])
-        assert run.github == {}
+        assert run.github == {"repository": "http://localhost"}
         assert run.name is None
         run.github = run_json["github"]
         assert run.name == f"{run_json['reason']}: {run_json['github']['commit']}"
 
-    def test_commit_info_do_not_send(self, monkeypatch):
-        monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY", raising=False)
+    def test_commit_info_without_hash(self, monkeypatch):
+        monkeypatch.setenv("CONBENCH_PROJECT_REPOSITORY", "http://localhost")
         monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER", raising=False)
         monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
         run = BenchmarkRun()
-        with pytest.raises(
-            ValueError,
-            match="dictionary does not contain commit hash / repository information",
-        ):
-            run.to_publishable_dict()
-
-        # We're OK not sending commit info.
-        run = BenchmarkRun(github=None)
         d = run.to_publishable_dict()
-        assert "github" not in d
+        assert d["github"] == {"repository": "http://localhost"}

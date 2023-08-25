@@ -88,34 +88,27 @@ class TestBenchmarkResult:
         monkeypatch.setenv("CONBENCH_PROJECT_COMMIT", res_json["github"]["commit"])
         assert BenchmarkResult().github == res_json["github"]
 
-        monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY")
-        monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER")
-        monkeypatch.delenv("CONBENCH_PROJECT_COMMIT")
-
-        with pytest.raises(
-            ValueError,
-            match="dictionary does not contain commit hash / repository information",
-        ):
-            d = BenchmarkResult().to_publishable_dict()
-            assert "github" not in d
-
-        # Intended, hopefully no warning, proceed.
-        d = BenchmarkResult(github=None).to_publishable_dict()
-        assert "github" not in d
-
     def test_run_name_defaulting(self, monkeypatch):
-        monkeypatch.delenv("CONBENCH_PROJECT_REPOSITORY", raising=False)
+        monkeypatch.setenv("CONBENCH_PROJECT_REPOSITORY", "http://localhost")
         monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER", raising=False)
         monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
 
         res = BenchmarkResult(run_reason=res_json["run_reason"])
-        assert res.github == {}
+        assert res.github == {"repository": "http://localhost"}
 
         assert res.run_name is None
         res.github = res_json["github"]
         assert (
             res.run_name == f"{res_json['run_reason']}: {res_json['github']['commit']}"
         )
+
+    def test_commit_info_without_hash(self, monkeypatch):
+        monkeypatch.setenv("CONBENCH_PROJECT_REPOSITORY", "http://localhost")
+        monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER", raising=False)
+        monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
+        res = BenchmarkResult()
+        d = res.to_publishable_dict()
+        assert d["github"] == {"repository": "http://localhost"}
 
     def test_host_detection(self, monkeypatch):
         machine_info_name = "fake-computer-name"

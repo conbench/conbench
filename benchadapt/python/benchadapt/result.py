@@ -16,7 +16,7 @@ class BenchmarkResult:
     ----------
     run_name : str
         Name for the run. Current convention is ``f"{run_reason}: {github['commit']}"``.
-        If missing and ``github["commmit"]`` exists, ``run_name`` will be populated
+        If missing and ``github["commit"]`` exists, ``run_name`` will be populated
         according to that pattern (even if ``run_reason`` is ``None``); otherwise it will
         remain ``None``. Users should not set this manually unless they want to identify
         runs in some other fashion. Benchmark name should be specified in ``tags["name"]``.
@@ -63,28 +63,26 @@ class BenchmarkResult:
         For benchmarks run on a cluster, information about the cluster
     context : Dict[str, Any]
         Should include ``benchmark_language`` and other relevant metadata like compiler flags
-    github : Optional[Dict[str, Any]]
-
+    github : Dict[str, Any]
         A dictionary containing GitHub-flavored commit information.
 
-        Allowed values: `None`, no value, a special dictionary.
+        Allowed values: no value, a special dictionary.
 
         Not passing an argument upon dataclass construction results in inspection
         of the environment variables ``CONBENCH_PROJECT_REPOSITORY``,
-        ``CONBENCH_PROJECT_COMMIT``, and ``CONBENCH_PROJECT_PR_NUMBER``.
-        If any of those are not set, a warning is raised.
+        ``CONBENCH_PROJECT_COMMIT``, and ``CONBENCH_PROJECT_PR_NUMBER``, which are
+        used as the special dictionary's ``repository``, ``commit``, and ``pr_number``
+        keys respectively, if they are set. These are defined below.
 
-        Passing `None` explicitly defines that this result is not associated
-        with any commit.
+        If passed a dictionary, it must have at least the ``repository`` key, which must
+        be a string, in the format ``https://github.com/<org>/<repo>``.
 
-        Not associating a benchmark result with commit information has special,
-        limited purpose (pre-merge benchmarks, testing). It generally means
-        that this benchmark result will not be considered for time series
-        analysis along a commit tree.
-
-        If passed a dictionary, it must have at least the following two keys:
-        - ``repository`` (string, in the format ``https://github.com/<org>/<repo>``)
-        - ``commit`` (string, the full commit hash)
+        If the benchmark was run on a reproducible commit (from the default branch or a
+        pull request commit), it must also have the ``commit`` key, which must be a
+        string of the full commit hash. Not associating a benchmark result with a commit
+        hash has special, limited purpose (pre-merge benchmarks, testing). It generally
+        means that this benchmark result will not be considered for time series analysis
+        along a commit tree.
 
         If the benchmark was run against the default branch, do not specify
         additional keys.
@@ -128,17 +126,6 @@ class BenchmarkResult:
     - ``machine_info`` if not run on the current machine
     - ``cluster_info`` if run on a cluster
     - ``github``
-
-    If a result with a new ``run_id`` is posted, a new record for the run will be
-    created. If a run record with that ID already exists, either because of a
-    previous result or the run being posted directly, the following fields will be
-    effectively ignored, as they are only stored on the run:
-
-    - ``run_name``
-    - ``run_reason``
-    - ``github``
-    - ``machine_info``
-    - ``cluster_info``
     """
 
     run_name: str = None
@@ -157,13 +144,11 @@ class BenchmarkResult:
     machine_info: Dict[str, Any] = field(default_factory=_machine_info.machine_info)
     cluster_info: Dict[str, Any] = None
     context: Dict[str, Any] = field(default_factory=dict)
-    github: Optional[Dict[str, str]] = field(
+    github: Dict[str, str] = field(
         default_factory=_machine_info.gh_commit_info_from_env
     )
 
     def __post_init__(self) -> None:
-        # if self.github == "inspect_git_in_cwd":
-        #    self.github = _machine_info.detect_commit_info_from_local_git_or_raise()
         self._maybe_set_run_name()
 
     def _maybe_set_run_name(self) -> None:
@@ -174,21 +159,21 @@ class BenchmarkResult:
         this should in most situations produce a reasonably useful `run_name`.
         """
         if not self.run_name:
-            if isinstance(self.github, dict):
-                if self.github.get("commit"):
-                    self.run_name = f"{self.run_reason}: {self.github['commit']}"
+            if self.github.get("commit"):
+                self.run_name = f"{self.run_reason}: {self.github['commit']}"
 
     @property
     def _github_property(self):
         return self._github_cache
 
     @_github_property.setter
-    def _github_property(
-        self, value: Union[Optional[Dict[str, str]], Literal["inspect_git_in_cwd"]]
-    ):
+    def _github_property(self, value: Dict[str, str]):
         # Better: schema validation
-        if value is not None and not isinstance(value, dict):
-            raise Exception(f"unexpected value for `github` property: {value}")
+        if not isinstance(value, dict):
+            raise TypeError(f"unexpected type for `github` property: {value}")
+
+        if "repository" not in value:
+            raise ValueError(f"missing `repository` key in `github` property: {value}")
 
         self._github_cache = value
         self._maybe_set_run_name()
@@ -227,8 +212,6 @@ class BenchmarkResult:
                 "Result not publishable! `stats` and/or `error` must be be specified"
             )
 
-        validate_or_remove_github_commit_key(res_dict)
-
         for attr in [
             "run_name",
             "optional_benchmark_info",
@@ -242,43 +225,6 @@ class BenchmarkResult:
                 res_dict.pop(attr)
 
         return res_dict
-
-
-def validate_or_remove_github_commit_key(res_dict: Dict, strict=False):
-    """
-    Mutate BenchmarkResult dictionary (result of asdict(self)) in-place to make
-    its `github` key property be compliant with the Conbench HTTP API:
-    - Remove it when it's set to `None` (silently)
-    - Remove it when it doesn't look good (but also emit a warning)
-
-    Not providing the `github` key in the result dictionary tells Conbench that
-    this result is commit-context-less (recording it in Conbench might be
-    useful for e.g. the special pre-merge capability, as well as for debugging
-    and testing purposes, but generally we should make clear that this might
-    imply to accidentally miss out on features/value).
-    """
-
-    errmsg = (
-        "This dictionary does not contain commit hash / repository information. "
-        "If that is intended (for a so-called pre-merge benchmark "
-        "result), explicitly set `github=None` upon data class "
-        "instantiation. For automatically "
-        "adding commit information, set the CONBENCH_PROJECT_* family "
-        "of environment variables before dataclass instantiation (see API "
-        "docs for details)."
-    )
-
-    if res_dict["github"] is None:
-        # Tis means: "no commit information present", and this was desired by
-        # the user (i.e., be quiet and do as demanded by user). Normalize this
-        # state into the the one way to tell the Conbench HTTP API "no commit
-        # info": remove the key from the BenchmarkResult dict.
-        del res_dict["github"]
-        return
-
-    for checkkey in ("repository", "commit"):
-        if checkkey not in res_dict["github"]:
-            raise ValueError(errmsg)
 
 
 # Ugly, but per https://stackoverflow.com/a/61480946 lets us keep defaults and order
