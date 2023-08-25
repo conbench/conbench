@@ -35,6 +35,7 @@ def _expected_entity(benchmark_result: BenchmarkResult, stats=None):
         benchmark_result.commit_id,
         parent_id,
         commit_type,
+        benchmark_result.commit_repo_url,
         branch,
         benchmark_result.hardware_id,
         benchmark_result.hardware.name,
@@ -632,7 +633,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
     def test_nested_schema_validation(self, client):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
-        del data["github"]["commit"]
+        del data["github"]["repository"]
         del data["machine_info"]["os_name"]
         data["machine_info"]["os_version"] = None
         data["stats"]["extra"] = "field"
@@ -642,7 +643,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         message = {
             "github": {
                 "extra": ["Unknown field."],
-                "commit": ["Missing data for required field."],
+                "repository": ["Missing data for required field."],
             },
             "machine_info": {
                 "extra": ["Unknown field."],
@@ -658,7 +659,23 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         new_id = response.json["id"]
         benchmark_result = BenchmarkResult.one(id=new_id)
         assert benchmark_result.commit is None
+        assert benchmark_result.commit_repo_url is None
         assert benchmark_result.associated_commit_repo_url == "n/a"
+        return benchmark_result, new_id
+
+    def _assert_commit_repo_without_hash(self, response):
+        assert response.status_code == 201, (response.status_code, response.text)
+        new_id = response.json["id"]
+        benchmark_result = BenchmarkResult.one(id=new_id)
+        assert benchmark_result.commit is None
+        assert (
+            benchmark_result.commit_repo_url
+            == self.valid_payload["github"]["repository"]
+        )
+        assert (
+            benchmark_result.associated_commit_repo_url
+            == self.valid_payload["github"]["repository"]
+        )
         return benchmark_result, new_id
 
     def test_create_no_commit_context(self, client):
@@ -680,6 +697,25 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
+    def test_create_no_commit_hash(self, client):
+        self.authenticate(client)
+        data = copy.deepcopy(self.valid_payload)
+        data["run_id"] = _uuid()
+        data["github"] = {"repository": data["github"]["repository"]}
+
+        # create benchmark without commit context, with a repo
+        response = client.post("/api/benchmarks/", json=data)
+        benchmark_result, new_id = self._assert_commit_repo_without_hash(response)
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
+
+        # create another benchmark without commit context, with a repo
+        # (test duplicate key duplicate key -- commit_index)
+        response = client.post("/api/benchmarks/", json=data)
+        benchmark_result, new_id = self._assert_commit_repo_without_hash(response)
+        location = "http://localhost/api/benchmarks/%s/" % new_id
+        self.assert_201_created(response, _expected_entity(benchmark_result), location)
+
     def test_create_unknown_commit_context(self, client):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
@@ -693,6 +729,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         benchmark_result = BenchmarkResult.one(id=new_id)
         assert benchmark_result.commit.sha == "unknown commit"
         assert benchmark_result.commit.repository == ARROW_REPO
+        assert benchmark_result.commit_repo_url == ARROW_REPO
         assert benchmark_result.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
@@ -704,6 +741,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         benchmark_result = BenchmarkResult.one(id=new_id)
         assert benchmark_result.commit.sha == "unknown commit"
         assert benchmark_result.commit.repository == ARROW_REPO
+        assert benchmark_result.commit_repo_url == ARROW_REPO
         assert benchmark_result.commit.parent is None
         location = "http://localhost/api/benchmarks/%s/" % new_id
         self.assert_201_created(response, _expected_entity(benchmark_result), location)
@@ -735,7 +773,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         assert resp.status_code == 400, resp.text
         assert "must be a URL, starting with 'https://github.com'" in resp.text
 
-    def test_create_allow_just_repo_no_commit_hash(self, client):
+    def test_create_allow_just_repo_empty_commit_hash(self, client):
         self.authenticate(client)
         data = copy.deepcopy(self.valid_payload)
         data["run_id"] = _uuid()
@@ -763,8 +801,9 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         data = copy.deepcopy(self.valid_payload)
         data["run_id"] = _uuid()
         data["github"]["pr_number"] = pr_number
-        # `<absent>` is a sentinel for `pr_number` not being specified.
+        # In this test, `<absent>` is a sentinel for `pr_number` not being specified.
         # viable `github` submissions without `pr_number`:
+        # - just `repository` (not a reproducible commit)
         # - just `repository` and `commit` (assumed to be on default branch)
         # - submit `branch` directly instead (mostly discouraged, but possible)
         if pr_number == "<absent>":

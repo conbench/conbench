@@ -42,10 +42,10 @@ _tloc = threading.local()
 
 
 class TypeCommitInfoGitHub(TypedDict):
-    # Guarantee: non-empty. A URL.
+    # Guarantee: non-empty. A URL without trailing slash.
     repo_url: str
-    # Guarantee: Non-empty.
-    commit_hash: str
+    # Guarantee: Non-empty or None
+    commit_hash: Optional[str]
     pr_number: Optional[int]
     # Guarantee: non-empty or None
     branch: Optional[str]
@@ -430,8 +430,10 @@ def get_github_commit_metadata(cinfo: TypeCommitInfoGitHub) -> Dict:
     requests.exceptions.RequestException.
 
     """
-    # repospec: in org/repo notation.
+    # Commit hash must be provided to use this function.
+    assert cinfo["commit_hash"]
 
+    # repospec: in org/repo notation.
     repospec = repository_to_name(cinfo["repo_url"])
 
     # `github.get_commit()` below may raise an exception if the GitHub
