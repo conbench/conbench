@@ -1,4 +1,6 @@
 import copy
+import time
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -45,6 +47,7 @@ def _expected_entity(benchmark_result: BenchmarkResult, stats=None):
         benchmark_result.error,
         benchmark_result.validation,
         benchmark_result.optional_benchmark_info,
+        benchmark_result.timestamp,
     )
 
 
@@ -386,6 +389,116 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         resp = client.get(f"/api/benchmark-results/?run_id={comma_separated_run_ids}")
         assert resp.status_code == 400, resp.text
         assert "currently not allowed to set more than five" in resp.text
+
+    def test_benchmark_results_with_limit(self, client):
+        self.authenticate(client)
+        _fixtures.benchmark_result()
+        benchmark_result = _fixtures.benchmark_result()
+        response = client.get("/api/benchmarks/?limit=1")
+        self.assert_200_ok(response, contains=_expected_entity(benchmark_result))
+        assert len(response.json) == 1
+
+    def test_benchmark_list_filter_by_name_with_limit(self, client):
+        self.authenticate(client)
+        _fixtures.benchmark_result(
+            name="bbb",
+            timestamp=datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+        )
+        time.sleep(1)
+        benchmark_result = _fixtures.benchmark_result(
+            name="bbb",
+            timestamp=datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+        )
+        _fixtures.benchmark_result(name="ccc")
+        response = client.get("/api/benchmarks/?name=bbb&limit=1")
+        assert len(response.json) == 1
+        self.assert_200_ok(response, [_expected_entity(benchmark_result)])
+
+    def test_benchmark_list_filter_by_run_reason_with_limit(self, client):
+        self.authenticate(client)
+        _fixtures.benchmark_result(run_id="100", reason="rolf")
+        _fixtures.benchmark_result(run_id="100", reason="rolf")
+        _fixtures.benchmark_result(run_id="100", reason="rolf")
+        resp = client.get("/api/benchmark-results/?run_reason=rolf&limit=1")
+        assert len(resp.json) == 1
+
+    def test_benchmark_results_with_days(self, client):
+        self.authenticate(client)
+        _fixtures.benchmark_result()
+        _fixtures.benchmark_result(
+            timestamp=(datetime.utcnow().replace(microsecond=0)).isoformat() + "Z",
+        )
+        _fixtures.benchmark_result(
+            timestamp=(
+                datetime.utcnow().replace(microsecond=0) - timedelta(days=2)
+            ).isoformat()
+            + "Z",
+        )
+        response = client.get("/api/benchmarks/?days=1")
+        assert len(response.json) == 1
+
+        response = client.get("/api/benchmarks/?days=10")
+        assert len(response.json) == 2
+
+    def test_benchmark_results_with_days_and_limit(self, client):
+        self.authenticate(client)
+        _fixtures.benchmark_result()
+        _fixtures.benchmark_result(
+            timestamp=(datetime.utcnow().replace(microsecond=0)).isoformat() + "Z",
+        )
+        _fixtures.benchmark_result(
+            timestamp=(
+                datetime.utcnow().replace(microsecond=0) - timedelta(days=2)
+            ).isoformat()
+            + "Z",
+        )
+        response = client.get("/api/benchmarks/?days=10&limit=1")
+        assert len(response.json) == 1
+
+    def test_benchmark_list_filter_by_name_with_daysand_limit(self, client):
+        self.authenticate(client)
+        benchmark_result = _fixtures.benchmark_result(
+            name="bbb",
+            timestamp=datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+        )
+        _fixtures.benchmark_result(
+            name="bbb",
+            timestamp=(
+                datetime.utcnow().replace(microsecond=0) - timedelta(days=2)
+            ).isoformat()
+            + "Z",
+        )
+        _fixtures.benchmark_result(name="ccc")
+        response = client.get("/api/benchmarks/?name=bbb&days=1")
+        assert len(response.json) == 1
+        self.assert_200_ok(response, [_expected_entity(benchmark_result)])
+
+        response = client.get("/api/benchmarks/?name=bbb&days=10")
+        assert len(response.json) == 2
+
+        response = client.get("/api/benchmarks/?name=bbb&days=10&limit=1")
+        assert len(response.json) == 1
+
+    def test_benchmark_list_filter_by_run_reason_with_days_and_limit(self, client):
+        self.authenticate(client)
+        _fixtures.benchmark_result(reason="rolf")
+        _fixtures.benchmark_result(
+            timestamp=(datetime.utcnow().replace(microsecond=0)).isoformat() + "Z",
+            reason="rolf",
+        )
+        _fixtures.benchmark_result(
+            timestamp=(
+                datetime.utcnow().replace(microsecond=0) - timedelta(days=2)
+            ).isoformat()
+            + "Z",
+            reason="rolf",
+        )
+        resp = client.get("/api/benchmark-results/?run_reason=rolf&days=1")
+        assert len(resp.json) == 1
+        resp = client.get("/api/benchmark-results/?run_reason=rolf&days=10")
+        assert len(resp.json) == 2
+        resp = client.get("/api/benchmark-results/?run_reason=rolf&days=10&limit=1")
+        assert len(resp.json) == 1
 
 
 class TestBenchmarkResultPost(_asserts.PostEnforcer):

@@ -1394,12 +1394,14 @@
         },
         "/api/benchmarks/": {
             "get": {
-                "description": "Return a JSON array of benchmark results.\n\nNote that this endpoint does not provide on-the-fly change\ndetection analysis (lookback z-score method).\n\nBehavior at the time of writing (subject to change):\n\nBenchmark results are usually returned in order of their\ntimestamp property (user-given benchmark start time), newest first.\n\nWhen no argument is provided, the last 1000 benchmark results\nare emitted.\n\nThe `run_id` argument can be provided to obtain benchmark\nresults for one or more specific runs. This attempts to fetch\nall associated benchmark results from the database and tries\nto return them all in a single response; use that with caution:\nkeep the number of run_ids low or equal to, unless you know better.\n\nThe `run_reason` argument can be provided to obtain benchmark\nresults for a specific run reason. Currently, this will return 55000\nresults.\n",
+                "description": "Return a JSON array of benchmark results.\n\nNote that this endpoint does not provide on-the-fly change\ndetection analysis (lookback z-score method).\n\nBehavior at the time of writing (subject to change):\n\nBenchmark results are usually returned in order of their\ntimestamp property (user-given benchmark start time), newest first.\n\nWhen no argument is provided, the last 1000 benchmark results\nare emitted.\n\nThe `run_id` argument can be provided to obtain benchmark\nresults for one or more specific runs. This attempts to fetch\nall associated benchmark results from the database and tries\nto return them all in a single response; use that with caution:\nkeep the number of run_ids low or equal to, unless you know better.\n\nThe `run_reason` argument can be provided to obtain benchmark\nresults for a specific run reason. Currently, this will return 30000\nresults if no limit is defined.\n\nThe `days` argument can be provided to limit the benchmark results from last `N` days.\nThis can be combined with other arguments, except `run_id` and `batch_id`.\n\nThe `limit` argument can be provided to limit the number of results.\nThis can be combined with other arguments, except `run_id` and `batch_id`.\n",
                 "parameters": [
                     {"in": "query", "name": "name", "schema": {"type": "string"}},
                     {"in": "query", "name": "batch_id", "schema": {"type": "string"}},
                     {"in": "query", "name": "run_id", "schema": {"type": "string"}},
                     {"in": "query", "name": "run_reason", "schema": {"type": "string"}},
+                    {"in": "query", "name": "days", "schema": {"type": "integer"}},
+                    {"in": "query", "name": "limit", "schema": {"type": "integer"}},
                 ],
                 "responses": {
                     "200": {"$ref": "#/components/responses/BenchmarkList"},

@@ -1,4 +1,6 @@
+import datetime
 import logging
+from typing import Optional
 
 import flask as f
 import flask_login
@@ -138,8 +140,14 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             keep the number of run_ids low or equal to, unless you know better.
 
             The `run_reason` argument can be provided to obtain benchmark
-            results for a specific run reason. Currently, this will return 55000
-            results.
+            results for a specific run reason. Currently, this will return 30000
+            results if no limit is defined.
+
+            The `days` argument can be provided to limit the benchmark results from last `N` days.
+            This can be combined with other arguments, except `run_id` and `batch_id`.
+
+            The `limit` argument can be provided to limit the number of results.
+            This can be combined with other arguments, except `run_id` and `batch_id`.
 
         responses:
             "200": "BenchmarkList"
@@ -161,16 +169,39 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             name: run_reason
             schema:
               type: string
+          - in: query
+            name: days
+            schema:
+              type: integer
+          - in: query
+            name: limit
+            schema:
+              type: integer
         tags:
           - Benchmarks
         """
         # Note(JP): "case name" is the conceptual benchmark name. Interesting,
         # so this is like asking "give me results for this benchmark".
+
+        # setting filters for days parameter
+        days_filters: list = []
+        if days := f.request.args.get("days"):
+            min_time = datetime.datetime.now(
+                datetime.timezone.utc
+            ).date() - datetime.timedelta(days=int(days))
+            days_filters = [
+                BenchmarkResult.timestamp >= min_time,
+            ]
+
+        # setting limit value
+        limit: Optional[int] = f.request.args.get("limit")
+
         if name_arg := f.request.args.get("name"):
-            # TODO: This needs a limit, and sorting behavior.
             benchmark_results = BenchmarkResult.search(
-                filters=[Case.name == name_arg],
+                filters=[Case.name == name_arg] + days_filters,
+                order_by=BenchmarkResult.timestamp.desc(),
                 joins=[Case],
+                limit=limit,
             )
 
         elif batch_id_arg := f.request.args.get("batch_id"):
@@ -193,15 +224,21 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             ).all()
 
         elif run_reason_arg := f.request.args.get("run_reason"):
+            if not limit:
+                limit = 30000
             benchmark_results = BenchmarkResult.search(
-                filters=[BenchmarkResult.run_reason == run_reason_arg],
+                filters=[BenchmarkResult.run_reason == run_reason_arg] + days_filters,
                 order_by=BenchmarkResult.timestamp.desc(),
-                limit=55000,
+                limit=limit,
             )
 
         else:
+            if not days_filters and not limit:
+                limit = 1000
             benchmark_results = BenchmarkResult.all(
-                order_by=BenchmarkResult.timestamp.desc(), limit=1000
+                filter_args=days_filters,
+                order_by=BenchmarkResult.timestamp.desc(),
+                limit=limit,
             )
 
         # See https://github.com/conbench/conbench/issues/999 -- for rather
