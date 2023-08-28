@@ -1,3 +1,4 @@
+import copy
 import re
 
 import pytest
@@ -80,7 +81,7 @@ class TestBenchmarkResultGet(_asserts.GetEnforcer):
         self.authenticate(client)
 
         # Post a benchmark without a commit
-        payload = _fixtures.VALID_RESULT_PAYLOAD.copy()
+        payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
         del payload["github"]["commit"]
         post_response = client.post("/api/benchmarks/", json=payload)
         assert post_response.status_code == 201
