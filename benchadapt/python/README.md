@@ -4,18 +4,18 @@ A small python package with utilities for getting benchmark results into a Conbe
 
 ## Useful components in this package
 
-### `BenchmarkResult` and `BenchmarkRun` dataclasses
+### `BenchmarkResult` dataclass
 
-The `BenchmarkResult` and `BenchmarkRun` dataclasses are designed to make it easy to
-populate JSON payloads to post to a Conbench server. Their structure corresponds to the
-corresponding POST endpoint; they each have a `.to_publishable_dict()` method that
+The `BenchmarkResult` dataclass is designed to make it easy to
+populate JSON payloads to post to a Conbench server. The structure corresponds to the
+corresponding POST endpoint; it has a `.to_publishable_dict()` method that
 produces a dict to post.
 
-Regardless of how you are using them, the docstrings of these two objects will be useful
+Regardless of how you are using it, the docstrings of this object will be useful
 as you try to assemble your results to get them in Conbench. All fields are documented,
 as are interactions between them and what you likely need to specify.
 
-The objects try to help you fill in your payloads correctly, including some defaults,
+The object tries to help you fill in your payloads correctly, including some defaults,
 like populating `machine_info` with metadata on the current machine. If you are running
 on a cluster instead, you will need to populate `cluster_info` yourself, and
 `machine_info` will remain empty.

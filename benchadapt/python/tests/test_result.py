@@ -106,7 +106,7 @@ class TestBenchmarkResult:
         monkeypatch.setenv("CONBENCH_PROJECT_REPOSITORY", "http://localhost")
         monkeypatch.delenv("CONBENCH_PROJECT_PR_NUMBER", raising=False)
         monkeypatch.delenv("CONBENCH_PROJECT_COMMIT", raising=False)
-        res = BenchmarkResult()
+        res = BenchmarkResult(stats={"data": [47.0]})
         d = res.to_publishable_dict()
         assert d["github"] == {"repository": "http://localhost"}
 
