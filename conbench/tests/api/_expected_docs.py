@@ -1094,7 +1094,7 @@
                     },
                     "github": {
                         "allOf": [{"$ref": "#/components/schemas/SchemaGitHubCreate"}],
-                        "description": "GitHub-flavored commit information.  Use this object to tell Conbench with which specific state of benchmarked code (repository identifier, commit hash) the BenchmarkResult is associated.  The optionality of this object is deprecated. It will become required soon.",
+                        "description": "GitHub-flavored commit information. Required.  Use this object to tell Conbench with which specific state of benchmarked code (repository identifier, possible commit hash) the BenchmarkResult is associated.",
                     },
                     "info": {
                         "description": "Optional.  Arbitrary metadata associated with this benchmark result.  Ignored when assembling timeseries across results (differences do not break history).  Must be a JSON object if provided. A flat string-string mapping is recommended (not yet enforced).  This can be useful for example for storing URLs pointing to build artifacts. You can also use this to store environmental properties that you potentially would like to review later (a compiler version, or runtime version), and generally any kind of information that can later be useful for debugging unexpected measurements.",
@@ -1139,7 +1139,14 @@
                         "type": "object",
                     },
                 },
-                "required": ["batch_id", "context", "run_id", "tags", "timestamp"],
+                "required": [
+                    "batch_id",
+                    "context",
+                    "github",
+                    "run_id",
+                    "tags",
+                    "timestamp",
+                ],
                 "type": "object",
             },
             "BenchmarkResultStats": {
