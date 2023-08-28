@@ -517,6 +517,7 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         "run_id",
         "tags",
         "timestamp",
+        "github",
     ]
 
     def test_create_benchmark(self, client):
@@ -767,15 +768,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
         }
         self.assert_400_bad_request(response, message)
 
-    def _assert_none_commit(self, response):
-        assert response.status_code == 201, (response.status_code, response.text)
-        new_id = response.json["id"]
-        benchmark_result = BenchmarkResult.one(id=new_id)
-        assert benchmark_result.commit is None
-        assert benchmark_result.commit_repo_url is None
-        assert benchmark_result.associated_commit_repo_url == "n/a"
-        return benchmark_result, new_id
-
     def _assert_commit_repo_without_hash(self, response):
         assert response.status_code == 201, (response.status_code, response.text)
         new_id = response.json["id"]
@@ -790,25 +782,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
             == self.valid_payload["github"]["repository"]
         )
         return benchmark_result, new_id
-
-    def test_create_no_commit_context(self, client):
-        self.authenticate(client)
-        data = copy.deepcopy(self.valid_payload)
-        data["run_id"] = _uuid()
-        del data["github"]
-
-        # create benchmark without commit context
-        response = client.post("/api/benchmarks/", json=data)
-        benchmark_result, new_id = self._assert_none_commit(response)
-        location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(benchmark_result), location)
-
-        # create another benchmark without commit context
-        # (test duplicate key duplicate key -- commit_index)
-        response = client.post("/api/benchmarks/", json=data)
-        benchmark_result, new_id = self._assert_none_commit(response)
-        location = "http://localhost/api/benchmarks/%s/" % new_id
-        self.assert_201_created(response, _expected_entity(benchmark_result), location)
 
     def test_create_no_commit_hash(self, client):
         self.authenticate(client)

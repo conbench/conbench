@@ -81,7 +81,7 @@ class TestBenchmarkResultGet(_asserts.GetEnforcer):
 
         # Post a benchmark without a commit
         payload = _fixtures.VALID_RESULT_PAYLOAD.copy()
-        del payload["github"]
+        del payload["github"]["commit"]
         post_response = client.post("/api/benchmarks/", json=payload)
         assert post_response.status_code == 201
 

@@ -97,7 +97,7 @@ class TestRunGet(_asserts.GetEnforcer):
 
     def test_get_run_without_commit(self, client):
         self.authenticate(client)
-        result = _fixtures.benchmark_result(no_github=True)
+        result = _fixtures.benchmark_result(no_commit_hash=True)
         response = client.get(f"/api/runs/{result.run_id}/")
         expected = _expected_entity(
             result,
@@ -833,7 +833,7 @@ def test_get_candidate_baseline_runs():
     benchmark_result_missing_commit = _fixtures.benchmark_result(
         name=benchmark_results[1].case.name,
         results=[1, 2, 3],
-        no_github=True,
+        no_commit_hash=True,
     )
     assert benchmark_result_missing_commit.commit is None
     actual_baseline_run_dict = get_candidate_baseline_runs(

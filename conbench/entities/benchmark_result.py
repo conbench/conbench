@@ -244,15 +244,13 @@ class BenchmarkResult(Base, EntityMixin):
         else:
             hardware = Cluster.get_or_create(userres["cluster_info"])
 
-        user_given_commit_info: Optional[TypeCommitInfoGitHub] = userres.get("github")
-        repo_url = None
+        user_given_commit_info: TypeCommitInfoGitHub = userres["github"]
+        repo_url = user_given_commit_info["repo_url"]
         commit = None
-        if user_given_commit_info is not None:
-            repo_url = user_given_commit_info["repo_url"]
-            if user_given_commit_info["commit_hash"] is not None:
-                commit = commit_fetch_info_and_create_in_db_if_not_exists(
-                    user_given_commit_info
-                )
+        if user_given_commit_info["commit_hash"] is not None:
+            commit = commit_fetch_info_and_create_in_db_if_not_exists(
+                user_given_commit_info
+            )
 
         result_data_for_db["run_id"] = userres["run_id"]
         result_data_for_db["run_tags"] = userres.get("run_tags") or {}
@@ -1661,18 +1659,15 @@ class _BenchmarkResultCreateSchema(marshmallow.Schema):
     )
     github = marshmallow.fields.Nested(
         SchemaGitHubCreate(),
-        required=False,
+        required=True,
         metadata={
             "description": conbench.util.dedent_rejoin(
                 """
-                GitHub-flavored commit information.
+                GitHub-flavored commit information. Required.
 
                 Use this object to tell Conbench with which specific state of
-                benchmarked code (repository identifier, commit hash) the
+                benchmarked code (repository identifier, possible commit hash) the
                 BenchmarkResult is associated.
-
-                The optionality of this object is deprecated. It will become required
-                soon.
                 """
             )
         },
