@@ -777,10 +777,6 @@ class TestBenchmarkResultPost(_asserts.PostEnforcer):
             benchmark_result.commit_repo_url
             == self.valid_payload["github"]["repository"]
         )
-        assert (
-            benchmark_result.associated_commit_repo_url
-            == self.valid_payload["github"]["repository"]
-        )
         return benchmark_result, new_id
 
     def test_create_no_commit_hash(self, client):

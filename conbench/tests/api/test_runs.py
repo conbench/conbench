@@ -97,7 +97,7 @@ class TestRunGet(_asserts.GetEnforcer):
 
     def test_get_run_without_commit(self, client):
         self.authenticate(client)
-        result = _fixtures.benchmark_result(no_commit_hash=True)
+        result = _fixtures.benchmark_result(repo_without_commit=_fixtures.REPO)
         response = client.get(f"/api/runs/{result.run_id}/")
         expected = _expected_entity(
             result,
@@ -833,7 +833,7 @@ def test_get_candidate_baseline_runs():
     benchmark_result_missing_commit = _fixtures.benchmark_result(
         name=benchmark_results[1].case.name,
         results=[1, 2, 3],
-        no_commit_hash=True,
+        repo_without_commit=_fixtures.REPO,
     )
     assert benchmark_result_missing_commit.commit is None
     actual_baseline_run_dict = get_candidate_baseline_runs(
@@ -854,5 +854,34 @@ def test_get_candidate_baseline_runs():
             "error": None,
             "baseline_run_id": run_ids[9],  # latest with same reason (commit)
             "commits_skipped": [],
+        },
+    }
+
+    # test a run with no commit that cannot find a latest_default baseline because there
+    # are no commits on its repo's default branch
+    benchmark_result_different_repo = _fixtures.benchmark_result(
+        name=benchmark_results[1].case.name,
+        results=[1, 2, 3],
+        repo_without_commit="https://github.com/org/doesnt_exist",
+    )
+    assert benchmark_result_different_repo.commit is None
+    actual_baseline_run_dict = get_candidate_baseline_runs(
+        benchmark_result_different_repo
+    )
+    assert actual_baseline_run_dict == {
+        "parent": {
+            "error": "the contender run is not connected to the git graph",
+            "baseline_run_id": None,
+            "commits_skipped": None,
+        },
+        "fork_point": {
+            "error": "the contender run is not connected to the git graph",
+            "baseline_run_id": None,
+            "commits_skipped": None,
+        },
+        "latest_default": {
+            "error": "this baseline commit type does not exist for this run",
+            "baseline_run_id": None,
+            "commits_skipped": None,
         },
     }
