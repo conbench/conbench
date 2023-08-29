@@ -1,7 +1,0 @@
-click
-numpy
-psutil
-py-cpuinfo
-pytest>=7.0.0
-PyYAML
-requests

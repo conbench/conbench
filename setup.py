@@ -22,7 +22,6 @@ def parse_requirements(path: str):
     ]
 
 
-requirements_cli = parse_requirements(path="requirements-cli.txt")
 requirements_webapp = parse_requirements(path="requirements-webapp.txt")
 requirements_dev = parse_requirements(path="requirements-dev.txt")
 
@@ -46,9 +45,8 @@ setuptools.setup(
     maintainer="Apache Arrow Developers",
     maintainer_email="dev@arrow.apache.org",
     url="https://github.com/conbench/conbench",
-    install_requires=requirements_cli,
+    install_requires=requirements_webapp,
     extras_require={
-        "server": requirements_webapp,
-        "dev": requirements_webapp + requirements_dev,
+        "dev": requirements_dev,
     },
 )

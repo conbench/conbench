@@ -3,9 +3,12 @@ from datetime import datetime, timezone
 from typing import Dict, List, Tuple
 
 from ...db import _session as dbsession
-from ...entities.benchmark_result import BenchmarkResult, SchemaGitHubCreate
+from ...entities.benchmark_result import (
+    BenchmarkResult,
+    SchemaGitHubCreate,
+    validate_and_aggregate_samples,
+)
 from ...entities.commit import Commit
-from ...runner import Conbench
 from ...tests.helpers import _uuid
 
 CHILD = "02addad336ba19a654f9c857ede546331be7b631"
@@ -290,7 +293,15 @@ def benchmark_result(
 
     if results is not None:
         unit = unit if unit else "s"
-        data["stats"] = Conbench._stats(results, unit, [], "s", one_sample_no_mean)
+        data["stats"] = validate_and_aggregate_samples(
+            {
+                "data": results,
+                "unit": unit,
+                "times": [],
+                "time_unit": "s",
+                "iterations": len(results),
+            }
+        )
 
     if empty_results:
         data.pop("stats", None)
