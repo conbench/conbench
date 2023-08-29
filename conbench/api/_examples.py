@@ -42,6 +42,7 @@ def _api_benchmark_entity(
     hardware_name,
     hardware_type,
     name,
+    history_fingerprint,
     stats=None,
     error=None,
     validation=None,
@@ -137,6 +138,7 @@ def _api_benchmark_entity(
             hardware_id, hardware_name, hardware_type, links=False
         ),
         "batch_id": batch_id,
+        "history_fingerprint": history_fingerprint,
         "timestamp": timestamp.isoformat() + "Z"
         if timestamp
         else "2020-11-25T21:02:44Z",
@@ -364,7 +366,9 @@ def _api_context_entity(context_id, links=True):
     return result
 
 
-def _api_history_entity(benchmark_result_id, case_id, context_id, run_name):
+def _api_history_entity(
+    benchmark_result_id, case_id, context_id, run_name, history_fingerprint
+):
     return [
         {
             "benchmark_result_id": benchmark_result_id,
@@ -375,6 +379,7 @@ def _api_history_entity(benchmark_result_id, case_id, context_id, run_name):
             "context_id": context_id,
             "data": BENCHMARK_ENTITY["stats"]["data"],
             "hardware_hash": "diana-2-2-4-17179869184",
+            "history_fingerprint": history_fingerprint,
             "mean": 0.036369,
             "single_value_summary": 0.036369,
             "single_value_summary_type": "mean",
@@ -515,6 +520,7 @@ BENCHMARK_ENTITY = _api_benchmark_entity(
     "some-machine-name",
     "machine",
     "file-write",
+    "some-hexdigest",
 )
 COMMIT_ENTITY = _api_commit_entity(
     "some-commit-uuid-1",
@@ -570,6 +576,7 @@ HISTORY_ENTITY = _api_history_entity(
     "some-case-uuid-1",
     "some-context-uuid-1",
     "some run name",
+    "some-hexdigest",
 )
 INFO_ENTITY = _api_info_entity("some-info-uuid-1")
 HARDWARE_ENTITY = _api_hardware_entity("some-machine-uuid-1", "some-machine-name")

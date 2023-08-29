@@ -1,4 +1,5 @@
 import functools
+import hashlib
 import logging
 import math
 import statistics
@@ -21,6 +22,7 @@ import conbench.units
 import conbench.util
 from conbench.dbsession import current_session
 from conbench.numstr import numstr, numstr_dyn
+from conbench.types import THistFingerprint
 from conbench.units import KNOWN_UNIT_SYMBOLS_STR
 
 from ..entities._entity import (
@@ -86,6 +88,13 @@ class BenchmarkResult(Base, EntityMixin):
 
     hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
     hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
+
+    # The "fingerprint" (identifier) of this result's "history" (timeseries group).
+    # Two results with the same history_fingerprint should be directly comparable,
+    # because the relevant experimental variables have been controlled.
+    # Right now, those variables are benchmark name & case permutations, context,
+    # hardware, and repository. This is a hash of those variables.
+    history_fingerprint: Mapped[THistFingerprint] = NotNull(s.Text)
 
     # `data` holds the numeric values derived from N repetitions of the same
     # measurement (experiment). These can be empty lists. An item in the list
@@ -280,6 +289,12 @@ class BenchmarkResult(Base, EntityMixin):
         result_data_for_db["hardware_id"] = hardware.id
         result_data_for_db["commit_id"] = commit.id if commit else None
         result_data_for_db["commit_repo_url"] = repo_url
+        result_data_for_db["history_fingerprint"] = generate_history_fingerprint(
+            case_id=case.id,
+            context_id=context.id,
+            hardware_hash=hardware.hash,
+            repo_url=repo_url,
+        )
         benchmark_result = BenchmarkResult(**result_data_for_db)
         benchmark_result.save()
 
@@ -332,6 +347,7 @@ class BenchmarkResult(Base, EntityMixin):
             "commit_repo_url": benchmark_result.commit_repo_url,
             "hardware": hardware_dict,
             "batch_id": benchmark_result.batch_id,
+            "history_fingerprint": benchmark_result.history_fingerprint,
             "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
                 benchmark_result.timestamp
             ),
@@ -1025,6 +1041,30 @@ def commit_fetch_info_and_create_in_db_if_not_exists(
     return commit
 
 
+def generate_history_fingerprint(
+    case_id: str, context_id: str, hardware_hash: str, repo_url: str
+) -> str:
+    """Generate a history_fingerprint from the relevant control variables."""
+    hash = hashlib.md5()
+
+    # The unique index on Case means that its primary key is a unique identifier for the
+    # specific benchmark name and case permutation (tags)
+    hash.update(case_id.encode("utf-8"))
+
+    # Similarly, Context has a unique index on its tags
+    hash.update(context_id.encode("utf-8"))
+
+    # The conventional field for checking whether two hardwares are compatible is
+    # "hash". This might change in the future:
+    # https://github.com/conbench/conbench/issues/1281
+    hash.update(hardware_hash.encode("utf-8"))
+
+    # Don't mix two repositories
+    hash.update(repo_url.encode("utf-8"))
+
+    return hash.hexdigest()
+
+
 s.Index("benchmark_result_run_id_index", BenchmarkResult.run_id)
 s.Index("benchmark_result_case_id_index", BenchmarkResult.case_id)
 
@@ -1039,6 +1079,11 @@ s.Index("benchmark_result_context_id_index", BenchmarkResult.context_id)
 # We order by benchmark_result.timestamp in /api/benchmarks/ -- that wants
 # and index!
 s.Index("benchmark_result_timestamp_index", BenchmarkResult.timestamp)
+
+# An important index. "Give me all comparable results" is a very common query.
+s.Index(
+    "benchmark_result_history_fingerprint_index", BenchmarkResult.history_fingerprint
+)
 
 
 class _Serializer(EntitySerializer):

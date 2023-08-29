@@ -13,7 +13,7 @@ from ...db import _session as Session
 from ...entities.commit import Commit
 from ...entities.history import (
     _detect_shifts_with_trimmed_estimators,
-    get_history_for_cchr,
+    get_history_for_fingerprint,
     set_z_scores,
 )
 from ...tests.api import _fixtures
@@ -156,12 +156,9 @@ def test_get_history():
             benchmark_results[ix].id for ix in expected_benchmark_results_ixs
         }
 
-        actual_history = get_history_for_cchr(
+        actual_history = get_history_for_fingerprint(
+            benchmark_result.history_fingerprint,
             cast(TBenchmarkName, str(benchmark_result.case.name)),
-            benchmark_result.case_id,
-            benchmark_result.context_id,
-            benchmark_result.hardware.hash,
-            benchmark_result.commit.repository,
         )
         actual_benchmark_result_ids = {
             row.benchmark_result_id for row in actual_history
@@ -310,6 +307,7 @@ def test_detect_shifts_with_trimmed_estimators():
             # equivalent with mean, the single value representing the outcome
             # of the benchmark result.
             "svs": mean_vals,
+            "history_fingerprint": ["fake-fingerprint"] * 100,
         }
     )
 

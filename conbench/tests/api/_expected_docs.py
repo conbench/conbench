@@ -88,6 +88,7 @@
                                 "os_version": "10.15.7",
                                 "type": "machine",
                             },
+                            "history_fingerprint": "some-hexdigest",
                             "id": "some-benchmark-uuid-1",
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
@@ -198,6 +199,7 @@
                                     "os_version": "10.15.7",
                                     "type": "machine",
                                 },
+                                "history_fingerprint": "some-hexdigest",
                                 "id": "some-benchmark-uuid-1",
                                 "links": {
                                     "context": "http://localhost/api/contexts/some-context-uuid-1/",
@@ -308,6 +310,7 @@
                                 "os_version": "10.15.7",
                                 "type": "machine",
                             },
+                            "history_fingerprint": "some-hexdigest",
                             "id": "some-benchmark-uuid-1",
                             "links": {
                                 "context": "http://localhost/api/contexts/some-context-uuid-1/",
@@ -730,6 +733,7 @@
                                         0.004733,
                                     ],
                                     "hardware_hash": "diana-2-2-4-17179869184",
+                                    "history_fingerprint": "some-hexdigest",
                                     "mean": 0.036369,
                                     "repository": "https://github.com/org/repo",
                                     "run_name": "some run name",

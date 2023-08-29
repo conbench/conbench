@@ -84,10 +84,10 @@ class HistoryDownloadAPI(ApiEndpoint):
         return send_file(
             csv_buf,
             as_attachment=True,
-            # Use a "timeseries" fingerprint here that represents what all data
+            # Use a history fingerprint here that represents what all data
             # points in this series have in common: benchmark name, case perm,
             # hardware, context, repo.
-            download_name=f"conbench-history-{items[0].benchmark_name}-{items[0].ts_fingerprint}.csv",
+            download_name=f"conbench-history-{items[0].benchmark_name}-{items[0].history_fingerprint}.csv",
             mimetype="text/csv",
         )
 
@@ -132,8 +132,8 @@ def generate_csv_history_for_result(
     Specification for this endpoint: Download current full history including
     the benchmark result provided via ID.
 
-    Think: read the timeseries fingerprint from result with given ID, get all
-    results with the same timeseries fingerprint; construct a data file from
+    Think: read the history fingerprint from result with given ID, get all
+    results with the same history fingerprint; construct a data file from
     it. That file contains data for each result, but also meta data - about the
     system emitting the file - that all results have in common
 
@@ -193,7 +193,7 @@ def generate_csv_history_for_result(
             f"# benchmark name: {items[0].benchmark_name}",
             f"# case permutation: {items[0].case_text_id}",
             f"# hardware hash: {items[0].hardware_hash}",
-            f"# timeseries fingerprint: {items[0].ts_fingerprint}",
+            f"# history fingerprint: {items[0].history_fingerprint}",
             f"# single value summary (SVS) type: {items[0].svs_type}",
         ]
     )

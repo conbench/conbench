@@ -2,7 +2,6 @@ import copy
 import dataclasses
 import datetime
 import decimal
-import hashlib
 import logging
 import math
 from collections import defaultdict
@@ -14,7 +13,7 @@ import sqlalchemy as s
 
 import conbench.units
 from conbench.dbsession import current_session
-from conbench.types import TBenchmarkName
+from conbench.types import TBenchmarkName, THistFingerprint
 
 from ..config import Config
 from ..entities.benchmark_result import BenchmarkResult
@@ -75,7 +74,7 @@ class HistorySampleZscoreStats:
 class HistorySample:
     benchmark_result_id: str
     benchmark_name: TBenchmarkName
-    ts_fingerprint: str
+    history_fingerprint: THistFingerprint
     case_text_id: str
     case_id: str
     context_id: str
@@ -130,76 +129,39 @@ class HistorySample:
 
         # Remove new props for now (needs test suite adjustment, and so far
         # usage of new props is internal).
-        d.pop("ts_fingerprint")
         d.pop("benchmark_name")
         d.pop("case_text_id")
         return d
 
 
 def get_history_for_benchmark(benchmark_result_id: str) -> List[HistorySample]:
-    # First, find case / context / hardware / repo combination based on the
-    # input benchmark result ID. This database lookup may raise the `NotFound`
-    # exception.
+    # First, find the history fingerprint based on the input benchmark result ID. This
+    # database lookup may raise the `NotFound` exception.
 
     result: BenchmarkResult = BenchmarkResult.one(id=benchmark_result_id)
 
     benchmark_name = cast(TBenchmarkName, str(result.case.name))
 
-    if result.commit is None:
-        # Alternatively, raise an exception here -- allowing to inform the
-        # user that conceptually there will never be history for this
-        # benchmark result, because it's not associated with repo/commit
-        # information
-        return []
-
-    return get_history_for_cchr(
-        # this is technically represented in "case", but we want to explicitly
+    return get_history_for_fingerprint(
+        result.history_fingerprint,
+        # this is technically represented in the fingerprint, but we want to explicitly
         # store the benchmark name on the resulting objects
         benchmark_name,
-        result.case_id,
-        result.context_id,
-        result.hardware.hash,
-        result.commit.repository,
     )
 
 
-def get_history_for_cchr(
-    benchmark_name: TBenchmarkName,
-    case_id: str,
-    context_id: str,
-    hardware_hash: str,
-    repo_url: str,
+def get_history_for_fingerprint(
+    history_fingerprint: THistFingerprint, benchmark_name: TBenchmarkName
 ) -> List[HistorySample]:
     """
-    Given a case/context/hardware/repo, return all non-errored BenchmarkResults
-    (past, present, and future) on the default branch that match those
-    criteria, along with information about the stats of the distribution as of
-    each BenchmarkResult. Order is not guaranteed. Used to power the history
-    API, which also powers the timeseries plots.
+    Given a history fingerprint, return all non-errored BenchmarkResults (past, present,
+    and future) on the default branch that match it, along with information about the
+    stats of the distribution as of each BenchmarkResult. Order is not guaranteed. Used
+    to power the history API, which also powers the timeseries plots.
 
     For further detail on the stats columns, see the docs of
     ``_add_rolling_stats_columns_to_history_query()``.
     """
-
-    # Do not support history logic for results that are not associated with
-    # 'commit context'. Here, we could/should inspect `repo` to not be an empty
-    # string for example (there may be stray "no context" objects in the
-    # database that have the repo set to an empty string, i.e. the filter for
-    # repo=="" might even yield something).
-
-    # Note(JP): the goal here is to have an identifier that represents a
-    # timeseries (as opposed to a single result). We may want to first-class
-    # this general idea. Also see
-    # https://github.com/conbench/conbench/issues/862. This fingerprint hashing
-    # approach has / will have similarities to Prometheus
-    # Fingerprint/FastFingerprint. Later, let's think about likelihood for
-    # collisions, and if there can be a fallout at all.
-    ts_fingerprint = hashlib.md5(
-        (benchmark_name + case_id + context_id + hardware_hash + repo_url).encode(
-            "utf-8"
-        )
-    ).hexdigest()
-
     history = (
         current_session.query(
             BenchmarkResult,
@@ -211,18 +173,17 @@ def get_history_for_cchr(
             BenchmarkResult.run_tags["name"].label("run_name"),
         )
         .join(Hardware, Hardware.id == BenchmarkResult.hardware_id)
+        # This is an inner join, so results that aren't associated with a particular
+        # commit are excluded from the result. That's okay because we only want
+        # default-branch results anyway.
         .join(Commit, Commit.id == BenchmarkResult.commit_id)
         .filter(
-            BenchmarkResult.case_id == case_id,
-            BenchmarkResult.context_id == context_id,
             BenchmarkResult.error.is_(None),
-            # This `sha == Commit.fork_point_sha` cannot be satisfied for
-            # results with an unknown commit context where commit parent/child
-            # and branch information is not available. Consequence is to not
-            # allow for history endpoint result for 'unknown context'.
-            Commit.sha == Commit.fork_point_sha,  # on default branch
-            Commit.repository == repo_url,
-            Hardware.hash == hardware_hash,
+            BenchmarkResult.history_fingerprint == history_fingerprint,
+            # Today this is equivalent to "is on default branch". Note this excludes any
+            # "unknown context" commits, where the repo/hash are known but metadata
+            # retrieval from the GitHub API failed.
+            Commit.sha == Commit.fork_point_sha,
         )
     )
 
@@ -276,7 +237,7 @@ def get_history_for_cchr(
             HistorySample(
                 benchmark_result_id=sample.benchmark_result_id,
                 benchmark_name=benchmark_name,
-                ts_fingerprint=ts_fingerprint,
+                history_fingerprint=history_fingerprint,
                 case_id=result.case_id,
                 case_text_id=result.case.text_id,
                 context_id=result.context_id,
@@ -312,10 +273,13 @@ def set_z_scores(
     contender_benchmark_results: List[BenchmarkResult], baseline_commit: Commit
 ):
     """Set the "z_score" attribute on each contender BenchmarkResult, comparing it to
-    the baseline distribution of BenchmarkResults that share the same
-    case/context/hardware/repo, in the git ancestry of the baseline_commit (inclusive).
+    the baseline distribution of BenchmarkResults that share the same history
+    fingerprint, in the git ancestry of the baseline_commit (inclusive).
 
-    The given contender_benchmark_results must all have the same run_id.
+    The given contender_benchmark_results must all have the same run_id, which implies
+    that they share the same hardware, repository, and commit. But they may have
+    different names, cases, and/or contexts, so they may have different history
+    fingerprints.
 
     This function does not affect the database whatsoever. It only populates an
     attribute on the given python objects. This is typically called right before
@@ -335,23 +299,20 @@ def set_z_scores(
 
     if len(contender_benchmark_results) == 1:
         # performance optimization
-        case_id = contender_benchmark_results[0].case_id
-        context_id = contender_benchmark_results[0].context_id
+        history_fingerprint = contender_benchmark_results[0].history_fingerprint
     else:
-        case_id = None
-        context_id = None
+        history_fingerprint = None
 
     distribution_stats = _query_and_calculate_distribution_stats(
         contender_run_id=contender_run_id,
         hardware_checksum=contender_benchmark_results[0].hardware.hash,
         baseline_commit=baseline_commit,
-        case_id=case_id,
-        context_id=context_id,
+        history_fingerprint=history_fingerprint,
     )
 
     for benchmark_result in contender_benchmark_results:
         dist_mean, dist_stddev = distribution_stats.get(
-            (benchmark_result.case_id, benchmark_result.context_id), (None, None)
+            benchmark_result.history_fingerprint, (None, None)
         )
         benchmark_result.z_score = _calculate_z_score(
             data_point=_to_float_or_none(benchmark_result.mean),
@@ -365,9 +326,8 @@ def _query_and_calculate_distribution_stats(
     contender_run_id: str,
     hardware_checksum: str,
     baseline_commit: Commit,
-    case_id: Optional[str],
-    context_id: Optional[str],
-) -> Dict[Tuple[str, str], Tuple[Optional[float], Optional[float]]]:
+    history_fingerprint: Optional[THistFingerprint],
+) -> Dict[THistFingerprint, Tuple[Optional[float], Optional[float]]]:
     """Query and calculate rolling stats of the distribution of all BenchmarkResults
     that:
 
@@ -376,16 +336,16 @@ def _query_and_calculate_distribution_stats(
     - match the hardware checksum
     - have no errors
 
-    The calculations are grouped by case and context, returning a dict that looks like:
+    The calculations are grouped by history fingerprint, returning a dict that looks
+    like:
 
-    ``{(case_id, context_id): (dist_mean, dist_stddev)}``
+    ``{history_fingerprint: (dist_mean, dist_stddev)}``
 
-    If case_id and context_id are not given, return all case/context pairs that the
+    If history_fingerprint is not given, return all history fingerprints that the
     contender run has results for. This saves some time compared to returning all
-    case/context pairs in the database.
+    history fingerprints in the database.
 
-    If case_id and context_id are given, only return that pair. This saves a lot of
-    time.
+    If history_fingerprint is given, only return it. This saves a lot of time.
 
     For further detail on the stats columns, see the docs of
     ``_add_rolling_stats_columns_to_df()``.
@@ -419,27 +379,23 @@ def _query_and_calculate_distribution_stats(
         .filter(BenchmarkResult.error.is_(None), Hardware.hash == hardware_checksum)
     )
 
-    # Filter to the correct case(s)/context(s)
-    if case_id and context_id:
-        # filter to the given case/context
+    # Filter to the correct history fingerprint(s)
+    if history_fingerprint:
+        # filter to the given history_fingerprint
         history = history.filter(
-            BenchmarkResult.case_id == case_id,
-            BenchmarkResult.context_id == context_id,
+            BenchmarkResult.history_fingerprint == history_fingerprint
         )
     else:
-        # filter to *any* case/context attached to this Run
-        these_cases_and_contexts = (
-            current_session.query(BenchmarkResult.case_id, BenchmarkResult.context_id)
-            .filter(BenchmarkResult.run_id == contender_run_id)
-            .distinct()
-            .subquery()
+        # filter to *any* history fingerprint associated with this run_id
+        these_fingerprints = set(
+            current_session.scalars(
+                s.select(BenchmarkResult.history_fingerprint).filter(
+                    BenchmarkResult.run_id == contender_run_id
+                )
+            ).all()
         )
-        history = history.join(
-            these_cases_and_contexts,
-            s.and_(
-                these_cases_and_contexts.c.case_id == BenchmarkResult.case_id,
-                these_cases_and_contexts.c.context_id == BenchmarkResult.context_id,
-            ),
+        history = history.filter(
+            BenchmarkResult.history_fingerprint.in_(these_fingerprints)
         )
 
     history_df, _ = execute_history_query_get_dataframe(history.statement)
@@ -451,13 +407,13 @@ def _query_and_calculate_distribution_stats(
         history_df, include_current_commit_in_rolling_stats=True
     )
 
-    # Select the latest rolling_mean/rolling_stddev for each distribution
+    # Select the latest rolling_mean/rolling_stddev for each history_fingerprint
     stats_df = history_df.sort_values("timestamp", ascending=False).drop_duplicates(
-        ["case_id", "context_id"]
+        ["history_fingerprint"]
     )
 
     return {
-        (row.case_id, row.context_id): (row.rolling_mean, row.rolling_stddev)
+        row.history_fingerprint: (row.rolling_mean, row.rolling_stddev)
         for row in stats_df.itertuples()
     }
 
@@ -477,10 +433,9 @@ def execute_history_query_get_dataframe(statement) -> Tuple[pd.DataFrame, Dict]:
     info) per point in time, and the `BenchmarkResult(+additional info)` is
     spread across two objects.
 
-    Note(JP): I once understood this but now I wonder: is this generating
-    a dataframe for one meaningful timeseries (for one ts_fingerprint) or
-    does this contain rows for various different timeseries (hence grouping
-    would be necessary later on when further processing this)?
+    Note: this can be called on a query that returns results from multiple history
+    fingerprints (hence grouping would be necessary later on when further processing
+    this).
 
     Previously, we did
 
@@ -537,6 +492,7 @@ def execute_history_query_get_dataframe(statement) -> Tuple[pd.DataFrame, Dict]:
                 dict_for_df["svs"].append(value.svs)
                 dict_for_df["change_annotations"].append(value.change_annotations)
                 dict_for_df["result_timestamp"].append(value.timestamp)
+                dict_for_df["history_fingerprint"].append(value.history_fingerprint)
             if coldesc["name"] == "hardware_hash":
                 dict_for_df["hash"].append(value)
 
@@ -598,13 +554,10 @@ def _add_rolling_stats_columns_to_df(
 
     The input DataFrame must already have the following columns:
 
-        - BenchmarkResult: case_id
-        - BenchmarkResult: context_id
+        - BenchmarkResult: history_fingerprint
         - BenchmarkResult: change_annotations
         - BenchmarkResult: svs (single value summary, currently mean)
         - BenchmarkResult: result_timestamp
-        - Hardware: hash
-        - Commit: repository
         - Commit: timestamp
 
     and this function will add these columns (more detail below):
@@ -644,9 +597,7 @@ def _add_rolling_stats_columns_to_df(
 
     # pandas likes the data to be sorted
     df.sort_values(
-        ["case_id", "context_id", "hash", "repository", "timestamp"],
-        inplace=True,
-        ignore_index=True,
+        ["history_fingerprint", "timestamp"], inplace=True, ignore_index=True
     )
 
     # Clean up begins_distribution_change so it's a non-null boolean column
@@ -664,7 +615,7 @@ def _add_rolling_stats_columns_to_df(
 
     # Add column with cumulative sum of distribution changes, to identify the segment
     df["segment_id"] = (
-        df.groupby(["case_id", "context_id", "hash", "repository"])
+        df.groupby(["history_fingerprint"])
         .rolling(
             _CommitIndexer(window_size=len(df) + 1),
             on="timestamp",
@@ -678,7 +629,7 @@ def _add_rolling_stats_columns_to_df(
     # Add column with rolling mean of the means (only inside of the segment)
     df.loc[~df.is_outlier, "rolling_mean_excluding_this_commit"] = (
         df.loc[~df.is_outlier]
-        .groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
+        .groupby(["history_fingerprint", "segment_id"])
         .rolling(
             _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
             on="timestamp",
@@ -698,7 +649,7 @@ def _add_rolling_stats_columns_to_df(
     if include_current_commit_in_rolling_stats:
         df.loc[~df.is_outlier, "rolling_mean"] = (
             df.loc[~df.is_outlier]
-            .groupby(["case_id", "context_id", "hash", "repository", "segment_id"])
+            .groupby(["history_fingerprint", "segment_id"])
             .rolling(
                 _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
                 on="timestamp",
@@ -719,7 +670,7 @@ def _add_rolling_stats_columns_to_df(
     # (these can go outside the segment since we assume they don't change much)
     df.loc[~df.is_outlier, "rolling_stddev"] = (
         df.loc[~df.is_outlier]
-        .groupby(["case_id", "context_id", "hash", "repository"])  # not segment
+        .groupby(["history_fingerprint"])  # not segment
         .rolling(
             _CommitIndexer(window_size=Config.DISTRIBUTION_COMMITS),
             on="timestamp",
@@ -783,21 +734,14 @@ def _detect_shifts_with_trimmed_estimators(
 
     # pandas likes the data to be sorted
     tmp_df.sort_values(
-        [
-            "case_id",
-            "context_id",
-            "hash",
-            "repository",
-            "timestamp",
-            "result_timestamp",
-        ],
+        ["history_fingerprint", "timestamp", "result_timestamp"],
         inplace=True,
         ignore_index=True,
     )
 
     # split / apply
     out_group_df_list = []
-    for _, group_df in tmp_df.groupby(["case_id", "context_id", "hash", "repository"]):
+    for _, group_df in tmp_df.groupby(["history_fingerprint"]):
         # clean copy will only get result columns
         out_group_df = copy.deepcopy(group_df)
 
