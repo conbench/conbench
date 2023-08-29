@@ -233,7 +233,7 @@ def benchmark_result(
     empty_results=False,
     reason=None,
     one_sample_no_mean=False,
-    no_commit_hash=False,
+    repo_without_commit=None,
     timestamp=None,
 ):
     """Create BenchmarkResult and directly write to database.
@@ -279,8 +279,8 @@ def benchmark_result(
         data["github"]["commit"] = commit.sha
         data["github"]["repository"] = commit.repository
         data["github"]["branch"] = commit.branch
-    if no_commit_hash:
-        del data["github"]["commit"]
+    if repo_without_commit:
+        data["github"] = {"repository": repo_without_commit}
     if timestamp:
         data["timestamp"] = timestamp
 

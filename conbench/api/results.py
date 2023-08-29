@@ -285,9 +285,9 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             return resp400(str(exc))
 
         # Rely on the idea that the lookup
-        # `benchmark_result.commit.repo_url` always succeeds
+        # `benchmark_result.commit_repo_url` always succeeds
         conbench.metrics.COUNTER_BENCHMARK_RESULTS_INGESTED.labels(
-            repourl=benchmark_result.associated_commit_repo_url
+            repourl=benchmark_result.commit_repo_url
         ).inc()
         return self.response_201_created(self.serializer.one.dump(benchmark_result))
 

@@ -82,8 +82,7 @@ class BenchmarkResult(Base, EntityMixin):
     commit: Mapped[Optional[Commit]] = relationship("Commit", lazy="joined")
 
     # Non-empty URL to the repository without trailing slash.
-    # Will be made non-nullable very soon.
-    commit_repo_url: Mapped[Optional[str]] = Nullable(s.Text)
+    commit_repo_url: Mapped[str] = NotNull(s.Text)
 
     hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
     hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
@@ -554,25 +553,6 @@ class BenchmarkResult(Base, EntityMixin):
         assert self.unit
 
         return conbench.units.legacy_convert(self.unit)
-
-    @property
-    def associated_commit_repo_url(self) -> str:
-        """
-        Always return a string. Return URL or "n/a".
-
-        This is for those consumers that absolutely need to have a string type
-        representation.
-        """
-        if self.commit_repo_url is not None:
-            return self.commit_repo_url
-
-        if self.commit and self.commit.repo_url is not None:
-            return self.commit.repo_url
-
-        # This means that the result is not associated with any commit, or it is
-        # associated with a legacy/invalid commit object in the database, one
-        # that does not have a repository URL set.
-        return "n/a"
 
 
 def ui_rel_sem(values: List[float]) -> Tuple[str, str]:

@@ -253,16 +253,17 @@ def get_candidate_baseline_runs(
         )
 
     # The latest commit on the default branch that Conbench knows about
-    query = s.select(Commit).filter(Commit.sha == Commit.fork_point_sha)
+    query = (
+        s.select(Commit)
+        .filter(
+            Commit.sha == Commit.fork_point_sha,
+            Commit.repository == contender_benchmark_result.commit_repo_url,
+        )
+        .order_by(s.desc(Commit.timestamp))
+        .limit(1)
+    )
 
-    # TODO: how do we filter by repository if there's no commit?
-    # (For now we just choose the latest commit of any repository.)
-    if contender_commit:
-        query = query.filter(Commit.repository == contender_commit.repository)
-
-    latest_commit = current_session.scalars(
-        query.order_by(s.desc(Commit.timestamp)).limit(1)
-    ).first()
+    latest_commit = current_session.scalars(query).first()
     candidates["latest_default"] = _search_for_baseline_run(
         baseline_commit=latest_commit,
         contender_run_id=contender_benchmark_result.run_id,
