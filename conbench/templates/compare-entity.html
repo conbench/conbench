@@ -152,6 +152,27 @@ matching fields between baseline and contender are aligned and mismatched fields
             </li>
           {% endif %}
         {% endfor %}
+        {% if baseline.error %}
+          <li class="list-group-item list-group-item-secondary">error</li>
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>timestamp</b>
+            <div align="right" style="display:inline-block; float: right;">{{ baseline.display_timestamp }}</div>
+          </li>
+          {% for k,v in baseline.error.items() %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>{{ k }}</b>
+              <br>
+              <br />
+              <div align="left"
+                   style="display:inline-block;
+                          white-space: pre;
+                          float: center">
+                {{ v | urlize(target="_blank")
+                }}
+              </div>
+            </li>
+          {% endfor %}
+        {% endif %}
         {{ sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display=baseline, run_to_display=baseline_run) }}
       </ul>
     </div>
@@ -250,6 +271,27 @@ matching fields between baseline and contender are aligned and mismatched fields
             </li>
           {% endif %}
         {% endfor %}
+        {% if contender.error %}
+          <li class="list-group-item list-group-item-secondary">error</li>
+          <li class="list-group-item" style="overflow-y: auto;">
+            <b>timestamp</b>
+            <div align="right" style="display:inline-block; float: right;">{{ contender.display_timestamp }}</div>
+          </li>
+          {% for k,v in contender.error.items() %}
+            <li class="list-group-item" style="overflow-y: auto;">
+              <b>{{ k }}</b>
+              <br>
+              <br />
+              <div align="left"
+                   style="display:inline-block;
+                          white-space: pre;
+                          float: center">
+                {{ v | urlize(target="_blank")
+                }}
+              </div>
+            </li>
+          {% endfor %}
+        {% endif %}
         {{ sections_with_different_fields(baseline, contender, baseline_run, contender_run, benchmark_to_display=contender, run_to_display=contender_run) }}
       </ul>
     </div>
