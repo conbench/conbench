@@ -2,7 +2,6 @@ alembic
 apispec
 apispec-webframeworks
 bokeh
-click
 dacite
 email-validator
 Flask==2.2.3
@@ -22,15 +21,11 @@ orjson
 pandas>=2
 prometheus-client
 prometheus-flask-exporter
-psutil
 psycopg2
-py-cpuinfo
 pytest>=7.0.0
 python-dotenv
-PyYAML
 requests
 sigfig
 SQLAlchemy>=2
 tenacity
 uuid7
-

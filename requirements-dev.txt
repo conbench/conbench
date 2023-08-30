@@ -13,8 +13,6 @@ myst-parser
 sphinx==7.1.2
 sphinx-autodoc-typehints
 types-beautifulsoup4
-types-psutil
-types-PyYAML
 types-requests
 types-oauthlib
 types-Flask

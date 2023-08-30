@@ -25,9 +25,9 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
     # see https://wiki.postgresql.org/wiki/Apt -- I added `bullseye`
     # so that we do not need lsb_release
     curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
-        gpg --dearmor | tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg >/dev/null && \
-        sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt bullseye-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
-        apt update && apt install -y postgresql-client-15 libpq-dev  && \
+    gpg --dearmor | tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg >/dev/null && \
+    sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt bullseye-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
+    apt update && apt install -y postgresql-client-15 libpq-dev  && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements-webapp.txt /tmp/
@@ -52,7 +52,7 @@ COPY migrations /app/migrations
 # TODO: make it so that .git is not needed
 # see https://github.com/conbench/conbench/pull/667
 COPY .git /app/.git
-COPY setup.py README.md requirements-cli.txt requirements-webapp.txt requirements-dev.txt alembic.ini /app/
+COPY setup.py README.md requirements-webapp.txt requirements-dev.txt alembic.ini /app/
 
 # Inspect contents of /app
 RUN pwd && /bin/ls -1 .
@@ -71,4 +71,3 @@ COPY ./buildinfo.json /buildinfo.json
 # Re-active this to get ideas for how the image size can be further reduced.
 # RUN echo "biggest dirs"
 # RUN cd / && du -ha . | sort -r -h | head -n 50 || true
-
