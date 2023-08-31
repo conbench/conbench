@@ -81,7 +81,7 @@ spec:
             # Note(JP): these are so small to allow for deployment rollover on
             # a too-busy k8s cluster (resource contention). Update: with
             # somewhat more real mem resources on vd-2 we can bump this again.
-            memory: '2500Mi'
+            memory: '8000Mi'
             cpu: 0.5
         # TODO(JP): define liveness probe (for k8s to restart upon e.g.
         # deadlock). Readiness is really about when to serve traffic.
