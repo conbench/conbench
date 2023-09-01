@@ -44,10 +44,10 @@ class Index(AppEndpoint, RunMixin):
         if resp is not None:
             return resp
 
-        # Get run info from benchmark results in the last 14 days.
+        # Get run info from benchmark results in the last 30 days.
         all_run_info = get_all_run_info(
             min_time=datetime.datetime.now(datetime.timezone.utc)
-            - datetime.timedelta(days=14),
+            - datetime.timedelta(days=30),
             max_time=datetime.datetime.now(datetime.timezone.utc),
         )
         # Note(JP): group runs by associated repository value.
