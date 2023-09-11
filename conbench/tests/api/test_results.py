@@ -43,6 +43,7 @@ def _expected_entity(benchmark_result: BenchmarkResult, stats=None):
         benchmark_result.hardware.name,
         benchmark_result.hardware.type,
         benchmark_result.case.name,
+        benchmark_result.history_fingerprint,
         stats,
         benchmark_result.error,
         benchmark_result.validation,

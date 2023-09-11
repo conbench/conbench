@@ -13,6 +13,7 @@ def _expected_entity(benchmark_result):
         benchmark_result.case_id,
         benchmark_result.context_id,
         benchmark_result.run_tags.get("name"),
+        benchmark_result.history_fingerprint,
     )
 
 

@@ -918,7 +918,7 @@ def get_source_for_single_benchmark_result(current_benchmark_result, cur_run, un
     dummy_hs_for_current_svs = HistorySample(
         mean=current_benchmark_result.mean,
         benchmark_name=TBenchmarkName("dummy"),
-        ts_fingerprint="dummy",
+        history_fingerprint="dummy",
         case_text_id="dummy",
         svs=current_benchmark_result.svs,
         svs_type=current_benchmark_result.svs_type,

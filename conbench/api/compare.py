@@ -11,6 +11,7 @@ import sqlalchemy as s
 import conbench.units
 from conbench.dbsession import current_session
 from conbench.numstr import numstr
+from conbench.types import THistFingerprint
 
 from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
@@ -441,45 +442,35 @@ class CompareRunsAPI(ApiEndpoint):
         baseline_results: List[BenchmarkResult],
         contender_results: List[BenchmarkResult],
     ) -> List[Tuple[Optional[BenchmarkResult], Optional[BenchmarkResult]]]:
-        """Do a full outer join of two lists of benchmark results, pairing by case,
-        context, hardware, and unit.
+        """Do a full outer join of two lists of benchmark results, pairing by history
+        fingerprint.
 
-        If a case/context/hardware/unit combination is present in one list but not
-        the other, it will still be included but the other tuple element will be None.
+        If a history fingerprint is present in one list but not the other, it will still
+        be included but the other tuple element will be None.
 
-        If there are multiple results for a case/context/hardware/unit combination
-        in both lists, a cartesian product of them all will be returned.
+        If there are multiple results for a history fingerprint in both lists, a
+        cartesian product of them all will be returned.
         """
-        _key_type = Tuple[str, str, str, Optional[str]]
-
-        def _generate_key(result: BenchmarkResult) -> _key_type:
-            return (
-                result.case_id,
-                result.context_id,
-                result.hardware.hash,
-                result.unit,
-            )
-
-        baseline_results_by_key: Dict[
-            _key_type, List[Optional[BenchmarkResult]]
+        baseline_results_by_fing: Dict[
+            THistFingerprint, List[Optional[BenchmarkResult]]
         ] = collections.defaultdict(list)
-        contender_results_by_key: Dict[
-            _key_type, List[Optional[BenchmarkResult]]
+        contender_results_by_fing: Dict[
+            THistFingerprint, List[Optional[BenchmarkResult]]
         ] = collections.defaultdict(list)
 
         for result in baseline_results:
-            baseline_results_by_key[_generate_key(result)].append(result)
+            baseline_results_by_fing[result.history_fingerprint].append(result)
 
         for result in contender_results:
-            contender_results_by_key[_generate_key(result)].append(result)
+            contender_results_by_fing[result.history_fingerprint].append(result)
 
         joined_results: List[
             Tuple[Optional[BenchmarkResult], Optional[BenchmarkResult]]
         ] = []
 
-        for key in set(baseline_results_by_key) | set(contender_results_by_key):
-            for baseline_result in baseline_results_by_key[key] or [None]:
-                for contender_result in contender_results_by_key[key] or [None]:
+        for fing in set(baseline_results_by_fing) | set(contender_results_by_fing):
+            for baseline_result in baseline_results_by_fing[fing] or [None]:
+                for contender_result in contender_results_by_fing[fing] or [None]:
                     joined_results.append((baseline_result, contender_result))
 
         return joined_results
@@ -492,10 +483,10 @@ class CompareRunsAPI(ApiEndpoint):
             Compare all benchmark results between two runs.
 
             This endpoint will return a list of comparison objects, pairing benchmark
-            results from the given baseline and contender runs that have the same case,
-            context, hardware, and unit. The comparison object is the same
-            as the `GET /api/compare/benchmark-results/` response; see that endpoint's
-            documentation for details.
+            results from the given baseline and contender runs that have the same
+            history fingerprint. The comparison object is the same as the `GET
+            /api/compare/benchmark-results/` response; see that endpoint's documentation
+            for details.
 
             If a benchmark result from one run does not have a matching result in the
             other run, a comparison object will still be returned for it, with the other
@@ -565,18 +556,22 @@ class CompareRunsAPI(ApiEndpoint):
             set_display_benchmark_name(benchmark_result)
             set_display_case_permutation(benchmark_result)
 
-        pairs = self._join_results(baseline_results, contender_results)
-        # We do not have to try to catch a UnmatchingUnitsError here because
-        # _join_results() will only return pairs of results with matching units.
-        comparators = [
-            BenchmarkResultComparator(
-                baseline=baseline_result,
-                contender=contender_result,
-                threshold=threshold,
-                threshold_z=threshold_z,
-            )
-            for baseline_result, contender_result in pairs
-        ]
+        comparators: List[BenchmarkResultComparator] = []
+        for baseline_result, contender_result in self._join_results(
+            baseline_results, contender_results
+        ):
+            try:
+                comparators.append(
+                    BenchmarkResultComparator(
+                        baseline=baseline_result,
+                        contender=contender_result,
+                        threshold=threshold,
+                        threshold_z=threshold_z,
+                    )
+                )
+            except UnmatchingUnitsError:
+                # Don't return comparisons if their units mismatch.
+                pass
 
         return f.jsonify([comparator._dict_for_api_json for comparator in comparators])
 

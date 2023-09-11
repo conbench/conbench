@@ -38,6 +38,7 @@ class TestJoinResults:
             result.commit = commit
         else:
             result.commit = None
+        result.history_fingerprint = case_id + context_id
         return result
 
     @staticmethod
