@@ -89,11 +89,11 @@ class BenchmarkResult(Base, EntityMixin):
     hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
     hardware: Mapped[Hardware] = relationship("Hardware", lazy="joined")
 
-    # The "fingerprint" (identifier) of this result's "history" (timeseries group).
-    # Two results with the same history_fingerprint should be directly comparable,
-    # because the relevant experimental variables have been controlled.
-    # Right now, those variables are benchmark name & case permutations, context,
-    # hardware, and repository. This is a hash of those variables.
+    # The "fingerprint" (identifier) of this result's "history" (timeseries group). Two
+    # results with the same history_fingerprint should be directly comparable, because
+    # the relevant experimental variables have been controlled. Right now, those
+    # variables are benchmark name & set of case parameter values, context, hardware,
+    # and repository. This is a hash of those variables.
     history_fingerprint: Mapped[THistFingerprint] = NotNull(s.Text)
 
     # `data` holds the numeric values derived from N repetitions of the same
@@ -1045,6 +1045,10 @@ def generate_history_fingerprint(
     case_id: str, context_id: str, hardware_hash: str, repo_url: str
 ) -> str:
     """Generate a history_fingerprint from the relevant control variables."""
+    # MD5 -- it's fine, it's fast, and I think collisions are practically impossible
+    # (but that back-of-the-envelope calculation should at some point maybe be done, so
+    # that at least current assumptions are documented: e.g., less than 10^6 individual
+    # fingerprints or something like that).
     hash = hashlib.md5()
 
     # The unique index on Case means that its primary key is a unique identifier for the

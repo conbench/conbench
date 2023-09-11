@@ -305,7 +305,6 @@ def set_z_scores(
 
     distribution_stats = _query_and_calculate_distribution_stats(
         contender_run_id=contender_run_id,
-        hardware_checksum=contender_benchmark_results[0].hardware.hash,
         baseline_commit=baseline_commit,
         history_fingerprint=history_fingerprint,
     )
@@ -324,7 +323,6 @@ def set_z_scores(
 
 def _query_and_calculate_distribution_stats(
     contender_run_id: str,
-    hardware_checksum: str,
     baseline_commit: Commit,
     history_fingerprint: Optional[THistFingerprint],
 ) -> Dict[THistFingerprint, Tuple[Optional[float], Optional[float]]]:
@@ -333,7 +331,6 @@ def _query_and_calculate_distribution_stats(
 
     - are associated with any of the last DISTRIBUTION_COMMITS commits in the
       baseline_commit's git ancestry (inclusive)
-    - match the hardware checksum
     - have no errors
 
     The calculations are grouped by history fingerprint, returning a dict that looks
@@ -376,7 +373,7 @@ def _query_and_calculate_distribution_stats(
         .select_from(BenchmarkResult)
         .join(Hardware, Hardware.id == BenchmarkResult.hardware_id)
         .join(commits, commits.c.ancestor_id == BenchmarkResult.commit_id)
-        .filter(BenchmarkResult.error.is_(None), Hardware.hash == hardware_checksum)
+        .filter(BenchmarkResult.error.is_(None))
     )
 
     # Filter to the correct history fingerprint(s)
