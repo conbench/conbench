@@ -2,7 +2,6 @@ from typing import List, Optional, Set, Tuple
 
 import pytest
 
-from ...entities.benchmark_result import generate_history_fingerprint
 from ...api._examples import _api_compare_entity, _api_compare_list
 from ...api.compare import CompareRunsAPI, _round
 from ...tests.api import _asserts, _fixtures
