@@ -543,6 +543,12 @@ class BenchmarkResult(Base, EntityMixin):
             return '<a href="#">n/a</a>'
         return f'<a href="{self.commit.commit_url}">{self.commit.hash[:7]}</a>'
 
+    @property
+    def ui_commit_short_msg(self) -> str:
+        if self.commit is None:
+            return "n/a"
+        return conbench.util.short_commit_msg(self.commit.message)
+
     @functools.cached_property
     def unitsymbol(self) -> Optional[conbench.units.TUnit]:
         """Return unit symbol or None if result indicates failure."""
