@@ -44,7 +44,7 @@
               {% for result_for_run in results_for_runs %}
                 <tr class="no-border">
                   <td>
-                    <code><a href="{{ url_for('app.run', run_id=result_for_run.run_id) }}">{{ result_for_run.ui_time_started_at}}</a></code>
+                    <code><a href="{{ url_for('app.run', run_id=result_for_run.run_id) }}">{{ result_for_run.ui_time_started_at }}</a></code>
                   </td>
                   <!-- no efficient lookup built so far; can populate this from BMRT cache if we want to -->
                   <td></td>
