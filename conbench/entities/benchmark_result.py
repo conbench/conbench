@@ -559,6 +559,12 @@ class BenchmarkResult(Base, EntityMixin):
             return '<a href="#">n/a</a>'
         return f'<a href="{self.commit.commit_url}">{self.commit.hash[:7]}</a>'
 
+    @property
+    def ui_commit_short_msg(self) -> str:
+        if self.commit is None:
+            return "n/a"
+        return conbench.util.short_commit_msg(self.commit.message)
+
     @functools.cached_property
     def unitsymbol(self) -> Optional[conbench.units.TUnit]:
         """Return unit symbol or None if result indicates failure."""
@@ -920,6 +926,49 @@ def validate_and_augment_result_tags(userres: Any):
             raise BenchmarkResultValidationError(
                 "tags: bad value type for key `{key}`, JSON object and array is not allowed`"
             )
+
+
+# Note(JP): This is a special "skip scan" query tailored for current
+# implementation details (PostgreSQL 15, current DB schema). It is designed to
+# quickly obtain one benchmark result row from results table, each result
+# having a unique run_id set. See
+# https://github.com/conbench/conbench/issues/1466 for more details and
+# background.
+_RECENT_RUNS_QUERY = """
+WITH RECURSIVE t AS (
+   (
+      SELECT *
+      FROM benchmark_result ORDER BY run_id LIMIT 1
+   )
+   UNION ALL
+   SELECT l.*
+   FROM t
+   CROSS JOIN LATERAL (
+      SELECT *
+      FROM   benchmark_result
+      WHERE  run_id > t.run_id
+      ORDER BY run_id
+      LIMIT  1
+      ) l
+   )
+SELECT * FROM t WHERE run_id IS NOT NULL
+ORDER BY timestamp desc
+LIMIT 500;
+"""
+
+
+def one_result_per_n_recent_runs() -> List[BenchmarkResult]:
+    from sqlalchemy.sql import text
+
+    bmrs = (
+        current_session.query(BenchmarkResult)
+        .from_statement(text(_RECENT_RUNS_QUERY))
+        .all()
+    )
+
+    log.info("found %s results", len(bmrs))
+
+    return bmrs
 
 
 def commit_fetch_info_and_create_in_db_if_not_exists(

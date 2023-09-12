@@ -2,7 +2,7 @@
 {% block app_content %}
   <h1>CI runs</h1>
   <div class="mt-3">
-    {% for reponame, runobjs in repo_runs_map.items() %}
+    {% for reponame, results_for_runs in reponame_result_map_sorted.items() %}
       <div class="row mb-5">
         <h4>
           Recent  CI runs for <strong>{{ reponame }}</strong>
@@ -27,8 +27,11 @@
                 <th scope="colgroup" colspan="3" class="">Commit</th>
               </tr>
               <tr>
-                <!-- add tooltip, saying that this is DB insertion time -->
-                <th scope="col" style="width: 180px" class="cb-colgroup-run">creation time</th>
+                <!-- add tooltip, saying that this is DB insertion time
+                update(jp): now this is more like "(a) result seen at.
+                "creation time" is kind of wrong
+              -->
+                <th scope="col" style="width: 180px" class="cb-colgroup-run">time</th>
                 <th scope="col" class="cb-colgroup-run">results</th>
                 <th scope="col" class="reason-col cb-colgroup-run">reason</th>
                 <th scope="col" style="width: 150px" class="cb-colgroup-run">hardware</th>
@@ -38,66 +41,55 @@
               </tr>
             </thead>
             <tbody class="table-group-divider">
-              {% for r in runobjs %}
+              {% for result_for_run in results_for_runs %}
                 <tr class="no-border">
                   <td>
-                    <code><a href="{{ url_for('app.run', run_id=r.earliest_result.run_id) }}">{{ r.display_commit_time }}</a></code>
-                    {% if r.any_result_failed %}
-                      <i class="bi bi-exclamation-circle text-danger"
-                         data-toggle="tooltip"
-                         data-placement="top"
-                         title="This Run contains a benchmark result with an error"></i>
-                    {% endif %}
+                    <code><a href="{{ url_for('app.run', run_id=result_for_run.run_id) }}">{{ result_for_run.ui_time_started_at }}</a></code>
                   </td>
-                  <td>{{ r.result_count }}</td>
+                  <!-- no efficient lookup built so far; can populate this from BMRT cache if we want to -->
+                  <td></td>
                   <td>
-                    {% if r.earliest_result.run_reason %}
-                      <div class="table-entry">{{ r.earliest_result.run_reason }}</div>
+                    {% if result_for_run.run_reason %}
+                      <div class="table-entry">{{ result_for_run.run_reason }}</div>
                     {% else %}
                       <div class="table-entry"></div>
                     {% endif %}
                   </td>
                   <td>
                     <span class="table-entry text-truncate d-inline-block"
-                          style="max-width: 140px">{{ r.earliest_result.hardware.name }}</span>
+                          style="max-width: 140px">{{ result_for_run.hardware.name }}</span>
                   </td>
                   <td>
                     <div class="table-entry">
-                      {% if r.earliest_result.commit is not none %}
-                        {% if r.earliest_result.commit.author_avatar_url is not none %}
+                      {% if result_for_run.commit is not none %}
+                        {% if result_for_run.commit.author_avatar_url is not none %}
                           <img alt="avatar"
-                               src="{{ r.earliest_result.commit.author_avatar_url  }}"
+                               src="{{ result_for_run.commit.author_avatar_url  }}"
                                height="25"
                                style="border-radius: 50%">
                           &nbsp;
                         {% endif %}
-                        {{ r.earliest_result.commit.author_name }}
+                        {{ result_for_run.commit.author_name }}
                       {% else %}
                         n/a
                       {% endif %}
                     </div>
                   </td>
                   <td>
-                    {% if r.earliest_result.commit is not none %}
-                      {% if r.earliest_result.commit.commit_url is not none %}
-                        <code><a href="{{ r.earliest_result.commit.commit_url }}">{{ r.earliest_result.commit.hash[:7] }}</a></code>
+                    {% if result_for_run.commit is not none %}
+                      {% if result_for_run.commit.commit_url is not none %}
+                        <code><a href="{{ result_for_run.commit.commit_url }}">{{ result_for_run.commit.hash[:7] }}</a></code>
                       {% else %}
                         {# is this a valid scenario? when there's a hash, but no url? #}
-                        {{ r.earliest_result.commit.hash[:7] }}
+                        {{ result_for_run.commit.hash[:7] }}
                       {% endif %}
                       <!--NOTE: enable full commit has search while maintaining partial hash display -->
-                      <p style="display:none">{{ r.earliest_result.commit.hash }}</p>
+                      <p style="display:none">{{ result_for_run.commit.hash }}</p>
                     {% else %}
                       n/a
                     {% endif %}
                   </td>
-                  <td>
-                    {% if r.earliest_result.commit is not none %}
-                      {{ r.display_commit_msg }}
-                    {% else %}
-                      n/a
-                    {% endif %}
-                  </td>
+                  <td>{{ result_for_run.ui_commit_short_msg }}</td>
                 </tr>
               {% endfor %}
             </tbody>

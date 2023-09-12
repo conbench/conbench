@@ -1,4 +1,3 @@
-import datetime
 import logging
 from collections import defaultdict
 from typing import Dict, List, Optional
@@ -6,11 +5,11 @@ from urllib.parse import urlparse
 
 import flask
 
-from ..api.runs import RunAggregate, get_all_run_info
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app.results import RunMixin
 from ..config import Config
+from ..entities.benchmark_result import BenchmarkResult, one_result_per_n_recent_runs
 
 log = logging.getLogger(__name__)
 
@@ -28,12 +27,12 @@ def _cloud_lb_health_check_shortcut() -> Optional[flask.Response]:
 
 
 class Index(AppEndpoint, RunMixin):
-    def page(self, repo_runs_map):
+    def page(self, reponame_result_map_sorted):
         return self.render_template(
             "index.html",
             application=Config.APPLICATION_NAME,
             title="Home",
-            repo_runs_map=repo_runs_map,
+            reponame_result_map_sorted=reponame_result_map_sorted,
             # Note(JP): search_value is not consumed in template
             # search_value=f.request.args.get("search"),
         )
@@ -44,25 +43,29 @@ class Index(AppEndpoint, RunMixin):
         if resp is not None:
             return resp
 
-        # Get run info from benchmark results in the last 30 days.
-        all_run_info = get_all_run_info(
-            min_time=datetime.datetime.now(datetime.timezone.utc)
-            - datetime.timedelta(days=30),
-            max_time=datetime.datetime.now(datetime.timezone.utc),
-        )
-        # Note(JP): group runs by associated repository value.
-        reponame_runs_map: Dict[str, List[RunAggregate]] = defaultdict(list)
+        # Get (any?) one result for all of the N most recently seen run IDs.
+        # This is not necessarily the earliest result. It may be, as of the
+        # current implementation, but this isn't guaranteed for now. Also, as
+        # of the DB query used we cannot answer if "any result in this run
+        # failed?", i.e. the notion of "a failed run" is not on the UI landing
+        # page anymore.
+        bmrs = one_result_per_n_recent_runs()
 
-        for run in all_run_info:
-            rname = repo_url_to_display_name(run.earliest_result.commit_repo_url)
-            reponame_runs_map[rname].append(run)
+        # Note(JP): group one-result-per-run by associated repository value.
+        reponame_result_map: Dict[str, List[BenchmarkResult]] = defaultdict(list)
+
+        for r in bmrs:
+            rname = repo_url_to_display_name(r.commit_repo_url)
+            reponame_result_map[rname].append(r)
 
         # A quick decision for now, not set in stone: get a stable sort order
         # of repositories the way they are listed on that page; do this by
         # sorting alphabetically.
-        reponame_runs_map_sorted = dict(sorted(reponame_runs_map.items()))
+        reponame_result_map_sorted = dict(sorted(reponame_result_map.items()))
 
-        return self.page(reponame_runs_map_sorted)
+        # log.info(reponame_result_map_sorted)
+
+        return self.page(reponame_result_map_sorted)
 
 
 def repo_url_to_display_name(url: Optional[str]) -> str:

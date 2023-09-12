@@ -39,6 +39,7 @@ class RunAggregate:
 
     @functools.cached_property
     def display_commit_time(self) -> str:
+        # Note(JP): this is not the commit time
         return self.earliest_result.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
 
     @functools.cached_property
