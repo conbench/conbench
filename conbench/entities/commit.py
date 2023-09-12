@@ -238,6 +238,7 @@ class Commit(Base, EntityMixin):
         # Get default branch commits before/including the fork point
         query = current_session.query(
             Commit.id.label("ancestor_id"),
+            Commit.sha.label("ancestor_hash"),
             Commit.timestamp.label("ancestor_timestamp"),
             s.sql.expression.literal(True, s.Boolean).label("on_default_branch"),
             s.func.concat("1_", Commit.timestamp).label("commit_order"),
@@ -251,6 +252,7 @@ class Commit(Base, EntityMixin):
         if self != fork_point_commit:
             branch_query = current_session.query(
                 Commit.id.label("ancestor_id"),
+                Commit.sha.label("ancestor_hash"),
                 Commit.timestamp.label("ancestor_timestamp"),
                 s.sql.expression.literal(False, s.Boolean).label("on_default_branch"),
                 s.func.concat("2_", Commit.timestamp).label("commit_order"),

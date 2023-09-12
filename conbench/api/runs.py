@@ -1,7 +1,7 @@
 import dataclasses
 import datetime
 import functools
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Set
 
 import flask as f
 import flask_login
@@ -15,7 +15,8 @@ from ..dbsession import current_session
 from ..entities._entity import EntitySerializer
 from ..entities.benchmark_result import BenchmarkResult
 from ..entities.commit import CantFindAncestorCommitsError, Commit, CommitSerializer
-from ..entities.hardware import Hardware, HardwareSerializer
+from ..entities.hardware import HardwareSerializer
+from ..types import THistFingerprint
 from ..util import short_commit_msg, tznaive_dt_to_aware_iso8601_for_api
 
 
@@ -115,7 +116,7 @@ class _CandidateBaselineSearchResult:
 def _search_for_baseline_run(
     contender_run_id: str,
     contender_run_reason: Optional[str],
-    contender_hardware_checksum: str,
+    contender_history_fingerprints: Set[THistFingerprint],
     baseline_commit: Optional[Commit],
     commit_limit: int = 20,
 ) -> _CandidateBaselineSearchResult:
@@ -142,72 +143,61 @@ def _search_for_baseline_run(
         )
 
     try:
-        ancestor_commits = (
-            baseline_commit.commit_ancestry_query.order_by(s.desc("commit_order"))
-            .limit(commit_limit)
-            .subquery()
-        )
+        commit_query = baseline_commit.commit_ancestry_query.order_by(
+            s.desc("commit_order")
+        ).limit(commit_limit)
     except CantFindAncestorCommitsError as e:
         return _CandidateBaselineSearchResult(
             error=f"could not find the baseline commit's ancestry because {e}"
         )
 
+    commits = commit_query.all()
+    commit_ids = [commit.ancestor_id for commit in commits]
+    commit_hashes = [commit.ancestor_hash for commit in commits]
+    earliest_commit_timestamp = commits[-1].ancestor_timestamp
+
     baseline_run_query = (
-        s.select(
-            BenchmarkResult.run_id,
-            Commit.sha,
-            BenchmarkResult.case_id,
-            BenchmarkResult.context_id,
-        )
+        s.select(BenchmarkResult.run_id, BenchmarkResult.commit_id)
         .select_from(BenchmarkResult)
-        .join(Hardware, Hardware.id == BenchmarkResult.hardware_id)
         .join(Commit, Commit.id == BenchmarkResult.commit_id)
-        .join(ancestor_commits, ancestor_commits.c.ancestor_id == Commit.id)
         .filter(
-            Hardware.hash == contender_hardware_checksum,
+            BenchmarkResult.history_fingerprint.in_(contender_history_fingerprints),
             BenchmarkResult.run_id != contender_run_id,
+            BenchmarkResult.commit_id.in_(commit_ids),
+            BenchmarkResult.timestamp >= earliest_commit_timestamp,  # a nice speedup
         )
         .order_by(
-            # Prefer this Run's run_reason,
+            # Prefer this Run's run_reason
             s.desc(BenchmarkResult.run_reason == contender_run_reason),
-            ancestor_commits.c.commit_order.desc(),  # then latest commit,
+            Commit.timestamp.desc(),  # then latest commit,
             BenchmarkResult.timestamp.desc(),  # then latest BenchmarkResult timestamp
         )
+        .limit(1)
     )
-    matching_benchmark_results = current_session.execute(baseline_run_query).all()
+    matching_benchmark_result = current_session.execute(baseline_run_query).first()
 
-    valid_cases_and_contexts = set(
-        row.tuple()
-        for row in current_session.execute(
-            s.select(BenchmarkResult.case_id, BenchmarkResult.context_id).filter(
-                BenchmarkResult.run_id == contender_run_id
-            )
-        ).all()
-    )
-
-    for row in matching_benchmark_results:
-        baseline_run_id, baseline_commit_hash, case_id, context_id = row.tuple()
-        if (case_id, context_id) in valid_cases_and_contexts:
-            # Continue onward with the first one that matches a case_id/context_id
-            # of this run
-            break
-    else:
+    if not matching_benchmark_result:
         return _CandidateBaselineSearchResult(
             error="no matching baseline run was found"
         )
 
     # Figure out a list of commits that were skipped in the search for a baseline
-    commit_hashes_searched = current_session.scalars(
-        s.select(Commit.sha)
-        .select_from(ancestor_commits)
-        .join(Commit, Commit.id == ancestor_commits.c.ancestor_id)
-        .order_by(ancestor_commits.c.commit_order.desc())
-    ).all()
-    index_of_baseline = commit_hashes_searched.index(baseline_commit_hash)
-    commits_skipped = commit_hashes_searched[:index_of_baseline]
+    index_of_baseline = commit_ids.index(matching_benchmark_result.commit_id)
+    commits_skipped = commit_hashes[:index_of_baseline]
 
     return _CandidateBaselineSearchResult(
-        baseline_run_id=baseline_run_id, commits_skipped=commits_skipped
+        baseline_run_id=matching_benchmark_result.run_id,
+        commits_skipped=commits_skipped,
+    )
+
+
+def _get_history_fingerprints_for_run(run_id: str) -> Set[THistFingerprint]:
+    return set(
+        current_session.scalars(
+            s.select(BenchmarkResult.history_fingerprint).filter(
+                BenchmarkResult.run_id == run_id
+            )
+        ).all()
     )
 
 
@@ -221,6 +211,7 @@ def get_candidate_baseline_runs(
     See docstring of _search_for_baseline_run() for how these are found.
     """
     contender_commit = contender_benchmark_result.commit
+    contender_history_fingerprints = set()  # to be cached and reused in this function
     candidates: Dict[str, _CandidateBaselineSearchResult] = {}
 
     # The direct, single parent in the git graph
@@ -229,11 +220,14 @@ def get_candidate_baseline_runs(
             error="the contender run is not connected to the git graph"
         )
     else:
+        contender_history_fingerprints = _get_history_fingerprints_for_run(
+            contender_benchmark_result.run_id
+        )
         candidates["parent"] = _search_for_baseline_run(
             baseline_commit=contender_commit.get_parent_commit(),
             contender_run_id=contender_benchmark_result.run_id,
             contender_run_reason=contender_benchmark_result.run_reason,
-            contender_hardware_checksum=contender_benchmark_result.hardware.hash,
+            contender_history_fingerprints=contender_history_fingerprints,
         )
 
     # If this is a PR run, the PR's fork point commit on the default branch
@@ -246,11 +240,15 @@ def get_candidate_baseline_runs(
             error="the contender run is already on the default branch"
         )
     else:
+        if not contender_history_fingerprints:
+            contender_history_fingerprints = _get_history_fingerprints_for_run(
+                contender_benchmark_result.run_id
+            )
         candidates["fork_point"] = _search_for_baseline_run(
             baseline_commit=contender_commit.get_fork_point_commit(),
             contender_run_id=contender_benchmark_result.run_id,
             contender_run_reason=contender_benchmark_result.run_reason,
-            contender_hardware_checksum=contender_benchmark_result.hardware.hash,
+            contender_history_fingerprints=contender_history_fingerprints,
         )
 
     # The latest commit on the default branch that Conbench knows about
@@ -265,11 +263,15 @@ def get_candidate_baseline_runs(
     )
 
     latest_commit = current_session.scalars(query).first()
+    if not contender_history_fingerprints:
+        contender_history_fingerprints = _get_history_fingerprints_for_run(
+            contender_benchmark_result.run_id
+        )
     candidates["latest_default"] = _search_for_baseline_run(
         baseline_commit=latest_commit,
         contender_run_id=contender_benchmark_result.run_id,
         contender_run_reason=contender_benchmark_result.run_reason,
-        contender_hardware_checksum=contender_benchmark_result.hardware.hash,
+        contender_history_fingerprints=contender_history_fingerprints,
     )
 
     return {
