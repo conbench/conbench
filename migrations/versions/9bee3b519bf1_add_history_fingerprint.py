@@ -49,9 +49,11 @@ def upgrade():
     p("renaming temp table")
     op.execute("ALTER TABLE temp RENAME TO benchmark_result")
 
+    p("marking id as primary key")
+    op.execute("ALTER TABLE benchmark_result ADD PRIMARY KEY (id)")
+
     p("-- making columns non-nullable --")
     for colname in [
-        "id",
         "case_id",
         "info_id",
         "context_id",
