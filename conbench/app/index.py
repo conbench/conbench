@@ -48,8 +48,11 @@ class Index(AppEndpoint, RunMixin):
         if resp is not None:
             return resp
 
-        # bmrs = fetch_one_result_per_n_recent_runs()
-
+        # _get_recent_runs() uses a return value cache base don the stdlib LRU
+        # cache module. Clear that cache during testing; the lru_cache
+        # decorator has added a `cache_clear()` method to the func object.
+        if Config.TESTING:
+            _get_recent_runs.cache_clear()
         runs_for_display = _get_recent_runs()
 
         # Note(JP): group one-result-per-run by associated repository value.
