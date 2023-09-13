@@ -163,7 +163,7 @@ def _get_recent_runs() -> List["RunForDisplay"]:
     for bmr in bmrs:
         result_count = "n/a"
         if bmr.run_id in bmrt_cache["by_run_id"]:
-            result_count = str(len(bmrt_cache["by_run_id"]))
+            result_count = str(len(bmrt_cache["by_run_id"][bmr.run_id]))
 
         runs_for_display.append(
             RunForDisplay(
