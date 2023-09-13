@@ -1,5 +1,5 @@
 import copy
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Tuple
 
 from ...db import _session as dbsession
@@ -268,6 +268,7 @@ def benchmark_result(
     data["run_id"] = run_id if run_id else _uuid()
     data["batch_id"] = batch_id if batch_id else _uuid()
     data["tags"]["name"] = name if name else _uuid()
+    data["timestamp"] = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
     if language:
         data["context"]["benchmark_language"] = language
@@ -402,6 +403,7 @@ def gen_fake_data(
     # Now populate a variety of different BenchmarkResults
     benchmark_results: List[BenchmarkResult] = []
     name = _uuid()
+    result_timestamp = datetime(2022, 1, 7)
 
     for data_or_error, commit_sha in [
         # first commit
@@ -431,6 +433,7 @@ def gen_fake_data(
         # some-context commit
         ([20.0, 20.1, 20.2], "sha"),
     ]:
+        result_timestamp += timedelta(seconds=1)
         commit = commits[commit_sha]
         if isinstance(data_or_error, list):
             benchmark_results.append(
@@ -440,7 +443,7 @@ def gen_fake_data(
                     name=name,
                     pull_request=commit.branch == "branch" if commit else False,
                     one_sample_no_mean=one_sample_no_mean,
-                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    timestamp=result_timestamp,
                 )
             )
         else:
@@ -451,7 +454,7 @@ def gen_fake_data(
                     name=name,
                     pull_request=commit.branch == "branch" if commit else False,
                     one_sample_no_mean=one_sample_no_mean,
-                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    timestamp=result_timestamp,
                 )
             )
 
@@ -467,11 +470,13 @@ def gen_fake_data(
         {"reason": "nightly"},
     ]:
         this_name = kwargs.pop("name", name)
+        result_timestamp += timedelta(seconds=1)
         benchmark_results.append(
             benchmark_result(
                 results=[5.1, 5.2, 5.3],
                 commit=commits["66666"],
                 name=this_name,
+                timestamp=result_timestamp,
                 **kwargs,
             )
         )

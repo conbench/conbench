@@ -401,15 +401,9 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
     def test_benchmark_list_filter_by_name_with_limit(self, client):
         self.authenticate(client)
-        _fixtures.benchmark_result(
-            name="bbb",
-            timestamp=datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
-        )
+        _fixtures.benchmark_result(name="bbb")
         time.sleep(1)
-        benchmark_result = _fixtures.benchmark_result(
-            name="bbb",
-            timestamp=datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
-        )
+        benchmark_result = _fixtures.benchmark_result(name="bbb")
         _fixtures.benchmark_result(name="ccc")
         response = client.get("/api/benchmarks/?name=bbb&limit=1")
         assert len(response.json) == 1
@@ -427,9 +421,6 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         self.authenticate(client)
         _fixtures.benchmark_result()
         _fixtures.benchmark_result(
-            timestamp=(datetime.utcnow().replace(microsecond=0)).isoformat() + "Z",
-        )
-        _fixtures.benchmark_result(
             timestamp=(
                 datetime.utcnow().replace(microsecond=0) - timedelta(days=2)
             ).isoformat()
@@ -444,9 +435,7 @@ class TestBenchmarkList(_asserts.ListEnforcer):
     def test_benchmark_results_with_days_and_limit(self, client):
         self.authenticate(client)
         _fixtures.benchmark_result()
-        _fixtures.benchmark_result(
-            timestamp=(datetime.utcnow().replace(microsecond=0)).isoformat() + "Z",
-        )
+        _fixtures.benchmark_result()
         _fixtures.benchmark_result(
             timestamp=(
                 datetime.utcnow().replace(microsecond=0) - timedelta(days=2)
@@ -458,10 +447,7 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
     def test_benchmark_list_filter_by_name_with_daysand_limit(self, client):
         self.authenticate(client)
-        benchmark_result = _fixtures.benchmark_result(
-            name="bbb",
-            timestamp=datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
-        )
+        benchmark_result = _fixtures.benchmark_result(name="bbb")
         _fixtures.benchmark_result(
             name="bbb",
             timestamp=(
@@ -483,10 +469,6 @@ class TestBenchmarkList(_asserts.ListEnforcer):
     def test_benchmark_list_filter_by_run_reason_with_days_and_limit(self, client):
         self.authenticate(client)
         _fixtures.benchmark_result(reason="rolf")
-        _fixtures.benchmark_result(
-            timestamp=(datetime.utcnow().replace(microsecond=0)).isoformat() + "Z",
-            reason="rolf",
-        )
         _fixtures.benchmark_result(
             timestamp=(
                 datetime.utcnow().replace(microsecond=0) - timedelta(days=2)

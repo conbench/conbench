@@ -118,7 +118,7 @@ class TestRunGet(_asserts.GetEnforcer):
         self._assert_baseline_link(
             response.text,
             "latest_default",
-            # earliest benchmark result on the latest default-branch commit
-            benchmark_results[9].run_id,
+            # latest benchmark result on the latest default-branch commit
+            benchmark_results[15].run_id,
             benchmark_results[3].run_id,
         )

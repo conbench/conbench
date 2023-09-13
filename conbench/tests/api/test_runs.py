@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime, timezone
 
 from conbench.util import tznaive_dt_to_aware_iso8601_for_api
 
@@ -405,15 +404,8 @@ class TestRunList(_asserts.ListEnforcer):
     public = True
 
     def _create(self):
-        # In this test class it's important to supply a timestamp of now() when creating
-        # BenchmarkResults because the list runs endpoint looks at the last 30 days of
-        # BenchmarkResults.
-        _fixtures.benchmark_result(
-            sha=_fixtures.PARENT, timestamp=datetime.now(timezone.utc).isoformat()
-        )
-        benchmark_result = _fixtures.benchmark_result(
-            timestamp=datetime.now(timezone.utc).isoformat()
-        )
+        _fixtures.benchmark_result(sha=_fixtures.PARENT)
+        benchmark_result = _fixtures.benchmark_result()
         return benchmark_result
 
     def test_run_list(self, client):
@@ -446,18 +438,10 @@ class TestRunList(_asserts.ListEnforcer):
         sha1 = _fixtures.CHILD
         sha2 = _fixtures.PARENT
         self.authenticate(client)
-        _fixtures.benchmark_result(
-            sha=_fixtures.PARENT, timestamp=datetime.now(timezone.utc).isoformat()
-        )
-        result_1 = _fixtures.benchmark_result(
-            timestamp=datetime.now(timezone.utc).isoformat()
-        )
-        _fixtures.benchmark_result(
-            sha=_fixtures.CHILD, timestamp=datetime.now(timezone.utc).isoformat()
-        )
-        result_2 = _fixtures.benchmark_result(
-            timestamp=datetime.now(timezone.utc).isoformat()
-        )
+        _fixtures.benchmark_result(sha=_fixtures.PARENT)
+        result_1 = _fixtures.benchmark_result()
+        _fixtures.benchmark_result(sha=_fixtures.CHILD)
+        result_2 = _fixtures.benchmark_result()
         response = client.get(f"/api/runs/?sha={sha1},{sha2}")
 
         self.assert_200_ok(response, contains=_expected_entity(result_1))
@@ -581,7 +565,7 @@ def test_get_candidate_baseline_runs():
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": run_ids[9],
+                "baseline_run_id": run_ids[15],
                 "commits_skipped": [],
             },
         },
@@ -599,7 +583,7 @@ def test_get_candidate_baseline_runs():
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": run_ids[9],
+                "baseline_run_id": run_ids[15],
                 "commits_skipped": [],
             },
         },
@@ -617,7 +601,7 @@ def test_get_candidate_baseline_runs():
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": run_ids[9],
+                "baseline_run_id": run_ids[15],
                 "commits_skipped": [],
             },
         },
@@ -649,7 +633,7 @@ def test_get_candidate_baseline_runs():
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": run_ids[9],
+                "baseline_run_id": run_ids[15],
                 "commits_skipped": [],
             },
         },
@@ -667,7 +651,7 @@ def test_get_candidate_baseline_runs():
             },
             "latest_default": {
                 "error": None,
-                "baseline_run_id": run_ids[9],
+                "baseline_run_id": run_ids[15],
                 "commits_skipped": [],
             },
         },
