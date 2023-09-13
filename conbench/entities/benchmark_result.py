@@ -84,6 +84,10 @@ class BenchmarkResult(Base, EntityMixin):
     commit: Mapped[Optional[Commit]] = relationship("Commit", lazy="joined")
 
     # Non-empty URL to the repository without trailing slash.
+    # Note(JP): maybe it is easier to think of this as just "repo_url" because
+    # while it is not required that each result is associated with a particular
+    # commit, but instead it is required to be associated with a (one!) code
+    # repository as identified by its user-given repository URL.
     commit_repo_url: Mapped[str] = NotNull(s.Text)
 
     hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
