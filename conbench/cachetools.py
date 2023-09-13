@@ -2,9 +2,13 @@ import time
 from functools import lru_cache, wraps
 
 
-def lru_cache_with_ttl(maxsize=128, typed=False, ttl=60):
+def lru_cache_with_ttl(maxsize=None, typed=False, ttl=60):
     """Stdlib LRU cache with a notion of expiration time. Inspired by
     https://stackoverflow.com/a/71634221 and others.
+
+    The maxsize=None default arg makes this (by default) behave like
+    functools.cache instead of functools.lru_cache (this is a little cleaner to
+    use for caching the return value of functions that have no arguments).
     """
 
     class Result:
