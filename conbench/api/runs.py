@@ -167,10 +167,13 @@ def _search_for_baseline_run(
             BenchmarkResult.timestamp >= earliest_commit_timestamp,  # a nice speedup
         )
         .order_by(
-            # Prefer this Run's run_reason
+            # Prefer this Run's run_reason,
             s.desc(BenchmarkResult.run_reason == contender_run_reason),
-            Commit.timestamp.desc(),  # then latest commit,
-            BenchmarkResult.timestamp.desc(),  # then latest BenchmarkResult timestamp
+            # then latest commit,
+            s.desc(Commit.sha != Commit.fork_point_sha),
+            Commit.timestamp.desc(),
+            # then latest BenchmarkResult timestamp
+            BenchmarkResult.timestamp.desc(),
         )
         .limit(1)
     )
