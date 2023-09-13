@@ -99,6 +99,23 @@ def repo_url_to_display_name(url: Optional[str]) -> str:
     return p.strip("/")
 
 
+@dataclass
+class RunForDisplay:
+    # Note(JP). dataclass tailored for displaying per-run information in the
+    # UI. Note that for VSCode support for Python variable types and
+    # auto-completion in a jinja2 templates is not yet there:
+    # https://github.com/microsoft/pylance-release/discussions/4090
+    run_id: str
+    time_for_table: str
+    commit_message_short: str
+    repo_url: str
+    # result count is str because it may also be "n/a"
+    result_count: str
+    hardware_name: str
+    run_reason: str
+    commit: Optional[Commit]
+
+
 view = Index.as_view("index")
 rule("/", view_func=view, methods=["GET"])
 rule("/index/", view_func=view, methods=["GET"])
