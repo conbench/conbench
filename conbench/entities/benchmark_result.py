@@ -84,6 +84,10 @@ class BenchmarkResult(Base, EntityMixin):
     commit: Mapped[Optional[Commit]] = relationship("Commit", lazy="joined")
 
     # Non-empty URL to the repository without trailing slash.
+    # Note(JP): maybe it is easier to think of this as just "repo_url" because
+    # while it is not required that each result is associated with a particular
+    # commit, but instead it is required to be associated with a (one!) code
+    # repository as identified by its user-given repository URL.
     commit_repo_url: Mapped[str] = NotNull(s.Text)
 
     hardware_id: Mapped[str] = NotNull(s.String(50), s.ForeignKey("hardware.id"))
@@ -928,10 +932,11 @@ def validate_and_augment_result_tags(userres: Any):
             )
 
 
-# Note(JP): This is a special "skip scan" query tailored for current
+# Note(JP): This tries to be a special "skip scan" query tailored for current
 # implementation details (PostgreSQL 15, current DB schema). It is designed to
-# quickly obtain one benchmark result row from results table, each result
-# having a unique run_id set. See
+# quickly and efficiently obtain one benchmark result row from results table,
+# with each result having a unique run_id set, and results overall being sorted
+# by time (most recent first). For more detail, see
 # https://github.com/conbench/conbench/issues/1466 for more details and
 # background.
 _RECENT_RUNS_QUERY = """
@@ -957,7 +962,7 @@ LIMIT 500;
 """
 
 
-def one_result_per_n_recent_runs() -> List[BenchmarkResult]:
+def fetch_one_result_per_n_recent_runs() -> List[BenchmarkResult]:
     from sqlalchemy.sql import text
 
     bmrs = (
@@ -966,8 +971,9 @@ def one_result_per_n_recent_runs() -> List[BenchmarkResult]:
         .all()
     )
 
-    log.info("found %s results", len(bmrs))
-
+    # Note(JP): as of the time of writing we're still having to reach out to
+    # the database to get commit information: one query per result, I think.
+    # That SELECT query (one per result) will often refer to the same c
     return bmrs
 
 

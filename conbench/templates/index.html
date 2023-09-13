@@ -2,7 +2,7 @@
 {% block app_content %}
   <h1>CI runs</h1>
   <div class="mt-3">
-    {% for reponame, results_for_runs in reponame_result_map_sorted.items() %}
+    {% for reponame, runs in reponame_runs_map_sorted.items() %}
       <div class="row mb-5">
         <h4>
           Recent  CI runs for <strong>{{ reponame }}</strong>
@@ -41,55 +41,55 @@
               </tr>
             </thead>
             <tbody class="table-group-divider">
-              {% for result_for_run in results_for_runs %}
+              {% for run in runs %}
                 <tr class="no-border">
                   <td>
-                    <code><a href="{{ url_for('app.run', run_id=result_for_run.run_id) }}">{{ result_for_run.ui_time_started_at }}</a></code>
+                    <code><a href="{{ url_for('app.run', run_id=run.run_id) }}">{{ run.time_for_table }}</a></code>
                   </td>
                   <!-- no efficient lookup built so far; can populate this from BMRT cache if we want to -->
-                  <td></td>
+                  <td>{{ run.result_count }}</td>
                   <td>
-                    {% if result_for_run.run_reason %}
-                      <div class="table-entry">{{ result_for_run.run_reason }}</div>
+                    {% if run.run_reason %}
+                      <div class="table-entry">{{ run.run_reason }}</div>
                     {% else %}
                       <div class="table-entry"></div>
                     {% endif %}
                   </td>
                   <td>
                     <span class="table-entry text-truncate d-inline-block"
-                          style="max-width: 140px">{{ result_for_run.hardware.name }}</span>
+                          style="max-width: 140px">{{ run.hardware_name }}</span>
                   </td>
                   <td>
                     <div class="table-entry">
-                      {% if result_for_run.commit is not none %}
-                        {% if result_for_run.commit.author_avatar_url is not none %}
+                      {% if run.commit is not none %}
+                        {% if run.commit.author_avatar_url is not none %}
                           <img alt="avatar"
-                               src="{{ result_for_run.commit.author_avatar_url  }}"
+                               src="{{ run.commit.author_avatar_url  }}"
                                height="25"
                                style="border-radius: 50%">
                           &nbsp;
                         {% endif %}
-                        {{ result_for_run.commit.author_name }}
+                        {{ run.commit.author_name }}
                       {% else %}
                         n/a
                       {% endif %}
                     </div>
                   </td>
                   <td>
-                    {% if result_for_run.commit is not none %}
-                      {% if result_for_run.commit.commit_url is not none %}
-                        <code><a href="{{ result_for_run.commit.commit_url }}">{{ result_for_run.commit.hash[:7] }}</a></code>
+                    {% if run.commit is not none %}
+                      {% if run.commit.commit_url is not none %}
+                        <code><a href="{{ run.commit.commit_url }}">{{ run.commit.hash[:7] }}</a></code>
                       {% else %}
                         {# is this a valid scenario? when there's a hash, but no url? #}
-                        {{ result_for_run.commit.hash[:7] }}
+                        {{ run.commit.hash[:7] }}
                       {% endif %}
                       <!--NOTE: enable full commit has search while maintaining partial hash display -->
-                      <p style="display:none">{{ result_for_run.commit.hash }}</p>
+                      <p style="display:none">{{ run.commit.hash }}</p>
                     {% else %}
                       n/a
                     {% endif %}
                   </td>
-                  <td>{{ result_for_run.ui_commit_short_msg }}</td>
+                  <td>{{ run.commit_message_short }}</td>
                 </tr>
               {% endfor %}
             </tbody>
