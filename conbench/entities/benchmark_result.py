@@ -1144,6 +1144,9 @@ s.Index(
     "benchmark_result_history_fingerprint_index", BenchmarkResult.history_fingerprint
 )
 
+# History queries look for specific commit_ids
+s.Index("benchmark_result_commit_id_index", BenchmarkResult.commit_id)
+
 
 class _Serializer(EntitySerializer):
     def _dump(self, benchmark_result):

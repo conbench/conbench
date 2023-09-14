@@ -348,32 +348,43 @@ def _query_and_calculate_distribution_stats(
     ``_add_rolling_stats_columns_to_df()``.
     """
     try:
-        commits = baseline_commit.commit_ancestry_query.subquery()
+        commit_ancestry_query = baseline_commit.commit_ancestry_query.order_by(
+            s.desc("commit_order")
+        ).limit(Config.DISTRIBUTION_COMMITS)
     except CantFindAncestorCommitsError as e:
         log.debug(f"Couldn't _query_and_calculate_distribution_stats() because {e}")
         return {}
 
-    # Get the last DISTRIBUTION_COMMITS ancestor commits of the baseline commit
-    commits = (
-        current_session.query(commits)
-        .order_by(commits.c.commit_order.desc())
-        .limit(Config.DISTRIBUTION_COMMITS)
-        .subquery()
-    )
+    commit_ancestry_info = commit_ancestry_query.all()
+    commit_timestamps_by_id = {
+        row.ancestor_id: row.ancestor_timestamp for row in commit_ancestry_info
+    }
+    earliest_commit_timestamp = min(commit_timestamps_by_id.values())
 
-    # Find all historic results in the distribution to analyze
-    history = (
-        current_session.query(
-            # we can use the `defer` method to not select all columns
-            BenchmarkResult,
-            Hardware.hash.label("hardware_hash"),
-            s.sql.expression.literal(baseline_commit.repository).label("repository"),
-            commits.c.ancestor_timestamp.label("commit_timestamp"),
-        )
-        .select_from(BenchmarkResult)
-        .join(Hardware, Hardware.id == BenchmarkResult.hardware_id)
-        .join(commits, commits.c.ancestor_id == BenchmarkResult.commit_id)
-        .filter(BenchmarkResult.error.is_(None))
+    # Find all historic results in the distribution to analyze. Still takes a while
+    # (~25s for 350K historic results corresponding to 3500 fingerprints). Probably,
+    # paginating by groups of fingerprints would be the next speedup step.
+    history = s.select(
+        BenchmarkResult.commit_id,
+        BenchmarkResult.history_fingerprint,
+        BenchmarkResult.timestamp.label("result_timestamp"),
+        BenchmarkResult.change_annotations,
+        # Note[austin]: Okay. Pros and cons here. Of course the SVS is not exactly
+        # equivalent to the mean in all cases because of "errored results", and that's
+        # especially true if we change the default definition of SVS in the future (in
+        # which case let's revisit this!). But after careful analysis of the code, I
+        # believe that they are equivalent for BenchmarkResults where "error" is None
+        # and "mean" is not None, at least since #1127 or previous.
+        #
+        # The benefit of this assumption is we can avoid the time-consuming
+        # execute_history_query_get_dataframe() for-loops and SQLAlchemy object
+        # instantiation for big data (3e5 results). This goes SO MUCH faster.
+        BenchmarkResult.mean.label("svs"),
+    ).filter(
+        BenchmarkResult.error.is_(None),
+        BenchmarkResult.mean.is_not(None),
+        BenchmarkResult.commit_id.in_(commit_timestamps_by_id.keys()),
+        BenchmarkResult.timestamp >= earliest_commit_timestamp,  # a nice speedup
     )
 
     # Filter to the correct history fingerprint(s)
@@ -395,7 +406,8 @@ def _query_and_calculate_distribution_stats(
             BenchmarkResult.history_fingerprint.in_(these_fingerprints)
         )
 
-    history_df, _ = execute_history_query_get_dataframe(history.statement)
+    history_df = pd.read_sql(history, current_session.connection())
+    history_df["timestamp"] = history_df["commit_id"].map(commit_timestamps_by_id)
 
     if len(history_df) == 0:
         return {}
