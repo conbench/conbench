@@ -123,10 +123,9 @@ def _search_for_baseline_run(
     """Search for and return information about a baseline run of a contender run, where
     the baseline run:
 
-    - is on the given baseline_commit, or in its git ancestry (up to
-        ``commit_limit`` commits ago)
-    - matches the contender run's hardware checksum
-    - has a BenchmarkResult with the case_id/context_id of any of the contender
+    - is on the given baseline_commit (but not the same run), or in its git ancestry (up
+        to ``commit_limit`` commits ago)
+    - has a BenchmarkResult with the history fingerprint of any of the contender
         run's BenchmarkResults
 
     Always returns a _CandidateBaselineSearchResult, and if there are no matches for

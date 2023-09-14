@@ -76,6 +76,7 @@ def upgrade():
         "info_id",
         "run_id",
         "timestamp",
+        "commit_id",
     ]:
         p(colname)
         op.create_index(

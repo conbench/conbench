@@ -426,6 +426,8 @@ class CompareRunsAPI(ApiEndpoint):
         """Get all benchmark results for a run. Abort if the run doesn't exist or if
         there are no results for the run.
         """
+        # TODO: fairly slow; e.g. 3 seconds for 3500 results. Maybe we select only the
+        # columns we need. Today it's joining to case, context, hardware, and commit
         result = current_session.scalars(
             s.select(BenchmarkResult).where(BenchmarkResult.run_id == run_id)
         ).all()
