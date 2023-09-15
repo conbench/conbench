@@ -13,7 +13,7 @@ from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app.results import RunMixin
 from ..config import Config
-from ..entities.benchmark_result import fetch_one_result_per_n_recent_runs
+from ..entities.benchmark_result import fetch_one_result_per_each_of_n_recent_runs
 from ..entities.commit import Commit
 
 log = logging.getLogger(__name__)
