@@ -50,6 +50,10 @@ def upgrade():
         """
     )
 
+    log.info("fixing column types")
+    op.alter_column("temp", "run_reason", type_=sa.Text())
+    op.alter_column("temp", "commit_repo_url", type_=sa.Text())
+
     log.info("dropping benchmark_result table")
     op.drop_table("benchmark_result")
 
