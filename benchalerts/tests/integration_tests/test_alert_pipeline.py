@@ -27,6 +27,7 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
     """While this test is running, you can watch
     https://github.com/conbench/benchalerts/pull/5 to see the statuses change!
     """
+    pytest.skip("https://github.com/conbench/conbench/issues/1478 causes this to fail")
     test_status_repo = "conbench/benchalerts"
     test_status_commit = "f6e70aeb29ce07c40eed0c0175e9dced488ed6ee"
 

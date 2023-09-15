@@ -56,6 +56,7 @@ def test_GetConbenchZComparisonStep(
     commit_hash: str,
     expected_len: int,
 ):
+    pytest.skip("https://github.com/conbench/conbench/issues/1478 causes this to fail")
     if "ursa" in conbench_url:
         pytest.skip(
             "https://github.com/conbench/conbench/issues/745 means timeouts cause this to fail"
