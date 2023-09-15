@@ -32,7 +32,7 @@ def upgrade():
                 run.reason AS run_reason,
                 run.commit_id AS commit_id,
                 run.hardware_id AS hardware_id,
-                COALESCE(commit.repository, 'https://github.com/facebookincubator/velox') AS commit_repo_url
+                COALESCE(commit.repository, 'https://github.com/apache/arrow') AS commit_repo_url
             FROM benchmark_result
             LEFT JOIN run ON run.id = benchmark_result.run_id
             LEFT JOIN commit ON commit.id = run.commit_id
