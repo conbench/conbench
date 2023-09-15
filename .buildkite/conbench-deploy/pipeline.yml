@@ -1,7 +1,6 @@
 steps:
   - label: "Build & Push"
     key: "build-and-push"
-    if: build.branch == 'main'
     concurrency: 1
     concurrency_group: "conbench-deploy"
     command:
@@ -9,7 +8,6 @@ steps:
 
   - label: "Deploy secrets and config"
     key: "deploy-secrets-and-config"
-    if: build.branch == 'main'
     depends_on: "build-and-push"
     concurrency: 1
     concurrency_group: "conbench-deploy"
@@ -19,7 +17,6 @@ steps:
 
   - label: "Run Migrations"
     key: "run-migrations"
-    if: build.branch == 'main'
     depends_on: "deploy-secrets-and-config"
     concurrency: 1
     concurrency_group: "conbench-deploy"
@@ -28,7 +25,6 @@ steps:
 
   - label: "Deploy"
     key: "deploy"
-    if: build.branch == 'main'
     depends_on: "run-migrations"
     concurrency: 1
     concurrency_group: "conbench-deploy"
