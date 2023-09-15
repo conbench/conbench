@@ -78,7 +78,7 @@ def get_all_run_info(
     ]
     if commit_hashes:
         joins.append(Commit)
-        filters.append(Commit.sha.in_(commit_hashes))
+        filters = [Commit.sha.in_(commit_hashes)]
 
     for result in BenchmarkResult.search(filters=filters, joins=joins):
         run_id = result.run_id
