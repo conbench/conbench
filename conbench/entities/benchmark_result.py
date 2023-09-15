@@ -939,7 +939,7 @@ def validate_and_augment_result_tags(userres: Any):
 # by time (most recent first). For more detail, see
 # https://github.com/conbench/conbench/issues/1466 for more details and
 # background.
-_RECENT_RUNS_QUERY = """
+_RECENT_RUNS_QUERY_TEMPL = """
 WITH RECURSIVE t AS (
    (
       SELECT *
@@ -958,16 +958,16 @@ WITH RECURSIVE t AS (
    )
 SELECT * FROM t WHERE run_id IS NOT NULL
 ORDER BY timestamp desc
-LIMIT 500;
+LIMIT {limit};
 """
 
 
-def fetch_one_result_per_n_recent_runs() -> List[BenchmarkResult]:
+def fetch_one_result_per_each_of_n_recent_runs(n: int = 250) -> List[BenchmarkResult]:
     from sqlalchemy.sql import text
 
     bmrs = (
         current_session.query(BenchmarkResult)
-        .from_statement(text(_RECENT_RUNS_QUERY))
+        .from_statement(text(_RECENT_RUNS_QUERY_TEMPL.format(limit=n)))
         .all()
     )
 

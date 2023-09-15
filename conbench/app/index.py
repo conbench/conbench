@@ -156,7 +156,7 @@ def _get_recent_runs() -> List["RunForDisplay"]:
 
     # Get one result per run from DB. Expect results to be sorted in time, most
     # recent first.
-    bmrs = fetch_one_result_per_n_recent_runs()
+    bmrs = fetch_one_result_per_each_of_n_recent_runs()
 
     runs_for_display: List[RunForDisplay] = []
 
