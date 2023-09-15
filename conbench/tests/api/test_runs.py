@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 
 from conbench.util import tznaive_dt_to_aware_iso8601_for_api
 
@@ -430,7 +431,12 @@ class TestRunList(_asserts.ListEnforcer):
     def test_run_list_filter_by_sha(self, client):
         sha = _fixtures.CHILD
         self.authenticate(client)
-        result = self._create()
+        result = _fixtures.benchmark_result(
+            timestamp=(
+                datetime.utcnow().replace(microsecond=0) - timedelta(days=40)
+            ).isoformat()
+            + "Z",
+        )
         response = client.get(f"/api/runs/?sha={sha}")
         self.assert_200_ok(response, contains=_expected_entity(result))
 
