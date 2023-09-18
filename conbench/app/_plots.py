@@ -460,11 +460,7 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_url):
 
     Warning: requires manual testing, not covered by tests/CI.
 
-    Note(JP): `repo_url` really is expected to be a URL and we have done quite
-    a bit of work in the last months to drive towards consistency, but at the
-    time of writing this sentence I am not sure if it really always is a URL.
-    There is still a code path below that handles non-url values. Requires
-    further cleanup in the future.
+    `repo_url` really is expected to be a URL.
     """
     return bokeh.models.CustomJS(
         code=f"""
@@ -685,9 +681,7 @@ def time_series_plot(
     # https://discourse.bokeh.org/t/how-to-trigger-callbacks-on-mouse-click-for-tap-tool/1630
     taptool = p.select(type=bokeh.models.TapTool)
     taptool.callback = gen_js_callback_click_on_glyph_show_run_details(
-        # The repository is constant across all data points in this plot. The
-        # underlying database query filters by exactly that (Commit.repository
-        # == repo).
+        # The repository is constant across all data points in this plot.
         repo_url=current_benchmark_result.commit_repo_url
     )
 
