@@ -75,10 +75,12 @@ class TimeSeriesPlotMixin:
         Generate JSON string for inclusion in HTML doc or a reason for why the
         plot-describing JSON doc was not generated.
 
-        `current_benchmark_result` is the result to generate the history plot
+        `current_benchmark_result`: the result to generate the history plot
         for. If there is history and if after all a plot is generated, then
         _this_ result will be labeled as "current result" in the plot, and it
         will be the newest one in the plot (right-most on time axis).
+
+        `run`: TODO
         """
         samples = get_history_for_benchmark(
             benchmark_result_id=current_benchmark_result.id
@@ -450,13 +452,19 @@ def gen_js_callback_tap_detect_unselect(source: bokeh.models.ColumnDataSource):
     )
 
 
-def gen_js_callback_click_on_glyph_show_run_details(repo_string):
+def gen_js_callback_click_on_glyph_show_run_details(repo_url):
     """
     Dynamically manipulate Bootstrap panel conbench-histplot-run-details`.
 
     Show run details if a corresponding glyph was clicked in the plot.
 
     Warning: requires manual testing, not covered by tests/CI.
+
+    Note(JP): `repo_url` really is expected to be a URL and we have done quite
+    a bit of work in the last months to drive towards consistency, but at the
+    time of writing this sentence I am not sure if it really always is a URL.
+    There is still a code path below that handles non-url values. Requires
+    further cleanup in the future.
     """
     return bokeh.models.CustomJS(
         code=f"""
@@ -496,20 +504,20 @@ def gen_js_callback_click_on_glyph_show_run_details(repo_string):
         // Austin says that repo string should as of today be either None or
         // a URL to the GitHub repo. We will see what future needs will bring.
 
-        var commit_repo_string =  run_commit_hash_short + ' in {repo_string}';
+        var commit_repo_url =  run_commit_hash_short + ' in {repo_url}';
 
-        const repo = '{repo_string}';
+        const repo = '{repo_url}';
         if (repo.startsWith('https://github.com/')) {{
             // for github at least this is known to work with a truncated hash
             const url_to_commit = repo + '/commit/' + run_commit_hash_short;
-            commit_repo_string = '<a href="' + url_to_commit + '">' + url_to_commit + '</a>';
+            commit_repo_url = '<a href="' + url_to_commit + '">' + url_to_commit + '</a>';
         }}
 
         // TODO? show run timestamp, not only commit timestamp.
         var newHtml = \
             '<li>Result view: <a href="' + url_bmr + '">' + url_bmr + '</a></li>' +
             '<li>Compare view (current and selected result):  <a href="' + url_resrescmp + '">' + url_resrescmp_title + '</a>' + "</li>" +
-            '<li>Commit: ' + commit_repo_string + '</li>' +
+            '<li>Commit: ' + commit_repo_url + '</li>' +
             '<li>Commit message (truncated): ' + run_commit_msg_pfx + '</li>' +
             "<li>Commit timestamp: " + run_date_string + "</li>" +
             "<li>Result mean: " + run_result_value_with_unit + "</li>";
@@ -537,6 +545,9 @@ def time_series_plot(
     width=800,
     highlight_result_in_hist: Optional[Tuple[HistorySample, str]] = None,
 ):
+    """
+    The `run` argument's purpose is unclear, document or remove.
+    """
     # log.info(
     #     "Time series plot for:\n%s",
     #     json.dumps([s._dict_for_api_json() for s in samples], indent=2, default=str),
@@ -677,7 +688,7 @@ def time_series_plot(
         # The repository is constant across all data points in this plot. The
         # underlying database query filters by exactly that (Commit.repository
         # == repo).
-        repo_string=run["commit"]["repository"]
+        repo_url=current_benchmark_result.commit_repo_url
     )
 
     # `tap` event triggers for each click. Whether or not this was on a glyph
@@ -904,6 +915,13 @@ def get_source_for_single_benchmark_result(current_benchmark_result, cur_run, un
     # which case we do not show a data point (for now).
     # source_current_bm_min = None
     # source_current_bm_mean = None
+
+    # TODO: `cur_run["commit"]` can be None, I think, and that means that
+    # cur_run["commit"]["timestamp"] may fail. Type checking does not know this
+    # because those dictionaries are untyped. `cur_run` I think is here only to
+    # communicate commit information. Once commit information is stores more
+    # clearly on the benchmark result object we can remove the `cur_run`
+    # argument and have type checking find potential bugs.
 
     if not cur_run["commit"]["timestamp"]:
         return None, None
