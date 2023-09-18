@@ -40,6 +40,37 @@ class TestCompareBenchmarkResults(_asserts.GetEnforcer):
         self.assert_page(response, "Compare Benchmark Results")
         assert "cannot perform comparison:" in response.text
 
+    def test_no_commit(self, client):
+        self.authenticate(client)
+
+        # Post baseline results so we try to render a plot
+        for _ in range(3):
+            payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
+            baseline_post_response = client.post(
+                "/api/benchmark-results/", json=payload
+            )
+            assert baseline_post_response.status_code == 201
+
+        # Post a benchmark result without a commit
+        payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
+        del payload["github"]["commit"]
+        payload["run_id"] = _fixtures._uuid()
+        contender_post_response = client.post("/api/benchmark-results/", json=payload)
+        assert contender_post_response.status_code == 201
+
+        # Ensure the result doesn't have a commit
+        get_response = client.get(
+            f'/api/benchmark-results/{contender_post_response.json["id"]}/'
+        )
+        assert get_response.status_code == 200
+        assert get_response.json["commit"] is None
+
+        # Ensure the compare page looks as expected
+        self._assert_view(
+            client,
+            f'{baseline_post_response.json["id"]}...{contender_post_response.json["id"]}',
+        )
+
 
 class TestCompareBenchmarks(_asserts.AppEndpointTest):
     url = "/compare/benchmarks/{}/"

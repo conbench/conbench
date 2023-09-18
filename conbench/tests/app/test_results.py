@@ -80,16 +80,23 @@ class TestBenchmarkResultGet(_asserts.GetEnforcer):
     def test_get_result_without_commit(self, client):
         self.authenticate(client)
 
-        # Post a benchmark without a commit
+        # Post baseline results so we try to render a plot
+        for _ in range(3):
+            payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
+            post_response = client.post("/api/benchmark-results/", json=payload)
+            assert post_response.status_code == 201
+
+        # Post a benchmark result without a commit
         payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
         del payload["github"]["commit"]
-        post_response = client.post("/api/benchmarks/", json=payload)
+        payload["run_id"] = _fixtures._uuid()
+        post_response = client.post("/api/benchmark-results/", json=payload)
         assert post_response.status_code == 201
 
-        # Ensure the run doesn't have a commit
-        run_response = client.get(f'/api/runs/{payload["run_id"]}/')
-        assert run_response.status_code == 200
-        assert run_response.json["commit"] is None
+        # Ensure the result doesn't have a commit
+        get_response = client.get(f'/api/benchmark-results/{post_response.json["id"]}/')
+        assert get_response.status_code == 200
+        assert get_response.json["commit"] is None
 
         # Ensure the result page looks as expected
         self._assert_view(client, post_response.json["id"])
