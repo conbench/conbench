@@ -917,7 +917,7 @@ def get_source_for_single_benchmark_result(current_benchmark_result, cur_run, un
     # clearly on the benchmark result object we can remove the `cur_run`
     # argument and have type checking find potential bugs.
 
-    if not cur_run["commit"]["timestamp"]:
+    if not cur_run["commit"] or not cur_run["commit"]["timestamp"]:
         return None, None
 
     cur_benchmark_time = util.tznaive_iso8601_to_tzaware_dt(
