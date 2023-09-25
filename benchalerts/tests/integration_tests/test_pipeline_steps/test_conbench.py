@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+
 import pytest
 
 from benchalerts.pipeline_steps.conbench import (
