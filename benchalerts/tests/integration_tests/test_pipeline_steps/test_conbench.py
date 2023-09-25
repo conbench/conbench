@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 import pytest
 
 from benchalerts.pipeline_steps.conbench import (
@@ -56,11 +58,8 @@ def test_GetConbenchZComparisonStep(
     commit_hash: str,
     expected_len: int,
 ):
-    pytest.skip("https://github.com/conbench/conbench/issues/1478 causes this to fail")
-    if "ursa" in conbench_url:
-        pytest.skip(
-            "https://github.com/conbench/conbench/issues/745 means timeouts cause this to fail"
-        )
+    if "ursa" in conbench_url and os.getenv("CI"):
+        pytest.skip("This currently takes a long time due to #745, so skip in CI")
     monkeypatch.setenv("CONBENCH_URL", conbench_url)
     step = GetConbenchZComparisonStep(
         commit_hash=commit_hash, baseline_run_type=BaselineRunCandidates.parent
