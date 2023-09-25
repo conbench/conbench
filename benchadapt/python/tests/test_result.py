@@ -5,6 +5,7 @@ from benchadapt import BenchmarkResult
 res_json = {
     "run_name": "very-real-benchmark",
     "run_id": "ezf69672dc3741259aac97650414a18c",
+    "run_tags": {},
     "batch_id": "1z21bd2477d04ca8be0f4bad58c61757",
     "run_reason": "test",
     "timestamp": "2202-09-16T15:42:27.527948+00:00",
