@@ -58,7 +58,7 @@ def test_GetConbenchZComparisonStep(
     expected_len: int,
 ):
     if "ursa" in conbench_url and os.getenv("CI"):
-        pytest.skip("This currently takes a really long time, so skip in CI")
+        pytest.skip("This currently takes a long time due to #745, so skip in CI")
     monkeypatch.setenv("CONBENCH_URL", conbench_url)
     step = GetConbenchZComparisonStep(
         commit_hash=commit_hash, baseline_run_type=BaselineRunCandidates.parent
