@@ -20,9 +20,21 @@ class BenchmarkResult:
         according to that pattern (even if ``run_reason`` is ``None``); otherwise it will
         remain ``None``. Users should not set this manually unless they want to identify
         runs in some other fashion. Benchmark name should be specified in ``tags["name"]``.
+
+        This argument is deprecated and will be removed in the future. Any given name
+        here will be added to ``run_tags`` under the "name" key on the server side.
     run_id : str
         ID for the run; should be consistent for all results of the run. Should not normally
         be set manually; adapters will handle this for you.
+    run_tags : Dict[str, str]
+        An optional mapping of arbitrary keys and values that describe the CI run. These
+        are used to group and filter runs in the UI and API. Do not include
+        ``run_reason`` here; it should be provided below.
+
+        The Conbench UI and API assume that all benchmark results with the same
+        ``run_id`` share the same ``run_tags``. There is no technical enforcement of
+        this on the server side, so some behavior may not work as intended if this
+        assumption is broken by the client.
     batch_id : str
         ID string for the batch
     run_reason : str
@@ -118,6 +130,7 @@ class BenchmarkResult:
     - ``info``
     - ``optional_benchmark_info``
     - ``context``
+    - ``run_tags``
 
     Fields with defaults you may want to override on instantiation:
 
@@ -130,6 +143,7 @@ class BenchmarkResult:
 
     run_name: str = None
     run_id: str = None
+    run_tags: Dict[str, str] = field(default_factory=dict)
     batch_id: str = field(default_factory=lambda: uuid.uuid4().hex)
     run_reason: str = None
     timestamp: str = field(
