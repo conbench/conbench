@@ -46,16 +46,16 @@ def configure_engine(url):
         # a while. Sometimes, the response generation duration is dominated by
         # a database query which takes a long time until it returns. We have
         # seen the libpq statement timeout to hit in every now and then when it
-        # was set to 30 seconds. Setting it to 60 seconds increases the
+        # was set to 30 seconds. Setting it to 120 seconds increases the
         # likelihood to deliver an HTTP response at all. Increasing it beyond
-        # 60 s probably does not make sense if we don't also increase timeout
-        # constants for the HTTP reverse proxy(s) in front of Conbench. Related
-        # tickets and discussions:
+        # 180 s probably does not make sense if we don't also increase timeout
+        # constants for the HTTP reverse proxy(s) in front of Conbench. See
+        # conbench/gunicorn-conf.py. Related tickets and discussions:
         # https://github.com/conbench/conbench/issues/599
         # https://github.com/conbench/conbench/pull/690
         # https://docs.sqlalchemy.org/en/20/core/engines.html#use-the-connect-args-dictionary-parameter
         connect_args={
-            "options": "-c timezone=utc -c statement_timeout=60s",
+            "options": "-c timezone=utc -c statement_timeout=120s",
             # The `connect_timeout` parameter is documented in
             # https://www.postgresql.org/docs/12/libpq-connect.html
             "connect_timeout": 3,  # unit: seconds
