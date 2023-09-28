@@ -75,6 +75,9 @@
           <div class="text-muted fst-italic">
             This plot shows the current result in historical context.
             The time axis shows the commit date (corresponds to code evolution).
+            {% if result.commit is none %}
+              The current result is not associated with a commit, so its time value is the timestamp associated with the result instead.
+            {% endif %}
             Think: along the plot everything is held constant except for the benchmarked code.
             Click a data point (grey) in the plot to see a corresponding result summary.
             <a href="{{ url_for('api.history-download', benchmark_result_id=benchmark.id) }}">csv</a> (current full history, experimental interface).

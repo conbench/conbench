@@ -905,27 +905,33 @@ def time_series_plot(
 
 
 def get_source_for_single_benchmark_result(current_benchmark_result, cur_run, unit):
-    # Edge case: this may be failed or the commit time might be unknown, in
-    # which case we do not show a data point (for now).
-    # source_current_bm_min = None
-    # source_current_bm_mean = None
+    # Use the commit timestamp for the x-axis, unless it doesn't exist, in which case
+    # use the benchmark result timestamp.
 
-    # TODO: `cur_run["commit"]` can be None, I think, and that means that
-    # cur_run["commit"]["timestamp"] may fail. Type checking does not know this
-    # because those dictionaries are untyped. `cur_run` I think is here only to
+    # Edge case: the result may be failed, in which case we do not show a data point
+    # (for now).
+
+    # TODO: `cur_run` is an untyped dict. `cur_run` I think is here only to
     # communicate commit information. Once commit information is stores more
     # clearly on the benchmark result object we can remove the `cur_run`
     # argument and have type checking find potential bugs.
 
-    if not cur_run["commit"] or not cur_run["commit"]["timestamp"]:
-        return None, None
-
-    cur_benchmark_time = util.tznaive_iso8601_to_tzaware_dt(
-        cur_run["commit"]["timestamp"]
-    )
-
     if current_benchmark_result.is_failed:
         return None, None
+
+    if cur_run["commit"]:
+        commit_msg = cur_run["commit"]["message"]
+        commit_hash = cur_run["commit"]["sha"]
+        if cur_run["commit"]["timestamp"]:
+            cur_benchmark_time = util.tznaive_iso8601_to_tzaware_dt(
+                cur_run["commit"]["timestamp"]
+            )
+        else:
+            cur_benchmark_time = current_benchmark_result.timestamp
+    else:
+        commit_msg = "no commit"
+        commit_hash = "no commit"
+        cur_benchmark_time = current_benchmark_result.timestamp
 
     dummy_hs_for_current_svs = HistorySample(
         mean=current_benchmark_result.mean,
@@ -934,11 +940,11 @@ def get_source_for_single_benchmark_result(current_benchmark_result, cur_run, un
         case_text_id="dummy",
         svs=current_benchmark_result.svs,
         svs_type=current_benchmark_result.svs_type,
-        commit_msg=cur_run["commit"]["message"],
+        commit_msg=commit_msg,
         commit_timestamp=cur_benchmark_time,
-        commit_hash=cur_run["commit"]["sha"],
+        commit_hash=commit_hash,
         benchmark_result_id=current_benchmark_result.id,
-        repository=cur_run["commit"]["repository"],
+        repository=current_benchmark_result.commit_repo_url,
         case_id="dummy",  # not consumed
         context_id="dummy",  # not consumed
         # "Per PEP 484, int is a subtype of float"
