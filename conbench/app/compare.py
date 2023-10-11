@@ -111,13 +111,6 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             baseline_hardware_checksum=baseline_hardware_checksum,
         )
 
-    def _get_benchmarks(self, run_id=None, batch_id=None):
-        if run_id:
-            response = self.api_get("api.benchmarks", run_id=run_id)
-        if batch_id:
-            response = self.api_get("api.benchmarks", batch_id=batch_id)
-        return response.json, response
-
     def _get_plot(self, baseline, contender):
         baseline_copy = copy.deepcopy(baseline)
         contender_copy = copy.deepcopy(contender)

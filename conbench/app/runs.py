@@ -99,6 +99,9 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             self.flash("Error getting benchmarks.")
             return self.redirect("app.index")
 
+        # TODO: paginate
+        benchmark_results = benchmark_results["data"]
+
         contexts = self.get_contexts(benchmark_results)
         for r in benchmark_results:
             augment(r, contexts)

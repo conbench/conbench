@@ -1,7 +1,5 @@
 import copy
-import time
-from datetime import datetime, timedelta
-from uuid import uuid4
+from typing import Tuple
 
 import pytest
 
@@ -321,167 +319,104 @@ class TestBenchmarkList(_asserts.ListEnforcer):
     url = "/api/benchmarks/"
     public = True
 
-    def test_benchmark_list(self, client):
-        self.authenticate(client)
-        benchmark_result = _fixtures.benchmark_result()
-        response = client.get("/api/benchmarks/")
-        self.assert_200_ok(response, contains=_expected_entity(benchmark_result))
+    def _make_request(self, client, **kwargs) -> dict:
+        query_args = [f"{key}={value}" for key, value in kwargs.items() if value]
+        query_str = f"{self.url}?" + "&".join(query_args)
+        response = client.get(query_str)
+        self.assert_200_ok(response)
+        return response.json
 
-    def test_benchmark_list_filter_by_name(self, client):
-        self.authenticate(client)
-        _fixtures.benchmark_result(name="aaa")
-        benchmark_result = _fixtures.benchmark_result(name="bbb")
-        _fixtures.benchmark_result(name="ccc")
-        response = client.get("/api/benchmarks/?name=bbb")
-        self.assert_200_ok(response, [_expected_entity(benchmark_result)])
+    def _request_all(self, client, **kwargs) -> Tuple[list, int]:
+        """Paginate over benchmark results, and return 1) a list of all results that
+        matched the filters, and 2) how many pages were hit.
+        """
+        benchmark_results = []
+        pages_hit = 0
 
-    def test_benchmark_list_filter_by_batch_id(self, client):
-        self.authenticate(client)
-        benchmark_result = _fixtures.benchmark_result(batch_id="20")
-        response = client.get("/api/benchmarks/?batch_id=20")
-        self.assert_200_ok(response, [_expected_entity(benchmark_result)])
+        res = self._make_request(client, **kwargs)
+        pages_hit += 1
+        benchmark_results += res["data"]
 
-    def test_benchmark_list_filter_by_multiple_batch_id(self, client):
-        self.authenticate(client)
-        benchmark_result_1 = _fixtures.benchmark_result()
-        batch_id_1 = benchmark_result_1.batch_id
-        benchmark_result_2 = _fixtures.benchmark_result()
-        batch_id_2 = benchmark_result_2.batch_id
-        response = client.get(f"/api/benchmarks/?batch_id={batch_id_1},{batch_id_2}")
-        self.assert_200_ok(response, contains=_expected_entity(benchmark_result_1))
-        self.assert_200_ok(response, contains=_expected_entity(benchmark_result_2))
+        while res["metadata"]["next_page_cursor"]:
+            res = self._make_request(
+                client, cursor=res["metadata"]["next_page_cursor"], **kwargs
+            )
+            pages_hit += 1
+            benchmark_results += res["data"]
 
-    def test_benchmark_list_filter_by_run_id(self, client):
-        self.authenticate(client)
-        _fixtures.benchmark_result(run_id="100")
-        benchmark_result = _fixtures.benchmark_result(run_id="200")
-        _fixtures.benchmark_result(run_id="300")
-        response = client.get("/api/benchmarks/?run_id=200")
-        self.assert_200_ok(response, [_expected_entity(benchmark_result)])
+        return benchmark_results, pages_hit
 
-    def test_benchmark_list_filter_by_run_reason(self, client):
-        self.authenticate(client)
-        thisresult = _fixtures.benchmark_result(run_id="100", reason="rolf")
-        resp = client.get("/api/benchmark-results/?run_reason=rolf")
-        assert resp.status_code == 200, resp.text
-        self.assert_200_ok(resp, [_expected_entity(thisresult)])
+    @classmethod
+    def setup_class(cls):
+        """Special pytest method - do this once before running the tests in this class."""
+        # set up 16 fake results
+        for run_id in ["1", "2"]:
+            for name in ["a", "b"]:
+                for batch_id in ["3", "4"]:
+                    for run_reason in ["commit", "pr"]:
+                        _fixtures.benchmark_result(
+                            name=name,
+                            batch_id=batch_id,
+                            run_id=run_id,
+                            reason=run_reason,
+                        )
 
-        resp = client.get("/api/benchmark-results/?run_reason=foo")
-        assert resp.status_code == 200, resp.text
-        assert resp.json == []
-
-    def test_benchmark_list_filter_by_multiple_run_id(self, client):
-        self.authenticate(client)
-        benchmark_result_1 = _fixtures.benchmark_result()
-        run_id_1 = benchmark_result_1.run_id
-        benchmark_result_2 = _fixtures.benchmark_result()
-        run_id_2 = benchmark_result_2.run_id
-        response = client.get(f"/api/benchmarks/?run_id={run_id_1},{run_id_2}")
-        self.assert_200_ok(response, contains=_expected_entity(benchmark_result_1))
-        self.assert_200_ok(response, contains=_expected_entity(benchmark_result_2))
-
-    def test_benchmark_results_for_run_ids_too_many(self, client):
-        self.authenticate(client)
-        comma_separated_run_ids = ",".join(uuid4().hex[-5:] for _ in range(5))
-        resp = client.get(f"/api/benchmark-results/?run_id={comma_separated_run_ids}")
-        assert resp.status_code == 200, resp.text
-
-        comma_separated_run_ids = ",".join(uuid4().hex[-5:] for _ in range(6))
-        resp = client.get(f"/api/benchmark-results/?run_id={comma_separated_run_ids}")
-        assert resp.status_code == 400, resp.text
-        assert "currently not allowed to set more than five" in resp.text
-
-    def test_benchmark_results_with_limit(self, client):
-        self.authenticate(client)
-        _fixtures.benchmark_result()
-        benchmark_result = _fixtures.benchmark_result()
-        response = client.get("/api/benchmarks/?limit=1")
-        self.assert_200_ok(response, contains=_expected_entity(benchmark_result))
-        assert len(response.json) == 1
-
-    def test_benchmark_list_filter_by_name_with_limit(self, client):
-        self.authenticate(client)
-        _fixtures.benchmark_result(name="bbb")
-        time.sleep(1)
-        benchmark_result = _fixtures.benchmark_result(name="bbb")
-        _fixtures.benchmark_result(name="ccc")
-        response = client.get("/api/benchmarks/?name=bbb&limit=1")
-        assert len(response.json) == 1
-        self.assert_200_ok(response, [_expected_entity(benchmark_result)])
-
-    def test_benchmark_list_filter_by_run_reason_with_limit(self, client):
-        self.authenticate(client)
-        _fixtures.benchmark_result(run_id="100", reason="rolf")
-        _fixtures.benchmark_result(run_id="100", reason="rolf")
-        _fixtures.benchmark_result(run_id="100", reason="rolf")
-        resp = client.get("/api/benchmark-results/?run_reason=rolf&limit=1")
-        assert len(resp.json) == 1
-
-    def test_benchmark_results_with_days(self, client):
-        self.authenticate(client)
-        _fixtures.benchmark_result()
+        # ...and another that's too old to be returned without specifying run_id
         _fixtures.benchmark_result(
-            timestamp=(
-                datetime.utcnow().replace(microsecond=0) - timedelta(days=2)
-            ).isoformat()
-            + "Z",
+            name="a", batch_id="3", run_id="1", reason="commit", timestamp="2000-01-01"
         )
-        response = client.get("/api/benchmarks/?days=1")
-        assert len(response.json) == 1
 
-        response = client.get("/api/benchmarks/?days=10")
-        assert len(response.json) == 2
+    @pytest.fixture(autouse=True)
+    def clear_db_state_between_tests(self):
+        """Override this autoused fixture from conftest.py so we don't delete that fake
+        data between the tests in this class.
+        """
+        return
 
-    def test_benchmark_results_with_days_and_limit(self, client):
+    # Try all the combinations of filters and different page sizes
+    @pytest.mark.parametrize("run_id_arg", ["1", None])
+    @pytest.mark.parametrize("name_arg", ["a", None])
+    @pytest.mark.parametrize("batch_id_arg", ["3", None])
+    @pytest.mark.parametrize("run_reason_arg", ["commit", None])
+    @pytest.mark.parametrize("page_size_arg", [2, 1000])
+    def test_benchmark_list(
+        self, client, run_id_arg, name_arg, batch_id_arg, run_reason_arg, page_size_arg
+    ):
         self.authenticate(client)
-        _fixtures.benchmark_result()
-        _fixtures.benchmark_result()
-        _fixtures.benchmark_result(
-            timestamp=(
-                datetime.utcnow().replace(microsecond=0) - timedelta(days=2)
-            ).isoformat()
-            + "Z",
-        )
-        response = client.get("/api/benchmarks/?days=10&limit=1")
-        assert len(response.json) == 1
 
-    def test_benchmark_list_filter_by_name_with_daysand_limit(self, client):
+        # Find the expected number of filtered results. (Because of the way we set up
+        # the data, each filter should filter out half the remaining results)
+        expected_num_results = 16
+        if name_arg:
+            expected_num_results /= 2
+        if batch_id_arg:
+            expected_num_results /= 2
+        if run_reason_arg:
+            expected_num_results /= 2
+        if run_id_arg:
+            expected_num_results /= 2
+            # add one for the "old" result
+            expected_num_results += 1
+
+        benchmark_results, pages_hit = self._request_all(
+            client,
+            run_id=run_id_arg,
+            name=name_arg,
+            batch_id=batch_id_arg,
+            run_reason=run_reason_arg,
+            page_size=page_size_arg,
+        )
+        assert len(benchmark_results) == expected_num_results
+        assert pages_hit == (expected_num_results // page_size_arg) + 1
+
+    @pytest.mark.parametrize("page_size", ["0", "1001", "-1", "asd"])
+    def test_bad_page_size(self, client, page_size):
         self.authenticate(client)
-        benchmark_result = _fixtures.benchmark_result(name="bbb")
-        _fixtures.benchmark_result(
-            name="bbb",
-            timestamp=(
-                datetime.utcnow().replace(microsecond=0) - timedelta(days=2)
-            ).isoformat()
-            + "Z",
+        res = client.get(f"{self.url}?page_size={page_size}")
+        self.assert_400_bad_request(
+            res,
+            {"_errors": ["page_size must be a positive integer no greater than 1000"]},
         )
-        _fixtures.benchmark_result(name="ccc")
-        response = client.get("/api/benchmarks/?name=bbb&days=1")
-        assert len(response.json) == 1
-        self.assert_200_ok(response, [_expected_entity(benchmark_result)])
-
-        response = client.get("/api/benchmarks/?name=bbb&days=10")
-        assert len(response.json) == 2
-
-        response = client.get("/api/benchmarks/?name=bbb&days=10&limit=1")
-        assert len(response.json) == 1
-
-    def test_benchmark_list_filter_by_run_reason_with_days_and_limit(self, client):
-        self.authenticate(client)
-        _fixtures.benchmark_result(reason="rolf")
-        _fixtures.benchmark_result(
-            timestamp=(
-                datetime.utcnow().replace(microsecond=0) - timedelta(days=2)
-            ).isoformat()
-            + "Z",
-            reason="rolf",
-        )
-        resp = client.get("/api/benchmark-results/?run_reason=rolf&days=1")
-        assert len(resp.json) == 1
-        resp = client.get("/api/benchmark-results/?run_reason=rolf&days=10")
-        assert len(resp.json) == 2
-        resp = client.get("/api/benchmark-results/?run_reason=rolf&days=10&limit=1")
-        assert len(resp.json) == 1
 
 
 class TestBenchmarkResultPost(_asserts.PostEnforcer):

@@ -43,6 +43,9 @@ class BatchPlot(AppEndpoint, ContextMixin):
             self.flash("Error getting benchmarks.")
             return self.redirect("app.index")
 
+        # TODO: paginate
+        benchmarks = benchmarks["data"]
+
         group_by_key = "dataset"  # TODO: move to GRAPHS
         by_group = collections.defaultdict(list)
         contexts = self.get_contexts(benchmarks)

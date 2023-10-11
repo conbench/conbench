@@ -72,7 +72,10 @@ spec.components.response("404", _error("Not Found", ex.API_404, "Error"))
 spec.components.response("Ping", _200_ok(ex.API_PING, "Ping"))
 spec.components.response("Index", _200_ok(ex.API_INDEX))
 spec.components.response("BenchmarkEntity", _200_ok(ex.BENCHMARK_ENTITY))
-spec.components.response("BenchmarkList", _200_ok([ex.BENCHMARK_ENTITY]))
+spec.components.response(
+    "BenchmarkList",
+    _200_ok({"data": [ex.BENCHMARK_ENTITY], "metadata": {"next_page_cursor": None}}),
+)
 spec.components.response("BenchmarkResultCreated", _201_created(ex.BENCHMARK_ENTITY))
 spec.components.response("CommitEntity", _200_ok(ex.COMMIT_ENTITY))
 spec.components.response("CommitList", _200_ok([ex.COMMIT_ENTITY]))

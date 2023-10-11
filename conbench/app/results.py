@@ -385,6 +385,9 @@ class BenchmarkResultList(AppEndpoint, ContextMixin):
             self.flash("Error getting benchmarks.")
             return self.redirect("app.index")
 
+        # TODO: paginate
+        benchmarks = benchmarks["data"]
+
         return self.page(benchmarks)
 
     def _get_benchmarks(self):
