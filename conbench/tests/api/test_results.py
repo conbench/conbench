@@ -320,7 +320,14 @@ class TestBenchmarkList(_asserts.ListEnforcer):
     public = True
 
     def _make_request(self, client, **kwargs) -> dict:
-        query_args = [f"{key}={value}" for key, value in kwargs.items() if value]
+        """Hit this endpoint with the query args given in kwargs. Make sure it returns a
+        200 and return the jsonified response.
+
+        If any kwarg value is None, don't include that query arg in the request.
+        """
+        query_args = [
+            f"{key}={value}" for key, value in kwargs.items() if value is not None
+        ]
         query_str = f"{self.url}?" + "&".join(query_args)
         response = client.get(query_str)
         self.assert_200_ok(response)
@@ -349,11 +356,11 @@ class TestBenchmarkList(_asserts.ListEnforcer):
     @classmethod
     def setup_class(cls):
         """Special pytest method - do this once before running the tests in this class."""
-        # set up 16 fake results
-        for run_id in ["1", "2"]:
-            for name in ["a", "b"]:
-                for batch_id in ["3", "4"]:
-                    for run_reason in ["commit", "pr"]:
+        # set up 210 fake results
+        for run_id in ["1", "2"]:  # 2
+            for name in ["a", "b", "c"]:  # 3
+                for batch_id in ["3", "4", "5", "6", "7"]:  # 5
+                    for run_reason in ["d", "e", "f", "g", "h", "i", "j"]:  # 7
                         _fixtures.benchmark_result(
                             name=name,
                             batch_id=batch_id,
@@ -363,7 +370,7 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
         # ...and another that's too old to be returned without specifying run_id
         _fixtures.benchmark_result(
-            name="a", batch_id="3", run_id="1", reason="commit", timestamp="2000-01-01"
+            name="a", batch_id="3", run_id="1", reason="d", timestamp="2000-01-01"
         )
 
     @pytest.fixture(autouse=True)
@@ -377,22 +384,21 @@ class TestBenchmarkList(_asserts.ListEnforcer):
     @pytest.mark.parametrize("run_id_arg", ["1", None])
     @pytest.mark.parametrize("name_arg", ["a", None])
     @pytest.mark.parametrize("batch_id_arg", ["3", None])
-    @pytest.mark.parametrize("run_reason_arg", ["commit", None])
+    @pytest.mark.parametrize("run_reason_arg", ["d", None])
     @pytest.mark.parametrize("page_size_arg", [2, 1000])
     def test_benchmark_list(
         self, client, run_id_arg, name_arg, batch_id_arg, run_reason_arg, page_size_arg
     ):
         self.authenticate(client)
 
-        # Find the expected number of filtered results. (Because of the way we set up
-        # the data, each filter should filter out half the remaining results)
-        expected_num_results = 16
+        # Find the expected number of filtered results
+        expected_num_results = 210
         if name_arg:
-            expected_num_results /= 2
+            expected_num_results /= 3
         if batch_id_arg:
-            expected_num_results /= 2
+            expected_num_results /= 5
         if run_reason_arg:
-            expected_num_results /= 2
+            expected_num_results /= 7
         if run_id_arg:
             expected_num_results /= 2
             # add one for the "old" result

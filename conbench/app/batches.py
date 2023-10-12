@@ -43,7 +43,7 @@ class BatchPlot(AppEndpoint, ContextMixin):
             self.flash("Error getting benchmarks.")
             return self.redirect("app.index")
 
-        # TODO: paginate
+        # TODO: switch to a DB query
         benchmarks = benchmarks["data"]
 
         group_by_key = "dataset"  # TODO: move to GRAPHS
@@ -64,7 +64,7 @@ class BatchPlot(AppEndpoint, ContextMixin):
         return self.page(by_group, batch_id)
 
     def _get_benchmarks(self, batch_id):
-        response = self.api_get("api.benchmarks", batch_id=batch_id)
+        response = self.api_get("api.benchmarks", batch_id=batch_id, page_size=1000)
         return response.json, response
 
 

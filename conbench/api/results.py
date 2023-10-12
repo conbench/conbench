@@ -160,12 +160,14 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             schema:
               type: string
             description: |
-                Cursor for pagination. To get the first page of results, leave out this
-                query parameter or submit `null`. The response's `metadata` key will
-                contain a `next_page_cursor` key, which will contain the cursor to
-                provide to this query parameter in order to get the next page. (If there
-                is expected to be no data in the next page, the `next_page_cursor` will
-                be `null`.)
+                A cursor for pagination through matching results in reverse DB insertion
+                order.
+
+                To get the first page of results, leave out this query parameter or
+                submit `null`. The response's `metadata` key will contain a
+                `next_page_cursor` key, which will contain the cursor to provide to this
+                query parameter in order to get the next page. (If there is expected to
+                be no data in the next page, the `next_page_cursor` will be `null`.)
 
                 The first page will contain the `page_size` most recent results matching
                 the given filter(s). Each subsequent page will have up to `page_size`
@@ -190,8 +192,14 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         joins = []
 
         if run_id_arg := f.request.args.get("run_id"):
+            # It's assumed that the number of benchmark results corresponding to one
+            # run_id won't increase unbounded over time (since runs end at some point).
+            # So we don't have to filter out "old" results.
             filters.append(BenchmarkResult.run_id == run_id_arg)
         else:
+            # All Conbench instances used a non-UUID7 primary key for benchmark results
+            # before this date. We need to filter those out or they will be mixed in to
+            # the results here, which will mess up the ordering.
             filters.append(BenchmarkResult.timestamp >= "2023-06-03")
 
         if name_arg := f.request.args.get("name"):
@@ -227,6 +235,10 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
 
         if len(benchmark_results) == page_size:
             next_page_cursor = benchmark_results[-1].id
+            # There's an edge case here where the last page happens to have exactly
+            # page_size results. So the client will grab one more (empty) page. The
+            # alternative would be to query the DB here, every single time, to *make
+            # sure* the next page will contain results... but that feels very expensive.
         else:
             # If there were fewer than page_size results, the next page should be empty
             next_page_cursor = None
