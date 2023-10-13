@@ -126,9 +126,21 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
                 f"for the contender run {run_id}. Error: {run_comparison.baseline_error}"
             )
             # Just get information about the contender benchmark results.
-            run_comparison.benchmark_results = self.conbench_client.get(
-                "/benchmark-results/", params={"run_id": run_id}
+            res = self.conbench_client.get(
+                "/benchmark-results/", params={"run_id": run_id, "page_size": 1000}
             )
+            results = res["data"]
+            while res["metadata"]["next_page_cursor"]:
+                res = self.conbench_client.get(
+                    "/benchmark-results/",
+                    params={
+                        "run_id": run_id,
+                        "page_size": 1000,
+                        "cursor": res["metadata"]["next_page_cursor"],
+                    },
+                )
+                results += res["data"]
+            run_comparison.benchmark_results = results
 
         return run_comparison
 

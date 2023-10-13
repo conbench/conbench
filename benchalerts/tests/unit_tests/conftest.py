@@ -123,8 +123,14 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         return res
 
     def _results(has_errors: bool):
-        """Get a mocked benchmark results response."""
-        res = _response("GET_conbench_benchmark-results_run_id_contender_wo_base")
+        """Get mocked benchmark results."""
+        res0 = _response(
+            "GET_conbench_benchmark-results_run_id_contender_wo_base_page_size_1000"
+        )
+        res1 = _response(
+            "GET_conbench_benchmark-results_run_id_contender_wo_base_page_size_1000_cursor_curse"
+        )
+        res = res0["data"] + res1["data"]
         if not has_errors:
             for result in res:
                 result["error"] = None

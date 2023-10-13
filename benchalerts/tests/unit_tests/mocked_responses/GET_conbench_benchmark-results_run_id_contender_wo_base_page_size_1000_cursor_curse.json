@@ -1,0 +1,56 @@
+{
+    "status_code": 200,
+    "data": {
+        "data": [
+            {
+                "batch_id": "some-batch-uuid-1",
+                "error": {
+                    "fatal": true,
+                    "message": "Something went wrong",
+                    "regression": false,
+                    "stack_trace": "Traceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\nAssertionError"
+                },
+                "id": "some-benchmark-uuid-2",
+                "links": {
+                    "context": "http://localhost/api/contexts/some-context-uuid-1/",
+                    "info": "http://localhost/api/info/some-info-uuid-1/",
+                    "list": "http://localhost/api/benchmarks/",
+                    "run": "http://localhost/api/runs/some-run-uuid-1/",
+                    "self": "http://localhost/api/benchmarks/some-benchmark-uuid-2/"
+                },
+                "run_id": "some-run-uuid-1",
+                "stats": {
+                    "data": [],
+                    "iqr": null,
+                    "iterations": null,
+                    "max": null,
+                    "mean": null,
+                    "median": null,
+                    "min": null,
+                    "q1": null,
+                    "q3": null,
+                    "stdev": null,
+                    "time_unit": null,
+                    "times": [],
+                    "unit": null,
+                    "z_improvement": false,
+                    "z_regression": false,
+                    "z_score": null
+                },
+                "tags": {
+                    "compression": "snappy",
+                    "cpu_count": 2,
+                    "dataset": "nyctaxi_sample",
+                    "file_type": "parquet",
+                    "id": "some-case-uuid-2",
+                    "input_type": "arrow",
+                    "name": "file-write"
+                },
+                "timestamp": "2020-11-25T21:03:42.706806"
+            }
+        ],
+        "metadata": {
+            "next_page_cursor": null
+        }
+    }
+}
