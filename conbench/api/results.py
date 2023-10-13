@@ -159,6 +159,7 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             name: cursor
             schema:
               type: string
+              nullable: true
             description: |
                 A cursor for pagination through matching results in reverse DB insertion
                 order.
@@ -183,8 +184,25 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             name: page_size
             schema:
               type: integer
+              minimum: 1
+              maximum: 1000
             description: |
                 The size of pages for pagination (see `cursor`). Default 100. Max 1000.
+          - in: query
+            name: earliest_timestamp
+            schema:
+              type: string
+              format: date-time
+            description: |
+                The earliest (least recent) benchmark result timestamp to return. (Note
+                that this parameter does not affect the behavior of returning only
+                results after `2023-06-03 UTC` without a `run_id` provided.)
+          - in: query
+            name: latest_timestamp
+            schema:
+              type: string
+              format: date-time
+            description: The latest (most recent) benchmark result timestamp to return.
         tags:
           - Benchmarks
         """
@@ -201,6 +219,12 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             # before this date. We need to filter those out or they will be mixed in to
             # the results here, which will mess up the ordering.
             filters.append(BenchmarkResult.timestamp >= "2023-06-03")
+
+        if earliest_timestamp_arg := f.request.args.get("earliest_timestamp"):
+            filters.append(BenchmarkResult.timestamp >= earliest_timestamp_arg)
+
+        if latest_timestamp_arg := f.request.args.get("latest_timestamp"):
+            filters.append(BenchmarkResult.timestamp <= latest_timestamp_arg)
 
         if name_arg := f.request.args.get("name"):
             filters.append(Case.name == name_arg)

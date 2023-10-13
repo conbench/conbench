@@ -1438,13 +1438,25 @@
                         "description": "A cursor for pagination through matching results in reverse DB insertion\norder.\n\nTo get the first page of results, leave out this query parameter or\nsubmit `null`. The response's `metadata` key will contain a\n`next_page_cursor` key, which will contain the cursor to provide to this\nquery parameter in order to get the next page. (If there is expected to\nbe no data in the next page, the `next_page_cursor` will be `null`.)\n\nThe first page will contain the `page_size` most recent results matching\nthe given filter(s). Each subsequent page will have up to `page_size`\nresults, going backwards in time in DB insertion order, until there are\nno more matching results or the benchmark result timestamps reach\n`2023-06-03 UTC` (if the `run_id` filter isn't used; see above).\n\nImplementation detail: currently, the next page's cursor value is equal\nto the ID of the earliest result in the current page. A page of results\nis therefore defined as the `page_size` latest results with an ID\nlexicographically less than the cursor value.\n",
                         "in": "query",
                         "name": "cursor",
-                        "schema": {"type": "string"},
+                        "schema": {"nullable": True, "type": "string"},
                     },
                     {
                         "description": "The size of pages for pagination (see `cursor`). Default 100. Max 1000.\n",
                         "in": "query",
                         "name": "page_size",
-                        "schema": {"type": "integer"},
+                        "schema": {"maximum": 1000, "minimum": 1, "type": "integer"},
+                    },
+                    {
+                        "description": "The earliest (least recent) benchmark result timestamp to return. (Note\nthat this parameter does not affect the behavior of returning only\nresults after `2023-06-03 UTC` without a `run_id` provided.)\n",
+                        "in": "query",
+                        "name": "earliest_timestamp",
+                        "schema": {"format": "date-time", "type": "string"},
+                    },
+                    {
+                        "description": "The latest (most recent) benchmark result timestamp to return.",
+                        "in": "query",
+                        "name": "latest_timestamp",
+                        "schema": {"format": "date-time", "type": "string"},
                     },
                 ],
                 "responses": {

@@ -1,4 +1,5 @@
 import copy
+import datetime
 from typing import Tuple
 
 import pytest
@@ -356,7 +357,8 @@ class TestBenchmarkList(_asserts.ListEnforcer):
     @classmethod
     def setup_class(cls):
         """Special pytest method - do this once before running the tests in this class."""
-        # set up 210 fake results
+        # set up 210 fake results from 2023-10-01 to 2023-10-09 17:00:00
+        timestamp = datetime.datetime(2023, 10, 1)
         for run_id in ["1", "2"]:  # 2
             for name in ["a", "b", "c"]:  # 3
                 for batch_id in ["3", "4", "5", "6", "7"]:  # 5
@@ -366,7 +368,9 @@ class TestBenchmarkList(_asserts.ListEnforcer):
                             batch_id=batch_id,
                             run_id=run_id,
                             reason=run_reason,
+                            timestamp=timestamp.isoformat(),
                         )
+                        timestamp += datetime.timedelta(hours=1)
 
         # ...and another that's too old to be returned without specifying run_id
         _fixtures.benchmark_result(
@@ -414,6 +418,29 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         )
         assert len(benchmark_results) == expected_num_results
         assert pages_hit == (expected_num_results // page_size_arg) + 1
+
+    @pytest.mark.parametrize("earliest_timestamp_arg", ["2023-10-02", None])
+    @pytest.mark.parametrize("latest_timestamp_arg", ["2023-10-09", None])
+    def test_benchmark_list_time_filters(
+        self, client, earliest_timestamp_arg, latest_timestamp_arg
+    ):
+        self.authenticate(client)
+
+        # Find the expected number of filtered results
+        expected_num_results = 210
+        if earliest_timestamp_arg:
+            expected_num_results -= 24
+        if latest_timestamp_arg:
+            expected_num_results -= 17
+
+        benchmark_results, pages_hit = self._request_all(
+            client,
+            earliest_timestamp=earliest_timestamp_arg,
+            latest_timestamp=latest_timestamp_arg,
+            page_size=1000,  # no pagination
+        )
+        assert len(benchmark_results) == expected_num_results
+        assert pages_hit == 1
 
     @pytest.mark.parametrize("page_size", ["0", "1001", "-1", "asd"])
     def test_bad_page_size(self, client, page_size):
