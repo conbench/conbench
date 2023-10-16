@@ -48,6 +48,8 @@ class AppEndpointTest:
         return _create_fixture_user()
 
     def assert_200_ok(self, r):
+        if r.status_code != 200:
+            print(r.text)
         assert r.status_code == 200, r.status_code
         assert r.content_type == "text/html; charset=utf-8", r.content_type
 

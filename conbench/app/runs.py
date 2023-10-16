@@ -99,6 +99,9 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             self.flash("Error getting benchmarks.")
             return self.redirect("app.index")
 
+        # TODO: switch to a DB query
+        benchmark_results = benchmark_results["data"]
+
         contexts = self.get_contexts(benchmark_results)
         for r in benchmark_results:
             augment(r, contexts)
@@ -106,7 +109,7 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
         return self.page(benchmark_results, rundict)
 
     def _get_benchmarks(self, run_id):
-        response = self.api_get("api.benchmarks", run_id=run_id)
+        response = self.api_get("api.benchmarks", run_id=run_id, page_size=1000)
         return response.json, response
 
 
