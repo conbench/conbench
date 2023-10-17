@@ -18,7 +18,6 @@ from ..entities.benchmark_result import (
     BenchmarkResultSerializer,
     BenchmarkResultValidationError,
 )
-from ..entities.case import Case
 from ._resp import json_response_for_byte_sequence, resp400
 
 log = logging.getLogger(__name__)
@@ -134,16 +133,6 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
             "401": "401"
         parameters:
           - in: query
-            name: name
-            schema:
-              type: string
-            description: Filter results to one specific conceptual benchmark name.
-          - in: query
-            name: batch_id
-            schema:
-              type: string
-            description: Filter results to one specific `batch_id`.
-          - in: query
             name: run_id
             schema:
               type: string
@@ -207,7 +196,6 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
           - Benchmarks
         """
         filters = []
-        joins = []
 
         if run_id_arg := f.request.args.get("run_id"):
             # It's assumed that the number of benchmark results corresponding to one
@@ -226,13 +214,6 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
         if latest_timestamp_arg := f.request.args.get("latest_timestamp"):
             filters.append(BenchmarkResult.timestamp <= latest_timestamp_arg)
 
-        if name_arg := f.request.args.get("name"):
-            filters.append(Case.name == name_arg)
-            joins.append(Case)
-
-        if batch_id_arg := f.request.args.get("batch_id"):
-            filters.append(BenchmarkResult.batch_id == batch_id_arg)
-
         if run_reason_arg := f.request.args.get("run_reason"):
             filters.append(BenchmarkResult.run_reason == run_reason_arg)
 
@@ -249,11 +230,11 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
                 "page_size must be a positive integer no greater than 1000"
             )
 
-        query = select(BenchmarkResult)
-        for join in joins:
-            query = query.join(join)
         query = (
-            query.filter(*filters).order_by(BenchmarkResult.id.desc()).limit(page_size)
+            select(BenchmarkResult)
+            .filter(*filters)
+            .order_by(BenchmarkResult.id.desc())
+            .limit(page_size)
         )
         benchmark_results = current_session.scalars(query).all()
 

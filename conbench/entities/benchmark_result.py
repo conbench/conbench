@@ -1135,8 +1135,7 @@ s.Index("benchmark_result_batch_id_index", BenchmarkResult.batch_id)
 s.Index("benchmark_result_info_id_index", BenchmarkResult.info_id)
 s.Index("benchmark_result_context_id_index", BenchmarkResult.context_id)
 
-# We order by benchmark_result.timestamp in /api/benchmarks/ -- that wants
-# and index!
+# We order by benchmark_result.timestamp during many queries
 s.Index("benchmark_result_timestamp_index", BenchmarkResult.timestamp)
 
 # An important index. "Give me all comparable results" is a very common query.
@@ -1146,6 +1145,20 @@ s.Index(
 
 # History queries look for specific commit_ids
 s.Index("benchmark_result_commit_id_index", BenchmarkResult.commit_id)
+
+# These indexes are important for how /api/benchmark-results/ accesses the DB for
+# pagination.
+s.Index(
+    "benchmark_result_id_idx",
+    BenchmarkResult.id,
+    postgresql_where=(BenchmarkResult.timestamp >= "2023-06-03"),
+)
+s.Index(
+    "benchmark_result_run_reason_id_idx",
+    BenchmarkResult.run_reason,
+    BenchmarkResult.id,
+    postgresql_where=(BenchmarkResult.timestamp >= "2023-06-03"),
+)
 
 
 class _Serializer(EntitySerializer):
