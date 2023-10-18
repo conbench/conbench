@@ -1411,18 +1411,6 @@
                 "description": 'Return benchmark results.\n\nNote that this endpoint does not provide on-the-fly change detection\nanalysis (lookback z-score method) since the "baseline" is ill-defined.\n\nThis endpoint implements pagination; see the `cursor` and `page_size` query\nparameters for how it works.\n\nFor legacy reasons, this endpoint will not return results from before\n`2023-06-03 UTC`, unless the `run_id` query parameter is used to filter\nbenchmark results.\n',
                 "parameters": [
                     {
-                        "description": "Filter results to one specific conceptual benchmark name.",
-                        "in": "query",
-                        "name": "name",
-                        "schema": {"type": "string"},
-                    },
-                    {
-                        "description": "Filter results to one specific `batch_id`.",
-                        "in": "query",
-                        "name": "batch_id",
-                        "schema": {"type": "string"},
-                    },
-                    {
                         "description": "Filter results to one specific `run_id`. Using this argument allows the\nresponse to return results from before `2023-06-03 UTC`.\n",
                         "in": "query",
                         "name": "run_id",

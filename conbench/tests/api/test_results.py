@@ -357,25 +357,17 @@ class TestBenchmarkList(_asserts.ListEnforcer):
     @classmethod
     def setup_class(cls):
         """Special pytest method - do this once before running the tests in this class."""
-        # set up 210 fake results from 2023-10-01 to 2023-10-09 17:00:00
+        # set up 6 fake results from 2023-10-01 to 2023-10-06
         timestamp = datetime.datetime(2023, 10, 1)
         for run_id in ["1", "2"]:  # 2
-            for name in ["a", "b", "c"]:  # 3
-                for batch_id in ["3", "4", "5", "6", "7"]:  # 5
-                    for run_reason in ["d", "e", "f", "g", "h", "i", "j"]:  # 7
-                        _fixtures.benchmark_result(
-                            name=name,
-                            batch_id=batch_id,
-                            run_id=run_id,
-                            reason=run_reason,
-                            timestamp=timestamp.isoformat(),
-                        )
-                        timestamp += datetime.timedelta(hours=1)
+            for run_reason in ["a", "b", "c"]:  # 3
+                _fixtures.benchmark_result(
+                    run_id=run_id, reason=run_reason, timestamp=timestamp.isoformat()
+                )
+                timestamp += datetime.timedelta(days=1)
 
         # ...and another that's too old to be returned without specifying run_id
-        _fixtures.benchmark_result(
-            name="a", batch_id="3", run_id="1", reason="d", timestamp="2000-01-01"
-        )
+        _fixtures.benchmark_result(run_id="1", reason="a", timestamp="2000-01-01")
 
     @pytest.fixture(autouse=True)
     def clear_db_state_between_tests(self):
@@ -386,23 +378,15 @@ class TestBenchmarkList(_asserts.ListEnforcer):
 
     # Try all the combinations of filters and different page sizes
     @pytest.mark.parametrize("run_id_arg", ["1", None])
-    @pytest.mark.parametrize("name_arg", ["a", None])
-    @pytest.mark.parametrize("batch_id_arg", ["3", None])
-    @pytest.mark.parametrize("run_reason_arg", ["d", None])
+    @pytest.mark.parametrize("run_reason_arg", ["a", None])
     @pytest.mark.parametrize("page_size_arg", [2, 1000])
-    def test_benchmark_list(
-        self, client, run_id_arg, name_arg, batch_id_arg, run_reason_arg, page_size_arg
-    ):
+    def test_benchmark_list(self, client, run_id_arg, run_reason_arg, page_size_arg):
         self.authenticate(client)
 
         # Find the expected number of filtered results
-        expected_num_results = 210
-        if name_arg:
-            expected_num_results /= 3
-        if batch_id_arg:
-            expected_num_results /= 5
+        expected_num_results = 6
         if run_reason_arg:
-            expected_num_results /= 7
+            expected_num_results /= 3
         if run_id_arg:
             expected_num_results /= 2
             # add one for the "old" result
@@ -411,8 +395,6 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         benchmark_results, pages_hit = self._request_all(
             client,
             run_id=run_id_arg,
-            name=name_arg,
-            batch_id=batch_id_arg,
             run_reason=run_reason_arg,
             page_size=page_size_arg,
         )
@@ -420,18 +402,18 @@ class TestBenchmarkList(_asserts.ListEnforcer):
         assert pages_hit == (expected_num_results // page_size_arg) + 1
 
     @pytest.mark.parametrize("earliest_timestamp_arg", ["2023-10-02", None])
-    @pytest.mark.parametrize("latest_timestamp_arg", ["2023-10-09", None])
+    @pytest.mark.parametrize("latest_timestamp_arg", ["2023-10-05", None])
     def test_benchmark_list_time_filters(
         self, client, earliest_timestamp_arg, latest_timestamp_arg
     ):
         self.authenticate(client)
 
         # Find the expected number of filtered results
-        expected_num_results = 210
+        expected_num_results = 6
         if earliest_timestamp_arg:
-            expected_num_results -= 24
+            expected_num_results -= 1
         if latest_timestamp_arg:
-            expected_num_results -= 17
+            expected_num_results -= 1
 
         benchmark_results, pages_hit = self._request_all(
             client,
