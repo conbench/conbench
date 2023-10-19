@@ -1,15 +1,11 @@
 import dataclasses
-import datetime
 import functools
-from typing import Dict, List, Optional, Sequence, Set
+from typing import Dict, Optional, Sequence, Set
 
 import flask as f
-import flask_login
-import marshmallow
 import sqlalchemy as s
 
 from ..api import rule
-from ..api._docs import spec
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..dbsession import current_session
 from ..entities._entity import EntitySerializer
@@ -48,50 +44,6 @@ class RunAggregate:
         return short_commit_msg(
             self.earliest_result.commit.message if self.earliest_result.commit else ""
         )
-
-
-def get_all_run_info(
-    min_time: datetime.datetime,
-    max_time: datetime.datetime,
-    commit_hashes: Optional[List[str]] = None,
-) -> List[RunAggregate]:
-    """Get info about each run in a time range.
-
-    Query the database for all benchmark results (optionally filtered to certain commit
-    hashes) in a time range, and return a list of RunAggregates, each corresponding to
-    one run_id.
-
-    This powers the "list runs" API endpoint and the "recent runs" list on the home
-    page.
-
-    Note: At the min_time boundary, the count is permanently wrong (single run partially
-    represented in DB query result, true for just one of many runs). That's fine, the UI
-    does not claim real-time truth in that regard. In the vast majority of the cases we
-    get a correct result count per run.
-    """
-    run_info: Dict[str, RunAggregate] = {}  # keyed by run_id
-
-    joins = []
-    filters = [
-        BenchmarkResult.timestamp >= min_time,
-        BenchmarkResult.timestamp <= max_time,
-    ]
-    if commit_hashes:
-        joins.append(Commit)
-        filters = [Commit.sha.in_(commit_hashes)]
-
-    for result in BenchmarkResult.search(filters=filters, joins=joins):
-        run_id = result.run_id
-        if run_id in run_info:
-            run_info[run_id].update(result)
-        else:
-            run_info[run_id] = RunAggregate(
-                earliest_result=result,
-                result_count=1,
-                any_result_failed=result.is_failed,
-            )
-
-    return list(run_info.values())
 
 
 @dataclasses.dataclass
@@ -316,22 +268,8 @@ class RunSerializer:
     many = _Serializer(many=True)
 
 
-class _RunFacadeSchemaCreate(marshmallow.Schema):
-    """Deprecated."""
-
-
-class _RunFacadeSchemaUpdate(marshmallow.Schema):
-    """Deprecated."""
-
-
-class RunFacadeSchema:
-    create = _RunFacadeSchemaCreate()
-    update = _RunFacadeSchemaUpdate()
-
-
 class RunEntityAPI(ApiEndpoint):
     serializer = RunSerializer()
-    schema = RunFacadeSchema()
 
     @maybe_login_required
     def get(self, run_id):
@@ -386,110 +324,129 @@ class RunEntityAPI(ApiEndpoint):
             self.abort_404_not_found()
         return self.serializer.one._dump(any_result, get_baseline_runs=True)
 
-    @flask_login.login_required
-    def put(self, run_id):
-        """
-        ---
-        description: Deprecated. This endpoint is a no-op, despite returning a 200.
-        responses:
-            "200": "RunCreated"
-            "401": "401"
-            "404": "404"
-        parameters:
-          - name: run_id
-            in: path
-            schema:
-                type: string
-        requestBody:
-            content:
-                application/json:
-                    schema: RunUpdate
-        tags:
-          - Runs
-        """
-        return {}
-
-    @flask_login.login_required
-    def delete(self, run_id):
-        """
-        ---
-        description: Deprecated. This endpoint is a no-op, despite returning a 204.
-        responses:
-            "204": "204"
-            "401": "401"
-            "404": "404"
-        parameters:
-          - name: run_id
-            in: path
-            schema:
-                type: string
-        tags:
-          - Runs
-        """
-        return self.response_204_no_content()
-
 
 class RunListAPI(ApiEndpoint):
     serializer = RunSerializer()
-    schema = RunFacadeSchema()
 
     @maybe_login_required
     def get(self):
         """
         ---
         description: |
-            Get a list of runs from the last few days of benchmark results (default 14
-            days; no more than 30 days).
+            Get a list of runs associated with a commit hash or hashes.
+
+            This endpoint implements pagination; see the `cursor` and `page_size` query
+            parameters for how it works.
         responses:
             "200": "RunList"
             "401": "401"
         parameters:
           - in: query
-            name: sha
+            name: commit_hash
             schema:
               type: string
+            description: |
+                Required. A commit hash or a comma-separated list of commit hashes.
           - in: query
-            name: days
+            name: cursor
+            schema:
+              type: string
+              nullable: true
+            description: |
+                A cursor for pagination through matching runs in alphabetical order by
+                `run_id`.
+
+                To get the first page of runs, leave out this query parameter or submit
+                `null`. The response's `metadata` key will contain a `next_page_cursor`
+                key, which will contain the cursor to provide to this query parameter in
+                order to get the next page. (If there is expected to be no data in the
+                next page, the `next_page_cursor` will be `null`.)
+
+                The first page will contain the `page_size` runs associated with the
+                given commit hash(es) that are first alphabetically by `run_id`. Each
+                subsequent page will have up to `page_size` runs, continuing
+                alphabetically, until there are no more matching runs.
+
+                Implementation detail: currently, the next page's cursor value is equal
+                to the latest `run_id` alphabetically in the current page. A page of
+                runs is therefore defined as the `page_size` matching runs with an ID
+                alphabetically later than the given cursor value.
+
+                Note that this means that if a run is created DURING a client's request
+                loop with an ID that is alphabetically earlier than the cursor value, it
+                will not be included in the next page. This is a known limitation of the
+                current implementation, and it is not expected to be a problem in
+                practice. This is because the number of runs per commit hash is expected
+                to be much less than the page size, and runs are added quite
+                infrequently.
+          - in: query
+            name: page_size
             schema:
               type: integer
+              minimum: 1
+              maximum: 1000
+            description: |
+                The size of pages for pagination (see `cursor`). Default 100. Max 1000.
         tags:
           - Runs
         """
-        sha_arg: Optional[str] = f.request.args.get("sha")
-        commit_hashes = sha_arg.split(",") if sha_arg else None
+        filters = []
 
-        days_arg: Optional[int] = f.request.args.get("days")
-        days = int(days_arg) if days_arg else 14
-        if days > 30:
-            self.abort_400_bad_request("days must be no more than 30")
+        commit_hash_arg: Optional[str] = f.request.args.get("commit_hash")
+        if not commit_hash_arg:
+            self.abort_400_bad_request("commit_hash is required")
+        filters.append(Commit.sha.in_(commit_hash_arg.split(",")))
 
-        return [
-            self.serializer.one._dump(run.earliest_result, get_baseline_runs=False)
-            for run in get_all_run_info(
-                min_time=datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(days=days),
-                max_time=datetime.datetime.now(datetime.timezone.utc),
-                commit_hashes=commit_hashes,
+        cursor_arg: Optional[str] = f.request.args.get("cursor")
+        if cursor_arg and cursor_arg != "null":
+            filters.append(BenchmarkResult.run_id > cursor_arg)
+
+        page_size_arg = f.request.args.get("page_size", 100)
+        try:
+            page_size = int(page_size_arg)
+            assert 1 <= page_size <= 1000
+        except Exception:
+            self.abort_400_bad_request(
+                "page_size must be a positive integer no greater than 1000"
             )
+
+        query = s.select(BenchmarkResult).join(Commit).where(*filters)
+
+        # Aggregate all benchmark results into runs (this is keyed by run_id)
+        run_info: Dict[str, RunAggregate] = {}
+        for result in current_session.scalars(query).all():
+            run_id = result.run_id
+            if run_id in run_info:
+                run_info[run_id].update(result)
+            else:
+                run_info[run_id] = RunAggregate(
+                    earliest_result=result,
+                    result_count=1,
+                    any_result_failed=result.is_failed,
+                )
+
+        this_page_run_ids = sorted(run_info.keys())[:page_size]
+        data = [
+            self.serializer.one._dump(
+                run_info[run_id].earliest_result, get_baseline_runs=False
+            )
+            for run_id in this_page_run_ids
         ]
 
-    @flask_login.login_required
-    def post(self):
-        """
-        ---
-        description: Deprecated. This endpoint is a no-op, despite returning a 201.
-        responses:
-            "201": "RunCreated"
-            "400": "400"
-            "401": "401"
-        requestBody:
-            content:
-                application/json:
-                    schema: RunCreate
-        tags:
-          - Runs
-        """
-        return self.response_201_created({})
+        if len(data) == page_size:
+            next_page_cursor = data[-1]["id"]
+            # There's an edge case here where the last page happens to have exactly
+            # page_size runs. So the client will grab one more (empty) page. The
+            # alternative would be to query the DB here, every single time, to *make
+            # sure* the next page will contain runs... but that feels very expensive.
+        else:
+            # If there were fewer than page_size runs, the next page should be empty
+            next_page_cursor = None
+
+        return {
+            "data": data,
+            "metadata": {"next_page_cursor": next_page_cursor},
+        }
 
 
 run_entity_view = RunEntityAPI.as_view("run")
@@ -498,12 +455,10 @@ run_list_view = RunListAPI.as_view("runs")
 rule(
     "/runs/",
     view_func=run_list_view,
-    methods=["GET", "POST"],
+    methods=["GET"],
 )
 rule(
     "/runs/<run_id>/",
     view_func=run_entity_view,
-    methods=["GET", "DELETE", "PUT"],
+    methods=["GET"],
 )
-spec.components.schema("RunCreate", schema=RunFacadeSchema.create)
-spec.components.schema("RunUpdate", schema=RunFacadeSchema.update)
