@@ -38,12 +38,13 @@ class BatchPlot(AppEndpoint, ContextMixin):
 
     @authorize_or_terminate
     def get(self, batch_id):
+        # This will only return 1000 results. This page isn't linked from anywhere.
+        # How useful is this page?
         benchmarks, response = self._get_benchmarks(batch_id)
         if response.status_code != 200:
             self.flash("Error getting benchmarks.")
             return self.redirect("app.index")
 
-        # TODO: switch to a DB query
         benchmarks = benchmarks["data"]
 
         group_by_key = "dataset"  # TODO: move to GRAPHS

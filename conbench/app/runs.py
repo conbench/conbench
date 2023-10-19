@@ -1,8 +1,9 @@
 import dataclasses
-from typing import Dict
+from typing import Dict, List
 
 import bokeh
 import flask as f
+from sqlalchemy import select
 
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
@@ -10,6 +11,8 @@ from ..app._plots import TimeSeriesPlotMixin
 from ..app._util import augment, error_page
 from ..app.results import ContextMixin, RunMixin
 from ..config import Config
+from ..dbsession import current_session
+from ..entities.benchmark_result import BenchmarkResult
 
 
 @dataclasses.dataclass
@@ -93,14 +96,7 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
             # user). Show that msg by rendering the err page templ
             return error_page()
 
-        benchmark_results, response = self._get_benchmarks(run_id)
-
-        if response.status_code != 200:
-            self.flash("Error getting benchmarks.")
-            return self.redirect("app.index")
-
-        # TODO: switch to a DB query
-        benchmark_results = benchmark_results["data"]
+        benchmark_results = self._get_results(run_id)
 
         contexts = self.get_contexts(benchmark_results)
         for r in benchmark_results:
@@ -108,9 +104,9 @@ class ViewRun(AppEndpoint, ContextMixin, RunMixin, TimeSeriesPlotMixin):
 
         return self.page(benchmark_results, rundict)
 
-    def _get_benchmarks(self, run_id):
-        response = self.api_get("api.benchmarks", run_id=run_id, page_size=1000)
-        return response.json, response
+    def _get_results(self, run_id) -> List[dict]:
+        query = select(BenchmarkResult).filter(BenchmarkResult.run_id == run_id)
+        return [r.to_dict_for_json_api() for r in current_session.scalars(query).all()]
 
 
 rule(
