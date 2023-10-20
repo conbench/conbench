@@ -410,27 +410,18 @@ class RunListAPI(ApiEndpoint):
                 "page_size must be a positive integer no greater than 1000"
             )
 
-        query = s.select(BenchmarkResult).join(Commit).where(*filters)
+        query = (
+            s.select(BenchmarkResult)
+            .join(Commit)
+            .where(*filters)
+            .distinct(BenchmarkResult.run_id)
+            .order_by(BenchmarkResult.run_id)
+            .limit(page_size)
+        )
 
-        # Aggregate all benchmark results into runs (this is keyed by run_id)
-        run_info: Dict[str, RunAggregate] = {}
-        for result in current_session.scalars(query).all():
-            run_id = result.run_id
-            if run_id in run_info:
-                run_info[run_id].update(result)
-            else:
-                run_info[run_id] = RunAggregate(
-                    earliest_result=result,
-                    result_count=1,
-                    any_result_failed=result.is_failed,
-                )
-
-        this_page_run_ids = sorted(run_info.keys())[:page_size]
         data = [
-            self.serializer.one._dump(
-                run_info[run_id].earliest_result, get_baseline_runs=False
-            )
-            for run_id in this_page_run_ids
+            self.serializer.one._dump(result, get_baseline_runs=False)
+            for result in current_session.scalars(query).all()
         ]
 
         if len(data) == page_size:
