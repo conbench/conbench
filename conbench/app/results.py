@@ -135,16 +135,6 @@ class RunMixin:
         self._augment(run)
         return run
 
-    def get_display_runs(self):
-        runs, response = self._get_runs()
-        if response.status_code != 200:
-            self.flash("Error getting runs.")  # type: ignore
-            return []
-
-        for run in runs:
-            self._augment(run)
-        return runs
-
     def _augment(self, run):
         self._display_time(run, "timestamp")
 
@@ -200,10 +190,6 @@ class RunMixin:
 
     def _get_run(self, run_id):
         response = self.api_get("api.run", run_id=run_id)
-        return response.json, response
-
-    def _get_runs(self):
-        response = self.api_get("api.runs")
         return response.json, response
 
 
