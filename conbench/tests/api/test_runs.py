@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime, timedelta
 
+import pytest
+
 from conbench.util import tznaive_dt_to_aware_iso8601_for_api
 
 from ...api._examples import _api_run_entity
@@ -401,7 +403,7 @@ class TestRunGet(_asserts.GetEnforcer):
 
 
 class TestRunList(_asserts.ListEnforcer):
-    url = "/api/runs/"
+    url = "/api/runs/?commit_hash=abc"
     public = True
 
     def _create(self):
@@ -409,119 +411,71 @@ class TestRunList(_asserts.ListEnforcer):
         benchmark_result = _fixtures.benchmark_result()
         return benchmark_result
 
-    def test_run_list(self, client):
+    def test_run_list_filter_by_commit_hash(self, client):
+        commit_hash = _fixtures.CHILD
         self.authenticate(client)
-        result = self._create()
-        response = client.get("/api/runs/")
-        self.assert_200_ok(response, contains=_expected_entity(result))
+        result = _fixtures.benchmark_result()
+        response = client.get(f"/api/runs/?commit_hash={commit_hash}")
+        self.assert_200_ok(response)
+        assert _expected_entity(result) in response.json["data"]
 
-    def test_run_list_different_days(self, client):
-        self.authenticate(client)
-        result = self._create()
-        response = client.get("/api/runs/?days=1")
-        self.assert_200_ok(response, contains=_expected_entity(result))
-
-    def test_run_list_too_many_days(self, client):
-        self.authenticate(client)
-        response = client.get("/api/runs/?days=31")
-        self.assert_400_bad_request(
-            response, {"_errors": ["days must be no more than 30"]}
-        )
-
-    def test_run_list_filter_by_sha(self, client):
-        sha = _fixtures.CHILD
-        self.authenticate(client)
-        result = _fixtures.benchmark_result(
-            timestamp=(
-                datetime.utcnow().replace(microsecond=0) - timedelta(days=40)
-            ).isoformat()
-            + "Z",
-        )
-        response = client.get(f"/api/runs/?sha={sha}")
-        self.assert_200_ok(response, contains=_expected_entity(result))
-
-    def test_run_list_filter_by_multiple_sha(self, client):
-        sha1 = _fixtures.CHILD
-        sha2 = _fixtures.PARENT
+    def test_run_list_filter_by_multiple_commits(self, client):
+        hash1 = _fixtures.CHILD
+        hash2 = _fixtures.PARENT
         self.authenticate(client)
         _fixtures.benchmark_result(sha=_fixtures.PARENT)
         result_1 = _fixtures.benchmark_result()
         _fixtures.benchmark_result(sha=_fixtures.CHILD)
         result_2 = _fixtures.benchmark_result()
-        response = client.get(f"/api/runs/?sha={sha1},{sha2}")
+        response = client.get(f"/api/runs/?commit_hash={hash1},{hash2}")
+        assert _expected_entity(result_1) in response.json["data"]
+        assert _expected_entity(result_2) in response.json["data"]
 
-        self.assert_200_ok(response, contains=_expected_entity(result_1))
-
-        self.assert_200_ok(response, contains=_expected_entity(result_2))
-
-    def test_run_list_filter_by_sha_no_match(self, client):
-        sha = "some unknown sha"
+    def test_run_list_filter_by_commit_hash_no_match(self, client):
+        commit_hash = "some unknown commit_hash"
         self.authenticate(client)
         self._create()
-        response = client.get(f"/api/runs/?sha={sha}")
-        self.assert_200_ok(response, [])
+        response = client.get(f"/api/runs/?commit_hash={commit_hash}")
+        self.assert_200_ok(
+            response, {"data": [], "metadata": {"next_page_cursor": None}}
+        )
 
-
-class TestRunDelete(_asserts.ApiEndpointTest):
-    """Deprecated at this time; always returns a 204"""
-
-    url = "api/runs/{}/"
-
-    def test_delete_run(self, client):
+    def test_run_list_no_commit_hash(self, client):
         self.authenticate(client)
-        benchmark_result = _fixtures.benchmark_result()
-        run_id = benchmark_result.run_id
+        response = client.get("/api/runs/")
+        self.assert_400_bad_request(response, {"_errors": ["commit_hash is required"]})
 
-        # can get before delete
-        BenchmarkResult.one(run_id=run_id)
-
-        # delete
-        response = client.delete(f"/api/runs/{run_id}/")
-        self.assert_204_no_content(response)
-
-        # can still get after delete
-        BenchmarkResult.one(run_id=run_id)
-
-
-class TestRunPut(_asserts.ApiEndpointTest):
-    """Deprecated at this time; always returns a 200"""
-
-    url = "/api/runs/{}/"
-    valid_payload = {
-        "finished_timestamp": "2022-11-25T21:02:45Z",
-        "info": {"setup": "passed"},
-        "error_info": {"error": "error", "stack_trace": "stack_trace", "fatal": True},
-        "error_type": "fatal",
-    }
-
-    def test_put_run(self, client):
+    @pytest.mark.parametrize("page_size", ["0", "1001", "-1", "asd"])
+    def test_bad_page_size(self, client, page_size):
         self.authenticate(client)
+        res = client.get(f"{self.url}&page_size={page_size}")
+        self.assert_400_bad_request(
+            res,
+            {"_errors": ["page_size must be a positive integer no greater than 1000"]},
+        )
 
-        # before
-        result_before = _fixtures.benchmark_result()
-
-        # mutate run in db (no-op)
-        resp = client.put(f"/api/runs/{result_before.run_id}/", json=self.valid_payload)
-        assert resp.status_code == 200, resp.status_code
-
-        # receive not-mutated run from db
-        resp = client.get(f"/api/runs/{result_before.run_id}/")
-        assert resp.status_code == 200, resp.status_code
-
-
-class TestRunPost(_asserts.ApiEndpointTest):
-    """Deprecated at this time; always returns a 201"""
-
-    url = "/api/runs/"
-
-    def test_create_run(self, client):
+    def test_pagination(self, client):
         self.authenticate(client)
-        payload = _fixtures.VALID_RUN_PAYLOAD
-        run_id = payload["id"]
-        assert not BenchmarkResult.first(run_id=run_id)
-        response = client.post(self.url, json=payload)
-        assert response.status_code == 201
-        assert response.json == {}
+        timestamp = datetime(2023, 10, 1)
+        for run_id in ["1", "2", "3"]:
+            for _ in range(2):
+                _fixtures.benchmark_result(
+                    run_id=run_id, sha="abc", timestamp=timestamp.isoformat()
+                )
+                timestamp += timedelta(days=1)
+
+        res = client.get(f"{self.url}&page_size=2")
+        self.assert_200_ok(res)
+        assert len(res.json["data"]) == 2
+        assert {r["id"] for r in res.json["data"]} == {"1", "2"}
+        cursor = res.json["metadata"]["next_page_cursor"]
+        assert cursor
+
+        res = client.get(f"{self.url}&page_size=2&cursor={cursor}")
+        self.assert_200_ok(res)
+        assert len(res.json["data"]) == 1
+        assert {r["id"] for r in res.json["data"]} == {"3"}
+        assert res.json["metadata"]["next_page_cursor"] is None
 
 
 def test_get_candidate_baseline_runs():

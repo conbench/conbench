@@ -970,51 +970,54 @@
             "RunList": {
                 "content": {
                     "application/json": {
-                        "example": [
-                            {
-                                "commit": {
-                                    "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
-                                    "author_login": "dianaclarke",
-                                    "author_name": "Diana Clarke",
-                                    "branch": "some_user_or_org:some_branch",
-                                    "fork_point_sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                    "id": "some-commit-uuid-1",
-                                    "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
-                                    "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
-                                    "repository": "https://github.com/org/repo",
-                                    "sha": "02addad336ba19a654f9c857ede546331be7b631",
-                                    "timestamp": "2021-02-25T01:02:51",
-                                    "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
-                                },
-                                "hardware": {
-                                    "architecture_name": "x86_64",
-                                    "cpu_core_count": 2,
-                                    "cpu_frequency_max_hz": 3500000000,
-                                    "cpu_l1d_cache_bytes": 32768,
-                                    "cpu_l1i_cache_bytes": 32768,
-                                    "cpu_l2_cache_bytes": 262144,
-                                    "cpu_l3_cache_bytes": 4194304,
-                                    "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
-                                    "cpu_thread_count": 4,
-                                    "gpu_count": 2,
-                                    "gpu_product_names": [
-                                        "Tesla T4",
-                                        "GeForce GTX 1060 3GB",
-                                    ],
-                                    "id": "some-machine-uuid-1",
-                                    "kernel_name": "19.6.0",
-                                    "memory_bytes": 17179869184,
-                                    "name": "some-machine-name",
-                                    "os_name": "macOS",
-                                    "os_version": "10.15.7",
-                                    "type": "machine",
-                                },
-                                "id": "some-run-uuid-1",
-                                "reason": "some run reason",
-                                "tags": {"arbitrary": "tags"},
-                                "timestamp": "2021-02-04T17:22:05.225583",
-                            }
-                        ]
+                        "example": {
+                            "data": [
+                                {
+                                    "commit": {
+                                        "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
+                                        "author_login": "dianaclarke",
+                                        "author_name": "Diana Clarke",
+                                        "branch": "some_user_or_org:some_branch",
+                                        "fork_point_sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                        "id": "some-commit-uuid-1",
+                                        "message": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                        "parent_sha": "4beb514d071c9beec69b8917b5265e77ade22fb3",
+                                        "repository": "https://github.com/org/repo",
+                                        "sha": "02addad336ba19a654f9c857ede546331be7b631",
+                                        "timestamp": "2021-02-25T01:02:51",
+                                        "url": "https://github.com/org/repo/commit/02addad336ba19a654f9c857ede546331be7b631",
+                                    },
+                                    "hardware": {
+                                        "architecture_name": "x86_64",
+                                        "cpu_core_count": 2,
+                                        "cpu_frequency_max_hz": 3500000000,
+                                        "cpu_l1d_cache_bytes": 32768,
+                                        "cpu_l1i_cache_bytes": 32768,
+                                        "cpu_l2_cache_bytes": 262144,
+                                        "cpu_l3_cache_bytes": 4194304,
+                                        "cpu_model_name": "Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz",
+                                        "cpu_thread_count": 4,
+                                        "gpu_count": 2,
+                                        "gpu_product_names": [
+                                            "Tesla T4",
+                                            "GeForce GTX 1060 3GB",
+                                        ],
+                                        "id": "some-machine-uuid-1",
+                                        "kernel_name": "19.6.0",
+                                        "memory_bytes": 17179869184,
+                                        "name": "some-machine-name",
+                                        "os_name": "macOS",
+                                        "os_version": "10.15.7",
+                                        "type": "machine",
+                                    },
+                                    "id": "some-run-uuid-1",
+                                    "reason": "some run reason",
+                                    "tags": {"arbitrary": "tags"},
+                                    "timestamp": "2021-02-04T17:22:05.225583",
+                                }
+                            ],
+                            "metadata": {"next_page_cursor": None},
+                        }
                     }
                 },
                 "description": "OK",
@@ -1348,8 +1351,6 @@
                 "required": ["email", "name", "password", "secret"],
                 "type": "object",
             },
-            "RunCreate": {"properties": {}, "type": "object"},
-            "RunUpdate": {"properties": {}, "type": "object"},
             "SchemaGitHubCreate": {
                 "properties": {
                     "branch": {
@@ -1810,52 +1811,35 @@
         },
         "/api/runs/": {
             "get": {
-                "description": "Get a list of runs from the last few days of benchmark results (default 14\ndays; no more than 30 days).\n",
+                "description": "Get a list of runs associated with a commit hash or hashes.\n\nThis endpoint implements pagination; see the `cursor` and `page_size` query\nparameters for how it works.\n",
                 "parameters": [
-                    {"in": "query", "name": "sha", "schema": {"type": "string"}},
-                    {"in": "query", "name": "days", "schema": {"type": "integer"}},
+                    {
+                        "description": "Required. A commit hash or a comma-separated list of commit hashes.\n",
+                        "in": "query",
+                        "name": "commit_hash",
+                        "schema": {"type": "string"},
+                    },
+                    {
+                        "description": "A cursor for pagination through matching runs in alphabetical order by\n`run_id`.\n\nTo get the first page of runs, leave out this query parameter or submit\n`null`. The response's `metadata` key will contain a `next_page_cursor`\nkey, which will contain the cursor to provide to this query parameter in\norder to get the next page. (If there is expected to be no data in the\nnext page, the `next_page_cursor` will be `null`.)\n\nThe first page will contain the `page_size` runs associated with the\ngiven commit hash(es) that are first alphabetically by `run_id`. Each\nsubsequent page will have up to `page_size` runs, continuing\nalphabetically, until there are no more matching runs.\n\nImplementation detail: currently, the next page's cursor value is equal\nto the latest `run_id` alphabetically in the current page. A page of\nruns is therefore defined as the `page_size` matching runs with an ID\nalphabetically later than the given cursor value.\n\nNote that this means that if a run is created DURING a client's request\nloop with an ID that is alphabetically earlier than the cursor value, it\nwill not be included in the next page. This is a known limitation of the\ncurrent implementation, and it is not expected to be a problem in\npractice. This is because the number of runs per commit hash is expected\nto be much less than the page size, and runs are added quite\ninfrequently.\n",
+                        "in": "query",
+                        "name": "cursor",
+                        "schema": {"nullable": True, "type": "string"},
+                    },
+                    {
+                        "description": "The size of pages for pagination (see `cursor`). Default 100. Max 1000.\n",
+                        "in": "query",
+                        "name": "page_size",
+                        "schema": {"maximum": 1000, "minimum": 1, "type": "integer"},
+                    },
                 ],
                 "responses": {
                     "200": {"$ref": "#/components/responses/RunList"},
                     "401": {"$ref": "#/components/responses/401"},
                 },
                 "tags": ["Runs"],
-            },
-            "post": {
-                "description": "Deprecated. This endpoint is a no-op, despite returning a 201.",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {"$ref": "#/components/schemas/RunCreate"}
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {"$ref": "#/components/responses/RunCreated"},
-                    "400": {"$ref": "#/components/responses/400"},
-                    "401": {"$ref": "#/components/responses/401"},
-                },
-                "tags": ["Runs"],
-            },
+            }
         },
         "/api/runs/{run_id}/": {
-            "delete": {
-                "description": "Deprecated. This endpoint is a no-op, despite returning a 204.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "run_id",
-                        "required": True,
-                        "schema": {"type": "string"},
-                    }
-                ],
-                "responses": {
-                    "204": {"$ref": "#/components/responses/204"},
-                    "401": {"$ref": "#/components/responses/401"},
-                    "404": {"$ref": "#/components/responses/404"},
-                },
-                "tags": ["Runs"],
-            },
             "get": {
                 "description": 'Get a run and information about its candidate baseline runs.\n\nThe `"candidate_baseline_runs"` key in the response contains information\nabout up to three candidate baseline runs. Each baseline run corresponds to\na different candidate baseline commit, detailed below. If a baseline run is\nnot found for that commit, the response will detail why in the `"error"`\nkey. If a baseline run is found, its ID will be returned in the\n`"baseline_run_id"` key.\n\nThe three candidate baseline commits are:\n\n- the parent commit of the contender run\'s commit (`"parent"`)\n- if the contender run is on a PR branch, the default-branch commit that the\n  PR branch forked from (`"fork_point"`)\n- if the contender run is on a PR branch, the latest commit on the default\n  branch that has benchmark results (`"latest_default"`)\n\nWhen searching for a baseline run, each matching baseline run must:\n\n- be on the respective baseline commit, or in its git ancestry\n- match the contender run\'s hardware\n- have a benchmark result with the `case_id`/`context_id` of any of the\n  contender run\'s benchmark results\n\nIf there are multiple matches, prefer a baseline run with the same reason as\nthe contender run, and then use the baseline run with the most-recent\ncommit, finally tiebreaking by choosing the baseline run with the latest run\ntimestamp.\n\nIf any commits in the git ancestry were skipped to find a matching baseline\nrun, those commit hashes will be returned in the `"commits_skipped"` key.\n',
                 "parameters": [
@@ -1872,31 +1856,7 @@
                     "404": {"$ref": "#/components/responses/404"},
                 },
                 "tags": ["Runs"],
-            },
-            "put": {
-                "description": "Deprecated. This endpoint is a no-op, despite returning a 200.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "run_id",
-                        "required": True,
-                        "schema": {"type": "string"},
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {"$ref": "#/components/schemas/RunUpdate"}
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {"$ref": "#/components/responses/RunCreated"},
-                    "401": {"$ref": "#/components/responses/401"},
-                    "404": {"$ref": "#/components/responses/404"},
-                },
-                "tags": ["Runs"],
-            },
+            }
         },
         "/api/users/": {
             "get": {
@@ -2000,7 +1960,7 @@
         {"description": "Benchmark runs", "name": "Runs"},
         {"description": "Monitor status", "name": "Ping"},
         {
-            "description": '## BenchmarkResultCreate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultCreate" />\n\n## BenchmarkResultStats\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultStats" />\n\n## BenchmarkResultUpdate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultUpdate" />\n\n## ClusterCreate\n<SchemaDefinition schemaRef="#/components/schemas/ClusterCreate" />\n\n## Error\n<SchemaDefinition schemaRef="#/components/schemas/Error" />\n\n## ErrorBadRequest\n<SchemaDefinition schemaRef="#/components/schemas/ErrorBadRequest" />\n\n## ErrorValidation\n<SchemaDefinition schemaRef="#/components/schemas/ErrorValidation" />\n\n## Login\n<SchemaDefinition schemaRef="#/components/schemas/Login" />\n\n## MachineCreate\n<SchemaDefinition schemaRef="#/components/schemas/MachineCreate" />\n\n## Ping\n<SchemaDefinition schemaRef="#/components/schemas/Ping" />\n\n## Register\n<SchemaDefinition schemaRef="#/components/schemas/Register" />\n\n## RunCreate\n<SchemaDefinition schemaRef="#/components/schemas/RunCreate" />\n\n## RunUpdate\n<SchemaDefinition schemaRef="#/components/schemas/RunUpdate" />\n\n## SchemaGitHubCreate\n<SchemaDefinition schemaRef="#/components/schemas/SchemaGitHubCreate" />\n\n## UserCreate\n<SchemaDefinition schemaRef="#/components/schemas/UserCreate" />\n\n## UserUpdate\n<SchemaDefinition schemaRef="#/components/schemas/UserUpdate" />\n',
+            "description": '## BenchmarkResultCreate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultCreate" />\n\n## BenchmarkResultStats\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultStats" />\n\n## BenchmarkResultUpdate\n<SchemaDefinition schemaRef="#/components/schemas/BenchmarkResultUpdate" />\n\n## ClusterCreate\n<SchemaDefinition schemaRef="#/components/schemas/ClusterCreate" />\n\n## Error\n<SchemaDefinition schemaRef="#/components/schemas/Error" />\n\n## ErrorBadRequest\n<SchemaDefinition schemaRef="#/components/schemas/ErrorBadRequest" />\n\n## ErrorValidation\n<SchemaDefinition schemaRef="#/components/schemas/ErrorValidation" />\n\n## Login\n<SchemaDefinition schemaRef="#/components/schemas/Login" />\n\n## MachineCreate\n<SchemaDefinition schemaRef="#/components/schemas/MachineCreate" />\n\n## Ping\n<SchemaDefinition schemaRef="#/components/schemas/Ping" />\n\n## Register\n<SchemaDefinition schemaRef="#/components/schemas/Register" />\n\n## SchemaGitHubCreate\n<SchemaDefinition schemaRef="#/components/schemas/SchemaGitHubCreate" />\n\n## UserCreate\n<SchemaDefinition schemaRef="#/components/schemas/UserCreate" />\n\n## UserUpdate\n<SchemaDefinition schemaRef="#/components/schemas/UserUpdate" />\n',
             "name": "Models",
             "x-displayName": "Object models",
         },

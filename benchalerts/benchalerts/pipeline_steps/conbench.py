@@ -208,11 +208,21 @@ class GetConbenchZComparisonStep(GetConbenchZComparisonForRunsStep):
         self.commit_hash = commit_hash
 
     def run_step(self, previous_outputs: Dict[str, Any]) -> FullComparisonInfo:
-        self.run_ids = [
-            run["id"]
-            for run in self.conbench_client.get(
-                "/runs/", params={"sha": self.commit_hash}
-            )
-        ]
+        res = self.conbench_client.get(
+            "/runs/", params={"commit_hash": self.commit_hash, "page_size": 1000}
+        )
+        runs = res["data"]
 
+        while res["metadata"]["next_page_cursor"]:
+            res = self.conbench_client.get(
+                "/runs/",
+                params={
+                    "commit_hash": self.commit_hash,
+                    "page_size": 1000,
+                    "cursor": res["metadata"]["next_page_cursor"],
+                },
+            )
+            runs += res["data"]
+
+        self.run_ids = [run["id"] for run in runs]
         return super().run_step(previous_outputs)
