@@ -83,6 +83,7 @@ def test_alert_pipeline(monkeypatch: pytest.MonkeyPatch, github_auth: str):
         )
 
     pipeline = AlertPipeline(pipeline_steps)
+    pytest.skip("Skip until #1509 is deployed to velox")
     outputs = pipeline.run_pipeline()
 
     assert outputs["GitHubCheckStep"][0]["conclusion"] == "failure"

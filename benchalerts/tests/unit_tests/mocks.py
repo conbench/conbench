@@ -53,7 +53,7 @@ class MockAdapter(HTTPAdapter):
     base URL, and the rest is the path of the request URL, with special characters
     replaced by underscores. Examples:
 
-    - GET https://conbench.biz/api/runs/?sha=abc -> GET_conbench_runs_sha_abc.json
+    - GET https://conbench.biz/api/runs/?commit_hash=abc -> GET_conbench_runs_commit_hash_abc.json
     - POST https://api.github.com/repos/some/repo/issues/1/comments ->
         POST_github_issues_1_comments.json
 
