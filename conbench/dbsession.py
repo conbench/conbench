@@ -50,7 +50,9 @@ def _get_session():
     return app.scoped_session
 
 
-current_session = LocalProxy(_get_session)
+# LocalProxy is not a good type hint. When used, this object acts as a scoped_session.
+# This type hint allows all SQLAlchemy query results to also be type hinted.
+current_session: scoped_session = LocalProxy(_get_session)  # type: ignore[assignment]
 """Provides the current SQL Alchemy session within a request.
 
 Will raise an exception if no :data:`~flask.current_app` is available or it has
