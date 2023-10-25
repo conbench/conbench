@@ -963,13 +963,11 @@ LIMIT {limit};
 
 
 def fetch_one_result_per_each_of_n_recent_runs(n: int = 250) -> List[BenchmarkResult]:
-    from sqlalchemy.sql import text
-
-    bmrs = (
-        current_session.query(BenchmarkResult)
-        .from_statement(text(_RECENT_RUNS_QUERY_TEMPL.format(limit=n)))
-        .all()
+    query = s.select(BenchmarkResult).from_statement(
+        s.text(_RECENT_RUNS_QUERY_TEMPL.format(limit=n))
     )
+    # Need to type hint this again because from_statement() overrides the type hints.
+    bmrs: List[BenchmarkResult] = list(current_session.scalars(query).all())
 
     # Note(JP): as of the time of writing we're still having to reach out to
     # the database to get commit information: one query per result, I think.
