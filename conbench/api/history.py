@@ -15,7 +15,7 @@ from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..entities._entity import NotFound
 from ..entities.history import HistorySample, get_history_for_benchmark
-from ._resp import json_response_for_byte_sequence  # , csv_response_for_byte_sequence
+from ._resp import json_response_for_byte_sequence
 
 
 class HistoryEntityAPI(ApiEndpoint):
@@ -23,7 +23,17 @@ class HistoryEntityAPI(ApiEndpoint):
     def get(self, benchmark_result_id):
         """
         ---
-        description: Get benchmark history.
+        description: |
+            Get details about all error-free benchmark results on the default branch
+            that match the given benchmark result's history fingerprint.
+
+            This endpoint also returns results of the lookback z-score analysis,
+            comparing each result to commits in its git history ending with its parent
+            commit. More details about this analysis can be found at
+            https://conbench.github.io/conbench/pages/lookback_zscore.html.
+
+            Though the response has pagination metadata, pagination is not currently
+            implemented. All matching results will be returned in one page.
         responses:
             "200": "HistoryList"
             "401": "401"
@@ -44,10 +54,11 @@ class HistoryEntityAPI(ApiEndpoint):
         except NotFound:
             self.abort_404_not_found()
 
-        # Note: wrap this into an array if there is just 1 sample, for
-        # consistency (clients expect an array).
         jsonbytes: bytes = orjson.dumps(
-            [s._dict_for_api_json() for s in samples],
+            {
+                "data": [s._dict_for_api_json() for s in samples],
+                "metadata": {"next_page_cursor": None},
+            },
             option=orjson.OPT_INDENT_2,
         )
         return json_response_for_byte_sequence(jsonbytes, 200)
@@ -90,14 +101,6 @@ class HistoryDownloadAPI(ApiEndpoint):
             download_name=f"conbench-history-{items[0].benchmark_name}-{items[0].history_fingerprint}.csv",
             mimetype="text/csv",
         )
-
-        # # Note: wrap this into an array if there is just 1 sample, for
-        # # consistency (clients expect an array).
-        # jsonbytes: bytes = orjson.dumps(
-        #     [s._dict_for_api_json() for s in samples],
-        #     option=orjson.OPT_INDENT_2,
-        # )
-        # return csv_response_for_byte_sequence(csv_buf.getbuffer(), 200)
 
 
 history_entity_view = HistoryEntityAPI.as_view("history")

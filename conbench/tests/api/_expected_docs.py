@@ -714,59 +714,62 @@
             "HistoryList": {
                 "content": {
                     "application/json": {
-                        "example": [
-                            [
-                                {
-                                    "benchmark_result_id": "some-benchmark-uuid-1",
-                                    "case_id": "some-case-uuid-1",
-                                    "commit_hash": "02addad336ba19a654f9c857ede546331be7b631",
-                                    "commit_msg": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
-                                    "commit_timestamp": "2021-02-25T01:02:51",
-                                    "context_id": "some-context-uuid-1",
-                                    "data": [
-                                        0.099094,
-                                        0.037129,
-                                        0.036381,
-                                        0.148896,
-                                        0.008104,
-                                        0.005496,
-                                        0.009871,
-                                        0.006008,
-                                        0.007978,
-                                        0.004733,
-                                    ],
-                                    "hardware_hash": "diana-2-2-4-17179869184",
-                                    "history_fingerprint": "some-hexdigest",
-                                    "mean": 0.036369,
-                                    "repository": "https://github.com/org/repo",
-                                    "run_name": "some run name",
-                                    "single_value_summary": 0.036369,
-                                    "single_value_summary_type": "mean",
-                                    "times": [
-                                        0.099094,
-                                        0.037129,
-                                        0.036381,
-                                        0.148896,
-                                        0.008104,
-                                        0.005496,
-                                        0.009871,
-                                        0.006008,
-                                        0.007978,
-                                        0.004733,
-                                    ],
-                                    "unit": "s",
-                                    "zscorestats": {
-                                        "begins_distribution_change": False,
-                                        "is_outlier": False,
-                                        "residual": 0.0,
-                                        "rolling_mean": 0.036369,
-                                        "rolling_mean_excluding_this_commit": 0.036369,
-                                        "rolling_stddev": 0.0,
-                                        "segment_id": 0.0,
-                                    },
-                                }
-                            ]
-                        ]
+                        "example": {
+                            "data": [
+                                [
+                                    {
+                                        "benchmark_result_id": "some-benchmark-uuid-1",
+                                        "case_id": "some-case-uuid-1",
+                                        "commit_hash": "02addad336ba19a654f9c857ede546331be7b631",
+                                        "commit_msg": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
+                                        "commit_timestamp": "2021-02-25T01:02:51",
+                                        "context_id": "some-context-uuid-1",
+                                        "data": [
+                                            0.099094,
+                                            0.037129,
+                                            0.036381,
+                                            0.148896,
+                                            0.008104,
+                                            0.005496,
+                                            0.009871,
+                                            0.006008,
+                                            0.007978,
+                                            0.004733,
+                                        ],
+                                        "hardware_hash": "diana-2-2-4-17179869184",
+                                        "history_fingerprint": "some-hexdigest",
+                                        "mean": 0.036369,
+                                        "repository": "https://github.com/org/repo",
+                                        "run_name": "some run name",
+                                        "single_value_summary": 0.036369,
+                                        "single_value_summary_type": "mean",
+                                        "times": [
+                                            0.099094,
+                                            0.037129,
+                                            0.036381,
+                                            0.148896,
+                                            0.008104,
+                                            0.005496,
+                                            0.009871,
+                                            0.006008,
+                                            0.007978,
+                                            0.004733,
+                                        ],
+                                        "unit": "s",
+                                        "zscorestats": {
+                                            "begins_distribution_change": False,
+                                            "is_outlier": False,
+                                            "residual": 0.0,
+                                            "rolling_mean": 0.036369,
+                                            "rolling_mean_excluding_this_commit": 0.036369,
+                                            "rolling_stddev": 0.0,
+                                            "segment_id": 0.0,
+                                        },
+                                    }
+                                ]
+                            ],
+                            "metadata": {"next_page_cursor": None},
+                        }
                     }
                 },
                 "description": "OK",
@@ -1714,7 +1717,7 @@
         },
         "/api/history/{benchmark_result_id}/": {
             "get": {
-                "description": "Get benchmark history.",
+                "description": "Get details about all error-free benchmark results on the default branch\nthat match the given benchmark result's history fingerprint.\n\nThis endpoint also returns results of the lookback z-score analysis,\ncomparing each result to commits in its git history ending with its parent\ncommit. More details about this analysis can be found at\nhttps://conbench.github.io/conbench/pages/lookback_zscore.html.\n\nThough the response has pagination metadata, pagination is not currently\nimplemented. All matching results will be returned in one page.\n",
                 "parameters": [
                     {
                         "in": "path",

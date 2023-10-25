@@ -1,4 +1,5 @@
 from io import StringIO
+from typing import List
 
 import pandas as pd
 from pandas import DatetimeIndex
@@ -7,7 +8,7 @@ from ...api._examples import _api_history_entity
 from ...tests.api import _asserts, _fixtures
 
 
-def _expected_entity(benchmark_result):
+def _expected_entity(benchmark_result) -> List[dict]:
     return _api_history_entity(
         benchmark_result.id,
         benchmark_result.case_id,
@@ -30,7 +31,10 @@ class TestHistoryGet(_asserts.GetEnforcer):
         response = client.get(f"/api/history/{benchmark_result.id}/")
         assert response.status_code == 200
         hist_endpont_resp_deser = response.json
-        expected_resp_deser = _expected_entity(benchmark_result)
+        expected_resp_deser = {
+            "data": _expected_entity(benchmark_result),
+            "metadata": {"next_page_cursor": None},
+        }
         assert hist_endpont_resp_deser == expected_resp_deser
 
     def test_csv_download(self, client):

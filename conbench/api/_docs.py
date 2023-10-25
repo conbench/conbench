@@ -84,7 +84,10 @@ spec.components.response("CompareList", _200_ok(ex.COMPARE_LIST))
 spec.components.response("ContextEntity", _200_ok(ex.CONTEXT_ENTITY))
 spec.components.response("ContextList", _200_ok([ex.CONTEXT_ENTITY]))
 spec.components.response("InfoList", _200_ok([ex.INFO_ENTITY]))
-spec.components.response("HistoryList", _200_ok([ex.HISTORY_ENTITY]))
+spec.components.response(
+    "HistoryList",
+    _200_ok({"data": [ex.HISTORY_ENTITY], "metadata": {"next_page_cursor": None}}),
+)
 spec.components.response("InfoEntity", _200_ok(ex.INFO_ENTITY))
 spec.components.response("HardwareEntity", _200_ok(ex.HARDWARE_ENTITY))
 spec.components.response("HardwareList", _200_ok([ex.HARDWARE_ENTITY]))
