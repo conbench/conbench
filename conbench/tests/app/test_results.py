@@ -101,6 +101,24 @@ class TestBenchmarkResultGet(_asserts.GetEnforcer):
         # Ensure the result page looks as expected
         self._assert_view(client, post_response.json["id"])
 
+    def test_display_result_urlize_optional_info(self, client):
+        # Test that benchmark result view/page loads fine for the results that
+        # have optional_benchmark_info only.
+        self.authenticate(client)
+
+        result = _fixtures.VALID_RESULT_PAYLOAD.copy()
+        result["optional_benchmark_info"] = {
+            "single_url": "https://foo.bar",
+            "list_of_single_url": ["https://foo.bar"],
+            "list_of_two_urls": ["https://foo.bar", "https://foo.bar"],
+        }
+
+        resp = client.post("/api/benchmark-results/", json=result)
+        assert resp.status_code == 201, resp.text
+        bmr_id = resp.json["id"]
+        resp = client.get(f"benchmark-results/{bmr_id}/")
+        assert resp.status_code == 200, resp.text
+
 
 class TestBenchmarkResultDelete(_asserts.DeleteEnforcer):
     def test_authenticated(self, client):

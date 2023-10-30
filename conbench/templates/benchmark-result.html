@@ -206,7 +206,18 @@
               {{ k }}
               {% if v is not none %}
                 <div align="right" style="display:inline-block; float: right;">
-                  <code>{{ v | urlize(target="_blank") }}</code>
+                  {% if not isinstance(v, list) %}
+                    <code>{{ v | urlize(target="_blank") }}</code>
+                  {% else %}
+                    <code>[
+                    {% for i in v %}
+                      {{ i | urlize(target="_blank") }}
+                      {% if not loop.last %}
+                        ,
+                      {% endif %}
+                    {% endfor %}
+                    ]</code>
+                  {% endif %}
                 </div>
               {% endif %}
             </li>
