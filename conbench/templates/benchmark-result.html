@@ -210,10 +210,10 @@
                     <code>{{ v | urlize(target="_blank") }}</code>
                   {% else %}
                     <code>[
-                    {% for i in v %}
-                      {{ i | urlize(target="_blank") }}
-                      {% if not loop.last %},{% endif %}
-                    {% endfor %}
+                      {% for i in v %}
+                        {{ i | urlize(target="_blank") }}
+                        {% if not loop.last %},{% endif %}
+                      {% endfor %}
                     ]</code>
                   {% endif %}
                 </div>
