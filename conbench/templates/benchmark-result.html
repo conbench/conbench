@@ -212,9 +212,7 @@
                     <code>[
                     {% for i in v %}
                       {{ i | urlize(target="_blank") }}
-                      {% if not loop.last %}
-                        ,
-                      {% endif %}
+                      {% if not loop.last %},{% endif %}
                     {% endfor %}
                     ]</code>
                   {% endif %}
