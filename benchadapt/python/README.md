@@ -62,10 +62,10 @@ are possible; if you create one corresponding to a benchmarking tool, please mak
 
 #### Running an adapter
 
-Adapters have separate `.run()` and `.publish_results()` methods; the former runs the
+Adapters have separate `.run()` and `.post_results()` methods; the former runs the
 benchmarks, transforms the results, and stores them in a `.results` attribute of the
 instance. It does not post them, so is useful for looking at results interactively before
-sending them. `.publish_results()` takes the results from the `.results` attribute and
+sending them. `.post_results()` takes the results from the `.results` attribute and
 posts them to a Conbench API.
 
 The whole instance also has a `__call__()` method defined so it can be called like a
