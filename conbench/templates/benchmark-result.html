@@ -206,7 +206,16 @@
               {{ k }}
               {% if v is not none %}
                 <div align="right" style="display:inline-block; float: right;">
-                  <code>{{ v | urlize(target="_blank") }}</code>
+                  {% if v is iterable and (v is not string and v is not mapping) %}
+                    <code>[
+                      {% for i in v %}
+                        {{ i | urlize(target="_blank") }}
+                        {% if not loop.last %},{% endif %}
+                      {% endfor %}
+                    ]</code>
+                  {% else %}
+                    <code>{{ v | urlize(target="_blank") }}</code>
+                  {% endif %}
                 </div>
               {% endif %}
             </li>

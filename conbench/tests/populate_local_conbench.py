@@ -122,6 +122,7 @@ def generate_benchmarks_data(
     data["optional_benchmark_info"] = {
         "log uri": "s3://some/log",
         "log url": "https://some/log",
+        "log urls": ["https://some/log", "https://another/one"],
         "trace uri": "s3://some/trace",
     }
 
