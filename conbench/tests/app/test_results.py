@@ -101,6 +101,30 @@ class TestBenchmarkResultGet(_asserts.GetEnforcer):
         # Ensure the result page looks as expected
         self._assert_view(client, post_response.json["id"])
 
+    def test_get_result_without_commit_timestamp(self, client):
+        self.authenticate(client)
+
+        # Post baseline results so we try to render a plot
+        for _ in range(3):
+            payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
+            post_response = client.post("/api/benchmark-results/", json=payload)
+            assert post_response.status_code == 201
+
+        # Post a benchmark result without a commit timestamp
+        payload = copy.deepcopy(_fixtures.VALID_RESULT_PAYLOAD)
+        payload["github"]["commit"] = "unknown"
+        payload["run_id"] = _fixtures._uuid()
+        post_response = client.post("/api/benchmark-results/", json=payload)
+        assert post_response.status_code == 201
+
+        # Ensure the result doesn't have a commit timestamp
+        get_response = client.get(f'/api/benchmark-results/{post_response.json["id"]}/')
+        assert get_response.status_code == 200
+        assert get_response.json["commit"]["timestamp"] is None
+
+        # Ensure the result page looks as expected
+        self._assert_view(client, post_response.json["id"])
+
     def test_display_result_urlize_optional_info(self, client):
         # Test that benchmark result view/page loads fine for the results that
         # have optional_benchmark_info only.
