@@ -214,11 +214,18 @@ def _api_commit_entity(
 
 
 def _api_compare_entity(
-    benchmark_result_ids, batch_ids, run_ids, benchmark_name, case_permutation, tags
+    benchmark_result_ids,
+    batch_ids,
+    run_ids,
+    benchmark_name,
+    case_permutation,
+    tags,
+    history_fingerprint,
 ):
     return {
         "unit": "s",
         "less_is_better": True,
+        "history_fingerprint": history_fingerprint,
         "baseline": {
             "benchmark_name": benchmark_name,
             "case_permutation": case_permutation,
@@ -266,11 +273,13 @@ def _api_compare_list(
     benchmark_names,
     case_permutations,
     tags,
+    history_fingerprints,
 ):
     return [
         {
             "unit": "s",
             "less_is_better": True,
+            "history_fingerprint": history_fingerprints[0],
             "baseline": {
                 "benchmark_name": benchmark_names[0],
                 "case_permutation": case_permutations[0],
@@ -311,6 +320,7 @@ def _api_compare_list(
         {
             "unit": "s",
             "less_is_better": True,
+            "history_fingerprint": history_fingerprints[1],
             "baseline": {
                 "benchmark_name": benchmark_names[1],
                 "case_permutation": case_permutations[1],
@@ -540,6 +550,7 @@ COMPARE_ENTITY = _api_compare_entity(
         "input_type": "arrow",
         "name": "file-read",
     },
+    "history-fingerprint-1",
 )
 COMPARE_LIST = _api_compare_list(
     ["some-benchmark-uuid-1", "some-benchmark-uuid-2"],
@@ -569,6 +580,7 @@ COMPARE_LIST = _api_compare_list(
             "name": "file-write",
         },
     ],
+    ["history-fingerprint-1", "history-fingerprint-2"],
 )
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
 HISTORY_ENTITY = _api_history_entity(

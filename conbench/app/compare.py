@@ -1,3 +1,4 @@
+import abc
 import copy
 import json
 import logging
@@ -5,7 +6,9 @@ from typing import List, Optional, Tuple
 
 import bokeh
 import flask as f
+from werkzeug.exceptions import HTTPException
 
+from ..api.compare import CompareRunsAPI
 from ..app import rule
 from ..app._endpoint import AppEndpoint, authorize_or_terminate
 from ..app._plots import TimeSeriesPlotMixin, simple_bar_plot
@@ -29,7 +32,19 @@ def all_keys(dict1, dict2, attr):
 
 
 class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
-    def page(self, comparisons, regressions, improvements, baseline_id, contender_id):
+    type: str
+    html: str
+    title: str
+
+    @abc.abstractmethod
+    def get_comparisons(
+        self, baseline_id: str, contender_id: str
+    ) -> Tuple[List[dict], Optional[str]]:
+        """Get comparisons between two entities. If the second tuple element is returned
+        it's an error message.
+        """
+
+    def page(self, comparisons, baseline_id, contender_id):
         unknown = "unknown...unknown"
         compare_runs_url = f.url_for("app.compare-runs", compare_ids=unknown)
         baseline, contender, plot, plot_history = None, None, None, None
@@ -91,8 +106,6 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             benchmark_result_history_plot_info=benchmark_result_history_plot_info,
             resources=bokeh.resources.CDN.render(),
             comparisons=comparisons,
-            regressions=regressions,
-            improvements=improvements,
             baseline_id=baseline_id,
             contender_id=contender_id,
             baseline=baseline,
@@ -156,7 +169,7 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         if "..." not in compare_ids:
             return error_page(
                 "Got unexpected URL path pattern. Expected: <id>...<id>",
-                subtitle=self.title,  # type: ignore
+                subtitle=self.title,
             )
 
         baseline_id, contender_id = compare_ids.split("...", 1)
@@ -164,84 +177,53 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
         if not baseline_id:
             return error_page(
                 "No baseline ID was provided. Expected format: <baseline_id>...<contender_id>",
-                subtitle=self.title,  # type: ignore
+                subtitle=self.title,
             )
 
         if not contender_id:
             return error_page(
                 "No contender ID was provided. Expected format: <baseline-id>...<contender-id>",
-                subtitle=self.title,  # type: ignore
+                subtitle=self.title,
             )
 
-        (
-            comparison_results,
-            regression_count,
-            improvement_count,
-            error_string,
-        ) = self._compare(baseline_id=baseline_id, contender_id=contender_id)
+        comparison_results, error_string = self._compare(
+            baseline_id=baseline_id, contender_id=contender_id
+        )
 
         if error_string is not None:
             return error_page(
                 f"cannot perform comparison: {error_string}",
                 alert_level="info",
-                subtitle=self.title,  # type: ignore
+                subtitle=self.title,
             )
 
         if len(comparison_results) == 0:
-            return error_page(  # type: ignore
+            return error_page(
                 "comparison yielded 0 benchmark results",
                 alert_level="info",
-                subtitle=self.title,  # type: ignore
+                subtitle=self.title,
             )
 
         return self.page(
             comparisons=comparison_results,
-            regressions=regression_count,
-            improvements=improvement_count,
             baseline_id=baseline_id,
             contender_id=contender_id,
         )
 
     def _compare(
         self, baseline_id: str, contender_id: str
-    ) -> Tuple[List, int, int, Optional[str]]:
+    ) -> Tuple[List, Optional[str]]:
         """
-        Return a 4-tuple.
+        Return a 2-tuple.
 
         If the last item is a string then it is an error message for why
-        the comparison failed. Do not process the first three items then.
+        the comparison failed. Do not process the first item then.
         """
-        # NOte(JP): This farms out one of three API endpoints.
-        # self.api_endpoint_name is mind-boggling. It is set in a child class.
-        # Re-assemble the stringified input argument for the virtual API
-        # endpoint, carrying both baseline and contender ID
-        params = {"compare_ids": f"{baseline_id}...{contender_id}"}
-        # error: "Compare" has no attribute "api_endpoint_name"  [attr-defined]
-        response = self.api_get(self.api_endpoint_name, **params)  # type: ignore
-
-        if response.status_code != 200:
-            log.error(
-                "processing req to %s -- unexpected response for virtual request: %s, %s",
-                f.request.url,
-                response.status_code,
-                response.text,
-            )
-            # poor-mans error propagation, until we remove the API
-            # layer indirection.
-            errmsg = response.text
-            try:
-                errmsg = response.json["description"]
-            except Exception:
-                pass
-            return [], 0, 0, errmsg
+        comparisons, errmsg = self.get_comparisons(baseline_id, contender_id)
+        if errmsg:
+            return [], errmsg
 
         # below is legacy code, review for bugs and clarity
-        comparisons, regressions, improvements = [], 0, 0
-
-        comparisons = [response.json]
-        if isinstance(response.json, list):
-            comparisons = response.json
-
         # Mutate comparison objs (dictionaries) on the fly
         for c in comparisons:
             view = "app.compare-benchmark-results"
@@ -251,25 +233,39 @@ class Compare(AppEndpoint, BenchmarkResultMixin, RunMixin, TimeSeriesPlotMixin):
             else:
                 c["compare_benchmarks_url"] = None
 
-            if (
-                c["analysis"]["lookback_z_score"]
-                and c["analysis"]["lookback_z_score"]["regression_indicated"]
-            ):
-                regressions += 1
-            if (
-                c["analysis"]["lookback_z_score"]
-                and c["analysis"]["lookback_z_score"]["improvement_indicated"]
-            ):
-                improvements += 1
-
-        return comparisons, regressions, improvements, None
+        return comparisons, None
 
 
 class CompareBenchmarkResults(Compare):
     type = "benchmark-result"
     html = "compare-entity.html"
     title = "Compare Benchmark Results"
-    api_endpoint_name = "api.compare-benchmark-results"
+
+    def get_comparisons(
+        self, baseline_id: str, contender_id: str
+    ) -> Tuple[List[dict], Optional[str]]:
+        # Re-assemble the stringified input argument for the virtual API
+        # endpoint, carrying both baseline and contender ID
+        params = {"compare_ids": f"{baseline_id}...{contender_id}"}
+        response = self.api_get("api.compare-benchmark-results", **params)
+
+        if response.status_code == 200:
+            return [response.json], None
+
+        log.error(
+            "processing req to %s -- unexpected response for virtual request: %s, %s",
+            f.request.url,
+            response.status_code,
+            response.text,
+        )
+        # poor-mans error propagation, until we remove the API
+        # layer indirection.
+        errmsg = response.text
+        try:
+            errmsg = response.json["description"]
+        except Exception:
+            pass
+        return [], errmsg
 
 
 class CompareRuns(Compare):
@@ -278,7 +274,23 @@ class CompareRuns(Compare):
     # runs" view.
     html = "compare-list.html"
     title = "Compare Runs"
-    api_endpoint_name = "api.compare-runs"
+
+    def get_comparisons(
+        self, baseline_id: str, contender_id: str
+    ) -> Tuple[List[dict], str | None]:
+        # Instead of hitting the API we'll hit the DB directly using the same code.
+        try:
+            api = CompareRunsAPI()
+            response = api._get_response_as_dict(
+                compare_ids=f"{baseline_id}...{contender_id}",
+                cursor=None,
+                page_size=None,
+                threshold=None,
+                threshold_z=None,
+            )
+            return response["data"], None
+        except HTTPException as e:
+            return [], e.description
 
 
 rule(
