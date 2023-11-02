@@ -622,10 +622,10 @@ class CompareRunsAPI(ApiEndpoint):
             schema:
               type: integer
               minimum: 1
-              maximum: 1000
+              maximum: 500
             description: |
                 The max number of unique fingerprints to return per page for pagination
-                (see `cursor`). Default 100. Max 1000.
+                (see `cursor`). Default 100. Max 500.
         tags:
           - Comparisons
         """
@@ -637,14 +637,13 @@ class CompareRunsAPI(ApiEndpoint):
             if not acquired:
                 return resp429("doing other /compare work, retry soon")
 
-            # TODO: optimize default/max page sizes
             page_size_arg = f.request.args.get("page_size", 100)
             try:
                 page_size = int(page_size_arg)
-                assert 1 <= page_size <= 1000
+                assert 1 <= page_size <= 500
             except Exception:
                 self.abort_400_bad_request(
-                    "page_size must be a positive integer no greater than 1000"
+                    "page_size must be a positive integer no greater than 500"
                 )
 
             cursor_arg: Optional[str] = f.request.args.get("cursor")

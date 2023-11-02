@@ -525,7 +525,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         res = client.get(f"/api/compare/runs/foo...bar/?page_size={page_size}")
         self.assert_400_bad_request(
             res,
-            {"_errors": ["page_size must be a positive integer no greater than 1000"]},
+            {"_errors": ["page_size must be a positive integer no greater than 500"]},
         )
 
     @pytest.mark.parametrize(
