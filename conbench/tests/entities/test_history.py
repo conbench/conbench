@@ -189,6 +189,7 @@ def test_set_z_scores(
             set_z_scores(
                 contender_benchmark_results=[benchmark_result],
                 baseline_commit=baseline_commit,
+                history_fingerprints=[benchmark_result.history_fingerprint],
             )
         else:
             benchmark_result.z_score = None
@@ -229,6 +230,7 @@ def test_set_z_scores(
             set_z_scores(
                 contender_benchmark_results=[benchmark_result],
                 baseline_commit=baseline_commit,
+                history_fingerprints=[benchmark_result.history_fingerprint],
             )
         else:
             benchmark_result.z_score = None
@@ -276,6 +278,7 @@ def test_set_z_scores_with_distribution_change(
             set_z_scores(
                 contender_benchmark_results=[benchmark_result],
                 baseline_commit=baseline_commit,
+                history_fingerprints=[benchmark_result.history_fingerprint],
             )
         else:
             benchmark_result.z_score = None

@@ -395,6 +395,7 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
             set_z_scores(
                 contender_benchmark_results=[contender_result],
                 baseline_commit=baseline_commit,
+                history_fingerprints=[contender_result.history_fingerprint],
             )
         else:
             # If the baseline run is not associated with a commit, skip z-scores. The
@@ -463,7 +464,7 @@ class CompareRunsAPI(ApiEndpoint):
     @staticmethod
     def _get_page_of_history_fingerprints(
         run_ids: List[str], cursor: Optional[str], page_size: Optional[int]
-    ) -> List[str]:
+    ) -> List[THistFingerprint]:
         """Get a list of up to page_size history fingerprints corresponding to the
         run_ids, after the cursor value.
         """
@@ -482,7 +483,7 @@ class CompareRunsAPI(ApiEndpoint):
 
     @staticmethod
     def _get_all_results_for_a_run(
-        run_id: str, history_fingerprints: List[str]
+        run_id: str, history_fingerprints: List[THistFingerprint]
     ) -> List[BenchmarkResult]:
         """Get all benchmark results for a run with the given history_fingerprints."""
         query = s.select(BenchmarkResult).where(
@@ -682,10 +683,10 @@ class CompareRunsAPI(ApiEndpoint):
         baseline_commit = self._get_commit(baseline_run_id)
 
         if baseline_commit:
-            # TODO: investigate possible speedup by passing fingerprints here
             set_z_scores(
                 contender_benchmark_results=contender_results,
                 baseline_commit=baseline_commit,
+                history_fingerprints=history_fingerprints,
             )
         else:
             # If the baseline run is not associated with a commit, skip z-scores. The
