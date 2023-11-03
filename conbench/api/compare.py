@@ -17,6 +17,7 @@ from ..api import rule
 from ..api._endpoint import ApiEndpoint, maybe_login_required
 from ..api._resp import resp429
 from ..entities.benchmark_result import BenchmarkResult
+from ..entities.commit import Commit
 from ..entities.history import set_z_scores
 from ..hacks import set_display_benchmark_name, set_display_case_permutation
 
@@ -132,6 +133,7 @@ class BenchmarkResultComparator:
 
     def __init__(
         self,
+        history_fingerprint: Optional[THistFingerprint],
         baseline: Optional["AugmentedBenchmarkResult"],
         contender: Optional["AugmentedBenchmarkResult"],
         threshold: Optional[float],
@@ -183,6 +185,7 @@ class BenchmarkResultComparator:
         # numeric comparison.
         self.do_comparison = do_comparison
 
+        self.history_fingerprint = history_fingerprint
         self.baseline = baseline
         self.contender = contender
         self.threshold = (
@@ -283,6 +286,7 @@ class BenchmarkResultComparator:
             # are not failed and have the same unit then this here is the unit
             # symbol. Else it's null/None.
             "unit": self.unit,
+            "history_fingerprint": self.history_fingerprint,
             "less_is_better": self.less_is_better,
             "baseline": self.result_info(self.baseline),
             "contender": self.result_info(self.contender),
@@ -391,6 +395,7 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
             set_z_scores(
                 contender_benchmark_results=[contender_result],
                 baseline_commit=baseline_commit,
+                history_fingerprints=[contender_result.history_fingerprint],
             )
         else:
             # If the baseline run is not associated with a commit, skip z-scores. The
@@ -404,8 +409,14 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
         set_display_benchmark_name(baseline_result)
         set_display_benchmark_name(contender_result)
 
+        if baseline_result.history_fingerprint != contender_result.history_fingerprint:
+            fingerprint = None
+        else:
+            fingerprint = baseline_result.history_fingerprint
+
         try:
             comparator = BenchmarkResultComparator(
+                history_fingerprint=fingerprint,
                 baseline=baseline_result,
                 contender=contender_result,
                 threshold=threshold,
@@ -422,28 +433,73 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
 
 class CompareRunsAPI(ApiEndpoint):
     @staticmethod
-    def _get_all_results_for_a_run(run_id: str) -> List[BenchmarkResult]:
-        """Get all benchmark results for a run. Abort if the run doesn't exist or if
-        there are no results for the run.
-        """
-        # TODO: fairly slow; e.g. 3 seconds for 3500 results. Maybe we select only the
-        # columns we need. Today it's joining to case, context, hardware, and commit
-        result = current_session.scalars(
-            s.select(BenchmarkResult).where(BenchmarkResult.run_id == run_id)
-        ).all()
-
+    def _check_run_exists(run_id: str) -> None:
+        """Quickly check if a run exists, or abort if it doesn't."""
+        query = (
+            s.select(BenchmarkResult.run_id)
+            .where(BenchmarkResult.run_id == run_id)
+            .limit(1)
+        )
+        result = current_session.scalars(query).first()
         if not result:
             f.abort(
                 404, description=f"no benchmark results found for run ID: '{run_id}'"
             )
 
+    @staticmethod
+    def _get_commit(run_id: str) -> Optional[Commit]:
+        """Get the Commit corresponding to a run, or None if the run is not associated
+        with a commit. The run must exist for this to make sense.
+        """
+        query = (
+            s.select(Commit)
+            .select_from(BenchmarkResult)
+            .join(Commit)
+            .where(BenchmarkResult.run_id == run_id)
+            .limit(1)
+        )
+        result = current_session.scalars(query).first()
+        return result
+
+    @staticmethod
+    def _get_page_of_history_fingerprints(
+        run_ids: List[str], cursor: Optional[str], page_size: Optional[int]
+    ) -> List[THistFingerprint]:
+        """Get a list of up to page_size history fingerprints corresponding to the
+        run_ids, after the cursor value.
+        """
+        filters = [BenchmarkResult.run_id.in_(run_ids)]
+        if cursor:
+            # Apparently this is a slightly different type than the other one
+            filters.append(BenchmarkResult.history_fingerprint > cursor)  # type: ignore
+
+        query = (
+            s.select(BenchmarkResult.history_fingerprint.distinct())
+            .where(*filters)
+            .order_by(BenchmarkResult.history_fingerprint)
+            .limit(page_size)
+        )
+        return list(current_session.scalars(query).all())
+
+    @staticmethod
+    def _get_all_results_for_a_run(
+        run_id: str, history_fingerprints: List[THistFingerprint]
+    ) -> List[BenchmarkResult]:
+        """Get all benchmark results for a run with the given history_fingerprints."""
+        query = s.select(BenchmarkResult).where(
+            BenchmarkResult.run_id == run_id,
+            BenchmarkResult.history_fingerprint.in_(history_fingerprints),
+        )
+        result = current_session.scalars(query).all()
         return list(result)
 
     @staticmethod
     def _join_results(
         baseline_results: List[BenchmarkResult],
         contender_results: List[BenchmarkResult],
-    ) -> List[Tuple[Optional[BenchmarkResult], Optional[BenchmarkResult]]]:
+    ) -> List[
+        Tuple[THistFingerprint, Optional[BenchmarkResult], Optional[BenchmarkResult]]
+    ]:
         """Do a full outer join of two lists of benchmark results, pairing by history
         fingerprint.
 
@@ -467,13 +523,15 @@ class CompareRunsAPI(ApiEndpoint):
             contender_results_by_fing[result.history_fingerprint].append(result)
 
         joined_results: List[
-            Tuple[Optional[BenchmarkResult], Optional[BenchmarkResult]]
+            Tuple[
+                THistFingerprint, Optional[BenchmarkResult], Optional[BenchmarkResult]
+            ]
         ] = []
 
         for fing in set(baseline_results_by_fing) | set(contender_results_by_fing):
             for baseline_result in baseline_results_by_fing[fing] or [None]:
                 for contender_result in contender_results_by_fing[fing] or [None]:
-                    joined_results.append((baseline_result, contender_result))
+                    joined_results.append((fing, baseline_result, contender_result))
 
         return joined_results
 
@@ -497,6 +555,9 @@ class CompareRunsAPI(ApiEndpoint):
             If a benchmark result from one run has multiple matching results in the
             other run, a comparison object will be returned for each match. Filtering
             must be done clientside.
+
+            This endpoint implements pagination; see the `cursor` and `page_size` query
+            parameters for how it works.
         responses:
             "200": "CompareList"
             "401": "401"
@@ -507,14 +568,64 @@ class CompareRunsAPI(ApiEndpoint):
             schema:
                 type: string
             example: <baseline_id>...<contender_id>
+            description: The baseline and contender run IDs, separated by `...`.
           - in: query
             name: threshold
             schema:
               type: number
+            description: |
+                The threshold for the `pairwise` analysis, in percent. Defaults to 5.0.
           - in: query
             name: threshold_z
             schema:
               type: number
+            description: |
+                The threshold for the `lookback_z_score` analysis, in z-score. Defaults
+                to 5.0.
+          - in: query
+            name: cursor
+            schema:
+              type: string
+              nullable: true
+            description: |
+                A cursor for pagination through comparisons in alphabetical order by
+                `history_fingerprint`.
+
+                To get the first page of comparisons, leave out this query parameter or
+                submit `null`. The response's `metadata` key will contain a
+                `next_page_cursor` key, which will contain the cursor to provide to this
+                query parameter in order to get the next page. (If there is expected to
+                be no data in the next page, the `next_page_cursor` will be `null`.)
+
+                The first page will contain the comparisons that are first
+                alphabetically by `history_fingerprint`. Each subsequent page will
+                correspond to up to `page_size` unique fingerprints, continuing
+                alphabetically, until there are no more comparisons.
+
+                Note! In some cases there may be more than one comparison per
+                fingerprint (if there were retries of a benchmark in the same run), so
+                the actual size of each page may vary slightly above the `page_size`.
+
+                Implementation detail: currently, the next page's cursor value is equal
+                to the latest `history_fingerprint` alphabetically in the current page.
+                A page of comparisons is therefore defined as the comparisons with the
+                `page_size` fingerprints alphabetically later than the given cursor
+                value.
+
+                Note that this means that if a new result belonging to one of the runs
+                is created DURING a client's request loop with a fingerprint that is
+                alphabetically earlier than the cursor value, it will not be included in
+                the next page. This is a known limitation of the current implementation,
+                so ensure you use this endpoint after all results have been submitted.
+          - in: query
+            name: page_size
+            schema:
+              type: integer
+              minimum: 1
+              maximum: 500
+            description: |
+                The max number of unique fingerprints to return per page for pagination
+                (see `cursor`). Default 100. Max 500.
         tags:
           - Comparisons
         """
@@ -523,24 +634,61 @@ class CompareRunsAPI(ApiEndpoint):
         # model with N request-handling threads per process. Wait in line for
         # a small number of seconds
         with _sem_acquire(_semaphore_compare_get, 0.1) as acquired:
-            if acquired:
-                return self._get(compare_ids)
-            return resp429("doing other /compare work, retry soon")
+            if not acquired:
+                return resp429("doing other /compare work, retry soon")
 
-    def _get(self, compare_ids: str) -> f.Response:
+            page_size_arg = f.request.args.get("page_size", 100)
+            try:
+                page_size = int(page_size_arg)
+                assert 1 <= page_size <= 500
+            except Exception:
+                self.abort_400_bad_request(
+                    "page_size must be a positive integer no greater than 500"
+                )
+
+            cursor_arg: Optional[str] = f.request.args.get("cursor")
+            cursor = None if cursor_arg == "null" else cursor_arg
+
+            threshold, threshold_z = _get_threshold_args_from_request()
+
+            response = self._get_response_as_dict(
+                compare_ids, cursor, page_size, threshold, threshold_z
+            )
+            return f.jsonify(response)
+
+    def _get_response_as_dict(
+        self,
+        compare_ids: str,
+        cursor: Optional[str],
+        page_size: Optional[int],
+        threshold: Optional[float],
+        threshold_z: Optional[float],
+    ) -> dict:
         baseline_run_id, contender_run_id = _parse_two_ids_or_abort(compare_ids)
-        threshold, threshold_z = _get_threshold_args_from_request()
-        baseline_results = self._get_all_results_for_a_run(baseline_run_id)
-        contender_results = self._get_all_results_for_a_run(contender_run_id)
+        self._check_run_exists(baseline_run_id)
+        self._check_run_exists(contender_run_id)
+
+        history_fingerprints = self._get_page_of_history_fingerprints(
+            [baseline_run_id, contender_run_id], cursor, page_size
+        )
+        if not history_fingerprints:
+            return {"data": [], "metadata": {"next_page_cursor": None}}
+
+        baseline_results = self._get_all_results_for_a_run(
+            baseline_run_id, history_fingerprints
+        )
+        contender_results = self._get_all_results_for_a_run(
+            contender_run_id, history_fingerprints
+        )
 
         # All baseline results share a run (and therefore a commit).
-        # The baseline_results list is guaranteed to be non-empty.
-        baseline_commit = baseline_results[0].commit
+        baseline_commit = self._get_commit(baseline_run_id)
 
         if baseline_commit:
             set_z_scores(
                 contender_benchmark_results=contender_results,
                 baseline_commit=baseline_commit,
+                history_fingerprints=history_fingerprints,
             )
         else:
             # If the baseline run is not associated with a commit, skip z-scores. The
@@ -559,12 +707,13 @@ class CompareRunsAPI(ApiEndpoint):
             set_display_case_permutation(benchmark_result)
 
         comparators: List[BenchmarkResultComparator] = []
-        for baseline_result, contender_result in self._join_results(
+        for fingerprint, baseline_result, contender_result in self._join_results(
             baseline_results, contender_results
         ):
             try:
                 comparators.append(
                     BenchmarkResultComparator(
+                        history_fingerprint=fingerprint,
                         baseline=baseline_result,
                         contender=contender_result,
                         threshold=threshold,
@@ -575,7 +724,24 @@ class CompareRunsAPI(ApiEndpoint):
                 # Don't return comparisons if their units mismatch.
                 pass
 
-        return f.jsonify([comparator._dict_for_api_json for comparator in comparators])
+        data = sorted(
+            [comparator._dict_for_api_json for comparator in comparators],
+            key=lambda x: x["history_fingerprint"],
+        )
+
+        if len(history_fingerprints) == page_size:
+            next_page_cursor = history_fingerprints[-1]
+            # There's an edge case here where the last page happens to have exactly
+            # page_size history_fingerprints. So the client will grab one more
+            # (empty) page. The alternative would be to query the DB here, every
+            # single time, to *make sure* the next page will contain
+            # history_fingerprints... but that feels very expensive.
+        else:
+            # If there were fewer than page_size history_fingerprints, the next page
+            # should be empty
+            next_page_cursor = None
+
+        return {"data": data, "metadata": {"next_page_cursor": next_page_cursor}}
 
 
 compare_benchmark_results_view = CompareBenchmarkResultsAPI.as_view(

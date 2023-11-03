@@ -270,7 +270,9 @@ def get_history_for_fingerprint(
 
 
 def set_z_scores(
-    contender_benchmark_results: List[BenchmarkResult], baseline_commit: Commit
+    contender_benchmark_results: List[BenchmarkResult],
+    baseline_commit: Commit,
+    history_fingerprints: List[THistFingerprint],
 ):
     """Set the "z_score" attribute on each contender BenchmarkResult, comparing it to
     the baseline distribution of BenchmarkResults that share the same history
@@ -279,7 +281,8 @@ def set_z_scores(
     The given contender_benchmark_results must all have the same run_id, which implies
     that they share the same hardware, repository, and commit. But they may have
     different names, cases, and/or contexts, so they may have different history
-    fingerprints.
+    fingerprints. To save time, provide those fingerprints in the history_fingerprints
+    argument.
 
     This function does not affect the database whatsoever. It only populates an
     attribute on the given python objects. This is typically called right before
@@ -297,16 +300,10 @@ def set_z_scores(
         )
     contender_run_id = contender_run_ids.pop()
 
-    if len(contender_benchmark_results) == 1:
-        # performance optimization
-        history_fingerprint = contender_benchmark_results[0].history_fingerprint
-    else:
-        history_fingerprint = None
-
     distribution_stats = _query_and_calculate_distribution_stats(
         contender_run_id=contender_run_id,
         baseline_commit=baseline_commit,
-        history_fingerprint=history_fingerprint,
+        history_fingerprints=history_fingerprints,
     )
 
     for benchmark_result in contender_benchmark_results:
@@ -324,7 +321,7 @@ def set_z_scores(
 def _query_and_calculate_distribution_stats(
     contender_run_id: str,
     baseline_commit: Commit,
-    history_fingerprint: Optional[THistFingerprint],
+    history_fingerprints: List[THistFingerprint],
 ) -> Dict[THistFingerprint, Tuple[Optional[float], Optional[float]]]:
     """Query and calculate rolling stats of the distribution of all BenchmarkResults
     that:
@@ -338,11 +335,7 @@ def _query_and_calculate_distribution_stats(
 
     ``{history_fingerprint: (dist_mean, dist_stddev)}``
 
-    If history_fingerprint is not given, return all history fingerprints that the
-    contender run has results for. This saves some time compared to returning all
-    history fingerprints in the database.
-
-    If history_fingerprint is given, only return it. This saves a lot of time.
+    Only do the calculation for the given history_fingerprints.
 
     For further detail on the stats columns, see the docs of
     ``_add_rolling_stats_columns_to_df()``.
@@ -361,9 +354,7 @@ def _query_and_calculate_distribution_stats(
     }
     earliest_commit_timestamp = min(commit_timestamps_by_id.values())
 
-    # Find all historic results in the distribution to analyze. Still takes a while
-    # (~25s for 350K historic results corresponding to 3500 fingerprints). Probably,
-    # paginating by groups of fingerprints would be the next speedup step.
+    # Find all historic results in the distribution to analyze.
     history = s.select(
         BenchmarkResult.commit_id,
         BenchmarkResult.history_fingerprint,
@@ -384,27 +375,9 @@ def _query_and_calculate_distribution_stats(
         BenchmarkResult.error.is_(None),
         BenchmarkResult.mean.is_not(None),
         BenchmarkResult.commit_id.in_(commit_timestamps_by_id.keys()),
+        BenchmarkResult.history_fingerprint.in_(history_fingerprints),
         BenchmarkResult.timestamp >= earliest_commit_timestamp,  # a nice speedup
     )
-
-    # Filter to the correct history fingerprint(s)
-    if history_fingerprint:
-        # filter to the given history_fingerprint
-        history = history.filter(
-            BenchmarkResult.history_fingerprint == history_fingerprint
-        )
-    else:
-        # filter to *any* history fingerprint associated with this run_id
-        these_fingerprints = set(
-            current_session.scalars(
-                s.select(BenchmarkResult.history_fingerprint).filter(
-                    BenchmarkResult.run_id == contender_run_id
-                )
-            ).all()
-        )
-        history = history.filter(
-            BenchmarkResult.history_fingerprint.in_(these_fingerprints)
-        )
 
     history_df = pd.read_sql(history, current_session.connection())
     history_df["timestamp"] = history_df["commit_id"].map(commit_timestamps_by_id)

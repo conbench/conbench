@@ -80,7 +80,10 @@ spec.components.response("BenchmarkResultCreated", _201_created(ex.BENCHMARK_ENT
 spec.components.response("CommitEntity", _200_ok(ex.COMMIT_ENTITY))
 spec.components.response("CommitList", _200_ok([ex.COMMIT_ENTITY]))
 spec.components.response("CompareEntity", _200_ok(ex.COMPARE_ENTITY))
-spec.components.response("CompareList", _200_ok(ex.COMPARE_LIST))
+spec.components.response(
+    "CompareList",
+    _200_ok({"data": ex.COMPARE_LIST, "metadata": {"next_page_cursor": None}}),
+)
 spec.components.response("ContextEntity", _200_ok(ex.CONTEXT_ENTITY))
 spec.components.response("ContextList", _200_ok([ex.CONTEXT_ENTITY]))
 spec.components.response("InfoList", _200_ok([ex.INFO_ENTITY]))

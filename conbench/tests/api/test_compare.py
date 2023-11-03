@@ -53,7 +53,7 @@ class TestJoinResults:
                 baseline.id if baseline is not None else None,
                 contender.id if contender is not None else None,
             )
-            for baseline, contender in pairs
+            for _, baseline, contender in pairs
         }
 
     def test_empty(self):
@@ -263,6 +263,7 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
                 # emitted tags anymore.
                 "name": name,
             },
+            history_fingerprint=new_entities[0].history_fingerprint,
         )
         expected["baseline"].update({"single_value_summary": 3.0})
         expected["contender"].update({"single_value_summary": 20.0})
@@ -305,6 +306,7 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
                 "compression": "snappy",
                 "name": name,
             },
+            history_fingerprint=new_entities[0].history_fingerprint,
         )
 
         expected["baseline"].update({"single_value_summary": None, "error": error})
@@ -401,6 +403,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             batch_id=batch_id,
         )
         new_ids = [e.id for e in new_entities]
+        fingerprints = [e.history_fingerprint for e in new_entities]
         query_string = {"threshold_z": threshold_z} if threshold_z else None
         response = client.get(
             f"/api/compare/runs/{compare.id}/", query_string=query_string
@@ -436,12 +439,18 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                     "name": "write",
                 },
             ],
+            history_fingerprints=fingerprints,
         )
         for e in expected:
             e["analysis"]["lookback_z_score"] = None
 
-        self.assert_200_ok(response, None, contains=expected[0])
-        self.assert_200_ok(response, None, contains=expected[1])
+        self.assert_200_ok(
+            response,
+            {
+                "data": sorted(expected, key=lambda e: e["history_fingerprint"]),
+                "metadata": {"next_page_cursor": None},
+            },
+        )
 
     def test_compare_with_error(self, client):
         self.authenticate(client)
@@ -454,6 +463,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             baseline_error=error,
         )
         new_ids = [e.id for e in new_entities]
+        fingerprints = [e.history_fingerprint for e in new_entities]
         response = client.get(f"/api/compare/runs/{compare.id}/")
 
         # cheating by comparing run to same run
@@ -486,6 +496,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                     "name": "write",
                 },
             ],
+            history_fingerprints=fingerprints,
         )
         expected[0]["analysis"]["lookback_z_score"] = None
         expected[1]["unit"] = None
@@ -494,13 +505,28 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         expected[1]["contender"].update({"single_value_summary": None, "error": error})
         expected[1]["analysis"]["pairwise"] = None
         expected[1]["analysis"]["lookback_z_score"] = None
-        self.assert_200_ok(response, None, contains=expected[0])
-        self.assert_200_ok(response, None, contains=expected[1])
+
+        self.assert_200_ok(
+            response,
+            {
+                "data": sorted(expected, key=lambda e: e["history_fingerprint"]),
+                "metadata": {"next_page_cursor": None},
+            },
+        )
 
     def test_compare_unknown_compare_ids(self, client):
         self.authenticate(client)
         response = client.get("/api/compare/runs/foo...bar/")
         self.assert_404_not_found(response)
+
+    @pytest.mark.parametrize("page_size", ["0", "1001", "-1", "asd"])
+    def test_bad_page_size(self, client, page_size):
+        self.authenticate(client)
+        res = client.get(f"/api/compare/runs/foo...bar/?page_size={page_size}")
+        self.assert_400_bad_request(
+            res,
+            {"_errors": ["page_size must be a positive integer no greater than 500"]},
+        )
 
     @pytest.mark.parametrize(
         ["baseline_result_id", "expected_z_score"],
@@ -525,6 +551,52 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         )
         assert response.status_code == 200, response.status_code
         assert (
-            response.json[0]["analysis"]["lookback_z_score"]["z_score"]
+            response.json["data"][0]["analysis"]["lookback_z_score"]["z_score"]
             == expected_z_score
         )
+
+    def test_pagination(self, client):
+        self.authenticate(client)
+
+        # Retry the 'c' benchmark on purpose. Due to the full outer join we should
+        # expect to see 4 comparisons for 'c', all on the same page.
+        names = ["a", "b", "c", "c"]
+        names_by_fingerprint = {}
+        for run_id in ["baseline", "contender"]:
+            for name in names:
+                result = _fixtures.benchmark_result(run_id=run_id, name=name)
+                names_by_fingerprint[result.history_fingerprint] = name
+
+        # Fingerprints are randomly generated, so the order will change with each run of
+        # this test.
+        expected_first_page_names = []
+        expected_second_page_names = []
+        for ix, fingerprint in enumerate(sorted(names_by_fingerprint.keys())):
+            name = names_by_fingerprint[fingerprint]
+            page = expected_first_page_names if ix < 2 else expected_second_page_names
+            if name == "c":
+                page += ["c"] * 4
+            else:
+                page.append(name)
+
+        print(f"{expected_first_page_names=}\n{expected_second_page_names=}")
+        url = "/api/compare/runs/baseline...contender/?page_size=2"
+
+        res = client.get(url)
+        self.assert_200_ok(res)
+        assert [
+            r["baseline"]["benchmark_name"] for r in res.json["data"]
+        ] == expected_first_page_names
+        cursor = res.json["metadata"]["next_page_cursor"]
+        assert cursor
+
+        res = client.get(f"{url}&cursor={cursor}")
+        self.assert_200_ok(res)
+        assert [
+            r["baseline"]["benchmark_name"] for r in res.json["data"]
+        ] == expected_second_page_names
+        assert res.json["metadata"]["next_page_cursor"] is None
+
+        # Try to go past the end of the list.
+        res = client.get(f"{url}&cursor=zzz")
+        self.assert_200_ok(res, {"data": [], "metadata": {"next_page_cursor": None}})
