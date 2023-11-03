@@ -4,6 +4,7 @@ import pytest
 from benchclients.conbench import ConbenchClientException
 from benchclients.http import RetryingHTTPClientDeadlineReached
 from pytest_httpserver import HTTPServer
+from pytest_httpserver.httpserver import HandlerType
 from werkzeug.wrappers import Response
 
 from benchclients import ConbenchClient
@@ -35,6 +36,20 @@ def test_cc_get_qparm(httpserver: HTTPServer):
         "/api/bonjour", query_string={"whats": "up"}
     ).respond_with_json([2])
     assert c.get("/bonjour", params={"whats": "up"}) == [2]
+
+
+def test_cc_get_all(httpserver: HTTPServer):
+    set_cb_base_url(httpserver)
+    c = ConbenchClient()
+    httpserver.expect_request(
+        "/api/foobar", handler_type=HandlerType.ORDERED
+    ).respond_with_json(
+        {"data": [{"a": 1}, {"b": 2}], "metadata": {"next_page_cursor": "c"}}
+    )
+    httpserver.expect_request(
+        "/api/foobar", query_string={"cursor": "c"}, handler_type=HandlerType.ORDERED
+    ).respond_with_json({"data": [{"c": 3}], "metadata": {"next_page_cursor": None}})
+    assert c.get_all("/foobar") == [{"a": 1}, {"b": 2}, {"c": 3}]
 
 
 @pytest.mark.parametrize("respjson", [[1, 2], {"1": "2"}])

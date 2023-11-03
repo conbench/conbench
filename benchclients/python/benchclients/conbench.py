@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import List
 
 import requests
 
@@ -171,3 +172,23 @@ class ConbenchClient(RetryingHTTPClient):
 
         # Rely on the details to have been logged previously
         raise RetryingHTTPClientLoginError("login failed (see logs), giving up")
+
+    def get_all(self, path: str, params: dict | None = None) -> List[dict]:
+        """
+        Make GET requests to a paginated Conbench endpoint. Expect responses with status
+        code 200, expect a JSON document in the response body of the form
+        {"data": List[dict], "metadata": {"next_page_cursor": Optional[str]}}.
+
+        Return the deserialized concatenation of the JSON data or raise an exception.
+
+        `params` can be used to pass URL query parameters, including `"page_size"`. If
+        `"cursor"` is given in `params`, it will be overwritten after the first request.
+        """
+        params = params or {}
+        resp_json = super().get(path, params)
+        data = resp_json["data"]
+        while resp_json["metadata"]["next_page_cursor"]:
+            params["cursor"] = resp_json["metadata"]["next_page_cursor"]
+            resp_json = super().get(path, params)
+            data += resp_json["data"]
+        return data
