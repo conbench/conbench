@@ -126,21 +126,9 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
                 f"for the contender run {run_id}. Error: {run_comparison.baseline_error}"
             )
             # Just get information about the contender benchmark results.
-            res = self.conbench_client.get(
+            run_comparison.benchmark_results = self.conbench_client.get_all(
                 "/benchmark-results/", params={"run_id": run_id, "page_size": 1000}
             )
-            results = res["data"]
-            while res["metadata"]["next_page_cursor"]:
-                res = self.conbench_client.get(
-                    "/benchmark-results/",
-                    params={
-                        "run_id": run_id,
-                        "page_size": 1000,
-                        "cursor": res["metadata"]["next_page_cursor"],
-                    },
-                )
-                results += res["data"]
-            run_comparison.benchmark_results = results
 
         return run_comparison
 
@@ -208,21 +196,8 @@ class GetConbenchZComparisonStep(GetConbenchZComparisonForRunsStep):
         self.commit_hash = commit_hash
 
     def run_step(self, previous_outputs: Dict[str, Any]) -> FullComparisonInfo:
-        res = self.conbench_client.get(
+        runs = self.conbench_client.get_all(
             "/runs/", params={"commit_hash": self.commit_hash, "page_size": 1000}
         )
-        runs = res["data"]
-
-        while res["metadata"]["next_page_cursor"]:
-            res = self.conbench_client.get(
-                "/runs/",
-                params={
-                    "commit_hash": self.commit_hash,
-                    "page_size": 1000,
-                    "cursor": res["metadata"]["next_page_cursor"],
-                },
-            )
-            runs += res["data"]
-
         self.run_ids = [run["id"] for run in runs]
         return super().run_step(previous_outputs)
