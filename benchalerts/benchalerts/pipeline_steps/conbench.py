@@ -1,7 +1,7 @@
 """Pipeline steps to talk to Conbench."""
 
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from benchclients.conbench import ConbenchClient
 from benchclients.http import RetryingHTTPClientNonRetryableResponse
@@ -111,12 +111,10 @@ class GetConbenchZComparisonForRunsStep(AlertPipelineStep):
 
         if run_comparison.baseline_id:
             # Get the comparison.
-            compare_params = (
-                {"threshold_z": self.z_score_threshold}
-                if self.z_score_threshold
-                else None
-            )
-            run_comparison.compare_results = self.conbench_client.get(
+            compare_params: Dict[str, Union[int, float]] = {"page_size": 500}
+            if self.z_score_threshold:
+                compare_params["threshold_z"] = self.z_score_threshold
+            run_comparison.compare_results = self.conbench_client.get_all(
                 run_comparison.compare_path, params=compare_params
             )
 
