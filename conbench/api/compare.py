@@ -671,6 +671,9 @@ class CompareRunsAPI(ApiEndpoint):
         history_fingerprints = self._get_page_of_history_fingerprints(
             [baseline_run_id, contender_run_id], cursor, page_size
         )
+        if not history_fingerprints:
+            return {"data": [], "metadata": {"next_page_cursor": None}}
+
         baseline_results = self._get_all_results_for_a_run(
             baseline_run_id, history_fingerprints
         )

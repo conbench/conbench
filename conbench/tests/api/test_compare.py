@@ -596,3 +596,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
             r["baseline"]["benchmark_name"] for r in res.json["data"]
         ] == expected_second_page_names
         assert res.json["metadata"]["next_page_cursor"] is None
+
+        # Try to go past the end of the list.
+        res = client.get(f"{url}&cursor=zzz")
+        self.assert_200_ok(res, {"data": [], "metadata": {"next_page_cursor": None}})
