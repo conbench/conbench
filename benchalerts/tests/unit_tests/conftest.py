@@ -115,12 +115,12 @@ def mock_comparison_info(request: SubRequest) -> FullComparisonInfo:
         """Get a mocked compare response."""
         suffix = "" if has_regressions else "_threshold_z_500"
         res = _response(
-            f"GET_conbench_compare_runs_some_baseline_some_contender{suffix}"
+            f"GET_conbench_compare_runs_some_baseline_some_contender_page_size_500{suffix}"
         )
         if not has_errors:
-            for result in res:
+            for result in res["data"]:
                 result["contender"]["error"] = None
-        return res
+        return res["data"]
 
     def _results(has_errors: bool):
         """Get mocked benchmark results."""
