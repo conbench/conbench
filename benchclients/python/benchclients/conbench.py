@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List
+from typing import List, Optional
 
 import requests
 
@@ -173,7 +173,7 @@ class ConbenchClient(RetryingHTTPClient):
         # Rely on the details to have been logged previously
         raise RetryingHTTPClientLoginError("login failed (see logs), giving up")
 
-    def get_all(self, path: str, params: dict | None = None) -> List[dict]:
+    def get_all(self, path: str, params: Optional[dict] = None) -> List[dict]:
         """
         Make GET requests to a paginated Conbench endpoint. Expect responses with status
         code 200, expect a JSON document in the response body of the form
