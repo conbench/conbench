@@ -10,6 +10,9 @@ env:
   # and cannot use a fine-grained token.
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+permissions:
+  pull-requests: write
+
 jobs:
   assign-issue-and-pr-author:
     runs-on: ubuntu-latest
@@ -42,13 +45,13 @@ jobs:
           repo: ${{ github.event.repository.name }}
           pr_number: ${{ github.event.pull_request.number }}
       - name: Show the linked issue output
-        env: 
+        env:
           RETRIEVED_ISSUE: ${{ steps.get_linked_issue.outputs.data }}
         run: |
           echo "Issue output: $RETRIEVED_ISSUE"
         continue-on-error: true
       - name: Assign the PR author to the issue
-        env: 
+        env:
           RETRIEVED_ISSUE: ${{ steps.get_linked_issue.outputs.data }}
         run: |
           echo "$RETRIEVED_ISSUE" | \
