@@ -1,6 +1,6 @@
 name: Auto assign pull requests and issues
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, edited]
 
 env:
@@ -9,9 +9,6 @@ env:
   # Currently (as of 2023-02) graphql queries must use a GitHub PAT
   # and cannot use a fine-grained token.
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-permissions:
-  pull-requests: write
 
 jobs:
   assign-issue-and-pr-author:
