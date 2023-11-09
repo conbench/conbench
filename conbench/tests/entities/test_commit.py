@@ -197,10 +197,10 @@ def test_get_github_commit_metadata_and_fork_point_sha(branch):
     [
         # as if github info were provided the recommended, manual way: only providing
         # commit, repository, and pr_number, not branch
-        (None, 10665),
+        (None, 1532),
         # as if github info were provided the advanced, github_info() way: that function
         # returns a branch string like this, and no pr_number
-        ("dianaclarke:ARROW-13266", None),
+        ("austin3dickey:main", None),
     ],
 )
 def test_get_github_commit_metadata_and_fork_point_sha_pull_request(branch, pr_number):
