@@ -156,7 +156,7 @@ def test_repository_to_url():
         None,
         # as if github info were provided the advanced, github_info() way: that function
         # returns a branch string like this
-        "apache:main",
+        "conbench:main",
     ],
 )
 def test_get_github_commit_metadata_and_fork_point_sha(branch):
@@ -164,17 +164,17 @@ def test_get_github_commit_metadata_and_fork_point_sha(branch):
     if not os.getenv("GITHUB_API_TOKEN"):
         pytest.skip("No GITHUB_API_TOKEN given so we won't hit the GitHub API")
 
-    repo = "https://github.com/apache/arrow"
-    sha = "3decc46119d583df56c7c66c77cf2803441c4458"
+    repo = "https://github.com/conbench/conbench"
+    sha = "44e81d10f475e9468eaf488dbfe73a0b43d26adc"
 
     expected = {
-        "parent": "fcaa422c84796bcf7dbe328ee3612f434cd4d356",
-        "date": datetime.datetime(2021, 3, 17, 16, 27, 37, tzinfo=timezone.utc),
-        "message": "ARROW-11997: [Python] concat_tables crashes python interpreter",
-        "author_name": "Diana Clarke",
-        "author_login": "dianaclarke",
-        "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
-        "branch": "apache:main",
+        "parent": "2c082f1f57ae867d83e50bfddc3749db2341559d",
+        "date": datetime.datetime(2023, 11, 6, 15, 0, 11, tzinfo=timezone.utc),
+        "message": "benchclients: fix bug on 3.8 (#1530)",
+        "author_name": "Austin Dickey",
+        "author_login": "austin3dickey",
+        "author_avatar": "https://avatars.githubusercontent.com/u/16600275?v=4",
+        "branch": "conbench:main",
         # this is the default branch, so the fork point sha == the commit sha
         "fork_point_sha": sha,
     }
@@ -208,18 +208,18 @@ def test_get_github_commit_metadata_and_fork_point_sha_pull_request(branch, pr_n
     if not os.getenv("GITHUB_API_TOKEN"):
         pytest.skip("No GITHUB_API_TOKEN given so we won't hit the GitHub API")
 
-    repo = "https://github.com/apache/arrow"
-    sha = "982023150ccbb06a6f581f6797c017492485b58c"
+    repo = "https://github.com/conbench/conbench"
+    sha = "f72178f50ce297cc7b99b30541c9e3415b7a29a2"
 
     expected = {
-        "parent": "c8668f85a465ea05b2724ec47ff72c4db4d7dfe6",
-        "date": datetime.datetime(2021, 7, 6, 21, 51, 48, tzinfo=timezone.utc),
-        "message": "ARROW-13266: [JS] Improve benchmark names",
-        "author_name": "Diana Clarke",
-        "author_login": "dianaclarke",
-        "author_avatar": "https://avatars.githubusercontent.com/u/878798?v=4",
-        "branch": "dianaclarke:ARROW-13266",
-        "fork_point_sha": "780e95c512d63bbea1e040af0eb44a0bf63c4d72",
+        "parent": "6002fd15fb7b660ed85499888ecdc6ff0b32b0ff",
+        "date": datetime.datetime(2023, 11, 9, 19, 33, 46, tzinfo=timezone.utc),
+        "message": "try this",
+        "author_name": "Austin Dickey",
+        "author_login": "austin3dickey",
+        "author_avatar": "https://avatars.githubusercontent.com/u/16600275?v=4",
+        "branch": "austin3dickey:main",
+        "fork_point_sha": "44e81d10f475e9468eaf488dbfe73a0b43d26adc",
     }
     try:
         result = get_github_commit_metadata(
