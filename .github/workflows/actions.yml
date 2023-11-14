@@ -13,8 +13,10 @@ env:
   # configured, allowing for automatic rotation after quota consumption.
   # Also see https://github.com/conbench/conbench/issues/917.
   # Future: potentially rename that variable: _POOL suffix
+  # We fall back to secrets.GITHUB_TOKEN in case this is a fork without the pool configured.
   GITHUB_API_TOKEN: ${{ secrets.PERSONAL_GITHUB_API_TOKEN_POOL || secrets.GITHUB_TOKEN }}
 
+# To enable the handful of tests that get info from the live GitHub HTTP API.
 permissions:
   contents: read
   pull-requests: read

@@ -898,7 +898,6 @@ class GitHubHTTPApiClient:
             # has a little bit of retrying built-in by default for some of
             # these errors, but it's not trying too hard. Add more retrying
             # on top of that.
-            log.info(f"{self._current_auth_token=}")
             if self._current_auth_token:
                 resp = requests.get(
                     url,
