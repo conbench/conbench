@@ -247,6 +247,9 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
         benchmark_result_ids = [e.id for e in new_entities]
         batch_ids = [e.batch_id for e in new_entities]
         run_ids = [e.run_id for e in new_entities]
+        result_dicts = [
+            e.to_dict_for_json_api(include_joins=False) for e in new_entities
+        ]
         expected = _api_compare_entity(
             benchmark_result_ids,
             batch_ids,
@@ -264,6 +267,7 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
                 "name": name,
             },
             history_fingerprint=new_entities[0].history_fingerprint,
+            result_dicts=result_dicts,
         )
         expected["baseline"].update({"single_value_summary": 3.0})
         expected["contender"].update({"single_value_summary": 20.0})
@@ -292,6 +296,9 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
         benchmark_result_ids = [e.id for e in new_entities]
         batch_ids = [e.batch_id for e in new_entities]
         run_ids = [e.run_id for e in new_entities]
+        result_dicts = [
+            e.to_dict_for_json_api(include_joins=False) for e in new_entities
+        ]
         expected = _api_compare_entity(
             benchmark_result_ids,
             batch_ids,
@@ -307,6 +314,7 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
                 "name": name,
             },
             history_fingerprint=new_entities[0].history_fingerprint,
+            result_dicts=result_dicts,
         )
 
         expected["baseline"].update({"single_value_summary": None, "error": error})
@@ -404,6 +412,9 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         )
         new_ids = [e.id for e in new_entities]
         fingerprints = [e.history_fingerprint for e in new_entities]
+        result_dicts = [
+            e.to_dict_for_json_api(include_joins=False) for e in new_entities
+        ]
         query_string = {"threshold_z": threshold_z} if threshold_z else None
         response = client.get(
             f"/api/compare/runs/{compare.id}/", query_string=query_string
@@ -440,6 +451,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                 },
             ],
             history_fingerprints=fingerprints,
+            result_dicts=result_dicts,
         )
         for e in expected:
             e["analysis"]["lookback_z_score"] = None
@@ -464,6 +476,9 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         )
         new_ids = [e.id for e in new_entities]
         fingerprints = [e.history_fingerprint for e in new_entities]
+        result_dicts = [
+            e.to_dict_for_json_api(include_joins=False) for e in new_entities
+        ]
         response = client.get(f"/api/compare/runs/{compare.id}/")
 
         # cheating by comparing run to same run
@@ -497,6 +512,7 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
                 },
             ],
             history_fingerprints=fingerprints,
+            result_dicts=result_dicts,
         )
         expected[0]["analysis"]["lookback_z_score"] = None
         expected[1]["unit"] = None

@@ -223,6 +223,7 @@ class BenchmarkResultComparator:
             "batch_id": result.batch_id,
             "run_id": result.run_id,
             "tags": result.case.tags,
+            "result": result.to_dict_for_json_api(include_joins=False),
         }
 
     @property

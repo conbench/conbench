@@ -321,41 +321,19 @@ class BenchmarkResult(Base, EntityMixin):
 
         super().update(data)
 
-    def to_dict_for_json_api(benchmark_result):
+    def to_dict_for_json_api(benchmark_result, include_joins=True):
         # `self` is just convention :-P
-
-        # Note(JP): having case/tags here is interesting; this requires a JOIN
-        # query when fetching BenchmarkResult objects from the database.
-        case = benchmark_result.case
-        # Note(JP): this is interesting, here we put the `name` and `id` keys
-        # into tags. That is, the `tags` as returned may look different from
-        # the tags as injected.
-        tags = {"name": case.name}
-        tags.update(case.tags)
-
-        if benchmark_result.commit:
-            commit_dict = CommitSerializer().one.dump(benchmark_result.commit)
-            commit_dict.pop("links", None)
-        else:
-            commit_dict = None
-
-        hardware_dict = HardwareSerializer().one.dump(benchmark_result.hardware)
-        hardware_dict.pop("links", None)
-
-        return {
+        out_dict = {
             "id": benchmark_result.id,
             "run_id": benchmark_result.run_id,
             "run_tags": benchmark_result.run_tags,
             "run_reason": benchmark_result.run_reason,
-            "commit": commit_dict,
             "commit_repo_url": benchmark_result.commit_repo_url,
-            "hardware": hardware_dict,
             "batch_id": benchmark_result.batch_id,
             "history_fingerprint": benchmark_result.history_fingerprint,
             "timestamp": conbench.util.tznaive_dt_to_aware_iso8601_for_api(
                 benchmark_result.timestamp
             ),
-            "tags": tags,
             "optional_benchmark_info": benchmark_result.optional_benchmark_info,
             "validation": benchmark_result.validation,
             "change_annotations": benchmark_result.change_annotations or {},
@@ -375,7 +353,29 @@ class BenchmarkResult(Base, EntityMixin):
                 "iqr": to_float(benchmark_result.iqr),
             },
             "error": benchmark_result.error,
-            "links": {
+        }
+
+        if include_joins:
+            case = benchmark_result.case
+            # Note(JP): this is interesting, here we put the `name` and `id` keys
+            # into tags. That is, the `tags` as returned may look different from
+            # the tags as injected.
+            tags = {"name": case.name}
+            tags.update(case.tags)
+
+            if benchmark_result.commit:
+                commit_dict = CommitSerializer().one.dump(benchmark_result.commit)
+                commit_dict.pop("links", None)
+            else:
+                commit_dict = None
+
+            hardware_dict = HardwareSerializer().one.dump(benchmark_result.hardware)
+            hardware_dict.pop("links", None)
+
+            out_dict["tags"] = tags
+            out_dict["commit"] = commit_dict
+            out_dict["hardware"] = hardware_dict
+            out_dict["links"] = {
                 "list": f.url_for("api.benchmarks", _external=True),
                 "self": f.url_for(
                     "api.benchmark",
@@ -393,8 +393,9 @@ class BenchmarkResult(Base, EntityMixin):
                 "run": f.url_for(
                     "api.run", run_id=benchmark_result.run_id, _external=True
                 ),
-            },
-        }
+            }
+
+        return out_dict
 
     @functools.cached_property
     def is_failed(self):
