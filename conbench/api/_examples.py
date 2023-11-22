@@ -221,6 +221,7 @@ def _api_compare_entity(
     case_permutation,
     tags,
     history_fingerprint,
+    result_dicts,
 ):
     return {
         "unit": "s",
@@ -236,6 +237,7 @@ def _api_compare_entity(
             "batch_id": batch_ids[0],
             "run_id": run_ids[0],
             "tags": tags,
+            "result": result_dicts[0],
         },
         "contender": {
             "benchmark_name": benchmark_name,
@@ -247,6 +249,7 @@ def _api_compare_entity(
             "batch_id": batch_ids[1],
             "run_id": run_ids[1],
             "tags": tags,
+            "result": result_dicts[1],
         },
         "analysis": {
             "pairwise": {
@@ -274,6 +277,7 @@ def _api_compare_list(
     case_permutations,
     tags,
     history_fingerprints,
+    result_dicts,
 ):
     return [
         {
@@ -290,6 +294,7 @@ def _api_compare_list(
                 "batch_id": batch_ids[0],
                 "run_id": run_ids[0],
                 "tags": tags[0],
+                "result": result_dicts[0],
             },
             "contender": {
                 "benchmark_name": benchmark_names[0],
@@ -301,6 +306,7 @@ def _api_compare_list(
                 "batch_id": batch_ids[1],
                 "run_id": run_ids[1],
                 "tags": tags[0],
+                "result": result_dicts[0],
             },
             "analysis": {
                 "pairwise": {
@@ -331,6 +337,7 @@ def _api_compare_list(
                 "batch_id": batch_ids[0],
                 "run_id": run_ids[0],
                 "tags": tags[1],
+                "result": result_dicts[1],
             },
             "contender": {
                 "benchmark_name": benchmark_names[1],
@@ -342,6 +349,7 @@ def _api_compare_list(
                 "batch_id": batch_ids[1],
                 "run_id": run_ids[1],
                 "tags": tags[1],
+                "result": result_dicts[1],
             },
             "analysis": {
                 "pairwise": {
@@ -536,6 +544,12 @@ COMMIT_ENTITY = _api_commit_entity(
     "some-commit-uuid-1",
     "some-commit-parent-uuid-1",
 )
+
+result_dict = copy.deepcopy(BENCHMARK_ENTITY)
+del result_dict["commit"]
+del result_dict["hardware"]
+del result_dict["tags"]
+del result_dict["links"]
 COMPARE_ENTITY = _api_compare_entity(
     ["some-benchmark-uuid-1", "some-benchmark-uuid-2"],
     ["some-batch-uuid-1", "some-batch-uuid-2"],
@@ -551,6 +565,7 @@ COMPARE_ENTITY = _api_compare_entity(
         "name": "file-read",
     },
     "history-fingerprint-1",
+    [result_dict] * 2,
 )
 COMPARE_LIST = _api_compare_list(
     ["some-benchmark-uuid-1", "some-benchmark-uuid-2"],
@@ -581,6 +596,7 @@ COMPARE_LIST = _api_compare_list(
         },
     ],
     ["history-fingerprint-1", "history-fingerprint-2"],
+    [result_dict] * 2,
 )
 CONTEXT_ENTITY = _api_context_entity("some-context-uuid-1")
 HISTORY_ENTITY = _api_history_entity(
