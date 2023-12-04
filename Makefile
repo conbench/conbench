@@ -108,7 +108,7 @@ alembic-new-migration: teardown-app
 		exit 1; \
 	fi
 	docker compose run --detach db
-	CREATE_ALL_TABLES=false docker compose \
+	CREATE_ALL_TABLES=false docker compose -f docker-compose.yml -f docker-compose.dev.yml \
 		run -e CREATE_ALL_TABLES app alembic upgrade head
 	CREATE_ALL_TABLES=false docker compose -f docker-compose.yml -f docker-compose.dev.yml \
 		run -e CREATE_ALL_TABLES  app alembic revision --autogenerate -m ${ALEMBIC_MIGRATION_NAME}

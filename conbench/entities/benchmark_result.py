@@ -1,5 +1,6 @@
 import functools
 import hashlib
+import json
 import logging
 import math
 import statistics
@@ -933,46 +934,58 @@ def validate_and_augment_result_tags(userres: Any):
             )
 
 
-# Note(JP): This tries to be a special "skip scan" query tailored for current
-# implementation details (PostgreSQL 15, current DB schema). It is designed to
-# quickly and efficiently obtain one benchmark result row from results table,
-# with each result having a unique run_id set, and results overall being sorted
-# by time (most recent first). For more detail, see
-# https://github.com/conbench/conbench/issues/1466 for more details and
-# background.
-_RECENT_RUNS_QUERY_TEMPL = """
-WITH RECURSIVE t AS (
-   (
-      SELECT *
-      FROM benchmark_result ORDER BY run_id LIMIT 1
-   )
-   UNION ALL
-   SELECT l.*
-   FROM t
-   CROSS JOIN LATERAL (
-      SELECT *
-      FROM   benchmark_result
-      WHERE  run_id > t.run_id
-      ORDER BY run_id
-      LIMIT  1
-      ) l
-   )
-SELECT * FROM t WHERE run_id IS NOT NULL
-ORDER BY timestamp desc
-LIMIT {limit};
-"""
-
-
 def fetch_one_result_per_each_of_n_recent_runs(n: int = 250) -> List[BenchmarkResult]:
-    query = s.select(BenchmarkResult).from_statement(
-        s.text(_RECENT_RUNS_QUERY_TEMPL.format(limit=n))
-    )
-    # Need to type hint this again because from_statement() overrides the type hints.
-    bmrs: List[BenchmarkResult] = list(current_session.scalars(query).all())
+    """
+    Uses a special "skip scan" query tailored for current implementation details
+    (PostgreSQL 14, current DB schema). It is designed to quickly and efficiently obtain
+    a handful of benchmark result rows from the results table, with each result having a
+    unique run_id set, and results overall being sorted by time (most recent first). For
+    more detail, see https://github.com/conbench/conbench/issues/1466.
 
-    # Note(JP): as of the time of writing we're still having to reach out to
-    # the database to get commit information: one query per result, I think.
-    # That SELECT query (one per result) will often refer to the same c
+    We used to scan all results, not limiting by timestamp. But the format of this query
+    means it cannot take any shortcuts, and must scan the entire results table for all
+    unique runs before sorting and limiting. This does not scale well. It's fine when
+    the DB can use the shared buffer cache, but after a while this cache expires and
+    this query can take >30s again reading all the data from disk. So we now filter to
+    14 days ago. This takes advantage of the (run_id, timestamp) index, which is only a
+    partial index: hence the '2023-11-19' filter. (This probably would be better handled
+    with something like TimescaleDB.)
+
+    Since this doesn't include joins, as of the time of writing we're still having to
+    reach out to the database to get commit and hardware information: one query per
+    result, I think. That SELECT query (one per result) will sometimes refer to the same
+    commit since there can be multiple runs per commit.
+    """
+    query_text = f"""
+        WITH RECURSIVE run_results AS (
+            (
+                SELECT *
+                FROM benchmark_result
+                WHERE timestamp > now() - INTERVAL '14 days'
+                AND timestamp > '2023-11-19'
+                ORDER BY run_id
+                LIMIT 1
+            )
+            UNION ALL
+            SELECT next_run.*
+            FROM run_results
+            CROSS JOIN LATERAL (
+                SELECT *
+                FROM benchmark_result
+                WHERE run_id > run_results.run_id
+                AND timestamp > now() - INTERVAL '14 days'
+                AND timestamp > '2023-11-19'
+                ORDER BY run_id
+                LIMIT 1
+            ) next_run
+        )
+        SELECT * FROM run_results
+        ORDER BY timestamp desc
+        LIMIT {n}
+    """
+    query = s.select(BenchmarkResult).from_statement(s.text(query_text))
+    # Need to type hint this again because from_statement() overrides the type hints.
+    bmrs: List[BenchmarkResult] = list(current_session.scalars(query, {"n": n}).all())
     return bmrs
 
 
@@ -1157,6 +1170,14 @@ s.Index(
     BenchmarkResult.run_reason,
     BenchmarkResult.id,
     postgresql_where=(BenchmarkResult.timestamp >= "2023-06-03"),
+)
+
+# This powers fetch_one_result_per_each_of_n_recent_runs().
+s.Index(
+    "benchmark_result_run_id_timestamp_idx",
+    BenchmarkResult.run_id,
+    BenchmarkResult.timestamp,
+    postgresql_where=(BenchmarkResult.timestamp >= "2023-11-19"),
 )
 
 
