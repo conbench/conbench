@@ -1751,7 +1751,7 @@
                         "schema": {"maximum": 1000, "minimum": 1, "type": "integer"},
                     },
                     {
-                        "description": "The earliest (least recent) benchmark result timestamp to return. (Note\nthat this parameter does not affect the behavior of returning only\nresults after `2023-06-03 UTC` without a `run_id` provided.)\n",
+                        "description": "The earliest (least recent) benchmark result timestamp to return. (Note\nthat this parameter does not affect the behavior of returning only\nresults after `2023-06-03 UTC` without a `run_id` provided.)\n\nThis parameter will also filter out results that were inserted into the\ndatabase before the given timestamp, independently of the user-given\nbenchmark result timestamp. This should not be a problem if you never\nupload data with a timestamp in the future, but if you do, you may get\nunexpected results around this boundary.\n",
                         "in": "query",
                         "name": "earliest_timestamp",
                         "schema": {"format": "date-time", "type": "string"},
