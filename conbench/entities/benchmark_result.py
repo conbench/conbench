@@ -364,7 +364,7 @@ class BenchmarkResult(Base, EntityMixin):
             tags.update(case.tags)
 
             if benchmark_result.commit:
-                commit_dict = CommitSerializer().one.dump(benchmark_result.commit)
+                commit_dict = CommitSerializer().many._dump(benchmark_result.commit)
                 commit_dict.pop("links", None)
             else:
                 commit_dict = None
