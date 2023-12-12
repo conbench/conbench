@@ -293,17 +293,8 @@ def set_z_scores(
     If we can't find a z-score for some reason, the z_score attribute will be None on
     that BenchmarkResult.
     """
-    contender_run_ids = set(result.run_id for result in contender_benchmark_results)
-    if len(contender_run_ids) != 1:
-        raise ValueError(
-            f"Encountered mixed run_ids in set_z_scores(): {contender_run_ids}"
-        )
-    contender_run_id = contender_run_ids.pop()
-
     distribution_stats = _query_and_calculate_distribution_stats(
-        contender_run_id=contender_run_id,
-        baseline_commit=baseline_commit,
-        history_fingerprints=history_fingerprints,
+        baseline_commit=baseline_commit, history_fingerprints=history_fingerprints
     )
 
     for benchmark_result in contender_benchmark_results:
@@ -319,9 +310,7 @@ def set_z_scores(
 
 
 def _query_and_calculate_distribution_stats(
-    contender_run_id: str,
-    baseline_commit: Commit,
-    history_fingerprints: List[THistFingerprint],
+    baseline_commit: Commit, history_fingerprints: List[THistFingerprint]
 ) -> Dict[THistFingerprint, Tuple[Optional[float], Optional[float]]]:
     """Query and calculate rolling stats of the distribution of all BenchmarkResults
     that:
@@ -352,7 +341,6 @@ def _query_and_calculate_distribution_stats(
     commit_timestamps_by_id = {
         row.ancestor_id: row.ancestor_timestamp for row in commit_ancestry_info
     }
-    earliest_commit_timestamp = min(commit_timestamps_by_id.values())
 
     # Find all historic results in the distribution to analyze.
     history = s.select(
@@ -376,7 +364,6 @@ def _query_and_calculate_distribution_stats(
         BenchmarkResult.mean.is_not(None),
         BenchmarkResult.commit_id.in_(commit_timestamps_by_id.keys()),
         BenchmarkResult.history_fingerprint.in_(history_fingerprints),
-        BenchmarkResult.timestamp >= earliest_commit_timestamp,  # a nice speedup
     )
 
     history_df = pd.read_sql(history, current_session.connection())

@@ -1937,10 +1937,10 @@
                         "schema": {"nullable": True, "type": "string"},
                     },
                     {
-                        "description": "The max number of unique fingerprints to return per page for pagination\n(see `cursor`). Default 100. Max 500.\n",
+                        "description": "The max number of unique fingerprints to return per page for pagination\n(see `cursor`). Default 100. Max 1000.\n",
                         "in": "query",
                         "name": "page_size",
-                        "schema": {"maximum": 500, "minimum": 1, "type": "integer"},
+                        "schema": {"maximum": 1000, "minimum": 1, "type": "integer"},
                     },
                 ],
                 "responses": {
