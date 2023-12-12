@@ -3,7 +3,9 @@ import logging
 import flask as f
 import flask_login
 import orjson
+import pandas as pd
 from sqlalchemy import select
+from uuid_extensions import uuid7
 
 import conbench.metrics
 from conbench.dbsession import current_session
@@ -186,6 +188,12 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
                 The earliest (least recent) benchmark result timestamp to return. (Note
                 that this parameter does not affect the behavior of returning only
                 results after `2023-06-03 UTC` without a `run_id` provided.)
+
+                This parameter will also filter out results that were inserted into the
+                database before the given timestamp, independently of the user-given
+                benchmark result timestamp. This should not be a problem if you never
+                upload data with a timestamp in the future, but if you do, you may get
+                unexpected results around this boundary.
           - in: query
             name: latest_timestamp
             schema:
@@ -210,6 +218,12 @@ class BenchmarkListAPI(ApiEndpoint, BenchmarkValidationMixin):
 
         if earliest_timestamp_arg := f.request.args.get("earliest_timestamp"):
             filters.append(BenchmarkResult.timestamp >= earliest_timestamp_arg)
+            # Speed up the query by also filtering out results that were inserted into
+            # the database before the given timestamp
+            earliest_timestamp_ns = (
+                pd.Timestamp(earliest_timestamp_arg).timestamp() * 10**9
+            )
+            filters.append(BenchmarkResult.id >= uuid7(earliest_timestamp_ns).hex)
 
         if latest_timestamp_arg := f.request.args.get("latest_timestamp"):
             filters.append(BenchmarkResult.timestamp <= latest_timestamp_arg)
