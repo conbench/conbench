@@ -1,0 +1,13 @@
+{
+    "data": {
+        "error": "channel_not_found",
+        "ok": false,
+        "response_metadata": {
+            "warnings": [
+                "missing_charset"
+            ]
+        },
+        "warning": "missing_charset"
+    },
+    "status_code": 200
+}

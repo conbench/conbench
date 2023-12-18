@@ -8,6 +8,7 @@ from .github import (
     GitHubCheckStep,
     GitHubPRCommentAboutCheckStep,
 )
+from .slack import SlackErrorHandler, SlackMessageAboutBadCheckStep
 
 __all__ = [
     "BaselineRunCandidates",
@@ -16,4 +17,6 @@ __all__ = [
     "GitHubCheckErrorHandler",
     "GitHubCheckStep",
     "GitHubPRCommentAboutCheckStep",
+    "SlackErrorHandler",
+    "SlackMessageAboutBadCheckStep",
 ]

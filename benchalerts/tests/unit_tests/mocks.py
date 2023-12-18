@@ -14,13 +14,14 @@
 
 import json
 import pathlib
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import pytest
 import requests
 from benchclients.conbench import ConbenchClient
 from requests.adapters import HTTPAdapter
 
+from benchalerts.integrations.slack import SlackClient
 from benchclients import log
 
 response_dir = pathlib.Path(__file__).parent / "mocked_responses"
@@ -67,6 +68,7 @@ class MockAdapter(HTTPAdapter):
             "https://api.github.com/repos/some/repo": "github",
             "https://api.github.com/app": "github_app",
             "https://conbench.biz/api": "conbench",
+            "https://slack.com/api": "slack",
         }
         for base_url, base_name in bases.items():
             if url.startswith(base_url):
@@ -96,6 +98,13 @@ class MockAdapter(HTTPAdapter):
 
         method = req.method
         clean_url = self.clean_base_url(req.url)
+
+        # switch Slack response based on channel ID too
+        if clean_url == "slack_chat_postMessage":
+            body = json.loads(req.body)
+            clean_url += "_" + body["channel"]
+            log.info("Slack comment: " + body["text"])
+
         response_path = response_dir / f"{method}_{clean_url}.json"
 
         if not response_path.exists():
@@ -120,6 +129,16 @@ class MockConbenchClient(ConbenchClient):
         # (Also, as of this comment, the parent method sets up a new requests session,
         # which would mean we'd lose our MockAdapter.)
         pass
+
+
+class MockSlackClient(SlackClient):
+    """A SlackClient that uses MockAdapter to intercept all requests and return
+    mocked responses, constructed from JSON files.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.session.mount("https://", MockAdapter())
 
 
 def check_posted_markdown(
@@ -192,3 +211,23 @@ def check_posted_comment(
         assert (
             expected_comment.strip() == actual_comment.strip()
         ), f"see tests/unit_tests/expected_md/{expected_comment_filename}.md"
+
+
+def check_posted_slack_message(
+    caplog: pytest.LogCaptureFixture, expected_message: Optional[str]
+):
+    """After we run a test, search through the logs for what message we
+    mock-posted to Slack, and assert it is what we expected.
+    """
+    actual_messages = [
+        log_record.message[15:]
+        for log_record in caplog.records
+        if log_record.levelname == "INFO"
+        and log_record.filename == "mocks.py"
+        and log_record.message.startswith("Slack comment: ")
+    ]
+    if expected_message:
+        assert len(actual_messages) == 1
+        assert expected_message.strip() == actual_messages[0].strip()
+    else:
+        assert len(actual_messages) == 0

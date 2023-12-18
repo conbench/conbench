@@ -60,6 +60,16 @@ v/Ow5T0q5gIJAiEAyS4RaI9YG8EWx/2w0T67ZUVAw8eOMB6BIUg0Xcu+3okCIBOs
 
 
 @pytest.fixture
+def slack_env(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SLACK_TOKEN", "xoxb-123")
+
+
+@pytest.fixture
+def slack_env_missing(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("SLACK_TOKEN", raising=False)
+
+
+@pytest.fixture
 def conbench_env(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("CONBENCH_URL", "https://conbench.biz")
     monkeypatch.setenv("CONBENCH_EMAIL", "email")
