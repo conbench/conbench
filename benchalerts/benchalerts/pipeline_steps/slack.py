@@ -25,6 +25,9 @@ class SlackMessageAboutBadCheckStep(AlertPipelineStep):
     check_step_name
         The name of the ``GitHubCheckStep`` that ran earlier in the pipeline. Defaults
         to "GitHubCheckStep" (which was the default if no name was given to that step).
+    pr_comment_step_name
+        [Optional] The name of the ``GitHubPRCommentStep`` that ran earlier in the
+        pipeline. If provided, will include a link to the comment in the Slack message.
     step_name
         The name for this step. If not given, will default to this class's name.
     alerter
@@ -53,6 +56,7 @@ class SlackMessageAboutBadCheckStep(AlertPipelineStep):
         channel_id: str,
         slack_client: Optional[SlackClient] = None,
         check_step_name: str = "GitHubCheckStep",
+        pr_comment_step_name: Optional[str] = None,
         step_name: Optional[str] = None,
         alerter: Optional[Alerter] = None,
     ) -> None:
@@ -60,10 +64,15 @@ class SlackMessageAboutBadCheckStep(AlertPipelineStep):
         self.channel_id = channel_id
         self.slack_client = slack_client or SlackClient()
         self.check_step_name = check_step_name
+        self.pr_comment_step_name = pr_comment_step_name
         self.alerter = alerter or Alerter()
 
     def run_step(self, previous_outputs: Dict[str, Any]) -> Optional[dict]:
         check_details, full_comparison = previous_outputs[self.check_step_name]
+        if self.pr_comment_step_name:
+            comment_details = previous_outputs[self.pr_comment_step_name]
+        else:
+            comment_details = None
 
         if self.alerter.github_check_status(full_comparison) == CheckStatus.SUCCESS:
             log.info("GitHub Check was successful; not posting to Slack.")
@@ -71,7 +80,9 @@ class SlackMessageAboutBadCheckStep(AlertPipelineStep):
 
         res = self.slack_client.post_message(
             message=self.alerter.slack_message(
-                full_comparison=full_comparison, check_details=check_details
+                full_comparison=full_comparison,
+                check_details=check_details,
+                comment_details=comment_details,
             ),
             channel_id=self.channel_id,
         )

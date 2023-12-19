@@ -307,9 +307,16 @@ class Alerter:
         return comment
 
     def slack_message(
-        self, full_comparison: FullComparisonInfo, check_details: dict
+        self,
+        full_comparison: FullComparisonInfo,
+        check_details: dict,
+        comment_details: Optional[dict],
     ) -> str:
         """Generate a Slack message that links to a GitHub Check."""
         status = self.github_check_status(full_comparison)
         link = check_details["html_url"]
-        return f"Check run posted with status `{status.value}`: <{link}|link>"
+        message = f"Check run posted with status `{status.value}`: <{link}|check link>"
+        if comment_details:
+            message += f", <{comment_details['html_url']}|comment link>"
+
+        return message
