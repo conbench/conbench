@@ -1,0 +1,53 @@
+{
+    "data": {
+        "channel": "123",
+        "message": {
+            "app_id": "123",
+            "blocks": [
+                {
+                    "block_id": "yxoJ",
+                    "elements": [
+                        {
+                            "elements": [
+                                {
+                                    "text": "hello",
+                                    "type": "text"
+                                }
+                            ],
+                            "type": "rich_text_section"
+                        }
+                    ],
+                    "type": "rich_text"
+                }
+            ],
+            "bot_id": "123",
+            "bot_profile": {
+                "app_id": "123",
+                "deleted": false,
+                "icons": {
+                    "image_36": "https://avatars.slack-edge.com/",
+                    "image_48": "https://avatars.slack-edge.com/",
+                    "image_72": "https://avatars.slack-edge.com/"
+                },
+                "id": "123",
+                "name": "abc",
+                "team_id": "123",
+                "updated": 1657225466
+            },
+            "team": "123",
+            "text": "hello",
+            "ts": "1702579355.753289",
+            "type": "message",
+            "user": "123"
+        },
+        "ok": true,
+        "response_metadata": {
+            "warnings": [
+                "missing_charset"
+            ]
+        },
+        "ts": "1702579355.753289",
+        "warning": "missing_charset"
+    },
+    "status_code": 200
+}
