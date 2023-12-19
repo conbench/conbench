@@ -110,7 +110,7 @@ class SlackErrorHandler(AlertPipelineErrorHandler):
         self.slack_client = slack_client or SlackClient()
         self.build_url = build_url
 
-    def handle_error(self, **kwargs) -> None:
+    def handle_error(self, exc: BaseException, traceback: str) -> None:
         res = self.slack_client.post_message(
             channel_id=self.channel_id,
             message=f"Error in benchalerts pipeline. {self.build_url=}",
