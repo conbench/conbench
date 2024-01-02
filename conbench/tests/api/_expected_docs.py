@@ -1527,7 +1527,7 @@
                         "type": "array",
                     },
                     "unit": {
-                        "description": "Unit of the numbers in `data`. Allowed values: B/s, s, ns, i/s",
+                        "description": "Unit of the numbers in `data`. Allowed values: B, B/s, s, ns, i/s",
                         "type": "string",
                     },
                 },

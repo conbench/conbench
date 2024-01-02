@@ -30,7 +30,7 @@ from typing import Dict, Literal, TypedDict, cast
 # These are the symbols. We could call this type UnitSymbol, but we can
 # have the convention that whenever "unit" pops up in the code base it means
 # the short version, the symbol.
-TUnit = Literal["B/s", "s", "ns", "i/s"]
+TUnit = Literal["B", "B/s", "s", "ns", "i/s"]
 
 
 class TUnitDef(TypedDict):
@@ -40,6 +40,10 @@ class TUnitDef(TypedDict):
 
 # slash ("/"") or "per"? We will see.
 KNOWN_UNITS: Dict[TUnit, TUnitDef] = {
+    "B": {
+        "long": "bytes",
+        "less_is_better": True,
+    },
     "B/s": {
         "long": "bytes per second",
         "less_is_better": False,
