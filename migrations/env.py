@@ -23,6 +23,9 @@ config = context.config
 
 if engine:
     sqlalchemy_url = engine.url.render_as_string(hide_password=False)
+    # That comes out URL-encoded as of sqlalchemy 2.0.24, but single percent signs are
+    # special interpolation characters to alembic, so we must escape them.
+    sqlalchemy_url = sqlalchemy_url.replace("%", "%%")
 else:
     sqlalchemy_url = Config.SQLALCHEMY_DATABASE_URI
 
