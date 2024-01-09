@@ -486,7 +486,10 @@ def backfill_default_branch_commits(repo_url: str, new_commit: Commit) -> None:
     default_branch = _github.get_default_branch(repospec)
 
     last_tracked_commit = Commit.all(
-        filter_args=[Commit.sha != new_commit.sha, Commit.timestamp.isnot(None)],
+        filter_args=[
+            Commit.timestamp < new_commit.timestamp,
+            Commit.timestamp.isnot(None),
+        ],
         branch=default_branch,
         repository=repo_url,
         order_by=Commit.timestamp.desc(),
