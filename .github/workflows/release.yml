@@ -22,6 +22,8 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - name: Check out repo to release ${{ inputs.package }}
         uses: actions/checkout@v3
@@ -141,12 +143,10 @@ jobs:
           cd ${{ steps.variables.outputs.pkg_root }}
           python -m build
       - name: Upload to PyPI
-        env:
-          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-        run: |
-          cd ${{ steps.variables.outputs.pkg_root }}
-          python -m twine upload dist/* --non-interactive
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir:
+            ${{ steps.variables.outputs.pkg_root }}/dist
       - name: Tag this commit
         uses: actions/github-script@v6
         with:
