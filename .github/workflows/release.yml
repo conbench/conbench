@@ -24,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      contents: write
+      pull-requests: write
     steps:
       - name: Check out repo to release ${{ inputs.package }}
         uses: actions/checkout@v3
@@ -137,7 +139,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install python dependencies
-        run: python -m pip install -U build twine
+        run: python -m pip install -U build
       - name: Build wheel
         run: |
           cd ${{ steps.variables.outputs.pkg_root }}
@@ -145,8 +147,7 @@ jobs:
       - name: Upload to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir:
-            ${{ steps.variables.outputs.pkg_root }}/dist
+          packages-dir: ${{ steps.variables.outputs.pkg_root }}/dist
       - name: Tag this commit
         uses: actions/github-script@v6
         with:
