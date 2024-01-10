@@ -15,5 +15,6 @@ data:
   DB_HOST: "acid-minimal-cluster"
   DB_PORT: "5432"
   DISTRIBUTION_COMMITS: "100"
+  SVS_TYPE: "best"
   # value does not seem to matter, hard-coded in gunicorn cmd
   FLASK_APP: foobarrofl

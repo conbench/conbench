@@ -241,14 +241,9 @@ def get_history_for_fingerprint(
                 case_id=result.case_id,
                 case_text_id=result.case.text_id,
                 context_id=result.context_id,
-                # Keep exposing the `mean` property like before. This was meant
-                # to be the single value summary, guaranteed to have a value
-                # set. So, actually read this from the new .svs property which
-                # still is the mean as of today. Do not read this from
-                # BenchmarkResult.mean, because this can be None.
-                mean=result.svs,
+                mean=result.mean,
                 svs=result.svs,
-                svs_type=result.svs_type,  # hard-code for now
+                svs_type=result.svs_type,
                 data=data,
                 times=times,
                 # JSON schema requires unit to be set upon BMR insertion, so I
@@ -342,26 +337,43 @@ def _query_and_calculate_distribution_stats(
         row.ancestor_id: row.ancestor_timestamp for row in commit_ancestry_info
     }
 
+    # Note[austin]: Okay. Pros and cons here. This is not DRY, so we have to maintain
+    # this logic in addition to the SVS logic in benchmark_result.py. Also, the SVS is
+    # not exactly equivalent to the mean/min/max in all cases because of "errored
+    # results", and that's especially true if we change the default definition of SVS in
+    # the future (in which case let's revisit this!). But after careful analysis of the
+    # code, I believe that they are equivalent for BenchmarkResults where error is None
+    # and mean/min/max is not None, at least since #1127 or previous.
+    #
+    # The benefit of this assumption is we can avoid the time-consuming
+    # execute_history_query_get_dataframe() for-loops and SQLAlchemy object
+    # instantiation for big data (3e5 results). This goes SO MUCH faster.
+    if Config.SVS_TYPE == "mean":
+        svs_col = BenchmarkResult.mean
+        svs_filters = [BenchmarkResult.mean.is_not(None)]
+    elif Config.SVS_TYPE == "best":
+        svs_col = s.case(
+            (BenchmarkResult.unit.like("%/s"), BenchmarkResult.max),
+            else_=BenchmarkResult.min,
+        )  # type: ignore
+        svs_filters = [
+            BenchmarkResult.unit.is_not(None),
+            BenchmarkResult.min.is_not(None),
+            BenchmarkResult.max.is_not(None),
+        ]
+    else:
+        raise ValueError("server is not configured properly")
+
     # Find all historic results in the distribution to analyze.
     history = s.select(
         BenchmarkResult.commit_id,
         BenchmarkResult.history_fingerprint,
         BenchmarkResult.timestamp.label("result_timestamp"),
         BenchmarkResult.change_annotations,
-        # Note[austin]: Okay. Pros and cons here. Of course the SVS is not exactly
-        # equivalent to the mean in all cases because of "errored results", and that's
-        # especially true if we change the default definition of SVS in the future (in
-        # which case let's revisit this!). But after careful analysis of the code, I
-        # believe that they are equivalent for BenchmarkResults where "error" is None
-        # and "mean" is not None, at least since #1127 or previous.
-        #
-        # The benefit of this assumption is we can avoid the time-consuming
-        # execute_history_query_get_dataframe() for-loops and SQLAlchemy object
-        # instantiation for big data (3e5 results). This goes SO MUCH faster.
-        BenchmarkResult.mean.label("svs"),
+        svs_col.label("svs"),
     ).filter(
         BenchmarkResult.error.is_(None),
-        BenchmarkResult.mean.is_not(None),
+        *svs_filters,
         BenchmarkResult.commit_id.in_(commit_timestamps_by_id.keys()),
         BenchmarkResult.history_fingerprint.in_(history_fingerprints),
     )
@@ -525,7 +537,7 @@ def _add_rolling_stats_columns_to_df(
 
         - BenchmarkResult: history_fingerprint
         - BenchmarkResult: change_annotations
-        - BenchmarkResult: svs (single value summary, currently mean)
+        - BenchmarkResult: svs (single value summary)
         - BenchmarkResult: result_timestamp
         - Commit: timestamp
 
@@ -595,7 +607,7 @@ def _add_rolling_stats_columns_to_df(
         .values
     )
 
-    # Add column with rolling mean of the means (only inside of the segment)
+    # Add column with rolling mean of the SVSs (only inside of the segment)
     df.loc[~df.is_outlier, "rolling_mean_excluding_this_commit"] = (
         df.loc[~df.is_outlier]
         .groupby(["history_fingerprint", "segment_id"])

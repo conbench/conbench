@@ -76,6 +76,7 @@ deploy_secrets_and_config() {
         s/{{DB_PORT}}/${DB_PORT}/g;\
         s/{{FLASK_APP}}/${CB_WEBAPP_IMAGE_NAME}/g;\
         s/{{DISTRIBUTION_COMMITS}}/${DISTRIBUTION_COMMITS}/g; \
+        s/{{SVS_TYPE}}/${SVS_TYPE}/g; \
         s/{{BENCHMARKS_DATA_PUBLIC}}/${BENCHMARKS_DATA_PUBLIC}/g" | kubectl apply -f -
 }
 

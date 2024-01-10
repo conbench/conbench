@@ -65,6 +65,9 @@ KNOWN_UNITS: Dict[TUnit, TUnitDef] = {
         "less_is_better": False,
     },
 }
+# Note: if you add a new unit where less_is_better isn't identical to
+# "symbol doesn't end with '/s'" then modify _query_and_calculate_distribution_stats()
+# in conbench/entities/history.py.
 
 
 _KNOWN_UNIT_SYMBOLS = list(KNOWN_UNITS.keys())

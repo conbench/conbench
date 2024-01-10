@@ -20,10 +20,11 @@ from sqlalchemy.orm import Mapped, relationship
 
 import conbench.units
 import conbench.util
+from conbench import Config
 from conbench.dbsession import current_session
 from conbench.numstr import numstr, numstr_dyn
 from conbench.types import THistFingerprint
-from conbench.units import KNOWN_UNIT_SYMBOLS_STR
+from conbench.units import KNOWN_UNIT_SYMBOLS_STR, TUnit, less_is_better
 
 from ..entities._entity import (
     Base,
@@ -127,7 +128,7 @@ class BenchmarkResult(Base, EntityMixin):
     # now we have validation in the insert path that this is one of the allowed
     # unit symbol strings. Related:
     # https://github.com/conbench/conbench/issues/1335
-    unit: Mapped[Optional[str]] = Nullable(s.Text)
+    unit: Mapped[Optional[TUnit]] = Nullable(s.Text)
 
     time_unit: Mapped[Optional[str]] = Nullable(s.Text)
 
@@ -423,19 +424,27 @@ class BenchmarkResult(Base, EntityMixin):
     @property
     def svs(self) -> float:
         """
-        Return single value summary (currently: mean) or raise an
-        Exception.
+        Return single value summary or raise an Exception.
         """
-
         # This is here just for the shorter name.
         return self._single_value_summary()
 
     @property
     def svs_type(self) -> str:
         """
-        Return single value summary type (currently: "mean")
+        Return single value summary type.
         """
-        return "mean"
+        if Config.SVS_TYPE == "mean":
+            return "mean"
+
+        assert Config.SVS_TYPE == "best"
+
+        if self.unit is None:
+            return "n/a"
+        elif less_is_better(self.unit):
+            return "min"
+        else:
+            return "max"
 
     def _single_value_summary(self) -> float:
         """
@@ -444,7 +453,17 @@ class BenchmarkResult(Base, EntityMixin):
 
         Return `math.nan` if this result is failed.
 
-        Summary: currently static (mean), can be dynamic in the future.
+        Strategy:
+
+        If Config.SVS_TYPE == "best", return the value of the "best" repetition. This is
+        the minimum value if less_is_better, else the maximum value. Previously it was
+        the mean value, but we saw that this was often skewed by outliers related to
+        unavoidable benchmarking environment issues, which led to false positives during
+        regression analysis. Much experience has taught us that when summarizing
+        benchmark results over time, users care to omit those outliers and only look at
+        the best-case scenarios.
+
+        If Config.SVS_TYPE == "mean", return the mean of the data.
 
         Assumption: each non-errored benchmark result (self.is_failed is False)
         is guaranteed to have at least one data point.
@@ -478,15 +497,24 @@ class BenchmarkResult(Base, EntityMixin):
         if not values:
             return math.nan
 
-        if self.mean is None:
-            # See https://github.com/conbench/conbench/issues/1169 -- Legacy
-            # database might have mean being None _despite the benchmark not
-            # being failed_. Because of a temporary logic error. Let's remove
-            # this code path again for sanity. `values` (from
-            # self.measurements) has only numbers.
-            return statistics.mean(values)
+        if Config.SVS_TYPE == "mean":
+            if self.mean is None:
+                # See https://github.com/conbench/conbench/issues/1169 -- Legacy
+                # database might have mean being None _despite the benchmark not
+                # being failed_. Because of a temporary logic error. Let's remove
+                # this code path again for sanity. `values` (from
+                # self.measurements) has only numbers.
+                return statistics.mean(values)
+            return float(self.mean)
 
-        return float(self.mean)
+        assert Config.SVS_TYPE == "best"
+        # If there are values, a unit should be present.
+        assert self.unit is not None
+
+        if less_is_better(self.unit):
+            return float(self.min) if self.min is not None else min(values)
+        else:
+            return float(self.max) if self.max is not None else max(values)
 
     @functools.cached_property
     def measurements(self) -> List[float]:

@@ -29,6 +29,13 @@ class ConfigClass:
     # default.
     DISTRIBUTION_COMMITS = int(os.environ.get("DISTRIBUTION_COMMITS", 100))
 
+    # The method for choosing the single value summary of a benchmark result, given the
+    # different values from the different repetitions.
+    # - "best" (default): Use the min value if less_is_better for the unit, or the max
+    #                     value if not.
+    # - "mean": Use the mean.
+    SVS_TYPE = os.environ.get("SVS_TYPE", "best")
+
     LOG_LEVEL_STDERR = os.environ.get("CONBENCH_LOG_LEVEL_STDERR", "INFO")
     LOG_LEVEL_FILE = None
     LOG_LEVEL_SQLALCHEMY = "WARNING"
