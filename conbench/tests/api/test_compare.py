@@ -3,7 +3,7 @@ from typing import List, Optional, Set, Tuple
 import pytest
 
 from ...api._examples import _api_compare_entity, _api_compare_list
-from ...api.compare import CompareRunsAPI, _round
+from ...api.compare import CompareRunsAPI
 from ...tests.api import _asserts, _fixtures
 from ...tests.helpers import _uuid
 
@@ -269,14 +269,14 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
             history_fingerprint=new_entities[0].history_fingerprint,
             result_dicts=result_dicts,
         )
-        expected["baseline"].update({"single_value_summary": 3.0})
-        expected["contender"].update({"single_value_summary": 20.0})
+        expected["baseline"].update({"single_value_summary": 2.0})
+        expected["contender"].update({"single_value_summary": 10.0})
         expected["analysis"]["pairwise"].update(
-            {"percent_change": -566.7, "regression_indicated": True}
+            {"percent_change": -400.0, "regression_indicated": True}
         )
         expected["analysis"]["lookback_z_score"].update(
             {
-                "z_score": _round(-_fixtures.Z_SCORE_UP),
+                "z_score": -26.16,
                 "regression_indicated": True,
             }
         )
@@ -318,7 +318,7 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
         )
 
         expected["baseline"].update({"single_value_summary": None, "error": error})
-        expected["contender"].update({"single_value_summary": 20.0})
+        expected["contender"].update({"single_value_summary": 10.0})
         expected["analysis"]["pairwise"] = None
         expected["analysis"]["lookback_z_score"] = None
         expected["unit"] = None
@@ -335,11 +335,11 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
         ["baseline_result_id", "expected_z_score"],
         [
             # result on the fork point commit
-            (5, -2.186),
+            (5, -2.358),
             # result on the parent commit
-            (6, -2.825),
+            (6, -3.023),
             # result on the head commit of the default branch
-            (8, 0.1205),
+            (8, 0.0459),
         ],
     )
     def test_compare_different_baselines(
@@ -548,11 +548,11 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         ["baseline_result_id", "expected_z_score"],
         [
             # result on the fork point commit
-            (5, -2.186),
+            (5, -2.358),
             # result on the parent commit
-            (6, -2.825),
+            (6, -3.023),
             # result on the head commit of the default branch
-            (8, 0.1205),
+            (8, 0.0459),
         ],
     )
     def test_compare_different_baselines(

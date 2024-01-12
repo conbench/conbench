@@ -9,6 +9,7 @@ import sqlalchemy as s
 
 from conbench.types import TBenchmarkName
 
+from ...config import Config
 from ...db import _session as Session
 from ...entities.commit import Commit
 from ...entities.history import (
@@ -66,8 +67,9 @@ def assert_equal_leeway(comparison, reference, figs=4):
 
 
 # These correspond to the benchmark_results of _fixtures.gen_fake_data() without modification
+# Keys: (svs_type, baseline_strategy)
 EXPECTED_Z_SCORES = {
-    "closest_defaultbranch_ancestor": [
+    ("mean", "closest_defaultbranch_ancestor"): [
         None,
         None,
         28.48,
@@ -85,7 +87,7 @@ EXPECTED_Z_SCORES = {
         None,
         -5.982,
     ],
-    "parent": [
+    ("mean", "parent"): [
         None,
         None,
         28.48,
@@ -103,7 +105,7 @@ EXPECTED_Z_SCORES = {
         None,
         -5.982,
     ],
-    "head_of_default": [
+    ("mean", "head_of_default"): [
         0.6625,
         0.6083,
         1.7269,
@@ -120,6 +122,60 @@ EXPECTED_Z_SCORES = {
         None,
         None,
         -1.072,
+    ],
+    ("best", "closest_defaultbranch_ancestor"): [
+        None,
+        None,
+        27.06,
+        -0.7071,
+        0.7071,
+        12.02,
+        0.9203,
+        -2.358,
+        -4.659,
+        -5.119,
+        None,
+        None,
+        None,
+        None,
+        None,
+        -6.155,
+    ],
+    ("best", "parent"): [
+        None,
+        None,
+        27.06,
+        -0.7071,
+        0.7071,
+        12.02,
+        0.9203,
+        -3.023,
+        -4.659,
+        -5.119,
+        None,
+        None,
+        None,
+        None,
+        None,
+        -6.155,
+    ],
+    ("best", "head_of_default"): [
+        0.5967,
+        0.5417,
+        1.678,
+        0.5967,
+        0.6518,
+        1.092,
+        1.092,
+        0.04590,
+        -0.6885,
+        -0.8354,
+        None,
+        None,
+        None,
+        None,
+        None,
+        -1.166,
     ],
 }
 
@@ -175,12 +231,14 @@ def test_get_history():
         ("head_of_default", _get_head_of_default),
     ],
 )
+@pytest.mark.parametrize("svs_type", ["mean", "best"])
 def test_set_z_scores(
-    strategy_name: str, get_baseline_func: Callable[[Commit], Commit]
+    strategy_name: str, get_baseline_func: Callable[[Commit], Commit], svs_type: str
 ):
+    Config.SVS_TYPE = svs_type
     _, benchmark_results = _fixtures.gen_fake_data()
     assert len(benchmark_results) == len(
-        EXPECTED_Z_SCORES[strategy_name]
+        EXPECTED_Z_SCORES[(svs_type, strategy_name)]
     ), "you should test all benchmark_results"
 
     for benchmark_result in benchmark_results:
@@ -195,7 +253,7 @@ def test_set_z_scores(
             benchmark_result.z_score = None
 
     for benchmark_result, expected_z_score in zip(
-        benchmark_results, EXPECTED_Z_SCORES[strategy_name]
+        benchmark_results, EXPECTED_Z_SCORES[(svs_type, strategy_name)]
     ):
         assert_equal_leeway(benchmark_result.z_score, expected_z_score)
 
@@ -222,7 +280,8 @@ def test_set_z_scores(
             name=benchmark_results[0].case.name,
         )
     )
-    expected_z_scores = EXPECTED_Z_SCORES[strategy_name] + [-52.9993797469743]
+    new_z = -53.94 if svs_type == "best" else -53.00
+    expected_z_scores = EXPECTED_Z_SCORES[(svs_type, strategy_name)] + [new_z]
 
     for benchmark_result in benchmark_results:
         baseline_commit = get_baseline_func(benchmark_result.commit)
@@ -246,18 +305,30 @@ def test_set_z_scores(
         ("parent", _get_parent),
     ],
 )
+@pytest.mark.parametrize("svs_type", ["mean", "best"])
 def test_set_z_scores_with_distribution_change(
-    strategy_name: str, get_baseline_func: Callable[[Commit], Commit]
+    strategy_name: str, get_baseline_func: Callable[[Commit], Commit], svs_type: str
 ):
-    expected_z_scores = EXPECTED_Z_SCORES[strategy_name].copy()
-    expected_z_scores[6] = 0.0
-    if strategy_name == "closest_defaultbranch_ancestor":
-        expected_z_scores[7] = -32.90896534380864
+    Config.SVS_TYPE = svs_type
+    expected_z_scores = EXPECTED_Z_SCORES[(svs_type, strategy_name)].copy()
+    if svs_type == "mean":
+        expected_z_scores[6] = 0.0
+        if strategy_name == "closest_defaultbranch_ancestor":
+            expected_z_scores[7] = -32.90896534380864
+        else:
+            expected_z_scores[7] = -3.846766028925861
+        expected_z_scores[8] = -56.00239876112446
+        expected_z_scores[9] = -60.62177826491064
+        expected_z_scores[15] = -71.0140831103239
     else:
-        expected_z_scores[7] = -3.846766028925861
-    expected_z_scores[8] = -56.00239876112446
-    expected_z_scores[9] = -60.62177826491064
-    expected_z_scores[15] = -71.0140831103239
+        expected_z_scores[6] = -1.732
+        if strategy_name == "closest_defaultbranch_ancestor":
+            expected_z_scores[7] = -34.64
+        else:
+            expected_z_scores[7] = -4.049
+        expected_z_scores[8] = -57.74
+        expected_z_scores[9] = -62.35
+        expected_z_scores[15] = -72.75
 
     _, benchmark_results = _fixtures.gen_fake_data()
 

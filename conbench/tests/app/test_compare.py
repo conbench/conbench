@@ -122,7 +122,7 @@ class TestCompareRuns(_asserts.GetEnforcer):
         self.authenticate(client)
         response = client.get(self.url.format(ids))
         self.assert_page(response, "")
-        assert "0.03637 s" in response.text
+        assert "0.004733 s" in response.text
 
     def test_flash_messages(self, client):
         self.authenticate(client)

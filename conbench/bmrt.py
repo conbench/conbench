@@ -313,7 +313,7 @@ def _fetch_and_cache_most_recent_results_guts(
             benchmark_name=benchmark_name,
             started_at=result.timestamp.timestamp(),
             data=result.measurements,
-            svs=result.svs,  # float(result.mean) if result.mean else None,
+            svs=result.svs,
             svs_type=result.svs_type,
             unit=str(result.unit) if result.unit else "n/a",
             # Current `hardware.hash` is a string (not byte sequence), and does

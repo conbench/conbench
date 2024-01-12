@@ -509,7 +509,7 @@
                                     "validation": None,
                                 },
                                 "run_id": "some-run-uuid-1",
-                                "single_value_summary": 0.03637,
+                                "single_value_summary": 0.004733,
                                 "tags": {
                                     "compression": "snappy",
                                     "cpu_count": "2",
@@ -578,7 +578,7 @@
                                     "validation": None,
                                 },
                                 "run_id": "some-run-uuid-2",
-                                "single_value_summary": 0.03637,
+                                "single_value_summary": 0.004733,
                                 "tags": {
                                     "compression": "snappy",
                                     "cpu_count": "2",
@@ -675,7 +675,7 @@
                                             "validation": None,
                                         },
                                         "run_id": "some-run-uuid-1",
-                                        "single_value_summary": 0.03637,
+                                        "single_value_summary": 0.004733,
                                         "tags": {
                                             "compression": "snappy",
                                             "cpu_count": "2",
@@ -744,7 +744,7 @@
                                             "validation": None,
                                         },
                                         "run_id": "some-run-uuid-2",
-                                        "single_value_summary": 0.03637,
+                                        "single_value_summary": 0.004733,
                                         "tags": {
                                             "compression": "snappy",
                                             "cpu_count": "2",
@@ -832,7 +832,7 @@
                                             "validation": None,
                                         },
                                         "run_id": "some-run-uuid-1",
-                                        "single_value_summary": 0.03637,
+                                        "single_value_summary": 0.004733,
                                         "tags": {
                                             "compression": "snappy",
                                             "cpu_count": "2",
@@ -901,7 +901,7 @@
                                             "validation": None,
                                         },
                                         "run_id": "some-run-uuid-2",
-                                        "single_value_summary": 0.03637,
+                                        "single_value_summary": 0.004733,
                                         "tags": {
                                             "compression": "snappy",
                                             "cpu_count": "2",
@@ -1053,8 +1053,8 @@
                                         "mean": 0.036369,
                                         "repository": "https://github.com/org/repo",
                                         "run_name": "some run name",
-                                        "single_value_summary": 0.036369,
-                                        "single_value_summary_type": "mean",
+                                        "single_value_summary": 0.004733,
+                                        "single_value_summary_type": "min",
                                         "times": [
                                             0.099094,
                                             0.037129,
@@ -1072,8 +1072,8 @@
                                             "begins_distribution_change": False,
                                             "is_outlier": False,
                                             "residual": 0.0,
-                                            "rolling_mean": 0.036369,
-                                            "rolling_mean_excluding_this_commit": 0.036369,
+                                            "rolling_mean": 0.004733,
+                                            "rolling_mean_excluding_this_commit": 0.004733,
                                             "rolling_stddev": 0.0,
                                             "segment_id": 0.0,
                                         },

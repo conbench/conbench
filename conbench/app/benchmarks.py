@@ -627,7 +627,7 @@ def show_benchmark_results(bname: TBenchmarkName, caseid: str) -> str:
             "data_for_uplot": [
                 # Send timestamp with 1 second resolution.
                 [int(r.started_at) for r in results],
-                # Use single value summary (right now: mean or NaN). Also:
+                # Use single value summary. Also:
                 # there is no need to send an abstruse number of significant
                 # digits here (64 bit floating point precision). Benchmark
                 # results should not vary across many orders of magnitude
