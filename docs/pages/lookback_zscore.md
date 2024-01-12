@@ -70,14 +70,15 @@ Before doing so, outliers are automatically excluded from the distribution.
 Documentation on this process is coming soon.
 
 After outliers are excluded, the remaining data is sorted by commit timestamp.
-For each benchmark result, Conbench uses the mean of all the result's iterations.
+For each benchmark result, Conbench uses the "best" value of all the result's repetitions.
+For example, the minimum value will be chosen for units like seconds, and the maximum value will be chosen for units like bytes per second.
 Then:
 
-- the rolling mean is calculated (with the window boundaries as described above)
-- the residual of each result's mean from the rolling mean is calculated
+- the rolling mean of the best values is calculated (with the window boundaries as described above)
+- the residual of each result's best value from the rolling mean is calculated
 - the standard deviation of the residuals is calculated, using Bessel's correction
 
-Then the z-score is the difference of the distribution's mean from the contender result's mean, divided by the standard deviation of the residuals.
+Then the z-score is the difference of the distribution's mean from the contender result's best value, divided by the standard deviation of the residuals.
 The sign is modified depending on the unit, such that a positive z-score indicates a performance improvement and a negative z-score indicates a performance regression.
 
 See below for details of why the standard deviation of the residuals is used.
