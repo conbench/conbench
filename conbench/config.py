@@ -34,7 +34,7 @@ class ConfigClass:
     # - "best" (default): Use the min value if less_is_better for the unit, or the max
     #                     value if not.
     # - "mean": Use the mean.
-    SVS_TYPE = os.environ.get("SVS_TYPE", "best")
+    SVS_TYPE = os.environ.get("SVS_TYPE") or "best"
 
     LOG_LEVEL_STDERR = os.environ.get("CONBENCH_LOG_LEVEL_STDERR", "INFO")
     LOG_LEVEL_FILE = None
