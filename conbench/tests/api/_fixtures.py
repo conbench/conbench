@@ -20,8 +20,6 @@ REPO = "https://github.com/org/something"
 
 RESULTS_UP = [[1, 2, 3], [2, 3, 4], [10, 20, 30]]
 RESULTS_DOWN = [[10, 11, 12], [11, 12, 13], [1, 2, 3]]
-Z_SCORE_UP = 24.74873734152916  # Computed using statistics.stdev()
-Z_SCORE_DOWN = -13.435028842544401  # Computed using statistics.stdev()
 
 CLUSTER_INFO = {
     "name": f"cluster-{_uuid()}",

@@ -241,7 +241,7 @@ def get_history_for_fingerprint(
                 case_id=result.case_id,
                 case_text_id=result.case.text_id,
                 context_id=result.context_id,
-                mean=result.mean,
+                mean=_to_float_or_none(result.mean),
                 svs=result.svs,
                 svs_type=result.svs_type,
                 data=data,
