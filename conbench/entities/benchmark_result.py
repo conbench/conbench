@@ -20,7 +20,7 @@ from sqlalchemy.orm import Mapped, relationship
 
 import conbench.units
 import conbench.util
-from conbench import Config
+from conbench.config import Config
 from conbench.dbsession import current_session
 from conbench.numstr import numstr, numstr_dyn
 from conbench.types import THistFingerprint
