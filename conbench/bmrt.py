@@ -34,7 +34,7 @@ import logging
 import threading
 import time
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Tuple, TypedDict, cast
 
 import pandas as pd
@@ -245,6 +245,7 @@ def _fetch_and_cache_most_recent_results_guts(
     query_statement = (
         sqlalchemy.select(BenchmarkResult)
         .order_by(BenchmarkResult.timestamp.desc())
+        .where(BenchmarkResult.timestamp > datetime.now() - timedelta(days=14))
         .limit(int(BMRT_CACHE_SIZE))
     ).execution_options(yield_per=2000)
 
