@@ -1,9 +1,8 @@
 import collections
-import copy
 import json
 import logging
 import math
-from typing import Dict, List, Optional, Tuple, no_type_check
+from typing import Dict, List, Literal, Optional, Tuple, no_type_check
 
 import bokeh.events
 import bokeh.models
@@ -264,15 +263,36 @@ def _truncate_commit_msg(msg: str) -> str:
 def _source(
     samples: List[HistorySample],
     unit,
-    distribution_mean=False,  # what is this parameter's original intent?
-    alert_min=False,
-    alert_max=False,
+    y_value_strategy: Literal[
+        "svs", "all_data", "rolling_mean", "alert_min", "alert_max"
+    ],
     break_line_indexes: Optional[List[int]] = None,
     reference_benchmark_result: Optional[BenchmarkResult] = None,
 ):
+    """
+    data_strategy: The way to extract the y-axis value(s) from each HistorySample.
+        svs: Plot the sample's single-value summary.
+        all_data: Plot all raw data points from the sample.
+        rolling_mean: Plot the mean of the baseline distribution ending with the parent
+            commit.
+        alert_min: Plot the value that's 5 z-scores below the rolling_mean.
+        alert_max: Plot the value that's 5 z-scores above the rolling_mean.
+    """
+
+    def x_axis_generator():
+        """Yield a HistorySample for each intended data point."""
+        if y_value_strategy == "all_data":
+            # This strategy returns multiple points per sample.
+            for s in samples:
+                for _ in s.data:
+                    yield s
+        else:
+            for s in samples:
+                yield s
+
     # These commit message prefixes end up (among others) in the on-hover
     # tooltip in the history plot.
-    commit_messages = [_truncate_commit_msg(s.commit_msg) for s in samples]
+    commit_messages = [_truncate_commit_msg(s.commit_msg) for s in x_axis_generator()]
 
     # The `timestamp` property corresponds to the UTC-local commit time
     # (example value: 2022-03-03T19:48:06). That is, each string is ISO 8601
@@ -283,7 +303,7 @@ def _source(
     # properly on `HistorySample`  (to be tzaware and in UTC), then we can
     # simplify.
     datetimes = util.tznaive_iso8601_to_tzaware_dt(
-        [s.commit_timestamp.isoformat() for s in samples]
+        [s.commit_timestamp.isoformat() for s in x_axis_generator()]
     )
 
     # Get stringified versions of those datetimes for UI display purposes.
@@ -292,30 +312,29 @@ def _source(
 
     values_to_plot: List[float] = []
 
-    if alert_min:
+    if y_value_strategy == "alert_min":
         # for 'lower boundary' vis, has its own problems. also see
         # https://github.com/conbench/conbench/issues/1252
         for s in samples:
             alert = 5 * float(s.zscorestats.rolling_stddev)
             values_to_plot.append(float(s.zscorestats.rolling_mean) - alert)
 
-    elif alert_max:
+    elif y_value_strategy == "alert_max":
         for s in samples:
             alert = 5 * float(s.zscorestats.rolling_stddev)
             values_to_plot.append(float(s.zscorestats.rolling_mean) + alert)
 
-    elif distribution_mean:
+    elif y_value_strategy == "rolling_mean":
         values_to_plot = [s.zscorestats.rolling_mean for s in samples]
-        values_with_unit = [
-            fmt_number_and_unit(float(s.zscorestats.rolling_mean), unit)
-            for s in samples
-            if s.zscorestats.rolling_mean
-        ]
+
+    elif y_value_strategy == "svs":
+        values_to_plot = [s.svs for s in samples]
+
+    elif y_value_strategy == "all_data":
+        values_to_plot = [d for s in samples for d in s.data]
 
     else:
-        # This seems to be the 'normal' code path (not the special case)/
-        # For plotting SVS over time.
-        values_to_plot = [s.svs for s in samples]
+        raise ValueError(f"bad {y_value_strategy=}")
 
     values_with_unit: List[str] = [fmt_number_and_unit(x, unit) for x in values_to_plot]
 
@@ -331,9 +350,9 @@ def _source(
         # List of (truncated) commit messages.
         "commit_messages": commit_messages,
         # List of short commit hashes with hashtag prefix
-        "commit_hashes_short": ["#" + s.commit_hash[:8] for s in samples],
+        "commit_hashes_short": ["#" + s.commit_hash[:8] for s in x_axis_generator()],
         "relative_benchmark_urls": [
-            f"/benchmark-results/{s.benchmark_result_id}" for s in samples
+            f"/benchmark-results/{s.benchmark_result_id}" for s in x_axis_generator()
         ],
         # Stringified values (truncated, with unit, for on-hover)
         "values_with_unit": values_with_unit,
@@ -344,7 +363,7 @@ def _source(
     if reference_benchmark_result:
         dsdict["rel_resresrmp_urls"] = [
             f"/compare/benchmark-results/{reference_benchmark_result.id}...{s.benchmark_result_id}"
-            for s in samples
+            for s in x_axis_generator()
         ]
 
     multisample, _ = _inspect_for_multisample(samples)
@@ -356,7 +375,7 @@ def _source(
         # distinguish samples from samples :-). In the next line, `samples` is
         # a list of entities that each may contain more than one per-iteration
         # sample.
-        for s in samples:
+        for s in x_axis_generator():
             # Terminology: subsample? itersample? rawsample?
             subsamples = s.data
             strings.append(
@@ -557,7 +576,7 @@ def time_series_plot(
     unit_symbol = conbench.units.legacy_convert(units.pop())
     unit_str_for_plot_axis_label = conbench.units.longform(unit_symbol)
 
-    with_dist = [s for s in samples if s.zscorestats.rolling_mean]
+    samples_with_z_score_analysis = [s for s in samples if s.zscorestats.rolling_mean]
     inliers = [s for s in samples if not s.zscorestats.is_outlier]
     outliers = [s for s in samples if s.zscorestats.is_outlier]
 
@@ -568,39 +587,17 @@ def time_series_plot(
 
     dist_change_indexes = [
         ix
-        for ix, sample in enumerate(samples)
+        for ix, sample in enumerate(samples_with_z_score_analysis)
         if sample.zscorestats.begins_distribution_change
     ]
 
     # Note(JP): `samples` is an ordered list of dicts, each dict has a `mean`
     # key which is extracted here by default.
-    source_mean_over_time = _source(
-        inliers,
-        unit_symbol,
-    )
-    source_outlier_mean_over_time = _source(outliers, unit_symbol)
-    source_unfiltered_mean_over_time = _source(
-        samples,
-        unit_symbol,
-        reference_benchmark_result=current_benchmark_result,
-    )
-
-    source_min_over_time = bokeh.models.ColumnDataSource(
-        data=dict(
-            # Insert NaNs to break the line at distribution changes
-            # (documented Bokeh feature for adding a gap to a line plot)
-            x=_insert_nans(
-                util.tznaive_iso8601_to_tzaware_dt(
-                    [s.commit_timestamp.isoformat() for s in inliers]
-                ),
-                dist_change_indexes,
-            ),
-            # TODO: best-case is not always min, e.g. when data has a unit like
-            # bandwidth. Note(JP): min() must not have None passed as arg, that
-            # is why I have changed `s.data` to only contain type float
-            # elements (including math.nan, instead of None).
-            y=_insert_nans([min(s.data) for s in inliers], dist_change_indexes),
-        )
+    source_raw_data = _source(samples, unit_symbol, "all_data")
+    source_svs_inliers = _source(inliers, unit_symbol, "svs")
+    source_svs_outliers = _source(outliers, unit_symbol, "svs")
+    source_svs_all = _source(
+        samples, unit_symbol, "svs", reference_benchmark_result=current_benchmark_result
     )
 
     # Note(JP). The `source_rolling_*` data is based on the "distribution"
@@ -608,26 +605,26 @@ def time_series_plot(
     # the time width of the window is variable, as of a fixed commit-count
     # width.
     source_rolling_mean_over_time = _source(
-        with_dist,
+        samples_with_z_score_analysis,
         unit_symbol,
-        distribution_mean=True,
+        "rolling_mean",
         break_line_indexes=dist_change_indexes,
     )
     source_rolling_alert_min_over_time = _source(
-        with_dist,
+        samples_with_z_score_analysis,
         unit_symbol,
-        alert_min=True,
+        "alert_min",
         break_line_indexes=dist_change_indexes,
     )
     source_rolling_alert_max_over_time = _source(
-        with_dist,
+        samples_with_z_score_analysis,
         unit_symbol,
-        alert_max=True,
+        "alert_max",
         break_line_indexes=dist_change_indexes,
     )
 
-    t_start = source_mean_over_time.data["x"][0]
-    t_end = source_mean_over_time.data["x"][-1]
+    t_start = source_svs_all.data["x"][0]
+    t_end = source_svs_all.data["x"][-1]
 
     t_range = t_end - t_start
 
@@ -689,9 +686,7 @@ def time_series_plot(
     # of a specific data source this can be decided in the callback when
     # passing a data source to the callback and then inspecting
     # `s1.selected.indices`.
-    p.js_on_event(
-        "tap", gen_js_callback_tap_detect_unselect(source_unfiltered_mean_over_time)
-    )
+    p.js_on_event("tap", gen_js_callback_tap_detect_unselect(source_svs_all))
 
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
@@ -699,18 +694,34 @@ def time_series_plot(
     p.xaxis.axis_label = ""
 
     multisample, multisample_count = _inspect_for_multisample(samples)
-    label = "result (n=1)"
-    if multisample:
-        label = "result mean"
-        if multisample_count:
-            label += f" (n={multisample_count})"
+    if not multisample:
+        n_label = "(n=1)"
+        svs_type = ""
+    elif multisample_count:
+        n_label = f"(n={multisample_count})"
+        svs_type = f"({current_benchmark_result.svs_type})"
+    else:
+        # mixed number of repetitions per result
+        n_label = ""
+        svs_type = f"({current_benchmark_result.svs_type})"
 
-    scatter_mean_over_time = p.circle(
-        source=source_unfiltered_mean_over_time,
-        legend_label=label,
-        name="samples",
-        size=5,
-        color="#ccc",
+    # Raw results, only if multisample
+    if multisample:
+        p.circle(
+            source=source_raw_data,
+            legend_label=f"result repetitions {n_label}",
+            name="raw",
+            size=3,
+            color="#ccc",
+        )
+
+    # Inlier SVS
+    scatter_inliers = p.circle(
+        source=source_svs_inliers,
+        legend_label=f"result {svs_type}",
+        name="inliers",
+        size=3,
+        color="#222",
         line_width=1,
         selection_color="#76bf5a",  # like bootstrap panel dff0d8, but darker
         selection_line_color="#5da540",  # same green, again darker
@@ -720,12 +731,13 @@ def time_series_plot(
         nonselection_line_alpha=1.0,
     )
 
+    # Outlier SVS
     if has_outliers:
-        scatter_outlier_mean_over_time = p.circle(
-            source=source_outlier_mean_over_time,
-            legend_label=f"outlier {label}",
+        scatter_outliers = p.circle(
+            source=source_svs_outliers,
+            legend_label=f"outlier result {svs_type}",
             name="outliers",
-            size=6,
+            size=3,
             line_color="#ccc",
             fill_color="white",
             line_width=1,
@@ -737,33 +749,11 @@ def time_series_plot(
             nonselection_line_alpha=1.0,
         )
 
-    if multisample:
-        # Do not show min-over-time when each benchmark reports at most one
-        # sample, i.e. when mean and min are the same.
-
-        label = "result min"
-        if multisample_count:
-            label += f" (n={multisample_count})"
-
-        # p.line(
-        #     source=source_min_over_time,
-        #     legend_label=label,
-        #     name="min-over-time",
-        #     color="#222",
-        # )
-        p.circle(
-            source=source_min_over_time,
-            legend_label=label,
-            name="min-over-time",
-            size=2,
-            color="#222",
-        )
-
     p.line(
         source=source_rolling_mean_over_time,
         color="#ffa600",
         line_width=2,
-        legend_label="lookback z-score mean",
+        legend_label="lookback z-score (mean)",
     )
     p.line(
         source=source_rolling_alert_min_over_time,
@@ -775,8 +765,8 @@ def time_series_plot(
     p.line(source=source_rolling_alert_max_over_time, color="Silver")
 
     (
-        source_current_bm_mean,
-        source_current_bm_min,
+        source_current_bm_svs,
+        source_current_bm_raw,
     ) = get_source_for_single_benchmark_result(
         current_benchmark_result, run, unit_symbol
     )
@@ -796,29 +786,29 @@ def time_series_plot(
             size=19,
             line_width=2.5,
             color="#005050",  # VD magenta
-            legend_label=f"highlighted result:\n{description} ({hs.svs_type})",
+            legend_label=f"highlighted result:\n{description} {svs_type}",
             name="additionally highlighted benchmark result",
         )
 
     cur_bench_mean_circle = None
     cur_bench_min_circle = None
-    if source_current_bm_mean is not None:
+    if source_current_bm_svs is not None:
         cur_bench_mean_circle = p.x(
-            source=source_current_bm_mean,
+            source=source_current_bm_svs,
             size=20,
             line_width=2.7,
             color="#C440C3",  # VD dark magenta
-            legend_label="current result (mean)" if multisample else "current result",
+            legend_label=f"current result {svs_type}",
             name="result",
         )
 
         if multisample:
             # do not show this for n=1 (then min equals to mean).
             cur_bench_min_circle = p.circle(
-                source=source_current_bm_min,
-                size=8,
+                source=source_current_bm_raw,
+                size=4,
                 color="#C440C3",
-                legend_label="current result (min)",
+                legend_label=f"current result repetitions {n_label}",
                 name="result",
             )
 
@@ -857,7 +847,7 @@ def time_series_plot(
             )
             dist_change_in_legend = True
 
-    hover_renderers = [scatter_mean_over_time]
+    hover_renderers = [scatter_inliers]
 
     if cur_bench_mean_circle is not None:
         hover_renderers.append(cur_bench_mean_circle)
@@ -866,7 +856,7 @@ def time_series_plot(
         hover_renderers.append(cur_bench_min_circle)
 
     if has_outliers:
-        hover_renderers.append(scatter_outlier_mean_over_time)
+        hover_renderers.append(scatter_outliers)
 
     p.add_tools(
         bokeh.models.HoverTool(
@@ -933,7 +923,7 @@ def get_source_for_single_benchmark_result(current_benchmark_result, cur_run, un
         commit_hash = "no commit"
         cur_benchmark_time = current_benchmark_result.timestamp
 
-    dummy_hs_for_current_svs = HistorySample(
+    dummy_hs = HistorySample(
         mean=current_benchmark_result.mean,
         benchmark_name=TBenchmarkName("dummy"),
         history_fingerprint="dummy",
@@ -945,10 +935,13 @@ def get_source_for_single_benchmark_result(current_benchmark_result, cur_run, un
         commit_hash=commit_hash,
         benchmark_result_id=current_benchmark_result.id,
         repository=current_benchmark_result.commit_repo_url,
+        data=[
+            float(d) if d is not None else math.nan
+            for d in current_benchmark_result.data
+        ],
         case_id="dummy",  # not consumed
         context_id="dummy",  # not consumed
         # "Per PEP 484, int is a subtype of float"
-        data=[0.0],  # not consumed
         times=[0.0],  # not consumed
         unit="dummy",  # not consumed
         hardware_hash="dummy",  # not consumed
@@ -964,19 +957,7 @@ def get_source_for_single_benchmark_result(current_benchmark_result, cur_run, un
         ),
     )
 
-    source_current_bm_mean = _source(
-        [dummy_hs_for_current_svs],
-        unit,
-    )
+    source_current_bm_svs = _source([dummy_hs], unit, "svs")
+    source_current_bm_raw = _source([dummy_hs], unit, "all_data")
 
-    # Create same dummy structure, only difference: set min as single value
-    # summary (SVS).
-    curbmrdata = current_benchmark_result.data
-    dummy_hs_for_min = copy.copy(dummy_hs_for_current_svs)
-    dummy_hs_for_min.svs = float(min(curbmrdata)) if curbmrdata else math.nan
-    source_current_bm_min = _source(
-        [dummy_hs_for_min],
-        unit,
-    )
-
-    return source_current_bm_mean, source_current_bm_min
+    return source_current_bm_svs, source_current_bm_raw
