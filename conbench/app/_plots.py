@@ -694,18 +694,22 @@ def time_series_plot(
     p.xaxis.axis_label = ""
 
     multisample, multisample_count = _inspect_for_multisample(samples)
-    label = "result (n=1)"
-    if multisample:
-        svs_type = current_benchmark_result.svs_type
-        label = f"result {svs_type}"
-        if multisample_count:
-            label += f" (n={multisample_count})"
+    if not multisample:
+        n_label = "(n=1)"
+        svs_type = ""
+    elif multisample_count:
+        n_label = f"(n={multisample_count})"
+        svs_type = f"({current_benchmark_result.svs_type})"
+    else:
+        # mixed number of repetitions per result
+        n_label = ""
+        svs_type = f"({current_benchmark_result.svs_type})"
 
     # Raw results, only if multisample
     if multisample:
         p.circle(
             source=source_raw_data,
-            legend_label=f"raw {label}",
+            legend_label=f"result repetitions {n_label}",
             name="raw",
             size=3,
             color="#ccc",
@@ -714,7 +718,7 @@ def time_series_plot(
     # Inlier SVS
     scatter_inliers = p.circle(
         source=source_svs_inliers,
-        legend_label=label,
+        legend_label=f"result {svs_type}",
         name="inliers",
         size=3,
         color="#222",
@@ -731,7 +735,7 @@ def time_series_plot(
     if has_outliers:
         scatter_outliers = p.circle(
             source=source_svs_outliers,
-            legend_label=f"outlier {label}",
+            legend_label=f"outlier result {svs_type}",
             name="outliers",
             size=3,
             line_color="#ccc",
@@ -749,7 +753,7 @@ def time_series_plot(
         source=source_rolling_mean_over_time,
         color="#ffa600",
         line_width=2,
-        legend_label="lookback z-score mean",
+        legend_label="lookback z-score (mean)",
     )
     p.line(
         source=source_rolling_alert_min_over_time,
@@ -782,7 +786,7 @@ def time_series_plot(
             size=19,
             line_width=2.5,
             color="#005050",  # VD magenta
-            legend_label=f"highlighted result:\n{description} ({hs.svs_type})",
+            legend_label=f"highlighted result:\n{description} {svs_type}",
             name="additionally highlighted benchmark result",
         )
 
@@ -794,7 +798,7 @@ def time_series_plot(
             size=20,
             line_width=2.7,
             color="#C440C3",  # VD dark magenta
-            legend_label=f"current result ({svs_type})"
+            legend_label=f"current result {svs_type}"
             if multisample
             else "current result",
             name="result",
@@ -804,9 +808,9 @@ def time_series_plot(
             # do not show this for n=1 (then min equals to mean).
             cur_bench_min_circle = p.circle(
                 source=source_current_bm_raw,
-                size=3,
+                size=4,
                 color="#C440C3",
-                legend_label="current raw results",
+                legend_label=f"current result repetitions {n_label}",
                 name="result",
             )
 
