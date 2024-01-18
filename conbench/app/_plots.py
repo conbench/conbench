@@ -798,9 +798,7 @@ def time_series_plot(
             size=20,
             line_width=2.7,
             color="#C440C3",  # VD dark magenta
-            legend_label=f"current result {svs_type}"
-            if multisample
-            else "current result",
+            legend_label=f"current result {svs_type}",
             name="result",
         )
 
