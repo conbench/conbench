@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 
 import conbench.bmrt
@@ -16,7 +18,7 @@ def assert_response_is_login_page(resp):
 benchmark_result_dict = {
     "run_id": "1",
     "batch_id": "1",
-    "timestamp": "2020-11-25T21:02:44Z",
+    "timestamp": datetime.now().isoformat(),
     "context": {},
     # something like "machine_info": {"foo": "bar"} should work, relax
     # constraints.
