@@ -72,7 +72,7 @@ EXPECTED_Z_SCORES = {
     ("mean", "closest_defaultbranch_ancestor"): [
         None,
         None,
-        28.48,
+        None,
         0.7071,
         2.121,
         13.44,
@@ -90,7 +90,7 @@ EXPECTED_Z_SCORES = {
     ("mean", "parent"): [
         None,
         None,
-        28.48,
+        None,
         0.7071,
         2.121,
         13.44,
@@ -108,7 +108,7 @@ EXPECTED_Z_SCORES = {
     ("mean", "head_of_default"): [
         0.6625,
         0.6083,
-        1.7269,
+        None,
         0.6625,
         0.7167,
         1.150,
@@ -126,56 +126,56 @@ EXPECTED_Z_SCORES = {
     ("best", "closest_defaultbranch_ancestor"): [
         None,
         None,
-        27.06,
-        -0.7071,
+        None,
         0.7071,
-        12.02,
-        0.9203,
-        -2.358,
-        -4.659,
-        -5.119,
+        2.121,
+        13.44,
+        1.093,
+        -2.186,
+        -4.084,
+        -4.947,
         None,
         None,
         None,
         None,
         None,
-        -6.155,
+        -5.982,
     ],
     ("best", "parent"): [
         None,
         None,
-        27.06,
-        -0.7071,
+        None,
         0.7071,
-        12.02,
-        0.9203,
-        -3.023,
-        -4.659,
-        -5.119,
+        2.121,
+        13.44,
+        1.093,
+        -2.825,
+        -4.084,
+        -4.947,
         None,
         None,
         None,
         None,
         None,
-        -6.155,
+        -5.982,
     ],
     ("best", "head_of_default"): [
-        0.5967,
-        0.5417,
-        1.678,
-        0.5967,
         0.6518,
-        1.092,
-        1.092,
-        0.04590,
-        -0.6885,
-        -0.8354,
+        0.5967,
+        None,
+        0.6518,
+        0.7069,
+        1.148,
+        1.148,
+        0.101,
+        -0.5049,
+        -0.7804,
         None,
         None,
         None,
         None,
         None,
-        -1.166,
+        -1.111,
     ],
 }
 
@@ -280,7 +280,7 @@ def test_set_z_scores(
             name=benchmark_results[0].case.name,
         )
     )
-    new_z = -53.94 if svs_type == "best" else -53.00
+    new_z = -53.39 if svs_type == "best" else -53.00
     expected_z_scores = EXPECTED_Z_SCORES[(svs_type, strategy_name)] + [new_z]
 
     for benchmark_result in benchmark_results:
@@ -311,24 +311,13 @@ def test_set_z_scores_with_distribution_change(
 ):
     Config.SVS_TYPE = svs_type
     expected_z_scores = EXPECTED_Z_SCORES[(svs_type, strategy_name)].copy()
-    if svs_type == "mean":
-        expected_z_scores[6] = 0.0
-        if strategy_name == "closest_defaultbranch_ancestor":
-            expected_z_scores[7] = -32.90896534380864
-        else:
-            expected_z_scores[7] = -3.846766028925861
-        expected_z_scores[8] = -56.00239876112446
-        expected_z_scores[9] = -60.62177826491064
-        expected_z_scores[15] = -71.0140831103239
-    else:
-        expected_z_scores[6] = -1.732
-        if strategy_name == "closest_defaultbranch_ancestor":
-            expected_z_scores[7] = -34.64
-        else:
-            expected_z_scores[7] = -4.049
-        expected_z_scores[8] = -57.74
-        expected_z_scores[9] = -62.35
-        expected_z_scores[15] = -72.75
+    expected_z_scores[6] = 0.000
+    expected_z_scores[7] = (
+        -32.91 if strategy_name == "closest_defaultbranch_ancestor" else -3.847
+    )
+    expected_z_scores[8] = -56.00 if svs_type == "mean" else -51.96
+    expected_z_scores[9] = -60.62
+    expected_z_scores[15] = -71.01
 
     _, benchmark_results = _fixtures.gen_fake_data()
 

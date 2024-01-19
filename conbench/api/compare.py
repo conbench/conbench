@@ -324,24 +324,24 @@ class CompareBenchmarkResultsAPI(ApiEndpoint):
             baseline.
 
             The `pairwise` analysis computes the percentage difference of the
-            contender's mean value to the baseline's mean value. The reported difference
-            is signed such that a more negative value indicates more of a performance
-            regression. This difference is then thresholded such that values more
-            extreme than the threshold are marked as `regression_indicated` or
+            contender's single-value summary (SVS) to the baseline's SVS. The reported
+            difference is signed such that a more negative value indicates more of a
+            performance regression. This difference is then thresholded such that values
+            more extreme than the threshold are marked as `regression_indicated` or
             `improvement_indicated`. The threshold is 5.0% by default, but can be
             changed via the `threshold` query parameter, which should be a positive
             percent value.
 
             The `pairwise` analysis may be `null` if either benchmark result does not
-            have a mean value, or if the baseline result's mean value is 0.
+            have a SVS, or if the baseline result's SVS is 0.
 
-            The `lookback_z_score` analysis compares the contender's mean value to a
-            baseline distribution of benchmark result mean values (from the git history
-            of the baseline result) via the so-called lookback z-score method. The
-            reported z-score is also signed such that a more negative value indicates
-            more of a performance regression, and thresholded. The threshold z-score is
-            5.0 by default, but can be changed via the `threshold_z` query parameter,
-            which should be a positive number.
+            The `lookback_z_score` analysis compares the contender's SVS value to a
+            baseline distribution of benchmark result SVSs (from the git history of the
+            baseline result) via the so-called lookback z-score method. The reported
+            z-score is also signed such that a more negative value indicates more of a
+            performance regression, and thresholded. The threshold z-score is 5.0 by
+            default, but can be changed via the `threshold_z` query parameter, which
+            should be a positive number.
 
             The `lookback_z_score` analysis object may be `null` if a z-score cannot be
             computed for the contender benchmark result, due to not finding a baseline

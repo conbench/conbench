@@ -276,7 +276,7 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
         )
         expected["analysis"]["lookback_z_score"].update(
             {
-                "z_score": -26.16,
+                "z_score": -12.02,
                 "regression_indicated": True,
             }
         )
@@ -335,11 +335,11 @@ class TestCompareBenchmarkResultsGet(_asserts.GetEnforcer):
         ["baseline_result_id", "expected_z_score"],
         [
             # result on the fork point commit
-            (5, -2.358),
+            (5, -2.186),
             # result on the parent commit
-            (6, -3.023),
+            (6, -2.825),
             # result on the head commit of the default branch
-            (8, 0.0459),
+            (8, 0.101),
         ],
     )
     def test_compare_different_baselines(
@@ -548,11 +548,11 @@ class TestCompareRunsGet(_asserts.GetEnforcer):
         ["baseline_result_id", "expected_z_score"],
         [
             # result on the fork point commit
-            (5, -2.358),
+            (5, -2.186),
             # result on the parent commit
-            (6, -3.023),
+            (6, -2.825),
             # result on the head commit of the default branch
-            (8, 0.0459),
+            (8, 0.101),
         ],
     )
     def test_compare_different_baselines(
