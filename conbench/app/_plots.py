@@ -591,8 +591,6 @@ def time_series_plot(
         if sample.zscorestats.begins_distribution_change
     ]
 
-    # Note(JP): `samples` is an ordered list of dicts, each dict has a `mean`
-    # key which is extracted here by default.
     source_raw_data = _source(samples, unit_symbol, "all_data")
     source_svs_inliers = _source(inliers, unit_symbol, "svs")
     source_svs_outliers = _source(outliers, unit_symbol, "svs")
@@ -803,7 +801,6 @@ def time_series_plot(
         )
 
         if multisample:
-            # do not show this for n=1 (then min equals to mean).
             cur_bench_min_circle = p.circle(
                 source=source_current_bm_raw,
                 size=4,

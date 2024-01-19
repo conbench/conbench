@@ -297,7 +297,7 @@ def set_z_scores(
             benchmark_result.history_fingerprint, (None, None)
         )
         benchmark_result.z_score = _calculate_z_score(
-            data_point=_to_float_or_none(benchmark_result.mean),
+            data_point=_to_float_or_none(benchmark_result.svs),
             unit=benchmark_result.unit,
             dist_mean=_to_float_or_none(dist_mean),
             dist_stddev=_to_float_or_none(dist_stddev),
