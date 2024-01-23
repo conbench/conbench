@@ -684,7 +684,7 @@ def time_series_plot(
     # of a specific data source this can be decided in the callback when
     # passing a data source to the callback and then inspecting
     # `s1.selected.indices`.
-    p.js_on_event("tap", gen_js_callback_tap_detect_unselect(source_raw_data))
+    p.js_on_event("tap", gen_js_callback_tap_detect_unselect(source_svs_all))
 
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
@@ -702,6 +702,9 @@ def time_series_plot(
         # mixed number of repetitions per result
         n_label = ""
         svs_type = f"({current_benchmark_result.svs_type})"
+
+    # Dummy points for the click action
+    p.circle(source=source_svs_all, name="dummy", size=6, color="#fff")
 
     # Raw results, only if multisample
     if multisample:
