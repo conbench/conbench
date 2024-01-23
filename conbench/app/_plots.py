@@ -684,7 +684,7 @@ def time_series_plot(
     # of a specific data source this can be decided in the callback when
     # passing a data source to the callback and then inspecting
     # `s1.selected.indices`.
-    p.js_on_event("tap", gen_js_callback_tap_detect_unselect(source_svs_all))
+    p.js_on_event("tap", gen_js_callback_tap_detect_unselect(source_raw_data))
 
     p.xaxis.formatter = get_date_format()
     p.xaxis.major_label_orientation = 1
@@ -818,7 +818,7 @@ def time_series_plot(
                     # transforming from datetime to string back to datetime is
                     # weird; done as part of refactoring to not change too much
                     # at the same time.
-                    samples[ix].commit_timestamp.isoformat()
+                    samples_with_z_score_analysis[ix].commit_timestamp.isoformat()
                 ),
                 dimension="height",
                 line_color="purple",
