@@ -131,9 +131,9 @@ def generate_benchmarks_data(
             f"{benchmark_language}_specific_{key}_field_1": "value-1",
             f"{benchmark_language}_specific_{key}_field_2": f"{benchmark_language}-{key}-value-2",
             f"{key}_field_3": f"{benchmark_language}-{key}-value-3",
-            f"{key}_field_4": "sweetvalue"
-            if benchmark_language == "Python"
-            else "value-4",
+            f"{key}_field_4": (
+                "sweetvalue" if benchmark_language == "Python" else "value-4"
+            ),
         }
         data[key].update(fields_set)
         if benchmark_language == "Python":

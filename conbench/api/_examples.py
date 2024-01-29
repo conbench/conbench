@@ -124,14 +124,16 @@ def _api_benchmark_entity(
         "run_id": run_id,
         "run_tags": run_tags,
         "run_reason": run_reason,
-        "commit": None
-        if commit_type == "none"
-        else _api_commit_entity(
-            commit_id,
-            parent_id,
-            branch,
-            links=False,
-            is_unknown_commit=commit_type == "unknown",
+        "commit": (
+            None
+            if commit_type == "none"
+            else _api_commit_entity(
+                commit_id,
+                parent_id,
+                branch,
+                links=False,
+                is_unknown_commit=commit_type == "unknown",
+            )
         ),
         "commit_repo_url": commit_repo_url,
         "hardware": _api_hardware_entity(
@@ -139,9 +141,9 @@ def _api_benchmark_entity(
         ),
         "batch_id": batch_id,
         "history_fingerprint": history_fingerprint,
-        "timestamp": timestamp.isoformat() + "Z"
-        if timestamp
-        else "2020-11-25T21:02:44Z",
+        "timestamp": (
+            timestamp.isoformat() + "Z" if timestamp else "2020-11-25T21:02:44Z"
+        ),
         "stats": stats,
         "error": error,
         "validation": validation,

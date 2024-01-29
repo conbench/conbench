@@ -86,17 +86,21 @@ class RunComparisonInfo:
                         contender_result_id=comparison["contender"][
                             "benchmark_result_id"
                         ],
-                        baseline_result_id=comparison["baseline"]["benchmark_result_id"]
-                        if comparison["baseline"]
-                        and not comparison["contender"]["error"]
-                        else None,
+                        baseline_result_id=(
+                            comparison["baseline"]["benchmark_result_id"]
+                            if comparison["baseline"]
+                            and not comparison["contender"]["error"]
+                            else None
+                        ),
                     ),
                     has_error=bool(comparison["contender"]["error"]),
-                    has_z_regression=comparison["analysis"]["lookback_z_score"][
-                        "regression_indicated"
-                    ]
-                    if comparison["analysis"]["lookback_z_score"]
-                    else False,
+                    has_z_regression=(
+                        comparison["analysis"]["lookback_z_score"][
+                            "regression_indicated"
+                        ]
+                        if comparison["analysis"]["lookback_z_score"]
+                        else False
+                    ),
                     run_id=self.contender_id,
                     run_reason=self.contender_reason,
                     run_time=self.contender_datetime,

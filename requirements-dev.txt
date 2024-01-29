@@ -1,4 +1,4 @@
-black
+black>=24,<25
 bs4
 curlylint==0.13.1
 coveralls

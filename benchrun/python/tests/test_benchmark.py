@@ -1,4 +1,5 @@
 """isort:skip_file"""
+
 import multiprocessing as mp
 from time import sleep
 

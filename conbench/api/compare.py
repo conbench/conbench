@@ -216,9 +216,9 @@ class BenchmarkResultComparator:
             "benchmark_name": result.display_bmname,
             "case_permutation": result.display_case_perm,
             "language": result.context.tags.get("benchmark_language", "unknown"),
-            "single_value_summary": None
-            if math.isnan(result.svs)
-            else _round(result.svs),
+            "single_value_summary": (
+                None if math.isnan(result.svs) else _round(result.svs)
+            ),
             "error": result.error,
             "batch_id": result.batch_id,
             "run_id": result.run_id,

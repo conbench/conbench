@@ -514,9 +514,9 @@ def _generate_tsdf_per_4tuple(
             df = df.sort_index()
             df.index.rename("time", inplace=True)
             tsdf_by_4tuple[(bname, case_id, context_id, hardware_checksum)] = df
-            bmrlist_by_4tuple[
-                (bname, case_id, context_id, hardware_checksum)
-            ] = usresults
+            bmrlist_by_4tuple[(bname, case_id, context_id, hardware_checksum)] = (
+                usresults
+            )
 
     t4 = time.monotonic()
     log.info("BMRT cache pop: quadratic sort loop took %.3f s", t3 - t2)
