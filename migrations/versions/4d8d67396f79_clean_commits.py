@@ -14,6 +14,7 @@ Revises: d3515ecea53d
 Create Date: 2022-12-15 11:08:12.526177
 
 """
+
 import logging
 
 from alembic import op

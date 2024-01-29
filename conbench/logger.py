@@ -22,7 +22,6 @@ which is why most Python modules in this code base use
     log = logging.getLogger(__name__)
 """
 
-
 import logging
 import logging.handlers
 

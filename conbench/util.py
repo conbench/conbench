@@ -75,13 +75,11 @@ def tznaive_dt_to_aware_iso8601_for_api(dt: datetime) -> str:
 
 
 @overload
-def tznaive_iso8601_to_tzaware_dt(input: str) -> datetime:
-    ...
+def tznaive_iso8601_to_tzaware_dt(input: str) -> datetime: ...
 
 
 @overload
-def tznaive_iso8601_to_tzaware_dt(input: List[str]) -> List[datetime]:
-    ...
+def tznaive_iso8601_to_tzaware_dt(input: List[str]) -> List[datetime]: ...
 
 
 def tznaive_iso8601_to_tzaware_dt(input):

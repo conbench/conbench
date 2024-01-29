@@ -5,6 +5,7 @@ Revises: dc0ed346df63
 Create Date: 2021-07-29 08:13:59.714930
 
 """
+
 from alembic import op
 from sqlalchemy import MetaData, distinct, select
 

@@ -97,9 +97,9 @@ def list_benchmarks() -> str:
     for bname, results in bmrt_cache["by_benchmark_name"].items():
         # Generally, there are C case permutations for this benchmark. Group
         # the results by case permutation.
-        results_per_case: Dict[
-            str, List[BMRTBenchmarkResult]
-        ] = collections.defaultdict(list)
+        results_per_case: Dict[str, List[BMRTBenchmarkResult]] = (
+            collections.defaultdict(list)
+        )
         for r in results:
             results_per_case[r.case_id].append(r)
 
@@ -558,9 +558,9 @@ def show_benchmark_results(bname: TBenchmarkName, caseid: str) -> str:
     if not matching_results:
         return f"no results found for benchmark `{bname}` and case `{caseid}`"
 
-    results_by_hardware_and_context: Dict[
-        Tuple, List[BMRTBenchmarkResult]
-    ] = collections.defaultdict(list)
+    results_by_hardware_and_context: Dict[Tuple, List[BMRTBenchmarkResult]] = (
+        collections.defaultdict(list)
+    )
 
     # Build up timeseries of results (group results, don't sort them yet).
     for result in matching_results:

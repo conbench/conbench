@@ -9,6 +9,7 @@ Also see https://github.com/dtheodor/flask-sqlalchemy-session/issues/14
 Provides an SQLAlchemy scoped session that creates unique sessions per Flask
 request.
 """
+
 import os
 
 from flask import current_app
