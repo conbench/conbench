@@ -386,3 +386,19 @@ def test_detect_shifts_with_trimmed_estimators():
     assert not np.any(result_df.is_step[:50])
     assert result_df.is_step[50]
     assert not np.any(result_df.is_step[51:])
+
+
+def test_set_z_scores_one_rep():
+    """Results with one repetition should be z-scorable."""
+    commits, _ = _fixtures.gen_fake_data()
+
+    _fixtures.benchmark_result(name="a", results=[1], commit=commits["11111"])
+    _fixtures.benchmark_result(name="a", results=[2], commit=commits["22222"])
+    br = _fixtures.benchmark_result(name="a", results=[3], commit=commits["33333"])
+
+    set_z_scores(
+        contender_benchmark_results=[br],
+        baseline_commit=commits["22222"],
+        history_fingerprints=[br.history_fingerprint],
+    )
+    assert_equal_leeway(br.z_score, -2.121)

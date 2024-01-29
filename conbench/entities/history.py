@@ -350,17 +350,14 @@ def _query_and_calculate_distribution_stats(
     # instantiation for big data (3e5 results). This goes SO MUCH faster.
     if Config.SVS_TYPE == "mean":
         svs_col = BenchmarkResult.mean
-        svs_filters = [BenchmarkResult.mean.is_not(None)]
     elif Config.SVS_TYPE == "best":
         svs_col = s.case(
+            # Min/max are missing when there's 1 rep, but mean is always populated
+            (BenchmarkResult.max.is_(None), BenchmarkResult.mean),
+            # Right now less is always better unless the unit is per second
             (BenchmarkResult.unit.like("%/s"), BenchmarkResult.max),
             else_=BenchmarkResult.min,
         )  # type: ignore
-        svs_filters = [
-            BenchmarkResult.unit.is_not(None),
-            BenchmarkResult.min.is_not(None),
-            BenchmarkResult.max.is_not(None),
-        ]
     else:
         raise ValueError("server is not configured properly")
 
@@ -373,7 +370,8 @@ def _query_and_calculate_distribution_stats(
         svs_col.label("svs"),
     ).filter(
         BenchmarkResult.error.is_(None),
-        *svs_filters,
+        BenchmarkResult.mean.is_not(None),
+        BenchmarkResult.unit.is_not(None),
         BenchmarkResult.commit_id.in_(commit_timestamps_by_id.keys()),
         BenchmarkResult.history_fingerprint.in_(history_fingerprints),
     )
