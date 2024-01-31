@@ -242,6 +242,7 @@ def simple_bar_plot(benchmarks, height=400, width=400, vbar_width=0.7):
 
 def _insert_nans(some_list: list, indexes: List[int]):
     """Insert nans into a list before the given indexes."""
+    some_list = some_list.copy()
     for ix in sorted(indexes, reverse=True):
         some_list.insert(ix, float("nan"))
     return some_list
