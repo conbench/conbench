@@ -282,13 +282,23 @@ class CompareRuns(Compare):
         try:
             api = CompareRunsAPI()
             response = api._get_response_as_dict(
-                compare_ids=f"{baseline_id}...{contender_id}",
                 cursor=None,
-                page_size=None,
+                compare_ids=f"{baseline_id}...{contender_id}",
+                page_size=1000,
                 threshold=None,
                 threshold_z=None,
             )
-            return response["data"], None
+            comparisons = response["data"]
+            while response["metadata"]["next_page_cursor"]:
+                response = api._get_response_as_dict(
+                    cursor=response["metadata"]["next_page_cursor"],
+                    compare_ids=f"{baseline_id}...{contender_id}",
+                    page_size=1000,
+                    threshold=None,
+                    threshold_z=None,
+                )
+                comparisons += response["data"]
+            return comparisons, None
         except HTTPException as e:
             return [], e.description
 
