@@ -147,8 +147,13 @@
                    style="display:inline-block;
                           white-space: pre;
                           float: center">
-                {{ v | urlize(target="_blank")
-                }}
+                <code>
+                  {% if v is string %}
+                    {{ v | urlize(target="_blank") }}
+                  {% else %}
+                    {{ v | pprint }}
+                  {% endif %}
+                </code>
               </div>
             </li>
           {% endfor %}
