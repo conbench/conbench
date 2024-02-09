@@ -94,6 +94,42 @@ def test_SlackMessageAboutBadCheckStep(
     check_posted_slack_message(caplog, expected_message)
 
 
+@pytest.mark.parametrize("mock_comparison_info", ["regressions"], indirect=True)
+def test_SlackMessageAboutBadCheckStep_no_comment(
+    mock_comparison_info: FullComparisonInfo,
+    caplog: pytest.LogCaptureFixture,
+    slack_env,
+):
+    """Test that SlackMessageAboutBadCheckStep posts the right message to Slack."""
+    mock_check_response = MockResponse.from_file(
+        response_dir / "POST_github_check-runs.json"
+    ).json()
+    mock_comment_response = MockResponse.from_file(
+        response_dir / "POST_github_issues_1_comments.json"
+    ).json()
+
+    class NoneAlerter(Alerter):
+        def slack_message(self, **kwargs) -> str:
+            return ""
+
+    step = SlackMessageAboutBadCheckStep(
+        channel_id="123",
+        slack_client=MockSlackClient(),
+        check_step_name="check_step",
+        pr_comment_step_name="pr_comment_step",
+        alerter=NoneAlerter(),
+    )
+    res = step.run_step(
+        {
+            "check_step": (mock_check_response, mock_comparison_info),
+            "pr_comment_step": mock_comment_response,
+        }
+    )
+    assert not res
+    expected_message = None
+    check_posted_slack_message(caplog, expected_message)
+
+
 def test_SlackErrorHandler(caplog: pytest.LogCaptureFixture, slack_env):
     """Test that SlackErrorHandler posts the right message to Slack."""
     try:

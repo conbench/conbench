@@ -175,15 +175,19 @@ class GitHubPRCommentAboutCheckStep(AlertPipelineStep):
         self.check_step_name = check_step_name
         self.alerter = alerter or Alerter()
 
-    def run_step(self, previous_outputs: Dict[str, Any]) -> dict:
+    def run_step(self, previous_outputs: Dict[str, Any]) -> Optional[dict]:
         check_details, full_comparison = previous_outputs[self.check_step_name]
 
+        comment = self.alerter.github_pr_comment(
+            full_comparison=full_comparison,
+            check_link=check_details["html_url"],
+        )
+        if not comment:
+            log.info("No comment; not posting to GitHub.")
+            return None
+
         res = self.github_client.create_pull_request_comment(
-            comment=self.alerter.github_pr_comment(
-                full_comparison=full_comparison,
-                check_link=check_details["html_url"],
-            ),
-            pull_number=self.pr_number,
+            comment=comment, pull_number=self.pr_number
         )
         return res
 
