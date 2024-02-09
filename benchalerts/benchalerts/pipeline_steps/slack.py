@@ -78,13 +78,17 @@ class SlackMessageAboutBadCheckStep(AlertPipelineStep):
             log.info("GitHub Check was successful; not posting to Slack.")
             return None
 
+        message = self.alerter.slack_message(
+            full_comparison=full_comparison,
+            check_details=check_details,
+            comment_details=comment_details,
+        )
+        if not message:
+            log.info("No message; not posting to Slack.")
+            return None
+
         res = self.slack_client.post_message(
-            message=self.alerter.slack_message(
-                full_comparison=full_comparison,
-                check_details=check_details,
-                comment_details=comment_details,
-            ),
-            channel_id=self.channel_id,
+            message=message, channel_id=self.channel_id
         )
         return res
 

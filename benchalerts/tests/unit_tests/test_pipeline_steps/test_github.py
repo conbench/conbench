@@ -121,6 +121,36 @@ def test_GitHubPRCommentAboutCheckStep(
     check_posted_comment(caplog, [expected_comment])
 
 
+@pytest.mark.parametrize("mock_comparison_info", ["regressions"], indirect=True)
+@pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)
+def test_GitHubPRCommentAboutCheckStep_no_comment(
+    mock_comparison_info: FullComparisonInfo,
+    caplog: pytest.LogCaptureFixture,
+    github_auth: str,
+):
+    class NoneAlerter(Alerter):
+        def github_pr_comment(
+            self, full_comparison: FullComparisonInfo, check_link: str
+        ) -> str:
+            return ""
+
+    mock_check_response = MockResponse.from_file(
+        response_dir / "POST_github_check-runs.json"
+    ).json()
+
+    step = GitHubPRCommentAboutCheckStep(
+        pr_number=1,
+        github_client=GitHubRepoClient(repo="some/repo", adapter=MockAdapter()),
+        check_step_name="check_step",
+        alerter=NoneAlerter(),
+    )
+    res = step.run_step(
+        previous_outputs={"check_step": (mock_check_response, mock_comparison_info)}
+    )
+    assert res is None
+    check_posted_comment(caplog, [])
+
+
 @pytest.mark.parametrize("github_auth", ["pat", "app"], indirect=True)
 def test_GitHubCheckErrorHandler(caplog: pytest.LogCaptureFixture, github_auth: str):
     try:
