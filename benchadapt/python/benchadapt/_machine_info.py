@@ -344,7 +344,7 @@ def _exec_command(command, ignore_error=True):
     # supposed to be fatal to this program here. However, it makes sense to log
     # information about how exactly the child process invocation failed.
     if result.returncode != 0:
-        log.warning(
+        log.debug(
             "command `%s` returned with code %s, stderr prefix:\n %s",
             command,
             result.returncode,
