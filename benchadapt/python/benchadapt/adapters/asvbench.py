@@ -1,10 +1,11 @@
-import json
-from pathlib import Path
-from typing import Any, Dict, List
 import itertools
-import numpy as np
+import json
 import os
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List
+
+import numpy as np
 
 from ..result import BenchmarkResult
 from ._adapter import BenchmarkAdapter

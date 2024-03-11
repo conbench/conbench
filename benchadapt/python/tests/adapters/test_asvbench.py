@@ -1,8 +1,8 @@
 import json
 import tempfile
-import numpy as np
 from pathlib import Path
 
+import numpy as np
 import pytest
 from benchadapt.adapters import AsvBenchmarkAdapter
 from benchadapt.result import BenchmarkResult
