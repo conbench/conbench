@@ -56,7 +56,9 @@ class AsvBenchmarkAdapter(BenchmarkAdapter):
 
         return parsed_benchmarks
 
-    def _parse_results(self, benchmarks_results: str, benchmarks_info: str) -> List[BenchmarkResult]:
+    def _parse_results(
+        self, benchmarks_results: str, benchmarks_info: str
+    ) -> List[BenchmarkResult]:
         """
         From asv documention "result_columns" is a list of column names for the results dictionary.
         ["result", "params", "version", "started_at", "duration", "stats_ci_99_a", "stats_ci_99_b",
@@ -75,23 +77,26 @@ class AsvBenchmarkAdapter(BenchmarkAdapter):
                 # with items corresponding to each result of a parameters combination,
                 # or just one value if the benchmark has no parameters.
                 # "name" is the name of the benchmark
-                result_dict = dict(zip(result_columns,
-                                   benchmarks_results["results"][benchmark_name]))
+                result_dict = dict(
+                    zip(result_columns, benchmarks_results["results"][benchmark_name])
+                )
                 if "samples" in result_dict:
                     data_key = "samples"
                 else:
                     data_key = "result"
                 for param_values, data in zip(
-                        itertools.product(*result_dict["params"]),
-                        result_dict[data_key]
+                    itertools.product(*result_dict["params"]), result_dict[data_key]
                 ):
                     if np.any(np.isnan(data)):
                         # Nan is generated in the results by pandas benchmarks
                         # when a combination of parameters is not allowed.
                         # In this case, the result is not sent to  the conbench webapp
                         continue
-                    param_dic = dict(zip(benchmarks_info[benchmark_name]["param_names"],
-                                     param_values))
+                    param_dic = dict(
+                        zip(
+                            benchmarks_info[benchmark_name]["param_names"], param_values
+                        )
+                    )
                     tags = {}
                     tags["name"] = benchmark_name
 
@@ -104,8 +109,7 @@ class AsvBenchmarkAdapter(BenchmarkAdapter):
                     tags.update(param_dic)
 
                     # asv units are seconds or bytes, conbench uses "s" or "B"
-                    units = {"seconds": "s",
-                             "bytes": "B"}
+                    units = {"seconds": "s", "bytes": "B"}
                     params = benchmarks_results["params"]
 
                     # Asv returns one value wich is the average of the samples
@@ -125,20 +129,25 @@ class AsvBenchmarkAdapter(BenchmarkAdapter):
                     parsed_benchmark = BenchmarkResult(
                         stats={
                             "data": data,
-                            "unit": units[benchmarks_info[benchmark_name]['unit']],
+                            "unit": units[benchmarks_info[benchmark_name]["unit"]],
                             "iterations": iterations,
                         },
                         tags=tags,
-                        context={"benchmark_language": "Python",
-                                 "env_name": benchmarks_results["env_name"],
-                                 "python": benchmarks_results["python"],
-                                 "requirements": benchmarks_results["requirements"],
-                                 },
-                        github={"repository": os.environ["REPOSITORY"],
-                                "commit": benchmarks_results["commit_hash"],
-                                },
-                        info={"date": str(datetime.fromtimestamp(benchmarks_results["date"] / 1e3)),
-                              },
+                        context={
+                            "benchmark_language": "Python",
+                            "env_name": benchmarks_results["env_name"],
+                            "python": benchmarks_results["python"],
+                            "requirements": benchmarks_results["requirements"],
+                        },
+                        github={
+                            "repository": os.environ["REPOSITORY"],
+                            "commit": benchmarks_results["commit_hash"],
+                        },
+                        info={
+                            "date": str(
+                                datetime.fromtimestamp(benchmarks_results["date"] / 1e3)
+                            ),
+                        },
                         machine_info={
                             "name": params["machine"],
                             "os_name": params["os"],

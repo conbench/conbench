@@ -21,29 +21,22 @@ benchmarks_json = {
         "type": "time",
         "unit": "seconds",
         "version": "1198fba41755fd157a0c7f7bc588ee00d3c4b577d482adc3cf034d8476f03f50",
-        "warmup_time": -1
+        "warmup_time": -1,
     },
     "strings.Repeat.time_repeat": {
         "code": "class Repeat:\n    def time_repeat(self, repeats):\n        rest_of_the_code",
         "min_run_count": 2,
         "name": "strings.Repeat.time_repeat",
         "number": 0,
-        "param_names": [
-            "repeats"
-        ],
-        "params": [
-            [
-                "'int'",
-                "'array'"
-            ]
-        ],
+        "param_names": ["repeats"],
+        "params": [["'int'", "'array'"]],
         "repeat": 0,
         "rounds": 2,
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
         "version": "1020d0debc1446a71cfda9efe059407dc390e74d806d2783566fdba4e7d1de98",
-        "warmup_time": -1
+        "warmup_time": -1,
     },
     "boolean.TimeLogicalOps.time_or_scalar": {
         "code": "class TimeLogicalOps:\n    def time_or_scalar(self):\n ",
@@ -58,70 +51,49 @@ benchmarks_json = {
         "type": "time",
         "unit": "seconds",
         "version": "a9dcf90a110c0c703887ee44358e18a6930758987f7f1e9f921dd5ff4c84234e",
-        "warmup_time": -1
+        "warmup_time": -1,
     },
     "array.ArrowStringArray.time_setitem_slice": {
         "code": "class ArrowStringArray:\n    def time_setitem_slice(self, chunks):\n        rest_of_the_code",
         "min_run_count": 2,
         "name": "array.ArrowStringArray.time_setitem_slice",
         "number": 0,
-        "param_names": [
-            "multiple_chunks"
-        ],
-        "params": [
-            [
-                "False",
-                "True"
-            ]
-        ],
+        "param_names": ["multiple_chunks"],
+        "params": [["False", "True"]],
         "repeat": 0,
         "rounds": 2,
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
         "version": "6a0d09a5d23eb6dc7d6bb95140476cc1c1a896640e9d7bd005861c59072edc0d",
-        "warmup_time": -1
+        "warmup_time": -1,
     },
     "algorithms.SortIntegerArray.time_argsort": {
         "code": "class SortIntegerArray:\n    def time_argsort(self, N):\n        rest_of_the_code",
         "min_run_count": 2,
         "name": "algorithms.SortIntegerArray.time_argsort",
         "number": 0,
-        "param_names": [
-            "param1"
-        ],
-        "params": [
-            [
-                "1000",
-                "100000",
-                "1"
-            ]
-        ],
+        "param_names": ["param1"],
+        "params": [["1000", "100000", "1"]],
         "repeat": 0,
         "rounds": 2,
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
         "version": "40aa122c3448a0c4db1b17a00f7b64ee18672679c258627dc894596ae752a9e0",
-        "warmup_time": -1
+        "warmup_time": -1,
     },
     "series_methods.ToFrame.time_to_frame": {
         "code": "class ToFrame:\n    def time_to_frame(self, dtype, name):\n        rest_of_the_code",
         "min_run_count": 2,
         "name": "series_methods.ToFrame.time_to_frame",
         "number": 0,
-        "param_names": [
-            "dtype",
-            "name"
-        ],
+        "param_names": ["dtype", "name"],
         "params": [
             [
                 "'int64'",
             ],
-            [
-                "None",
-                "'foo'"
-            ]
+            ["None", "'foo'"],
         ],
         "repeat": 0,
         "rounds": 2,
@@ -129,9 +101,9 @@ benchmarks_json = {
         "type": "time",
         "unit": "seconds",
         "version": "9837bd38099b9a8813a9b22a59b46e9e9afd7614361947eb24b302192b97eb20",
-        "warmup_time": -1
+        "warmup_time": -1,
     },
-    "version": 2
+    "version": 2,
 }
 
 asv_json = {
@@ -145,7 +117,7 @@ asv_json = {
         "num_cpu": "8",
         "os": "macOS 13.5.1 (22G90)",
         "ram": "16GB",
-        "python": "3.10"
+        "python": "3.10",
     },
     "python": "3.10",
     "requirements": {},
@@ -163,39 +135,25 @@ asv_json = {
         "stats_number",
         "stats_repeat",
         "samples",
-        "profile"
+        "profile",
     ],
     "results": {
         "benchmarks.TimeSuite.time_insertion_sort": [
-            [
-                1.2035623905003376
-            ],
+            [1.2035623905003376],
             [],
             "1198fba41755fd157a0c7f7bc588ee00d3c4b577d482adc3cf034d8476f03f50",
             1703063099923,
             38.656,
-            [
-                1.2016
-            ],
-            [
-                1.2053
-            ],
-            [
-                1.2025
-            ],
-            [
-                1.2045
-            ],
-            [
-                4
-            ],
-            [
-                6
-            ]
+            [1.2016],
+            [1.2053],
+            [1.2025],
+            [1.2045],
+            [4],
+            [6],
         ]
     },
     "durations": {},
-    "version": 2
+    "version": 2,
 }
 
 asv_json_param_and_samples = {
@@ -225,7 +183,7 @@ asv_json_param_and_samples = {
         "jinja2": "",
         "meson": "",
         "meson-python": "",
-        "python-build": ""
+        "python-build": "",
     },
     "python": "3.10",
     "requirements": {
@@ -244,7 +202,7 @@ asv_json_param_and_samples = {
         "jinja2": "",
         "meson": "",
         "meson-python": "",
-        "python-build": ""
+        "python-build": "",
     },
     "env_vars": {},
     "result_columns": [
@@ -260,74 +218,34 @@ asv_json_param_and_samples = {
         "stats_number",
         "stats_repeat",
         "samples",
-        "profile"
+        "profile",
     ],
     "results": {
         "strings.Repeat.time_repeat": [
-            [
-                0.03481033350544749,
-                0.03935433350125095
-            ],
-            [
-                [
-                    "'int'",
-                    "'array'"
-                ]
-            ],
+            [0.03481033350544749, 0.03935433350125095],
+            [["'int'", "'array'"]],
             "1020d0debc1446a71cfda9efe059407dc390e74d806d2783566fdba4e7d1de98",
             1709658661060,
             2.571,
-            [
-                0.0344,
-                0.039027
-            ],
-            [
-                0.035398,
-                0.039706
-            ],
-            [
-                0.034686,
-                0.039297
-            ],
-            [
-                0.035208,
-                0.039587
-            ],
-            [
-                1,
-                1
-            ],
-            [
-                10,
-                10
-            ]
+            [0.0344, 0.039027],
+            [0.035398, 0.039706],
+            [0.034686, 0.039297],
+            [0.035208, 0.039587],
+            [1, 1],
+            [10, 10],
         ],
         "boolean.TimeLogicalOps.time_or_scalar": [
-            [
-                0.00001634304932968048
-            ],
+            [0.00001634304932968048],
             [],
             "a9dcf90a110c0c703887ee44358e18a6930758987f7f1e9f921dd5ff4c84234e",
             1709659847382,
             0.91048,
-            [
-                0.000016278
-            ],
-            [
-                0.000016475
-            ],
-            [
-                0.000016302
-            ],
-            [
-                0.000016374
-            ],
-            [
-                669
-            ],
-            [
-                10
-            ],
+            [0.000016278],
+            [0.000016475],
+            [0.000016302],
+            [0.000016374],
+            [669],
+            [10],
             [
                 [
                     0.000016370204791373757,
@@ -339,48 +257,22 @@ asv_json_param_and_samples = {
                     0.000016333956644843892,
                     0.000016291790719454486,
                     0.000016286434983849937,
-                    0.000016278026913333076
+                    0.000016278026913333076,
                 ]
-            ]
+            ],
         ],
         "array.ArrowStringArray.time_setitem_slice": [
-            [
-                0.00006179990675063583,
-                0.0001277931890998422
-            ],
-            [
-                [
-                    "False",
-                    "True"
-                ]
-            ],
+            [0.00006179990675063583, 0.0001277931890998422],
+            [["False", "True"]],
             "6a0d09a5d23eb6dc7d6bb95140476cc1c1a896640e9d7bd005861c59072edc0d",
             1709800865468,
             1.875,
-            [
-                0.000061653,
-                0.00012664
-            ],
-            [
-                0.00006225,
-                0.000136
-            ],
-            [
-                0.00006173,
-                0.00012706
-            ],
-            [
-                0.000061992,
-                0.00012931
-            ],
-            [
-                177,
-                82
-            ],
-            [
-                10,
-                10
-            ],
+            [0.000061653, 0.00012664],
+            [0.00006225, 0.000136],
+            [0.00006173, 0.00012706],
+            [0.000061992, 0.00012931],
+            [177, 82],
+            [10, 10],
             [
                 [
                     0.00006182156493334826,
@@ -392,7 +284,7 @@ asv_json_param_and_samples = {
                     0.00006224953116964823,
                     0.00006212170615971173,
                     0.0000616723163800556,
-                    0.00006165348587289326
+                    0.00006165348587289326,
                 ],
                 [
                     0.00012692784153708688,
@@ -404,89 +296,38 @@ asv_json_param_and_samples = {
                     0.00013176371945386253,
                     0.00012914939050948839,
                     0.0001266422804314416,
-                    0.00012786839038088192
-                ]
-            ]
+                    0.00012786839038088192,
+                ],
+            ],
         ],
         "algorithms.SortIntegerArray.time_argsort": [
-            [
-                9.382720887127119e-06,
-                0.0008135993461669737,
-                np.NaN
-            ],
-            [
-                [
-                    "1000",
-                    "100000",
-                    "1"
-                ]
-            ],
+            [9.382720887127119e-06, 0.0008135993461669737, np.NaN],
+            [["1000", "100000", "1"]],
             "40aa122c3448a0c4db1b17a00f7b64ee18672679c258627dc894596ae752a9e0",
             1709835572798,
             2.3563,
-            [
-                9.2976e-06,
-                0.00079774,
-                np.NaN
-            ],
-
-            [
-                9.5915e-06,
-                0.00083937,
-                np.NaN
-            ],
-            [
-                9.3473e-06,
-                0.00080488,
-                np.NaN
-            ],
-            [
-                9.4343e-06,
-                0.00082726,
-                np.NaN
-            ],
-            [
-                1082,
-                13,
-                np.NaN
-            ],
-            [
-                10,
-                10,
-                np.NaN
-            ]
+            [9.2976e-06, 0.00079774, np.NaN],
+            [9.5915e-06, 0.00083937, np.NaN],
+            [9.3473e-06, 0.00080488, np.NaN],
+            [9.4343e-06, 0.00082726, np.NaN],
+            [1082, 13, np.NaN],
+            [10, 10, np.NaN],
         ],
-        "series_methods.ToFrame.time_to_frame":
-        [
-            [
-                1.4953170287206877e-05,
-                1.495111301503055e-05
-            ],
-            [
-                [
-                    "'int64'"
-                ],
-                [
-                    "None",
-                    "'foo'"
-                ]
-            ],
+        "series_methods.ToFrame.time_to_frame": [
+            [1.4953170287206877e-05, 1.495111301503055e-05],
+            [["'int64'"], ["None", "'foo'"]],
             "9837bd38099b9a8813a9b22a59b46e9e9afd7614361947eb24b302192b97eb20",
-
         ],
     },
-
     "durations": {},
-    "version": 2
+    "version": 2,
 }
 
 
 class TestAsvAdapter:
     @pytest.fixture
     def asv_adapter(self, monkeypatch):
-        monkeypatch.setenv(
-            "REPOSITORY", "git@github.com:conchair/conchair"
-        )
+        monkeypatch.setenv("REPOSITORY", "git@github.com:conchair/conchair")
         result_file = tempfile.mktemp(suffix=".json")
         tempdir = Path(tempfile.mkdtemp())
 
@@ -506,7 +347,7 @@ class TestAsvAdapter:
         return asv_adapter
 
     def test_transform_results(self, asv_adapter) -> None:
-        """ This tests basic case: no params, no samples, only one benchmark. """
+        """This tests basic case: no params, no samples, only one benchmark."""
         results = asv_adapter.transform_results()
 
         assert len(results) == 1
@@ -516,15 +357,19 @@ class TestAsvAdapter:
             assert isinstance(result, BenchmarkResult)
             assert isinstance(result.run_name, str)
             assert result.tags["name"].endswith("time_insertion_sort")
-            assert result.context == {'benchmark_language': 'Python',
-                                      'env_name': 'conda-py3.10',
-                                      'python': '3.10',
-                                      'requirements': {}}
+            assert result.context == {
+                "benchmark_language": "Python",
+                "env_name": "conda-py3.10",
+                "python": "3.10",
+                "requirements": {},
+            }
             assert result.machine_info is not None
-            assert result.stats == {'data': [1.2035623905003376],
-                                    'unit': 's',
-                                    'iterations': 1}
-            assert result.github['commit'] == '0d24f201cc2506de45a2ed688d9f72f7123d58f7'
+            assert result.stats == {
+                "data": [1.2035623905003376],
+                "unit": "s",
+                "iterations": 1,
+            }
+            assert result.github["commit"] == "0d24f201cc2506de45a2ed688d9f72f7123d58f7"
 
     def test_run(self, asv_adapter) -> None:
         results = asv_adapter.run()
@@ -534,9 +379,7 @@ class TestAsvAdapter:
 class TestAsvAdapter_with_param_andsamples:
     @pytest.fixture
     def asv_adapter(self, monkeypatch):
-        monkeypatch.setenv(
-            "REPOSITORY", "git@github.com:conchair/conchair"
-        )
+        monkeypatch.setenv("REPOSITORY", "git@github.com:conchair/conchair")
 
         result_file = tempfile.mktemp(suffix=".json")
         tempdir = Path(tempfile.mkdtemp())
@@ -569,64 +412,78 @@ class TestAsvAdapter_with_param_andsamples:
             match res.tags:
                 # Benchmark strings.Repeat.time_repeat uses two parameters or cases
                 # ('int' and 'array') but no samples. It must return two results.
-                case {'name': 'strings.Repeat.time_repeat', 'repeats': "'int'"}:
-                    assert res.stats == {'data': [0.03481033350544749],
-                                         'unit': 's',
-                                         'iterations': 1}
-                case {'name': 'strings.Repeat.time_repeat', 'repeats': "'array'"}:
-                    assert res.stats == {'data': [0.03935433350125095],
-                                         'unit': 's',
-                                         'iterations': 1}
+                case {"name": "strings.Repeat.time_repeat", "repeats": "'int'"}:
+                    assert res.stats == {
+                        "data": [0.03481033350544749],
+                        "unit": "s",
+                        "iterations": 1,
+                    }
+                case {"name": "strings.Repeat.time_repeat", "repeats": "'array'"}:
+                    assert res.stats == {
+                        "data": [0.03935433350125095],
+                        "unit": "s",
+                        "iterations": 1,
+                    }
 
                 # Benchmark 'boolean.TimeLogicalOps.time_or_scalar' uses samples
                 # (iterations) but no parameters. It must return a list with these values.
-                case {'name': 'boolean.TimeLogicalOps.time_or_scalar'}:
-                    assert res.stats == {'data': [1.6370204791373757e-05,
-                                                  1.64747757895297e-05,
-                                                  1.6352142014517064e-05,
-                                                  1.6375186853806846e-05,
-                                                  1.6442887910143355e-05,
-                                                  1.633370702185561e-05,
-                                                  1.6333956644843892e-05,
-                                                  1.6291790719454486e-05,
-                                                  1.6286434983849937e-05,
-                                                  1.6278026913333076e-05],
-                                         'unit': 's',
-                                         'iterations': 10}
+                case {"name": "boolean.TimeLogicalOps.time_or_scalar"}:
+                    assert res.stats == {
+                        "data": [
+                            1.6370204791373757e-05,
+                            1.64747757895297e-05,
+                            1.6352142014517064e-05,
+                            1.6375186853806846e-05,
+                            1.6442887910143355e-05,
+                            1.633370702185561e-05,
+                            1.6333956644843892e-05,
+                            1.6291790719454486e-05,
+                            1.6286434983849937e-05,
+                            1.6278026913333076e-05,
+                        ],
+                        "unit": "s",
+                        "iterations": 10,
+                    }
                 # Benchmark array.ArrowStringArray.time_setitem_slice uses samples
                 # and parameters
-                case {'name': 'array.ArrowStringArray.time_setitem_slice',
-                      'multiple_chunks': 'False'
-                      }:
+                case {
+                    "name": "array.ArrowStringArray.time_setitem_slice",
+                    "multiple_chunks": "False",
+                }:
                     assert len(res.stats["data"]) == 10
-                case {'name': 'array.ArrowStringArray.time_setitem_slice',
-                      'multiple_chunks': 'True'
-                      }:
+                case {
+                    "name": "array.ArrowStringArray.time_setitem_slice",
+                    "multiple_chunks": "True",
+                }:
                     assert len(res.stats["data"]) == 10
 
                 # Benchmark algorithms.SortIntegerArray.time_argsort tests that
                 # NaN results still generate the rest for the data and the adapter
                 # doesn't break. (A very common case).
-                case {'name': 'algorithms.SortIntegerArray.time_argsort',
-                      'param1': '1000'
-                      }:
+                case {
+                    "name": "algorithms.SortIntegerArray.time_argsort",
+                    "param1": "1000",
+                }:
                     assert res.stats["data"] == [9.382720887127119e-06]
-                case {'name': 'algorithms.SortIntegerArray.time_argsort',
-                      'param1': '100000'
-                      }:
+                case {
+                    "name": "algorithms.SortIntegerArray.time_argsort",
+                    "param1": "100000",
+                }:
                     assert res.stats["data"] == [0.0008135993461669737]
 
                 # Benchmark series_methods.ToFrame.time_to_frame tests that
                 # a parameter or case is not called "name". (This was generating a bug).
-                case {'name': 'series_methods.ToFrame.time_to_frame',
-                      'dtype': "'int64'",
-                      'name_': "'foo'"
-                      }:
+                case {
+                    "name": "series_methods.ToFrame.time_to_frame",
+                    "dtype": "'int64'",
+                    "name_": "'foo'",
+                }:
                     assert res.stats["data"] == [1.495111301503055e-05]
-                case {'name': 'series_methods.ToFrame.time_to_frame',
-                      'dtype': "'int64'",
-                      'name_': "None"
-                      }:
+                case {
+                    "name": "series_methods.ToFrame.time_to_frame",
+                    "dtype": "'int64'",
+                    "name_": "None",
+                }:
                     assert res.stats["data"] == [1.4953170287206877e-05]
                 # A result may pass the test of len above (the number of results)
                 # but here checking that the names of benchmarks are still correct.
