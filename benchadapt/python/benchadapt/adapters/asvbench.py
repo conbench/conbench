@@ -12,6 +12,7 @@ from ._adapter import BenchmarkAdapter
 
 
 class AsvBenchmarkAdapter(BenchmarkAdapter):
+    """A class for adapting Asv Benchmarks and sending the results to conbench"""
 
     def __init__(
         self,
@@ -19,6 +20,7 @@ class AsvBenchmarkAdapter(BenchmarkAdapter):
         result_file: Path,
         benchmarks_file_path: Path,
         result_fields_override: Dict[str, Any] = None,
+        result_fields_append: Dict[str, Any] = None,
     ) -> None:
         """
         Parameters
@@ -35,12 +37,19 @@ class AsvBenchmarkAdapter(BenchmarkAdapter):
             A dict of values to override on each instance of `BenchmarkResult`. Useful
             for specifying metadata only available at runtime, e.g. build info. Applied
             before ``results_field_append``.
+        result_fields_append : Dict[str, Any]
+            A dict of default values to be appended to `BenchmarkResult` values after
+            instantiation. Useful for appending extra tags or other metadata in addition
+            to that gathered elsewhere. Only applicable for dict attributes. For each
+            element, will override any keys that already exist, i.e. it does not append
+            recursively.
         """
         self.result_file = result_file
         self.benchmarks_file_path = benchmarks_file_path
         super().__init__(
             command=command,
             result_fields_override=result_fields_override,
+            result_fields_append=result_fields_append,
         )
 
     def _transform_results(self) -> List[BenchmarkResult]:
