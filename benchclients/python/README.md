@@ -33,18 +33,27 @@ However, clients for other APIs can easily be created by inheriting from the
 
 #### Environment variables
 
-Configuration and credentials for `ConbenchClient` are handled by three environment
+Configuration and credentials for `ConbenchClient` can be handled by three environment
 variables set before class instantiation:
 
 - `CONBENCH_URL`: The URL of the Conbench server. Required.
 - `CONBENCH_EMAIL`: The email to use for Conbench login. Only required for GETting if the
 server is private.
 - `CONBENCH_PASSWORD`: The password to use for Conbench login. Only required for GETting
-if the server is private.
+if the server is private.   
+
+Alternatively, you can instantiate the client with the `url`, `email`, and `password` keyword arguments - like:
+    
+``` python
+conbench = ConbenchClient(url="https://conbench.ursa.dev",
+                          email="test@example.com",
+                          password="xxxxxx"
+                          )
+```
 
 #### Usage
 
-Provided environment variables are set before instantiation, `ConbenchClient` will handle
+If environment variables are set before instantiation, or the keyword arguments are used, `ConbenchClient` will handle
 auth, so users can get right to making requests:
 
 ``` python
