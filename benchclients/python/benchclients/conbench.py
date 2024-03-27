@@ -58,9 +58,9 @@ class ConbenchClient(RetryingHTTPClient):
     timeout_login_request = (3.5, 10)
 
     def __init__(self,
-                 url: Optional[str] = os.getenv("CONBENCH_URL"),
-                 email: Optional[str] = os.getenv("CONBENCH_EMAIL"),
-                 password: Optional[str] = os.getenv("CONBENCH_PASSWORD"),
+                 url: Optional[str] = None,
+                 email: Optional[str] = None,
+                 password: Optional[str] = None,
                  default_retry_for_seconds=None):
         # If this library is embedded into a Python program that has stdlib
         # logging not set up yet (no root logger configured) then this call
@@ -71,6 +71,10 @@ class ConbenchClient(RetryingHTTPClient):
             format="%(asctime)s.%(msecs)03d [%(name)s] %(levelname)s: %(message)s",
             datefmt="%y%m%d-%H:%M:%S",
         )
+
+        # Set the URL from the environment if not provided
+        if url is None:
+            url = os.environ.get("CONBENCH_URL")
 
         url = self._validate_url(url=url)
 
@@ -84,13 +88,15 @@ class ConbenchClient(RetryingHTTPClient):
             assert isinstance(default_retry_for_seconds, (float, int))
             self.default_retry_for_seconds = default_retry_for_seconds
 
-        if email:
+        # Set the email and password from the environment if not provided
+        self._email = email if email is not None else os.environ.get("CONBENCH_EMAIL")
+        self._password = password if password is not None else os.environ.get("CONBENCH_PASSWORD")
+
+        if self._email:
             # The logic would attempt to perform login automatically after
             # receiving the first 401 response. When this env var is set,
             # anticipate that login is needed (this might do more harm than
             # use)
-            self._email = email
-            self._password = password
             self._login_or_raise()
         else:
             log.info("Conbench email not specified, skipping login")

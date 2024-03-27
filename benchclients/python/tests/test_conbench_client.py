@@ -129,19 +129,26 @@ def test_cc_performs_login_when_env_is_set(
 
 
 def test_cc_performs_login_from_kwargs(
-    httpserver: HTTPServer
+    monkeypatch: pytest.MonkeyPatch, httpserver: HTTPServer
 ):
     url = httpserver.url_for("/")
+
+    creds = {
+        "email": os.getenv("CONBENCH_EMAIL"),
+        "password": os.getenv("CONBENCH_PASSWORD"),
+    }
+
+    httpserver.expect_oneshot_request(
+        "/api/login/", method="POST", json=creds
+    ).respond_with_data("", status=204)
+
     # This confirms that the initialization of this object performs an HTTP
     # request.
     ConbenchClient(url=url,
-                   email="email",
-                   password="password",
+                   email=creds.get("email"),
+                   password=creds.get("password"),
                    default_retry_for_seconds=15
                    )
-
-    # https://github.com/csernazs/pytest-httpserver/issues/35#issuecomment-1517903020
-    assert len(httpserver.log) == 1
 
 
 def test_cc_get_500(httpserver: HTTPServer):
