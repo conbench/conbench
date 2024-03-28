@@ -882,7 +882,7 @@ class GitHubHTTPApiClient:
         # Give up after retrying.
         metrics.COUNTER_GITHUB_HTTP_API_REQUEST_FAILURES.inc()
         raise Exception(
-            f"_get_response(): deadline exceeded, giving up after {time.monotonic()-t0:.3f} s"
+            f"_get_response(): deadline exceeded, giving up after {time.monotonic() - t0:.3f} s"
         )
 
     def _get_response_retry_guts(self, url) -> Optional[dict]:
@@ -904,7 +904,7 @@ class GitHubHTTPApiClient:
             if self._current_auth_token:
                 resp = requests.get(
                     url,
-                    headers={"Authorization": f"Bearer { self._current_auth_token}"},
+                    headers={"Authorization": f"Bearer {self._current_auth_token}"},
                 )
             else:
                 resp = requests.get(url)
