@@ -97,7 +97,8 @@ def test_cc_get_401(httpserver: HTTPServer):
     # This confirms that indeed one request was made, and that initiated the
     # machinery for triggering login. The login request is never sent.
     with pytest.raises(
-        ConbenchClientException, match="credentials not set via parameters or the environment"
+        ConbenchClientException,
+        match="credentials not set via parameters or the environment",
     ):
         httpserver.expect_request("/api/test").respond_with_data("", 401)
         c.get("/test")
@@ -144,11 +145,12 @@ def test_cc_performs_login_from_kwargs(
 
     # This confirms that the initialization of this object performs an HTTP
     # request.
-    ConbenchClient(url=url,
-                   email=creds.get("email"),
-                   password=creds.get("password"),
-                   default_retry_for_seconds=15
-                   )
+    ConbenchClient(
+        url=url,
+        email=creds.get("email"),
+        password=creds.get("password"),
+        default_retry_for_seconds=15,
+    )
 
 
 def test_cc_get_500(httpserver: HTTPServer):

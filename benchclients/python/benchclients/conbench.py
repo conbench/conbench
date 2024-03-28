@@ -57,11 +57,13 @@ class ConbenchClient(RetryingHTTPClient):
 
     timeout_login_request = (3.5, 10)
 
-    def __init__(self,
-                 url: Optional[str] = None,
-                 email: Optional[str] = None,
-                 password: Optional[str] = None,
-                 default_retry_for_seconds=None):
+    def __init__(
+        self,
+        url: Optional[str] = None,
+        email: Optional[str] = None,
+        password: Optional[str] = None,
+        default_retry_for_seconds=None,
+    ):
         # If this library is embedded into a Python program that has stdlib
         # logging not set up yet (no root logger configured) then this call
         # sets up a root logger with handlers. This is a noop if the calling
@@ -90,7 +92,9 @@ class ConbenchClient(RetryingHTTPClient):
 
         # Set the email and password from the environment if not provided
         self._email = email if email is not None else os.environ.get("CONBENCH_EMAIL")
-        self._password = password if password is not None else os.environ.get("CONBENCH_PASSWORD")
+        self._password = (
+            password if password is not None else os.environ.get("CONBENCH_PASSWORD")
+        )
 
         if self._email:
             # The logic would attempt to perform login automatically after
@@ -118,9 +122,7 @@ class ConbenchClient(RetryingHTTPClient):
             url = url.strip()
 
         if not url:
-            raise ConbenchClientException(
-                "CONBENCH_URL not set or empty"
-            )
+            raise ConbenchClientException("CONBENCH_URL not set or empty")
 
         url = url.rstrip("/")
 
@@ -155,7 +157,9 @@ class ConbenchClient(RetryingHTTPClient):
         for k, v in creds.items():
             if not v:
                 log.error("not set: %s", k)
-                raise ConbenchClientException("credentials not set via parameters or the environment")
+                raise ConbenchClientException(
+                    "credentials not set via parameters or the environment"
+                )
 
         self.session = requests.Session()
 
