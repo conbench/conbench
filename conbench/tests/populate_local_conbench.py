@@ -290,7 +290,7 @@ def post_benchmark_result(data):
         f"Posted a benchmark with run_id '{data.get('run_id')}' "
         f"and commit {data.get('github', {}).get('commit')}. "
         f"Received status code {res.status_code}. "
-        f"Took {attempt} attempt(s). Last attempt took {time.monotonic() - t0 :.5f} s."
+        f"Took {attempt} attempt(s). Last attempt took {time.monotonic() - t0:.5f} s."
     )
 
     if str(res.status_code).startswith("4"):
@@ -350,7 +350,7 @@ def create_benchmarks_data():
         for hardware_type in hardware_types:
             for benchmark_language in benchmark_languages:
                 for benchmark_name in benchmark_names:
-                    run_id = f"run-on-{hardware_type}-{i+1}"
+                    run_id = f"run-on-{hardware_type}-{i + 1}"
                     measurements, reason = measurement_lists[i], reasons[i]
                     timestamp = datetime.datetime.now() + datetime.timedelta(hours=i)
                     if errors[i] and benchmark_name == "csv-read":

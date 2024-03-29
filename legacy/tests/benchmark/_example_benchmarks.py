@@ -189,7 +189,7 @@ class ExternalBenchmarkR(conbenchlegacy.runner.Benchmark):
 
     def _get_r_command(self):
         return (
-            f"addition <- function() { 1 + 1 }; "
+            f"addition <- function() {1 + 1}; "
             "start_time <- Sys.time();"
             "addition(); "
             "end_time <- Sys.time(); "

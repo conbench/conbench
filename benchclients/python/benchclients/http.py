@@ -289,7 +289,7 @@ class RetryingHTTPClient(ABC):
 
         # Give up after retrying.
         raise RetryingHTTPClientDeadlineReached(
-            f"{method} request to {url}: giving up after {time.monotonic()-t0:.3f} s"
+            f"{method} request to {url}: giving up after {time.monotonic() - t0:.3f} s"
         )
 
     def _make_request_retry_guts(
