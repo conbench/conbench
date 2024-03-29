@@ -112,6 +112,13 @@ class ConbenchClient(RetryingHTTPClient):
     def _base_url(self) -> str:
         return self._url
 
+    @property
+    def url(self) -> str:
+        """
+        Return the base URL of the Conbench API server.
+        """
+        return self._url
+
     def _validate_url(self, url: str) -> str:
         """
         The return value is guaranteed to not have a trailing slash.
