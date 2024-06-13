@@ -12,9 +12,6 @@ class Info(Base, EntityMixin["Info"]):
     tags: Mapped[dict] = NotNull(postgresql.JSONB)
 
 
-s.Index("info_index", Info.tags, unique=True)
-
-
 class _Serializer(EntitySerializer):
     def _dump(self, info):
         result = {
