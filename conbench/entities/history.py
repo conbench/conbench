@@ -105,7 +105,9 @@ class HistorySample:
     # tz-naive timestamp of commit authoring time (to be interpreted in UTC
     # timezone).
     commit_timestamp: datetime.datetime
+    result_timestamp: datetime.datetime
     run_name: str
+    run_tags: Dict[str, str]
     zscorestats: HistorySampleZscoreStats
 
     # Note(JP):
@@ -122,6 +124,7 @@ class HistorySample:
 
         # For external consumption, change type/representation of time.
         d["commit_timestamp"] = self.commit_timestamp.isoformat()
+        d["result_timestamp"] = self.result_timestamp.isoformat()
 
         # Rename SVS for clarity for external consumption.
         d["single_value_summary"] = d.pop("svs")
@@ -256,7 +259,9 @@ def get_history_for_fingerprint(
                 commit_msg=sample.commit_message,
                 commit_hash=sample.commit_hash,
                 commit_timestamp=sample.timestamp,
+                result_timestamp=sample.result_timestamp,
                 run_name=sample.run_name,
+                run_tags=sample.run_tags,
                 zscorestats=zstats,
             )
         )
@@ -472,6 +477,7 @@ def execute_history_query_get_dataframe(statement) -> Tuple[pd.DataFrame, Dict]:
                 dict_for_df["change_annotations"].append(value.change_annotations)
                 dict_for_df["result_timestamp"].append(value.timestamp)
                 dict_for_df["history_fingerprint"].append(value.history_fingerprint)
+                dict_for_df["run_tags"].append(value.run_tags)
             if coldesc["name"] == "hardware_hash":
                 dict_for_df["hash"].append(value)
 

@@ -387,7 +387,12 @@ def _api_context_entity(context_id, links=True):
 
 
 def _api_history_entity(
-    benchmark_result_id, case_id, context_id, run_name, history_fingerprint
+    benchmark_result_id,
+    case_id,
+    context_id,
+    run_name,
+    history_fingerprint,
+    result_timestamp,
 ):
     return [
         {
@@ -396,6 +401,7 @@ def _api_history_entity(
             "commit_hash": "02addad336ba19a654f9c857ede546331be7b631",
             "commit_msg": "ARROW-11771: [Developer][Archery] Move benchmark tests (so CI runs them)",
             "commit_timestamp": "2021-02-25T01:02:51",
+            "result_timestamp": result_timestamp,
             "context_id": context_id,
             "data": BENCHMARK_ENTITY["stats"]["data"],
             "hardware_hash": "diana-2-2-4-17179869184",
@@ -405,6 +411,7 @@ def _api_history_entity(
             "single_value_summary_type": "min",
             "repository": "https://github.com/org/repo",
             "run_name": run_name,
+            "run_tags": {"name": run_name, "arbitrary": "tags"},
             "times": BENCHMARK_ENTITY["stats"]["times"],
             "unit": "s",
             "zscorestats": {
@@ -607,6 +614,7 @@ HISTORY_ENTITY = _api_history_entity(
     "some-context-uuid-1",
     "some run name",
     "some-hexdigest",
+    "2021-02-25T01:02:51",
 )
 INFO_ENTITY = _api_info_entity("some-info-uuid-1")
 HARDWARE_ENTITY = _api_hardware_entity("some-machine-uuid-1", "some-machine-name")

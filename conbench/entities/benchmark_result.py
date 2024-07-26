@@ -763,7 +763,7 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
     # data point (even if not that useful). That gives the guarantee that
     # BenchmarkResult.mean is populated for all non-errored BenchmarkResults.
     # See https://github.com/conbench/conbench/issues/1169
-    result_data_for_db["mean"] = np.mean(samples)
+    result_data_for_db["mean"] = float(np.mean(samples))
 
     if len(samples) >= 3:
         # See https://github.com/conbench/conbench/issues/802 and
@@ -775,8 +775,8 @@ def validate_and_aggregate_samples(stats_usergiven: Any):
             "q1": q1,
             "q3": q3,
             "median": float(np.median(samples)),
-            "min": np.min(samples),
-            "max": np.max(samples),
+            "min": float(np.min(samples)),
+            "max": float(np.max(samples)),
             # With ddof=1 this is Bessel's correction, has N-1 in the divisor.
             # This is the same behavior as
             # statistics.stdev() and the same behavior as

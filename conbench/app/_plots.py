@@ -947,6 +947,8 @@ def get_source_for_single_benchmark_result(current_benchmark_result, cur_run, un
         unit="dummy",  # not consumed
         hardware_hash="dummy",  # not consumed
         run_name="dummy",  # not consumed
+        run_tags={},  # not consumed
+        result_timestamp=cur_benchmark_time,  # not consumed
         zscorestats=HistorySampleZscoreStats(
             begins_distribution_change=False,  # not consumed
             segment_id="dummy",  # not consumed
