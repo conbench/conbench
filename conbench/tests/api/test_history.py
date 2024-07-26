@@ -15,6 +15,7 @@ def _expected_entity(benchmark_result) -> List[dict]:
         benchmark_result.context_id,
         benchmark_result.run_tags.get("name"),
         benchmark_result.history_fingerprint,
+        benchmark_result.timestamp.isoformat(),
     )
 
 

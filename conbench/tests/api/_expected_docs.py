@@ -1052,7 +1052,12 @@
                                         "history_fingerprint": "some-hexdigest",
                                         "mean": 0.036369,
                                         "repository": "https://github.com/org/repo",
+                                        "result_timestamp": "2021-02-25T01:02:51",
                                         "run_name": "some run name",
+                                        "run_tags": {
+                                            "arbitrary": "tags",
+                                            "name": "some run name",
+                                        },
                                         "single_value_summary": 0.004733,
                                         "single_value_summary_type": "min",
                                         "times": [
