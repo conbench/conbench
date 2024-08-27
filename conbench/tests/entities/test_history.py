@@ -1,5 +1,5 @@
-from datetime import datetime
-from typing import Callable, cast
+from datetime import datetime, timedelta
+from typing import Callable, List, cast
 
 import numpy as np
 import pandas as pd
@@ -11,6 +11,7 @@ from conbench.types import TBenchmarkName
 
 from ...config import Config
 from ...db import _session as Session
+from ...entities.benchmark_result import BenchmarkResult
 from ...entities.commit import Commit
 from ...entities.history import (
     _detect_shifts_with_trimmed_estimators,
@@ -344,6 +345,52 @@ def test_set_z_scores_with_distribution_change(
             benchmark_result.z_score = None
 
     for benchmark_result, expected_z_score in zip(benchmark_results, expected_z_scores):
+        assert_equal_leeway(benchmark_result.z_score, expected_z_score)
+
+
+@pytest.mark.parametrize("data", [[[1], [2], [5]], [[10, 20], [11, 22], [50, 70]]])
+@pytest.mark.parametrize("unit", ["s", "i/s"])
+@pytest.mark.parametrize("svs_type", ["mean", "best"])
+def test_set_z_scores_with_small_reps(data: List[List[int]], unit: str, svs_type: str):
+    expected_z_scores = {
+        (1, "s", "mean"): [None, None, -4.95],
+        (1, "s", "best"): [None, None, -4.95],
+        (1, "i/s", "mean"): [None, None, 4.95],
+        (1, "i/s", "best"): [None, None, 4.95],
+        (2, "s", "mean"): [None, None, -41.72],
+        (2, "s", "best"): [None, None, -55.86],
+        (2, "i/s", "mean"): [None, None, 41.72],
+        (2, "i/s", "best"): [None, None, 34.65],
+    }
+    Config.SVS_TYPE = svs_type
+    commits, _ = _fixtures.gen_fake_data()
+    benchmark_results: List[BenchmarkResult] = []
+    result_timestamp = datetime(2022, 1, 7)
+    name = _fixtures._uuid()
+
+    for results, commit_hash in zip(data, ["22222", "33333", "44444"]):
+        result_timestamp += timedelta(seconds=1)
+        benchmark_results.append(
+            _fixtures.benchmark_result(
+                results=results,
+                commit=commits[commit_hash],
+                name=name,
+                unit=unit,
+                timestamp=result_timestamp,
+            )
+        )
+
+    for benchmark_result in benchmark_results:
+        baseline_commit = benchmark_result.commit.get_parent_commit()
+        set_z_scores(
+            contender_benchmark_results=[benchmark_result],
+            baseline_commit=baseline_commit,
+            history_fingerprints=[benchmark_result.history_fingerprint],
+        )
+
+    for benchmark_result, expected_z_score in zip(
+        benchmark_results, expected_z_scores[(len(data[0]), unit, svs_type)]
+    ):
         assert_equal_leeway(benchmark_result.z_score, expected_z_score)
 
 

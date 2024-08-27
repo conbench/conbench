@@ -356,11 +356,24 @@ def _query_and_calculate_distribution_stats(
     if Config.SVS_TYPE == "mean":
         svs_col = BenchmarkResult.mean
     elif Config.SVS_TYPE == "best":
+        # Right now less is always better unless the unit is "per second", so return the
+        # max in that case and the min otherwise.
+        # Also, the min/max fields are missing when there's less than 3 reps, so
+        # calculate those on the fly in that case.
+        data_len = s.func.array_length(BenchmarkResult.data, 1)
+        more_is_better = BenchmarkResult.unit.like("%/s")
+
         svs_col = s.case(
-            # Min/max are missing when there's 1 rep, but mean is always populated
-            (BenchmarkResult.max.is_(None), BenchmarkResult.mean),
-            # Right now less is always better unless the unit is per second
-            (BenchmarkResult.unit.like("%/s"), BenchmarkResult.max),
+            (data_len == 1, BenchmarkResult.mean),
+            (
+                s.and_(data_len == 2, more_is_better),
+                s.func.greatest(BenchmarkResult.data[1], BenchmarkResult.data[2]),
+            ),
+            (
+                s.and_(data_len == 2, ~more_is_better),
+                s.func.least(BenchmarkResult.data[1], BenchmarkResult.data[2]),
+            ),
+            (more_is_better, BenchmarkResult.max),
             else_=BenchmarkResult.min,
         )  # type: ignore
     else:
