@@ -1,5 +1,5 @@
 
-FROM python:3.11-slim-buster
+FROM python:3.11-slim-bookworm
 
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
         gnupg curl git jq moreutils ca-certificates unzip less tree pandoc \
