@@ -1,8 +1,8 @@
 
-FROM python:3.11-slim-buster
+FROM python:3.11-slim-bookworm
 
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
-        gnupg curl git jq moreutils ca-certificates unzip less tree pandoc libgcc-s1 \
+        gnupg curl git jq moreutils ca-certificates unzip less tree pandoc \
     && curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add \
     && echo "deb [arch=amd64]  http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update && apt-get install -y -q --no-install-recommends \
