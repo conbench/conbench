@@ -984,32 +984,18 @@ def fetch_one_result_per_each_of_n_recent_runs(n: int = 250) -> List[BenchmarkRe
     commit since there can be multiple runs per commit.
     """
     query_text = f"""
-        WITH RECURSIVE run_results AS (
-            (
-                SELECT *
-                FROM benchmark_result
-                WHERE timestamp > now() - INTERVAL '14 days'
-                AND timestamp > '2023-11-19'
-                ORDER BY run_id
-                LIMIT 1
-            )
-            UNION ALL
-            SELECT next_run.*
-            FROM run_results
-            CROSS JOIN LATERAL (
-                SELECT *
-                FROM benchmark_result
-                WHERE run_id > run_results.run_id
-                AND timestamp > now() - INTERVAL '14 days'
-                AND timestamp > '2023-11-19'
-                ORDER BY run_id
-                LIMIT 1
-            ) next_run
-        )
-        SELECT * FROM run_results
-        ORDER BY timestamp desc
+        SELECT r.* FROM (
+            SELECT DISTINCT ON (run_id) *
+            FROM benchmark_result
+            ORDER by run_id
+        ) r
+        WHERE timestamp > (now() - INTERVAL '14 days')
+        AND timestamp > '2023-11-19'
+        ORDER BY timestamp DESC, run_id DESC
         LIMIT {n}
     """
+    # ana = current_session.execute(s.text(f"EXPLAIN ANALYZE {s.text(query_text)}"))
+    # print("\n".join("".join(*tup) for tup in ana.fetchall()))
     query = s.select(BenchmarkResult).from_statement(s.text(query_text))
     # Need to type hint this again because from_statement() overrides the type hints.
     bmrs: List[BenchmarkResult] = list(current_session.scalars(query, {"n": n}).all())
