@@ -1,0 +1,273 @@
+{
+  "artifact": "conbench-dashboard-screenshots",
+  "data_source": "deterministic demo database seeded by the Go server container",
+  "isolation": [
+    "docker-compose.server.yml",
+    "docker-compose.docs-screenshots.yml",
+    "Dockerfile.docs-screenshots pinned Playwright container"
+  ],
+  "quality_checks": [
+    "manifest routes and viewport inventory are checked",
+    "PNG dimensions match the screenshot manifest",
+    "PNG pixels are nonblank and not a single flat color",
+    "chart canvases are painted before capture",
+    "desktop pages have no document-level horizontal overflow",
+    "mobile primary navigation remains visible",
+    "volatile generated result IDs are normalized",
+    "internal screenshot server origins are scrubbed",
+    "pinned Playwright container version matches web/package.json"
+  ],
+  "schema_version": 1,
+  "screenshots": [
+    {
+      "bytes": 120363,
+      "file": "dashboard-home-desktop.png",
+      "height": 900,
+      "id": "home",
+      "purpose": "Start from recent run activity and jump into CI, result, or series workflows.",
+      "route": "/",
+      "sha256": "ccf64afba2978ec4148aaba3d95f99f16b6db94dbcd96234d3d984abf80243c1",
+      "title": "Recent runs",
+      "viewport": "desktop",
+      "width": 1440
+    },
+    {
+      "bytes": 59687,
+      "file": "dashboard-home-mobile.png",
+      "height": 844,
+      "id": "home",
+      "purpose": "Start from recent run activity and jump into CI, result, or series workflows.",
+      "route": "/",
+      "sha256": "52b4c49249366e6cbeb04ffc895228585a63fab9edcea2249269145120dd57e9",
+      "title": "Recent runs",
+      "viewport": "mobile",
+      "width": 390
+    },
+    {
+      "bytes": 83912,
+      "file": "dashboard-series-desktop.png",
+      "height": 900,
+      "id": "series",
+      "purpose": "Browse benchmark families, filters, status, and production-shaped identifiers.",
+      "route": "/series?q=demo-benchmark",
+      "sha256": "7dcac4f038406cca9536c687f6d4ba8244bfc8f22668541cb47da3893fe24211",
+      "title": "Series browse",
+      "viewport": "desktop",
+      "width": 1440
+    },
+    {
+      "bytes": 48638,
+      "file": "dashboard-series-mobile.png",
+      "height": 844,
+      "id": "series",
+      "purpose": "Browse benchmark families, filters, status, and production-shaped identifiers.",
+      "route": "/series?q=demo-benchmark",
+      "sha256": "7f301a626f03ddd9f0286c8d2ad960a78600e7dea0c017f196dbf984873ce0ea",
+      "title": "Series browse",
+      "viewport": "mobile",
+      "width": 390
+    },
+    {
+      "bytes": 80265,
+      "file": "dashboard-trend-desktop.png",
+      "height": 900,
+      "id": "trend",
+      "purpose": "Inspect history, charted trends, and sample rows for one series.",
+      "route": "/series/:fingerprint?range=all",
+      "sha256": "9056f3f70ac15a1a55e20c8205022829021e93c0c71ba0815393b74d8f1b72b6",
+      "title": "Trend detail",
+      "viewport": "desktop",
+      "width": 1440
+    },
+    {
+      "bytes": 52981,
+      "file": "dashboard-trend-mobile.png",
+      "height": 844,
+      "id": "trend",
+      "purpose": "Inspect history, charted trends, and sample rows for one series.",
+      "route": "/series/:fingerprint?range=all",
+      "sha256": "7c46c675196d551f7f555caa836b67ef8307b7d7f16634ab2e4a328e29ec54a4",
+      "title": "Trend detail",
+      "viewport": "mobile",
+      "width": 390
+    },
+    {
+      "bytes": 95841,
+      "file": "dashboard-result-desktop.png",
+      "height": 900,
+      "id": "result",
+      "purpose": "Inspect one benchmark result, measurement, metadata, and read-only actions.",
+      "route": "/results/:id",
+      "sha256": "11b4d42749ff698bf62fac807bf6f9b67d4e711574418fa65b00eb8c5c55a5f2",
+      "title": "Result detail",
+      "viewport": "desktop",
+      "width": 1440
+    },
+    {
+      "bytes": 57442,
+      "file": "dashboard-result-mobile.png",
+      "height": 844,
+      "id": "result",
+      "purpose": "Inspect one benchmark result, measurement, metadata, and read-only actions.",
+      "route": "/results/:id",
+      "sha256": "2f443b9acbd17b84d31cf1f6efc844468e7210c0f781c797fba8bb51492d721d",
+      "title": "Result detail",
+      "viewport": "mobile",
+      "width": 390
+    },
+    {
+      "bytes": 65054,
+      "file": "dashboard-results-desktop.png",
+      "height": 900,
+      "id": "results",
+      "purpose": "Browse submitted benchmark results, filter by run or batch, and jump into detail or trends.",
+      "route": "/results?run_id=...",
+      "sha256": "a853d172572c024753791feb47df190f9d7a631d9d934acd0b0831764fe1a089",
+      "title": "Results list",
+      "viewport": "desktop",
+      "width": 1440
+    },
+    {
+      "bytes": 50622,
+      "file": "dashboard-results-mobile.png",
+      "height": 844,
+      "id": "results",
+      "purpose": "Browse submitted benchmark results, filter by run or batch, and jump into detail or trends.",
+      "route": "/results?run_id=...",
+      "sha256": "3ecb100fcf5d28d73a25f583001b99b328f6c8af2e0356ba73061e2da88c80e7",
+      "title": "Results list",
+      "viewport": "mobile",
+      "width": 390
+    },
+    {
+      "bytes": 60882,
+      "file": "dashboard-run-desktop.png",
+      "height": 900,
+      "id": "run",
+      "purpose": "Inspect one run_id, its result rows, CI report link, batches, and series links.",
+      "route": "/runs/:run_id",
+      "sha256": "701190b5846589dee221174a5c4cd29b361abfcb5fa18927f0432603c5a44a37",
+      "title": "Run detail",
+      "viewport": "desktop",
+      "width": 1440
+    },
+    {
+      "bytes": 51391,
+      "file": "dashboard-run-mobile.png",
+      "height": 844,
+      "id": "run",
+      "purpose": "Inspect one run_id, its result rows, CI report link, batches, and series links.",
+      "route": "/runs/:run_id",
+      "sha256": "4486d17fa0c63843f60b990a3d2c594338b1a6ca21f693bf58f7fbad367baa11",
+      "title": "Run detail",
+      "viewport": "mobile",
+      "width": 390
+    },
+    {
+      "bytes": 69894,
+      "file": "dashboard-batch-desktop.png",
+      "height": 900,
+      "id": "batch",
+      "purpose": "Inspect one batch_id across runs, CI reports, result rows, and series links.",
+      "route": "/batches/:batch_id",
+      "sha256": "72fe8da94c0b8d76dc8023d734275d4d7f5ba127894e56c332e9d276df59ec6b",
+      "title": "Batch detail",
+      "viewport": "desktop",
+      "width": 1440
+    },
+    {
+      "bytes": 49993,
+      "file": "dashboard-batch-mobile.png",
+      "height": 844,
+      "id": "batch",
+      "purpose": "Inspect one batch_id across runs, CI reports, result rows, and series links.",
+      "route": "/batches/:batch_id",
+      "sha256": "a21d5e3f99b21f177f6ad3c498523b11afb65f117248df89472f8993c78edefb",
+      "title": "Batch detail",
+      "viewport": "mobile",
+      "width": 390
+    },
+    {
+      "bytes": 71006,
+      "file": "dashboard-compare-desktop.png",
+      "height": 900,
+      "id": "compare",
+      "purpose": "Compare two results with pairwise and lookback diagnostics.",
+      "route": "/compare?baseline=:id&contender=:id",
+      "sha256": "a7320656cc8b347c6ebfcd4dfc435c665f05d5fd7982d5a343812929ac7eaf04",
+      "title": "Compare",
+      "viewport": "desktop",
+      "width": 1440
+    },
+    {
+      "bytes": 47088,
+      "file": "dashboard-compare-mobile.png",
+      "height": 844,
+      "id": "compare",
+      "purpose": "Compare two results with pairwise and lookback diagnostics.",
+      "route": "/compare?baseline=:id&contender=:id",
+      "sha256": "29ffd9f5fe84a3fd49448053f02f061048abfef635ac12f9c7ffabfd01aa2741",
+      "title": "Compare",
+      "viewport": "mobile",
+      "width": 390
+    },
+    {
+      "bytes": 94655,
+      "file": "dashboard-ci-report-desktop.png",
+      "height": 900,
+      "id": "ci-report",
+      "purpose": "Review PR/CI regression status, filters, investigation queue, and row verdicts.",
+      "route": "/ci/report?repository=...&commit_sha=...&run_ids=...",
+      "sha256": "7899031f2cc6808b3de2ad3066eb4b4f205f2c946b48cfb099178f02c90ed356",
+      "title": "CI report",
+      "viewport": "desktop",
+      "width": 1440
+    },
+    {
+      "bytes": 64657,
+      "file": "dashboard-ci-report-mobile.png",
+      "height": 844,
+      "id": "ci-report",
+      "purpose": "Review PR/CI regression status, filters, investigation queue, and row verdicts.",
+      "route": "/ci/report?repository=...&commit_sha=...&run_ids=...",
+      "sha256": "f8f5179bdba035b2b20f47009f48528f7a6c3b3a54712ee609b86dbf2288dcc3",
+      "title": "CI report",
+      "viewport": "mobile",
+      "width": 390
+    },
+    {
+      "bytes": 33473,
+      "file": "dashboard-account-desktop.png",
+      "height": 900,
+      "id": "account",
+      "purpose": "Reach session identity, login, API token management, and alert-rule management surfaces.",
+      "route": "/account",
+      "sha256": "7aa4cfc9087882f241e15c8c1c4279e2d178cfbb26de88c6f70e53cf9b926762",
+      "title": "Account",
+      "viewport": "desktop",
+      "width": 1440
+    },
+    {
+      "bytes": 27816,
+      "file": "dashboard-account-mobile.png",
+      "height": 844,
+      "id": "account",
+      "purpose": "Reach session identity, login, API token management, and alert-rule management surfaces.",
+      "route": "/account",
+      "sha256": "4ab0db40013ceed22db06753da1298d78953909d915fc550f8192cd70f56c3ee",
+      "title": "Account",
+      "viewport": "mobile",
+      "width": 390
+    }
+  ],
+  "viewports": {
+    "desktop": {
+      "height": 900,
+      "width": 1440
+    },
+    "mobile": {
+      "height": 844,
+      "width": 390
+    }
+  }
+}
