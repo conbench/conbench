@@ -1,0 +1,24 @@
+# Self-contained dev Postgres for the Go backend's `make dev` loop. It binds a
+# fixed host port (so the host-run server can connect at a known address) and
+# uses a named volume (so seeded data persists across restarts).
+#
+#   docker compose -p conbench_backend_dev -f docker-compose.backend-dev.yml up -d db
+services:
+  db:
+    image: library/postgres:15.2-alpine
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - conbench_backend_devdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  conbench_backend_devdata:

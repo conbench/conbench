@@ -1,0 +1,51 @@
+# Specify platform so that developers using this on ARM MacOS get to use the
+# same Python wheels (platform-specific binaries) that we use when running this
+# on Linux. Otherwise, some wheels might not exist on PyPI (psutil) and
+# compilation tools are required for building C extensions. Downside: when
+# executing an AMD64 image on ARM the QEMU emulation layer inficts a small
+# slowdown.
+# Also see https://github.com/conbench/conbench/issues/709 and
+# https://docs.docker.com/engine/reference/builder/#from
+# https://www.docker.com/blog/multi-platform-docker-builds/
+# FROM --platform=linux/amd64 python:3.11-slim
+#
+# Update: the slowdown may be not so small, see
+# https://github.com/conbench/conbench/issues/914
+# The downside here is that with `build-essential` baked into the image we
+# do a bad job optimizing for image size; but we do that anyway so far, so
+# maybe it's really not a big deal.
+FROM python:3.11-slim-bullseye
+
+# curl is needed for docker-compose health checks. The Postgres client provides
+# pg_dump for schema generation.
+RUN apt-get update && apt-get install -y -q --no-install-recommends \
+    curl ca-certificates gnupg && \
+    # Install postgres-client-15 from official PG repo
+    # see https://wiki.postgresql.org/wiki/Apt -- I added `bullseye`
+    # so that we do not need lsb_release
+    curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
+    gpg --dearmor | tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg >/dev/null && \
+    sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt bullseye-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
+    apt update && apt install -y postgresql-client-15 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY requirements-schema.txt /tmp/
+
+RUN pip install --no-cache-dir -r /tmp/requirements-schema.txt
+
+# Temporary Alembic schema image. It exists only while migrations/ remains the
+# schema source of truth.
+WORKDIR /app
+
+# Only copy in the files that are required (instead of the entire repo root),
+# to make more use of Docker container image layer caching.
+COPY migrations /app/migrations
+
+COPY alembic.ini /app/
+
+# Inspect contents of /app
+RUN pwd && /bin/ls -1 .
+
+# Re-active this to get ideas for how the image size can be further reduced.
+# RUN echo "biggest dirs"
+# RUN cd / && du -ha . | sort -r -h | head -n 50 || true

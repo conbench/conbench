@@ -12,18 +12,19 @@ Create Date: 2022-11-09 11:33:51.081418
 
 import datetime
 import uuid
-from typing import List, Tuple
 
 from alembic import op
 from sqlalchemy import MetaData, Table, distinct, select
 
-from conbench.entities.commit import Commit, _github, repository_to_name
+from migrations.github import GitHubHTTPAPIClient, repository_to_name
 
 # revision identifiers, used by Alembic.
 revision = "d3515ecea53d"
 down_revision = "480dbbd48927"
 branch_labels = None
 depends_on = None
+
+_github = GitHubHTTPAPIClient()
 
 
 def upgrade():
@@ -32,9 +33,7 @@ def upgrade():
     meta.reflect(bind=connection)
     commit_table: Table = meta.tables["commit"]
 
-    repos: List[Tuple[str]] = list(
-        connection.execute(select(distinct(commit_table.c.repository)))
-    )
+    repos = list(connection.execute(select(distinct(commit_table.c.repository))))
     print(f"All repos: {repos}")
 
     for (repo,) in repos:
@@ -44,8 +43,6 @@ def upgrade():
 
         name = repository_to_name(repo)
 
-        # This deliberately (mis)uses the per-process singleton GitHub HTTP API
-        # client object from commit.py
         default_branch = _github.get_default_branch(name)
         all_commits = _github.get_commits_to_branch(
             name=name,
@@ -55,8 +52,10 @@ def upgrade():
         )
 
         print(f"Checking if {len(all_commits)} commits are in the database")
-        db_commits: List[Commit] = list(
-            connection.execute(commit_table.select(commit_table.c.repository == repo))
+        db_commits = list(
+            connection.execute(
+                select(commit_table).where(commit_table.c.repository == repo)
+            )
         )
         db_commits_by_sha = {commit.sha: commit for commit in db_commits}
         print(f"Found {len(db_commits)} commits in the database")

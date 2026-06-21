@@ -1,0 +1,36 @@
+{
+  "name": "@conbench/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run",
+    "test:e2e": "playwright test --config e2e/playwright.config.ts",
+    "check:e2e": "tsc --noEmit -p e2e/tsconfig.json",
+    "docs:screenshots": "playwright test --config docs-screenshots/playwright.config.ts",
+    "check:docs-screenshots": "tsc --noEmit -p docs-screenshots/tsconfig.json",
+    "codegen": "openapi-typescript ../api/openapi.yaml --output src/lib/api/schema.ts"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0",
+    "uplot": "1.6.32"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.60.0",
+    "@sveltejs/vite-plugin-svelte": "7.1.2",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/svelte": "5.3.1",
+    "@testing-library/user-event": "14.6.1",
+    "@types/node": "25.9.2",
+    "jsdom": "29.1.1",
+    "openapi-typescript": "7.13.0",
+    "svelte": "5.56.2",
+    "svelte-check": "4.6.0",
+    "typescript": "5.9.3",
+    "vite": "8.0.16",
+    "vitest": "4.1.8"
+  }
+}

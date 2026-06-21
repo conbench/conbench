@@ -1,6 +1,0 @@
-steps:
-  - label: "Rollback"
-    concurrency_group: "conbench-deploy"
-    concurrency: 1
-    command:
-      - source .buildkite/utils.sh rollback

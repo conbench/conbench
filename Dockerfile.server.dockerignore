@@ -1,0 +1,14 @@
+.git
+bin
+site
+var
+tmp
+.venv
+__pycache__
+*.pyc
+node_modules
+web/node_modules
+web/dist
+web/playwright-report
+web/test-results
+.cache

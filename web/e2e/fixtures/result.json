@@ -1,0 +1,21 @@
+{
+  "tags": {"name": "demo-benchmark", "dataset": "uniform"},
+  "context": {"compiler": "gcc-13", "optimization": "O2"},
+  "info": {"benchmark_language": "C++"},
+  "machine_info": {
+    "name": "demo-runner",
+    "architecture_name": "arm64",
+    "os_name": "Linux",
+    "cpu_model_name": "Demo CPU",
+    "cpu_core_count": 10,
+    "cpu_thread_count": 10,
+    "memory_bytes": 34359738368,
+    "gpu_count": 0
+  },
+  "github": {"commit": "commit-06", "repository": "https://github.com/conbench/demo"},
+  "run_id": "e2e-run-06",
+  "run_name": "nightly",
+  "batch_id": "e2e-batch-06",
+  "timestamp": "2024-01-07T12:00:00Z",
+  "stats": {"data": [1.50, 1.52, 1.54], "unit": "s"}
+}

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: conbench-migration
-        image: "{{CONBENCH_WEBAPP_IMAGE_SPEC}}"
+        image: "{{CONBENCH_SCHEMA_IMAGE_SPEC}}"
         command:
         - /bin/sh
         - -c
@@ -36,4 +36,3 @@ spec:
             memory: '1Mi'
             cpu: 1m
       restartPolicy: Never
-

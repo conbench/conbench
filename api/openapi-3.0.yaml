@@ -1,0 +1,2589 @@
+components:
+  schemas:
+    Aggregates:
+      additionalProperties: false
+      properties:
+        iqr:
+          format: double
+          nullable: true
+          type: number
+        max:
+          format: double
+          nullable: true
+          type: number
+        mean:
+          format: double
+          nullable: true
+          type: number
+        median:
+          format: double
+          nullable: true
+          type: number
+        min:
+          format: double
+          nullable: true
+          type: number
+        q1:
+          format: double
+          nullable: true
+          type: number
+        q3:
+          format: double
+          nullable: true
+          type: number
+        stdev:
+          format: double
+          nullable: true
+          type: number
+      required:
+        - mean
+        - min
+        - max
+        - median
+        - q1
+        - q3
+        - stdev
+        - iqr
+      type: object
+    AlertEventView:
+      additionalProperties: false
+      properties:
+        commit_sha:
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        id:
+          type: string
+        kind:
+          type: string
+        report_url:
+          type: string
+        repository:
+          type: string
+        rule_id:
+          type: string
+        run_id:
+          type: string
+        status:
+          type: string
+        status_reason:
+          type: string
+        summary: {}
+      required:
+        - id
+        - rule_id
+        - kind
+        - status
+        - status_reason
+        - repository
+        - report_url
+        - summary
+        - created_at
+      type: object
+    AlertRuleBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/AlertRuleBody.json
+          format: uri
+          readOnly: true
+          type: string
+        baseline:
+          type: string
+        enabled:
+          type: boolean
+        name:
+          type: string
+        repository:
+          type: string
+        run_reason:
+          type: string
+        threshold:
+          format: double
+          type: number
+        threshold_z:
+          format: double
+          type: number
+      required:
+        - name
+        - repository
+      type: object
+    AlertRuleView:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/AlertRuleView.json
+          format: uri
+          readOnly: true
+          type: string
+        baseline:
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        enabled:
+          type: boolean
+        id:
+          type: string
+        last_evaluated_at:
+          format: date-time
+          type: string
+        name:
+          type: string
+        repository:
+          type: string
+        run_reason:
+          type: string
+        state:
+          type: string
+        threshold:
+          format: double
+          type: number
+        threshold_z:
+          format: double
+          type: number
+        updated_at:
+          format: date-time
+          type: string
+        user_id:
+          type: string
+      required:
+        - id
+        - user_id
+        - name
+        - repository
+        - baseline
+        - threshold
+        - threshold_z
+        - enabled
+        - state
+        - created_at
+        - updated_at
+      type: object
+    CIReport:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/CIReport.json
+          format: uri
+          readOnly: true
+          type: string
+        baseline:
+          type: string
+        commit_sha:
+          nullable: true
+          type: string
+        missing_run_ids:
+          items:
+            type: string
+          nullable: true
+          type: array
+        report_url:
+          type: string
+        repository:
+          type: string
+        runs:
+          items:
+            $ref: "#/components/schemas/CIReportRun"
+          nullable: true
+          type: array
+        selected_run_ids:
+          items:
+            type: string
+          nullable: true
+          type: array
+        status:
+          enum:
+            - success
+            - failure
+            - action_required
+            - skipped
+          type: string
+        status_reason:
+          type: string
+        summary:
+          $ref: "#/components/schemas/CIReportSummary"
+        threshold:
+          format: double
+          type: number
+        threshold_z:
+          format: double
+          type: number
+      required:
+        - repository
+        - commit_sha
+        - selected_run_ids
+        - missing_run_ids
+        - baseline
+        - status
+        - status_reason
+        - threshold
+        - threshold_z
+        - summary
+        - runs
+        - report_url
+      type: object
+    CIReportAnalysis:
+      additionalProperties: false
+      nullable: true
+      properties:
+        lookback_z_score:
+          $ref: "#/components/schemas/LookbackAnalysis"
+        pairwise:
+          $ref: "#/components/schemas/PairwiseAnalysis"
+      required:
+        - pairwise
+        - lookback_z_score
+      type: object
+    CIReportBaselineError:
+      additionalProperties: false
+      nullable: true
+      properties:
+        baseline:
+          type: string
+        code:
+          type: string
+        commit_sha:
+          nullable: true
+          type: string
+        message:
+          type: string
+        run_id:
+          type: string
+        searched_ancestor_limit:
+          format: int64
+          type: integer
+        searched_commit_shas:
+          items:
+            type: string
+          nullable: true
+          type: array
+      required:
+        - code
+        - message
+        - run_id
+        - baseline
+        - commit_sha
+      type: object
+    CIReportBaselineSide:
+      additionalProperties: false
+      nullable: true
+      properties:
+        commit_sha:
+          nullable: true
+          type: string
+        commit_timestamp:
+          format: date-time
+          nullable: true
+          type: string
+        result_id:
+          type: string
+        result_timestamp:
+          format: date-time
+          type: string
+        run_id:
+          type: string
+        single_value_summary:
+          format: double
+          nullable: true
+          type: number
+        single_value_summary_type:
+          type: string
+      required:
+        - result_id
+        - run_id
+        - result_timestamp
+        - commit_sha
+        - commit_timestamp
+        - single_value_summary
+        - single_value_summary_type
+      type: object
+    CIReportComparison:
+      additionalProperties: false
+      properties:
+        analysis:
+          $ref: "#/components/schemas/CIReportAnalysis"
+        baseline:
+          $ref: "#/components/schemas/CIReportBaselineSide"
+        contender:
+          $ref: "#/components/schemas/CIReportSide"
+        context:
+          additionalProperties: {}
+          type: object
+        error:
+          additionalProperties: {}
+          nullable: true
+          type: object
+        hardware:
+          $ref: "#/components/schemas/Hardware"
+        history_fingerprint:
+          type: string
+        info:
+          additionalProperties: {}
+          type: object
+        less_is_better:
+          nullable: true
+          type: boolean
+        links:
+          $ref: "#/components/schemas/CIReportRowLinks"
+        name:
+          type: string
+        reason:
+          type: string
+        status:
+          enum:
+            - regressed
+            - improved
+            - stable
+            - insufficient
+            - errored
+            - missing_baseline
+            - not_comparable
+          type: string
+          x-enum-varnames:
+            - CIReportComparisonStatusRegressed
+            - CIReportComparisonStatusImproved
+            - CIReportComparisonStatusStable
+            - CIReportComparisonStatusInsufficient
+            - CIReportComparisonStatusErrored
+            - CIReportComparisonStatusMissingBaseline
+            - CIReportComparisonStatusNotComparable
+        tags:
+          additionalProperties: {}
+          type: object
+        unit:
+          nullable: true
+          type: string
+      required:
+        - status
+        - name
+        - tags
+        - context
+        - info
+        - hardware
+        - history_fingerprint
+        - unit
+        - less_is_better
+        - contender
+        - baseline
+        - analysis
+        - error
+        - links
+      type: object
+    CIReportRowLinks:
+      additionalProperties: false
+      properties:
+        compare:
+          type: string
+        result:
+          type: string
+        series:
+          type: string
+      required:
+        - result
+        - series
+      type: object
+    CIReportRun:
+      additionalProperties: false
+      properties:
+        baseline_commit:
+          $ref: "#/components/schemas/Commit"
+        baseline_error:
+          $ref: "#/components/schemas/CIReportBaselineError"
+        baseline_run_id:
+          nullable: true
+          type: string
+        commit:
+          $ref: "#/components/schemas/Commit"
+        commits_skipped:
+          items:
+            type: string
+          nullable: true
+          type: array
+        comparisons:
+          items:
+            $ref: "#/components/schemas/CIReportComparison"
+          nullable: true
+          type: array
+        run_id:
+          type: string
+        run_reason:
+          nullable: true
+          type: string
+        run_tags:
+          additionalProperties: {}
+          type: object
+      required:
+        - run_id
+        - run_tags
+        - run_reason
+        - commit
+        - baseline_run_id
+        - baseline_commit
+        - commits_skipped
+        - baseline_error
+        - comparisons
+      type: object
+    CIReportSide:
+      additionalProperties: false
+      properties:
+        commit_sha:
+          nullable: true
+          type: string
+        commit_timestamp:
+          format: date-time
+          nullable: true
+          type: string
+        error:
+          additionalProperties: {}
+          nullable: true
+          type: object
+        result_id:
+          type: string
+        result_timestamp:
+          format: date-time
+          type: string
+        run_id:
+          type: string
+        single_value_summary:
+          format: double
+          nullable: true
+          type: number
+        single_value_summary_type:
+          type: string
+      required:
+        - result_id
+        - run_id
+        - result_timestamp
+        - commit_sha
+        - commit_timestamp
+        - error
+        - single_value_summary
+        - single_value_summary_type
+      type: object
+    CIReportSummary:
+      additionalProperties: false
+      properties:
+        analyzed:
+          format: int64
+          type: integer
+        benchmark_errors:
+          format: int64
+          type: integer
+        compared:
+          format: int64
+          type: integer
+        contender_results:
+          format: int64
+          type: integer
+        improvements:
+          format: int64
+          type: integer
+        missing_baseline:
+          format: int64
+          type: integer
+        missing_runs:
+          format: int64
+          type: integer
+        not_comparable:
+          format: int64
+          type: integer
+        regressions:
+          format: int64
+          type: integer
+        runs:
+          format: int64
+          type: integer
+      required:
+        - runs
+        - missing_runs
+        - contender_results
+        - compared
+        - analyzed
+        - regressions
+        - improvements
+        - benchmark_errors
+        - missing_baseline
+        - not_comparable
+      type: object
+    CapabilitiesOutputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/CapabilitiesOutputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        auth_disabled:
+          type: boolean
+        can_write_results:
+          type: boolean
+        signed_in:
+          type: boolean
+      required:
+        - signed_in
+        - auth_disabled
+        - can_write_results
+      type: object
+    CliExchangeInputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/CliExchangeInputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+      required:
+        - code
+        - name
+      type: object
+    CliExchangeOutputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/CliExchangeOutputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        prefix:
+          type: string
+        token:
+          description: The plaintext secret. Shown once.
+          type: string
+      required:
+        - id
+        - name
+        - token
+        - prefix
+        - created_at
+      type: object
+    ClusterInfo:
+      additionalProperties: false
+      properties:
+        info:
+          additionalProperties: {}
+          type: object
+        name:
+          type: string
+        optional_info:
+          additionalProperties: {}
+          type: object
+      required:
+        - name
+        - info
+      type: object
+    Commit:
+      additionalProperties: false
+      nullable: true
+      properties:
+        id:
+          type: string
+        message:
+          type: string
+        repository:
+          type: string
+        sha:
+          type: string
+        timestamp:
+          format: date-time
+          nullable: true
+          type: string
+      required:
+        - id
+        - sha
+        - repository
+        - message
+        - timestamp
+      type: object
+    CompareAnalysis:
+      additionalProperties: false
+      properties:
+        lookback_z_score:
+          $ref: "#/components/schemas/LookbackAnalysis"
+        pairwise:
+          $ref: "#/components/schemas/PairwiseAnalysis"
+      required:
+        - pairwise
+        - lookback_z_score
+      type: object
+    CompareResult:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/CompareResult.json
+          format: uri
+          readOnly: true
+          type: string
+        analysis:
+          $ref: "#/components/schemas/CompareAnalysis"
+        baseline:
+          $ref: "#/components/schemas/CompareSide"
+        contender:
+          $ref: "#/components/schemas/CompareSide"
+        less_is_better:
+          type: boolean
+        unit:
+          type: string
+      required:
+        - unit
+        - less_is_better
+        - baseline
+        - contender
+        - analysis
+      type: object
+    CompareSide:
+      additionalProperties: false
+      properties:
+        benchmark_result_id:
+          type: string
+        run_id:
+          type: string
+        single_value_summary:
+          format: double
+          type: number
+      required:
+        - benchmark_result_id
+        - single_value_summary
+        - run_id
+      type: object
+    CreateTokenInputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/CreateTokenInputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        name:
+          type: string
+      required:
+        - name
+      type: object
+    CreateTokenOutputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/CreateTokenOutputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        prefix:
+          type: string
+        token:
+          description: The plaintext secret. Shown once; store it now.
+          type: string
+      required:
+        - id
+        - name
+        - token
+        - prefix
+        - created_at
+      type: object
+    ErrorDetail:
+      additionalProperties: false
+      properties:
+        location:
+          description: Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id'
+          type: string
+        message:
+          description: Error message text
+          type: string
+        value:
+          description: The value at the given location
+      type: object
+    ErrorModel:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/ErrorModel.json
+          format: uri
+          readOnly: true
+          type: string
+        detail:
+          description: A human-readable explanation specific to this occurrence of the problem.
+          example: Property foo is required but is missing.
+          type: string
+        errors:
+          description: Optional list of individual error details
+          items:
+            $ref: "#/components/schemas/ErrorDetail"
+          nullable: true
+          type: array
+        instance:
+          description: A URI reference that identifies the specific occurrence of the problem.
+          example: https://example.com/error-log/abc123
+          format: uri
+          type: string
+        status:
+          description: HTTP status code
+          example: 400
+          format: int64
+          type: integer
+        title:
+          description: A short, human-readable summary of the problem type. This value should not change between occurrences of the error.
+          example: Bad Request
+          type: string
+        type:
+          default: about:blank
+          description: A URI reference to human-readable documentation for the error.
+          example: https://example.com/errors/example
+          format: uri
+          type: string
+      type: object
+    GitHubInfo:
+      additionalProperties: false
+      properties:
+        branch:
+          description: Branch in org:branch form; only for non-default-branch runs outside PRs.
+          nullable: true
+          type: string
+        commit:
+          type: string
+        pr_number:
+          description: Pull request number; used to resolve the branch via the GitHub API.
+          format: int64
+          nullable: true
+          type: integer
+        repository:
+          type: string
+      required:
+        - repository
+      type: object
+    Hardware:
+      additionalProperties: false
+      properties:
+        hash:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+      required:
+        - id
+        - type
+        - name
+        - hash
+      type: object
+    HealthOutputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/HealthOutputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        status:
+          type: string
+      required:
+        - status
+      type: object
+    HistorySample:
+      additionalProperties: false
+      properties:
+        benchmark_result_id:
+          type: string
+        commit_hash:
+          type: string
+        commit_message:
+          type: string
+        commit_repository:
+          type: string
+        commit_timestamp:
+          format: date-time
+          nullable: true
+          type: string
+        hardware_hash:
+          type: string
+        mean:
+          format: double
+          nullable: true
+          type: number
+        result_timestamp:
+          format: date-time
+          type: string
+        single_value_summary:
+          format: double
+          type: number
+        single_value_summary_type:
+          type: string
+        unit:
+          nullable: true
+          type: string
+        zscorestats:
+          $ref: "#/components/schemas/ZScoreStats"
+      required:
+        - benchmark_result_id
+        - result_timestamp
+        - mean
+        - single_value_summary
+        - single_value_summary_type
+        - unit
+        - hardware_hash
+        - commit_hash
+        - commit_repository
+        - commit_message
+        - commit_timestamp
+        - zscorestats
+      type: object
+    HistorySeries:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/HistorySeries.json
+          format: uri
+          readOnly: true
+          type: string
+        history_fingerprint:
+          type: string
+        samples:
+          items:
+            $ref: "#/components/schemas/HistorySample"
+          nullable: true
+          type: array
+      required:
+        - history_fingerprint
+        - samples
+      type: object
+    ListAlertEventsOutputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/ListAlertEventsOutputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        events:
+          items:
+            $ref: "#/components/schemas/AlertEventView"
+          nullable: true
+          type: array
+      required:
+        - events
+      type: object
+    ListAlertRulesOutputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/ListAlertRulesOutputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        rules:
+          items:
+            $ref: "#/components/schemas/AlertRuleView"
+          nullable: true
+          type: array
+      required:
+        - rules
+      type: object
+    ListCommit:
+      additionalProperties: false
+      nullable: true
+      properties:
+        hash:
+          type: string
+        repository:
+          type: string
+        timestamp:
+          format: date-time
+          nullable: true
+          type: string
+      required:
+        - hash
+        - repository
+        - timestamp
+      type: object
+    ListTokensOutputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/ListTokensOutputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        tokens:
+          items:
+            $ref: "#/components/schemas/TokenView"
+          nullable: true
+          type: array
+      required:
+        - tokens
+      type: object
+    LookbackAnalysis:
+      additionalProperties: false
+      nullable: true
+      properties:
+        improvement_indicated:
+          type: boolean
+        regression_indicated:
+          type: boolean
+        z_score:
+          format: double
+          type: number
+        z_threshold:
+          format: double
+          type: number
+      required:
+        - z_score
+        - z_threshold
+        - regression_indicated
+        - improvement_indicated
+      type: object
+    MachineInfo:
+      additionalProperties: false
+      properties:
+        architecture_name:
+          type: string
+        cpu_core_count:
+          format: int32
+          type: integer
+        cpu_frequency_max_hz:
+          format: int64
+          type: integer
+        cpu_l1d_cache_bytes:
+          format: int32
+          type: integer
+        cpu_l1i_cache_bytes:
+          format: int32
+          type: integer
+        cpu_l2_cache_bytes:
+          format: int32
+          type: integer
+        cpu_l3_cache_bytes:
+          format: int32
+          type: integer
+        cpu_model_name:
+          type: string
+        cpu_thread_count:
+          format: int32
+          type: integer
+        gpu_count:
+          format: int32
+          type: integer
+        gpu_product_names:
+          items:
+            type: string
+          nullable: true
+          type: array
+        kernel_name:
+          type: string
+        memory_bytes:
+          format: int64
+          type: integer
+        name:
+          type: string
+        os_name:
+          type: string
+        os_version:
+          type: string
+      required:
+        - name
+      type: object
+    MeOutputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/MeOutputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        email:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - email
+        - name
+      type: object
+    PairwiseAnalysis:
+      additionalProperties: false
+      nullable: true
+      properties:
+        improvement_indicated:
+          type: boolean
+        percent_change:
+          format: double
+          type: number
+        percent_threshold:
+          format: double
+          type: number
+        regression_indicated:
+          type: boolean
+      required:
+        - percent_change
+        - percent_threshold
+        - regression_indicated
+        - improvement_indicated
+      type: object
+    RecentRunListItem:
+      additionalProperties: false
+      properties:
+        batch_count:
+          format: int64
+          type: integer
+        commit:
+          $ref: "#/components/schemas/ListCommit"
+        commit_sha:
+          nullable: true
+          type: string
+        error_count:
+          format: int64
+          type: integer
+        first_result_at:
+          format: date-time
+          type: string
+        last_result_at:
+          format: date-time
+          type: string
+        latest_batch_id:
+          nullable: true
+          type: string
+        latest_result_id:
+          type: string
+        repository:
+          type: string
+        result_count:
+          format: int64
+          type: integer
+        run_id:
+          type: string
+        run_reason:
+          nullable: true
+          type: string
+        run_tags:
+          additionalProperties: {}
+          type: object
+        series_count:
+          format: int64
+          type: integer
+      required:
+        - run_id
+        - run_reason
+        - run_tags
+        - batch_count
+        - latest_batch_id
+        - result_count
+        - error_count
+        - series_count
+        - latest_result_id
+        - repository
+        - commit_sha
+        - first_result_at
+        - last_result_at
+        - commit
+      type: object
+    RecentRunsPage:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/RecentRunsPage.json
+          format: uri
+          readOnly: true
+          type: string
+        runs:
+          items:
+            $ref: "#/components/schemas/RecentRunListItem"
+          nullable: true
+          type: array
+      required:
+        - runs
+      type: object
+    ResultDetail:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/ResultDetail.json
+          format: uri
+          readOnly: true
+          type: string
+        batch_id:
+          nullable: true
+          type: string
+        change_annotations:
+          additionalProperties: {}
+          type: object
+        commit:
+          $ref: "#/components/schemas/Commit"
+        commit_repo_url:
+          type: string
+        context:
+          additionalProperties: {}
+          type: object
+        data:
+          items:
+            format: double
+            nullable: true
+            type: number
+          nullable: true
+          type: array
+        error:
+          additionalProperties: {}
+          nullable: true
+          type: object
+        hardware:
+          $ref: "#/components/schemas/Hardware"
+        history_fingerprint:
+          type: string
+        id:
+          type: string
+        info:
+          additionalProperties: {}
+          type: object
+        iterations:
+          format: int32
+          nullable: true
+          type: integer
+        less_is_better:
+          nullable: true
+          type: boolean
+        optional_benchmark_info:
+          additionalProperties: {}
+          nullable: true
+          type: object
+        run_id:
+          type: string
+        run_reason:
+          nullable: true
+          type: string
+        run_tags:
+          additionalProperties: {}
+          type: object
+        single_value_summary:
+          format: double
+          nullable: true
+          type: number
+        single_value_summary_type:
+          type: string
+        stats:
+          $ref: "#/components/schemas/Aggregates"
+        tags:
+          additionalProperties: {}
+          type: object
+        time_unit:
+          nullable: true
+          type: string
+        times:
+          items:
+            format: double
+            nullable: true
+            type: number
+          nullable: true
+          type: array
+        timestamp:
+          format: date-time
+          type: string
+        unit:
+          nullable: true
+          type: string
+        validation:
+          additionalProperties: {}
+          nullable: true
+          type: object
+      required:
+        - id
+        - run_id
+        - run_tags
+        - run_reason
+        - batch_id
+        - timestamp
+        - commit_repo_url
+        - history_fingerprint
+        - tags
+        - context
+        - info
+        - hardware
+        - commit
+        - unit
+        - less_is_better
+        - time_unit
+        - iterations
+        - data
+        - times
+        - stats
+        - error
+        - optional_benchmark_info
+        - validation
+        - change_annotations
+        - single_value_summary
+        - single_value_summary_type
+      type: object
+    ResultListItem:
+      additionalProperties: false
+      properties:
+        batch_id:
+          nullable: true
+          type: string
+        commit:
+          $ref: "#/components/schemas/ListCommit"
+        has_error:
+          type: boolean
+        history_fingerprint:
+          type: string
+        id:
+          type: string
+        run_id:
+          type: string
+        run_reason:
+          nullable: true
+          type: string
+        run_tags:
+          additionalProperties: {}
+          type: object
+        single_value_summary:
+          format: double
+          nullable: true
+          type: number
+        single_value_summary_type:
+          type: string
+        timestamp:
+          format: date-time
+          type: string
+        unit:
+          nullable: true
+          type: string
+      required:
+        - id
+        - run_id
+        - run_reason
+        - run_tags
+        - batch_id
+        - timestamp
+        - unit
+        - single_value_summary
+        - single_value_summary_type
+        - history_fingerprint
+        - commit
+        - has_error
+      type: object
+    ResultPage:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/ResultPage.json
+          format: uri
+          readOnly: true
+          type: string
+        next_page_cursor:
+          nullable: true
+          type: string
+        results:
+          items:
+            $ref: "#/components/schemas/ResultListItem"
+          nullable: true
+          type: array
+      required:
+        - results
+        - next_page_cursor
+      type: object
+    SeriesListItem:
+      additionalProperties: false
+      properties:
+        context:
+          additionalProperties: {}
+          type: object
+        hardware:
+          $ref: "#/components/schemas/Hardware"
+        history_fingerprint:
+          type: string
+        latest_commit_sha:
+          type: string
+        latest_commit_timestamp:
+          format: date-time
+          type: string
+        latest_result_id:
+          type: string
+        latest_result_timestamp:
+          format: date-time
+          type: string
+        latest_single_value_summary:
+          format: double
+          nullable: true
+          type: number
+        latest_single_value_summary_type:
+          nullable: true
+          type: string
+        less_is_better:
+          nullable: true
+          type: boolean
+        name:
+          type: string
+        point_count:
+          format: int64
+          type: integer
+        repository:
+          type: string
+        sparkline:
+          items:
+            format: double
+            type: number
+          nullable: true
+          type: array
+        status:
+          enum:
+            - regressed
+            - improved
+            - stable
+            - insufficient
+          type: string
+          x-enum-varnames:
+            - Regressed
+            - Improved
+            - Stable
+            - Insufficient
+        tags:
+          additionalProperties: {}
+          type: object
+        unit:
+          nullable: true
+          type: string
+      required:
+        - history_fingerprint
+        - name
+        - tags
+        - context
+        - hardware
+        - repository
+        - unit
+        - less_is_better
+        - status
+        - latest_result_id
+        - latest_single_value_summary
+        - latest_single_value_summary_type
+        - latest_commit_sha
+        - latest_commit_timestamp
+        - latest_result_timestamp
+        - point_count
+        - sparkline
+      type: object
+    SeriesPage:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/SeriesPage.json
+          format: uri
+          readOnly: true
+          type: string
+        next_page_cursor:
+          nullable: true
+          type: string
+        series:
+          items:
+            $ref: "#/components/schemas/SeriesListItem"
+          nullable: true
+          type: array
+      required:
+        - series
+        - next_page_cursor
+      type: object
+    StatsInput:
+      additionalProperties: false
+      properties:
+        data:
+          items:
+            format: double
+            nullable: true
+            type: number
+          nullable: true
+          type: array
+        iqr:
+          format: double
+          type: number
+        iterations:
+          format: int32
+          type: integer
+        max:
+          format: double
+          type: number
+        mean:
+          format: double
+          type: number
+        median:
+          format: double
+          type: number
+        min:
+          format: double
+          type: number
+        q1:
+          format: double
+          type: number
+        q3:
+          format: double
+          type: number
+        stdev:
+          format: double
+          type: number
+        time_unit:
+          type: string
+        times:
+          items:
+            format: double
+            nullable: true
+            type: number
+          nullable: true
+          type: array
+        unit:
+          type: string
+      required:
+        - data
+      type: object
+    SubmitOutputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/SubmitOutputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        history_fingerprint:
+          type: string
+        id:
+          type: string
+      required:
+        - id
+        - history_fingerprint
+      type: object
+    SubmitRequest:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/SubmitRequest.json
+          format: uri
+          readOnly: true
+          type: string
+        batch_id:
+          type: string
+        change_annotations:
+          additionalProperties: {}
+          nullable: true
+          type: object
+        cluster_info:
+          $ref: "#/components/schemas/ClusterInfo"
+        context:
+          additionalProperties: {}
+          type: object
+        error:
+          additionalProperties: true
+          type: object
+        github:
+          $ref: "#/components/schemas/GitHubInfo"
+        info:
+          additionalProperties: {}
+          type: object
+        machine_info:
+          $ref: "#/components/schemas/MachineInfo"
+        optional_benchmark_info:
+          additionalProperties: {}
+          nullable: true
+          type: object
+        run_id:
+          type: string
+        run_name:
+          type: string
+        run_reason:
+          type: string
+        run_tags:
+          additionalProperties: {}
+          type: object
+        stats:
+          $ref: "#/components/schemas/StatsInput"
+        tags:
+          additionalProperties: {}
+          type: object
+        timestamp:
+          format: date-time
+          type: string
+        validation:
+          additionalProperties: {}
+          nullable: true
+          type: object
+      required:
+        - tags
+        - context
+        - github
+        - run_id
+        - timestamp
+      type: object
+    TokenView:
+      additionalProperties: false
+      properties:
+        created_at:
+          format: date-time
+          type: string
+        id:
+          type: string
+        last_used_at:
+          format: date-time
+          type: string
+        name:
+          type: string
+        prefix:
+          type: string
+        revoked_at:
+          format: date-time
+          type: string
+      required:
+        - id
+        - name
+        - prefix
+        - created_at
+      type: object
+    UpdateResultInputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          example: https://example.com/schemas/UpdateResultInputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        change_annotations:
+          additionalProperties: {}
+          nullable: true
+          type: object
+      type: object
+    ZScoreStats:
+      additionalProperties: false
+      nullable: true
+      properties:
+        begins_distribution_change:
+          type: boolean
+        is_outlier:
+          type: boolean
+        is_step:
+          type: boolean
+        residual:
+          format: double
+          nullable: true
+          type: number
+        rolling_mean:
+          format: double
+          nullable: true
+          type: number
+        rolling_mean_excluding_this_commit:
+          format: double
+          nullable: true
+          type: number
+        rolling_stddev:
+          format: double
+          nullable: true
+          type: number
+        segment_id:
+          format: int64
+          type: integer
+      required:
+        - begins_distribution_change
+        - is_step
+        - is_outlier
+        - segment_id
+        - rolling_mean_excluding_this_commit
+        - rolling_mean
+        - residual
+        - rolling_stddev
+      type: object
+info:
+  title: Conbench
+  version: 0.1.0
+openapi: 3.0.3
+paths:
+  /api/alert-rules:
+    get:
+      operationId: list-alert-rules
+      parameters:
+        - description: Bearer token.
+          in: header
+          name: Authorization
+          schema:
+            description: Bearer token.
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListAlertRulesOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: List the caller's alert rules
+    post:
+      operationId: create-alert-rule
+      parameters:
+        - description: Bearer token.
+          in: header
+          name: Authorization
+          schema:
+            description: Bearer token.
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertRuleBody"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertRuleView"
+          description: Created
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Create an alert rule
+  /api/alert-rules/{id}:
+    delete:
+      operationId: delete-alert-rule
+      parameters:
+        - description: Bearer token.
+          in: header
+          name: Authorization
+          schema:
+            description: Bearer token.
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Delete one alert rule
+    get:
+      operationId: get-alert-rule
+      parameters:
+        - description: Bearer token.
+          in: header
+          name: Authorization
+          schema:
+            description: Bearer token.
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertRuleView"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Get one alert rule
+    put:
+      operationId: update-alert-rule
+      parameters:
+        - description: Bearer token.
+          in: header
+          name: Authorization
+          schema:
+            description: Bearer token.
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertRuleBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertRuleView"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Update one alert rule
+  /api/alert-rules/{id}/events:
+    get:
+      operationId: list-alert-events
+      parameters:
+        - description: Bearer token.
+          in: header
+          name: Authorization
+          schema:
+            description: Bearer token.
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - description: Maximum events to return.
+          explode: false
+          in: query
+          name: limit
+          schema:
+            default: 50
+            description: Maximum events to return.
+            format: int32
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListAlertEventsOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: List alert events for one rule
+  /api/auth/callback:
+    get:
+      operationId: auth-callback
+      parameters:
+        - explode: false
+          in: query
+          name: state
+          schema:
+            type: string
+        - explode: false
+          in: query
+          name: code
+          schema:
+            type: string
+        - in: cookie
+          name: conbench_pending
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+            Set-Cookie:
+              schema:
+                type: string
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: OIDC callback
+  /api/auth/capabilities:
+    get:
+      operationId: auth-capabilities
+      parameters:
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapabilitiesOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Browser-visible auth capabilities
+  /api/auth/cli-exchange:
+    post:
+      operationId: auth-cli-exchange
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CliExchangeInputBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CliExchangeOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Exchange a CLI login code for an API token
+  /api/auth/cli-start:
+    get:
+      operationId: auth-cli-start
+      parameters:
+        - explode: false
+          in: query
+          name: redirect_uri
+          schema:
+            type: string
+        - explode: false
+          in: query
+          name: state
+          schema:
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+            Set-Cookie:
+              schema:
+                type: string
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Begin CLI loopback login
+  /api/auth/login:
+    get:
+      operationId: auth-login
+      responses:
+        "302":
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+            Set-Cookie:
+              schema:
+                type: string
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Begin OIDC login
+  /api/auth/logout:
+    post:
+      operationId: auth-logout
+      responses:
+        "204":
+          description: No Content
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Log out
+  /api/benchmark-results:
+    get:
+      operationId: list-benchmark-results
+      parameters:
+        - description: Filter by run id.
+          explode: false
+          in: query
+          name: run_id
+          schema:
+            description: Filter by run id.
+            type: string
+        - description: Filter by batch id.
+          explode: false
+          in: query
+          name: batch_id
+          schema:
+            description: Filter by batch id.
+            type: string
+        - description: Filter by run reason.
+          explode: false
+          in: query
+          name: run_reason
+          schema:
+            description: Filter by run reason.
+            type: string
+        - description: Lower bound (inclusive), RFC3339.
+          explode: false
+          in: query
+          name: earliest_timestamp
+          schema:
+            description: Lower bound (inclusive), RFC3339.
+            type: string
+        - description: Upper bound (inclusive), RFC3339.
+          explode: false
+          in: query
+          name: latest_timestamp
+          schema:
+            description: Upper bound (inclusive), RFC3339.
+            type: string
+        - description: Pagination cursor (previous page's last id).
+          explode: false
+          in: query
+          name: cursor
+          schema:
+            description: Pagination cursor (previous page's last id).
+            type: string
+        - description: Page size (max 1000).
+          explode: false
+          in: query
+          name: page_size
+          schema:
+            default: 100
+            description: Page size (max 1000).
+            format: int64
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultPage"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: List and search benchmark results
+  /api/benchmark-results/{id}:
+    delete:
+      operationId: delete-result
+      parameters:
+        - description: Bearer token, e.g. 'Bearer <token>'.
+          in: header
+          name: Authorization
+          schema:
+            description: Bearer token, e.g. 'Bearer <token>'.
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Delete a benchmark result
+    get:
+      operationId: get-benchmark-result
+      parameters:
+        - description: Benchmark result id.
+          in: path
+          name: id
+          required: true
+          schema:
+            description: Benchmark result id.
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultDetail"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Get a benchmark result
+    put:
+      operationId: update-result
+      parameters:
+        - description: Bearer token, e.g. 'Bearer <token>'.
+          in: header
+          name: Authorization
+          schema:
+            description: Bearer token, e.g. 'Bearer <token>'.
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateResultInputBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultDetail"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Update a benchmark result's change_annotations
+  /api/ci/report:
+    get:
+      operationId: get-ci-report
+      parameters:
+        - description: Repository URL.
+          explode: false
+          in: query
+          name: repository
+          schema:
+            description: Repository URL.
+            type: string
+        - description: Commit SHA.
+          explode: false
+          in: query
+          name: commit_sha
+          schema:
+            description: Commit SHA.
+            type: string
+        - description: Comma-separated contender run IDs.
+          explode: false
+          in: query
+          name: run_ids
+          schema:
+            description: Comma-separated contender run IDs.
+            type: string
+        - description: Comma-separated explicit baseline run IDs, paired by position with run_ids.
+          explode: false
+          in: query
+          name: baseline_run_ids
+          schema:
+            description: Comma-separated explicit baseline run IDs, paired by position with run_ids.
+            type: string
+        - description: Automatic baseline selector.
+          explode: false
+          in: query
+          name: baseline
+          schema:
+            description: Automatic baseline selector.
+            enum:
+              - fork_point
+              - parent
+              - latest_default
+            type: string
+        - description: Pairwise percent-change threshold. Defaults to 5.
+          explode: false
+          in: query
+          name: threshold
+          schema:
+            description: Pairwise percent-change threshold. Defaults to 5.
+            format: double
+            type: number
+        - description: Lookback z-score threshold. Defaults to 5.
+          explode: false
+          in: query
+          name: threshold_z
+          schema:
+            description: Lookback z-score threshold. Defaults to 5.
+            format: double
+            type: number
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CIReport"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Get a PR/CI benchmark report
+  /api/compare/benchmark-results:
+    get:
+      operationId: compare-benchmark-results
+      parameters:
+        - description: Baseline benchmark result id.
+          explode: false
+          in: query
+          name: baseline_result_id
+          required: true
+          schema:
+            description: Baseline benchmark result id.
+            type: string
+        - description: Contender benchmark result id.
+          explode: false
+          in: query
+          name: contender_result_id
+          required: true
+          schema:
+            description: Contender benchmark result id.
+            type: string
+        - description: Pairwise percent-change threshold.
+          explode: false
+          in: query
+          name: threshold
+          schema:
+            default: 5
+            description: Pairwise percent-change threshold.
+            format: double
+            type: number
+        - description: Lookback z-score threshold.
+          explode: false
+          in: query
+          name: threshold_z
+          schema:
+            default: 5
+            description: Lookback z-score threshold.
+            format: double
+            type: number
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompareResult"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Compare two benchmark results
+  /api/history:
+    get:
+      operationId: get-history
+      parameters:
+        - description: History fingerprint.
+          explode: false
+          in: query
+          name: fingerprint
+          required: true
+          schema:
+            description: History fingerprint.
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistorySeries"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Get a history series by fingerprint
+  /api/history/{benchmark_result_id}:
+    get:
+      operationId: get-history-for-result
+      parameters:
+        - description: Benchmark result id whose history to load.
+          in: path
+          name: benchmark_result_id
+          required: true
+          schema:
+            description: Benchmark result id whose history to load.
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistorySeries"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Get the history series for a benchmark result
+  /api/ping:
+    get:
+      operationId: ping
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Liveness check
+  /api/results:
+    post:
+      operationId: submit-result
+      parameters:
+        - description: Bearer token, e.g. 'Bearer <token>'.
+          in: header
+          name: Authorization
+          schema:
+            description: Bearer token, e.g. 'Bearer <token>'.
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmitOutputBody"
+          description: Created
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Submit a benchmark result
+  /api/runs/recent:
+    get:
+      operationId: list-recent-runs
+      parameters:
+        - description: Page size (max 100).
+          explode: false
+          in: query
+          name: page_size
+          schema:
+            default: 25
+            description: Page size (max 100).
+            format: int64
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecentRunsPage"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: List recent benchmark runs
+  /api/series:
+    get:
+      operationId: list-series
+      parameters:
+        - description: Substring match on case name and case tags.
+          explode: false
+          in: query
+          name: q
+          schema:
+            description: Substring match on case name and case tags.
+            type: string
+        - description: Filter by hardware name.
+          explode: false
+          in: query
+          name: hardware
+          schema:
+            description: Filter by hardware name.
+            type: string
+        - description: Filter by repository URL.
+          explode: false
+          in: query
+          name: repository
+          schema:
+            description: Filter by repository URL.
+            type: string
+        - description: Filter by history fingerprint.
+          explode: false
+          in: query
+          name: fingerprint
+          schema:
+            description: Filter by history fingerprint.
+            type: string
+        - description: Latest commit at or after this instant, RFC3339.
+          explode: false
+          in: query
+          name: active_since
+          schema:
+            description: Latest commit at or after this instant, RFC3339.
+            type: string
+        - description: Latest commit at or before this instant, RFC3339.
+          explode: false
+          in: query
+          name: active_until
+          schema:
+            description: Latest commit at or before this instant, RFC3339.
+            type: string
+        - description: Pagination cursor from a previous page's next_page_cursor.
+          explode: false
+          in: query
+          name: cursor
+          schema:
+            description: Pagination cursor from a previous page's next_page_cursor.
+            type: string
+        - description: Page size (max 1000).
+          explode: false
+          in: query
+          name: page_size
+          schema:
+            default: 100
+            description: Page size (max 1000).
+            format: int64
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeriesPage"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: List and search benchmark series
+  /api/tokens:
+    get:
+      operationId: list-tokens
+      parameters:
+        - description: Bearer token.
+          in: header
+          name: Authorization
+          schema:
+            description: Bearer token.
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListTokensOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: List the caller's API tokens
+    post:
+      operationId: create-token
+      parameters:
+        - description: Bearer token.
+          in: header
+          name: Authorization
+          schema:
+            description: Bearer token.
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTokenInputBody"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTokenOutputBody"
+          description: Created
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Mint an API token
+  /api/tokens/{id}:
+    delete:
+      operationId: delete-token
+      parameters:
+        - description: Bearer token.
+          in: header
+          name: Authorization
+          schema:
+            description: Bearer token.
+            type: string
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Revoke one of the caller's API tokens
+  /api/users/me:
+    get:
+      operationId: users-me
+      parameters:
+        - in: cookie
+          name: conbench_session
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Current session identity

@@ -1,4 +1,4 @@
-# This is used in a BK pipeline, in prod
+# Service manifest for production-style Kubernetes deployments.
 apiVersion: v1
 kind: Service
 metadata:
@@ -20,7 +20,7 @@ spec:
     # The port number above: the port that will be exposed by this service.
     # `targetPort` is documented with "Number or name of the port to access on
     # the pods targeted by the service."
-    targetPort: gunicorn-port
+    targetPort: http
     protocol: TCP
   type: NodePort
   selector:

@@ -1,0 +1,286 @@
+{
+  "aggregates": [
+    {
+      "samples": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "q1": 1.5,
+      "q3": 2.5,
+      "mean": 2.0,
+      "median": 2.0,
+      "min": 1.0,
+      "max": 3.0,
+      "stdev": 1.0,
+      "iqr": 1.0
+    },
+    {
+      "samples": [
+        5.0
+      ],
+      "q1": null,
+      "q3": null,
+      "mean": 5.0,
+      "median": null,
+      "min": null,
+      "max": null,
+      "stdev": null,
+      "iqr": null
+    },
+    {
+      "samples": [
+        2.0,
+        4.0
+      ],
+      "q1": null,
+      "q3": null,
+      "mean": 3.0,
+      "median": null,
+      "min": null,
+      "max": null,
+      "stdev": null,
+      "iqr": null
+    },
+    {
+      "samples": [
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0
+      ],
+      "q1": 2.25,
+      "q3": 4.75,
+      "mean": 3.5,
+      "median": 3.5,
+      "min": 1.0,
+      "max": 6.0,
+      "stdev": 1.8708286933869707,
+      "iqr": 2.5
+    },
+    {
+      "samples": [
+        10.5,
+        9.5,
+        11.0,
+        8.0,
+        12.0
+      ],
+      "q1": 9.5,
+      "q3": 11.0,
+      "mean": 10.2,
+      "median": 10.5,
+      "min": 8.0,
+      "max": 12.0,
+      "stdev": 1.5247950681976907,
+      "iqr": 1.5
+    },
+    {
+      "samples": [
+        3.0,
+        3.0,
+        3.0
+      ],
+      "q1": 3.0,
+      "q3": 3.0,
+      "mean": 3.0,
+      "median": 3.0,
+      "min": 3.0,
+      "max": 3.0,
+      "stdev": 0.0,
+      "iqr": 0.0
+    }
+  ],
+  "svs": [
+    {
+      "data": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "unit": "s",
+      "has_error": false,
+      "mode": "best",
+      "is_failed": false,
+      "measurements": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "svs_type": "min",
+      "svs": 1.0
+    },
+    {
+      "data": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "unit": "i/s",
+      "has_error": false,
+      "mode": "best",
+      "is_failed": false,
+      "measurements": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "svs_type": "max",
+      "svs": 3.0
+    },
+    {
+      "data": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "unit": "s",
+      "has_error": false,
+      "mode": "mean",
+      "is_failed": false,
+      "measurements": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "svs_type": "mean",
+      "svs": 2.0
+    },
+    {
+      "data": [
+        5.0
+      ],
+      "unit": "s",
+      "has_error": false,
+      "mode": "best",
+      "is_failed": false,
+      "measurements": [
+        5.0
+      ],
+      "svs_type": "min",
+      "svs": 5.0
+    },
+    {
+      "data": [
+        5.0,
+        3.0
+      ],
+      "unit": "s",
+      "has_error": false,
+      "mode": "best",
+      "is_failed": false,
+      "measurements": [
+        5.0,
+        3.0
+      ],
+      "svs_type": "min",
+      "svs": 3.0
+    },
+    {
+      "data": [
+        5.0,
+        3.0
+      ],
+      "unit": "i/s",
+      "has_error": false,
+      "mode": "best",
+      "is_failed": false,
+      "measurements": [
+        5.0,
+        3.0
+      ],
+      "svs_type": "max",
+      "svs": 5.0
+    },
+    {
+      "data": [
+        2.0,
+        4.0
+      ],
+      "unit": "s",
+      "has_error": false,
+      "mode": "mean",
+      "is_failed": false,
+      "measurements": [
+        2.0,
+        4.0
+      ],
+      "svs_type": "mean",
+      "svs": 3.0
+    },
+    {
+      "data": [
+        1.0,
+        null,
+        3.0
+      ],
+      "unit": "s",
+      "has_error": false,
+      "mode": "best",
+      "is_failed": true,
+      "measurements": [],
+      "svs_type": "min",
+      "svs": null
+    },
+    {
+      "data": [],
+      "unit": "s",
+      "has_error": false,
+      "mode": "best",
+      "is_failed": true,
+      "measurements": [],
+      "svs_type": "min",
+      "svs": null
+    },
+    {
+      "data": [
+        1.0
+      ],
+      "unit": null,
+      "has_error": false,
+      "mode": "best",
+      "is_failed": true,
+      "measurements": [],
+      "svs_type": "n/a",
+      "svs": null
+    },
+    {
+      "data": [
+        1.0
+      ],
+      "unit": "s",
+      "has_error": true,
+      "mode": "best",
+      "is_failed": true,
+      "measurements": [],
+      "svs_type": "min",
+      "svs": null
+    },
+    {
+      "data": [
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0
+      ],
+      "unit": "i/s",
+      "has_error": false,
+      "mode": "mean",
+      "is_failed": false,
+      "measurements": [
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0
+      ],
+      "svs_type": "mean",
+      "svs": 3.5
+    }
+  ]
+}

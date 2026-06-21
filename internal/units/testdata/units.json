@@ -1,0 +1,76 @@
+{
+  "units": [
+    {
+      "symbol": "B",
+      "less_is_better": true,
+      "long": "bytes"
+    },
+    {
+      "symbol": "B/s",
+      "less_is_better": false,
+      "long": "bytes per second"
+    },
+    {
+      "symbol": "s",
+      "less_is_better": true,
+      "long": "seconds"
+    },
+    {
+      "symbol": "ns",
+      "less_is_better": true,
+      "long": "nanoseconds"
+    },
+    {
+      "symbol": "i/s",
+      "less_is_better": false,
+      "long": "iterations per second"
+    }
+  ],
+  "legacy_convert": [
+    {
+      "input": "b/s",
+      "output": "B/s",
+      "valid": true
+    },
+    {
+      "input": "B/s",
+      "output": "B/s",
+      "valid": true
+    },
+    {
+      "input": "s",
+      "output": "s",
+      "valid": true
+    },
+    {
+      "input": "B",
+      "output": "B",
+      "valid": true
+    },
+    {
+      "input": "ns",
+      "output": "ns",
+      "valid": true
+    },
+    {
+      "input": "i/s",
+      "output": "i/s",
+      "valid": true
+    },
+    {
+      "input": "ms",
+      "output": null,
+      "valid": false
+    },
+    {
+      "input": "foo",
+      "output": null,
+      "valid": false
+    },
+    {
+      "input": "",
+      "output": null,
+      "valid": false
+    }
+  ]
+}

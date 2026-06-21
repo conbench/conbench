@@ -1,9 +1,0 @@
-{
-    "status_code": 200,
-    "data": {
-        "data": [],
-        "metadata": {
-            "next_page_cursor": null
-        }
-    }
-}

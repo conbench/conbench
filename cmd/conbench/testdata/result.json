@@ -1,0 +1,21 @@
+{
+  "tags": {"name": "cli-demo", "dataset": "uniform"},
+  "context": {"compiler": "gcc-13", "optimization": "O2"},
+  "info": {"benchmark_language": "C++"},
+  "machine_info": {
+    "name": "cli-runner",
+    "architecture_name": "arm64",
+    "os_name": "Linux",
+    "cpu_model_name": "Demo CPU",
+    "cpu_core_count": 10,
+    "cpu_thread_count": 10,
+    "memory_bytes": 34359738368,
+    "gpu_count": 0
+  },
+  "github": {"commit": "cli-commit-01", "repository": "https://github.com/conbench/demo"},
+  "run_id": "cli-run-1",
+  "run_name": "cli-nightly",
+  "batch_id": "cli-batch-1",
+  "timestamp": "2024-01-02T12:00:00Z",
+  "stats": {"data": [1.0, 1.02, 1.04], "unit": "s"}
+}

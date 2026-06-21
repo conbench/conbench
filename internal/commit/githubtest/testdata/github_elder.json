@@ -1,0 +1,147 @@
+{
+  "sha": "81e9417eb68171e03a304097ae86e1fd83307130",
+  "node_id": "MDY6Q29tbWl0NTE5MDUzNTM6ODFlOTQxN2ViNjgxNzFlMDNhMzA0MDk3YWU4NmUxZmQ4MzMwNzEzMA==",
+  "commit": {
+    "author": {
+      "name": "Diana Clarke",
+      "email": "diana.joan.clarke@gmail.com",
+      "date": "2021-02-24T20:27:21Z"
+    },
+    "committer": {
+      "name": "Benjamin Kietzman",
+      "email": "bengilgit@gmail.com",
+      "date": "2021-02-24T20:27:21Z"
+    },
+    "message": "ARROW-11575: [Developer][Archery] Expose execution time in benchmark results\n\nSee: https://issues.apache.org/jira/browse/ARROW-11575\n\nGoogle Benchmark reports both cpu time & real time in each benchmark observation. For example:\n\n```\n{'cpu_time': 9718937.499999996,\n  'items_per_second': 26972495.707478322,\n  'iterations': 64,\n  'name': 'TakeStringRandomIndicesWithNulls/262144/0',\n  'null_percent': 0.0,\n  'real_time': 10297947.859726265,\n  'repetition_index': 2,\n  'repetitions': 0,\n  'run_name': 'TakeStringRandomIndicesWithNulls/262144/0',\n  'run_type': 'iteration',\n  'size': 262144.0,\n  'threads': 1,\n  'time_unit': 'ns'},\n```\n\nCurrently, Archery doesn't expose the execution time in its json results though. For example:\n\n```\n                {\n                    \"name\": \"TakeStringRandomIndicesWithNulls/262144/2\",\n                    \"unit\": \"items_per_second\",\n                    \"less_is_better\": false,\n                    \"values\": [\n                        20900887.666890558,\n                        21737551.30809738,\n                        21872425.314689018\n                    ]\n                }\n```\n\nThis pull request updates Archery to expose the real time as well. For example:\n\n```\n                {\n                    \"name\": \"TakeStringRandomIndicesWithNulls/262144/2\",\n                    \"unit\": \"items_per_second\",\n                    \"less_is_better\": false,\n                    \"values\": [\n                        20900887.666890558,\n                        21737551.30809738,\n                        21872425.314689018\n                    ],\n                    \"time_unit\": \"ns\",\n                    \"times\": [\n                        34939132.454438195,\n                        44459594.18080747,\n                        46606865.63566384\n                    ]\n                }\n```\n\nMotivation: I am persisting these results and would also like to store the execution time to debug slow benchmarks.\n\nCloses #9458 from dianaclarke/ARROW-11575\n\nAuthored-by: Diana Clarke <diana.joan.clarke@gmail.com>\nSigned-off-by: Benjamin Kietzman <bengilgit@gmail.com>",
+    "tree": {
+      "sha": "0bbda88d73e2aeed36b92e9aad40fb6a1a4b42b0",
+      "url": "https://api.github.com/repos/apache/arrow/git/trees/0bbda88d73e2aeed36b92e9aad40fb6a1a4b42b0"
+    },
+    "url": "https://api.github.com/repos/apache/arrow/git/commits/81e9417eb68171e03a304097ae86e1fd83307130",
+    "comment_count": 0,
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null
+    }
+  },
+  "url": "https://api.github.com/repos/apache/arrow/commits/81e9417eb68171e03a304097ae86e1fd83307130",
+  "html_url": "https://github.com/apache/arrow/commit/81e9417eb68171e03a304097ae86e1fd83307130",
+  "comments_url": "https://api.github.com/repos/apache/arrow/commits/81e9417eb68171e03a304097ae86e1fd83307130/comments",
+  "author": {
+    "login": "dianaclarke",
+    "id": 878798,
+    "node_id": "MDQ6VXNlcjg3ODc5OA==",
+    "avatar_url": "https://avatars.githubusercontent.com/u/878798?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/dianaclarke",
+    "html_url": "https://github.com/dianaclarke",
+    "followers_url": "https://api.github.com/users/dianaclarke/followers",
+    "following_url": "https://api.github.com/users/dianaclarke/following{/other_user}",
+    "gists_url": "https://api.github.com/users/dianaclarke/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/dianaclarke/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/dianaclarke/subscriptions",
+    "organizations_url": "https://api.github.com/users/dianaclarke/orgs",
+    "repos_url": "https://api.github.com/users/dianaclarke/repos",
+    "events_url": "https://api.github.com/users/dianaclarke/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/dianaclarke/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "committer": {
+    "login": "bkietz",
+    "id": 1299904,
+    "node_id": "MDQ6VXNlcjEyOTk5MDQ=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/1299904?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/bkietz",
+    "html_url": "https://github.com/bkietz",
+    "followers_url": "https://api.github.com/users/bkietz/followers",
+    "following_url": "https://api.github.com/users/bkietz/following{/other_user}",
+    "gists_url": "https://api.github.com/users/bkietz/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/bkietz/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/bkietz/subscriptions",
+    "organizations_url": "https://api.github.com/users/bkietz/orgs",
+    "repos_url": "https://api.github.com/users/bkietz/repos",
+    "events_url": "https://api.github.com/users/bkietz/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/bkietz/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "parents": [
+    {
+      "sha": "4de992c60ba433ad9b15ca1c41e6ec40bc542c2a",
+      "url": "https://api.github.com/repos/apache/arrow/commits/4de992c60ba433ad9b15ca1c41e6ec40bc542c2a",
+      "html_url": "https://github.com/apache/arrow/commit/4de992c60ba433ad9b15ca1c41e6ec40bc542c2a"
+    }
+  ],
+  "stats": {
+    "total": 166,
+    "additions": 150,
+    "deletions": 16
+  },
+  "files": [
+    {
+      "sha": "359dea9b9f3d1fcee16eaaadaf8e17811817e187",
+      "filename": "dev/archery/archery/benchmark/codec.py",
+      "status": "renamed",
+      "additions": 2,
+      "deletions": 0,
+      "changes": 2,
+      "blob_url": "https://github.com/apache/arrow/blob/81e9417eb68171e03a304097ae86e1fd83307130/dev/archery/archery/benchmark/codec.py",
+      "raw_url": "https://github.com/apache/arrow/raw/81e9417eb68171e03a304097ae86e1fd83307130/dev/archery/archery/benchmark/codec.py",
+      "contents_url": "https://api.github.com/repos/apache/arrow/contents/dev/archery/archery/benchmark/codec.py?ref=81e9417eb68171e03a304097ae86e1fd83307130",
+      "patch": "@@ -48,6 +48,8 @@ def encode(b):\n             \"unit\": b.unit,\n             \"less_is_better\": b.less_is_better,\n             \"values\": b.values,\n+            \"time_unit\": b.time_unit,\n+            \"times\": b.times,\n         }\n \n     @staticmethod",
+      "previous_filename": "dev/archery/archery/utils/codec.py"
+    },
+    {
+      "sha": "5a92271a35391f16d6d13b3b6481f9e9b4e258b9",
+      "filename": "dev/archery/archery/benchmark/core.py",
+      "status": "modified",
+      "additions": 4,
+      "deletions": 1,
+      "changes": 5,
+      "blob_url": "https://github.com/apache/arrow/blob/81e9417eb68171e03a304097ae86e1fd83307130/dev/archery/archery/benchmark/core.py",
+      "raw_url": "https://github.com/apache/arrow/raw/81e9417eb68171e03a304097ae86e1fd83307130/dev/archery/archery/benchmark/core.py",
+      "contents_url": "https://api.github.com/repos/apache/arrow/contents/dev/archery/archery/benchmark/core.py?ref=81e9417eb68171e03a304097ae86e1fd83307130",
+      "patch": "@@ -27,11 +27,14 @@ def median(values):\n \n \n class Benchmark:\n-    def __init__(self, name, unit, less_is_better, values, counters=None):\n+    def __init__(self, name, unit, less_is_better, values, time_unit,\n+                 times, counters=None):\n         self.name = name\n         self.unit = unit\n         self.less_is_better = less_is_better\n         self.values = sorted(values)\n+        self.time_unit = time_unit\n+        self.times = sorted(times)\n         self.median = median(self.values)\n         self.counters = counters or {}\n "
+    },
+    {
+      "sha": "c1644dcbd9cea2185c44750b5d3ca54d8dda62bd",
+      "filename": "dev/archery/archery/benchmark/google.py",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 1,
+      "changes": 4,
+      "blob_url": "https://github.com/apache/arrow/blob/81e9417eb68171e03a304097ae86e1fd83307130/dev/archery/archery/benchmark/google.py",
+      "raw_url": "https://github.com/apache/arrow/raw/81e9417eb68171e03a304097ae86e1fd83307130/dev/archery/archery/benchmark/google.py",
+      "contents_url": "https://api.github.com/repos/apache/arrow/contents/dev/archery/archery/benchmark/google.py?ref=81e9417eb68171e03a304097ae86e1fd83307130",
+      "patch": "@@ -152,11 +152,13 @@ def __init__(self, name, runs):\n         _, runs = partition(lambda b: b.is_aggregate, runs)\n         self.runs = sorted(runs, key=lambda b: b.value)\n         unit = self.runs[0].unit\n+        time_unit = self.runs[0].time_unit\n         less_is_better = not unit.endswith(\"per_second\")\n         values = [b.value for b in self.runs]\n+        times = [b.real_time for b in self.runs]\n         # Slight kludge to extract the UserCounters for each benchmark\n         self.counters = self.runs[0].counters\n-        super().__init__(name, unit, less_is_better, values)\n+        super().__init__(name, unit, less_is_better, values, time_unit, times)\n \n     def __repr__(self):\n         return \"GoogleBenchmark[name={},runs={}]\".format(self.names, self.runs)"
+    },
+    {
+      "sha": "74e2373821c019914edcab9d5774a2e7679915fa",
+      "filename": "dev/archery/archery/cli.py",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/apache/arrow/blob/81e9417eb68171e03a304097ae86e1fd83307130/dev/archery/archery/cli.py",
+      "raw_url": "https://github.com/apache/arrow/raw/81e9417eb68171e03a304097ae86e1fd83307130/dev/archery/archery/cli.py",
+      "contents_url": "https://api.github.com/repos/apache/arrow/contents/dev/archery/archery/cli.py?ref=81e9417eb68171e03a304097ae86e1fd83307130",
+      "patch": "@@ -25,10 +25,10 @@\n import pathlib\n import sys\n \n+from .benchmark.codec import JsonEncoder\n from .benchmark.compare import RunnerComparator, DEFAULT_THRESHOLD\n from .benchmark.runner import BenchmarkRunner, CppBenchmarkRunner\n from .lang.cpp import CppCMakeDefinition, CppConfiguration\n-from .utils.codec import JsonEncoder\n from .utils.lint import linter, python_numpydoc, LintValidationException\n from .utils.logger import logger, ctx as log_ctx\n from .utils.source import ArrowSources, InvalidArrowSource"
+    },
+    {
+      "sha": "b763ea3c86fba324cf4155a8473940d48c738599",
+      "filename": "dev/archery/tests/test_benchmarks.py",
+      "status": "modified",
+      "additions": 140,
+      "deletions": 13,
+      "changes": 153,
+      "blob_url": "https://github.com/apache/arrow/blob/81e9417eb68171e03a304097ae86e1fd83307130/dev/archery/tests/test_benchmarks.py",
+      "raw_url": "https://github.com/apache/arrow/raw/81e9417eb68171e03a304097ae86e1fd83307130/dev/archery/tests/test_benchmarks.py",
+      "contents_url": "https://api.github.com/repos/apache/arrow/contents/dev/archery/tests/test_benchmarks.py?ref=81e9417eb68171e03a304097ae86e1fd83307130",
+      "patch": "@@ -17,32 +17,36 @@\n \n import json\n \n+from archery.benchmark.codec import JsonEncoder\n from archery.benchmark.core import Benchmark, median\n from archery.benchmark.compare import BenchmarkComparator\n from archery.benchmark.google import (\n     GoogleBenchmark, GoogleBenchmarkObservation\n )\n-from archery.utils.codec import JsonEncoder\n \n \n def test_benchmark_comparator():\n     unit = \"micros\"\n \n     assert not BenchmarkComparator(\n-        Benchmark(\"contender\", unit, True, [10]),\n-        Benchmark(\"baseline\", unit, True, [20])).regression\n+        Benchmark(\"contender\", unit, True, [10], unit, [1]),\n+        Benchmark(\"baseline\", unit, True, [20], unit, [1]),\n+    ).regression\n \n     assert BenchmarkComparator(\n-        Benchmark(\"contender\", unit, False, [10]),\n-        Benchmark(\"baseline\", unit, False, [20])).regression\n+        Benchmark(\"contender\", unit, False, [10], unit, [1]),\n+        Benchmark(\"baseline\", unit, False, [20], unit, [1]),\n+    ).regression\n \n     assert BenchmarkComparator(\n-        Benchmark(\"contender\", unit, True, [20]),\n-        Benchmark(\"baseline\", unit, True, [10])).regression\n+        Benchmark(\"contender\", unit, True, [20], unit, [1]),\n+        Benchmark(\"baseline\", unit, True, [10], unit, [1]),\n+    ).regression\n \n     assert not BenchmarkComparator(\n-        Benchmark(\"contender\", unit, False, [20]),\n-        Benchmark(\"baseline\", unit, False, [10])).regression\n+        Benchmark(\"contender\", unit, False, [20], unit, [1]),\n+        Benchmark(\"baseline\", unit, False, [10], unit, [1]),\n+    ).regression\n \n \n def test_benchmark_median():\n@@ -65,6 +69,123 @@ def assert_benchmark(name, google_result, archery_result):\n     assert json.loads(result) == archery_result\n \n \n+def test_items_per_second():\n+    name = \"ArrayArrayKernel<AddChecked, UInt8Type>/32768/0\"\n+    google_result = {\n+        \"cpu_time\": 116292.58886653671,\n+        \"items_per_second\": 281772039.9844759,\n+        \"iterations\": 5964,\n+        \"name\": name,\n+        \"null_percent\": 0.0,\n+        \"real_time\": 119811.77313729875,\n+        \"repetition_index\": 0,\n+        \"repetitions\": 0,\n+        \"run_name\": name,\n+        \"run_type\": \"iteration\",\n+        \"size\": 32768.0,\n+        \"threads\": 1,\n+        \"time_unit\": \"ns\",\n+    }\n+    archery_result = {\n+        \"name\": name,\n+        \"unit\": \"items_per_second\",\n+        \"less_is_better\": False,\n+        \"values\": [281772039.9844759],\n+        \"time_unit\": \"ns\",\n+        \"times\": [119811.77313729875],\n+    }\n+    assert \"items_per_second\" in google_result\n+    assert \"bytes_per_second\" not in google_result\n+    assert_benchmark(name, google_result, archery_result)\n+\n+\n+def test_bytes_per_second():\n+    name = \"BufferOutputStreamLargeWrites/real_time\"\n+    google_result = {\n+        \"bytes_per_second\": 1890209037.3405428,\n+        \"cpu_time\": 17018127.659574457,\n+        \"iterations\": 47,\n+        \"name\": name,\n+        \"real_time\": 17458386.53190963,\n+        \"repetition_index\": 1,\n+        \"repetitions\": 0,\n+        \"run_name\": name,\n+        \"run_type\": \"iteration\",\n+        \"threads\": 1,\n+        \"time_unit\": \"ns\",\n+    }\n+    archery_result = {\n+        \"name\": name,\n+        \"unit\": \"bytes_per_second\",\n+        \"less_is_better\": False,\n+        \"values\": [1890209037.3405428],\n+        \"time_unit\": \"ns\",\n+        \"times\": [17458386.53190963],\n+    }\n+    assert \"items_per_second\" not in google_result\n+    assert \"bytes_per_second\" in google_result\n+    assert_benchmark(name, google_result, archery_result)\n+\n+\n+def test_both_items_and_bytes_per_second():\n+    name = \"ArrayArrayKernel<AddChecked, UInt8Type>/32768/0\"\n+    google_result = {\n+        \"bytes_per_second\": 281772039.9844759,\n+        \"cpu_time\": 116292.58886653671,\n+        \"items_per_second\": 281772039.9844759,\n+        \"iterations\": 5964,\n+        \"name\": name,\n+        \"null_percent\": 0.0,\n+        \"real_time\": 119811.77313729875,\n+        \"repetition_index\": 0,\n+        \"repetitions\": 0,\n+        \"run_name\": name,\n+        \"run_type\": \"iteration\",\n+        \"size\": 32768.0,\n+        \"threads\": 1,\n+        \"time_unit\": \"ns\",\n+    }\n+    # Note that bytes_per_second trumps items_per_second\n+    archery_result = {\n+        \"name\": name,\n+        \"unit\": \"bytes_per_second\",\n+        \"less_is_better\": False,\n+        \"values\": [281772039.9844759],\n+        \"time_unit\": \"ns\",\n+        \"times\": [119811.77313729875],\n+    }\n+    assert \"items_per_second\" in google_result\n+    assert \"bytes_per_second\" in google_result\n+    assert_benchmark(name, google_result, archery_result)\n+\n+\n+def test_neither_items_nor_bytes_per_second():\n+    name = \"AllocateDeallocate<Jemalloc>/size:1048576/real_time\"\n+    google_result = {\n+        \"cpu_time\": 1778.6004847419827,\n+        \"iterations\": 352765,\n+        \"name\": name,\n+        \"real_time\": 1835.3137357788837,\n+        \"repetition_index\": 0,\n+        \"repetitions\": 0,\n+        \"run_name\": name,\n+        \"run_type\": \"iteration\",\n+        \"threads\": 1,\n+        \"time_unit\": \"ns\",\n+    }\n+    archery_result = {\n+        \"name\": name,\n+        \"unit\": \"ns\",\n+        \"less_is_better\": True,\n+        \"values\": [1835.3137357788837],\n+        \"time_unit\": \"ns\",\n+        \"times\": [1835.3137357788837],\n+    }\n+    assert \"items_per_second\" not in google_result\n+    assert \"bytes_per_second\" not in google_result\n+    assert_benchmark(name, google_result, archery_result)\n+\n+\n def test_prefer_real_time():\n     name = \"AllocateDeallocate<Jemalloc>/size:1048576/real_time\"\n     google_result = {\n@@ -74,7 +195,7 @@ def test_prefer_real_time():\n         \"real_time\": 1835.3137357788837,\n         \"repetition_index\": 0,\n         \"repetitions\": 0,\n-        \"run_name\": \"AllocateDeallocate<Jemalloc>/size:1048576/real_time\",\n+        \"run_name\": name,\n         \"run_type\": \"iteration\",\n         \"threads\": 1,\n         \"time_unit\": \"ns\",\n@@ -84,6 +205,8 @@ def test_prefer_real_time():\n         \"unit\": \"ns\",\n         \"less_is_better\": True,\n         \"values\": [1835.3137357788837],\n+        \"time_unit\": \"ns\",\n+        \"times\": [1835.3137357788837],\n     }\n     assert name.endswith(\"/real_time\")\n     assert_benchmark(name, google_result, archery_result)\n@@ -98,7 +221,7 @@ def test_prefer_cpu_time():\n         \"real_time\": 1835.3137357788837,\n         \"repetition_index\": 0,\n         \"repetitions\": 0,\n-        \"run_name\": \"AllocateDeallocate<Jemalloc>/size:1048576\",\n+        \"run_name\": name,\n         \"run_type\": \"iteration\",\n         \"threads\": 1,\n         \"time_unit\": \"ns\",\n@@ -108,6 +231,8 @@ def test_prefer_cpu_time():\n         \"unit\": \"ns\",\n         \"less_is_better\": True,\n         \"values\": [1778.6004847419827],\n+        \"time_unit\": \"ns\",\n+        \"times\": [1835.3137357788837],\n     }\n     assert not name.endswith(\"/real_time\")\n     assert_benchmark(name, google_result, archery_result)\n@@ -122,7 +247,7 @@ def test_omits_aggregates():\n         \"name\": \"AllocateDeallocate<Jemalloc>/size:1048576/real_time_mean\",\n         \"real_time\": 1849.3869337041162,\n         \"repetitions\": 0,\n-        \"run_name\": \"AllocateDeallocate<Jemalloc>/size:1048576/real_time\",\n+        \"run_name\": name,\n         \"run_type\": \"aggregate\",\n         \"threads\": 1,\n         \"time_unit\": \"ns\",\n@@ -134,7 +259,7 @@ def test_omits_aggregates():\n         \"real_time\": 1835.3137357788837,\n         \"repetition_index\": 0,\n         \"repetitions\": 0,\n-        \"run_name\": \"AllocateDeallocate<Jemalloc>/size:1048576/real_time\",\n+        \"run_name\": name,\n         \"run_type\": \"iteration\",\n         \"threads\": 1,\n         \"time_unit\": \"ns\",\n@@ -144,6 +269,8 @@ def test_omits_aggregates():\n         \"unit\": \"ns\",\n         \"less_is_better\": True,\n         \"values\": [1835.3137357788837],\n+        \"time_unit\": \"ns\",\n+        \"times\": [1835.3137357788837],\n     }\n     assert google_aggregate[\"run_type\"] == \"aggregate\"\n     assert google_result[\"run_type\"] == \"iteration\""
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "machines": [
+    {
+      "name": "ip-10-0-0-1",
+      "gpu_count": 0,
+      "cpu_core_count": 8,
+      "cpu_thread_count": 16,
+      "memory_bytes": 17179869184,
+      "hash": "ip-10-0-0-1-0-8-16-17179869184"
+    },
+    {
+      "name": "dgx-a100",
+      "gpu_count": 8,
+      "cpu_core_count": 64,
+      "cpu_thread_count": 128,
+      "memory_bytes": 540672819200,
+      "hash": "dgx-a100-8-64-128-540672819200"
+    },
+    {
+      "name": "partial",
+      "gpu_count": null,
+      "cpu_core_count": null,
+      "cpu_thread_count": null,
+      "memory_bytes": null,
+      "hash": "partial-None-None-None-None"
+    },
+    {
+      "name": "café-box-1",
+      "gpu_count": 1,
+      "cpu_core_count": 4,
+      "cpu_thread_count": 8,
+      "memory_bytes": 8589934592,
+      "hash": "café-box-1-1-4-8-8589934592"
+    }
+  ],
+  "clusters": [
+    {
+      "name": "dask-cluster",
+      "info": {
+        "workers": 4,
+        "scheduler": "single"
+      },
+      "python_json": "{\"scheduler\": \"single\", \"workers\": 4}",
+      "hash": "dask-cluster-564ffd5b0edaa313768fd7af7c7ede60"
+    },
+    {
+      "name": "c-sortkeys",
+      "info": {
+        "b": 1,
+        "a": 2,
+        "m": 3
+      },
+      "python_json": "{\"a\": 2, \"b\": 1, \"m\": 3}",
+      "hash": "c-sortkeys-3b794153164332f4a6e52fe185d52e13"
+    },
+    {
+      "name": "c-nested",
+      "info": {
+        "nested": {
+          "z": 2,
+          "y": 1
+        },
+        "a": "x"
+      },
+      "python_json": "{\"a\": \"x\", \"nested\": {\"y\": 1, \"z\": 2}}",
+      "hash": "c-nested-b5dcd9fde2f64f0b051fb7340ea078e9"
+    },
+    {
+      "name": "c-unicode",
+      "info": {
+        "region": "münchen",
+        "note": "✓"
+      },
+      "python_json": "{\"note\": \"\\u2713\", \"region\": \"m\\u00fcnchen\"}",
+      "hash": "c-unicode-9db2cd08963aad4854d7f488964e8e4a"
+    },
+    {
+      "name": "c-empty",
+      "info": {},
+      "python_json": "{}",
+      "hash": "c-empty-99914b932bd37a50b983c5e7c90ae93b"
+    },
+    {
+      "name": "c-mixed",
+      "info": {
+        "flag": true,
+        "opt": null,
+        "hosts": [
+          "h1",
+          "h2"
+        ],
+        "count": 1000000000000
+      },
+      "python_json": "{\"count\": 1000000000000, \"flag\": true, \"hosts\": [\"h1\", \"h2\"], \"opt\": null}",
+      "hash": "c-mixed-0747a6807801d063486f8327917d0abd"
+    },
+    {
+      "name": "c-escapes",
+      "info": {
+        "note": "line1\nline2 \"q\" \\ café"
+      },
+      "python_json": "{\"note\": \"line1\\nline2 \\\"q\\\" \\\\ caf\\u00e9\"}",
+      "hash": "c-escapes-86ba62a9e5104cb3cd5b80eb8922ae9e"
+    },
+    {
+      "name": "c-floats",
+      "info": {
+        "a": 2.0,
+        "b": 1.5,
+        "c": 0.25
+      },
+      "python_json": "{\"a\": 2.0, \"b\": 1.5, \"c\": 0.25}",
+      "hash": "c-floats-cb473a047880550f0670b11024056da2"
+    }
+  ]
+}

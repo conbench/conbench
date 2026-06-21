@@ -1,0 +1,4 @@
+# Every sdk/python/conbench path owned by sdk/python/overlays.
+# Keep retired paths here until the generated package copy is removed.
+conbench/__init__.py
+conbench/migration.py

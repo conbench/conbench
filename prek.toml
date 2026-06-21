@@ -1,0 +1,77 @@
+default_install_hook_types = ["pre-commit", "pre-push"]
+default_stages = ["pre-commit"]
+
+[[repos]]
+repo = "builtin"
+hooks = [
+  { id = "check-case-conflict" },
+  { id = "check-merge-conflict", args = ["--assume-in-merge"] },
+  { id = "detect-private-key" },
+  { id = "no-commit-to-branch" },
+  { id = "check-added-large-files", args = ["--maxkb=1024"] },
+  { id = "trailing-whitespace", args = ["--markdown-linebreak-ext=md"] },
+  { id = "end-of-file-fixer" },
+  { id = "check-json" },
+  { id = "check-toml" },
+  { id = "check-yaml", args = ["--allow-multiple-documents"] },
+]
+
+[[repos]]
+repo = "local"
+hooks = [
+  {
+    id = "gofmt",
+    name = "gofmt",
+    language = "system",
+    entry = "gofmt -w",
+    files = "\\.go$",
+    priority = 0,
+  },
+  {
+    id = "golangci-lint",
+    name = "golangci-lint --fix",
+    language = "system",
+    entry = "make go-lint",
+    files = "^(go\\.mod|go\\.sum|.*\\.go)$",
+    pass_filenames = false,
+    require_serial = true,
+    priority = 10,
+  },
+  {
+    id = "sqlc-check",
+    name = "sqlc generated-code drift",
+    language = "system",
+    entry = "make sqlc-check",
+    files = "^(sqlc\\.yaml|internal/db/query/.*\\.sql|internal/db/schema\\.sql|internal/db/.*\\.go)$",
+    pass_filenames = false,
+    require_serial = true,
+    priority = 15,
+  },
+  {
+    id = "go-deploy-manifest-check",
+    name = "Go deploy manifest check",
+    language = "system",
+    entry = "make go-deploy-manifest-check",
+    files = "^(Makefile|k8s/conbench-(deployment\\.templ|service|cloud-ingress\\.templ|db-migration\\.templ)\\.yml|scripts/(check_go_deploy_manifests|go_deploy_runtime)\\.sh)$",
+    pass_filenames = false,
+    require_serial = true,
+    priority = 18,
+  },
+  {
+    id = "go-test-short",
+    name = "go test (short)",
+    language = "system",
+    entry = "make go-test-short",
+    files = "^(go\\.mod|go\\.sum|.*\\.go)$",
+    pass_filenames = false,
+    require_serial = true,
+    priority = 20,
+  },
+]
+
+[[repos]]
+repo = "meta"
+hooks = [
+  { id = "check-hooks-apply" },
+  { id = "check-useless-excludes" },
+]

@@ -1,7 +1,0 @@
-click
-numpy
-psutil
-py-cpuinfo
-PyYAML
-requests
-pytest<8.1
