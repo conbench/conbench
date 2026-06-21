@@ -5,7 +5,7 @@
 //	conbench compare <baseline-id> <contender-id> --server URL [--threshold N] [--threshold-z N]
 //	conbench series list --server URL [--q TEXT] [--hardware NAME] [--repository URL] [--fingerprint FP] [--active-since RFC3339] [--active-until RFC3339] [--cursor CURSOR] [--page-size N]
 //	conbench history export <result-id> --server URL [--token TOKEN] [--output PATH]
-//	conbench ci report --server URL [--repository URL --commit SHA] [--run-ids ID[,ID...]] [--baseline-run-ids ID[,ID...]]
+//	conbench ci report --server URL [--repository URL --commit SHA] [--run-ids ID[,ID...]] [--baseline-run-ids ID[,ID...]] [--github-check] [--github-pr-comment]
 //	conbench openapi [--downgrade]
 //	conbench auth login --server URL
 //	conbench auth token list --server URL [--token TOKEN]

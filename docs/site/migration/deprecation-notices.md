@@ -86,8 +86,9 @@ installed.
 `benchalerts` is retired as a maintained Python client package.
 
 For synchronous pull request diagnostics, run `conbench ci report` after result
-submission and let the CI job own status, summaries, and repository-local
-comments.
+submission. Use its exit status and Markdown output for CI summaries, and enable
+`--github-check --github-pr-comment` when the old workflow posted GitHub App
+Check Runs and pull request comments.
 
 Scheduled alert state now belongs to the Conbench server. Create alert rules
 through the `/account` dashboard or authenticated alert-rule API, then run
@@ -176,9 +177,9 @@ task without requiring a source-compatible package shim.
    `examples/migration/gbench_to_cli_submit.py` recipe from every publication
    surface.
 5. For `benchalerts`, include both replacements: synchronous PR diagnostics via
-   `conbench ci report`, and scheduled notification state/delivery through
-   server alert rules plus `conbench admin alerts evaluate` and
-   `conbench admin alerts deliver`.
+   `conbench ci report` including optional GitHub Check/PR-comment publishing,
+   and scheduled notification state/delivery through server alert rules plus
+   `conbench admin alerts evaluate` and `conbench admin alerts deliver`.
 6. For the Flask `conbench` package and `conbenchlegacy`, warn explicitly about
    import and console-script name confusion. The generated SDK imports as
    `conbench`; migration jobs should call the Go `conbench` binary explicitly.

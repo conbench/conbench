@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -1429,22 +1430,163 @@ func TestCIReportParseArgs(t *testing.T) {
 		"--threshold-z", "4",
 		"--format", "markdown",
 		"--output", "report.md",
+		"--github-check",
+		"--github-pr-comment",
+		"--github-token", "ghs_secret",
+		"--github-api-url", "https://api.github.test",
+		"--github-pr-number", "48886",
+		"--github-external-id", "buildkite-123",
+		"--build-url", "https://buildkite.com/org/pipeline/builds/123",
 	})
 	require.NoError(t, err)
 	assert.Equal(t, ciReportConfig{
-		server:         "http://h",
-		token:          "tok",
-		repository:     "https://github.com/org/repo",
-		commit:         "abc",
-		runIDs:         "run-a,run-b",
-		baselineRunIDs: "base-a,base-b",
-		threshold:      "2.5",
-		thresholdSet:   true,
-		thresholdZ:     "4",
-		thresholdZSet:  true,
-		format:         "markdown",
-		output:         "report.md",
+		server:           "http://h",
+		token:            "tok",
+		repository:       "https://github.com/org/repo",
+		commit:           "abc",
+		runIDs:           "run-a,run-b",
+		baselineRunIDs:   "base-a,base-b",
+		threshold:        "2.5",
+		thresholdSet:     true,
+		thresholdZ:       "4",
+		thresholdZSet:    true,
+		format:           "markdown",
+		output:           "report.md",
+		githubCheck:      true,
+		githubPRComment:  true,
+		githubToken:      "ghs_secret",
+		githubAPIURL:     "https://api.github.test",
+		githubPRNumber:   "48886",
+		githubExternalID: "buildkite-123",
+		buildURL:         "https://buildkite.com/org/pipeline/builds/123",
 	}, got)
+}
+
+func TestPublishCIReportGitHubCreatesCheckAndPRComment(t *testing.T) {
+	ctx := context.Background()
+	sha := "abc123def456"
+	runReason := "commit"
+	compareLink := "/compare?baseline=base-result&contender=result-1"
+	resultTime := time.Date(2026, 6, 19, 12, 48, 38, 0, time.UTC)
+	report := &conbench.CIReport{
+		Repository:   "https://github.com/org/repo",
+		CommitSha:    &sha,
+		Status:       conbench.Failure,
+		StatusReason: "regressions detected",
+		ReportUrl:    "https://conbench.example/ci/report?run_ids=run-1",
+		Summary: conbench.CIReportSummary{
+			Runs:             1,
+			ContenderResults: 1,
+			Compared:         1,
+			Analyzed:         1,
+			Regressions:      1,
+		},
+		Runs: &[]conbench.CIReportRun{{
+			RunId:     "run-1",
+			RunReason: &runReason,
+			Comparisons: &[]conbench.CIReportComparison{{
+				Status:   "regressed",
+				Name:     "tpch",
+				Tags:     map[string]any{"name": "tpch", "query_id": "TPCH-13", "language": "R"},
+				Hardware: conbench.Hardware{Name: "test-mac-arm"},
+				Contender: conbench.CIReportSide{
+					ResultId:        "result-1",
+					RunId:           "run-1",
+					ResultTimestamp: resultTime,
+				},
+				Links: conbench.CIReportRowLinks{
+					Result:  "/results/result-1",
+					Compare: &compareLink,
+					Series:  "/series/fp-1",
+				},
+			}},
+		}},
+	}
+	var checkBody map[string]any
+	var commentBody map[string]any
+	var paths []string
+	gh := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		paths = append(paths, r.Method+" "+r.URL.Path)
+		assert.Equal(t, "Bearer ghs_secret", r.Header.Get("Authorization"))
+		switch r.URL.Path {
+		case "/repos/org/repo/check-runs":
+			if !assert.NoError(t, json.NewDecoder(r.Body).Decode(&checkBody)) {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			assert.NoError(t, json.NewEncoder(w).Encode(map[string]any{
+				"html_url": "https://github.com/org/repo/runs/82397297966",
+			}))
+		case "/repos/org/repo/commits/abc123def456/pulls":
+			assert.NoError(t, json.NewEncoder(w).Encode([]map[string]any{{"number": 48886}}))
+		case "/repos/org/repo/issues/48886/comments":
+			if !assert.NoError(t, json.NewDecoder(r.Body).Decode(&commentBody)) {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			assert.NoError(t, json.NewEncoder(w).Encode(map[string]any{
+				"html_url": "https://github.com/org/repo/pull/48886#issuecomment-1",
+			}))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(gh.Close)
+
+	err := publishCIReportGitHub(ctx, ciReportConfig{
+		repository:       "https://github.com/org/repo",
+		commit:           sha,
+		githubCheck:      true,
+		githubPRComment:  true,
+		githubToken:      "ghs_secret",
+		githubAPIURL:     gh.URL,
+		githubExternalID: "buildkite-123",
+		buildURL:         "https://buildkite.com/org/pipeline/builds/123",
+	}, report)
+
+	require.NoError(t, err)
+	assert.Equal(t, []string{
+		"POST /repos/org/repo/check-runs",
+		"GET /repos/org/repo/commits/abc123def456/pulls",
+		"POST /repos/org/repo/issues/48886/comments",
+	}, paths)
+	assert.Equal(t, "Conbench performance report", checkBody["name"])
+	assert.Equal(t, sha, checkBody["head_sha"])
+	assert.Equal(t, "failure", checkBody["conclusion"])
+	assert.Equal(t, "buildkite-123", checkBody["external_id"])
+	assert.Equal(t, report.ReportUrl, checkBody["details_url"])
+	output, ok := checkBody["output"].(map[string]any)
+	require.True(t, ok)
+	assert.Contains(t, output["summary"], "regressions detected")
+	assert.Contains(t, output["summary"], "https://buildkite.com/org/pipeline/builds/123")
+	body, ok := commentBody["body"].(string)
+	require.True(t, ok)
+	assert.Contains(t, body, "Conbench analyzed the 1 benchmark run on commit `abc123de`.")
+	assert.Contains(t, body, "There was 1 benchmark result indicating a performance regression:")
+	assert.Contains(t, body, "Commit Run on `test-mac-arm`")
+	assert.Contains(t, body, "[`tpch` with language=R, query_id=TPCH-13](https://conbench.example/compare?baseline=base-result&contender=result-1)")
+	assert.Contains(t, body, "The [full Conbench report](https://github.com/org/repo/runs/82397297966) has more details.")
+}
+
+func TestCIReportGitHubClientPrefersAppCredentialsOverFallbackToken(t *testing.T) {
+	t.Setenv("GITHUB_API_TOKEN", "ghs_fallback")
+	t.Setenv("CONBENCH_CI_GITHUB_APP_ID", "12345")
+	t.Setenv("CONBENCH_CI_GITHUB_APP_PRIVATE_KEY", "not a pem")
+
+	_, err := newCIReportGitHubClient(context.Background(), ciReportConfig{})
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "parse github app private key")
+}
+
+func TestCIReportGitHubClientPartialAppConfigDoesNotFallbackToToken(t *testing.T) {
+	t.Setenv("GITHUB_API_TOKEN", "ghs_fallback")
+	t.Setenv("CONBENCH_CI_GITHUB_APP_ID", "12345")
+
+	_, err := newCIReportGitHubClient(context.Background(), ciReportConfig{})
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "github app private key is required")
 }
 
 func TestCIReportParseArgsErrors(t *testing.T) {

@@ -18,7 +18,7 @@ to cut over a benchmark job.
 | Flask API and Jinja dashboard | Go API and Svelte dashboard |
 | Password/session Python HTTP clients | Generated SDKs for reads; API tokens for automation |
 | `benchconnect submit` and direct POST helpers | `conbench results submit` |
-| `benchalerts` PR checks/comments | `conbench ci report` and CI step summaries |
+| `benchalerts` PR checks/comments | `conbench ci report`, CI step summaries, and optional GitHub Check/PR-comment publishing |
 | `/api/history/download/{id}/` CSV downloads | `conbench history export <result-id>` |
 | Legacy run lifecycle helpers | explicit `run_id`, `run_tags`, `batch_id`, and CI report selectors |
 | Old Sphinx/autodoc docs | this Markdown/Zensical docs site |
@@ -62,7 +62,9 @@ compatibility contracts.
 2. Ensure each result payload has the metadata needed by the new workflows.
 3. Write one JSON object per result file.
 4. Replace Python HTTP submission with `conbench results submit`.
-5. Replace client-side alerting or PR comments with `conbench ci report`.
+5. Replace client-side alerting or PR comments with `conbench ci report`, using
+   `--github-check` and `--github-pr-comment` when the repository needs the old
+   GitHub App output.
 6. Move read automation to the generated Python SDK or direct API calls.
 7. Remove password-login client code and legacy Flask route assumptions.
 8. Remove old package imports once the JSON/CLI path is in place.
@@ -569,9 +571,32 @@ cat conbench-report.md >> "$GITHUB_STEP_SUMMARY"
 exit "$status"
 ```
 
-This replaces `benchalerts` for synchronous PR diagnostics: the CI job owns the
-GitHub status, and the Markdown report can be appended to the job summary or
-posted by repository-local automation.
+This replaces `benchalerts` for synchronous PR diagnostics when the CI system
+only needs a process status and Markdown summary.
+
+To preserve the old GitHub App Check Run and pull request comment, add GitHub
+publishing flags:
+
+```bash
+export CONBENCH_CI_GITHUB_APP_ID="<github-app-id>"
+export CONBENCH_CI_GITHUB_APP_PRIVATE_KEY="$(cat /path/to/private-key.pem)"
+
+conbench ci report \
+  --server "$CONBENCH_SERVER_URL" \
+  --repository "https://github.com/org/project" \
+  --commit "$CI_COMMIT_SHA" \
+  --run-ids "$RUN_IDS" \
+  --github-check \
+  --github-pr-comment \
+  --github-pr-number "$CI_PULL_REQUEST_NUMBER" \
+  --github-external-id "$CI_BUILD_ID" \
+  --build-url "$CI_BUILD_URL"
+```
+
+For Buildkite, map those placeholders to the Buildkite commit, pull request,
+build ID, and build URL variables. If `--github-pr-number` is omitted, Conbench
+will ask GitHub for pull requests associated with the commit and will fail unless
+there is exactly one match.
 
 Scheduled alert state moves into the server. Create alert rules through the
 `/account` dashboard or authenticated alert-rule API, then run
@@ -755,7 +780,7 @@ Legacy adapter status:
 | `benchconnect` | Deleted from the maintained implementation; replace | Use `conbench results submit` and `conbench ci report` | Password/session posting and implicit run lifecycle |
 | `benchclients` | Deleted from the maintained implementation; replace | Use generated `conbench` SDK reads and CLI writes | `ConbenchClient`, password login, cookie sessions, legacy pagination helpers |
 | `benchrun` | Deleted from the maintained implementation; retire | Keep useful benchmark execution code in the benchmark project; emit Conbench JSON at the boundary | Old decorators or runner APIs solely to preserve imports |
-| `benchalerts` | Deleted from the maintained implementation; replace PR checks and scheduled alert state with server-owned surfaces | Use CI reports for PRs; use `/account` or the alert-rule API plus `conbench admin alerts evaluate`; use `conbench admin alerts deliver` for generic webhook, Slack, GitHub Check, GitHub commit-comment, or email notifications | Client-side GitHub Checks, comments, Slack routing, or email routing as a maintained package |
+| `benchalerts` | Deleted from the maintained implementation; replace PR checks and scheduled alert state with server-owned surfaces | Use CI reports plus optional GitHub Check/PR-comment publishing for PRs; use `/account` or the alert-rule API plus `conbench admin alerts evaluate`; use `conbench admin alerts deliver` for generic webhook, Slack, GitHub Check, GitHub commit-comment, or email notifications | Client-side GitHub Checks, comments, Slack routing, or email routing as a maintained package |
 | `conbenchlegacy` | Deleted from the maintained implementation; retire | Migrate benchmark output to JSON payloads plus CLI | Legacy runner/import compatibility |
 | Flask `conbench` app | Deleted from the maintained implementation; replace | Deploy Go server and Svelte app | Flask route, Jinja, password-login, and SQLAlchemy app contracts |
 

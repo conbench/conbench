@@ -79,6 +79,19 @@ conbench ci report --server URL --repository REPO --commit SHA --run-ids RUN_IDS
 conbench ci report --server URL --run-ids CONTENDER_IDS --baseline-run-ids BASELINE_IDS
 ```
 
+Publish repository-facing GitHub output from any CI runner:
+
+```bash
+conbench ci report \
+  --server URL \
+  --repository REPO \
+  --commit SHA \
+  --github-check \
+  --github-pr-comment \
+  --github-pr-number PR_NUMBER \
+  --build-url BUILD_URL
+```
+
 `--format json` is the default. Use `--format markdown --output
 conbench-report.md` for CI step summaries. Report exit codes are:
 
@@ -89,7 +102,7 @@ conbench-report.md` for CI step summaries. Report exit codes are:
 | `2` | usage, authentication, server, transport, or decode error |
 
 Use [CI Reporting](ci-reporting.md) for the metadata contract, GitHub Actions
-fragment, baseline modes, and status precedence.
+fragment, GitHub App publishing, baseline modes, and status precedence.
 
 ## Authentication Commands
 

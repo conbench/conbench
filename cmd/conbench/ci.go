@@ -7,28 +7,42 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"net/url"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/conbench/conbench/internal/githubapi"
 	"github.com/conbench/conbench/sdk/go/conbench"
 	"github.com/spf13/cobra"
 )
 
 type ciReportConfig struct {
-	server         string
-	token          string
-	repository     string
-	commit         string
-	runIDs         string
-	baselineRunIDs string
-	baseline       string
-	threshold      string
-	thresholdSet   bool
-	thresholdZ     string
-	thresholdZSet  bool
-	format         string
-	output         string
+	server              string
+	token               string
+	repository          string
+	commit              string
+	runIDs              string
+	baselineRunIDs      string
+	baseline            string
+	threshold           string
+	thresholdSet        bool
+	thresholdZ          string
+	thresholdZSet       bool
+	format              string
+	output              string
+	githubCheck         bool
+	githubPRComment     bool
+	githubToken         string
+	githubAppID         string
+	githubAppPrivateKey string
+	githubAPIURL        string
+	githubPRNumber      string
+	githubExternalID    string
+	buildURL            string
+	githubCheckName     string
 }
 
 type codedError struct {
@@ -98,6 +112,13 @@ func newCIReportCommand(
 				return commandUsageError(cmd, "invalid --baseline %q", cfg.baseline)
 			case cfg.format != "json" && cfg.format != "markdown":
 				return commandUsageError(cmd, "invalid --format %q", cfg.format)
+			case (cfg.githubCheck || cfg.githubPRComment) && (cfg.repository == "" || cfg.commit == ""):
+				return commandUsageError(cmd, "github publishing requires --repository and --commit")
+			}
+			if cfg.githubPRNumber != "" {
+				if _, err := parsePositiveIntFlag(cfg.githubPRNumber, "--github-pr-number"); err != nil {
+					return commandUsageError(cmd, "%s", err)
+				}
 			}
 			if cfg.thresholdSet {
 				if err := validatePositiveFloatFlag(cfg.threshold, "--threshold"); err != nil {
@@ -126,6 +147,16 @@ func newCIReportCommand(
 	cmd.Flags().StringVar(&cfg.thresholdZ, "threshold-z", "", "lookback z-score threshold")
 	cmd.Flags().StringVar(&cfg.format, "format", "json", "output format: json or markdown")
 	cmd.Flags().StringVar(&cfg.output, "output", "", "write rendered report to this path")
+	cmd.Flags().BoolVar(&cfg.githubCheck, "github-check", false, "create a GitHub Check Run for the report")
+	cmd.Flags().BoolVar(&cfg.githubPRComment, "github-pr-comment", false, "post a pull request comment linking to the GitHub Check")
+	cmd.Flags().StringVar(&cfg.githubToken, "github-token", "", "GitHub token for report publishing")
+	cmd.Flags().StringVar(&cfg.githubAppID, "github-app-id", "", "GitHub App ID for report publishing")
+	cmd.Flags().StringVar(&cfg.githubAppPrivateKey, "github-app-private-key", "", "GitHub App private key contents for report publishing")
+	cmd.Flags().StringVar(&cfg.githubAPIURL, "github-api-url", "", "GitHub API base URL for report publishing")
+	cmd.Flags().StringVar(&cfg.githubPRNumber, "github-pr-number", "", "pull request number for --github-pr-comment")
+	cmd.Flags().StringVar(&cfg.githubExternalID, "github-external-id", "", "external identifier for the GitHub Check Run")
+	cmd.Flags().StringVar(&cfg.buildURL, "build-url", "", "CI build URL to include in the GitHub report")
+	cmd.Flags().StringVar(&cfg.githubCheckName, "github-check-name", "", "GitHub Check Run name")
 	return cmd
 }
 
@@ -186,6 +217,11 @@ func runCIReportConfig(ctx context.Context, cfg ciReportConfig, stdout io.Writer
 	if err := writeCIReport(cfg, stdout, resp.JSON200); err != nil {
 		return codedError{err: err, code: 2}
 	}
+	if cfg.githubCheck || cfg.githubPRComment {
+		if err := publishCIReportGitHub(ctx, cfg, resp.JSON200); err != nil {
+			return codedError{err: err, code: 2}
+		}
+	}
 	if resp.JSON200.Status == conbench.Failure || resp.JSON200.Status == conbench.ActionRequired {
 		return ciReportStatusError{status: resp.JSON200.Status}
 	}
@@ -215,6 +251,363 @@ func writeCIReport(cfg ciReportConfig, stdout io.Writer, report *conbench.CIRepo
 	}
 	_, err = stdout.Write(rendered)
 	return err
+}
+
+func publishCIReportGitHub(ctx context.Context, cfg ciReportConfig, report *conbench.CIReport) error {
+	if report == nil {
+		return errors.New("github publish requires a CI report")
+	}
+	gh, err := newCIReportGitHubClient(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	checkName := cfg.githubCheckName
+	if checkName == "" {
+		checkName = "Conbench performance report"
+	}
+	check, err := gh.CreateCheckRun(ctx, cfg.repository, githubapi.CheckRunRequest{
+		Name:        checkName,
+		HeadSHA:     cfg.commit,
+		Status:      "completed",
+		Conclusion:  githubCheckConclusion(report.Status),
+		CompletedAt: time.Now().UTC().Format(time.RFC3339),
+		DetailsURL:  absoluteHTTPURL(report.ReportUrl),
+		ExternalID:  cfg.githubExternalID,
+		Output: githubapi.CheckRunOutput{
+			Title:   githubCheckTitle(report),
+			Summary: githubCheckSummary(report, cfg.buildURL),
+			Text:    githubCheckDetails(report),
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("create github check run: %w", err)
+	}
+	if !cfg.githubPRComment {
+		return nil
+	}
+	prNumber, err := ciReportGitHubPRNumber(ctx, gh, cfg)
+	if err != nil {
+		return err
+	}
+	comment := githubPRComment(report, check.HTMLURL, cfg.server)
+	if comment == "" {
+		return nil
+	}
+	if _, err := gh.CreatePullRequestComment(ctx, cfg.repository, prNumber, comment); err != nil {
+		return fmt.Errorf("create github pull request comment: %w", err)
+	}
+	return nil
+}
+
+func newCIReportGitHubClient(ctx context.Context, cfg ciReportConfig) (*githubapi.Client, error) {
+	token := strings.TrimSpace(cfg.githubToken)
+	appID := firstNonEmpty(
+		cfg.githubAppID,
+		os.Getenv("CONBENCH_CI_GITHUB_APP_ID"),
+		os.Getenv("CONBENCH_GITHUB_APP_ID"),
+		os.Getenv("GITHUB_APP_ID"),
+	)
+	appPrivateKey := firstNonEmpty(
+		cfg.githubAppPrivateKey,
+		os.Getenv("CONBENCH_CI_GITHUB_APP_PRIVATE_KEY"),
+		os.Getenv("CONBENCH_GITHUB_APP_PRIVATE_KEY"),
+		os.Getenv("GITHUB_APP_PRIVATE_KEY"),
+	)
+	if token == "" && appID == "" && appPrivateKey == "" {
+		token = firstNonEmptyEnv("CONBENCH_CI_GITHUB_TOKEN", "GITHUB_TOKEN", "GITHUB_API_TOKEN")
+	}
+	apiURL := firstNonEmpty(cfg.githubAPIURL, os.Getenv("CONBENCH_CI_GITHUB_API_URL"))
+	client, err := githubapi.NewClient(ctx, githubapi.Config{
+		Token:         token,
+		AppID:         appID,
+		AppPrivateKey: appPrivateKey,
+		BaseURL:       apiURL,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("configure github publishing: %w", err)
+	}
+	return client, nil
+}
+
+func ciReportGitHubPRNumber(ctx context.Context, gh *githubapi.Client, cfg ciReportConfig) (int, error) {
+	if cfg.githubPRNumber != "" {
+		return parsePositiveIntFlag(cfg.githubPRNumber, "--github-pr-number")
+	}
+	pulls, err := gh.PullRequestsForCommit(ctx, cfg.repository, cfg.commit)
+	if err != nil {
+		return 0, fmt.Errorf("find github pull request for commit: %w", err)
+	}
+	if len(pulls) != 1 {
+		return 0, fmt.Errorf("find github pull request for commit: expected exactly 1 pull request, found %d", len(pulls))
+	}
+	return pulls[0].Number, nil
+}
+
+func githubCheckConclusion(status conbench.CIReportStatus) string {
+	switch status {
+	case conbench.ActionRequired:
+		return "action_required"
+	case conbench.Failure:
+		return "failure"
+	case conbench.Skipped:
+		return "skipped"
+	default:
+		return "success"
+	}
+}
+
+func githubCheckTitle(report *conbench.CIReport) string {
+	switch report.Status {
+	case conbench.ActionRequired:
+		return "Action required for Conbench report"
+	case conbench.Failure:
+		return fmt.Sprintf("Found %d benchmark regression%s", report.Summary.Regressions, pluralS(report.Summary.Regressions))
+	case conbench.Skipped:
+		return "Conbench report skipped regression verdict"
+	default:
+		return "No benchmark regressions detected"
+	}
+}
+
+func githubCheckSummary(report *conbench.CIReport, buildURL string) string {
+	var b strings.Builder
+	b.WriteString(ciReportIntro(report))
+	if report.StatusReason != "" {
+		fmt.Fprintf(&b, "\n\nStatus reason: %s", report.StatusReason)
+	}
+	fmt.Fprintf(&b, "\n\nRuns: %d. Contender results: %d. Compared: %d. Analyzed: %d. Regressions: %d. Benchmark errors: %d.",
+		report.Summary.Runs,
+		report.Summary.ContenderResults,
+		report.Summary.Compared,
+		report.Summary.Analyzed,
+		report.Summary.Regressions,
+		report.Summary.BenchmarkErrors,
+	)
+	if report.ReportUrl != "" {
+		fmt.Fprintf(&b, "\n\nConbench report: %s", report.ReportUrl)
+	}
+	if buildURL != "" {
+		fmt.Fprintf(&b, "\n\nBuild logs: %s", buildURL)
+	}
+	return b.String()
+}
+
+func githubCheckDetails(report *conbench.CIReport) string {
+	var b strings.Builder
+	writeGitHubRows(&b, "Benchmark errors", ciReportRowsWithStatus(report, conbench.CIReportComparisonStatusErrored), 10, report.ReportUrl, "")
+	writeGitHubRows(&b, "Benchmark regressions", ciReportRowsWithStatus(report, conbench.CIReportComparisonStatusRegressed), 10, report.ReportUrl, "")
+	if b.Len() == 0 {
+		return ""
+	}
+	return b.String()
+}
+
+func githubPRComment(report *conbench.CIReport, checkURL string, serverURL string) string {
+	var b strings.Builder
+	b.WriteString(ciReportIntro(report))
+	errors := ciReportRowsWithStatus(report, conbench.CIReportComparisonStatusErrored)
+	regressions := ciReportRowsWithStatus(report, conbench.CIReportComparisonStatusRegressed)
+	switch {
+	case len(errors) > 0:
+		fmt.Fprintf(&b, "There %s %d benchmark result%s with an error:", were(len(errors)), len(errors), pluralS(len(errors)))
+		writeGitHubRows(&b, "", errors, 2, report.ReportUrl, serverURL)
+	case report.Summary.ContenderResults == 0:
+		b.WriteString("None of the specified runs had any associated benchmark results.\n\n")
+	case report.Summary.Analyzed == 0:
+		b.WriteString("There were not enough matching historic benchmark results to make a call on whether there were regressions.\n\n")
+	case len(regressions) > 0:
+		fmt.Fprintf(&b, "There %s %d benchmark result%s indicating a performance regression:", were(len(regressions)), len(regressions), pluralS(len(regressions)))
+		writeGitHubRows(&b, "", regressions, 2, report.ReportUrl, serverURL)
+	default:
+		b.WriteString("There were no benchmark performance regressions.\n\n")
+	}
+	if checkURL != "" {
+		fmt.Fprintf(&b, "The [full Conbench report](%s) has more details.", checkURL)
+	} else if report.ReportUrl != "" {
+		fmt.Fprintf(&b, "The [full Conbench report](%s) has more details.", absoluteConbenchLink(report.ReportUrl, report.ReportUrl, serverURL))
+	}
+	return b.String()
+}
+
+type ciReportGitHubRow struct {
+	runID      string
+	runReason  string
+	hardware   string
+	timestamp  string
+	runLink    string
+	name       string
+	resultLink string
+}
+
+func ciReportRowsWithStatus(report *conbench.CIReport, status conbench.CIReportComparisonStatus) []ciReportGitHubRow {
+	if report == nil || report.Runs == nil {
+		return nil
+	}
+	rows := []ciReportGitHubRow{}
+	for _, run := range *report.Runs {
+		if run.Comparisons == nil {
+			continue
+		}
+		reason := "commit"
+		if run.RunReason != nil && *run.RunReason != "" {
+			reason = *run.RunReason
+		}
+		for _, comp := range *run.Comparisons {
+			if comp.Status != status {
+				continue
+			}
+			link := comp.Links.Result
+			if comp.Links.Compare != nil && *comp.Links.Compare != "" {
+				link = *comp.Links.Compare
+			}
+			rows = append(rows, ciReportGitHubRow{
+				runID:      run.RunId,
+				runReason:  reason,
+				hardware:   comp.Hardware.Name,
+				timestamp:  comp.Contender.ResultTimestamp.UTC().Format("2006-01-02 15:04:05Z"),
+				runLink:    "/runs/" + url.PathEscape(run.RunId),
+				name:       ciReportGitHubBenchmarkName(comp),
+				resultLink: link,
+			})
+		}
+	}
+	return rows
+}
+
+func writeGitHubRows(b *strings.Builder, heading string, rows []ciReportGitHubRow, limit int, reportURL string, fallbackBase string) {
+	if len(rows) == 0 {
+		return
+	}
+	if heading != "" {
+		fmt.Fprintf(b, "## %s\n", heading)
+	}
+	previousRunID := ""
+	written := 0
+	for _, row := range rows {
+		if limit > 0 && written >= limit {
+			fmt.Fprintf(b, "\n- and %d more (see the report linked below)\n\n", len(rows)-limit)
+			return
+		}
+		if row.runID != previousRunID {
+			fmt.Fprintf(b, "\n\n- %s Run on `%s` at [%s](%s)", titleWord(row.runReason), row.hardware, row.timestamp, absoluteConbenchLink(reportURL, row.runLink, fallbackBase))
+			previousRunID = row.runID
+		}
+		fmt.Fprintf(b, "\n  - [%s](%s)", row.name, absoluteConbenchLink(reportURL, row.resultLink, fallbackBase))
+		written++
+	}
+	if written > 0 {
+		b.WriteString("\n\n")
+	}
+}
+
+func ciReportGitHubBenchmarkName(comp conbench.CIReportComparison) string {
+	name := "`" + comp.Name + "`"
+	parts := make([]string, 0, len(comp.Tags))
+	for key, value := range comp.Tags {
+		if key == "name" || value == nil {
+			continue
+		}
+		parts = append(parts, fmt.Sprintf("%s=%v", key, value))
+	}
+	sort.Strings(parts)
+	if len(parts) > 0 {
+		name += " with " + strings.Join(parts, ", ")
+	}
+	return name
+}
+
+func ciReportIntro(report *conbench.CIReport) string {
+	runs := report.Summary.Runs
+	if runs == 0 && report.Runs != nil {
+		runs = int64(len(*report.Runs))
+	}
+	if report.CommitSha != nil && *report.CommitSha != "" {
+		sha := *report.CommitSha
+		if len(sha) > 8 {
+			sha = sha[:8]
+		}
+		return fmt.Sprintf("Conbench analyzed the %d benchmark run%s on commit `%s`.\n\n", runs, pluralS(runs), sha)
+	}
+	return fmt.Sprintf("Conbench analyzed the %d benchmark run%s that triggered this notification.\n\n", runs, pluralS(runs))
+}
+
+func absoluteConbenchLink(reportURL string, raw string, fallbackBase string) string {
+	if raw == "" {
+		return ""
+	}
+	if isAbsoluteHTTPURL(raw) {
+		return raw
+	}
+	base := fallbackBase
+	if parsed, err := url.Parse(reportURL); err == nil && parsed.Scheme != "" && parsed.Host != "" {
+		base = parsed.Scheme + "://" + parsed.Host
+	}
+	if base == "" {
+		return raw
+	}
+	if strings.HasPrefix(raw, "/") {
+		return strings.TrimRight(base, "/") + raw
+	}
+	return strings.TrimRight(base, "/") + "/" + raw
+}
+
+func absoluteHTTPURL(raw string) string {
+	if isAbsoluteHTTPURL(raw) {
+		return raw
+	}
+	return ""
+}
+
+func isAbsoluteHTTPURL(raw string) bool {
+	u, err := url.Parse(raw)
+	return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
+}
+
+func parsePositiveIntFlag(raw string, flag string) (int, error) {
+	value, err := strconv.Atoi(raw)
+	if err != nil || value <= 0 {
+		return 0, fmt.Errorf("%s must be a positive integer", flag)
+	}
+	return value, nil
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return strings.TrimSpace(value)
+		}
+	}
+	return ""
+}
+
+func firstNonEmptyEnv(names ...string) string {
+	for _, name := range names {
+		if value := strings.TrimSpace(os.Getenv(name)); value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
+func pluralS[T ~int | ~int64](n T) string {
+	if n == 1 {
+		return ""
+	}
+	return "s"
+}
+
+func were(n int) string {
+	if n == 1 {
+		return "was"
+	}
+	return "were"
+}
+
+func titleWord(value string) string {
+	if value == "" {
+		return value
+	}
+	return strings.ToUpper(value[:1]) + value[1:]
 }
 
 func renderCIReportMarkdown(report *conbench.CIReport) string {

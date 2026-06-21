@@ -32,7 +32,7 @@ Use this path for most benchmark jobs:
 | Flask API and Jinja dashboard | Go API and Svelte dashboard |
 | Password/session Python HTTP clients | Generated SDKs for reads; API tokens for automation |
 | `benchconnect submit` and direct POST helpers | `conbench results submit` |
-| `benchalerts` PR checks/comments | `conbench ci report` |
+| `benchalerts` PR checks/comments | `conbench ci report` with `--github-check` and `--github-pr-comment` when repository-facing GitHub output is required |
 | `/api/history/download/{id}/` CSV downloads | `conbench history export <result-id>` |
 | Legacy run lifecycle helpers | explicit `run_id`, `run_tags`, `batch_id`, and CI report selectors |
 | Old Sphinx/autodoc docs | this Markdown/Zensical docs site |
@@ -156,9 +156,30 @@ cat conbench-report.md >> "$GITHUB_STEP_SUMMARY"
 exit "$status"
 ```
 
-This replaces `benchalerts` for synchronous PR diagnostics: the CI job owns the
-GitHub status, and the Markdown report can be appended to the job summary or
-posted by repository-local automation.
+This replaces `benchalerts` for synchronous PR diagnostics when a CI job only
+needs an exit status and Markdown output.
+
+When the old workflow posted a GitHub App Check Run and pull request comment,
+keep that repository-facing behavior by enabling GitHub publishing:
+
+```bash
+export CONBENCH_CI_GITHUB_APP_ID="<github-app-id>"
+export CONBENCH_CI_GITHUB_APP_PRIVATE_KEY="$(cat /path/to/private-key.pem)"
+
+conbench ci report \
+  --server "$CONBENCH_SERVER_URL" \
+  --repository "https://github.com/org/project" \
+  --commit "$CI_COMMIT_SHA" \
+  --run-ids "$RUN_IDS" \
+  --github-check \
+  --github-pr-comment \
+  --github-pr-number "$CI_PULL_REQUEST_NUMBER" \
+  --github-external-id "$CI_BUILD_ID" \
+  --build-url "$CI_BUILD_URL"
+```
+
+The GitHub App path is runner-agnostic; Buildkite and other external CI systems
+should pass their own commit, pull request number, build ID, and build URL.
 
 For scheduled alerting, use server alert rules plus
 `conbench admin alerts evaluate` and `conbench admin alerts deliver`. See
@@ -187,7 +208,7 @@ not appropriate.
 | `benchconnect` | Deleted from the maintained implementation | Use `conbench results submit` and `conbench ci report`. |
 | `benchclients` | Deleted from the maintained implementation | Use generated `conbench` SDK reads and CLI writes. |
 | `benchrun` | Deleted from the maintained implementation | Keep benchmark execution code in benchmark projects; emit JSON at the boundary. |
-| `benchalerts` | Deleted from the maintained implementation | Use CI reports for PRs and server-owned alert rules/outbox for scheduled alerts. |
+| `benchalerts` | Deleted from the maintained implementation | Use CI reports plus optional GitHub Check/PR-comment publishing for PRs, and server-owned alert rules/outbox for scheduled alerts. |
 | `conbenchlegacy` | Deleted from the maintained implementation | Migrate benchmark output to JSON payloads plus CLI. |
 | Flask `conbench` app | Deleted from the maintained implementation | Deploy the Go server and Svelte dashboard. |
 

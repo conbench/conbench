@@ -29,7 +29,7 @@ generated SDKs, and server-owned alerting surfaces.
 | Legacy job | New supported path |
 | --- | --- |
 | Submit benchmark results with `benchconnect` or direct POST helpers | Write one result object per JSON file and run `conbench results submit`; Python jobs may use `conbench.migration` for payload-file writing and CLI invocation. Follow the [migration guide](python-app.md) and the runnable [`examples/migration/gbench_to_cli_submit.py`](https://github.com/conbench/conbench/blob/main/examples/migration/gbench_to_cli_submit.py) recipe. |
-| Run PR regression checks with `benchalerts` | Run `conbench ci report`, publish Markdown through CI, and use its exit code for status. |
+| Run PR regression checks with `benchalerts` | Run `conbench ci report`, publish Markdown through CI, use its exit code for status, and enable `--github-check --github-pr-comment` when the repository still needs GitHub App output. |
 | Deliver scheduled alert notifications from Python | Use server alert rules, `conbench admin alerts evaluate`, and `conbench admin alerts deliver` for webhook, Slack, GitHub Check, GitHub commit-comment, or email delivery. |
 | Browse recent runs from the Flask landing page | Use the Svelte home dashboard, run pages, batch pages, CI report links, and sample result links. |
 | Inspect one result from `/benchmark-results/{id}/` or `/benchmarks/{id}/` | Use `/results/{id}` or `/benchmark-results/{id}` with raw metadata, history JSON, validation, hardware, run, commit, and authenticated result actions. |
