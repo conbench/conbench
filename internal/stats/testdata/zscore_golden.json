@@ -1,0 +1,44 @@
+[
+  {
+    "data_point": 1.5,
+    "dist_mean": 1.0,
+    "dist_stddev": 0.25,
+    "less_is_better": true,
+    "z_score": -2.0
+  },
+  {
+    "data_point": 1.5,
+    "dist_mean": 1.0,
+    "dist_stddev": 0.25,
+    "less_is_better": false,
+    "z_score": 2.0
+  },
+  {
+    "data_point": 1.0,
+    "dist_mean": 1.0,
+    "dist_stddev": 0.25,
+    "less_is_better": true,
+    "z_score": 0.0
+  },
+  {
+    "data_point": null,
+    "dist_mean": 1.0,
+    "dist_stddev": 0.25,
+    "less_is_better": true,
+    "z_score": null
+  },
+  {
+    "data_point": 1.5,
+    "dist_mean": null,
+    "dist_stddev": 0.25,
+    "less_is_better": true,
+    "z_score": null
+  },
+  {
+    "data_point": 1.5,
+    "dist_mean": 1.0,
+    "dist_stddev": 0.0,
+    "less_is_better": true,
+    "z_score": null
+  }
+]

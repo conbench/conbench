@@ -1,0 +1,6 @@
+*
+!web/
+!web/package.json
+!web/bun.lock
+!web/docs-screenshots/
+!web/docs-screenshots/**

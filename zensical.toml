@@ -1,0 +1,60 @@
+[project]
+site_name = "Conbench"
+site_url = "https://conbench.github.io/conbench/"
+site_description = "Language-independent continuous benchmarking with a Go API, Svelte dashboard, CLI-first writes, and generated SDKs."
+site_author = "Conbench maintainers"
+docs_dir = "docs/site"
+site_dir = "site"
+dev_addr = "localhost:8000"
+nav = [
+  { "Overview" = "index.md" },
+  { "Get started" = [
+    "quickstart.md",
+    "cli-reference.md",
+    "concepts.md",
+    "submitting-results.md",
+    "ci-reporting.md",
+  ] },
+  { "Using Conbench" = [
+    "browsing-and-comparing.md",
+    "dashboard-screenshots.md",
+    "regression-analysis.md",
+    "alerting.md",
+    "api-and-sdk.md",
+    "auth-and-tokens.md",
+  ] },
+  { "Migration" = [
+    "migration/python-app.md",
+    "migration/python-legacy-reference.md",
+    "migration/legacy-parity-roadmap.md",
+    "migration/deprecation-notices.md",
+  ] },
+  { "Operations" = [
+    "operations.md",
+    "prod-clone-compatibility.md",
+    "storage-roadmap.md",
+    "contributing.md",
+  ] },
+]
+
+[project.theme]
+features = [
+  "navigation.instant",
+  "navigation.instant.progress",
+  "navigation.path",
+  "navigation.sections",
+]
+
+[[project.theme.palette]]
+scheme = "slate"
+primary = "black"
+accent = "blue"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+scheme = "default"
+primary = "white"
+accent = "blue"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to dark mode"

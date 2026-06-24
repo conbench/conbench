@@ -1,0 +1,30 @@
+[
+  {
+    "case_id": "0188b0c3a1b27f3e9d2a4c5e6f708192",
+    "context_id": "0188b0c3a1b27f3e9d2a4c5e6f7081a3",
+    "hardware_hash": "a1b2c3d4e5f6",
+    "repo_url": "https://github.com/apache/arrow",
+    "fingerprint": "e1d7d8f2532fc169ca95a2ec74b98d6e"
+  },
+  {
+    "case_id": "0188b0c3a1b27f3e9d2a4c5e6f708192",
+    "context_id": "0188b0c3a1b27f3e9d2a4c5e6f7081a3",
+    "hardware_hash": "a1b2c3d4e5f6",
+    "repo_url": "https://github.com/apache/arrow-rs",
+    "fingerprint": "e0155884e5ff5505bec5f7dca224b408"
+  },
+  {
+    "case_id": "",
+    "context_id": "",
+    "hardware_hash": "",
+    "repo_url": "",
+    "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  {
+    "case_id": "café",
+    "context_id": "ctx-✓",
+    "hardware_hash": "máquina",
+    "repo_url": "https://github.com/exämple/repo",
+    "fingerprint": "625dfee54573d8e4360a41e38fd7d3c9"
+  }
+]

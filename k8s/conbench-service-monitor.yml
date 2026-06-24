@@ -1,5 +1,7 @@
 apiVersion: monitoring.coreos.com/v1
-# This is a CRD defined by the prometheus-operator/kube-prometheus project
+# This CRD is defined by the prometheus-operator/kube-prometheus project. It
+# scrapes the Go server / `conbench serve` /metrics endpoint through the Service
+# port.
 kind: ServiceMonitor
 metadata:
   name: conbench-service-monitor
@@ -8,13 +10,8 @@ spec:
     matchLabels:
       app: conbench
   endpoints:
-    # It's important that ServiceMonitor i) refers to a Service port  and ii)
-    # refers to it via its name.
+    # ServiceMonitor refers to the Service port by name, not the container port.
     - port: conbench-service-port
       path: /metrics
       scheme: http
-      # This defines the scrape interval, and therefore the time resolution
-      # within timeseries (usually the moving window width, over which
-      # aggregates are reported). 30 s is already on the lower end, others
-      # sometimes choose 1-5 mins, in the Prometheus ecosystem.
       interval: 30s

@@ -1,0 +1,46 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    schema: "internal/db/schema.sql"
+    queries: "internal/db/query"
+    gen:
+      go:
+        package: "db"
+        out: "internal/db"
+        sql_package: "pgx/v5"
+        emit_pointers_for_null_types: true
+        emit_empty_slices: true
+        overrides:
+          # The aggregate columns and per-iteration data/times are floats in the
+          # stats core; map numeric -> float64 (and numeric[] -> []float64).
+          - db_type: "pg_catalog.numeric"
+            go_type: "float64"
+          - db_type: "pg_catalog.numeric"
+            nullable: true
+            go_type:
+              type: "float64"
+              pointer: true
+          - db_type: "pg_catalog.timestamp"
+            go_type:
+              import: "time"
+              type: "Time"
+          - db_type: "pg_catalog.timestamp"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+          # benchmark_result.data/times are per-iteration samples where an
+          # element can be NULL (a missing iteration, legacy parity). Column
+          # overrides beat the catch-all numeric mapping above, so every other
+          # numeric[] stays []float64.
+          - column: "benchmark_result.data"
+            go_type:
+              type: "float64"
+              pointer: true
+              slice: true
+          - column: "benchmark_result.times"
+            go_type:
+              type: "float64"
+              pointer: true
+              slice: true

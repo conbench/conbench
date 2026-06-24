@@ -1,5 +1,0 @@
-conbench[server]
-Flask==2.2.3
-pytest>=7.0.0
-# Flask 2.2.3 isn't compatible with werkzeug >= 3
-werkzeug<3

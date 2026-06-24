@@ -1,0 +1,74 @@
+{
+  "viewports": {
+    "desktop": {
+      "width": 1440,
+      "height": 900
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "screenshots": [
+    {
+      "id": "home",
+      "title": "Recent runs",
+      "path": "/",
+      "purpose": "Start from recent run activity and jump into CI, result, or series workflows."
+    },
+    {
+      "id": "series",
+      "title": "Series browse",
+      "path": "/series?q=demo-benchmark",
+      "purpose": "Browse benchmark families, filters, status, and production-shaped identifiers."
+    },
+    {
+      "id": "trend",
+      "title": "Trend detail",
+      "path": "/series/:fingerprint?range=all",
+      "purpose": "Inspect history, charted trends, and sample rows for one series."
+    },
+    {
+      "id": "result",
+      "title": "Result detail",
+      "path": "/results/:id",
+      "purpose": "Inspect one benchmark result, measurement, metadata, and read-only actions."
+    },
+    {
+      "id": "results",
+      "title": "Results list",
+      "path": "/results?run_id=...",
+      "purpose": "Browse submitted benchmark results, filter by run or batch, and jump into detail or trends."
+    },
+    {
+      "id": "run",
+      "title": "Run detail",
+      "path": "/runs/:run_id",
+      "purpose": "Inspect one run_id, its result rows, CI report link, batches, and series links."
+    },
+    {
+      "id": "batch",
+      "title": "Batch detail",
+      "path": "/batches/:batch_id",
+      "purpose": "Inspect one batch_id across runs, CI reports, result rows, and series links."
+    },
+    {
+      "id": "compare",
+      "title": "Compare",
+      "path": "/compare?baseline=:id&contender=:id",
+      "purpose": "Compare two results with pairwise and lookback diagnostics."
+    },
+    {
+      "id": "ci-report",
+      "title": "CI report",
+      "path": "/ci/report?repository=...&commit_sha=...&run_ids=...",
+      "purpose": "Review PR/CI regression status, filters, investigation queue, and row verdicts."
+    },
+    {
+      "id": "account",
+      "title": "Account",
+      "path": "/account",
+      "purpose": "Reach session identity, login, API token management, and alert-rule management surfaces."
+    }
+  ]
+}

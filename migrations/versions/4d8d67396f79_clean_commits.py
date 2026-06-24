@@ -18,7 +18,9 @@ Create Date: 2022-12-15 11:08:12.526177
 import logging
 
 from alembic import op
-from sqlalchemy.orm import Session
+from sqlalchemy import MetaData, Table, distinct, select
+
+from migrations.github import GitHubHTTPAPIClient, repository_to_name
 
 # revision identifiers, used by Alembic.
 revision = "4d8d67396f79"
@@ -28,18 +30,16 @@ depends_on = None
 
 log = logging.getLogger(__name__)
 log.setLevel("DEBUG")
+_github = GitHubHTTPAPIClient()
 
 
 def upgrade():
-    # Before importing conbench.entities, monkeypatch the conbench.entities Session
-    # to use the alembic Session
-    alembic_session = Session(op.get_bind())
-    from conbench.entities import _entity
+    connection = op.get_bind()
+    meta = MetaData()
+    meta.reflect(bind=connection)
+    commit_table: Table = meta.tables["commit"]
 
-    _entity.Session = alembic_session
-    from conbench.entities.commit import Commit, _github, repository_to_name
-
-    repos = alembic_session.query(Commit.repository).distinct().all()
+    repos = list(connection.execute(select(distinct(commit_table.c.repository))))
     log.info(f"All repos: {repos}")
 
     for (repo,) in repos:
@@ -58,8 +58,14 @@ def upgrade():
         log.info(
             f"Finding commits in repository {name} with missing enriched information"
         )
-        commits = Commit.all(
-            repository=repo, filter_args=[Commit.timestamp.is_(None), Commit.sha != ""]
+        commits = list(
+            connection.execute(
+                select(commit_table).where(
+                    commit_table.c.repository == repo,
+                    commit_table.c.timestamp.is_(None),
+                    commit_table.c.sha != "",
+                )
+            )
         )
         log.info(f"Found {len(commits)} to fix")
         for commit in commits:
@@ -72,16 +78,18 @@ def upgrade():
             if not fork_point_sha:
                 log.error(f"Couldn't find the fork_point_sha for sha '{commit.sha}'")
 
-            commit.update(
-                {
-                    "parent": commit_details.get("parent"),
-                    "timestamp": commit_details.get("date"),
-                    "message": commit_details.get("message") or "",
-                    "author_name": commit_details.get("author_name") or "",
-                    "author_login": commit_details.get("author_login"),
-                    "author_avatar": commit_details.get("author_avatar"),
-                    "fork_point_sha": fork_point_sha,
-                }
+            connection.execute(
+                commit_table.update()
+                .where(commit_table.c.id == commit.id)
+                .values(
+                    parent=commit_details.get("parent"),
+                    timestamp=commit_details.get("date"),
+                    message=commit_details.get("message") or "",
+                    author_name=commit_details.get("author_name") or "",
+                    author_login=commit_details.get("author_login"),
+                    author_avatar=commit_details.get("author_avatar"),
+                    fork_point_sha=fork_point_sha,
+                )
             )
 
         # ______ (sha == fork_point_sha) --> (branch == default) ______
@@ -90,16 +98,22 @@ def upgrade():
             f"Finding Commits in repository {name} where sha == fork_point_sha "
             f"but the branch is not '{default_branch}'",
         )
-        commits = Commit.all(
-            repository=repo,
-            filter_args=[
-                Commit.sha == Commit.fork_point_sha,
-                Commit.branch != default_branch,
-            ],
+        commits = list(
+            connection.execute(
+                select(commit_table.c.id).where(
+                    commit_table.c.repository == repo,
+                    commit_table.c.sha == commit_table.c.fork_point_sha,
+                    commit_table.c.branch != default_branch,
+                )
+            )
         )
         log.info(f"Found {len(commits)} to fix")
         for commit in commits:
-            commit.update({"branch": default_branch})
+            connection.execute(
+                commit_table.update()
+                .where(commit_table.c.id == commit.id)
+                .values(branch=default_branch)
+            )
 
         # ______ (sha != fork_point_sha) --> (branch != default) ______
 
@@ -107,16 +121,22 @@ def upgrade():
             f"Finding Commits in repository {name} where sha != fork_point_sha "
             f"but the branch is '{default_branch}'",
         )
-        commits = Commit.all(
-            repository=repo,
-            filter_args=[
-                Commit.sha != Commit.fork_point_sha,
-                Commit.branch == default_branch,
-            ],
+        commits = list(
+            connection.execute(
+                select(commit_table.c.id).where(
+                    commit_table.c.repository == repo,
+                    commit_table.c.sha != commit_table.c.fork_point_sha,
+                    commit_table.c.branch == default_branch,
+                )
+            )
         )
         log.info(f"Found {len(commits)} to fix")
         for commit in commits:
-            commit.update({"branch": None})
+            connection.execute(
+                commit_table.update()
+                .where(commit_table.c.id == commit.id)
+                .values(branch=None)
+            )
 
 
 def downgrade():

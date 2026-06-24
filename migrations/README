@@ -1,1 +1,26 @@
-Generic single-database configuration.
+# Alembic Schema Provenance
+
+This directory is the temporary schema source of truth for the new Go/Svelte
+Conbench runtime while it runs on the frozen production Postgres schema.
+
+The active server, CLI, web app, and Python SDK do not import these files at
+runtime. Schema generation runs them inside the isolated schema image from
+`Dockerfile.schema` with `requirements-schema.txt`. The schema image does not
+import the retired Python client packages and does not import the retired Flask
+application.
+
+Use the Make targets instead of invoking Alembic directly:
+
+```bash
+make schema
+make schema-check
+ALEMBIC_MIGRATION_NAME=describe_change make schema-new-migration
+```
+
+`make schema` regenerates `internal/db/schema.sql`, which is the checked sqlc
+input consumed by the Go backend. `make schema-check` verifies that checked-in
+SQL still matches these migrations.
+
+Retire this directory when schema ownership moves out of the legacy
+Python/Alembic path. Until then, keep migrations limited to schema provenance
+and schema drift checks; do not add runtime Python application code here.

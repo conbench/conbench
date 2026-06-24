@@ -1,0 +1,107 @@
+{
+  "empty": {
+    "distribution_commits": 100,
+    "mean": null,
+    "points": [],
+    "stddev": null
+  },
+  "increasing": {
+    "distribution_commits": 100,
+    "mean": 1.25,
+    "points": [
+      {
+        "begins_distribution_change": false,
+        "commit_timestamp": "2024-01-01T00:00:00Z",
+        "result_timestamp": "2024-01-01T00:00:00Z",
+        "svs": 1.0
+      },
+      {
+        "begins_distribution_change": false,
+        "commit_timestamp": "2024-01-02T00:00:00Z",
+        "result_timestamp": "2024-01-02T00:00:00Z",
+        "svs": 1.1
+      },
+      {
+        "begins_distribution_change": false,
+        "commit_timestamp": "2024-01-03T00:00:00Z",
+        "result_timestamp": "2024-01-03T00:00:00Z",
+        "svs": 1.2
+      },
+      {
+        "begins_distribution_change": false,
+        "commit_timestamp": "2024-01-04T00:00:00Z",
+        "result_timestamp": "2024-01-04T00:00:00Z",
+        "svs": 1.3
+      },
+      {
+        "begins_distribution_change": false,
+        "commit_timestamp": "2024-01-05T00:00:00Z",
+        "result_timestamp": "2024-01-05T00:00:00Z",
+        "svs": 1.4
+      },
+      {
+        "begins_distribution_change": false,
+        "commit_timestamp": "2024-01-06T00:00:00Z",
+        "result_timestamp": "2024-01-06T00:00:00Z",
+        "svs": 1.5
+      }
+    ],
+    "stddev": 0.10801234497346435
+  },
+  "tied_latest": {
+    "distribution_commits": 100,
+    "mean": 1.1375,
+    "points": [
+      {
+        "begins_distribution_change": false,
+        "commit_timestamp": "2024-01-01T00:00:00Z",
+        "result_timestamp": "2024-01-01T00:00:00Z",
+        "svs": 1.0
+      },
+      {
+        "begins_distribution_change": false,
+        "commit_timestamp": "2024-01-02T00:00:00Z",
+        "result_timestamp": "2024-01-02T00:00:00Z",
+        "svs": 1.1
+      },
+      {
+        "begins_distribution_change": false,
+        "commit_timestamp": "2024-01-03T00:00:00Z",
+        "result_timestamp": "2024-01-03T00:00:00Z",
+        "svs": 1.2
+      },
+      {
+        "begins_distribution_change": false,
+        "commit_timestamp": "2024-01-03T00:00:00Z",
+        "result_timestamp": "2024-01-03T00:00:05Z",
+        "svs": 1.25
+      }
+    ],
+    "stddev": 0.08539125638299662
+  },
+  "tied_latest_begins": {
+    "distribution_commits": 100,
+    "mean": 25.0,
+    "points": [
+      {
+        "begins_distribution_change": false,
+        "commit_timestamp": "2024-01-01T00:00:00Z",
+        "result_timestamp": "2024-01-01T00:00:00Z",
+        "svs": 10.0
+      },
+      {
+        "begins_distribution_change": false,
+        "commit_timestamp": "2024-01-02T00:00:00Z",
+        "result_timestamp": "2024-01-02T00:00:00Z",
+        "svs": 20.0
+      },
+      {
+        "begins_distribution_change": true,
+        "commit_timestamp": "2024-01-02T00:00:00Z",
+        "result_timestamp": "2024-01-02T00:00:05Z",
+        "svs": 30.0
+      }
+    ],
+    "stddev": 0.0
+  }
+}

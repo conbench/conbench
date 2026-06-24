@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=77", "wheel>=0.45"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "conbench"
+version = "0.1.0"
+description = "Generated Python SDK for the Conbench API."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    { name = "Conbench maintainers" },
+]
+maintainers = [
+    { name = "Conbench maintainers" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "attrs>=22.2",
+    "httpx>=0.23",
+    "python-dateutil>=2.8",
+]
+
+[project.urls]
+Homepage = "https://github.com/conbench/conbench"
+Documentation = "https://conbench.github.io/conbench/"
+"Migration Guide" = "https://conbench.github.io/conbench/migration/python-app/"
+Repository = "https://github.com/conbench/conbench"
+Issues = "https://github.com/conbench/conbench/issues"
+
+[dependency-groups]
+dev = [
+    "build>=1.2",
+    "pytest>=8",
+    "setuptools>=77",
+    "twine>=5",
+    "wheel>=0.45",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["conbench*"]

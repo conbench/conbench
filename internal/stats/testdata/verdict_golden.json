@@ -1,0 +1,130 @@
+[
+  {
+    "baseline_svs": 1.0,
+    "contender_svs": 1.1,
+    "less_is_better": true,
+    "lookback": {
+      "improvement_indicated": false,
+      "regression_indicated": false,
+      "z_score": -3.0,
+      "z_threshold": 5.0
+    },
+    "pairwise": {
+      "improvement_indicated": false,
+      "percent_change": -10.0,
+      "percent_threshold": 5.0,
+      "regression_indicated": true
+    },
+    "unit": "s",
+    "z_score": -3.0
+  },
+  {
+    "baseline_svs": 1.0,
+    "contender_svs": 0.9,
+    "less_is_better": true,
+    "lookback": {
+      "improvement_indicated": true,
+      "regression_indicated": false,
+      "z_score": 7.0,
+      "z_threshold": 5.0
+    },
+    "pairwise": {
+      "improvement_indicated": true,
+      "percent_change": 10.0,
+      "percent_threshold": 5.0,
+      "regression_indicated": false
+    },
+    "unit": "s",
+    "z_score": 7.0
+  },
+  {
+    "baseline_svs": 1.0,
+    "contender_svs": 1.02,
+    "less_is_better": true,
+    "lookback": {
+      "improvement_indicated": false,
+      "regression_indicated": false,
+      "z_score": 1.0,
+      "z_threshold": 5.0
+    },
+    "pairwise": {
+      "improvement_indicated": false,
+      "percent_change": -2.0,
+      "percent_threshold": 5.0,
+      "regression_indicated": false
+    },
+    "unit": "s",
+    "z_score": 1.0
+  },
+  {
+    "baseline_svs": 1.0,
+    "contender_svs": 0.95,
+    "less_is_better": true,
+    "lookback": {
+      "improvement_indicated": false,
+      "regression_indicated": false,
+      "z_score": -5.0,
+      "z_threshold": 5.0
+    },
+    "pairwise": {
+      "improvement_indicated": true,
+      "percent_change": 5.0,
+      "percent_threshold": 5.0,
+      "regression_indicated": false
+    },
+    "unit": "s",
+    "z_score": -5.0
+  },
+  {
+    "baseline_svs": 1.0,
+    "contender_svs": 1.1,
+    "less_is_better": false,
+    "lookback": {
+      "improvement_indicated": true,
+      "regression_indicated": false,
+      "z_score": 6.0,
+      "z_threshold": 5.0
+    },
+    "pairwise": {
+      "improvement_indicated": true,
+      "percent_change": 10.0,
+      "percent_threshold": 5.0,
+      "regression_indicated": false
+    },
+    "unit": "i/s",
+    "z_score": 6.0
+  },
+  {
+    "baseline_svs": 0.0,
+    "contender_svs": 1.0,
+    "less_is_better": true,
+    "lookback": {
+      "improvement_indicated": false,
+      "regression_indicated": false,
+      "z_score": 2.0,
+      "z_threshold": 5.0
+    },
+    "pairwise": null,
+    "unit": "s",
+    "z_score": 2.0
+  },
+  {
+    "baseline_svs": 16.0,
+    "contender_svs": 17.0,
+    "less_is_better": false,
+    "lookback": {
+      "improvement_indicated": false,
+      "regression_indicated": false,
+      "z_score": 5.0,
+      "z_threshold": 5.0
+    },
+    "pairwise": {
+      "improvement_indicated": false,
+      "percent_change": 6.25,
+      "percent_threshold": 6.25,
+      "regression_indicated": false
+    },
+    "unit": "i/s",
+    "z_score": 5.0
+  }
+]

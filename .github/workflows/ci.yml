@@ -1,0 +1,248 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main, new-vision]
+  push:
+    branches: [main, new-vision]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Install golangci-lint v2.12.2
+        run: |
+          cd /tmp
+          curl -fsSL -O https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-linux-amd64.tar.gz
+          curl -fsSL -O https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-checksums.txt
+          grep -E 'golangci-lint-2.12.2-linux-amd64\.tar\.gz$' golangci-lint-2.12.2-checksums.txt | sha256sum -c -
+          tar -xzf golangci-lint-2.12.2-linux-amd64.tar.gz
+          sudo install golangci-lint-2.12.2-linux-amd64/golangci-lint /usr/local/bin/golangci-lint
+          golangci-lint version
+      - run: make go-lint-ci
+      - run: make go-vet
+      - run: make go-test
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run check:e2e
+      - run: bun run check:docs-screenshots
+      - run: bun run test
+
+  sdk-python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: "0.9.2"
+          enable-cache: true
+      - run: cd sdk/python && uv python install 3.12
+      - run: make python-sdk-check
+      - run: make migration-examples-test
+
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: "0.9.2"
+          enable-cache: true
+      - run: make build-docs
+
+  docs-screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Capture dashboard screenshots
+        env:
+          CONBENCH_DOCS_SCREENSHOT_OUT_DIR: ${{ runner.temp }}/conbench-dashboard-screenshots
+        run: make docs-screenshots
+      - name: Check dashboard screenshot inventory
+        env:
+          CONBENCH_DOCS_SCREENSHOT_OUT_DIR: ${{ runner.temp }}/conbench-dashboard-screenshots
+        run: make docs-screenshots-check
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: conbench-dashboard-screenshots
+          path: |
+            ${{ runner.temp }}/conbench-dashboard-screenshots/*.png
+            ${{ runner.temp }}/conbench-dashboard-screenshots/dashboard-screenshots-evidence.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish dashboard screenshots to artifact branch
+        if: ${{ github.event_name == 'push' }}
+        env:
+          CONBENCH_DOCS_SCREENSHOT_OUT_DIR: ${{ runner.temp }}/conbench-dashboard-screenshots
+          GITHUB_TOKEN: ${{ github.token }}
+        run: scripts/publish_docs_screenshot_artifacts.sh
+
+  schema-drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - run: make schema-check
+
+  codegen-drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.14
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: "0.9.2"
+          enable-cache: true
+      - name: Install sqlc v1.30.0
+        run: |
+          cd /tmp
+          curl -fsSL -O https://github.com/sqlc-dev/sqlc/releases/download/v1.30.0/sqlc_1.30.0_linux_amd64.tar.gz
+          echo "468aecee071bfe55e97fcbcac52ea0208eeca444f67736f3b8f0f3d6a106132e  sqlc_1.30.0_linux_amd64.tar.gz" | sha256sum -c -
+          tar -xzf sqlc_1.30.0_linux_amd64.tar.gz sqlc
+          sudo install sqlc /usr/local/bin/sqlc
+          sqlc version
+      - run: make sqlc-check
+      - run: make codegen-check
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.14
+      - run: make build
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: conbench-binaries
+          path: |
+            bin/conbench
+          if-no-files-found: error
+          retention-days: 14
+
+  server-container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - run: make server-container-smoke
+
+  deploy-manifests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - run: make go-deploy-manifest-check
+
+  workflows:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: "0.9.2"
+          enable-cache: true
+      - run: make workflow-shape-check
+      - run: make docs-link-check
+      - run: make docs-screenshots-check
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.14
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: "0.9.2"
+          enable-cache: true
+      - name: Install web deps (pinned Playwright CLI)
+        working-directory: web
+        run: bun install --frozen-lockfile
+      - name: Cache Playwright browsers
+        # Keep the version in the key in sync with web/package.json @playwright/test.
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.60.0-${{ runner.os }}
+      - name: Install Chromium
+        working-directory: web
+        run: bunx playwright install --with-deps chromium
+      - name: Keystone e2e
+        env:
+          CONBENCH_E2E_SKIP_BROWSER_INSTALL: "1"
+        run: make e2e

@@ -1,0 +1,22 @@
+ARG BUN_VERSION=1.3.14
+ARG PLAYWRIGHT_VERSION=1.60.0
+
+FROM docker.io/oven/bun:${BUN_VERSION} AS bun
+
+FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
+
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
+
+WORKDIR /workspace
+
+COPY web/package.json web/bun.lock ./web/
+RUN cd web && bun install --frozen-lockfile
+
+COPY web/docs-screenshots ./web/docs-screenshots
+RUN chmod -R a+rX /workspace/web && \
+    mkdir -p /workspace/web/test-results && \
+    chmod -R a+rwX /workspace/web/test-results
+
+WORKDIR /workspace/web
+
+CMD ["bun", "run", "docs:screenshots"]

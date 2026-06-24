@@ -1,0 +1,70 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: none
+  enable:
+    - depguard
+    - errcheck
+    - forbidigo
+    - govet
+    - ineffassign
+    - misspell
+    - modernize
+    - staticcheck
+    - testifylint
+    - unused
+  settings:
+    depguard:
+      rules:
+        # internal/service depends on the storage port, never the concrete
+        # adapter or its driver. Test files are exempt: the external *_test
+        # packages wire the real Postgres adapter to exercise the port.
+        service:
+          files:
+            - '**/internal/service/*.go'
+            - '!**/internal/service/*_test.go'
+          deny:
+            - pkg: github.com/conbench/conbench/internal/db
+              desc: internal/service must use internal/storage, not the concrete DB adapter.
+            - pkg: github.com/jackc/pgx/v5
+              desc: pgx must stay behind the storage boundary (map errors to storage.ErrNotFound in internal/db).
+    govet:
+      disable:
+        - shadow
+        - fieldalignment
+    forbidigo:
+      forbid:
+        - pattern: '^t\.(Fatal|Fatalf|Error|Errorf|Fail|FailNow)$'
+          msg: Use testify assert/require helpers in tests.
+        - pattern: '^testing\..+\.(Fatal|Fatalf|Error|Errorf|Fail|FailNow)$'
+          msg: Use testify assert/require helpers in tests.
+        - pattern: '^time\.Local$'
+          msg: Keep storage and API datetimes in UTC; local conversion belongs in the UI.
+        - pattern: '^time\.LoadLocation$'
+          msg: Keep storage and API datetimes in UTC; local conversion belongs in the UI.
+        - pattern: '^time\.FixedZone$'
+          msg: Keep storage and API datetimes in UTC; local conversion belongs in the UI.
+      analyze-types: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      # errcheck is noisy in tests (e.g. unchecked Close in fixtures).
+      - linters:
+          - errcheck
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

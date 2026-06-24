@@ -22,7 +22,7 @@ metadata:
     alb.ingress.kubernetes.io/group.order: "9"
     # Configure health check against Conbench containers.
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
-    alb.ingress.kubernetes.io/healthcheck-path: /api/ping/
+    alb.ingress.kubernetes.io/healthcheck-path: /api/ping
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
     alb.ingress.kubernetes.io/success-codes: '200'
     # Configure exposure to Internet.
@@ -32,24 +32,26 @@ metadata:
     # will be ignored." That is preclisely what we want, a no-brainer
     # configuration parameter that disallows serving traffic via non-TLS.
     alb.ingress.kubernetes.io/ssl-redirect: '443'
-    # The ALB "idle timeout" Must be shorter than the TCP conn
-    # keepalive-related timeout constant of the other end, see
-    # https://github.com/conbench/conbench/issues/1156 -- Note that this is
-    # also what is elsewhere called a "request timeout", ALB sends a 504
-    # Gateway Timeout if the back-end does not return a response in this time
-    # window. That is, let's pick this to be longer than the timeout constant
-    # we use in reasonable clients. For example: client: 150 s, ALB idle
-    # timeout: 160 s, gunicorn keepalive timeout: 170 s gunicorn worker
-    # timeout: 180 s. Also see https://github.com/conbench/conbench/issues/1384
+    # ALB sends 504 Gateway Timeout if the backend does not return a response
+    # within this idle timeout window. Keep this longer than normal client
+    # request deadlines.
     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=160
-    alb.ingress.kubernetes.io/certificate-arn: <CERTIFICATE_ARN>
+    alb.ingress.kubernetes.io/certificate-arn: "{{CERTIFICATE_ARN}}"
+    alb.ingress.kubernetes.io/actions.conbench-metrics-deny: '{"type":"fixed-response","fixedResponseConfig":{"contentType":"text/plain","statusCode":"404","messageBody":"not found"}}'
   labels:
     app: conbench-ingress
 spec:
   rules:
-  - host: <CONBENCH_INTENDED_DNS_NAME>
+  - host: "{{CONBENCH_INTENDED_DNS_NAME}}"
     http:
       paths:
+      - path: /metrics
+        pathType: Exact
+        backend:
+          service:
+            name: conbench-metrics-deny
+            port:
+              name: use-annotation
       - path: /
         pathType: Prefix
         backend:

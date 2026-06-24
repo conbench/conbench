@@ -1,0 +1,38 @@
+services:
+  db:
+    image: library/postgres:15.2-alpine
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - conbench_server_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    environment:
+      CONBENCH_ADDR: ":8080"
+      CONBENCH_DB_URL: "postgres://postgres:postgres@db:5432/postgres?sslmode=disable"
+      CONBENCH_INIT_SCHEMA: "true"
+      CONBENCH_SEED: "true"
+      CONBENCH_AUTH_DISABLED: "${DCOMP_CONBENCH_AUTH_DISABLED:-true}"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${DCOMP_CONBENCH_SERVER_HOST_PORT:-127.0.0.1:8080}:8080"
+    healthcheck:
+      test: [ "CMD", "/usr/local/bin/conbench", "series", "list", "--server", "http://127.0.0.1:8080", "--page-size", "1" ]
+      interval: 5s
+      timeout: 10s
+      retries: 12
+
+volumes:
+  conbench_server_data:

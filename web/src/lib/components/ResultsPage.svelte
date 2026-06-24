@@ -1,0 +1,452 @@
+<script lang="ts">
+  import { createConbenchClient } from "../api/client";
+  import {
+    loadResultsPage,
+    type ResultListRow,
+    type ResultsPageViewModel,
+  } from "../results/loader";
+  import {
+    formatResultListQuery,
+    interceptNavClick,
+    navigate,
+    type ResultListQuery,
+  } from "../router";
+
+  let {
+    query,
+    baseUrl = "",
+  }: {
+    query: ResultListQuery;
+    baseUrl?: string;
+  } = $props();
+
+  const client = $derived(createConbenchClient(baseUrl));
+
+  let vm = $state<ResultsPageViewModel | null>(null);
+  let loading = $state(true);
+  let loadingMore = $state(false);
+  let errorMsg = $state<string | null>(null);
+  let moreErrorMsg = $state<string | null>(null);
+  let reqToken = 0;
+
+  let runID = $state("");
+  let batchID = $state("");
+  let runReason = $state("");
+  let earliestTimestamp = $state("");
+  let latestTimestamp = $state("");
+
+  $effect(() => {
+    runID = query.runID;
+    batchID = query.batchID;
+    runReason = query.runReason;
+    earliestTimestamp = query.earliestTimestamp;
+    latestTimestamp = query.latestTimestamp;
+    void load(query);
+  });
+
+  async function load(q: ResultListQuery) {
+    const token = ++reqToken;
+    loading = true;
+    loadingMore = false;
+    errorMsg = null;
+    moreErrorMsg = null;
+    vm = null;
+    try {
+      const page = await loadResultsPage(client, { query: q, cursor: null });
+      if (token !== reqToken) return;
+      vm = page;
+    } catch (err) {
+      if (token !== reqToken) return;
+      errorMsg = err instanceof Error ? err.message : String(err);
+    } finally {
+      if (token === reqToken) loading = false;
+    }
+  }
+
+  async function loadMore() {
+    if (vm === null || vm.nextCursor === null || loadingMore) return;
+    const token = reqToken;
+    loadingMore = true;
+    moreErrorMsg = null;
+    try {
+      const page = await loadResultsPage(client, { query, cursor: vm.nextCursor });
+      if (token !== reqToken) return;
+      vm = summarizeRows([...vm.rows, ...page.rows], page.nextCursor);
+    } catch (err) {
+      if (token !== reqToken) return;
+      moreErrorMsg = err instanceof Error ? err.message : String(err);
+    } finally {
+      if (token === reqToken) loadingMore = false;
+    }
+  }
+
+  function summarizeRows(rows: ResultListRow[], nextCursor: string | null): ResultsPageViewModel {
+    return {
+      rows,
+      nextCursor,
+      loadedResults: rows.length,
+      loadedRuns: new Set(rows.map((row) => row.runId)).size,
+      loadedBatches: new Set(rows.map((row) => row.batchId).filter(Boolean)).size,
+      loadedErrors: rows.filter((row) => row.hasError).length,
+      loadedSeries: new Set(rows.map((row) => row.historyFingerprint)).size,
+    };
+  }
+
+  function submitFilters(e: SubmitEvent) {
+    e.preventDefault();
+    navigate(`/results${formatResultListQuery(currentFilterQuery())}`);
+  }
+
+  function currentFilterQuery(): ResultListQuery {
+    return {
+      runID: runID.trim(),
+      batchID: batchID.trim(),
+      runReason: runReason.trim(),
+      earliestTimestamp: earliestTimestamp.trim(),
+      latestTimestamp: latestTimestamp.trim(),
+    };
+  }
+
+  function clearFilter(patch: Partial<ResultListQuery>) {
+    navigate(`/results${formatResultListQuery({ ...query, ...patch })}`);
+  }
+
+  function go(e: MouseEvent, href: string) {
+    if (!interceptNavClick(e)) return;
+    e.preventDefault();
+    navigate(href);
+  }
+
+  function formatTime(value: string): string {
+    return new Intl.DateTimeFormat(undefined, {
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(new Date(value));
+  }
+
+  function formatSVS(row: ResultListRow): string {
+    if (row.singleValueSummary === null) return "not computed";
+    const value = Number.isInteger(row.singleValueSummary)
+      ? row.singleValueSummary.toLocaleString()
+      : row.singleValueSummary.toLocaleString(undefined, { maximumSignificantDigits: 6 });
+    return row.unit === null ? value : `${value} ${row.unit}`;
+  }
+
+  function plural(n: number, word: string, pluralWord = `${word}s`): string {
+    return `${n.toLocaleString()} ${n === 1 ? word : pluralWord}`;
+  }
+
+  let activeFilters = $derived([
+    ...(query.runID !== ""
+      ? [{ label: "run id", value: query.runID, clear: { runID: "" }, aria: `Remove run id filter ${query.runID}` }]
+      : []),
+    ...(query.batchID !== ""
+      ? [{ label: "batch id", value: query.batchID, clear: { batchID: "" }, aria: `Remove batch id filter ${query.batchID}` }]
+      : []),
+    ...(query.runReason !== ""
+      ? [{
+          label: "run reason",
+          value: query.runReason,
+          clear: { runReason: "" },
+          aria: `Remove run reason filter ${query.runReason}`,
+        }]
+      : []),
+    ...(query.earliestTimestamp !== ""
+      ? [{
+          label: "earliest",
+          value: query.earliestTimestamp,
+          clear: { earliestTimestamp: "" },
+          aria: `Remove earliest timestamp filter ${query.earliestTimestamp}`,
+        }]
+      : []),
+    ...(query.latestTimestamp !== ""
+      ? [{
+          label: "latest",
+          value: query.latestTimestamp,
+          clear: { latestTimestamp: "" },
+          aria: `Remove latest timestamp filter ${query.latestTimestamp}`,
+        }]
+      : []),
+  ]);
+</script>
+
+<main class="page results-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Result Explorer</p>
+      <h1>Benchmark results</h1>
+      <p class="page-subtitle">
+        Browse raw submitted results, filter by run or batch, and jump into detail, trends, and CI context.
+      </p>
+    </div>
+    {#if vm !== null}
+      <div class="page-meta">
+        <span>{plural(vm.loadedResults, "loaded result")}</span>
+        {#if vm.nextCursor !== null}<span>More available</span>{/if}
+      </div>
+    {/if}
+  </header>
+
+  <form class="filter-bar panel results-filters" onsubmit={submitFilters}>
+    <label class="filter-label">
+      run id
+      <input type="text" bind:value={runID} placeholder="any" />
+    </label>
+    <label class="filter-label">
+      batch id
+      <input type="text" bind:value={batchID} placeholder="any" />
+    </label>
+    <label class="filter-label">
+      run reason
+      <input type="text" bind:value={runReason} placeholder="any" />
+    </label>
+    <label class="filter-label">
+      earliest timestamp
+      <input type="text" bind:value={earliestTimestamp} placeholder="RFC3339" />
+    </label>
+    <label class="filter-label">
+      latest timestamp
+      <input type="text" bind:value={latestTimestamp} placeholder="RFC3339" />
+    </label>
+    <div class="filter-actions">
+      <button type="submit" class="button-pill">Apply filters</button>
+      <a class="button-pill secondary" href="/results" onclick={(e) => go(e, "/results")}>Clear</a>
+    </div>
+  </form>
+
+  {#if activeFilters.length > 0}
+    <div class="active-filters" role="group" aria-label="Active result filters">
+      {#each activeFilters as filter (filter)}
+        <button type="button" class="filter-chip" aria-label={filter.aria} onclick={() => clearFilter(filter.clear)}>
+          <span class="chip-label">{filter.label}</span>
+          <span class="chip-value">{filter.value}</span>
+          <span class="chip-x" aria-hidden="true">&times;</span>
+        </button>
+      {/each}
+    </div>
+  {/if}
+
+  {#if errorMsg}
+    <section class="panel state-panel error-panel" role="alert">
+      <h2>Failed to load results</h2>
+      <p>{errorMsg}</p>
+    </section>
+  {:else if loading || vm === null}
+    <section class="panel state-panel loading-panel" aria-live="polite">
+      <h2>Loading benchmark results</h2>
+      <p>Loading...</p>
+    </section>
+  {:else if vm.rows.length === 0}
+    <section class="panel state-panel empty-panel" aria-label="No matching benchmark results">
+      <h2>No benchmark results match the current filters</h2>
+      <p>Clear the filters or open the series explorer to find a result from a benchmark family.</p>
+      <a class="button-pill" href="/series" onclick={(e) => go(e, "/series")}>Browse series</a>
+    </section>
+  {:else}
+    <p class="summary-line" aria-label="Result list summary">
+      <span class="summary-item">
+        {plural(vm.loadedResults, "result")}{vm.nextCursor === null ? "" : "+"}
+      </span>
+      <span class="summary-item">{plural(vm.loadedRuns, "run")}</span>
+      <span class="summary-item">{plural(vm.loadedBatches, "batch", "batches")}</span>
+      <span class="summary-item" class:alert={vm.loadedErrors > 0}>{plural(vm.loadedErrors, "error")}</span>
+      <span class="summary-item">{plural(vm.loadedSeries, "series", "series")}</span>
+    </p>
+
+    <section class="panel table-panel" aria-label="Benchmark results">
+      <table class="data-table stacked-table results-table">
+        <colgroup>
+          <col class="result-col" />
+          <col class="run-col" />
+          <col class="batch-col" />
+          <col class="reason-col" />
+          <col class="status-col" />
+          <col class="svs-col" />
+          <col class="commit-col" />
+          <col class="time-col" />
+          <col class="series-col" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Result</th>
+            <th>Run</th>
+            <th>Batch</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>SVS</th>
+            <th>Commit</th>
+            <th>Time</th>
+            <th>Series</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each vm.rows as row (row.id)}
+            <tr class:error-row={row.hasError}>
+              <td data-label="Result">
+                <a class="row-primary-link mono" href={row.resultHref} onclick={(e) => go(e, row.resultHref)}>{row.id}</a>
+              </td>
+              <td data-label="Run">
+                <a class="mono" href={row.runHref} onclick={(e) => go(e, row.runHref)}>{row.runId}</a>
+              </td>
+              <td data-label="Batch">
+                {#if row.batchId && row.batchHref}
+                  <a class="mono" href={row.batchHref} onclick={(e) => go(e, row.batchHref!)}>{row.batchId}</a>
+                {:else}
+                  not set
+                {/if}
+              </td>
+              <td class="wrap-anywhere" data-label="Reason">{row.runReason ?? "not set"}</td>
+              <td class="status-cell" data-label="Status">
+                <span class={`status-badge ${row.hasError ? "warning" : "success"}`}>
+                  {row.hasError ? "error" : "ok"}
+                </span>
+              </td>
+              <td class="numeric" data-label="SVS">{formatSVS(row)} <span class="subtle-inline">{row.singleValueSummaryType}</span></td>
+              <td class="commit-cell" data-label="Commit">
+                <span class="identity-stack">
+                  {#if row.commitSha !== null}
+                    <span class="mono" title={row.commitSha}>{row.shortCommit}</span>
+                  {:else}
+                    <span>not set</span>
+                  {/if}
+                  {#if row.repository !== ""}
+                    <span class="metadata-line">{row.repository}</span>
+                  {/if}
+                </span>
+              </td>
+              <td class="time-cell" data-label="Time">{formatTime(row.timestamp)}</td>
+              <td data-label="Series">
+                <a
+                  class="button-pill secondary"
+                  href={row.trendHref}
+                  aria-label={`trend for ${row.id}`}
+                  onclick={(e) => go(e, row.trendHref)}
+                >
+                  Trend
+                </a>
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </section>
+
+    {#if moreErrorMsg}
+      <section class="panel state-panel error-panel" role="alert">
+        <h2>Failed to load more</h2>
+        <p>{moreErrorMsg}</p>
+      </section>
+    {/if}
+    {#if vm.nextCursor !== null}
+      <button type="button" class="button-pill more" onclick={loadMore} disabled={loadingMore}>
+        {loadingMore ? "Loading…" : "Load more"}
+      </button>
+    {/if}
+  {/if}
+</main>
+
+<style>
+  .results-page {
+    gap: 12px;
+  }
+  .results-filters {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(130px, 1fr)) auto;
+    gap: 10px;
+    align-items: end;
+    padding: 10px 12px;
+  }
+
+  .secondary {
+    background: var(--c-surface);
+    color: var(--c-text-muted);
+  }
+  .subtle-inline {
+    color: var(--c-text-muted);
+    font-size: 0.76rem;
+  }
+
+  .results-table {
+    --stacked-label-width: 82px;
+  }
+
+  .result-col {
+    width: 16%;
+  }
+
+  .run-col {
+    width: 15%;
+  }
+
+  .batch-col {
+    width: 13%;
+  }
+
+  .reason-col {
+    width: 10%;
+  }
+
+  .status-col {
+    width: 8%;
+  }
+
+  .svs-col {
+    width: 12%;
+  }
+
+  .commit-col {
+    width: 16%;
+  }
+
+  .time-col {
+    width: 10%;
+  }
+
+  .series-col {
+    width: 86px;
+  }
+
+  .identity-stack {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .metadata-line {
+    color: var(--c-text-faint);
+    font-size: 0.72rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .numeric {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .time-cell,
+  .status-cell {
+    white-space: nowrap;
+  }
+
+  .error-panel h2 {
+    color: var(--c-error);
+  }
+
+  @media (max-width: 1120px) {
+    .results-filters {
+      grid-template-columns: repeat(3, minmax(140px, 1fr));
+    }
+  }
+  @media (max-width: 760px) {
+    .results-filters {
+      grid-template-columns: 1fr;
+    }
+    .time-cell,
+    .status-cell {
+      white-space: normal;
+    }
+  }
+</style>

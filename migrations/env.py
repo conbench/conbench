@@ -1,66 +1,42 @@
+import os
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from conbench.config import Config
-from conbench.db import engine
-from conbench.entities._entity import Base
 
-from conbench.entities import (  # noqa  # isort:skip
-    case,
-    commit,
-    context as _,
-    info,
-    hardware,
-    benchmark_result,
-    user,
-)
+def database_url() -> str:
+    configured = os.environ.get("CONBENCH_SCHEMA_DB_URL") or os.environ.get(
+        "CONBENCH_DB_URL"
+    )
+    if configured:
+        return configured
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+    username = os.environ.get("DB_USERNAME", "postgres")
+    password = os.environ.get("DB_PASSWORD", "postgres")
+    host = os.environ.get("DB_HOST", "localhost")
+    port = os.environ.get("DB_PORT", "5432")
+    name = os.environ.get("DB_NAME", "postgres")
+    return f"postgresql://{username}:{password}@{host}:{port}/{name}"
+
+
+# this is the Alembic Config object, which provides access to the values within
+# the .ini file in use.
 config = context.config
 
-if engine:
-    sqlalchemy_url = engine.url.render_as_string(hide_password=False)
-    # That comes out URL-encoded as of sqlalchemy 2.0.24, but single percent signs are
-    # special interpolation characters to alembic, so we must escape them.
-    sqlalchemy_url = sqlalchemy_url.replace("%", "%%")
-else:
-    sqlalchemy_url = Config.SQLALCHEMY_DATABASE_URI
+# Single percent signs are special interpolation characters to Alembic.
+config.set_main_option("sqlalchemy.url", database_url().replace("%", "%%"))
 
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", sqlalchemy_url)
-
-
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
-fileConfig(config.config_file_name)
-
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = Base.metadata
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+# The historical SQLAlchemy ORM metadata lived in the retired Flask app package.
+# Keep migrations as the schema source of truth, but do not import the app just
+# for autogenerate metadata.
+target_metadata = None
 
 
 def run_migrations_offline():
-    """Run migrations in 'offline' mode.
-
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
-
-    Calls to context.execute() here emit the given string to the
-    script output.
-
-    """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -75,12 +51,6 @@ def run_migrations_offline():
 
 
 def run_migrations_online():
-    """Run migrations in 'online' mode.
-
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
-    """
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",

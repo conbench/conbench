@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Conbench</title>
+    <script>
+      // Resolve the theme before first paint so there is no light/dark flash.
+      // Keep in sync with src/lib/theme.svelte.ts.
+      (function () {
+        try {
+          var stored = localStorage.getItem("conbench-theme");
+          var choice = stored === "light" || stored === "dark" ? stored : "system";
+          var prefersDark =
+            window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var dark = choice === "dark" || (choice === "system" && prefersDark);
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+        } catch (e) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
