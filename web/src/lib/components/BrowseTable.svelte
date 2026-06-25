@@ -121,35 +121,35 @@
   }
 
   .benchmark-col {
-    width: 30%;
+    width: 27%;
   }
 
   .context-col {
-    width: 18%;
+    width: 17%;
   }
 
   .hardware-col {
-    width: 16%;
+    width: 15%;
   }
 
   .value-col {
-    width: 92px;
+    width: 11%;
   }
 
   .points-col {
-    width: 68px;
+    width: 6%;
   }
 
   .trend-col {
-    width: 116px;
+    width: 8%;
   }
 
   .status-col {
-    width: 102px;
+    width: 7%;
   }
 
   .commit-col {
-    width: 130px;
+    width: 9%;
   }
 
   .browse-table tbody tr {
@@ -181,9 +181,12 @@
 
   .num-cell,
   .trend-cell,
-  .status-cell,
-  .commit-cell {
+  .status-cell {
     white-space: nowrap;
+  }
+
+  .commit-cell {
+    white-space: normal;
   }
 
   .num-cell {
