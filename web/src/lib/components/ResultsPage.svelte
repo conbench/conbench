@@ -34,13 +34,14 @@
   let runReason = $state("");
   let earliestTimestamp = $state("");
   let latestTimestamp = $state("");
+  let exactFiltersOpen = $state(false);
 
   $effect(() => {
     runID = query.runID;
     batchID = query.batchID;
     runReason = query.runReason;
-    earliestTimestamp = query.earliestTimestamp;
-    latestTimestamp = query.latestTimestamp;
+    earliestTimestamp = utcToDatetimeLocal(query.earliestTimestamp);
+    latestTimestamp = utcToDatetimeLocal(query.latestTimestamp);
     void load(query);
   });
 
@@ -102,8 +103,8 @@
       runID: runID.trim(),
       batchID: batchID.trim(),
       runReason: runReason.trim(),
-      earliestTimestamp: earliestTimestamp.trim(),
-      latestTimestamp: latestTimestamp.trim(),
+      earliestTimestamp: datetimeLocalToUTC(earliestTimestamp),
+      latestTimestamp: datetimeLocalToUTC(latestTimestamp),
     };
   }
 
@@ -125,6 +126,25 @@
       minute: "2-digit",
       hour12: false,
     }).format(new Date(value));
+  }
+
+  function utcToDatetimeLocal(value: string): string {
+    if (value.trim() === "") return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+  }
+
+  function datetimeLocalToUTC(value: string): string {
+    const trimmed = value.trim();
+    if (trimmed === "") return "";
+    return `${trimmed.length === 16 ? `${trimmed}:00` : trimmed}Z`;
+  }
+
+  function formatTimestampFilter(value: string): string {
+    const localValue = utcToDatetimeLocal(value);
+    return localValue === "" ? value : `${localValue.replace("T", " ")} UTC`;
   }
 
   function formatSVS(row: ResultListRow): string {
@@ -161,7 +181,7 @@
     ...(query.earliestTimestamp !== ""
       ? [{
           label: "earliest",
-          value: query.earliestTimestamp,
+          value: formatTimestampFilter(query.earliestTimestamp),
           clear: { earliestTimestamp: "" },
           aria: `Remove earliest timestamp filter ${query.earliestTimestamp}`,
         }]
@@ -169,7 +189,7 @@
     ...(query.latestTimestamp !== ""
       ? [{
           label: "latest",
-          value: query.latestTimestamp,
+          value: formatTimestampFilter(query.latestTimestamp),
           clear: { latestTimestamp: "" },
           aria: `Remove latest timestamp filter ${query.latestTimestamp}`,
         }]
@@ -183,7 +203,7 @@
       <p class="eyebrow">Result Explorer</p>
       <h1>Benchmark results</h1>
       <p class="page-subtitle">
-        Browse raw submitted results, filter by run or batch, and jump into detail, trends, and CI context.
+        Browse submitted benchmark measurements by case, commit, run, or exact IDs when needed.
       </p>
     </div>
     {#if vm !== null}
@@ -194,32 +214,50 @@
     {/if}
   </header>
 
-  <form class="filter-bar panel results-filters" onsubmit={submitFilters}>
-    <label class="filter-label">
-      run id
-      <input type="text" bind:value={runID} placeholder="any" />
-    </label>
-    <label class="filter-label">
-      batch id
-      <input type="text" bind:value={batchID} placeholder="any" />
-    </label>
-    <label class="filter-label">
-      run reason
-      <input type="text" bind:value={runReason} placeholder="any" />
-    </label>
-    <label class="filter-label">
-      earliest timestamp
-      <input type="text" bind:value={earliestTimestamp} placeholder="RFC3339" />
-    </label>
-    <label class="filter-label">
-      latest timestamp
-      <input type="text" bind:value={latestTimestamp} placeholder="RFC3339" />
-    </label>
-    <div class="filter-actions">
-      <button type="submit" class="button-pill">Apply filters</button>
+  <div class="filter-toolbar">
+    <button
+      type="button"
+      class="button-pill secondary"
+      aria-expanded={exactFiltersOpen}
+      onclick={() => (exactFiltersOpen = !exactFiltersOpen)}
+    >
+      Exact result filters
+    </button>
+    {#if activeFilters.length > 0}
       <a class="button-pill secondary" href="/results" onclick={(e) => go(e, "/results")}>Clear</a>
-    </div>
-  </form>
+    {/if}
+  </div>
+
+  {#if exactFiltersOpen}
+    <section class="panel filter-disclosure" aria-label="Exact result filters">
+      <form class="results-filters" onsubmit={submitFilters}>
+        <label class="filter-label">
+          Run ID
+          <input type="text" bind:value={runID} placeholder="paste run id" autocomplete="off" />
+        </label>
+        <label class="filter-label">
+          Batch ID
+          <input type="text" bind:value={batchID} placeholder="paste batch id" autocomplete="off" />
+        </label>
+        <label class="filter-label">
+          Run reason
+          <input type="text" bind:value={runReason} placeholder="commit" autocomplete="off" />
+        </label>
+        <label class="filter-label">
+          Earliest result time (UTC)
+          <input type="datetime-local" bind:value={earliestTimestamp} />
+        </label>
+        <label class="filter-label">
+          Latest result time (UTC)
+          <input type="datetime-local" bind:value={latestTimestamp} />
+        </label>
+        <div class="filter-actions">
+          <button type="submit" class="button-pill">Apply exact filters</button>
+          <a class="button-pill secondary" href="/results" onclick={(e) => go(e, "/results")}>Clear</a>
+        </div>
+      </form>
+    </section>
+  {/if}
 
   {#if activeFilters.length > 0}
     <div class="active-filters" role="group" aria-label="Active result filters">
@@ -382,12 +420,22 @@
   .results-page {
     gap: 12px;
   }
+  .filter-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .filter-disclosure {
+    padding: 0;
+  }
+
   .results-filters {
     display: grid;
     grid-template-columns: repeat(5, minmax(130px, 1fr)) auto;
     gap: 10px;
     align-items: end;
-    padding: 10px 12px;
+    padding: 0 12px 12px;
   }
 
   .secondary {

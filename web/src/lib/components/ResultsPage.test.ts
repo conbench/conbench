@@ -83,17 +83,38 @@ describe("ResultsPage", () => {
     expect(secondCall.params.query.cursor).toBe("cur2");
   });
 
-  it("navigates with result list filters", async () => {
+  it("navigates with exact result filters from the advanced control", async () => {
     GET.mockResolvedValueOnce({ data: { results: [], next_page_cursor: null } });
     render(ResultsPage, { props: { query: DEFAULT_RESULT_LIST_QUERY } });
     await waitFor(() => screen.getByText(/no benchmark results match/i));
 
+    expect(screen.queryByLabelText(/^run id$/i)).toBeNull();
+    await fireEvent.click(screen.getByRole("button", { name: /exact result filters/i }));
     await fireEvent.input(screen.getByLabelText(/run id/i), { target: { value: "run-a " } });
     await fireEvent.input(screen.getByLabelText(/run reason/i), { target: { value: "nightly" } });
-    await fireEvent.submit(screen.getByRole("button", { name: /apply filters/i }).closest("form")!);
+    await fireEvent.submit(screen.getByRole("button", { name: /apply exact filters/i }).closest("form")!);
 
     expect(window.location.pathname).toBe("/results");
     expect(window.location.search).toBe("?run_id=run-a&run_reason=nightly");
+  });
+
+  it("serializes UTC date inputs to result timestamp filters", async () => {
+    GET.mockResolvedValueOnce({ data: { results: [], next_page_cursor: null } });
+    render(ResultsPage, { props: { query: DEFAULT_RESULT_LIST_QUERY } });
+    await waitFor(() => screen.getByText(/no benchmark results match/i));
+
+    await fireEvent.click(screen.getByRole("button", { name: /exact result filters/i }));
+    await fireEvent.input(screen.getByLabelText(/earliest result time/i), {
+      target: { value: "2026-01-01T03:04" },
+    });
+    await fireEvent.input(screen.getByLabelText(/latest result time/i), {
+      target: { value: "2026-01-02T05:06" },
+    });
+    await fireEvent.submit(screen.getByRole("button", { name: /apply exact filters/i }).closest("form")!);
+
+    expect(window.location.search).toBe(
+      "?earliest_timestamp=2026-01-01T03%3A04%3A00Z&latest_timestamp=2026-01-02T05%3A06%3A00Z",
+    );
   });
 
   it("shows active result filters with clearable deep-link hrefs", async () => {

@@ -26,11 +26,16 @@
   let errorMsg = $state<string | null>(null);
   let moreErrorMsg = $state<string | null>(null);
   let sort = $state<SortSpec | null>(null);
+  let hardwareFilter = $state("");
+  let repositoryFilter = $state("");
+  let exactFiltersOpen = $state(false);
   // Monotonic token: a stale response (filters changed mid-flight) must not
   // overwrite a newer page.
   let reqToken = 0;
 
   $effect(() => {
+    hardwareFilter = query.hardware;
+    repositoryFilter = query.repository;
     void load(query);
   });
 
@@ -84,6 +89,14 @@
     setFilter(patch);
   }
 
+  function submitExactFilters(e: SubmitEvent) {
+    e.preventDefault();
+    setFilter({
+      hardware: hardwareFilter.trim(),
+      repository: repositoryFilter.trim(),
+    });
+  }
+
   function toggleSort(key: SortKey) {
     if (sort?.key !== key) {
       sort = { key, dir: "asc" };
@@ -111,6 +124,12 @@
     "3mo": "last 3 months",
     "1y": "last year",
   };
+  const windowOptions: { value: BrowseWindow; label: string }[] = [
+    { value: "all", label: "All time" },
+    { value: "30d", label: "Last 30 days" },
+    { value: "3mo", label: "Last 3 months" },
+    { value: "1y", label: "Last year" },
+  ];
   let activeFilters = $derived([
     ...(query.q !== ""
       ? [{ label: "query", value: query.q, clear: { q: "" }, aria: `Remove query filter ${query.q}` }]
@@ -250,41 +269,66 @@
     </div>
   </header>
 
-  <div class="filter-bar panel browse-filters">
-    <label class="filter-label">
-      hardware
-      <input
-        type="text"
-        value={query.hardware}
-        placeholder="any"
-        onchange={(e) => setFilter({ hardware: e.currentTarget.value.trim() })}
-      />
-    </label>
-    <label class="filter-label">
-      repository
-      <input
-        type="text"
-        value={query.repository}
-        placeholder="any"
-        onchange={(e) => setFilter({ repository: e.currentTarget.value.trim() })}
-      />
-    </label>
-    <label class="filter-label">
-      window
-      <select
-        value={query.window}
-        onchange={(e) => setFilter({ window: e.currentTarget.value as BrowseWindow })}
-      >
-        <option value="all">all time</option>
-        <option value="30d">last 30 days</option>
-        <option value="3mo">last 3 months</option>
-        <option value="1y">last year</option>
-      </select>
-    </label>
+  <div class="panel browse-filters">
+    <div class="filter-row" role="group" aria-label="Series time window">
+      <span class="filter-row-label">Window</span>
+      <div class="segmented-control">
+        {#each windowOptions as option}
+          <button
+            type="button"
+            class:active={query.window === option.value}
+            aria-pressed={query.window === option.value}
+            onclick={() => setFilter({ window: option.value })}
+          >
+            {option.label}
+          </button>
+        {/each}
+      </div>
+    </div>
     {#if activeFilters.length > 0}
       <button type="button" class="button-pill secondary" onclick={() => navigate("/series")}>Clear filters</button>
     {/if}
   </div>
+
+  <div class="filter-toolbar">
+    <button
+      type="button"
+      class="button-pill secondary"
+      aria-expanded={exactFiltersOpen}
+      onclick={() => (exactFiltersOpen = !exactFiltersOpen)}
+    >
+      Exact metadata filters
+    </button>
+  </div>
+
+  {#if exactFiltersOpen}
+    <section class="panel filter-disclosure" aria-label="Exact metadata filters">
+      <form class="exact-filter-form" onsubmit={submitExactFilters}>
+        <label class="filter-label">
+          Hardware name
+          <input
+            type="text"
+            bind:value={hardwareFilter}
+            placeholder="for example m5"
+            autocomplete="off"
+          />
+        </label>
+        <label class="filter-label">
+          Repository URL
+          <input
+            type="url"
+            bind:value={repositoryFilter}
+            placeholder="https://github.com/apache/arrow"
+            autocomplete="off"
+          />
+        </label>
+        <div class="filter-actions">
+          <button type="submit" class="button-pill">Apply exact filters</button>
+          <a class="button-pill secondary" href="/series" onclick={(e) => go(e, "/series")}>Clear</a>
+        </div>
+      </form>
+    </section>
+  {/if}
 
   {#if activeFilters.length > 0}
     <div class="active-filters" role="group" aria-label="Active filters">
@@ -406,17 +450,75 @@
     gap: 12px;
   }
   .browse-filters {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     padding: 10px 12px;
   }
 
-  .browse-filters .filter-label {
-    min-width: 180px;
-    flex: 1 1 180px;
-    max-width: 360px;
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
   }
 
-  .browse-filters select {
-    max-width: 180px;
+  .filter-row-label {
+    color: var(--c-text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .segmented-control {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 2px;
+    border: 1px solid var(--c-border-muted);
+    border-radius: var(--radius-md);
+    background: var(--c-bg-inset);
+  }
+
+  .segmented-control button {
+    min-height: 26px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--c-text-muted);
+    cursor: pointer;
+  }
+
+  .segmented-control button:hover {
+    background: var(--c-surface-hover);
+    color: var(--c-text);
+  }
+
+  .segmented-control button.active {
+    background: var(--c-accent);
+    color: var(--c-on-accent);
+  }
+
+  .filter-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .filter-disclosure {
+    padding: 0;
+  }
+
+  .exact-filter-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(180px, 1fr)) auto;
+    gap: 10px;
+    align-items: end;
+    padding: 0 12px 12px;
   }
 
   .error-panel h2 {
@@ -537,15 +639,11 @@
     }
     .browse-filters {
       align-items: stretch;
+      flex-direction: column;
     }
 
-    .browse-filters .filter-label {
-      min-width: 0;
-      max-width: none;
-    }
-
-    .browse-filters select {
-      max-width: none;
+    .exact-filter-form {
+      grid-template-columns: 1fr;
     }
   }
 </style>

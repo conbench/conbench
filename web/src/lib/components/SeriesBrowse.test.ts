@@ -38,12 +38,12 @@ beforeEach(() => {
 describe("SeriesBrowse", () => {
   it("renders rows after loading", async () => {
     GET.mockResolvedValueOnce({ data: { series: [item("f1", "demo")], next_page_cursor: null } });
-    const { container } = render(SeriesBrowse, { props: { query: DEFAULT_BROWSE_QUERY } });
+    render(SeriesBrowse, { props: { query: DEFAULT_BROWSE_QUERY } });
     expect(screen.getByRole("heading", { name: /loading benchmark series/i })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole("link", { name: "demo" })).toBeInTheDocument());
     expect(screen.getByRole("heading", { name: /benchmark series/i })).toBeInTheDocument();
     expect(screen.getByText(/showing 1 loaded series/i)).toBeInTheDocument();
-    expect(container.querySelector(".filter-bar.panel")).not.toBeNull();
+    expect(screen.getByRole("group", { name: /series time window/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /load more/i })).toBeNull();
   });
 
@@ -121,14 +121,32 @@ describe("SeriesBrowse", () => {
     expect(screen.queryByRole("link", { name: "two" })).toBeNull();
   });
 
-  it("navigates with updated URL filters when a filter changes", async () => {
+  it("navigates with updated URL filters when a window preset changes", async () => {
     GET.mockResolvedValue({ data: { series: [], next_page_cursor: null } });
     window.history.replaceState(null, "", "/series");
     render(SeriesBrowse, { props: { query: DEFAULT_BROWSE_QUERY } });
     await waitFor(() => screen.getByText(/no series match/i));
-    await fireEvent.change(screen.getByLabelText(/window/i), { target: { value: "3mo" } });
+    await fireEvent.click(screen.getByRole("button", { name: /last 3 months/i }));
     expect(window.location.pathname).toBe("/series");
     expect(window.location.search).toBe("?window=3mo");
+  });
+
+  it("keeps exact metadata filters behind an explicit advanced control", async () => {
+    GET.mockResolvedValue({ data: { series: [], next_page_cursor: null } });
+    window.history.replaceState(null, "", "/series");
+    render(SeriesBrowse, { props: { query: DEFAULT_BROWSE_QUERY } });
+    await waitFor(() => screen.getByText(/no series match/i));
+
+    expect(screen.queryByLabelText(/^hardware name$/i)).toBeNull();
+    await fireEvent.click(screen.getByRole("button", { name: /exact metadata filters/i }));
+    await fireEvent.input(screen.getByLabelText(/^hardware name$/i), { target: { value: "m5 " } });
+    await fireEvent.input(screen.getByLabelText(/^repository url$/i), {
+      target: { value: "https://github.com/apache/arrow " },
+    });
+    await fireEvent.submit(screen.getByRole("button", { name: /apply exact filters/i }).closest("form")!);
+
+    expect(window.location.pathname).toBe("/series");
+    expect(window.location.search).toBe("?hardware=m5&repository=https%3A%2F%2Fgithub.com%2Fapache%2Farrow");
   });
 
   it("shows active filters and can clear them", async () => {
