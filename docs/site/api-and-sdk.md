@@ -49,8 +49,8 @@ payload validation, token handling, glob behavior, and CI-report integration
 stay consistent.
 
 For jobs that already construct Python dictionaries, the SDK also ships a small
-hand-written `conbench.migration` helper. It writes object-per-file payload JSON
-and invokes the Go CLI without exposing tokens in helper-returned errors:
+hand-written `conbench.migration` helper. It writes payload JSON and invokes the
+Go CLI without exposing tokens in helper-returned errors:
 
 ```python
 from conbench.migration import submit_results, write_result_payloads
@@ -60,6 +60,7 @@ submit_results(
     ["bench-results/*.json"],
     server="https://conbench.example.com",
     token=token,
+    jobs=16,
 )
 ```
 

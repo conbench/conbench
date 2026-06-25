@@ -113,28 +113,24 @@ The `github.commit` value must match the commit passed to
 
 ## Submit Results
 
-Write one payload object per JSON file, then submit a quoted glob:
+Write payload JSON, then submit a quoted glob:
 
 ```bash
 export CONBENCH_SERVER_URL=https://conbench.example.com
 export CONBENCH_TOKEN=<token>
 
 conbench results submit "bench-results/*.json" \
-  --server "$CONBENCH_SERVER_URL"
+  --server "$CONBENCH_SERVER_URL" \
+  --jobs 16
 ```
 
 The CLI reads `CONBENCH_TOKEN` from the environment, so migration scripts do not
 need to put tokens on the command line.
 
-If your current code writes an array of results, split it before submitting:
-
-```python
-import json
-
-for i, payload in enumerate(payloads):
-    path = out_dir / f"result-{i:04d}.json"
-    path.write_text(json.dumps(payload), encoding="utf-8")
-```
+Each matched file may contain one payload object or an array of payload objects.
+Object-per-file output gives the clearest local failure reporting; array files
+avoid an extra splitting step for existing benchmark harnesses. Use `--jobs` to
+bound concurrent submissions for large suites.
 
 ## Add CI Reporting
 
@@ -239,6 +235,7 @@ submit_results(
     ["bench-results/*.json"],
     server="https://conbench.example.com",
     token=token,
+    jobs=16,
 )
 ```
 
@@ -251,8 +248,7 @@ errors. It is not a source-compatible `benchadapt`, `benchconnect`, or
 
 The repository includes a fixture-backed migration demo,
 [`examples/migration/gbench_to_cli_submit.py`](https://github.com/conbench/conbench/blob/main/examples/migration/gbench_to_cli_submit.py),
-that converts saved Google Benchmark JSON into object-per-file Conbench
-payloads:
+that converts saved Google Benchmark JSON into Conbench payloads:
 
 ```bash
 make migration-examples-test

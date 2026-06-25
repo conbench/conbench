@@ -10,16 +10,20 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/conbench/conbench/sdk/go/conbench"
 	"github.com/spf13/cobra"
 )
+
+const defaultSubmitJobs = 8
 
 // submitConfig is a parsed `results submit` invocation.
 type submitConfig struct {
 	fixtures []string
 	server   string
 	token    string
+	jobs     int
 }
 
 type resultGetConfig struct {
@@ -29,10 +33,22 @@ type resultGetConfig struct {
 
 type submitResultLine struct {
 	File               string `json:"file"`
+	Index              *int   `json:"index,omitempty"`
 	OK                 bool   `json:"ok"`
 	ID                 string `json:"id,omitempty"`
 	HistoryFingerprint string `json:"history_fingerprint,omitempty"`
 	Error              string `json:"error,omitempty"`
+}
+
+type submitRequestBody struct {
+	File  string
+	Index *int
+	Body  []byte
+}
+
+type submitWorkItem struct {
+	lineIndex int
+	body      submitRequestBody
 }
 
 func resultsSubmitCommand(stdout io.Writer) *cobra.Command {
@@ -53,6 +69,8 @@ func newResultsSubmitCommand(
 				return commandUsageError(cmd, "missing benchmark result file")
 			case cfg.server == "":
 				return commandUsageError(cmd, "--server is required")
+			case cfg.jobs <= 0:
+				return commandUsageError(cmd, "--jobs must be greater than zero")
 			}
 
 			fixtures, err := expandSubmitPositionals(cmd, args)
@@ -68,6 +86,7 @@ func newResultsSubmitCommand(
 	})
 	cmd.Flags().StringVar(&cfg.server, "server", "", "Conbench server base URL (required)")
 	cmd.Flags().StringVar(&cfg.token, "token", "", "bearer token for write authentication")
+	cmd.Flags().IntVar(&cfg.jobs, "jobs", defaultSubmitJobs, "maximum concurrent result submissions")
 	return cmd
 }
 
@@ -171,8 +190,18 @@ func runSubmitConfig(ctx context.Context, cfg submitConfig, stdout io.Writer) er
 		params.Authorization = &bearer
 	}
 
-	if len(cfg.fixtures) == 1 {
-		result, err := submitFixture(ctx, client, params, cfg.server, cfg.fixtures[0])
+	jobs := cfg.jobs
+	if jobs <= 0 {
+		jobs = defaultSubmitJobs
+	}
+
+	lines, tasks, err := prepareSubmitWork(cfg.fixtures)
+	if err != nil {
+		return err
+	}
+
+	if len(tasks) == 1 && len(lines) == 1 {
+		result, err := submitBody(ctx, client, params, cfg.server, tasks[0].body)
 		if err != nil {
 			return err
 		}
@@ -182,13 +211,14 @@ func runSubmitConfig(ctx context.Context, cfg submitConfig, stdout io.Writer) er
 		}{result.ID, result.HistoryFingerprint})
 	}
 
+	submitMany(ctx, client, params, cfg.server, jobs, lines, tasks)
+
 	anyFailed := false
-	for _, fixture := range cfg.fixtures {
-		result, _ := submitFixture(ctx, client, params, cfg.server, fixture)
-		if !result.OK {
+	for _, line := range lines {
+		if !line.OK {
 			anyFailed = true
 		}
-		if err := writeJSONLine(stdout, result); err != nil {
+		if err := writeJSONLine(stdout, line); err != nil {
 			return err
 		}
 	}
@@ -221,21 +251,70 @@ func (submitPartialFailure) Error() string {
 
 func (submitPartialFailure) SuppressDiagnostic() {}
 
-func submitFixture(
+func prepareSubmitWork(fixtures []string) ([]submitResultLine, []submitWorkItem, error) {
+	lines := make([]submitResultLine, 0, len(fixtures))
+	var tasks []submitWorkItem
+	for _, fixture := range fixtures {
+		bodies, err := decodeFixtureRequests(fixture)
+		if err != nil {
+			if len(fixtures) == 1 {
+				return nil, nil, err
+			}
+			lines = append(lines, submitResultLine{File: fixture, Error: err.Error()})
+			continue
+		}
+		for _, body := range bodies {
+			lineIndex := len(lines)
+			lines = append(lines, submitResultLine{File: body.File, Index: body.Index})
+			tasks = append(tasks, submitWorkItem{lineIndex: lineIndex, body: body})
+		}
+	}
+	return lines, tasks, nil
+}
+
+func submitMany(
 	ctx context.Context,
 	client *conbench.ClientWithResponses,
 	params *conbench.SubmitResultParams,
 	server string,
-	fixture string,
-) (submitResultLine, error) {
-	result := submitResultLine{File: fixture}
-	body, err := decodeRequest(fixture)
-	if err != nil {
-		result.Error = err.Error()
-		return result, err
+	jobs int,
+	lines []submitResultLine,
+	tasks []submitWorkItem,
+) {
+	if jobs > len(tasks) {
+		jobs = len(tasks)
+	}
+	if jobs <= 0 {
+		return
 	}
 
-	resp, err := client.SubmitResultWithBodyWithResponse(ctx, params, "application/json", bytes.NewReader(body))
+	work := make(chan submitWorkItem)
+	var wg sync.WaitGroup
+	for worker := 0; worker < jobs; worker++ {
+		wg.Go(func() {
+			for task := range work {
+				line, _ := submitBody(ctx, client, params, server, task.body)
+				lines[task.lineIndex] = line
+			}
+		})
+	}
+	for _, task := range tasks {
+		work <- task
+	}
+	close(work)
+	wg.Wait()
+}
+
+func submitBody(
+	ctx context.Context,
+	client *conbench.ClientWithResponses,
+	params *conbench.SubmitResultParams,
+	server string,
+	body submitRequestBody,
+) (submitResultLine, error) {
+	result := submitResultLine{File: body.File, Index: body.Index}
+
+	resp, err := client.SubmitResultWithBodyWithResponse(ctx, params, "application/json", bytes.NewReader(body.Body))
 	if err != nil {
 		err = fmt.Errorf("submit to %s: %w", server, err)
 		result.Error = err.Error()
@@ -251,26 +330,64 @@ func submitFixture(
 	}
 
 	return submitResultLine{
-		File:               fixture,
+		File:               body.File,
+		Index:              body.Index,
 		OK:                 true,
 		ID:                 resp.JSON201.Id,
 		HistoryFingerprint: resp.JSON201.HistoryFingerprint,
 	}, nil
 }
 
-func decodeRequest(path string) ([]byte, error) {
+func decodeFixtureRequests(path string) ([]submitRequestBody, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read %s: %w", path, err)
 	}
 	dec := json.NewDecoder(bytes.NewReader(raw))
-	dec.DisallowUnknownFields()
-	var body conbench.SubmitRequest
-	if err := dec.Decode(&body); err != nil {
+	var value json.RawMessage
+	if err := dec.Decode(&value); err != nil {
 		return nil, fmt.Errorf("decode %s: %w", path, err)
 	}
 	if err := dec.Decode(new(json.RawMessage)); !errors.Is(err, io.EOF) {
 		return nil, fmt.Errorf("decode %s: trailing data after the JSON object", path)
 	}
-	return raw, nil
+	if len(bytes.TrimSpace(value)) == 0 {
+		return nil, fmt.Errorf("decode %s: empty JSON value", path)
+	}
+	if bytes.HasPrefix(bytes.TrimSpace(value), []byte("[")) {
+		var items []json.RawMessage
+		if err := json.Unmarshal(value, &items); err != nil {
+			return nil, fmt.Errorf("decode %s: %w", path, err)
+		}
+		if len(items) == 0 {
+			return nil, fmt.Errorf("decode %s: array must contain at least one benchmark result", path)
+		}
+		out := make([]submitRequestBody, 0, len(items))
+		for idx, item := range items {
+			source := fmt.Sprintf("%s[%d]", path, idx)
+			if err := validateSubmitRequest(source, item); err != nil {
+				return nil, err
+			}
+			index := idx
+			out = append(out, submitRequestBody{File: path, Index: &index, Body: item})
+		}
+		return out, nil
+	}
+	if err := validateSubmitRequest(path, value); err != nil {
+		return nil, err
+	}
+	return []submitRequestBody{{File: path, Body: value}}, nil
+}
+
+func validateSubmitRequest(source string, raw []byte) error {
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	dec.DisallowUnknownFields()
+	var body conbench.SubmitRequest
+	if err := dec.Decode(&body); err != nil {
+		return fmt.Errorf("decode %s: %w", source, err)
+	}
+	if err := dec.Decode(new(json.RawMessage)); !errors.Is(err, io.EOF) {
+		return fmt.Errorf("decode %s: trailing data after the JSON object", source)
+	}
+	return nil
 }

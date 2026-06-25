@@ -15,7 +15,8 @@ A result is one benchmark measurement payload. It contains:
 - run metadata such as `run_id`, `run_tags`, and `batch_id`,
 - GitHub metadata such as repository, commit, branch, and pull request number.
 
-The write path accepts one JSON object per file.
+The CLI write path accepts JSON files containing either one result object or an
+array of result objects.
 
 ## Series
 

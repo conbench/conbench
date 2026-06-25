@@ -24,13 +24,15 @@ conbench results submit <file-or-glob>... --server URL
 Keep globs quoted:
 
 ```bash
-conbench results submit "bench-results/*.json" --server "$CONBENCH_SERVER_URL"
+conbench results submit "bench-results/*.json" --server "$CONBENCH_SERVER_URL" --jobs 16
 ```
 
 The CLI expands globs internally, validates payloads, resolves credentials, and
-submits one file at a time. With one input file it prints one compact JSON
-result identity. With multiple input files it prints one JSON line per file,
-including per-file success or error state.
+submits multiple results with bounded concurrency. Each matched file may contain
+one result object or an array of result objects. With exactly one result it
+prints one compact JSON result identity. With multiple results it prints one
+JSON line per result, including file, optional array index, and success or error
+state. Use `--jobs` to tune concurrency for large benchmark suites.
 
 Fetch one result as JSON:
 

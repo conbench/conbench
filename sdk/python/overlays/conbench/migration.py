@@ -80,11 +80,12 @@ def write_result_payloads(
 ) -> list[Path]:
     """Write result payload objects to ``out_dir`` as one JSON file per result.
 
-    The Go CLI accepts one object per file. This helper deliberately rejects
-    array-shaped payload entries so migrations fail before producing files the
-    CLI would not submit as intended. Files previously written by this helper
-    with the same prefix are removed first so a submit glob does not include
-    stale payloads from an earlier run.
+    This helper keeps object-per-file artifacts for easy CI inspection. The Go
+    CLI also accepts array files directly, but array-shaped entries are rejected
+    here so callers do not accidentally nest many results inside one helper-owned
+    file. Files previously written by this helper with the same prefix are
+    removed first so a submit glob does not include stale payloads from an
+    earlier run.
     """
 
     _validate_payload_prefix(prefix)
@@ -120,6 +121,7 @@ def submit_results(
     server: str,
     token: str | None = None,
     conbench_bin: PathLike = "conbench",
+    jobs: int | None = None,
     timeout: float | None = None,
     env: Mapping[str, str] | None = None,
 ) -> CLIResult:
@@ -136,6 +138,8 @@ def submit_results(
         raise ValueError("at least one payload path or glob is required")
     if not server:
         raise ValueError("server is required")
+    if jobs is not None and jobs <= 0:
+        raise ValueError("jobs must be greater than zero")
 
     command = [
         str(conbench_bin),
@@ -145,6 +149,8 @@ def submit_results(
         "--server",
         server,
     ]
+    if jobs is not None:
+        command.extend(["--jobs", str(jobs)])
     child_env = merged_env(env, token=token)
     secrets = token_secrets(child_env)
 

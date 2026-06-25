@@ -58,9 +58,9 @@ arguments; `--token` remains available for explicit local overrides.
 ```
 
 The shape-tolerant `jq` expression handles either a single result file or files
-containing arrays during local experimentation. The submit step still expects
-one Conbench result object per file, so split array-shaped output before calling
-`conbench results submit`.
+containing arrays during local experimentation. `conbench results submit`
+accepts both one-object files and array files; use `--jobs` to bound concurrent
+submissions for larger benchmark suites.
 
 ## GitHub Check And PR Comment
 

@@ -58,7 +58,7 @@ code, write Conbench JSON payloads, submit those files with the Go CLI, and use
 this SDK only where Python code needs to read API data.
 
 For Python jobs that need a small amount of migration glue, use
-`conbench.migration` to write one JSON object per file and invoke the Go CLI:
+`conbench.migration` to write payload files and invoke the Go CLI:
 
 ```python
 from conbench.migration import submit_results, write_result_payloads
@@ -80,6 +80,7 @@ submit_results(
     ["bench-results/*.json"],
     server="https://conbench.example",
     token="<api token>",
+    jobs=16,
 )
 ```
 
@@ -101,8 +102,8 @@ Migration documentation:
 The source repository also includes
 [`examples/migration/gbench_to_cli_submit.py`](https://github.com/conbench/conbench/blob/main/examples/migration/gbench_to_cli_submit.py)
 for a fixture-backed migration example that preserves fixture timestamps, writes
-object-per-file payloads, and calls the CLI. `make migration-examples-test`
-verifies that example.
+payload files, and calls the CLI. `make migration-examples-test` verifies that
+example.
 
 Do not edit generated modules under `conbench/` by hand. The hand-written
 `conbench.migration` source lives in `sdk/python/overlays/conbench/` and is

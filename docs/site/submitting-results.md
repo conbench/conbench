@@ -3,12 +3,13 @@
 The supported write path is:
 
 1. benchmark code emits Conbench-compatible JSON payload files,
-2. each file contains one result object,
-3. the Go `conbench` CLI submits those files.
+2. each file contains either one result object or an array of result objects,
+3. the Go `conbench` CLI submits those files with bounded concurrency.
 
 ```bash
 conbench results submit "bench-results/*.json" \
-  --server "$CONBENCH_SERVER_URL"
+  --server "$CONBENCH_SERVER_URL" \
+  --jobs 16
 ```
 
 If `CONBENCH_TOKEN` is set, no `--token` flag is needed. Prefer the environment
@@ -47,9 +48,9 @@ Useful production payloads should also include:
 - `github.repository` and `github.commit`: required for commit-wide CI reports,
 - `github.pr_number` or `github.branch`: useful for display and audit.
 
-## Multi-File Submission
+## Multi-Result Submission
 
-Use one result object per file:
+Object-per-file output is still a good default:
 
 ```text
 bench-results/
@@ -58,9 +59,13 @@ bench-results/
   result-0003.json
 ```
 
-If existing benchmark code writes an array of results, split it before calling
-`conbench results submit`. The CLI intentionally treats each matched file as a
-single result object so submission output and failure reporting stay clear.
+Array files are also accepted, which is useful for benchmark harnesses that
+already produce one JSON document containing many cases. When more than one
+result is submitted, stdout is JSON Lines with per-result success or error
+state; array entries include an `index` field. Use `--jobs` to control the
+maximum number of concurrent HTTP submissions. The default is suitable for small
+CI jobs; larger benchmark suites should set it explicitly after measuring their
+server and database capacity.
 
 ## Existing Python Result Builders
 
@@ -84,8 +89,8 @@ For package-by-package migration guidance, read the
 [Python app migration guide](migration/python-app.md). For a runnable migration
 example, see
 [`examples/migration/gbench_to_cli_submit.py`](https://github.com/conbench/conbench/blob/main/examples/migration/gbench_to_cli_submit.py).
-It transforms a saved Google Benchmark JSON fixture into object-per-file
-Conbench payloads, fills run and GitHub metadata, uses `conbench.migration` for
+It transforms a saved Google Benchmark JSON fixture into Conbench payloads,
+fills run and GitHub metadata, uses `conbench.migration` for
 payload-file writing and CLI submission, preserves the fixture timestamp when
 Google Benchmark provides one, redacts tokens from dry-run output, prints the
 dry-run submit command without a `--token` argument, and can optionally call

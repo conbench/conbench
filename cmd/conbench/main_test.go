@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -204,7 +205,7 @@ func TestCobraHelpExitsZero(t *testing.T) {
 		{name: "results help command", args: []string{"help", "results"}, contains: []string{"submit", "get"}},
 		{name: "compare leaf", args: []string{"compare", "--help"}, contains: []string{"Compare two benchmark results", "--server", "--threshold", "--threshold-z"}},
 		{name: "compare help command", args: []string{"help", "compare"}, contains: []string{"Compare two benchmark results", "--server", "--threshold", "--threshold-z"}},
-		{name: "submit leaf", args: []string{"results", "submit", "--help"}, contains: []string{"Submit benchmark result JSON", "--server", "--token"}},
+		{name: "submit leaf", args: []string{"results", "submit", "--help"}, contains: []string{"Submit benchmark result JSON", "--server", "--token", "--jobs"}},
 		{name: "result get leaf", args: []string{"results", "get", "--help"}, contains: []string{"Fetch a benchmark result by id", "--server"}},
 		{name: "series list leaf", args: []string{"series", "list", "--help"}, contains: []string{"List benchmark series", "--server", "--q", "--page-size"}},
 		{name: "history export leaf", args: []string{"history", "export", "--help"}, contains: []string{"Export benchmark history as CSV", "--server", "--token", "--output"}},
@@ -2006,32 +2007,32 @@ func TestParseSubmitArgs(t *testing.T) {
 		{
 			name: "positional first then flags (kata shape)",
 			args: []string{"fixture.json", "--server", "http://h", "--token", "secret"},
-			want: submitConfig{fixtures: []string{"fixture.json"}, server: "http://h", token: "secret"},
+			want: submitConfig{fixtures: []string{"fixture.json"}, server: "http://h", token: "secret", jobs: defaultSubmitJobs},
 		},
 		{
 			name: "flags first then positional",
 			args: []string{"--server", "http://h", "--token", "secret", "fixture.json"},
-			want: submitConfig{fixtures: []string{"fixture.json"}, server: "http://h", token: "secret"},
+			want: submitConfig{fixtures: []string{"fixture.json"}, server: "http://h", token: "secret", jobs: defaultSubmitJobs},
 		},
 		{
 			name: "positional between flags",
 			args: []string{"--server", "http://h", "fixture.json", "--token", "secret"},
-			want: submitConfig{fixtures: []string{"fixture.json"}, server: "http://h", token: "secret"},
+			want: submitConfig{fixtures: []string{"fixture.json"}, server: "http://h", token: "secret", jobs: defaultSubmitJobs},
 		},
 		{
 			name: "equals form",
 			args: []string{"fixture.json", "--server=http://h", "--token=secret"},
-			want: submitConfig{fixtures: []string{"fixture.json"}, server: "http://h", token: "secret"},
+			want: submitConfig{fixtures: []string{"fixture.json"}, server: "http://h", token: "secret", jobs: defaultSubmitJobs},
 		},
 		{
 			name: "token optional",
 			args: []string{"fixture.json", "--server", "http://h"},
-			want: submitConfig{fixtures: []string{"fixture.json"}, server: "http://h", token: ""},
+			want: submitConfig{fixtures: []string{"fixture.json"}, server: "http://h", token: "", jobs: defaultSubmitJobs},
 		},
 		{
 			name: "multiple files",
-			args: []string{"a.json", "b.json", "--server", "http://h", "--token", "secret"},
-			want: submitConfig{fixtures: []string{"a.json", "b.json"}, server: "http://h", token: "secret"},
+			args: []string{"a.json", "b.json", "--server", "http://h", "--token", "secret", "--jobs", "4"},
+			want: submitConfig{fixtures: []string{"a.json", "b.json"}, server: "http://h", token: "secret", jobs: 4},
 		},
 	}
 	for _, tt := range tests {
@@ -2054,6 +2055,7 @@ func TestParseSubmitArgsErrors(t *testing.T) {
 		{name: "missing files", args: []string{"--server", "http://h"}},
 		{name: "missing server", args: []string{"fixture.json"}},
 		{name: "unknown flag", args: []string{"fixture.json", "--server", "http://h", "--nope"}},
+		{name: "zero jobs", args: []string{"fixture.json", "--server", "http://h", "--jobs", "0"}},
 		{name: "malformed glob", args: []string{"[", "--server", "http://h"}},
 		{name: "glob matching no files", args: []string{filepath.Join(tempDir, "*.json"), "--server", "http://h"}},
 	}
@@ -2065,16 +2067,19 @@ func TestParseSubmitArgsErrors(t *testing.T) {
 	}
 }
 
-// TestDecodeRequestTrailingData pins that a file with content after the first
-// JSON value is rejected instead of silently submitting only the first value.
-func TestDecodeRequestTrailingData(t *testing.T) {
+// TestDecodeFixtureRequests pins local payload decoding: one JSON object remains
+// one submit request, a JSON array becomes many submit requests, and trailing
+// data is rejected instead of silently submitting only the first value.
+func TestDecodeFixtureRequests(t *testing.T) {
 	tests := []struct {
-		name    string
-		content string
-		wantErr bool
+		name      string
+		content   string
+		wantCount int
+		wantErr   bool
 	}{
-		{name: "single object", content: `{"run_id": "r1"}`, wantErr: false},
-		{name: "trailing whitespace", content: "{\"run_id\": \"r1\"}\n\t ", wantErr: false},
+		{name: "single object", content: `{"run_id": "r1"}`, wantCount: 1},
+		{name: "array of objects", content: `[{"run_id": "r1"}, {"run_id": "r2"}]`, wantCount: 2},
+		{name: "trailing whitespace", content: "{\"run_id\": \"r1\"}\n\t ", wantCount: 1},
 		{name: "second JSON object", content: `{"run_id": "r1"}{"run_id": "r2"}`, wantErr: true},
 		{name: "trailing garbage", content: `{"run_id": "r1"} trailing`, wantErr: true},
 	}
@@ -2082,11 +2087,12 @@ func TestDecodeRequestTrailingData(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "result.json")
 			require.NoError(t, os.WriteFile(path, []byte(tt.content), 0o600))
-			_, err := decodeRequest(path)
+			got, err := decodeFixtureRequests(path)
 			if tt.wantErr {
 				assert.ErrorContains(t, err, "trailing data")
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
+				assert.Len(t, got, tt.wantCount)
 			}
 		})
 	}
@@ -2136,6 +2142,86 @@ func TestSubmitIntegration(t *testing.T) {
 			want := fmt.Sprintf("{\"id\":%q,\"history_fingerprint\":%q}\n", out.ID, out.HistoryFingerprint)
 			assert.Equal(t, want, stdout.String())
 		})
+	}
+}
+
+func TestSubmitMultipleResultsUsesWorkerConcurrency(t *testing.T) {
+	tempDir := t.TempDir()
+	for _, name := range []string{"a.json", "b.json"} {
+		raw, err := os.ReadFile(filepath.Join("testdata", "result.json"))
+		require.NoError(t, err)
+		require.NoError(t, os.WriteFile(filepath.Join(tempDir, name), raw, 0o600))
+	}
+
+	var inFlight atomic.Int32
+	var maxInFlight atomic.Int32
+	var requestCount atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/api/results", r.URL.Path)
+		current := inFlight.Add(1)
+		for {
+			observed := maxInFlight.Load()
+			if current <= observed || maxInFlight.CompareAndSwap(observed, current) {
+				break
+			}
+		}
+		time.Sleep(100 * time.Millisecond)
+		inFlight.Add(-1)
+		n := requestCount.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_, err := fmt.Fprintf(w, `{"id":"result-%d","history_fingerprint":"fp-%d"}`, n, n)
+		assert.NoError(t, err)
+	}))
+	t.Cleanup(srv.Close)
+
+	var stdout bytes.Buffer
+	err := runSubmitConfig(context.Background(), submitConfig{
+		fixtures: []string{filepath.Join(tempDir, "a.json"), filepath.Join(tempDir, "b.json")},
+		server:   srv.URL,
+		jobs:     2,
+	}, &stdout)
+
+	require.NoError(t, err)
+	assert.Equal(t, int32(2), requestCount.Load())
+	assert.GreaterOrEqual(t, maxInFlight.Load(), int32(2), "submissions should overlap when --jobs allows it")
+}
+
+func TestSubmitArrayFileSubmitsEachResult(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "results.json")
+	raw, err := os.ReadFile(filepath.Join("testdata", "result.json"))
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(path, []byte("["+string(raw)+","+string(raw)+"]"), 0o600))
+
+	var requestCount atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/api/results", r.URL.Path)
+		n := requestCount.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_, err := fmt.Fprintf(w, `{"id":"result-%d","history_fingerprint":"fp-%d"}`, n, n)
+		assert.NoError(t, err)
+	}))
+	t.Cleanup(srv.Close)
+
+	var stdout bytes.Buffer
+	err = runSubmitConfig(context.Background(), submitConfig{
+		fixtures: []string{path},
+		server:   srv.URL,
+		jobs:     2,
+	}, &stdout)
+
+	require.NoError(t, err)
+	assert.Equal(t, int32(2), requestCount.Load())
+	lines := strings.Split(strings.TrimSpace(stdout.String()), "\n")
+	require.Len(t, lines, 2)
+	for idx, rawLine := range lines {
+		var got submitResultLine
+		require.NoError(t, json.Unmarshal([]byte(rawLine), &got))
+		assert.True(t, got.OK)
+		assert.Equal(t, path, got.File)
+		require.NotNil(t, got.Index)
+		assert.Equal(t, idx, *got.Index)
 	}
 }
 

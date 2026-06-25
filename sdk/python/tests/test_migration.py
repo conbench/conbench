@@ -140,6 +140,33 @@ def test_submit_results_invokes_cli_without_leaking_token(tmp_path: Path) -> Non
     assert captured_env["CONBENCH_TOKEN"] == token
 
 
+def test_submit_results_passes_jobs_to_cli(tmp_path: Path) -> None:
+    from conbench.migration import submit_results
+
+    capture = tmp_path / "argv.json"
+    fake_cli = fake_conbench_cli(tmp_path)
+
+    result = submit_results(
+        ["bench-results/*.json"],
+        server="https://conbench.example",
+        conbench_bin=fake_cli,
+        jobs=16,
+        env={"CONBENCH_FAKE_CLI_CAPTURE": str(capture)},
+    )
+
+    assert result.returncode == 0
+    assert json.loads(capture.read_text(encoding="utf-8")) == [
+        str(fake_cli),
+        "results",
+        "submit",
+        "bench-results/*.json",
+        "--server",
+        "https://conbench.example",
+        "--jobs",
+        "16",
+    ]
+
+
 def test_submit_results_failure_redacts_token(tmp_path: Path) -> None:
     from conbench.migration import ConbenchCLIError, submit_results
 

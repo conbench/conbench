@@ -38,12 +38,14 @@ Migration path:
 1. Build or normalize result dictionaries in your benchmark project.
 2. Set `run_id`, `run_reason`, `run_tags`, `github.repository`,
    `github.commit`, `timestamp`, and `machine_info`.
-3. Write one Conbench result object per JSON file.
-4. Submit with `conbench results submit "bench-results/*.json"`.
+3. Write payload JSON files containing one result object or an array of result
+   objects.
+4. Submit with `conbench results submit "bench-results/*.json"`. Use `--jobs`
+   for large suites after measuring server capacity.
 
 The maintained `conbench` SDK now ships `conbench.migration` for this bridge:
-it writes object-per-file JSON payloads and invokes the Go CLI without becoming
-a source-compatible `benchadapt` port.
+it writes payload JSON and invokes the Go CLI without becoming a
+source-compatible `benchadapt` port.
 
 Runnable migration recipe:
 https://github.com/conbench/conbench/blob/main/examples/migration/gbench_to_cli_submit.py
@@ -56,11 +58,13 @@ https://github.com/conbench/conbench/blob/main/examples/migration/gbench_to_cli_
 usage with the Go CLI:
 
 conbench results submit "bench-results/*.json" \
-  --server "$CONBENCH_SERVER_URL"
+  --server "$CONBENCH_SERVER_URL" \
+  --jobs 16
 
 The new submit path uses user-owned API tokens, explicit run metadata, and
-object-per-file JSON payloads. It does not preserve password-login sessions,
-implicit run lifecycle helpers, or legacy client-side request augmentation.
+payload JSON files containing one result object or an array of result objects.
+It does not preserve password-login sessions, implicit run lifecycle helpers, or
+legacy client-side request augmentation.
 
 Runnable migration recipe:
 https://github.com/conbench/conbench/blob/main/examples/migration/gbench_to_cli_submit.py

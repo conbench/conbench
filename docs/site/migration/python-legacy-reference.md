@@ -160,9 +160,10 @@ The `github.commit` value must match the commit passed to
 1. Keep your existing benchmark runner and result-construction code.
 2. Add or normalize `run_id`, `run_reason`, `run_tags`, `github.repository`,
    `github.commit`, `timestamp`, and `machine_info`.
-3. Write one payload object per JSON file into a directory such as
-   `bench-results/`.
-4. Run `conbench results submit "bench-results/*.json"` with an API token.
+3. Write payload JSON into a directory such as `bench-results/`; each file may
+   contain one result object or an array of result objects.
+4. Run `conbench results submit "bench-results/*.json"` with an API token and a
+   measured `--jobs` value for large suites.
 5. Add `conbench ci report` after submission for pull request diagnostics.
 6. Move any read-only Python automation to `from conbench import Client`.
 7. Delete password-login client code after the CI and read paths have moved.
@@ -213,7 +214,8 @@ New create/submit shape:
 
 ```bash
 conbench results submit "bench-results/*.json" \
-  --server "$CONBENCH_SERVER_URL"
+  --server "$CONBENCH_SERVER_URL" \
+  --jobs 16
 ```
 
 Set `CONBENCH_TOKEN` in the job environment for authenticated submissions. The
@@ -223,10 +225,11 @@ the command line.
 Important differences:
 
 - the glob should be quoted so the CLI expands it consistently,
-- each matched file must contain one result object,
+- each matched file may contain one result object or an array of result objects,
 - auth uses user-owned API tokens, not password-login sessions,
 - run grouping is explicit through `run_id`, `run_tags`, and `batch_id`,
-- submit output is line-oriented and reports each accepted or rejected file.
+- submit output is compact for exactly one result and line-oriented for
+  multi-result submissions, reporting each accepted or rejected result.
 
 Old `benchconnect post` workflows should become the same CLI submit path unless
 they intentionally need to call the OpenAPI `POST /api/results` endpoint
@@ -249,15 +252,9 @@ for payload in payloads:
     payload["run_tags"] = run_tags
 ```
 
-If your current code writes an array of results, split it:
-
-```python
-import json
-
-for i, payload in enumerate(payloads):
-    path = out_dir / f"result-{i:04d}.json"
-    path.write_text(json.dumps(payload), encoding="utf-8")
-```
+If your current code writes an array of results, submit that array file directly
+or use `conbench.migration.write_result_payloads` when object-per-file artifacts
+are easier to inspect in CI.
 
 ## Replacing CSV History Downloads
 
@@ -659,6 +656,7 @@ submit_results(
     ["bench-results/*.json"],
     server="https://conbench.example.com",
     token=token,
+    jobs=16,
 )
 ```
 
@@ -719,8 +717,8 @@ does not include the API token on argv:
 ```
 
 The test target is part of the CI path and proves that the demo still writes
-object-per-file payloads without leaking tokens. The converter preserves the
-Google Benchmark `context.date` timestamp when it is present, which keeps
+payload files without leaking tokens. The converter preserves the Google
+Benchmark `context.date` timestamp when it is present, which keeps
 historical imports and dry-run output reproducible. It uses the supported
 `conbench.migration` helper for payload-file writing and CLI result submission,
 so the runnable example follows the same Python boundary recommended above. Its
