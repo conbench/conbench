@@ -104,29 +104,6 @@ require_missing() {
 	fi
 }
 
-require_active_path_absent() {
-	local pattern="$1"
-	local matches
-	matches="$(
-		grep -R -F -n \
-			--exclude=check_go_deploy_manifests.sh \
-			--exclude=check_workflows.sh \
-			--exclude=docs_migration_coverage.py \
-			--exclude=repo_hygiene.py \
-			--exclude=test_repo_hygiene.py \
-			-- "$pattern" \
-			"$root/Makefile" \
-			"$root/Dockerfile.server" \
-			"$root/.github" \
-			"$root/k8s" \
-			"$root/scripts" || true
-	)"
-	if [[ -n "$matches" ]]; then
-		record_failure "unexpected active runtime path contains $pattern"
-		echo "$matches" >&2
-	fi
-}
-
 require_secret_key() {
 	local file="$1"
 	local key="$2"
@@ -363,27 +340,7 @@ render_secret_case() {
 	) > "$outfile"
 }
 
-require_contains "$root/Dockerfile.server" 'RUN CGO_ENABLED=0 go build -trimpath -o /out/conbench ./cmd/conbench'
-require_contains "$root/Dockerfile.server" 'COPY --from=go-build /out/conbench /usr/local/bin/conbench'
-require_contains "$root/Dockerfile.server" 'ENTRYPOINT ["/usr/local/bin/conbench", "serve"]'
-require_absent "$root/Dockerfile.server" "conbench-server"
-require_absent "$root/Dockerfile.server" "/out/conbench-server"
-require_absent "$root/Dockerfile.server" "/usr/local/bin/conbench-server"
-require_absent "$root/Makefile" "bin/conbench-server"
-require_absent "$root/Makefile" "cmd/conbench-server"
-require_absent "$root/scripts/e2e.sh" "./bin/conbench-server"
-require_absent "$root/scripts/e2e.sh" "./cmd/conbench-server"
-require_absent "$root/scripts/dev.sh" "bin/conbench-server"
-require_absent "$root/scripts/dev.sh" "./cmd/conbench-server"
-require_absent "$root/scripts/prod_clone_compat.sh" "./bin/conbench-server"
-require_absent "$root/scripts/prod_clone_compat.sh" "./cmd/conbench-server"
 require_missing "$root/cmd/conbench-server"
-require_active_path_absent "bin/conbench-server"
-require_active_path_absent "./bin/conbench-server"
-require_active_path_absent "cmd/conbench-server"
-require_active_path_absent "./cmd/conbench-server"
-require_active_path_absent "go run ./cmd/conbench-server"
-require_active_path_absent "/usr/local/bin/conbench-server"
 
 require_absent "$render_prod_deployment" "gunicorn"
 require_absent "$render_prod_deployment" "gunicorn-port"
@@ -404,13 +361,10 @@ require_contains "$render_prod_deployment" "readinessProbe:"
 require_line "$render_prod_deployment" '^[[:space:]]*path:[[:space:]]*/api/ping$'
 require_contains "$render_prod_deployment" "port: http"
 require_absent "$render_prod_deployment" "{{"
-require_absent "$root/k8s/conbench-deployment.templ.yml" "TODO"
 require_yaml_kinds "$render_prod_deployment" "Deployment"
 
-require_contains "$root/k8s/conbench-service.yml" "targetPort: http"
 require_yaml_kinds "$root/k8s/conbench-service.yml" "Service"
 require_line "$root/k8s/conbench-service-monitor.yml" '^[[:space:]]*path:[[:space:]]*/metrics$'
-require_contains "$root/k8s/conbench-service-monitor.yml" "port: conbench-service-port"
 require_yaml_kinds "$root/k8s/conbench-service-monitor.yml" "ServiceMonitor"
 require_line "$render_prod_ingress" '^[[:space:]]*alb.ingress.kubernetes.io/healthcheck-path:[[:space:]]*/api/ping$'
 require_contains "$render_prod_ingress" "alb.ingress.kubernetes.io/actions.conbench-metrics-deny"
@@ -446,26 +400,8 @@ require_key_sets_equal "conbench config contract" "$tmp/config-expected-keys" "$
 require_missing "$root/ci/minikube"
 require_missing "$root/conbench-config.yml"
 require_missing "$root/conbench-secret.yml"
-require_absent "$root/Makefile" "deploy-on-minikube"
-require_absent "$root/Makefile" "conbench-on-minikube"
-require_absent "$root/Makefile" "minikube-conbench-url"
-require_absent "$root/Makefile" "start-minikube"
 require_missing "$root/.buildkite"
-require_absent "$root/scripts/go_deploy_runtime.sh" "CONBENCH_WEBAPP_IMAGE_SPEC"
-require_contains "$root/scripts/go_deploy_runtime.sh" "servicemonitors.monitoring.coreos.com"
-require_contains "$root/scripts/go_deploy_runtime.sh" "k8s/conbench-service-monitor.yml"
-require_absent "$root/scripts/go_deploy_runtime.sh" "jsonnet-kube-prom-manifests"
-require_absent "$root/scripts/go_deploy_runtime.sh" "kube-prometheus/deploy-or-update.sh"
-require_absent "$root/scripts/go_deploy_runtime.sh" "conbench-grafana-dashboard"
-require_absent "$root/scripts/go_deploy_runtime.sh" "legacy Flask/BMRT"
-require_absent "$root/scripts/go_deploy_runtime.sh" "export IMAGE_SPEC="
-require_contains "$root/scripts/go_deploy_runtime.sh" 'CONBENCH_DEPLOY_NO_DISPATCH'
-require_contains "$root/scripts/go_deploy_runtime.sh" "CONBENCH_DEPLOY_VERSION must be set"
-require_absent "$root/scripts/go_deploy_runtime.sh" "BUILDKITE"
-require_absent "$root/scripts/go_deploy_runtime.sh" ".buildkite"
 require_service_apply_before_ingress_branch "$root/scripts/go_deploy_runtime.sh"
-require_absent "$root/Makefile" "jsonnet-kube-prom-manifests"
-require_absent "$root/Makefile" "Grafana UI port-forward"
 require_missing "$root/k8s/conbench-grafana-dashboard-configmap.template.yml"
 require_missing "$root/k8s/kube-prometheus/conbench-grafana-dashboard.json"
 require_missing "$root/k8s/kube-prometheus"

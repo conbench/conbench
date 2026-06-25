@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import json
+import ast
 import contextlib
 import io
+import json
 import os
 import subprocess
 import sys
@@ -25,10 +26,15 @@ SCRIPT = Path(__file__).with_name("gbench_to_cli_submit.py")
 
 class GbenchToCLISubmitTest(unittest.TestCase):
     def test_gbench_demo_does_not_import_retired_legacy_packages(self) -> None:
-        text = SCRIPT.read_text(encoding="utf-8")
-        for package in RETIRED_PYTHON_PACKAGE_ROOTS:
-            with self.subTest(package=package):
-                self.assertNotIn(package, text)
+        tree = ast.parse(SCRIPT.read_text(encoding="utf-8"), filename=SCRIPT.name)
+        imported_roots: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported_roots.update(alias.name.split(".", 1)[0] for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                imported_roots.add(node.module.split(".", 1)[0])
+
+        self.assertTrue(imported_roots.isdisjoint(RETIRED_PYTHON_PACKAGE_ROOTS))
 
     def test_gbench_demo_dry_run_writes_cli_payloads(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

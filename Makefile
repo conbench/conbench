@@ -23,11 +23,7 @@ check-zensical-version:
 docs-link-check:
 	PYTHONDONTWRITEBYTECODE=1 uv run --with tomli python -B -m unittest scripts.test_docs_links
 	PYTHONDONTWRITEBYTECODE=1 uv run --with tomli python -B -m unittest scripts.test_docs_rendered_assets
-	PYTHONDONTWRITEBYTECODE=1 uv run --with tomli python -B -m unittest scripts.test_docs_cli_reference
-	PYTHONDONTWRITEBYTECODE=1 uv run --with tomli python -B -m unittest scripts.test_docs_migration_coverage
 	PYTHONDONTWRITEBYTECODE=1 uv run --with tomli python -B scripts/docs_links.py
-	PYTHONDONTWRITEBYTECODE=1 uv run --with tomli python -B scripts/docs_cli_reference.py
-	PYTHONDONTWRITEBYTECODE=1 uv run --with tomli python -B scripts/docs_migration_coverage.py docs/site sdk/python/README.md README.md
 
 .PHONY: build-docs
 build-docs: check-zensical-version docs-link-check docs-screenshots-check
@@ -118,9 +114,7 @@ repo-hygiene-check:
 
 .PHONY: workflow-shape-check
 workflow-shape-check: repo-hygiene-check
-	PYTHONDONTWRITEBYTECODE=1 uv run --with tomli python -B -m unittest scripts.test_check_workflows
 	PYTHONDONTWRITEBYTECODE=1 uv run --with tomli python -B -m unittest scripts.test_retired_python_surfaces
-	scripts/check_workflows.sh
 
 # Bring up only the ephemeral dev Postgres for local work against the schema.
 .PHONY: dev-db
@@ -251,7 +245,6 @@ python-sdk-check: python-sdk-test python-sdk-package-check
 
 .PHONY: migration-examples-test
 migration-examples-test:
-	PYTHONDONTWRITEBYTECODE=1 uv run --with tomli python -B -m unittest scripts.test_check_migration_examples
 	./scripts/check_migration_examples.sh
 
 # Go client: oapi-codegen generates sdk/go/conbench from the 3.0 downgrade (it

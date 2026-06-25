@@ -1,5 +1,4 @@
 import unittest
-from pathlib import Path
 
 from scripts import python_sdk_artifact_hygiene, repo_hygiene
 from scripts.retired_python_surfaces import RETIRED_PYTHON_MODULE_FILES, RETIRED_PYTHON_PACKAGE_ROOTS
@@ -27,16 +26,6 @@ class RetiredPythonSurfacesTest(unittest.TestCase):
     def test_python_guard_modules_use_the_shared_module_files(self) -> None:
         self.assertIs(repo_hygiene.RETIRED_MODULE_FILES, RETIRED_PYTHON_MODULE_FILES)
         self.assertIs(python_sdk_artifact_hygiene.RETIRED_MODULE_FILES, RETIRED_PYTHON_MODULE_FILES)
-
-    def test_migration_example_import_guard_uses_shared_package_roots(self) -> None:
-        test_path = Path("examples/migration/test_gbench_to_cli_submit.py")
-        source = test_path.read_text(encoding="utf-8")
-
-        self.assertIn(
-            "from scripts.retired_python_surfaces import RETIRED_PYTHON_PACKAGE_ROOTS",
-            source,
-        )
-        self.assertIn("for package in RETIRED_PYTHON_PACKAGE_ROOTS:", source)
 
 
 if __name__ == "__main__":

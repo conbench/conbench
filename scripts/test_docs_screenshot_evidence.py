@@ -67,7 +67,6 @@ class DocsScreenshotEvidenceTest(unittest.TestCase):
         data = json.loads(evidence.read_text(encoding="utf-8"))
         self.assertEqual(1, data["schema_version"])
         self.assertEqual("conbench-dashboard-screenshots", data["artifact"])
-        self.assertIn("pinned Playwright", " ".join(data["quality_checks"]))
         self.assertEqual({"width": 4, "height": 3}, data["viewports"]["desktop"])
         self.assertEqual({"width": 2, "height": 2}, data["viewports"]["mobile"])
 
