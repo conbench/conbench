@@ -87,7 +87,7 @@ describe("RecentRunsHome", () => {
     await waitFor(() => expect(screen.getByRole("heading", { name: /recent runs/i })).toBeInTheDocument());
     expect(screen.getByText("66f230370652…ea96d29b")).toBeInTheDocument();
     expect(screen.getByText("batch 66f230370652…29b-1p")).toBeInTheDocument();
-    expect(screen.getByText("apache/arrow")).toBeInTheDocument();
+    expect(screen.getByText("repository apache/arrow")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: `Open run ${longRunID}` })).toHaveAttribute(
       "href",
       `/runs/${longRunID}`,
@@ -96,6 +96,28 @@ describe("RecentRunsHome", () => {
       "href",
       `/batches/${longBatchID}`,
     );
+  });
+
+  it("suppresses empty row metadata and renders compact inline actions", async () => {
+    GET.mockResolvedValueOnce({
+      data: {
+        runs: [
+          run({ run_id: "run-a", run_reason: null, error_count: 0 }),
+          run({ run_id: "run-b", run_reason: null, error_count: 0 }),
+        ],
+      },
+    });
+
+    const { container } = render(RecentRunsHome, { props: {} });
+
+    await waitFor(() => expect(screen.getByRole("heading", { name: /recent runs/i })).toBeInTheDocument());
+    expect(screen.getByText("repository apache/arrow")).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Reason" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Repository" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Errors" })).not.toBeInTheDocument();
+    expect(screen.queryByText("0 errors")).not.toBeInTheDocument();
+    expect(container.querySelector(".button-pill")).toBeNull();
+    expect(container.querySelector(".inline-actions")).not.toBeNull();
   });
 
   it("shows an empty state", async () => {

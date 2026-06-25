@@ -32,7 +32,10 @@
 
   const totalResults = $derived(runs.reduce((sum, run) => sum + run.resultCount, 0));
   const totalErrors = $derived(runs.reduce((sum, run) => sum + run.errorCount, 0));
-  const repositoryCount = $derived(new Set(runs.map((run) => run.repository).filter(Boolean)).size);
+  const repositoryLabels = $derived(uniqueRepositoryLabels(runs));
+  const showReasonColumn = $derived(runs.some((run) => (run.runReason ?? "").trim() !== ""));
+  const showRepositoryColumn = $derived(repositoryLabels.length > 1);
+  const showErrorsColumn = $derived(totalErrors > 0);
 
   function go(e: MouseEvent, href: string) {
     if (!interceptNavClick(e)) return;
@@ -52,6 +55,21 @@
 
   function plural(n: number, word: string, pluralWord = `${word}s`): string {
     return `${n.toLocaleString()} ${n === 1 ? word : pluralWord}`;
+  }
+
+  function uniqueRepositoryLabels(source: RecentRunViewModel[]): string[] {
+    const labels = new Map<string, string>();
+    for (const run of source) {
+      if (run.repository === "") continue;
+      labels.set(run.repository, run.repositoryLabel);
+    }
+    return Array.from(labels.values()).sort();
+  }
+
+  function repositorySummary(labels: string[]): string {
+    if (labels.length === 0) return "repository not set";
+    if (labels.length === 1) return `repository ${labels[0]}`;
+    return plural(labels.length, "repository", "repositories");
   }
 </script>
 
@@ -84,32 +102,46 @@
     <p class="summary-line" aria-label="Recent run summary">
       <span class="summary-item">{plural(runs.length, "run")}</span>
       <span class="summary-item">{plural(totalResults, "result")}</span>
-      <span class="summary-item" class:alert={totalErrors > 0}>{plural(totalErrors, "error")}</span>
-      <span class="summary-item">{plural(repositoryCount, "repository", "repositories")}</span>
+      {#if showErrorsColumn}
+        <span class="summary-item alert">{plural(totalErrors, "error")}</span>
+      {/if}
+      <span class="summary-item">{repositorySummary(repositoryLabels)}</span>
     </p>
 
     <section class="panel table-panel" aria-label="Recent runs">
       <table class="data-table stacked-table runs-table">
         <colgroup>
           <col class="run-col" />
-          <col class="reason-col" />
-          <col class="repository-col" />
+          {#if showReasonColumn}
+            <col class="reason-col" />
+          {/if}
+          {#if showRepositoryColumn}
+            <col class="repository-col" />
+          {/if}
           <col class="commit-col" />
           <col class="count-col" />
           <col class="count-col" />
-          <col class="count-col" />
+          {#if showErrorsColumn}
+            <col class="count-col" />
+          {/if}
           <col class="time-col" />
           <col class="actions-col" />
         </colgroup>
         <thead>
           <tr>
             <th>Run</th>
-            <th>Reason</th>
-            <th>Repository</th>
+            {#if showReasonColumn}
+              <th>Reason</th>
+            {/if}
+            {#if showRepositoryColumn}
+              <th>Repository</th>
+            {/if}
             <th>Commit</th>
             <th>Results</th>
             <th>Series</th>
-            <th>Errors</th>
+            {#if showErrorsColumn}
+              <th>Errors</th>
+            {/if}
             <th>Latest</th>
             <th>Actions</th>
           </tr>
@@ -148,33 +180,41 @@
                   {/if}
                 </div>
               </td>
-              <td data-label="Reason" class="wrap-anywhere">{run.runReason ?? "not set"}</td>
-              <td data-label="Repository">
-                <span class="mono value-code" title={run.repository || "not set"}>{run.repositoryLabel}</span>
-              </td>
+              {#if showReasonColumn}
+                <td data-label="Reason" class="wrap-anywhere">{run.runReason ?? "not set"}</td>
+              {/if}
+              {#if showRepositoryColumn}
+                <td data-label="Repository">
+                  <span class="mono value-code" title={run.repository || "not set"}>{run.repositoryLabel}</span>
+                </td>
+              {/if}
               <td data-label="Commit">
                 <span class="mono value-code">{run.shortCommit ?? "not set"}</span>
               </td>
               <td data-label="Results" class="numeric">{run.resultCount.toLocaleString()}</td>
               <td data-label="Series" class="numeric">{run.seriesCount.toLocaleString()}</td>
-              <td data-label="Errors">
-                <span class={`status-badge ${run.errorCount > 0 ? "warning" : "stable"}`}>
-                  {run.errorCount.toLocaleString()}
-                </span>
-              </td>
+              {#if showErrorsColumn}
+                <td data-label="Errors">
+                  {#if run.errorCount > 0}
+                    <span class="status-badge warning">
+                      {run.errorCount.toLocaleString()}
+                    </span>
+                  {/if}
+                </td>
+              {/if}
               <td data-label="Latest" class="time-cell">{formatTime(run.lastResultAt)}</td>
               <td data-label="Actions">
-                <div class="action-row table-actions">
+                <div class="inline-actions table-actions">
                   {#if run.ciReportHref}
                     <a
-                      class="button-pill"
+                      class="inline-action-link"
                       href={run.ciReportHref}
                       aria-label={`Open CI report for run ${run.runId}`}
                       onclick={(e) => go(e, run.ciReportHref!)}
                     >CI report</a>
                   {/if}
                   <a
-                    class="button-pill"
+                    class="inline-action-link"
                     href={run.latestResultHref}
                     aria-label={`Open sample result for run ${run.runId}`}
                     onclick={(e) => go(e, run.latestResultHref)}
@@ -225,6 +265,29 @@
   .meta-line,
   .table-actions {
     min-width: 0;
+  }
+  .inline-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+  }
+  .inline-action-link {
+    color: var(--c-accent);
+    font-weight: 650;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .inline-action-link:hover {
+    color: var(--c-accent-strong);
+    text-decoration: underline;
+  }
+  .inline-action-link + .inline-action-link::before {
+    content: "·";
+    margin-right: 8px;
+    color: var(--c-border);
+    font-weight: 400;
+    text-decoration: none;
   }
   .meta-line {
     display: flex;
