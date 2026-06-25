@@ -76,7 +76,7 @@ class DocsLinksTest(unittest.TestCase):
 
         validate_docs_links([docs / "dashboard-screenshots.md"])
 
-    def test_accepts_allowlisted_non_dashboard_screenshot_link(self) -> None:
+    def test_rejects_unknown_non_dashboard_screenshot_link(self) -> None:
         docs = self.make_docs()
         (docs / "dashboard-screenshots.md").write_text(
             "# Dashboard Screenshots\n\n"
@@ -84,29 +84,15 @@ class DocsLinksTest(unittest.TestCase):
             encoding="utf-8",
         )
 
-        validate_docs_links([docs / "dashboard-screenshots.md"])
-
-    def test_rejects_unknown_non_dashboard_screenshot_link(self) -> None:
-        docs = self.make_docs()
-        (docs / "dashboard-screenshots.md").write_text(
-            "# Dashboard Screenshots\n\n"
-            "![Typo](assets/screenshots/prod-clone-series-arrow-typo.png)\n",
-            encoding="utf-8",
-        )
-
         with self.assertRaisesRegex(DocsLinkError, r"missing local link target"):
             validate_docs_links([docs / "dashboard-screenshots.md"])
 
-    def test_verify_generated_screenshots_requires_files(self) -> None:
+    def test_verify_generated_screenshots_has_no_non_dashboard_requirements(self) -> None:
         tmp_handle = tempfile.TemporaryDirectory(prefix="conbench-docs-links-assets-")
         self.addCleanup(tmp_handle.cleanup)
         asset_dir = Path(tmp_handle.name)
 
-        with self.assertRaisesRegex(DocsLinkError, r"missing generated screenshot"):
-            verify_generated_screenshots(asset_dir)
-
-        (asset_dir / "prod-clone-series-arrow-toucharea.png").write_bytes(b"png")
-        self.assertEqual(verify_generated_screenshots(asset_dir), 1)
+        self.assertEqual(verify_generated_screenshots(asset_dir), 0)
 
     def test_rejects_missing_relative_link_target(self) -> None:
         docs = self.make_docs()

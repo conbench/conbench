@@ -1,11 +1,8 @@
 # Dashboard Screenshots
 
-These screenshots are generated from two review sources:
-
-- the deterministic demo database used by `make docs-screenshots`, which covers
-  the main dashboard routes without private data or hand-picked local state;
-- a production-clone capture from Apache Arrow series data, used as an
-  open-source example of a real series browsing workflow.
+These screenshots are generated from the deterministic demo database used by
+`make docs-screenshots`, which covers the main dashboard routes without private
+data or hand-picked local state.
 
 The PNGs and evidence JSON are generated artifacts. They are not committed to
 the main development branch. The current reviewed image set lives on the orphan
@@ -50,8 +47,6 @@ data.
 CI runs the same capture path, checks the generated artifact directory before
 upload, and on push publishes the latest deterministic dashboard PNGs plus
 `dashboard-screenshots-evidence.json` to the orphan `docs-screenshots` branch.
-That publish step preserves non-dashboard extras already present on the branch,
-including production-clone screenshots.
 
 The Playwright capture test also checks the page state before it writes an
 image:
@@ -82,14 +77,6 @@ UI instead of hand-picked local captures.
 | Compare | `/compare?baseline=:id&contender=:id` | Compare two results with pairwise and lookback diagnostics. |
 | CI report | `/ci/report?repository=...&commit_sha=...&run_ids=...` | Review PR/CI regression status, filters, investigation queue, and row verdicts. |
 | Account | `/account` | Reach session identity, login, API token management, and alert-rule management surfaces. |
-
-## Production-Clone Series
-
-This image is captured from the production-clone server against Apache Arrow
-benchmark data. It is separate from the deterministic CI harness because the
-clone data is only a temporary review source while this branch is prepared.
-
-![Apache Arrow series trend from the production clone](assets/screenshots/prod-clone-series-arrow-toucharea.png)
 
 ## Recent Runs
 

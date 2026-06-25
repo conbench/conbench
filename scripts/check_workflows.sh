@@ -262,7 +262,6 @@ require_contains "$docs_screenshot_page" "pinned Playwright container"
 require_contains "$docs_screenshot_page" "dashboard-screenshots-evidence.json"
 require_contains "$docs_screenshot_page" "https://conbench.example"
 require_contains "$docs_screenshot_page" 'orphan `docs-screenshots` branch'
-require_contains "$docs_screenshot_page" "production-clone capture"
 require_contains "$docs_screenshot_page" "chart canvases must be painted"
 require_contains "$docs_screenshot_page" "mobile primary navigation must remain visible"
 require_contains "$docs_screenshot_page" "single flat color"

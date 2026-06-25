@@ -19,11 +19,7 @@ LINK_RE = re.compile(r"!?\[[^\]\n]*\]\(([^)\n]+)\)")
 SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 GENERATED_SCREENSHOT_RE = re.compile(r"^assets/screenshots/[A-Za-z0-9_.-]+\.png$")
 DASHBOARD_SCREENSHOT_RE = re.compile(r"^dashboard-[A-Za-z0-9-]+\.png$")
-# Non-dashboard generated screenshots live on the orphan docs-screenshots branch
-# and are restored at docs-build time, so they are absent from this branch. List
-# them here so a typo'd or unknown reference still fails the link check;
-# restore_docs_screenshot_artifacts.sh verifies each one exists after restore.
-KNOWN_GENERATED_SCREENSHOTS = frozenset({"prod-clone-series-arrow-toucharea.png"})
+KNOWN_GENERATED_SCREENSHOTS = frozenset()
 HEADING_RE = re.compile(r"^(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$")
 CUSTOM_ANCHOR_RE = re.compile(r"\{#([A-Za-z0-9_.:-]+)\}[ \t]*$")
 MAKE_TARGET_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
@@ -269,12 +265,7 @@ def is_generated_screenshot_target(target: str) -> bool:
 
 
 def verify_generated_screenshots(asset_dir: Path) -> int:
-    """Verify each known non-dashboard generated screenshot exists in asset_dir.
-
-    Dashboard screenshots are validated against the manifest by
-    docs_screenshot_inventory.py; this guards the orphan-branch extras restored
-    by restore_docs_screenshot_artifacts.sh so a missing file fails the build.
-    """
+    """Verify each known non-dashboard generated screenshot exists in asset_dir."""
     missing = sorted(
         name for name in KNOWN_GENERATED_SCREENSHOTS if not (asset_dir / name).is_file()
     )
