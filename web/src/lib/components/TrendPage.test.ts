@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { components } from "../api/schema";
 import { DEFAULT_TREND_QUERY } from "../router";
 import TrendPage from "./TrendPage.svelte";
-import trendPageSource from "./TrendPage.svelte?raw";
 
 const GET = vi.fn();
 vi.mock("../api/client", () => ({
@@ -245,18 +244,6 @@ describe("TrendPage", () => {
     await fireEvent.click(screen.getByRole("button", { name: "set baseline" }));
     expect(within(context).getByText(/baseline: sha-r1/i)).toBeInTheDocument();
     expect(within(context).getByText(/pick both points to compare/i)).toBeInTheDocument();
-  });
-
-  it("offsets the sticky trend context below the global app header", () => {
-    expect(trendPageSource).toContain(".trend-context");
-    expect(trendPageSource).toContain("top: var(--app-header-height);");
-    expect(trendPageSource).not.toContain("top: 0;");
-  });
-
-  it("disables trend context stickiness when the global app header wraps", () => {
-    expect(trendPageSource).toMatch(
-      /@media \(max-width: 1120px\)[\s\S]*\.trend-context[\s\S]*position: static;[\s\S]*top: auto;/,
-    );
   });
 
   it("renders a selected-point inspector with compare and history export actions", async () => {

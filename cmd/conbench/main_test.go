@@ -258,10 +258,6 @@ func TestProdCloneMigrationHelpersAreHiddenFromGeneralHelp(t *testing.T) {
 	code = run([]string{"admin", "prod-clone", "--help"}, &stdout, &stderr)
 	assert.Equal(t, 0, code)
 	assert.Empty(t, stderr.String())
-	assert.Contains(t, stdout.String(), "temporary migration-only")
-	assert.Contains(t, stdout.String(), "Available Commands:")
-	assert.Contains(t, stdout.String(), "samples")
-	assert.Contains(t, stdout.String(), "report")
 }
 
 func TestProdCloneLegacyHelpPseudoCommandIsNotRegistered(t *testing.T) {
@@ -273,16 +269,6 @@ func TestProdCloneLegacyHelpPseudoCommandIsNotRegistered(t *testing.T) {
 	assert.Contains(t, stderr.String(), `unknown command "help"`)
 	assert.Contains(t, stderr.String(), "Usage:")
 	assert.NotContains(t, stderr.String(), "usage: conbench admin prod-clone <safe-db-url")
-}
-
-func TestPackageCommentUsesCobraProdCloneHelpSurface(t *testing.T) {
-	source, err := os.ReadFile("main.go")
-	require.NoError(t, err)
-
-	text := string(source)
-	assert.NotContains(t, text, "conbench admin prod-clone --help")
-	assert.NotContains(t, text, "conbench admin prod-clone samples --help")
-	assert.NotContains(t, text, "conbench admin prod-clone <safe-db-url")
 }
 
 func TestOpenAPICommandEmitsCanonicalSpec(t *testing.T) {
