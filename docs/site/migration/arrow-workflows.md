@@ -61,7 +61,7 @@ Benchmark jobs need:
 | `CONBENCH_URL` | no | Non-production Conbench v2 endpoint during evaluation. |
 | `CONBENCH_TOKEN` | yes | Reporter API token used by `conbench results submit` and `conbench ci report`. |
 | `CONBENCH_CLI` | no | Path or executable name for the v2 CLI. |
-| `CONBENCH_SUBMIT_JOBS` | no | Submit parallelism for large suites. Start with `16` and tune with measurement. |
+| `CONBENCH_SUBMIT_JOBS` | no | Submit parallelism for large suites. Defaults to `64` in the Buildkite fork for one-file-per-result workloads; lower it if the endpoint or database shows pressure. |
 | `BENCHMARKABLE` | no | Commit SHA being benchmarked. |
 | `BENCHMARKABLE_PR_NUMBER` | no | Pull request number for PR-shaped runs. |
 | `RUN_ID` | no | Stable run identifier, usually the Buildkite build ID. |
