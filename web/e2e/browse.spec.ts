@@ -19,14 +19,10 @@ test("browse lists the seeded series, searches, and opens its trend", async ({ p
   await page.reload();
   await expect(page.locator("table.browse-table tbody tr")).toHaveCount(1);
 
-  // Row click opens the fingerprint trend via SPA navigation. The seeded data is
-  // from 2024, so the default 3mo window is empty — the empty-range state with
-  // its "show all" action is the expected first render.
+  // Row click opens the fingerprint trend via SPA navigation. The default range
+  // is anchored at the newest series point, so the seeded history renders.
   await page.locator("table.browse-table tbody tr a").first().click();
   await expect(page).toHaveURL(/\/series\//);
-  await expect(page.getByText(/no points in the last/i)).toBeVisible();
-  await page.getByRole("button", { name: /show all/i }).click();
-  await expect(page).toHaveURL(/range=all/);
   await expect(page.locator(".chart-wrap canvas")).toBeVisible();
 
   // A search with no matches shows the empty state, not an error.

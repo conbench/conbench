@@ -6,8 +6,8 @@ test("browse to trend to compare happy path", async ({ page }) => {
   await page.goto(`${baseURL}/series`);
   await page.locator("table.browse-table tbody tr a").first().click();
   await expect(page).toHaveURL(/\/series\//);
-  // 2024-dated seed: widen the empty default 3mo window first.
-  await page.getByRole("button", { name: /show all/i }).click();
+  // The trend default range is anchored at the newest series point, so the
+  // seeded history renders without widening the window.
   await expect(page.locator(".chart-wrap canvas")).toBeVisible();
 
   // Pick baseline and contender from the table (row click selects; the strip
