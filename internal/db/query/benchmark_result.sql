@@ -85,6 +85,10 @@ SELECT
   br.history_fingerprint,
   c.sha AS commit_sha,
   c.repository AS commit_repository,
+  c.message AS commit_message,
+  c.author_name AS commit_author_name,
+  c.author_login AS commit_author_login,
+  c.author_avatar AS commit_author_avatar,
   c."timestamp" AS commit_timestamp
 FROM benchmark_result br
 LEFT JOIN commit c ON c.id = br.commit_id
@@ -143,6 +147,10 @@ SELECT
   latest.commit_repo_url,
   c.sha AS commit_sha,
   c.repository AS commit_repository,
+  c.message AS commit_message,
+  c.author_name AS commit_author_name,
+  c.author_login AS commit_author_login,
+  c.author_avatar AS commit_author_avatar,
   c."timestamp" AS commit_timestamp
 FROM run_agg a
 JOIN LATERAL (

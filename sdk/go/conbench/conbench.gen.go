@@ -511,9 +511,13 @@ type ListAlertRulesOutputBody struct {
 
 // ListCommit defines model for ListCommit.
 type ListCommit struct {
-	Hash       string     `json:"hash"`
-	Repository string     `json:"repository"`
-	Timestamp  *time.Time `json:"timestamp"`
+	AuthorAvatar *string    `json:"author_avatar"`
+	AuthorLogin  *string    `json:"author_login"`
+	AuthorName   string     `json:"author_name"`
+	Hash         string     `json:"hash"`
+	Message      string     `json:"message"`
+	Repository   string     `json:"repository"`
+	Timestamp    *time.Time `json:"timestamp"`
 }
 
 // ListTokensOutputBody defines model for ListTokensOutputBody.

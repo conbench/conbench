@@ -144,7 +144,7 @@ func TestListResultsTimestampFilterUTCNormalized(t *testing.T) {
 }
 
 func TestListRecentRunsGroupsResultsByRun(t *testing.T) {
-	tapi, _, _ := seedAPI(t)
+	tapi, pool, ctx := seedAPI(t)
 	olderA := seedResult(t, tapi, seedOpts{
 		sha:       "c1",
 		ts:        day(1),
@@ -174,6 +174,14 @@ func TestListRecentRunsGroupsResultsByRun(t *testing.T) {
 		name:      "bench-c",
 		repo:      "https://github.com/org/other",
 	})
+	authorLogin := "contributor-a"
+	authorAvatar := "https://avatars.githubusercontent.com/u/12345?v=4"
+	_, err := pool.Exec(ctx, `
+		UPDATE commit
+		SET message = $1, author_name = $2, author_login = $3, author_avatar = $4
+		WHERE repository = $5 AND sha = $6
+	`, "Improve vector kernels", "Contributor A", authorLogin, authorAvatar, defaultRepo, "c2")
+	require.NoError(t, err)
 
 	resp := tapi.Get("/api/runs/recent?page_size=10")
 	require.Equal(t, http.StatusOK, resp.Code, "recent runs: %s", resp.Body.String())
@@ -190,8 +198,16 @@ func TestListRecentRunsGroupsResultsByRun(t *testing.T) {
 			LatestResult  string  `json:"latest_result_id"`
 			Repository    string  `json:"repository"`
 			CommitSHA     string  `json:"commit_sha"`
-			FirstResultAt string  `json:"first_result_at"`
-			LastResultAt  string  `json:"last_result_at"`
+			Commit        struct {
+				Hash         string  `json:"hash"`
+				Repository   string  `json:"repository"`
+				Message      string  `json:"message"`
+				AuthorName   string  `json:"author_name"`
+				AuthorLogin  *string `json:"author_login"`
+				AuthorAvatar *string `json:"author_avatar"`
+			} `json:"commit"`
+			FirstResultAt string `json:"first_result_at"`
+			LastResultAt  string `json:"last_result_at"`
 		} `json:"runs"`
 	}
 	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &page))
@@ -216,6 +232,16 @@ func TestListRecentRunsGroupsResultsByRun(t *testing.T) {
 	assert.Equal(t, "run-b", page.Runs[1].RunID)
 	assert.Equal(t, latestB, page.Runs[1].LatestResult)
 	assert.Equal(t, "https://github.com/org/other", page.Runs[1].Repository)
+	assert.Equal(t, "c2", page.Runs[0].Commit.Hash)
+	assert.Equal(t, defaultRepo, page.Runs[0].Commit.Repository)
+	assert.Equal(t, "Improve vector kernels", page.Runs[0].Commit.Message)
+	assert.Equal(t, "Contributor A", page.Runs[0].Commit.AuthorName)
+	if assert.NotNil(t, page.Runs[0].Commit.AuthorLogin) {
+		assert.Equal(t, authorLogin, *page.Runs[0].Commit.AuthorLogin)
+	}
+	if assert.NotNil(t, page.Runs[0].Commit.AuthorAvatar) {
+		assert.Equal(t, authorAvatar, *page.Runs[0].Commit.AuthorAvatar)
+	}
 }
 
 func TestListRecentRunsCanIncludeActionableAttention(t *testing.T) {

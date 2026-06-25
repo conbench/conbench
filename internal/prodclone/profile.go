@@ -22,9 +22,9 @@ const (
 	profileLargePageSize      = int64(50)
 	profileRecentPageSize     = int64(25)
 	profileRecentMaxPageSize  = int64(100)
-	profileRecentCandidateMin = int64(1000)
-	profileRecentCandidateMax = int64(10000)
-	profileRecentFactor       = int64(200)
+	profileRecentCandidateMin = int64(50000)
+	profileRecentCandidateMax = int64(250000)
+	profileRecentFactor       = int64(5000)
 	profileExactQ             = "BM_ReadBinaryColumn"
 	profileBroadQ             = "tpch"
 	profileQRecentCommitLimit = int64(320)

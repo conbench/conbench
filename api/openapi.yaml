@@ -967,7 +967,19 @@ components:
     ListCommit:
       additionalProperties: false
       properties:
+        author_avatar:
+          type:
+            - string
+            - "null"
+        author_login:
+          type:
+            - string
+            - "null"
+        author_name:
+          type: string
         hash:
+          type: string
+        message:
           type: string
         repository:
           type: string
@@ -979,6 +991,10 @@ components:
       required:
         - hash
         - repository
+        - message
+        - author_name
+        - author_login
+        - author_avatar
         - timestamp
       type:
         - object

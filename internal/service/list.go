@@ -29,10 +29,14 @@ type ListQuery struct {
 // ListCommit is the minimal commit subset on a list item. The blank nullable
 // marker makes huma emit it as nullable (null for a commitless result).
 type ListCommit struct {
-	_          struct{}   `json:"-" nullable:"true"`
-	Hash       string     `json:"hash"`
-	Repository string     `json:"repository"`
-	Timestamp  *time.Time `json:"timestamp"`
+	_            struct{}   `json:"-" nullable:"true"`
+	Hash         string     `json:"hash"`
+	Repository   string     `json:"repository"`
+	Message      string     `json:"message"`
+	AuthorName   string     `json:"author_name"`
+	AuthorLogin  *string    `json:"author_login"`
+	AuthorAvatar *string    `json:"author_avatar"`
+	Timestamp    *time.Time `json:"timestamp"`
 }
 
 // ResultListItem is one row of the list/search response.
@@ -132,8 +136,12 @@ func listCommit(row storage.ResultListRow) *ListCommit {
 		return nil
 	}
 	return &ListCommit{
-		Hash:       *row.CommitSha,
-		Repository: derefString(row.CommitRepository),
-		Timestamp:  row.CommitTimestamp,
+		Hash:         *row.CommitSha,
+		Repository:   derefString(row.CommitRepository),
+		Message:      derefString(row.CommitMessage),
+		AuthorName:   derefString(row.CommitAuthorName),
+		AuthorLogin:  row.CommitAuthorLogin,
+		AuthorAvatar: row.CommitAuthorAvatar,
+		Timestamp:    row.CommitTimestamp,
 	}
 }

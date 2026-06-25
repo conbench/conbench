@@ -13,17 +13,35 @@ T = TypeVar("T", bound="ListCommitType0")
 class ListCommitType0:
     """
     Attributes:
+        author_avatar (None | str):
+        author_login (None | str):
+        author_name (str):
         hash_ (str):
+        message (str):
         repository (str):
         timestamp (datetime.datetime | None):
     """
 
+    author_avatar: None | str
+    author_login: None | str
+    author_name: str
     hash_: str
+    message: str
     repository: str
     timestamp: datetime.datetime | None
 
     def to_dict(self) -> dict[str, Any]:
+        author_avatar: None | str
+        author_avatar = self.author_avatar
+
+        author_login: None | str
+        author_login = self.author_login
+
+        author_name = self.author_name
+
         hash_ = self.hash_
+
+        message = self.message
 
         repository = self.repository
 
@@ -37,7 +55,11 @@ class ListCommitType0:
 
         field_dict.update(
             {
+                "author_avatar": author_avatar,
+                "author_login": author_login,
+                "author_name": author_name,
                 "hash": hash_,
+                "message": message,
                 "repository": repository,
                 "timestamp": timestamp,
             }
@@ -48,7 +70,26 @@ class ListCommitType0:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
+
+        def _parse_author_avatar(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_avatar = _parse_author_avatar(d.pop("author_avatar"))
+
+        def _parse_author_login(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_login = _parse_author_login(d.pop("author_login"))
+
+        author_name = d.pop("author_name")
+
         hash_ = d.pop("hash")
+
+        message = d.pop("message")
 
         repository = d.pop("repository")
 
@@ -68,7 +109,11 @@ class ListCommitType0:
         timestamp = _parse_timestamp(d.pop("timestamp"))
 
         list_commit_type_0 = cls(
+            author_avatar=author_avatar,
+            author_login=author_login,
+            author_name=author_name,
             hash_=hash_,
+            message=message,
             repository=repository,
             timestamp=timestamp,
         )

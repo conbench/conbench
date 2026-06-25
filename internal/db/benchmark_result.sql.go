@@ -335,6 +335,10 @@ SELECT
   br.history_fingerprint,
   c.sha AS commit_sha,
   c.repository AS commit_repository,
+  c.message AS commit_message,
+  c.author_name AS commit_author_name,
+  c.author_login AS commit_author_login,
+  c.author_avatar AS commit_author_avatar,
   c."timestamp" AS commit_timestamp
 FROM benchmark_result br
 LEFT JOIN commit c ON c.id = br.commit_id
@@ -371,6 +375,10 @@ type SelectBenchmarkResultsRow struct {
 	HistoryFingerprint string
 	CommitSha          *string
 	CommitRepository   *string
+	CommitMessage      *string
+	CommitAuthorName   *string
+	CommitAuthorLogin  *string
+	CommitAuthorAvatar *string
 	CommitTimestamp    *time.Time
 }
 
@@ -410,6 +418,10 @@ func (q *Queries) SelectBenchmarkResults(ctx context.Context, arg SelectBenchmar
 			&i.HistoryFingerprint,
 			&i.CommitSha,
 			&i.CommitRepository,
+			&i.CommitMessage,
+			&i.CommitAuthorName,
+			&i.CommitAuthorLogin,
+			&i.CommitAuthorAvatar,
 			&i.CommitTimestamp,
 		); err != nil {
 			return nil, err
@@ -464,6 +476,10 @@ SELECT
   latest.commit_repo_url,
   c.sha AS commit_sha,
   c.repository AS commit_repository,
+  c.message AS commit_message,
+  c.author_name AS commit_author_name,
+  c.author_login AS commit_author_login,
+  c.author_avatar AS commit_author_avatar,
   c."timestamp" AS commit_timestamp
 FROM run_agg a
 JOIN LATERAL (
@@ -483,21 +499,25 @@ type SelectRecentRunsParams struct {
 }
 
 type SelectRecentRunsRow struct {
-	RunID            string
-	FirstResultAt    time.Time
-	LastResultAt     time.Time
-	ResultCount      int64
-	ErrorCount       int64
-	SeriesCount      int64
-	BatchCount       int64
-	LatestResultID   string
-	RunReason        *string
-	RunTags          []byte
-	LatestBatchID    *string
-	CommitRepoUrl    string
-	CommitSha        *string
-	CommitRepository *string
-	CommitTimestamp  *time.Time
+	RunID              string
+	FirstResultAt      time.Time
+	LastResultAt       time.Time
+	ResultCount        int64
+	ErrorCount         int64
+	SeriesCount        int64
+	BatchCount         int64
+	LatestResultID     string
+	RunReason          *string
+	RunTags            []byte
+	LatestBatchID      *string
+	CommitRepoUrl      string
+	CommitSha          *string
+	CommitRepository   *string
+	CommitMessage      *string
+	CommitAuthorName   *string
+	CommitAuthorLogin  *string
+	CommitAuthorAvatar *string
+	CommitTimestamp    *time.Time
 }
 
 // Landing-page run summaries. Discover candidate run IDs from the newest result
@@ -528,6 +548,10 @@ func (q *Queries) SelectRecentRuns(ctx context.Context, arg SelectRecentRunsPara
 			&i.CommitRepoUrl,
 			&i.CommitSha,
 			&i.CommitRepository,
+			&i.CommitMessage,
+			&i.CommitAuthorName,
+			&i.CommitAuthorLogin,
+			&i.CommitAuthorAvatar,
 			&i.CommitTimestamp,
 		); err != nil {
 			return nil, err

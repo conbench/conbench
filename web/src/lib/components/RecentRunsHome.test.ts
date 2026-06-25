@@ -25,6 +25,10 @@ const run = (overrides: Record<string, unknown> = {}) => ({
   commit: {
     hash: "abcdef123456",
     repository: "https://github.com/apache/arrow",
+    message: "Improve vector kernel dispatch",
+    author_name: "Contributor A",
+    author_login: "contributor-a",
+    author_avatar: "https://avatars.githubusercontent.com/u/12345?v=4",
     timestamp: "2026-01-02T00:00:00Z",
   },
   ...overrides,
@@ -36,7 +40,7 @@ beforeEach(() => {
 });
 
 describe("RecentRunsHome", () => {
-  it("renders recent run summaries with investigation links", async () => {
+  it("renders CI run triage rows around commit and author identity", async () => {
     GET.mockResolvedValueOnce({
       data: {
         runs: [
@@ -62,24 +66,27 @@ describe("RecentRunsHome", () => {
     render(RecentRunsHome, { props: {} });
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("heading", { name: /recent runs/i })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("heading", { name: /^ci runs$/i })).toBeInTheDocument());
 
     expect(screen.getByText(/2 runs/i)).toBeInTheDocument();
     expect(screen.getByText(/360 results/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 error/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /needs attention/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/1 error/i)).not.toHaveLength(0);
+    expect(screen.getByText(/attention checked: newest 5 runs/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /needs attention/i })).toHaveTextContent(/newest 5/i);
     expect(screen.getByRole("link", { name: /review ci report for run run-a/i })).toHaveAttribute(
       "href",
       "/ci/report?run_ids=run-a&baseline=fork_point",
     );
-    expect(screen.getByText("2 regressions")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open run run-a" })).toHaveAttribute("href", "/runs/run-a");
     expect(screen.getAllByRole("link", { name: "Open batch batch-a" })[0]).toHaveAttribute(
       "href",
       "/batches/batch-a",
     );
     expect(screen.getAllByText("nightly")).toHaveLength(2);
-    expect(screen.getAllByText("abcdef12")).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: "Open commit abcdef12 on GitHub" })[0]).toHaveAttribute(
+      "href",
+      "https://github.com/apache/arrow/commit/abcdef123456",
+    );
     expect(screen.getByRole("link", { name: "Open CI report for run run-a" })).toHaveAttribute(
       "href",
       "/ci/report?repository=https%3A%2F%2Fgithub.com%2Fapache%2Farrow&commit_sha=abcdef123456&run_ids=run-a&baseline=fork_point",
@@ -110,10 +117,9 @@ describe("RecentRunsHome", () => {
 
     render(RecentRunsHome, { props: {} });
 
-    await waitFor(() => expect(screen.getByRole("heading", { name: /recent runs/i })).toBeInTheDocument());
-    expect(screen.getByText("66f230370652…ea96d29b")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("heading", { name: /^ci runs$/i })).toBeInTheDocument());
+    expect(screen.getAllByText("run 66f230370652…ea96d29b")).not.toHaveLength(0);
     expect(screen.getByText("batch 66f230370652…29b-1p")).toBeInTheDocument();
-    expect(screen.getByText("repository apache/arrow")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: `Open run ${longRunID}` })).toHaveAttribute(
       "href",
       `/runs/${longRunID}`,
@@ -136,11 +142,9 @@ describe("RecentRunsHome", () => {
 
     const { container } = render(RecentRunsHome, { props: {} });
 
-    await waitFor(() => expect(screen.getByRole("heading", { name: /recent runs/i })).toBeInTheDocument());
-    expect(screen.getByText("repository apache/arrow")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("heading", { name: /^ci runs$/i })).toBeInTheDocument());
     expect(screen.queryByRole("columnheader", { name: "Reason" })).not.toBeInTheDocument();
     expect(screen.queryByRole("columnheader", { name: "Repository" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("columnheader", { name: "Errors" })).not.toBeInTheDocument();
     expect(screen.queryByText("0 errors")).not.toBeInTheDocument();
     expect(container.querySelector(".button-pill")).toBeNull();
     expect(container.querySelector(".inline-actions")).not.toBeNull();

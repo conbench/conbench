@@ -35,8 +35,8 @@
   const repositoryLabels = $derived(uniqueRepositoryLabels(runs));
   const showReasonColumn = $derived(runs.some((run) => (run.runReason ?? "").trim() !== ""));
   const showRepositoryColumn = $derived(repositoryLabels.length > 1);
-  const showErrorsColumn = $derived(totalErrors > 0);
   const attentionRuns = $derived(runs.filter((run) => run.attention !== null));
+  const ATTENTION_WINDOW = 5;
 
   function go(e: MouseEvent, href: string) {
     if (!interceptNavClick(e)) return;
@@ -76,19 +76,25 @@
   function attentionStatusLabel(attention: RecentRunAttentionViewModel): string {
     return attention.status === "failure" ? "Regression" : "Action required";
   }
+
+  function reportLabel(run: RecentRunViewModel): string {
+    if (run.attention === null) return "Report";
+    return attentionStatusLabel(run.attention);
+  }
 </script>
 
 <main class="page home-page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">Activity</p>
-      <h1>Recent runs</h1>
-      <p class="page-subtitle">
-        Start from the latest benchmark activity, then jump into CI reports, sample results, or the series explorer.
-      </p>
+      <p class="eyebrow">apache/arrow</p>
+      <h1>CI runs</h1>
     </div>
     <div class="page-meta">
-      <span>Grouped by run_id</span>
+      {#if repositoryLabels.length === 1}
+        <span>{repositoryLabels[0]}</span>
+      {:else if repositoryLabels.length > 1}
+        <span>{plural(repositoryLabels.length, "repository", "repositories")}</span>
+      {/if}
       <span>Newest first</span>
     </div>
   </header>
@@ -107,16 +113,17 @@
     <p class="summary-line" aria-label="Recent run summary">
       <span class="summary-item">{plural(runs.length, "run")}</span>
       <span class="summary-item">{plural(totalResults, "result")}</span>
-      {#if showErrorsColumn}
+      {#if totalErrors > 0}
         <span class="summary-item alert">{plural(totalErrors, "error")}</span>
       {/if}
+      <span class="summary-item">attention checked: newest {ATTENTION_WINDOW} runs</span>
       <span class="summary-item">{repositorySummary(repositoryLabels)}</span>
     </p>
 
     {#if attentionRuns.length > 0}
       <section class="attention-panel" aria-labelledby="home-attention-heading">
         <div class="attention-heading">
-          <h2 id="home-attention-heading">Needs attention</h2>
+          <h2 id="home-attention-heading">Needs attention <span>newest {ATTENTION_WINDOW}</span></h2>
           <span>{plural(attentionRuns.length, "run")}</span>
         </div>
         <div class="attention-list">
@@ -129,7 +136,7 @@
               onclick={(e) => go(e, attention.reportHref)}
             >
               <span class={`attention-status ${attention.status}`}>{attentionStatusLabel(attention)}</span>
-              <strong class="mono">{run.displayRunId}</strong>
+              <strong>{run.primaryLabel}</strong>
               <span>{attention.summaryText}</span>
               <span class="attention-reason">{attention.statusReason}</span>
             </a>
@@ -138,75 +145,60 @@
       </section>
     {/if}
 
-    <section class="panel table-panel" aria-label="Recent runs">
+    <section class="panel table-panel" aria-label="CI runs">
       <table class="data-table stacked-table runs-table">
         <colgroup>
-          <col class="run-col" />
+          <col class="time-col" />
+          <col class="results-col" />
           {#if showReasonColumn}
             <col class="reason-col" />
           {/if}
           {#if showRepositoryColumn}
             <col class="repository-col" />
           {/if}
+          <col class="author-col" />
           <col class="commit-col" />
-          <col class="count-col" />
-          <col class="count-col" />
-          {#if showErrorsColumn}
-            <col class="count-col" />
-          {/if}
-          <col class="time-col" />
-          <col class="actions-col" />
+          <col class="message-col" />
+          <col class="report-col" />
         </colgroup>
         <thead>
           <tr>
-            <th>Run</th>
+            <th>Time</th>
+            <th>Results</th>
             {#if showReasonColumn}
               <th>Reason</th>
             {/if}
             {#if showRepositoryColumn}
               <th>Repository</th>
             {/if}
+            <th>Author</th>
             <th>Commit</th>
-            <th>Results</th>
-            <th>Series</th>
-            {#if showErrorsColumn}
-              <th>Errors</th>
-            {/if}
-            <th>Latest</th>
-            <th>Actions</th>
+            <th>Message</th>
+            <th>Report</th>
           </tr>
         </thead>
         <tbody>
           {#each runs as run (run.runId)}
-            <tr class:error-row={run.errorCount > 0}>
-              <td data-label="Run">
-                <div class="identity-stack">
-                  <a
-                    class="row-primary-link mono"
-                    href={run.runHref}
-                    aria-label={`Open run ${run.runId}`}
-                    title={run.runId}
-                    onclick={(e) => go(e, run.runHref)}
-                  >
-                    {run.displayRunId}
-                  </a>
-                  {#if run.latestBatchId}
-                    <div class="meta-line">
-                      {#if run.latestBatchHref}
-                        <a
-                          class="muted-detail batch-link"
-                          href={run.latestBatchHref}
-                          aria-label={`Open batch ${run.latestBatchId}`}
-                          title={run.latestBatchId}
-                          onclick={(e) => go(e, run.latestBatchHref!)}
-                        >batch {run.displayLatestBatchId}</a>
-                      {:else}
-                        <span class="muted-detail" title={run.latestBatchId}>batch {run.displayLatestBatchId}</span>
-                      {/if}
-                      {#if run.batchCount > 1}
-                        <span class="muted-detail">{run.batchCount - 1} earlier {run.batchCount === 2 ? "batch" : "batches"}</span>
-                      {/if}
-                    </div>
+            <tr class:error-row={run.errorCount > 0} class:attention-row={run.attention !== null}>
+              <td data-label="Time">
+                <a
+                  class="time-link"
+                  href={run.runHref}
+                  aria-label={`Open run detail for ${run.runId}`}
+                  title={run.runId}
+                  onclick={(e) => go(e, run.runHref)}
+                >{formatTime(run.lastResultAt)}</a>
+                <div class="muted-detail">{run.secondaryLabel}</div>
+              </td>
+              <td data-label="Results">
+                <div class="count-stack">
+                  <strong>{run.resultCount.toLocaleString()}</strong>
+                  <span>{plural(run.seriesCount, "series", "series")}</span>
+                  {#if run.errorCount > 0}
+                    <span class="status-badge warning">{plural(run.errorCount, "error")}</span>
+                  {/if}
+                  {#if run.attention}
+                    <span class={`attention-mini ${run.attention.status}`}>{run.attention.summaryText}</span>
                   {/if}
                 </div>
               </td>
@@ -218,37 +210,83 @@
                   <span class="mono value-code" title={run.repository || "not set"}>{run.repositoryLabel}</span>
                 </td>
               {/if}
-              <td data-label="Commit">
-                <span class="mono value-code">{run.shortCommit ?? "not set"}</span>
-              </td>
-              <td data-label="Results" class="numeric">{run.resultCount.toLocaleString()}</td>
-              <td data-label="Series" class="numeric">{run.seriesCount.toLocaleString()}</td>
-              {#if showErrorsColumn}
-                <td data-label="Errors">
-                  {#if run.errorCount > 0}
-                    <span class="status-badge warning">
-                      {run.errorCount.toLocaleString()}
-                    </span>
+              <td data-label="Author">
+                <div class="author-cell">
+                  {#if run.authorAvatar}
+                    <img src={run.authorAvatar} alt="" loading="lazy" referrerpolicy="no-referrer" />
+                  {:else}
+                    <span class="author-initial" aria-hidden="true">{run.authorLabel.slice(0, 1).toUpperCase()}</span>
                   {/if}
-                </td>
-              {/if}
-              <td data-label="Latest" class="time-cell">{formatTime(run.lastResultAt)}</td>
-              <td data-label="Actions">
+                  <div>
+                    <div>{run.authorLabel}</div>
+                    {#if run.authorLogin}
+                      <div class="muted-detail">@{run.authorLogin}</div>
+                    {/if}
+                  </div>
+                </div>
+              </td>
+              <td data-label="Commit">
+                {#if run.commitHref && run.shortCommit}
+                  <a
+                    class="mono value-code"
+                    href={run.commitHref}
+                    aria-label={`Open commit ${run.shortCommit} on GitHub`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >{run.shortCommit}</a>
+                {:else}
+                  <span class="mono value-code">{run.shortCommit ?? "not set"}</span>
+                {/if}
+              </td>
+              <td data-label="Message">
+                <div class="message-cell">
+                  <a
+                    class="row-primary-link"
+                    href={run.runHref}
+                    aria-label={`Open run ${run.runId}`}
+                    title={run.runId}
+                    onclick={(e) => go(e, run.runHref)}
+                  >{run.primaryLabel}</a>
+                  <div class="meta-line">
+                    <span class="muted-detail">{run.secondaryLabel}</span>
+                    {#if run.latestBatchId}
+                      {#if run.latestBatchHref}
+                        <a
+                          class="muted-detail batch-link"
+                          href={run.latestBatchHref}
+                          aria-label={`Open batch ${run.latestBatchId}`}
+                          title={run.latestBatchId}
+                          onclick={(e) => go(e, run.latestBatchHref!)}
+                        >batch {run.displayLatestBatchId}</a>
+                      {:else}
+                        <span class="muted-detail" title={run.latestBatchId}>batch {run.displayLatestBatchId}</span>
+                      {/if}
+                    {/if}
+                    {#if run.batchCount > 1}
+                      <span class="muted-detail">{run.batchCount - 1} earlier {run.batchCount === 2 ? "batch" : "batches"}</span>
+                    {/if}
+                  </div>
+                </div>
+              </td>
+              <td data-label="Report">
                 <div class="inline-actions table-actions">
                   {#if run.ciReportHref}
                     <a
-                      class="inline-action-link"
+                      class:status-badge={run.attention !== null}
+                      class:failure={run.attention?.status === "failure"}
+                      class:action_required={run.attention?.status === "action_required"}
+                      class:inline-action-link={run.attention === null}
                       href={run.ciReportHref}
                       aria-label={`Open CI report for run ${run.runId}`}
                       onclick={(e) => go(e, run.ciReportHref!)}
-                    >CI report</a>
+                    >{reportLabel(run)}</a>
                   {/if}
                   <a
                     class="inline-action-link"
                     href={run.latestResultHref}
                     aria-label={`Open sample result for run ${run.runId}`}
                     onclick={(e) => go(e, run.latestResultHref)}
-                  >Sample result</a>
+                  >Result</a>
                 </div>
               </td>
             </tr>
@@ -266,31 +304,42 @@
   .runs-table {
     --stacked-label-width: 88px;
   }
-  .runs-table .run-col {
-    width: 20%;
-  }
-  .runs-table .reason-col {
-    width: 11%;
-  }
-  .runs-table .repository-col {
-    width: 19%;
-  }
-  .runs-table .commit-col {
-    width: 9%;
-  }
-  .runs-table .count-col {
-    width: 6%;
-  }
   .runs-table .time-col {
     width: 10%;
   }
-  .runs-table .actions-col {
+  .runs-table .results-col {
+    width: 9%;
+  }
+  .runs-table .reason-col {
+    width: 8%;
+  }
+  .runs-table .repository-col {
     width: 13%;
   }
-  .identity-stack {
+  .runs-table .author-col {
+    width: 14%;
+  }
+  .runs-table .commit-col {
+    width: 8%;
+  }
+  .runs-table .message-col {
+    width: auto;
+  }
+  .runs-table .report-col {
+    width: 12%;
+  }
+  .message-cell,
+  .count-stack {
     display: grid;
     gap: 4px;
     min-width: 0;
+  }
+  .count-stack strong {
+    font-variant-numeric: tabular-nums;
+  }
+  .count-stack span:not(.status-badge):not(.attention-mini) {
+    color: var(--c-text-muted);
+    font-size: 0.76rem;
   }
   .meta-line,
   .table-actions {
@@ -321,9 +370,11 @@
     font-size: 0.86rem;
     line-height: 1.2;
   }
-  .attention-heading span {
+  .attention-heading h2 span,
+  .attention-heading > span {
     color: var(--c-text-muted);
     font-size: 0.74rem;
+    font-weight: 500;
   }
   .attention-list {
     display: flex;
@@ -362,6 +413,50 @@
     color: var(--c-text-muted);
     font-size: 0.76rem;
     overflow-wrap: anywhere;
+  }
+  .attention-mini {
+    color: var(--c-error);
+    font-size: 0.72rem;
+    font-weight: 750;
+  }
+  .attention-mini.action_required {
+    color: var(--c-warning);
+  }
+  .author-cell {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+  }
+  .author-cell img,
+  .author-initial {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+  }
+  .author-cell img {
+    display: block;
+    background: var(--c-surface-subtle);
+  }
+  .author-initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-accent-soft);
+    color: var(--c-accent-strong);
+    font-size: 0.76rem;
+    font-weight: 750;
+  }
+  .time-link {
+    color: var(--c-accent);
+    font-weight: 650;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .time-link:hover {
+    color: var(--c-accent-strong);
+    text-decoration: underline;
   }
   .inline-actions {
     display: flex;
@@ -412,10 +507,6 @@
   .numeric {
     text-align: right;
   }
-  .time-cell {
-    color: var(--c-text-muted);
-    white-space: nowrap;
-  }
   @media (max-width: 1120px) {
     .attention-panel {
       grid-template-columns: 1fr;
@@ -431,12 +522,6 @@
     }
     .attention-link:last-child {
       border-bottom: 0;
-    }
-    .numeric {
-      text-align: left;
-    }
-    .time-cell {
-      white-space: normal;
     }
   }
 </style>

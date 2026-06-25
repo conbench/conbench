@@ -12,9 +12,9 @@ import (
 const (
 	recentRunsPageSizeDefault = 25
 	recentRunsPageSizeMax     = 100
-	recentRunsCandidateMin    = int32(1000)
-	recentRunsCandidateMax    = int32(10000)
-	recentRunsCandidateFactor = int32(200)
+	recentRunsCandidateMin    = int32(50000)
+	recentRunsCandidateMax    = int32(250000)
+	recentRunsCandidateFactor = int32(5000)
 	recentRunsAttentionLimit  = 5
 )
 
@@ -204,8 +204,12 @@ func recentRunCommit(row storage.RecentRunRow) *ListCommit {
 		return nil
 	}
 	return &ListCommit{
-		Hash:       *row.CommitSha,
-		Repository: derefString(row.CommitRepository),
-		Timestamp:  row.CommitTimestamp,
+		Hash:         *row.CommitSha,
+		Repository:   derefString(row.CommitRepository),
+		Message:      derefString(row.CommitMessage),
+		AuthorName:   derefString(row.CommitAuthorName),
+		AuthorLogin:  row.CommitAuthorLogin,
+		AuthorAvatar: row.CommitAuthorAvatar,
+		Timestamp:    row.CommitTimestamp,
 	}
 }

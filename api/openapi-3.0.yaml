@@ -915,7 +915,17 @@ components:
       additionalProperties: false
       nullable: true
       properties:
+        author_avatar:
+          nullable: true
+          type: string
+        author_login:
+          nullable: true
+          type: string
+        author_name:
+          type: string
         hash:
+          type: string
+        message:
           type: string
         repository:
           type: string
@@ -926,6 +936,10 @@ components:
       required:
         - hash
         - repository
+        - message
+        - author_name
+        - author_login
+        - author_avatar
         - timestamp
       type: object
     ListTokensOutputBody:

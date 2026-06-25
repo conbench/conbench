@@ -813,7 +813,11 @@ export interface components {
             rules: components["schemas"]["AlertRuleView"][] | null;
         };
         ListCommit: {
+            author_avatar: string | null;
+            author_login: string | null;
+            author_name: string;
             hash: string;
+            message: string;
             repository: string;
             /** Format: date-time */
             timestamp: string | null;

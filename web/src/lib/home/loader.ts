@@ -3,10 +3,18 @@ import type { components } from "../api/schema";
 
 type Client = ReturnType<typeof createConbenchClient>;
 type RecentRun = components["schemas"]["RecentRunListItem"];
+type RecentRunCommit = NonNullable<RecentRun["commit"]> & {
+  message?: string | null;
+  author_name?: string | null;
+  author_login?: string | null;
+  author_avatar?: string | null;
+};
 
 export interface RecentRunViewModel {
   runId: string;
   displayRunId: string;
+  primaryLabel: string;
+  secondaryLabel: string;
   runHref: string;
   runReason: string | null;
   batchCount: number;
@@ -22,6 +30,11 @@ export interface RecentRunViewModel {
   repositoryLabel: string;
   commitSha: string | null;
   shortCommit: string | null;
+  commitMessage: string | null;
+  commitHref: string | null;
+  authorLabel: string;
+  authorLogin: string | null;
+  authorAvatar: string | null;
   firstResultAt: string;
   lastResultAt: string;
   ciReportHref: string | null;
@@ -61,9 +74,17 @@ export async function listRecentRuns(client: Client): Promise<RecentRunsViewMode
 
 function toRecentRunViewModel(run: RecentRun): RecentRunViewModel {
   const commitSha = run.commit_sha ?? null;
+  const shortCommit = commitSha === null ? null : commitSha.slice(0, 8);
+  const displayRunId = compactIdentifier(run.run_id, 12, 8);
+  const commit = (run.commit ?? null) as RecentRunCommit | null;
+  const commitMessage = cleanString(commit?.message ?? null);
+  const authorLogin = cleanString(commit?.author_login ?? null);
+  const authorName = cleanString(commit?.author_name ?? null);
   return {
     runId: run.run_id,
-    displayRunId: compactIdentifier(run.run_id, 12, 8),
+    displayRunId,
+    primaryLabel: commitMessage ?? shortCommit ?? displayRunId,
+    secondaryLabel: `run ${displayRunId}`,
     runHref: `/runs/${encodeURIComponent(run.run_id)}`,
     runReason: run.run_reason ?? null,
     batchCount: run.batch_count,
@@ -80,7 +101,12 @@ function toRecentRunViewModel(run: RecentRun): RecentRunViewModel {
     repository: run.repository,
     repositoryLabel: formatRepositoryLabel(run.repository),
     commitSha,
-    shortCommit: commitSha === null ? null : commitSha.slice(0, 8),
+    shortCommit,
+    commitMessage,
+    commitHref: commitHref(run.repository, commitSha),
+    authorLabel: authorName ?? authorLogin ?? "unknown author",
+    authorLogin,
+    authorAvatar: usableHTTPURL(commit?.author_avatar ?? null),
     firstResultAt: run.first_result_at,
     lastResultAt: run.last_result_at,
     ciReportHref: ciReportHref(run.repository, commitSha, run.run_id),
@@ -151,6 +177,26 @@ function formatRepositoryLabel(repository: string): string {
   return `${u.hostname}${path}`;
 }
 
+function commitHref(repository: string, commitSha: string | null): string | null {
+  if (commitSha === null || commitSha === "") {
+    return null;
+  }
+  let u: URL;
+  try {
+    u = new URL(repository);
+  } catch {
+    return null;
+  }
+  if (u.hostname !== "github.com" && u.hostname !== "www.github.com") {
+    return null;
+  }
+  const parts = u.pathname.split("/").filter(Boolean);
+  if (parts.length < 2) {
+    return null;
+  }
+  return `https://github.com/${parts[0]}/${parts[1]}/commit/${encodeURIComponent(commitSha)}`;
+}
+
 function ciReportHref(repository: string, commitSha: string | null, runId: string): string | null {
   if (repository === "" || commitSha === null || commitSha === "") {
     return null;
@@ -162,4 +208,23 @@ function ciReportHref(repository: string, commitSha: string | null, runId: strin
     baseline: "fork_point",
   });
   return `/ci/report?${params.toString()}`;
+}
+
+function cleanString(value: string | null): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed === "" ? null : trimmed;
+}
+
+function usableHTTPURL(value: string | null): string | null {
+  const cleaned = cleanString(value);
+  if (cleaned === null) {
+    return null;
+  }
+  let u: URL;
+  try {
+    u = new URL(cleaned);
+  } catch {
+    return null;
+  }
+  return u.protocol === "https:" || u.protocol === "http:" ? cleaned : null;
 }

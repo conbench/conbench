@@ -36,6 +36,10 @@ describe("listRecentRuns", () => {
           commit: {
             hash: "abcdef123456",
             repository: "https://github.com/apache/arrow",
+            message: "Improve vector kernel dispatch",
+            author_name: "Contributor A",
+            author_login: "contributor-a",
+            author_avatar: "https://avatars.githubusercontent.com/u/12345?v=4",
             timestamp: "2026-01-02T00:00:00Z",
           },
           attention: {
@@ -70,7 +74,15 @@ describe("listRecentRuns", () => {
       latestBatchHref: "/batches/batch-a",
       latestResultHref: "/results/result-a",
       shortCommit: "abcdef12",
+      primaryLabel: "Improve vector kernel dispatch",
+      commitMessage: "Improve vector kernel dispatch",
+      authorLabel: "Contributor A",
+      authorLogin: "contributor-a",
+      authorAvatar: "https://avatars.githubusercontent.com/u/12345?v=4",
+      commitHref: "https://github.com/apache/arrow/commit/abcdef123456",
     });
+    expect(page.runs[0]!.secondaryLabel).toContain("run");
+    expect(page.runs[0]!.errorCount).toBe(1);
     expect(page.runs[0]!.attention).toMatchObject({
       status: "failure",
       statusReason: "lookback regression detected",
@@ -80,6 +92,47 @@ describe("listRecentRuns", () => {
     expect(page.runs[0]!.ciReportHref).toBe(
       "/ci/report?repository=https%3A%2F%2Fgithub.com%2Fapache%2Farrow&commit_sha=abcdef123456&run_ids=run-a&baseline=fork_point",
     );
+  });
+
+  it("falls back to stable run identity when commit metadata is sparse", async () => {
+    const { client } = fakeClient({
+      runs: [
+        {
+          run_id: "fff41571debd35f721110e6a7d99440a",
+          run_reason: null,
+          run_tags: {},
+          batch_count: 0,
+          latest_batch_id: null,
+          result_count: 1,
+          error_count: 0,
+          series_count: 1,
+          latest_result_id: "result-a",
+          repository: "https://example.com/custom/repo",
+          commit_sha: "abcdef123456",
+          first_result_at: "2026-01-01T00:00:00Z",
+          last_result_at: "2026-01-02T00:00:00Z",
+          commit: {
+            hash: "abcdef123456",
+            repository: "https://example.com/custom/repo",
+            message: "",
+            author_name: "",
+            author_login: "benchmark-bot",
+            author_avatar: "",
+            timestamp: "2026-01-02T00:00:00Z",
+          },
+        },
+      ],
+    });
+
+    const page = await listRecentRuns(client);
+
+    expect(page.runs[0]).toMatchObject({
+      primaryLabel: "abcdef12",
+      secondaryLabel: "run fff41571debd…7d99440a",
+      authorLabel: "benchmark-bot",
+      authorAvatar: null,
+      commitHref: null,
+    });
   });
 
   it("treats null runs as an empty page", async () => {

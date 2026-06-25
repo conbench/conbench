@@ -416,6 +416,10 @@ func resultListRowsFromRows(rows []SelectBenchmarkResultsRow) []storage.ResultLi
 			HistoryFingerprint: r.HistoryFingerprint,
 			CommitSha:          r.CommitSha,
 			CommitRepository:   r.CommitRepository,
+			CommitMessage:      r.CommitMessage,
+			CommitAuthorName:   r.CommitAuthorName,
+			CommitAuthorLogin:  r.CommitAuthorLogin,
+			CommitAuthorAvatar: r.CommitAuthorAvatar,
 			CommitTimestamp:    r.CommitTimestamp,
 		}
 	}
@@ -426,21 +430,25 @@ func recentRunRowsFromRows(rows []SelectRecentRunsRow) []storage.RecentRunRow {
 	out := make([]storage.RecentRunRow, len(rows))
 	for i, r := range rows {
 		out[i] = storage.RecentRunRow{
-			RunID:            r.RunID,
-			FirstResultAt:    r.FirstResultAt,
-			LastResultAt:     r.LastResultAt,
-			ResultCount:      r.ResultCount,
-			ErrorCount:       r.ErrorCount,
-			SeriesCount:      r.SeriesCount,
-			BatchCount:       r.BatchCount,
-			LatestResultID:   r.LatestResultID,
-			RunReason:        r.RunReason,
-			RunTags:          r.RunTags,
-			LatestBatchID:    r.LatestBatchID,
-			Repository:       r.CommitRepoUrl,
-			CommitSha:        r.CommitSha,
-			CommitRepository: r.CommitRepository,
-			CommitTimestamp:  r.CommitTimestamp,
+			RunID:              r.RunID,
+			FirstResultAt:      r.FirstResultAt,
+			LastResultAt:       r.LastResultAt,
+			ResultCount:        r.ResultCount,
+			ErrorCount:         r.ErrorCount,
+			SeriesCount:        r.SeriesCount,
+			BatchCount:         r.BatchCount,
+			LatestResultID:     r.LatestResultID,
+			RunReason:          r.RunReason,
+			RunTags:            r.RunTags,
+			LatestBatchID:      r.LatestBatchID,
+			Repository:         r.CommitRepoUrl,
+			CommitSha:          r.CommitSha,
+			CommitRepository:   r.CommitRepository,
+			CommitMessage:      r.CommitMessage,
+			CommitAuthorName:   r.CommitAuthorName,
+			CommitAuthorLogin:  r.CommitAuthorLogin,
+			CommitAuthorAvatar: r.CommitAuthorAvatar,
+			CommitTimestamp:    r.CommitTimestamp,
 		}
 	}
 	return out

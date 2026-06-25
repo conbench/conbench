@@ -560,6 +560,10 @@ type ResultListRow struct {
 	HistoryFingerprint string
 	CommitSha          *string
 	CommitRepository   *string
+	CommitMessage      *string
+	CommitAuthorName   *string
+	CommitAuthorLogin  *string
+	CommitAuthorAvatar *string
 	CommitTimestamp    *time.Time
 }
 
@@ -575,21 +579,25 @@ type RecentRunsParams struct {
 // for the returned run IDs; commit columns are nil when the latest result in the
 // run was submitted without commit metadata.
 type RecentRunRow struct {
-	RunID            string
-	FirstResultAt    time.Time
-	LastResultAt     time.Time
-	ResultCount      int64
-	ErrorCount       int64
-	SeriesCount      int64
-	BatchCount       int64
-	LatestResultID   string
-	RunReason        *string
-	RunTags          []byte
-	LatestBatchID    *string
-	Repository       string
-	CommitSha        *string
-	CommitRepository *string
-	CommitTimestamp  *time.Time
+	RunID              string
+	FirstResultAt      time.Time
+	LastResultAt       time.Time
+	ResultCount        int64
+	ErrorCount         int64
+	SeriesCount        int64
+	BatchCount         int64
+	LatestResultID     string
+	RunReason          *string
+	RunTags            []byte
+	LatestBatchID      *string
+	Repository         string
+	CommitSha          *string
+	CommitRepository   *string
+	CommitMessage      *string
+	CommitAuthorName   *string
+	CommitAuthorLogin  *string
+	CommitAuthorAvatar *string
+	CommitTimestamp    *time.Time
 }
 
 // SeriesListParams filters and paginates the series list. Nil filters are
