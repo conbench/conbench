@@ -56,4 +56,6 @@ replaced, retired, or future product work. Package maintainers should use the
 old READMEs, PyPI pages, or release notes.
 
 Apache Arrow maintainers evaluating Buildkite-based migration should also read
-the [Arrow workflow migration](migration/arrow-workflows.md) status page.
+the [Arrow workflow migration](migration/arrow-workflows.md) status page and
+the [AWS sidecar evaluation deployment](migration/aws-sidecar-deployment.md)
+runbook.

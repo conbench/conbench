@@ -26,6 +26,7 @@ nav = [
   { "Migration" = [
     "migration/python-app.md",
     "migration/arrow-workflows.md",
+    "migration/aws-sidecar-deployment.md",
     "migration/python-legacy-reference.md",
     "migration/legacy-parity-roadmap.md",
     "migration/deprecation-notices.md",
