@@ -67,6 +67,36 @@ describe("loadResult", () => {
     expect(vm.aggregates.some((a) => a.label === "q1")).toBe(false);
   });
 
+  it("derives compact display labels for exact identifiers", async () => {
+    const vm = await loadResult(fakeClient({
+      ...detail,
+      id: "06a220d0d94471c480001414453ee7fc",
+      batch_id: "66f23037065241d6ac22aaeaea96d29b-1p",
+      run_id: "66f23037065241d6ac22aaeaea96d29b",
+      run_tags: { name: "commit:2315161817ad5dcb94891567e7ac48a35921e05a" },
+      hardware: {
+        ...detail.hardware,
+        hash: "0123456789abcdef0123456789abcdef",
+      },
+      commit_repo_url: "https://github.com/apache/arrow",
+      commit: {
+        ...detail.commit,
+        repository: "https://github.com/apache/arrow",
+        sha: "2315161817ad5dcb94891567e7ac48a35921e05a",
+      },
+      history_fingerprint: "fff41571debd35f721110e6a7d99440a",
+    }), "06a220d0d94471c480001414453ee7fc");
+
+    expect(vm.displayResultId).toBe("06a220d0d944…453ee7fc");
+    expect(vm.displayRunId).toBe("66f230370652…ea96d29b");
+    expect(vm.displayBatchId).toBe("66f230370652…6d29b-1p");
+    expect(vm.displayHardwareHash).toBe("0123456789ab…89abcdef");
+    expect(vm.displayFingerprint).toBe("fff41571debd…7d99440a");
+    expect(vm.shortCommit).toBe("23151618");
+    expect(vm.repositoryLabel).toBe("apache/arrow");
+    expect(vm.runTagsText).toBe("name=commit:2315161817ad…5921e05a");
+  });
+
   it("renders an errored result with a dash SVS and the error payload", async () => {
     const vm = await loadResult(
       fakeClient({ ...detail, single_value_summary: null, error: { stack: "trace" } }),

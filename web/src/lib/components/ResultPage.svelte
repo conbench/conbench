@@ -145,7 +145,7 @@
         <div class="page-meta">
           <span>SVS {vm.svsText}</span>
           <span>{vm.hardwareName} ({vm.hardwareType})</span>
-          <span>run {vm.runId}</span>
+          <span title={vm.runId}>run {vm.displayRunId}</span>
         </div>
         <div class="action-row">
           <a
@@ -228,7 +228,7 @@
         <dl class="compact-dl">
           {#if vm.commitSha !== null}
             <dt>sha</dt>
-            <dd>{vm.commitSha}</dd>
+            <dd class="mono" title={vm.commitSha}>{vm.shortCommit}</dd>
           {/if}
           {#if vm.commitMessage !== null && vm.commitMessage !== ""}
             <dt>message</dt>
@@ -239,7 +239,7 @@
             <dd>{vm.commitDateText}</dd>
           {/if}
           <dt>repository</dt>
-          <dd>{vm.repository}</dd>
+          <dd title={vm.repository}>{vm.repositoryLabel}</dd>
         </dl>
       </div>
 
@@ -247,7 +247,7 @@
         <h2>Run</h2>
         <dl class="compact-dl">
           <dt>run id</dt>
-          <dd>{vm.runId}</dd>
+          <dd class="mono" title={vm.runId}>{vm.displayRunId}</dd>
           {#if vm.runTagsText}
             <dt>run tags</dt>
             <dd>{vm.runTagsText}</dd>
@@ -258,20 +258,24 @@
           {/if}
           {#if vm.batchId !== null}
             <dt>batch</dt>
-            <dd>{vm.batchId}</dd>
+            <dd class="mono" title={vm.batchId}>{vm.displayBatchId}</dd>
           {/if}
           <dt>result time</dt>
           <dd>{vm.resultDateText}</dd>
+          <dt>result id</dt>
+          <dd class="mono" title={vm.id}>{vm.displayResultId}</dd>
         </dl>
       </div>
 
       <div class="panel result-section">
         <h2>Hardware</h2>
         <dl class="compact-dl">
+          <dt>name</dt>
+          <dd>{vm.hardwareName} ({vm.hardwareType})</dd>
           <dt>hardware hash</dt>
-          <dd>{vm.hardwareHash}</dd>
+          <dd class="mono" title={vm.hardwareHash}>{vm.displayHardwareHash}</dd>
           <dt>history fingerprint</dt>
-          <dd>{vm.fingerprint}</dd>
+          <dd class="mono" title={vm.fingerprint}>{vm.displayFingerprint}</dd>
         </dl>
       </div>
     </section>

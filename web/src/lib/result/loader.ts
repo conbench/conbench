@@ -12,6 +12,7 @@ export interface JSONBlock {
 
 export interface ResultViewModel {
   id: string;
+  displayResultId: string;
   name: string;
   paramsText: string;
   contextText: string;
@@ -23,16 +24,22 @@ export interface ResultViewModel {
   hardwareName: string;
   hardwareType: string;
   hardwareHash: string;
+  displayHardwareHash: string;
   commitSha: string | null;
+  shortCommit: string | null;
   commitMessage: string | null;
   commitDateText: string | null;
   repository: string;
+  repositoryLabel: string;
   runId: string;
+  displayRunId: string;
   runReason: string | null;
   runTagsText: string;
   batchId: string | null;
+  displayBatchId: string | null;
   resultDateText: string;
   fingerprint: string;
+  displayFingerprint: string;
   lessIsBetterText: string;
   timeUnitText: string;
   dataCountText: string;
@@ -73,8 +80,11 @@ export function resultViewModelFromDetail(
   const name = typeof rawName === "string" ? rawName : "(unnamed)";
   delete tags["name"];
   const svs = d.single_value_summary;
+  const commitSha = d.commit === null ? null : d.commit.sha;
+  const repository = d.commit_repo_url;
   return {
     id: d.id,
+    displayResultId: compactIdentifier(d.id, 12, 8),
     name,
     paramsText: tagsText(tags),
     contextText: tagsText(d.context),
@@ -86,19 +96,25 @@ export function resultViewModelFromDetail(
     hardwareName: d.hardware.name,
     hardwareType: d.hardware.type,
     hardwareHash: d.hardware.hash,
-    commitSha: d.commit === null ? null : d.commit.sha,
+    displayHardwareHash: compactIdentifier(d.hardware.hash, 12, 8),
+    commitSha,
+    shortCommit: commitSha === null ? null : commitSha.slice(0, 8),
     commitMessage: d.commit === null ? null : d.commit.message,
     commitDateText:
       d.commit === null || d.commit.timestamp === null
         ? null
         : formatDate(d.commit.timestamp, locale),
-    repository: d.commit_repo_url,
+    repository,
+    repositoryLabel: formatRepositoryLabel(repository),
     runId: d.run_id,
+    displayRunId: compactIdentifier(d.run_id, 12, 8),
     runReason: d.run_reason,
-    runTagsText: tagsText(d.run_tags),
+    runTagsText: compactTagsText(d.run_tags),
     batchId: d.batch_id,
+    displayBatchId: d.batch_id === null ? null : compactIdentifier(d.batch_id, 12, 8),
     resultDateText: formatDate(d.timestamp, locale),
     fingerprint: d.history_fingerprint,
+    displayFingerprint: compactIdentifier(d.history_fingerprint, 12, 8),
     lessIsBetterText: d.less_is_better === null ? "not set" : String(d.less_is_better),
     timeUnitText: d.time_unit ?? "not set",
     dataCountText: valueCountText(d.data),
@@ -116,6 +132,37 @@ export function resultViewModelFromDetail(
       { label: "raw payload", value: jsonText(d) },
     ],
   };
+}
+
+function compactIdentifier(value: string, head: number, tail: number): string {
+  if (value.length <= head + tail + 1) return value;
+  return `${value.slice(0, head)}…${value.slice(-tail)}`;
+}
+
+function formatRepositoryLabel(repository: string): string {
+  if (repository === "") return "repository not set";
+  let u: URL;
+  try {
+    u = new URL(repository);
+  } catch {
+    return repository;
+  }
+  const path = u.pathname.replace(/^\/+|\/+$/g, "");
+  if (u.hostname === "github.com" || u.hostname === "www.github.com") {
+    return path || u.hostname;
+  }
+  return `${u.hostname}${path === "" ? "" : `/${path}`}`;
+}
+
+function compactTagsText(tags: Record<string, unknown>): string {
+  return Object.keys(tags)
+    .sort()
+    .map((k) => `${k}=${compactTagValue(String(tags[k]))}`)
+    .join(" · ");
+}
+
+function compactTagValue(value: string): string {
+  return value.replace(/\b([0-9a-f]{32,40})\b/gi, (match) => compactIdentifier(match, 12, 8));
 }
 
 /** loadResult fetches one benchmark result and shapes the light detail view.

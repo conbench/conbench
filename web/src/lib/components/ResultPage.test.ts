@@ -97,7 +97,8 @@ describe("ResultPage", () => {
     // SVS, mean, and median all render "1.5 s"; scope to the SVS row so the
     // assertion targets the measured value specifically.
     expect(screen.getByText("SVS (min)").nextElementSibling).toHaveTextContent("1.5 s");
-    expect(screen.getByText("sha").nextElementSibling).toHaveTextContent("abc1234def");
+    expect(screen.getByText("sha").nextElementSibling).toHaveTextContent("abc1234d");
+    expect(screen.getByText("sha").nextElementSibling).toHaveAttribute("title", "abc1234def");
     expect(screen.getByText("run1")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /view trend/i })).toHaveAttribute(
       "href",
