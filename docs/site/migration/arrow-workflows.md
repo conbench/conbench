@@ -5,8 +5,9 @@ benchmark workflows. It is written for maintainers evaluating the new system,
 not for people who built the previous Python application.
 
 The migration is not complete until it has been validated against a
-non-production Conbench v2 deployment, Buildkite, and production-shaped data.
-Use this page as the public checklist for that evaluation.
+non-production Conbench v2 deployment and Buildkite. Production-shaped read
+validation has passed against a restored clone; use this page as the public
+checklist for the remaining evaluation.
 
 ## Current Direction
 
@@ -127,8 +128,14 @@ Local smoke runs have shown that:
 - the Buildkite adapter preflight can emit an environment-shaped v2 payload, and
 - server-minted reporter tokens are the intended automation auth path.
 
-Those checks reduce migration risk, but they do not replace Buildkite and
-prod-clone validation.
+The read-only production-clone gate has also passed on a 100M-result-row class
+Postgres restore. Recent-runs dashboard requests returned in about 0.24-0.28 s,
+CI report selection returned in about 0.37-0.39 s, and targeted result/history/
+compare probes passed through the API, CLI, and generated Python SDK.
+
+Those checks reduce migration risk, but they do not replace Buildkite execution,
+GitHub App publishing, or a non-production deployment that maintainers can
+evaluate directly.
 
 ## Caveats For Existing Deployments
 

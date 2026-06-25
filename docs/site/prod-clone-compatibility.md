@@ -162,12 +162,21 @@ loopback run returned:
 
 | Read path | Status | Timing |
 | --- | ---: | ---: |
+| `/api/runs/recent?page_size=25` | 200 | 0.28 s cold, 0.24 s warm |
+| `/api/runs/recent?page_size=100` | 200 | 0.26 s cold, 0.24 s warm |
 | `/api/series?page_size=5` | 200 | 1.37-1.38 s |
 | `/api/series?page_size=10` | 200 | 1.75-1.79 s |
 | `/api/series?page_size=50` | 200 | 3.3-6.0 s |
 | `/api/series?q=<exact>&page_size=10` | 200 | 16.3 s cold, 1.7 s warm |
 | `/api/series?q=<broad>&page_size=10` | 200 | 4.6 s cold, 2.8 s warm |
 | `/api/ci/report?commit_sha=<sha>&repository=<repo>&run_ids=<run>` | 200 | 0.36-0.39 s |
+
+The recent-runs SQL profile measured 395 ms for page size 25 and 238 ms for
+page size 100. The plans used a bounded newest-result candidate scan over
+`benchmark_result_timestamp_index`, then exact `run_id` aggregation through
+`benchmark_result_run_id_index`. This confirms the v2 dashboard path avoids the
+legacy Flask landing-page query shape that depended on 14-day predicates and
+stale partial-index behavior.
 
 The matching browser probe measured `/api/ci/report` at about 0.39 s for a
 6.9 MB payload and the mobile CI report page at about 1.4 s after rendering the
