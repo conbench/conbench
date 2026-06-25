@@ -993,6 +993,10 @@ export interface components {
         };
         ResultListItem: {
             batch_id: string | null;
+            case_name: string;
+            case_tags: {
+                [key: string]: unknown;
+            };
             commit: components["schemas"]["ListCommit"];
             has_error: boolean;
             history_fingerprint: string;

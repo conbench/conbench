@@ -35,6 +35,8 @@ func TestListResultsOrderingAndFields(t *testing.T) {
 	assert.Equal(t, b, page.Results[0].ID)
 	first := page.Results[0]
 	assert.Equal(t, "run-1", first.RunID)
+	assert.Equal(t, "bench", first.CaseName)
+	assert.Equal(t, map[string]any{"source": "test"}, first.CaseTags)
 	require.NotNil(t, first.Unit)
 	assert.Equal(t, "s", *first.Unit)
 	require.NotNil(t, first.SVS)

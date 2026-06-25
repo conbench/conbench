@@ -83,6 +83,8 @@ SELECT
   br.data,
   br.error,
   br.history_fingerprint,
+  cs.name AS case_name,
+  cs.tags AS case_tags,
   c.sha AS commit_sha,
   c.repository AS commit_repository,
   c.message AS commit_message,
@@ -91,6 +93,7 @@ SELECT
   c.author_avatar AS commit_author_avatar,
   c."timestamp" AS commit_timestamp
 FROM benchmark_result br
+JOIN "case" cs ON cs.id = br.case_id
 LEFT JOIN commit c ON c.id = br.commit_id
 WHERE (sqlc.narg('run_id')::text IS NULL OR br.run_id = sqlc.narg('run_id'))
   AND (sqlc.narg('batch_id')::text IS NULL OR br.batch_id = sqlc.narg('batch_id'))

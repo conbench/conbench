@@ -8,6 +8,7 @@ from attrs import define as _attrs_define
 
 if TYPE_CHECKING:
     from ..models.list_commit_type_0 import ListCommitType0
+    from ..models.result_list_item_case_tags import ResultListItemCaseTags
     from ..models.result_list_item_run_tags import ResultListItemRunTags
 
 
@@ -19,6 +20,8 @@ class ResultListItem:
     """
     Attributes:
         batch_id (None | str):
+        case_name (str):
+        case_tags (ResultListItemCaseTags):
         commit (ListCommitType0 | None):
         has_error (bool):
         history_fingerprint (str):
@@ -33,6 +36,8 @@ class ResultListItem:
     """
 
     batch_id: None | str
+    case_name: str
+    case_tags: ResultListItemCaseTags
     commit: ListCommitType0 | None
     has_error: bool
     history_fingerprint: str
@@ -50,6 +55,10 @@ class ResultListItem:
 
         batch_id: None | str
         batch_id = self.batch_id
+
+        case_name = self.case_name
+
+        case_tags = self.case_tags.to_dict()
 
         commit: dict[str, Any] | None
         if isinstance(self.commit, ListCommitType0):
@@ -85,6 +94,8 @@ class ResultListItem:
         field_dict.update(
             {
                 "batch_id": batch_id,
+                "case_name": case_name,
+                "case_tags": case_tags,
                 "commit": commit,
                 "has_error": has_error,
                 "history_fingerprint": history_fingerprint,
@@ -104,6 +115,7 @@ class ResultListItem:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.list_commit_type_0 import ListCommitType0
+        from ..models.result_list_item_case_tags import ResultListItemCaseTags
         from ..models.result_list_item_run_tags import ResultListItemRunTags
 
         d = dict(src_dict)
@@ -114,6 +126,10 @@ class ResultListItem:
             return cast(None | str, data)
 
         batch_id = _parse_batch_id(d.pop("batch_id"))
+
+        case_name = d.pop("case_name")
+
+        case_tags = ResultListItemCaseTags.from_dict(d.pop("case_tags"))
 
         def _parse_commit(data: object) -> ListCommitType0 | None:
             if data is None:
@@ -169,6 +185,8 @@ class ResultListItem:
 
         result_list_item = cls(
             batch_id=batch_id,
+            case_name=case_name,
+            case_tags=case_tags,
             commit=commit,
             has_error=has_error,
             history_fingerprint=history_fingerprint,

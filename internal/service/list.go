@@ -51,6 +51,8 @@ type ResultListItem struct {
 	SVS                *float64       `json:"single_value_summary"`
 	SVSType            string         `json:"single_value_summary_type"`
 	HistoryFingerprint string         `json:"history_fingerprint"`
+	CaseName           string         `json:"case_name"`
+	CaseTags           map[string]any `json:"case_tags"`
 	Commit             *ListCommit    `json:"commit"`
 	HasError           bool           `json:"has_error"`
 }
@@ -106,6 +108,10 @@ func (r *Reader) ListResults(ctx context.Context, q ListQuery) (*ResultPage, err
 		if err != nil {
 			return nil, err
 		}
+		caseTags, err := jsonObject(row.CaseTags)
+		if err != nil {
+			return nil, err
+		}
 		items = append(items, ResultListItem{
 			ID:                 row.ID,
 			RunID:              row.RunID,
@@ -117,6 +123,8 @@ func (r *Reader) ListResults(ctx context.Context, q ListQuery) (*ResultPage, err
 			SVS:                svs,
 			SVSType:            svsType,
 			HistoryFingerprint: row.HistoryFingerprint,
+			CaseName:           row.CaseName,
+			CaseTags:           caseTags,
 			Commit:             listCommit(row),
 			HasError:           row.Error != nil,
 		})

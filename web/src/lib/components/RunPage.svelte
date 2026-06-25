@@ -110,6 +110,22 @@
   function plural(n: number, word: string, pluralWord = `${word}s`): string {
     return `${n.toLocaleString()} ${n === 1 ? word : pluralWord}`;
   }
+
+  function tagSummary(tags: Record<string, unknown>): string[] {
+    const priority = ["query_id", "suite", "dataset", "scale_factor", "format", "language", "engine"];
+    return Object.entries(tags)
+      .filter(([, value]) => value !== null && value !== undefined && value !== "")
+      .sort(([left], [right]) => {
+        const leftIndex = priority.indexOf(left);
+        const rightIndex = priority.indexOf(right);
+        if (leftIndex >= 0 || rightIndex >= 0) {
+          return (leftIndex < 0 ? priority.length : leftIndex) - (rightIndex < 0 ? priority.length : rightIndex);
+        }
+        return left.localeCompare(right);
+      })
+      .slice(0, 4)
+      .map(([key, value]) => `${key} ${String(value)}`);
+  }
 </script>
 
 {#if errorMsg}
@@ -134,15 +150,28 @@
   <main class="page run-page">
     <header class="page-header">
       <div>
-        <p class="eyebrow">Run Detail</p>
-        <h1>Run <span class="id-heading mono">{vm.runId}</span></h1>
-        <p class="page-subtitle">
-          Inspect submitted results for one run_id, then jump to CI diagnostics, result detail, or series trends.
+        <p class="eyebrow">{vm.repositoryLabel}</p>
+        <h1>{vm.primaryLabel}</h1>
+        <p class="page-subtitle run-subtitle">
+          <span>{vm.secondaryLabel}</span>
+          {#if vm.authorLabel !== "unknown author"}
+            <span>{vm.authorLabel}{vm.authorLogin ? ` @${vm.authorLogin}` : ""}</span>
+          {/if}
         </p>
       </div>
       <div class="page-meta">
         <span class="wrap-anywhere">{vm.runReason ?? "reason not set"}</span>
-        <span class="mono wrap-anywhere">{vm.shortCommit ?? "commit not set"}</span>
+        {#if vm.commitHref && vm.shortCommit}
+          <a
+            class="mono wrap-anywhere"
+            href={vm.commitHref}
+            aria-label={`Open commit ${vm.shortCommit} on GitHub`}
+            target="_blank"
+            rel="noreferrer"
+          >{vm.shortCommit}</a>
+        {:else}
+          <span class="mono wrap-anywhere">{vm.shortCommit ?? "commit not set"}</span>
+        {/if}
       </div>
     </header>
 
@@ -159,11 +188,38 @@
       <div class="key-value-grid">
         <dl class="key-value">
           <dt>repository</dt>
-          <dd class="mono">{vm.repository || "not set"}</dd>
+          <dd>{vm.repositoryLabel}</dd>
+        </dl>
+        <dl class="key-value">
+          <dt>author</dt>
+          <dd>
+            <span class="author-inline">
+              {#if vm.authorAvatar}
+                <img src={vm.authorAvatar} alt="" loading="lazy" referrerpolicy="no-referrer" />
+              {/if}
+              <span>{vm.authorLabel}</span>
+            </span>
+          </dd>
         </dl>
         <dl class="key-value">
           <dt>commit</dt>
-          <dd class="mono">{vm.commitSha ?? "not set"}</dd>
+          <dd>
+            {#if vm.commitHref && vm.shortCommit}
+              <a
+                class="mono"
+                href={vm.commitHref}
+                aria-label={`Open commit ${vm.shortCommit} on GitHub`}
+                target="_blank"
+                rel="noreferrer"
+              >{vm.shortCommit}</a>
+            {:else}
+              <span class="mono">{vm.shortCommit ?? "not set"}</span>
+            {/if}
+          </dd>
+        </dl>
+        <dl class="key-value">
+          <dt>run</dt>
+          <dd class="mono wrap-anywhere" title={vm.runId}>{vm.displayRunId}</dd>
         </dl>
         <dl class="key-value">
           <dt>loaded window</dt>
@@ -190,62 +246,80 @@
     <section class="panel table-panel" aria-label="Run results">
       <table class="data-table stacked-table run-results-table">
         <colgroup>
-          <col class="result-col" />
+          <col class="benchmark-col" />
+          <col class="measure-col" />
           <col class="status-col" />
-          <col class="svs-col" />
           <col class="batch-col" />
           <col class="time-col" />
-          <col class="series-col" />
+          <col class="actions-col" />
         </colgroup>
         <thead>
           <tr>
-            <th>Result</th>
+            <th>Benchmark</th>
+            <th>Measurement</th>
             <th>Status</th>
-            <th>SVS</th>
             <th>Batch</th>
             <th>Time</th>
-            <th>Series</th>
+            <th>Open</th>
           </tr>
         </thead>
         <tbody>
           {#each vm.rows as row (row.id)}
             <tr class:error-row={row.hasError}>
-              <td data-label="Result">
+              <td data-label="Benchmark">
                 <a
-                  class="row-primary-link mono"
+                  class="row-primary-link"
                   href={row.resultHref}
+                  aria-label={`Open result ${row.id} for ${row.benchmarkName}`}
                   onclick={(e) => go(e, row.resultHref)}
-                >{row.id}</a>
+                >{row.benchmarkName}</a>
+                <div class="row-metadata">
+                  <span class="muted-detail mono" title={row.id}>result {row.displayResultId}</span>
+                  {#each tagSummary(row.benchmarkTags) as tag}
+                    <span class="tag-chip">{tag}</span>
+                  {/each}
+                </div>
+              </td>
+              <td data-label="Measurement">
+                <strong>{formatSVS(row)}</strong>
+                <span class="subtle-inline">{row.singleValueSummaryType}</span>
               </td>
               <td data-label="Status">
                 <span class={`status-badge ${row.hasError ? "warning" : "success"}`}>
                   {row.hasError ? "error" : "ok"}
                 </span>
               </td>
-              <td data-label="SVS">{formatSVS(row)} <span class="subtle-inline">{row.singleValueSummaryType}</span></td>
               <td data-label="Batch">
                 {#if row.batchId && row.batchHref}
                   <a
                     class="mono"
                     href={row.batchHref}
+                    aria-label={`Open batch ${row.batchId}`}
+                    title={row.batchId}
                     onclick={(e) => go(e, row.batchHref!)}
                   >
-                    {row.batchId}
+                    {row.displayBatchId}
                   </a>
                 {:else}
                   not set
                 {/if}
               </td>
               <td data-label="Time">{formatTime(row.timestamp)}</td>
-              <td data-label="Series">
-                <a
-                  class="button-pill secondary"
-                  href={row.trendHref}
-                  aria-label={`Open series trend for result ${row.id}`}
-                  onclick={(e) => go(e, row.trendHref)}
-                >
-                  Series trend
-                </a>
+              <td data-label="Open">
+                <div class="inline-actions table-actions">
+                  <a
+                    class="inline-action-link"
+                    href={row.trendHref}
+                    aria-label={`Open series trend for ${row.benchmarkName} result ${row.id}`}
+                    onclick={(e) => go(e, row.trendHref)}
+                  >Trend</a>
+                  <a
+                    class="inline-action-link"
+                    href={row.resultHref}
+                    aria-label={`Open result ${row.id}`}
+                    onclick={(e) => go(e, row.resultHref)}
+                  >Result</a>
+                </div>
               </td>
             </tr>
           {/each}
@@ -271,27 +345,65 @@
   .id-heading {
     overflow-wrap: anywhere;
   }
-  .run-results-table .result-col {
-    width: 26%;
+  .run-subtitle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+  }
+  .run-results-table .benchmark-col {
+    width: 38%;
+  }
+  .run-results-table .measure-col {
+    width: 15%;
   }
   .run-results-table .status-col {
-    width: 10%;
-  }
-  .run-results-table .svs-col {
-    width: 17%;
+    width: 8%;
   }
   .run-results-table .batch-col {
-    width: 21%;
+    width: 18%;
   }
   .run-results-table .time-col {
-    width: 14%;
+    width: 11%;
   }
-  .run-results-table .series-col {
-    width: 12%;
+  .run-results-table .actions-col {
+    width: 10%;
+  }
+  .row-metadata,
+  .table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    min-width: 0;
+  }
+  .row-metadata {
+    margin-top: 4px;
+  }
+  .tag-chip {
+    color: var(--c-text-muted);
+    background: var(--c-surface-subtle);
+    border: 1px solid var(--c-border);
+    border-radius: 999px;
+    padding: 1px 6px;
+    font-size: 0.68rem;
+    line-height: 1.35;
   }
   .subtle-inline {
     color: var(--c-text-muted);
     font-size: 0.76rem;
+    margin-left: 4px;
+  }
+  .author-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .author-inline img {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--c-surface-subtle);
   }
   .context-panel {
     display: flex;

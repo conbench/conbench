@@ -67,6 +67,7 @@ from .result_detail_run_tags import ResultDetailRunTags
 from .result_detail_tags import ResultDetailTags
 from .result_detail_validation_type_0 import ResultDetailValidationType0
 from .result_list_item import ResultListItem
+from .result_list_item_case_tags import ResultListItemCaseTags
 from .result_list_item_run_tags import ResultListItemRunTags
 from .result_page import ResultPage
 from .series_list_item import SeriesListItem
@@ -162,6 +163,7 @@ __all__ = (
     "ResultDetailTags",
     "ResultDetailValidationType0",
     "ResultListItem",
+    "ResultListItemCaseTags",
     "ResultListItemRunTags",
     "ResultPage",
     "SeriesListItem",

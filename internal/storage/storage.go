@@ -558,6 +558,8 @@ type ResultListRow struct {
 	Data               []*float64
 	Error              []byte
 	HistoryFingerprint string
+	CaseName           string
+	CaseTags           []byte
 	CommitSha          *string
 	CommitRepository   *string
 	CommitMessage      *string

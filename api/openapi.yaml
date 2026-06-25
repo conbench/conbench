@@ -1402,6 +1402,11 @@ components:
           type:
             - string
             - "null"
+        case_name:
+          type: string
+        case_tags:
+          additionalProperties: {}
+          type: object
         commit:
           $ref: "#/components/schemas/ListCommit"
         has_error:
@@ -1444,6 +1449,8 @@ components:
         - single_value_summary
         - single_value_summary_type
         - history_fingerprint
+        - case_name
+        - case_tags
         - commit
         - has_error
       type: object

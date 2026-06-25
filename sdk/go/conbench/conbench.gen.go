@@ -653,6 +653,8 @@ type ResultDetail struct {
 // ResultListItem defines model for ResultListItem.
 type ResultListItem struct {
 	BatchId                *string                `json:"batch_id"`
+	CaseName               string                 `json:"case_name"`
+	CaseTags               map[string]interface{} `json:"case_tags"`
 	Commit                 *ListCommit            `json:"commit"`
 	HasError               bool                   `json:"has_error"`
 	HistoryFingerprint     string                 `json:"history_fingerprint"`

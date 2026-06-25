@@ -414,6 +414,8 @@ func resultListRowsFromRows(rows []SelectBenchmarkResultsRow) []storage.ResultLi
 			Data:               r.Data,
 			Error:              r.Error,
 			HistoryFingerprint: r.HistoryFingerprint,
+			CaseName:           r.CaseName,
+			CaseTags:           r.CaseTags,
 			CommitSha:          r.CommitSha,
 			CommitRepository:   r.CommitRepository,
 			CommitMessage:      r.CommitMessage,
