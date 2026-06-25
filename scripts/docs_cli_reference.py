@@ -39,8 +39,6 @@ REQUIRED_CLI_REFERENCE_PHRASES: tuple[str, ...] = (
     "conbench admin alerts deliver --channel github-check --format json",
     "conbench admin alerts deliver --channel github-comment --format json",
     "conbench admin alerts deliver --channel email --format json",
-    "conbench admin prod-clone --help",
-    "conbench admin prod-clone samples --help",
     "conbench openapi",
     "conbench openapi --downgrade",
     "conbench serve",

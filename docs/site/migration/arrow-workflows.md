@@ -108,8 +108,8 @@ Run evaluation in this order:
    report selection, and representative submit paths against production-shaped
    data.
 
-The [prod-clone compatibility](../prod-clone-compatibility.md) page describes
-the read-only production-clone gate. The Buildkite fork's
+The [temporary production-clone migration gate](../prod-clone-compatibility.md)
+page describes the read-only production-clone gate. The Buildkite fork's
 [`docs/v2-conbench-smoke-test-plan.md`](https://github.com/wesm/arrow-benchmarks-ci/blob/v2-conbench-ci-report/docs/v2-conbench-smoke-test-plan.md)
 contains the detailed Buildkite smoke commands.
 

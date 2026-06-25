@@ -351,15 +351,18 @@ generic channels that enqueue every stored alert event for the selected target.
 The canonical delivery model and current non-goals are documented in
 [Alerting](alerting.md).
 
-## Production-Clone Compatibility
+## Temporary Migration Validation Gate
 
-The repository includes a local-only compatibility harness for read-only
-production-clone validation. It is intentionally deployment-local and must not
-commit private infrastructure details. It runs through
-`conbench admin prod-clone ...` so compatibility checks do not add a second Go
-binary to the maintained runtime. The public contract, safety model, and
-sanitized scale findings are documented in
-[Production-Clone Compatibility](prod-clone-compatibility.md).
+The repository keeps a temporary, local-only migration gate for read-only
+production-clone validation. It is not a normal Conbench product workflow and
+is hidden from the public CLI surface. Use it only through
+`scripts/prod_clone_compat.sh` when validating an existing deployment during
+cutover planning.
+
+Do not commit private infrastructure details, sample identifiers, raw payloads,
+query plans, or server logs from these runs. The safety model and sanitized
+scale findings are documented in
+[Temporary Production-Clone Migration Gate](prod-clone-compatibility.md).
 
 ## Cutover Notes
 

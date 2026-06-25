@@ -13,9 +13,9 @@ like small mutable application metadata.
 
 ## Current Evidence
 
-Sanitized production-clone findings are recorded in
-[Production-Clone Compatibility](prod-clone-compatibility.md). The important
-shape is:
+Sanitized production-clone findings are recorded in the
+[temporary production-clone migration gate](prod-clone-compatibility.md). The
+important shape is:
 
 - `benchmark_result` dominates storage size and row count,
 - small dimension tables such as commit, case, hardware, context, and info are

@@ -162,15 +162,7 @@ conbench admin alerts deliver --channel github-comment --format json
 conbench admin alerts deliver --channel email --format json
 ```
 
-Run the production-clone compatibility harness:
-
-```bash
-conbench admin prod-clone --help
-conbench admin prod-clone samples --help
-```
-
-Use [Operations](operations.md), [Alerting](alerting.md), and
-[Production-Clone Compatibility](prod-clone-compatibility.md) for the required
+Use [Operations](operations.md) and [Alerting](alerting.md) for the required
 environment variables and safety boundaries.
 
 ## API And Server Commands

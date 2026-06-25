@@ -14,8 +14,6 @@
 //	conbench admin repair-commits [--repository URL] [--limit N] [--cursor CURSOR] [--dry-run] [--backfill] [--backfill-timeout DURATION] [--github-timeout DURATION] [--format text|json]
 //	conbench admin alerts evaluate [--format text|json]
 //	conbench admin alerts deliver [--channel webhook|slack|github-check|github-comment|email] [--webhook-url URL] [--slack-webhook-url URL] [--github-repository URL] [--github-token TOKEN] [--github-api-url URL] [--email-smtp-addr HOST:PORT] [--email-from ADDRESS] [--email-to ADDRESS[,ADDRESS...]] [--email-username USERNAME] [--email-password PASSWORD] [--limit N] [--retry-after DURATION] [--timeout DURATION] [--format text|json]
-//	conbench admin prod-clone --help
-//	conbench admin prod-clone samples --help
 //	conbench serve
 //
 // `results submit` submits a benchmark result (read from the JSON file) to a
@@ -264,7 +262,8 @@ func adminCommand(stdout, stderr io.Writer) *cobra.Command {
 }
 
 func adminProdCloneCommand(stdout, stderr io.Writer) *cobra.Command {
-	cmd := groupCommand("prod-clone", "Run production-clone compatibility harness helpers.")
+	cmd := groupCommand("prod-clone", "Run temporary migration-only production-clone validation helpers.")
+	cmd.Hidden = true
 	cmd.AddCommand(
 		prodCloneForwardCommand("safe-db-url", "Print the scrubbed production-clone database URL.", stdout, stderr),
 		prodCloneForwardCommand(
@@ -323,7 +322,7 @@ func adminProdCloneCommand(stdout, stderr io.Writer) *cobra.Command {
 		),
 		prodCloneForwardCommand(
 			"report",
-			"Render the production-clone compatibility report.",
+			"Render the temporary production-clone migration report.",
 			stdout,
 			stderr,
 			prodCloneStringFlag("out", prodCloneDefaultOutDir, "artifact output directory"),

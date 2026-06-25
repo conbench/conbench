@@ -1,10 +1,11 @@
-# Production-Clone Compatibility
+# Temporary Production-Clone Migration Gate
 
-Use a production-derived Postgres clone to prove that the Go server, Svelte
-dashboard, CLI, and generated SDK can read an existing Conbench deployment
-before any storage-model change. The harness is local-only and read-only. It is
-for compatibility evidence, not for committing deployment infrastructure into
-this repository.
+Use this temporary migration gate with a production-derived Postgres clone to
+prove that the Go server, Svelte dashboard, CLI, and generated SDK can read an
+existing Conbench deployment before any storage-model change. The gate is
+local-only and read-only. It is for migration confidence and sanitized scale
+evidence, not for normal Conbench product workflow or committed deployment
+infrastructure.
 
 Do not commit passwords, tokens, `.pgpass` entries, service credentials,
 private hostnames, private IP addresses, raw production-derived payloads, query
@@ -71,13 +72,12 @@ The restored legacy clone may not have rewrite-only tables such as `api_token`.
 The harness treats legacy read-path tables as required and includes optional
 rewrite tables in privilege and count checks only when they exist.
 
-The helper commands live under the same binary as the rest of the system:
-
-```bash
-conbench admin prod-clone --help
-```
-
-The repository does not build or ship a separate production-clone executable.
+The validation script uses a hidden CLI helper inside the main `conbench`
+binary. This helper is temporary and migration-only. It stays callable so
+`scripts/prod_clone_compat.sh` and migration agents can run the gate, but it is
+not listed in general CLI help and is not documented as a supported user
+workflow. The repository does not build or ship a separate production-clone
+executable.
 
 ## Running The Gate
 

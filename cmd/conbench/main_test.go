@@ -230,9 +230,6 @@ func TestCobraHelpExitsZero(t *testing.T) {
 		{name: "admin tokens create leaf", args: []string{"admin", "tokens", "create", "--help"}, contains: []string{"Mint an API token", "--email", "--token-name"}},
 		{name: "admin repair leaf", args: []string{"admin", "repair-commits", "--help"}, contains: []string{"Repair stored unknown commit rows", "--repository", "--limit", "--dry-run", "--format"}},
 		{name: "admin alerts evaluate leaf", args: []string{"admin", "alerts", "evaluate", "--help"}, contains: []string{"Evaluate server-side alert rules", "--format"}},
-		{name: "admin prod clone parent", args: []string{"admin", "prod-clone", "--help"}, contains: []string{"Run production-clone compatibility harness helpers", "Available Commands:", "samples", "report"}},
-		{name: "admin prod clone parent help command", args: []string{"help", "admin", "prod-clone"}, contains: []string{"Run production-clone compatibility harness helpers", "Available Commands:", "samples", "report"}},
-		{name: "admin prod clone samples leaf", args: []string{"admin", "prod-clone", "samples", "--help"}, contains: []string{"Select sample result identifiers", "Usage:", "--json-out", "--allow-dev-role"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -246,6 +243,25 @@ func TestCobraHelpExitsZero(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestProdCloneMigrationHelpersAreHiddenFromGeneralHelp(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"admin", "--help"}, &stdout, &stderr)
+
+	assert.Equal(t, 0, code)
+	assert.Empty(t, stderr.String())
+	assert.NotContains(t, stdout.String(), "prod-clone")
+
+	stdout.Reset()
+	stderr.Reset()
+	code = run([]string{"admin", "prod-clone", "--help"}, &stdout, &stderr)
+	assert.Equal(t, 0, code)
+	assert.Empty(t, stderr.String())
+	assert.Contains(t, stdout.String(), "temporary migration-only")
+	assert.Contains(t, stdout.String(), "Available Commands:")
+	assert.Contains(t, stdout.String(), "samples")
+	assert.Contains(t, stdout.String(), "report")
 }
 
 func TestProdCloneLegacyHelpPseudoCommandIsNotRegistered(t *testing.T) {
@@ -264,8 +280,8 @@ func TestPackageCommentUsesCobraProdCloneHelpSurface(t *testing.T) {
 	require.NoError(t, err)
 
 	text := string(source)
-	assert.Contains(t, text, "conbench admin prod-clone --help")
-	assert.Contains(t, text, "conbench admin prod-clone samples --help")
+	assert.NotContains(t, text, "conbench admin prod-clone --help")
+	assert.NotContains(t, text, "conbench admin prod-clone samples --help")
 	assert.NotContains(t, text, "conbench admin prod-clone <safe-db-url")
 }
 
