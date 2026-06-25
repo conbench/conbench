@@ -51,6 +51,7 @@ type ProductSmokeTargets struct {
 	RecentBatchID             string
 	CIRegressionRunID         string
 	CIRegressionCommitSHA     string
+	CIRegressionRunReason     string
 	CIActionRequiredRunID     string
 	CIActionRequiredCommitSHA string
 	ErroredRunID              string
@@ -166,8 +167,10 @@ func requests() []seedResult {
 		out = append(out, seedResult{label: c.sha, included: true, req: baseReq(c.sha, c.day, trend(c.min))})
 	}
 	// Excluded: an off-branch commit (sha != fork_point_sha), shaped as a clear
-	// PR regression against commit-03 for CI report smoke coverage.
-	out = append(out, seedResult{label: "feature-branch-1", included: false, req: baseReq("feature-branch-1", 4, trend(1.80))})
+	// PR regression against commit-03 for CI report and alert smoke coverage.
+	featureReq := baseReq("feature-branch-1", 4, trend(1.80))
+	featureReq.RunReason = "pull request"
+	out = append(out, seedResult{label: "feature-branch-1", included: false, req: featureReq})
 	// Excluded: an errored run (a missing iteration -> partial result).
 	out = append(out, seedResult{label: "commit-06-broken", included: false, req: baseReq("commit-06-broken", 7, partial(1.00))})
 	return out
@@ -205,6 +208,7 @@ func productSmokeTargets(fingerprint string, results map[string]*service.Result)
 		RecentBatchID:             "batch-commit-05",
 		CIRegressionRunID:         "run-feature-branch-1",
 		CIRegressionCommitSHA:     "feature-branch-1",
+		CIRegressionRunReason:     "pull request",
 		CIActionRequiredRunID:     "run-commit-05",
 		CIActionRequiredCommitSHA: "commit-05",
 		ErroredRunID:              "run-commit-06-broken",

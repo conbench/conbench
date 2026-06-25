@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,6 +19,7 @@ import (
 	"github.com/conbench/conbench/internal/seed"
 	"github.com/conbench/conbench/internal/server"
 	"github.com/conbench/conbench/internal/service"
+	"github.com/conbench/conbench/internal/storage"
 )
 
 // noAuthHandler builds an auth handler with no live OIDC client or DB, for
@@ -67,10 +69,15 @@ func TestServerServesSeededProductSmokeCorpus(t *testing.T) {
 	require.NotEmpty(t, targets.RecentBatchID)
 	require.NotEmpty(t, targets.CIRegressionRunID)
 	require.NotEmpty(t, targets.CIRegressionCommitSHA)
+	require.NotEmpty(t, targets.CIRegressionRunReason)
 	require.NotEmpty(t, targets.CIActionRequiredRunID)
 	require.NotEmpty(t, targets.CIActionRequiredCommitSHA)
 
-	handler := server.New(store, auth.New("", true, store, nil), commit.LocalProvider{}, noAuthHandler())
+	sessions := auth.NewSessionSigner("sek")
+	userID := dbtest.SeedUser(t, ctx, pool)
+	authn := auth.New("static-op", false, store, sessions)
+	authHandler := api.NewAuthHandler(nil, store, sessions, auth.NewSigner("sek"), false, "", api.NewCodeStore(), false)
+	handler := server.New(store, authn, commit.LocalProvider{}, authHandler)
 
 	detail := getAPI[service.ResultDetail](t, handler, "/api/benchmark-results/"+url.PathEscape(targets.LatestResultID))
 	assert.Equal(t, targets.LatestResultID, detail.ID)
@@ -124,6 +131,31 @@ func TestServerServesSeededProductSmokeCorpus(t *testing.T) {
 	require.Len(t, actionReport.Runs, 1)
 	require.NotNil(t, actionReport.Runs[0].BaselineError)
 	assert.Equal(t, service.CIReportBaselineErrorDefaultBranchRun, actionReport.Runs[0].BaselineError.Code)
+
+	rule, err := store.CreateAlertRule(ctx, storage.InsertAlertRuleParams{
+		UserID: userID, Name: "Seeded PR regression", Repository: targets.Repository,
+		Baseline: string(service.CIReportBaselineForkPoint), Threshold: 5, ThresholdZ: 5,
+		RunReason: &targets.CIRegressionRunReason, Enabled: true, CreatedAt: dayForSmokeTest(),
+	})
+	require.NoError(t, err)
+	alertSummary, err := service.NewAlertEvaluator(
+		store, service.NewCIReporter(store, ""), func() time.Time { return dayForSmokeTest().Add(time.Hour) },
+	).Evaluate(ctx, service.AlertEvaluationOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, 1, alertSummary.Opened)
+	require.Len(t, alertSummary.Events, 1)
+	assert.Equal(t, targets.CIRegressionRunID, *alertSummary.Events[0].RunID)
+
+	session := sessions.Sign(userID, time.Now().UTC().Add(time.Hour))
+	events := getAPIWithCookie[struct {
+		Events []struct {
+			Status       string `json:"status"`
+			StatusReason string `json:"status_reason"`
+		} `json:"events"`
+	}](t, handler, "/api/alert-rules/"+url.PathEscape(rule.ID)+"/events", session)
+	require.Len(t, events.Events, 1)
+	assert.Equal(t, string(service.CIReportStatusFailure), events.Events[0].Status)
+	assert.Equal(t, "lookback regression detected", events.Events[0].StatusReason)
 }
 
 // TestOpenAPISpec emits the OpenAPI document straight from the huma structs with
@@ -199,6 +231,18 @@ func getAPI[T any](t *testing.T, handler http.Handler, target string) T {
 	return out
 }
 
+func getAPIWithCookie[T any](t *testing.T, handler http.Handler, target, session string) T {
+	t.Helper()
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, target, nil)
+	req.AddCookie(&http.Cookie{Name: auth.SessionCookieName, Value: session})
+	handler.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusOK, rec.Code, "GET %s; body %s", target, rec.Body.String())
+	var out T
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &out), "decode GET %s", target)
+	return out
+}
+
 func assertRunPresent(t *testing.T, runs []service.RecentRunListItem, runID, latestBatchID string) {
 	t.Helper()
 	for _, run := range runs {
@@ -211,4 +255,8 @@ func assertRunPresent(t *testing.T, runs []service.RecentRunListItem, runID, lat
 		return
 	}
 	require.Failf(t, "run not found", "recent runs did not include %s", runID)
+}
+
+func dayForSmokeTest() time.Time {
+	return time.Date(2024, 1, 8, 12, 0, 0, 0, time.UTC)
 }
