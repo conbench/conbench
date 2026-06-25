@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -49,6 +50,22 @@ type submitRequestBody struct {
 type submitWorkItem struct {
 	lineIndex int
 	body      submitRequestBody
+}
+
+type submitDecoder func(path string, yield func(submitRequestBody) error) error
+
+type submitFunc func(ctx context.Context, body submitRequestBody) (submitResultLine, error)
+
+type indexedSubmitResult struct {
+	lineIndex int
+	line      submitResultLine
+	err       error
+}
+
+type submitStreamResult struct {
+	lines          []submitResultLine
+	submitted      int
+	firstSubmitErr error
 }
 
 func resultsSubmitCommand(stdout io.Writer) *cobra.Command {
@@ -195,26 +212,35 @@ func runSubmitConfig(ctx context.Context, cfg submitConfig, stdout io.Writer) er
 		jobs = defaultSubmitJobs
 	}
 
-	lines, tasks, err := prepareSubmitWork(cfg.fixtures)
+	stream, err := streamSubmitWork(
+		ctx,
+		cfg.fixtures,
+		jobs,
+		streamDecodeFixtureRequests,
+		func(ctx context.Context, body submitRequestBody) (submitResultLine, error) {
+			return submitBody(ctx, client, params, cfg.server, body)
+		},
+	)
 	if err != nil {
 		return err
 	}
 
-	if len(tasks) == 1 && len(lines) == 1 {
-		result, err := submitBody(ctx, client, params, cfg.server, tasks[0].body)
-		if err != nil {
-			return err
+	if stream.submitted == 1 && len(stream.lines) == 1 {
+		line := stream.lines[0]
+		if !line.OK {
+			if stream.firstSubmitErr != nil {
+				return stream.firstSubmitErr
+			}
+			return submitPartialFailure{}
 		}
 		return writeJSONLine(stdout, struct {
 			ID                 string `json:"id"`
 			HistoryFingerprint string `json:"history_fingerprint"`
-		}{result.ID, result.HistoryFingerprint})
+		}{line.ID, line.HistoryFingerprint})
 	}
 
-	submitMany(ctx, client, params, cfg.server, jobs, lines, tasks)
-
 	anyFailed := false
-	for _, line := range lines {
+	for _, line := range stream.lines {
 		if !line.OK {
 			anyFailed = true
 		}
@@ -251,58 +277,77 @@ func (submitPartialFailure) Error() string {
 
 func (submitPartialFailure) SuppressDiagnostic() {}
 
-func prepareSubmitWork(fixtures []string) ([]submitResultLine, []submitWorkItem, error) {
-	lines := make([]submitResultLine, 0, len(fixtures))
-	var tasks []submitWorkItem
-	for _, fixture := range fixtures {
-		bodies, err := decodeFixtureRequests(fixture)
-		if err != nil {
-			if len(fixtures) == 1 {
-				return nil, nil, err
-			}
-			lines = append(lines, submitResultLine{File: fixture, Error: err.Error()})
-			continue
-		}
-		for _, body := range bodies {
-			lineIndex := len(lines)
-			lines = append(lines, submitResultLine{File: body.File, Index: body.Index})
-			tasks = append(tasks, submitWorkItem{lineIndex: lineIndex, body: body})
-		}
-	}
-	return lines, tasks, nil
-}
-
-func submitMany(
+func streamSubmitWork(
 	ctx context.Context,
-	client *conbench.ClientWithResponses,
-	params *conbench.SubmitResultParams,
-	server string,
+	fixtures []string,
 	jobs int,
-	lines []submitResultLine,
-	tasks []submitWorkItem,
-) {
-	if jobs > len(tasks) {
-		jobs = len(tasks)
-	}
+	decode submitDecoder,
+	submit submitFunc,
+) (submitStreamResult, error) {
 	if jobs <= 0 {
-		return
+		jobs = defaultSubmitJobs
 	}
 
+	var (
+		mu     sync.Mutex
+		stream submitStreamResult
+	)
 	work := make(chan submitWorkItem)
+	results := make(chan indexedSubmitResult, jobs)
 	var wg sync.WaitGroup
 	for worker := 0; worker < jobs; worker++ {
 		wg.Go(func() {
 			for task := range work {
-				line, _ := submitBody(ctx, client, params, server, task.body)
-				lines[task.lineIndex] = line
+				line, err := submit(ctx, task.body)
+				results <- indexedSubmitResult{lineIndex: task.lineIndex, line: line, err: err}
 			}
 		})
 	}
-	for _, task := range tasks {
-		work <- task
+
+	collected := make(chan struct{})
+	go func() {
+		defer close(collected)
+		for result := range results {
+			mu.Lock()
+			stream.lines[result.lineIndex] = result.line
+			if result.err != nil && stream.firstSubmitErr == nil {
+				stream.firstSubmitErr = result.err
+			}
+			mu.Unlock()
+		}
+	}()
+
+	appendLine := func(line submitResultLine) int {
+		mu.Lock()
+		defer mu.Unlock()
+		stream.lines = append(stream.lines, line)
+		return len(stream.lines) - 1
 	}
-	close(work)
-	wg.Wait()
+	finish := func() {
+		close(work)
+		wg.Wait()
+		close(results)
+		<-collected
+	}
+
+	for _, fixture := range fixtures {
+		err := decode(fixture, func(body submitRequestBody) error {
+			lineIndex := appendLine(submitResultLine{File: body.File, Index: body.Index})
+			stream.submitted++
+			work <- submitWorkItem{lineIndex: lineIndex, body: body}
+			return nil
+		})
+		if err != nil {
+			if len(fixtures) == 1 {
+				finish()
+				return submitStreamResult{}, err
+			}
+			appendLine(submitResultLine{File: fixture, Error: err.Error()})
+			continue
+		}
+	}
+	finish()
+	return stream, nil
 }
 
 func submitBody(
@@ -339,44 +384,108 @@ func submitBody(
 }
 
 func decodeFixtureRequests(path string) ([]submitRequestBody, error) {
-	raw, err := os.ReadFile(path)
+	var out []submitRequestBody
+	err := streamDecodeFixtureRequests(path, func(body submitRequestBody) error {
+		out = append(out, body)
+		return nil
+	})
+	return out, err
+}
+
+func streamDecodeFixtureRequests(path string, yield func(submitRequestBody) error) error {
+	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("read %s: %w", path, err)
+		return fmt.Errorf("read %s: %w", path, err)
 	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+	first, err := peekFirstJSONByte(reader)
+	if err != nil {
+		return fmt.Errorf("decode %s: %w", path, err)
+	}
+	if first == '[' {
+		return streamDecodeArrayFixture(path, reader, yield)
+	}
+
+	raw, err := io.ReadAll(reader)
+	if err != nil {
+		return fmt.Errorf("read %s: %w", path, err)
+	}
+	return streamDecodeSingleFixture(path, raw, yield)
+}
+
+func peekFirstJSONByte(reader *bufio.Reader) (byte, error) {
+	for {
+		b, err := reader.Peek(1)
+		if err != nil {
+			return 0, err
+		}
+		if !isJSONWhitespace(b[0]) {
+			return b[0], nil
+		}
+		if _, err := reader.ReadByte(); err != nil {
+			return 0, err
+		}
+	}
+}
+
+func isJSONWhitespace(b byte) bool {
+	switch b {
+	case ' ', '\n', '\r', '\t':
+		return true
+	default:
+		return false
+	}
+}
+
+func streamDecodeSingleFixture(path string, raw []byte, yield func(submitRequestBody) error) error {
 	dec := json.NewDecoder(bytes.NewReader(raw))
 	var value json.RawMessage
 	if err := dec.Decode(&value); err != nil {
-		return nil, fmt.Errorf("decode %s: %w", path, err)
+		return fmt.Errorf("decode %s: %w", path, err)
 	}
 	if err := dec.Decode(new(json.RawMessage)); !errors.Is(err, io.EOF) {
-		return nil, fmt.Errorf("decode %s: trailing data after the JSON object", path)
+		return fmt.Errorf("decode %s: trailing data after the JSON object", path)
 	}
 	if len(bytes.TrimSpace(value)) == 0 {
-		return nil, fmt.Errorf("decode %s: empty JSON value", path)
-	}
-	if bytes.HasPrefix(bytes.TrimSpace(value), []byte("[")) {
-		var items []json.RawMessage
-		if err := json.Unmarshal(value, &items); err != nil {
-			return nil, fmt.Errorf("decode %s: %w", path, err)
-		}
-		if len(items) == 0 {
-			return nil, fmt.Errorf("decode %s: array must contain at least one benchmark result", path)
-		}
-		out := make([]submitRequestBody, 0, len(items))
-		for idx, item := range items {
-			source := fmt.Sprintf("%s[%d]", path, idx)
-			if err := validateSubmitRequest(source, item); err != nil {
-				return nil, err
-			}
-			index := idx
-			out = append(out, submitRequestBody{File: path, Index: &index, Body: item})
-		}
-		return out, nil
+		return fmt.Errorf("decode %s: empty JSON value", path)
 	}
 	if err := validateSubmitRequest(path, value); err != nil {
-		return nil, err
+		return err
 	}
-	return []submitRequestBody{{File: path, Body: value}}, nil
+	return yield(submitRequestBody{File: path, Body: value})
+}
+
+func streamDecodeArrayFixture(path string, reader *bufio.Reader, yield func(submitRequestBody) error) error {
+	dec := json.NewDecoder(reader)
+	if _, err := dec.Token(); err != nil {
+		return fmt.Errorf("decode %s: %w", path, err)
+	}
+	if !dec.More() {
+		return fmt.Errorf("decode %s: array must contain at least one benchmark result", path)
+	}
+	for idx := 0; dec.More(); idx++ {
+		var item json.RawMessage
+		if err := dec.Decode(&item); err != nil {
+			return fmt.Errorf("decode %s: %w", path, err)
+		}
+		source := fmt.Sprintf("%s[%d]", path, idx)
+		if err := validateSubmitRequest(source, item); err != nil {
+			return err
+		}
+		index := idx
+		if err := yield(submitRequestBody{File: path, Index: &index, Body: item}); err != nil {
+			return err
+		}
+	}
+	if _, err := dec.Token(); err != nil {
+		return fmt.Errorf("decode %s: %w", path, err)
+	}
+	if err := dec.Decode(new(json.RawMessage)); !errors.Is(err, io.EOF) {
+		return fmt.Errorf("decode %s: trailing data after the JSON object", path)
+	}
+	return nil
 }
 
 func validateSubmitRequest(source string, raw []byte) error {

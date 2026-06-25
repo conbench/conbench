@@ -2350,6 +2350,54 @@ func TestSubmitMultipleResultsUsesWorkerConcurrency(t *testing.T) {
 	assert.GreaterOrEqual(t, maxInFlight.Load(), int32(2), "submissions should overlap when --jobs allows it")
 }
 
+func TestSubmitStreamsDecodedWorkBeforeReadingAllFixtures(t *testing.T) {
+	firstPath := "first.json"
+	secondPath := "second.json"
+	firstSubmitStarted := make(chan struct{})
+	var firstSubmitSignal atomic.Bool
+
+	decode := func(path string, yield func(submitRequestBody) error) error {
+		switch path {
+		case firstPath:
+			return yield(submitRequestBody{File: path, Body: []byte(`{"run_id":"first"}`)})
+		case secondPath:
+			select {
+			case <-firstSubmitStarted:
+			case <-time.After(time.Second):
+				return errors.New("decoded second fixture before submitting first fixture")
+			}
+			return yield(submitRequestBody{File: path, Body: []byte(`{"run_id":"second"}`)})
+		default:
+			return fmt.Errorf("unexpected fixture %s", path)
+		}
+	}
+	submit := func(_ context.Context, body submitRequestBody) (submitResultLine, error) {
+		if body.File == firstPath && firstSubmitSignal.CompareAndSwap(false, true) {
+			close(firstSubmitStarted)
+		}
+		return submitResultLine{
+			File:               body.File,
+			Index:              body.Index,
+			OK:                 true,
+			ID:                 "id-" + body.File,
+			HistoryFingerprint: "fp-" + body.File,
+		}, nil
+	}
+
+	got, err := streamSubmitWork(
+		context.Background(),
+		[]string{firstPath, secondPath},
+		1,
+		decode,
+		submit,
+	)
+
+	require.NoError(t, err)
+	require.Len(t, got.lines, 2)
+	assert.Equal(t, firstPath, got.lines[0].File)
+	assert.Equal(t, secondPath, got.lines[1].File)
+}
+
 func TestSubmitArrayFileSubmitsEachResult(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "results.json")
 	raw, err := os.ReadFile(filepath.Join("testdata", "result.json"))
