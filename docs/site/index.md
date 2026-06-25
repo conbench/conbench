@@ -54,3 +54,6 @@ the older Python packages, start with the
 replaced, retired, or future product work. Package maintainers should use the
 [legacy deprecation notices](migration/deprecation-notices.md) when updating
 old READMEs, PyPI pages, or release notes.
+
+Apache Arrow maintainers evaluating Buildkite-based migration should also read
+the [Arrow workflow migration](migration/arrow-workflows.md) status page.
