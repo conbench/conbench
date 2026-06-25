@@ -226,7 +226,7 @@ Important differences:
 
 - the glob should be quoted so the CLI expands it consistently,
 - each matched file may contain one result object or an array of result objects,
-- auth uses user-owned API tokens, not password-login sessions,
+- auth uses server-minted reporter tokens, not password-login sessions,
 - run grouping is explicit through `run_id`, `run_tags`, and `batch_id`,
 - submit output is compact for exactly one result and line-oriented for
   multi-result submissions, reporting each accepted or rejected result.
@@ -469,8 +469,8 @@ Old shapes:
 /register/
 ```
 
-The new system uses OIDC for human identity and user-owned API tokens for
-automation. It supports the `/account` dashboard, `/api/users/me`,
+The new system uses OIDC for human identity and server-minted reporter tokens
+for automation. It supports the `/account` dashboard, `/api/users/me`,
 `/api/auth/*`, `/api/tokens`, and the CLI commands:
 
 ```bash

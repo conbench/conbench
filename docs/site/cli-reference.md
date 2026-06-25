@@ -130,7 +130,7 @@ overrides. Credential resolution is:
 3. the credentials file written by `conbench auth login`
 
 Use [Authentication And Tokens](auth-and-tokens.md) for browser sessions,
-operator tokens, and user-owned API tokens.
+server-minted reporter tokens, and the static operator token.
 
 ## Operations Commands
 

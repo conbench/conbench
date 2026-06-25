@@ -61,8 +61,8 @@ conbench results submit "bench-results/*.json" \
   --server "$CONBENCH_SERVER_URL" \
   --jobs 16
 
-The new submit path uses user-owned API tokens, explicit run metadata, and
-payload JSON files containing one result object or an array of result objects.
+The new submit path uses server-minted reporter tokens, explicit run metadata,
+and payload JSON files containing one result object or an array of result objects.
 It does not preserve password-login sessions, implicit run lifecycle helpers, or
 legacy client-side request augmentation.
 

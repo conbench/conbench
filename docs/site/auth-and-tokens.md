@@ -31,7 +31,7 @@ the user-owned API-token endpoints.
 
 ## Automation
 
-Automation should use API tokens:
+Automation should use server-minted reporter tokens:
 
 ```bash
 export CONBENCH_TOKEN=<token>
@@ -61,6 +61,11 @@ CONBENCH_DB_URL="$CONBENCH_DB_URL" conbench admin tokens create \
 The command creates the user row if needed, writes only the token hash and
 prefix to Postgres, and prints the plaintext token once as JSON. Put that value
 in the reporter secret named `CONBENCH_TOKEN`.
+
+This means a deployment can migrate CI reporters before human OIDC is fully
+wired up. The reporter token is still backed by a Conbench user row so writes
+have an owner, but the reporter does not need a browser session or password-era
+login flow.
 
 ## Token Management
 

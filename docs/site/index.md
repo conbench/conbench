@@ -19,7 +19,7 @@ The main surfaces are:
   reports,
 - the `conbench` CLI for submitting results and generating CI diagnostics,
 - OpenAPI and generated SDKs for read automation,
-- user-owned API tokens for CI and scripts,
+- server-minted reporter tokens for CI and scripts,
 - server-side alert rules for scheduled regression monitoring.
 
 ## What to do next
@@ -43,7 +43,7 @@ The main surfaces are:
 | Browse trends and comparisons | Svelte dashboard |
 | Read/query from automation | Generated SDKs and OpenAPI |
 | Authenticate humans | OIDC session login |
-| Authenticate automation | User-owned API tokens |
+| Authenticate automation | Server-minted reporter tokens |
 
 ## Migrating From Older Conbench
 

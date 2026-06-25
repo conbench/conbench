@@ -18,7 +18,7 @@ truth; this table is the public deployment summary.
 | `CONBENCH_OIDC_CLIENT_ID` | for OIDC | OIDC client id. |
 | `CONBENCH_OIDC_CLIENT_SECRET` | for OIDC | OIDC client secret. |
 | `CONBENCH_SESSION_SECRET` | for session auth | HMAC key for session and pending-login cookies. If set, it must be at least 32 characters. |
-| `CONBENCH_API_TOKEN` | optional | Static operator bearer token for write automation or break-glass use. Prefer user-owned API tokens for normal automation. |
+| `CONBENCH_API_TOKEN` | optional | Static operator bearer token for break-glass writes. Prefer server-minted reporter tokens for normal automation. |
 | `CONBENCH_AUTH_DISABLED` | dev only | Set to `true` to disable write auth. Do not use in shared deployments. |
 | `GITHUB_API_TOKEN` | optional | Comma-separated GitHub token pool. Enables commit metadata fetch and asynchronous default-branch ancestry backfill. |
 | `CONBENCH_GITHUB_TIMEOUT` | optional | Go duration budget for in-request GitHub enrichment. Defaults to `5s`. |
@@ -26,13 +26,13 @@ truth; this table is the public deployment summary.
 | `CONBENCH_SEED` | dev only | Set to `true` to seed deterministic demo data. |
 | `CONBENCH_SEED_DEV_TOKEN` | dev/e2e only | Seeds a user-owned API token for local/e2e authentication. The server logs only the token prefix. |
 
-Reads are public by default. Writes accept user-owned API tokens, valid session
-cookies, or the static operator token when configured. Token management requires
-a user principal, so the static operator token cannot list, create, or revoke
-user API tokens.
+Reads are public by default. Writes accept server-minted API tokens, valid
+session cookies, or the static operator token when configured. Token management
+requires a user principal, so the static operator token cannot list, create, or
+revoke API tokens.
 
-For CI reporters and shared automation, mint a user-attributed token from the
-server environment instead of sharing the static operator token:
+For CI reporters and shared automation, mint a reporter token from the server
+environment instead of sharing the static operator token:
 
 ```bash
 conbench admin tokens create \
