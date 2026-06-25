@@ -98,8 +98,10 @@ Run evaluation in this order:
    Confirm missing baselines are reported as an `action_required` result, not as
    authentication or transport errors.
 5. GitHub App publishing against a scratch pull request.
-   Confirm the Check Run and pull request comment appear only on the scratch
-   target.
+   Submit a scratch-shaped payload whose `github.repository`, `github.commit`,
+   and pull request number match the scratch target, then confirm the Check Run
+   and pull request comment appear only there. Do not mix Arrow run IDs with a
+   scratch repository selector.
 6. Scheduler-path Buildkite smoke.
    Confirm the scheduled path can create a benchmark build, retain logs and
    artifacts, and hand off report metadata.

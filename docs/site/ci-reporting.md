@@ -72,6 +72,10 @@ repository-facing diagnostics that the retired `benchalerts` package provided.
 The job still runs `conbench ci report` after result submission, but adds
 explicit GitHub publishing flags:
 
+When testing against a scratch pull request, first submit payloads stamped with
+the scratch repository and commit. `--repository` and `--commit` select Conbench
+results as well as the GitHub publishing target.
+
 ```bash
 export CONBENCH_TOKEN="<conbench-api-token>"
 export CONBENCH_CI_GITHUB_APP_ID="<github-app-id>"
