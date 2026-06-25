@@ -134,6 +134,12 @@ operator tokens, and user-owned API tokens.
 
 ## Operations Commands
 
+Mint a reporter token from a server/admin environment:
+
+```bash
+conbench admin tokens create --email ci@example.com --token-name buildkite
+```
+
 Repair unknown commit rows after GitHub metadata becomes available:
 
 ```bash

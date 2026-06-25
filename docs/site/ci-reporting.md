@@ -19,6 +19,8 @@ because it cannot find the current run.
 Set `CONBENCH_TOKEN` in the CI environment. The examples below rely on
 `CONBENCH_TOKEN` instead of `--token` so the token is not placed on process
 arguments; `--token` remains available for explicit local overrides.
+Operators can mint reporter tokens with `conbench admin tokens create`; see
+[Authentication And Tokens](auth-and-tokens.md).
 
 ## GitHub Actions Fragment
 

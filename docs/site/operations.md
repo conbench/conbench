@@ -31,6 +31,20 @@ cookies, or the static operator token when configured. Token management requires
 a user principal, so the static operator token cannot list, create, or revoke
 user API tokens.
 
+For CI reporters and shared automation, mint a user-attributed token from the
+server environment instead of sharing the static operator token:
+
+```bash
+conbench admin tokens create \
+  --email ci@example.com \
+  --user-name "Conbench CI Reporter" \
+  --token-name buildkite
+```
+
+The command requires `CONBENCH_DB_URL`, creates the user row if absent, stores
+only the token hash and prefix, and prints the plaintext token once. Store that
+plaintext in the CI secret named `CONBENCH_TOKEN`.
+
 Cookie `Secure` behavior follows `CONBENCH_INTENDED_BASE_URL`: loopback
 development hosts (`localhost`, `127.0.0.1`, `::1`) allow non-secure cookies;
 other hosts use secure cookies.

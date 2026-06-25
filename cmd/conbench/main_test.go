@@ -68,6 +68,9 @@ func TestUsageErrorsExitTwo(t *testing.T) {
 		{name: "missing server on auth token list", args: []string{"auth", "token", "list"}},
 		{name: "unknown auth token subcommand", args: []string{"auth", "token", "rotate", "--server", "http://h"}},
 		{name: "missing id on auth token revoke", args: []string{"auth", "token", "revoke", "--server", "http://h"}},
+		{name: "missing admin token email", args: []string{"admin", "tokens", "create", "--token-name", "buildkite"}},
+		{name: "invalid admin token email", args: []string{"admin", "tokens", "create", "--email", "Buildkite <ci@example.com>", "--token-name", "buildkite"}},
+		{name: "missing admin token name", args: []string{"admin", "tokens", "create", "--email", "ci@example.com"}},
 		{name: "unknown command", args: []string{"unknown"}},
 		{name: "unknown help topic", args: []string{"help", "does-not-exist"}},
 	}
@@ -214,6 +217,7 @@ func TestCobraHelpExitsZero(t *testing.T) {
 		{name: "auth login leaf", args: []string{"auth", "login", "--help"}, contains: []string{"Run loopback browser login", "--server"}},
 		{name: "auth token list leaf", args: []string{"auth", "token", "list", "--help"}, contains: []string{"List API tokens", "--server", "--token"}},
 		{name: "auth token revoke leaf", args: []string{"auth", "token", "revoke", "--help"}, contains: []string{"Revoke an API token", "--server", "--token"}},
+		{name: "admin tokens create leaf", args: []string{"admin", "tokens", "create", "--help"}, contains: []string{"Mint an API token", "--email", "--token-name"}},
 		{name: "admin repair leaf", args: []string{"admin", "repair-commits", "--help"}, contains: []string{"Repair stored unknown commit rows", "--repository", "--limit", "--dry-run", "--format"}},
 		{name: "admin alerts evaluate leaf", args: []string{"admin", "alerts", "evaluate", "--help"}, contains: []string{"Evaluate server-side alert rules", "--format"}},
 		{name: "admin prod clone parent", args: []string{"admin", "prod-clone", "--help"}, contains: []string{"Run production-clone compatibility harness helpers", "Available Commands:", "samples", "report"}},
@@ -1104,6 +1108,155 @@ func TestAdminAlertsDeliverRunnerConfigAndJSONOutput(t *testing.T) {
 	require.NoError(t, json.Unmarshal(stdout.Bytes(), &summary))
 	assert.Equal(t, 2, summary.Enqueued)
 	assert.Equal(t, 1, summary.Delivered)
+}
+
+func TestAdminTokensCreateRequiresDatabaseURL(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := run([]string{
+		"admin", "tokens", "create",
+		"--email", "ci@example.com",
+		"--token-name", "buildkite",
+	}, &stdout, &stderr)
+
+	assert.Equal(t, 1, code)
+	assert.Empty(t, stdout.String())
+	assert.Contains(t, stderr.String(), "CONBENCH_DB_URL is required")
+	assert.NotContains(t, stderr.String(), "Usage:")
+}
+
+func TestAdminTokensCreateRunnerConfigAndJSONOutput(t *testing.T) {
+	now := time.Date(2026, time.June, 24, 12, 0, 0, 0, time.UTC)
+	var got adminTokenCreateConfig
+	runAdminTokenCreate = func(
+		_ context.Context,
+		cfg adminTokenCreateConfig,
+		_ io.Writer,
+		_ io.Writer,
+	) (adminTokenCreateOutput, error) {
+		got = cfg
+		return adminTokenCreateOutput{
+			UserID:    "user123",
+			TokenID:   "token123",
+			Email:     cfg.Email,
+			UserName:  cfg.UserName,
+			TokenName: cfg.TokenName,
+			Token:     "cb_secret",
+			Prefix:    "cb_secre",
+			CreatedAt: now,
+		}, nil
+	}
+	t.Cleanup(func() { runAdminTokenCreate = runAdminTokenCreateReal })
+	t.Setenv("CONBENCH_DB_URL", "postgres://user:pass@db/conbench")
+
+	var stdout, stderr bytes.Buffer
+	code := run([]string{
+		"admin", "tokens", "create",
+		"--email", "ci@example.com",
+		"--user-name", "Buildkite Reporter",
+		"--token-name", "buildkite",
+	}, &stdout, &stderr)
+
+	require.Equal(t, 0, code, "stderr=%s", stderr.String())
+	assert.Equal(t, "postgres://user:pass@db/conbench", got.DatabaseURL)
+	assert.Equal(t, "ci@example.com", got.Email)
+	assert.Equal(t, "Buildkite Reporter", got.UserName)
+	assert.Equal(t, "buildkite", got.TokenName)
+	assert.Empty(t, stderr.String())
+	assert.NotContains(t, stderr.String(), "cb_secret")
+	var out adminTokenCreateOutput
+	require.NoError(t, json.Unmarshal(stdout.Bytes(), &out))
+	assert.Equal(t, "user123", out.UserID)
+	assert.Equal(t, "token123", out.TokenID)
+	assert.Equal(t, "ci@example.com", out.Email)
+	assert.Equal(t, "Buildkite Reporter", out.UserName)
+	assert.Equal(t, "buildkite", out.TokenName)
+	assert.Equal(t, "cb_secret", out.Token)
+	assert.Equal(t, "cb_secre", out.Prefix)
+	assert.Equal(t, now, out.CreatedAt)
+}
+
+func TestAdminTokensCreateDefaultsUserNameToEmail(t *testing.T) {
+	var got adminTokenCreateConfig
+	runAdminTokenCreate = func(
+		_ context.Context,
+		cfg adminTokenCreateConfig,
+		_ io.Writer,
+		_ io.Writer,
+	) (adminTokenCreateOutput, error) {
+		got = cfg
+		return adminTokenCreateOutput{UserID: "user123", TokenID: "token123", Token: "cb_secret", Prefix: "cb_secre"}, nil
+	}
+	t.Cleanup(func() { runAdminTokenCreate = runAdminTokenCreateReal })
+	t.Setenv("CONBENCH_DB_URL", "postgres://db")
+
+	var stdout, stderr bytes.Buffer
+	code := run([]string{
+		"admin", "tokens", "create",
+		"--email", "ci@example.com",
+		"--token-name", "buildkite",
+	}, &stdout, &stderr)
+
+	require.Equal(t, 0, code, "stderr=%s", stderr.String())
+	assert.Equal(t, "ci@example.com", got.UserName)
+	assert.Empty(t, stderr.String())
+}
+
+func TestAdminTokensCreateRealPostgresMintsUsableBearerToken(t *testing.T) {
+	pool, ctx := dbtest.NewPool(t)
+	store := db.NewStore(pool)
+	t.Setenv("CONBENCH_DB_URL", pool.Config().ConnString())
+
+	var stdout, stderr bytes.Buffer
+	code := run([]string{
+		"admin", "tokens", "create",
+		"--email", "ci@example.com",
+		"--user-name", "Buildkite Reporter",
+		"--token-name", "buildkite",
+	}, &stdout, &stderr)
+
+	require.Equal(t, 0, code, "stderr=%s", stderr.String())
+	assert.Empty(t, stderr.String())
+	var out adminTokenCreateOutput
+	require.NoError(t, json.Unmarshal(stdout.Bytes(), &out))
+	assert.Equal(t, "ci@example.com", out.Email)
+	assert.Equal(t, "Buildkite Reporter", out.UserName)
+	assert.Equal(t, "buildkite", out.TokenName)
+	assert.NotEmpty(t, out.UserID)
+	assert.NotEmpty(t, out.TokenID)
+	assert.NotEmpty(t, out.CreatedAt)
+	assert.True(t, strings.HasPrefix(out.Token, "cb_"))
+	assert.Equal(t, out.Token[:8], out.Prefix)
+
+	row, err := store.GetAPITokenByHash(ctx, auth.HashToken(out.Token))
+	require.NoError(t, err)
+	assert.Equal(t, out.TokenID, row.ID)
+	assert.Equal(t, out.UserID, row.UserID)
+	assert.Equal(t, "buildkite", row.Name)
+	assert.Equal(t, out.Prefix, row.TokenPrefix)
+
+	user, err := store.GetUserByID(ctx, out.UserID)
+	require.NoError(t, err)
+	assert.Equal(t, "ci@example.com", user.Email)
+	assert.Equal(t, "Buildkite Reporter", user.Name)
+
+	principal, err := auth.New("", false, store, nil).ResolvePrincipal(ctx, "Bearer "+out.Token, "")
+	require.NoError(t, err)
+	assert.Equal(t, out.UserID, principal.UserID)
+
+	var secondStdout, secondStderr bytes.Buffer
+	secondCode := run([]string{
+		"admin", "tokens", "create",
+		"--email", "ci@example.com",
+		"--user-name", "Renamed Reporter",
+		"--token-name", "buildkite rerun",
+	}, &secondStdout, &secondStderr)
+
+	require.Equal(t, 0, secondCode, "stderr=%s", secondStderr.String())
+	var second adminTokenCreateOutput
+	require.NoError(t, json.Unmarshal(secondStdout.Bytes(), &second))
+	assert.Equal(t, out.UserID, second.UserID)
+	assert.Equal(t, "Buildkite Reporter", second.UserName)
+	assert.Equal(t, "buildkite rerun", second.TokenName)
 }
 
 func TestAdminRepairJSONSummaryOutput(t *testing.T) {

@@ -10,6 +10,7 @@
 //	conbench auth login --server URL
 //	conbench auth token list --server URL [--token TOKEN]
 //	conbench auth token revoke <id> --server URL [--token TOKEN]
+//	conbench admin tokens create --email EMAIL --token-name NAME [--user-name NAME]
 //	conbench admin repair-commits [--repository URL] [--limit N] [--cursor CURSOR] [--dry-run] [--backfill] [--backfill-timeout DURATION] [--github-timeout DURATION] [--format text|json]
 //	conbench admin alerts evaluate [--format text|json]
 //	conbench admin alerts deliver [--channel webhook|slack|github-check|github-comment|email] [--webhook-url URL] [--slack-webhook-url URL] [--github-repository URL] [--github-token TOKEN] [--github-api-url URL] [--email-smtp-addr HOST:PORT] [--email-from ADDRESS] [--email-to ADDRESS[,ADDRESS...]] [--email-username USERNAME] [--email-password PASSWORD] [--limit N] [--retry-after DURATION] [--timeout DURATION] [--format text|json]
@@ -252,6 +253,9 @@ func adminCommand(stdout, stderr io.Writer) *cobra.Command {
 		adminRepairCommand(stdout, stderr),
 		adminProdCloneCommand(stdout, stderr),
 	)
+	tokens := groupCommand("tokens", "Manage reporter API tokens.")
+	tokens.AddCommand(adminTokensCreateCommand(stdout, stderr))
+	cmd.AddCommand(tokens)
 	alerts := groupCommand("alerts", "Run alert operations.")
 	alerts.AddCommand(adminAlertsEvaluateCommand(stdout, stderr))
 	alerts.AddCommand(adminAlertsDeliverCommand(stdout, stderr))

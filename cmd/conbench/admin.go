@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/mail"
 	"net/url"
 	"os"
 	"strings"
@@ -15,10 +16,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/cobra"
 
+	"github.com/conbench/conbench/internal/auth"
 	"github.com/conbench/conbench/internal/commit"
 	"github.com/conbench/conbench/internal/commitrepair"
 	"github.com/conbench/conbench/internal/db"
 	"github.com/conbench/conbench/internal/service"
+	"github.com/conbench/conbench/internal/storage"
 )
 
 const (
@@ -69,11 +72,31 @@ type adminAlertsDeliverConfig struct {
 	Format           string
 }
 
+type adminTokenCreateConfig struct {
+	DatabaseURL string
+	Email       string
+	UserName    string
+	TokenName   string
+}
+
+type adminTokenCreateOutput struct {
+	UserID    string    `json:"user_id"`
+	TokenID   string    `json:"token_id"`
+	Email     string    `json:"email"`
+	UserName  string    `json:"user_name"`
+	TokenName string    `json:"token_name"`
+	Token     string    `json:"token"`
+	Prefix    string    `json:"prefix"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 var runAdminRepair = runAdminRepairReal
 
 var runAdminAlertsEvaluate = runAdminAlertsEvaluateReal
 
 var runAdminAlertsDeliver = runAdminAlertsDeliverReal
+
+var runAdminTokenCreate = runAdminTokenCreateReal
 
 var newAdminGitHubClient = newAdminGitHubClientReal
 
@@ -87,6 +110,122 @@ func adminAlertsEvaluateCommand(stdout, stderr io.Writer) *cobra.Command {
 
 func adminAlertsDeliverCommand(stdout, stderr io.Writer) *cobra.Command {
 	return newAdminAlertsDeliverCommand(stdout, stderr, runAdminAlertsDeliverConfig)
+}
+
+func adminTokensCreateCommand(stdout, stderr io.Writer) *cobra.Command {
+	return newAdminTokensCreateCommand(stdout, stderr, runAdminTokenCreateConfig)
+}
+
+func newAdminTokensCreateCommand(
+	stdout, stderr io.Writer,
+	run func(context.Context, adminTokenCreateConfig, io.Writer, io.Writer) error,
+) *cobra.Command {
+	cfg := adminTokenCreateConfig{}
+	cmd := configureCommand(&cobra.Command{
+		Use:   "create",
+		Short: "Mint an API token for a reporter or service account.",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				return commandUsageError(cmd, "unexpected argument %q", args[0])
+			}
+			email, err := normalizeAdminTokenEmail(cfg.Email)
+			if err != nil {
+				return commandUsageError(cmd, "%s", err)
+			}
+			cfg.Email = email
+			cfg.TokenName = strings.TrimSpace(cfg.TokenName)
+			if cfg.TokenName == "" {
+				return commandUsageError(cmd, "--token-name is required")
+			}
+			cfg.UserName = strings.TrimSpace(cfg.UserName)
+			if cfg.UserName == "" {
+				cfg.UserName = cfg.Email
+			}
+			cfg.DatabaseURL = os.Getenv("CONBENCH_DB_URL")
+			if cfg.DatabaseURL == "" {
+				return errors.New("CONBENCH_DB_URL is required")
+			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return run(cmd.Context(), cfg, stdout, stderr)
+		},
+	})
+	cmd.Flags().StringVar(&cfg.Email, "email", "", "user email to own the token")
+	cmd.Flags().StringVar(&cfg.UserName, "user-name", "", "display name for a newly-created user")
+	cmd.Flags().StringVar(&cfg.TokenName, "token-name", "", "display name for the token")
+	return cmd
+}
+
+func normalizeAdminTokenEmail(raw string) (string, error) {
+	email := strings.TrimSpace(raw)
+	if email == "" {
+		return "", errors.New("--email is required")
+	}
+	addr, err := mail.ParseAddress(email)
+	if err != nil || addr.Address != email || addr.Name != "" {
+		return "", errors.New("--email must be a single email address")
+	}
+	return email, nil
+}
+
+func runAdminTokenCreateConfig(ctx context.Context, cfg adminTokenCreateConfig, stdout, stderr io.Writer) error {
+	out, err := runAdminTokenCreate(ctx, cfg, stdout, stderr)
+	if err != nil {
+		return err
+	}
+	return writeJSONLine(stdout, out)
+}
+
+func runAdminTokenCreateReal(
+	ctx context.Context,
+	cfg adminTokenCreateConfig,
+	_ io.Writer,
+	_ io.Writer,
+) (adminTokenCreateOutput, error) {
+	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return adminTokenCreateOutput{}, errors.New("connect database failed")
+	}
+	defer pool.Close()
+	if err := pool.Ping(ctx); err != nil {
+		return adminTokenCreateOutput{}, errors.New("connect database failed")
+	}
+
+	store := db.NewStore(pool)
+	userID, err := store.GetOrCreateUserByEmail(ctx, cfg.Email, cfg.UserName, "!")
+	if err != nil {
+		return adminTokenCreateOutput{}, fmt.Errorf("create user: %w", err)
+	}
+	user, err := store.GetUserByID(ctx, userID)
+	if err != nil {
+		return adminTokenCreateOutput{}, fmt.Errorf("read user: %w", err)
+	}
+	tok, err := auth.GenerateToken()
+	if err != nil {
+		return adminTokenCreateOutput{}, err
+	}
+	now := time.Now().UTC()
+	tokenID, err := store.CreateAPIToken(ctx, storage.InsertAPITokenParams{
+		UserID:      userID,
+		Name:        cfg.TokenName,
+		TokenHash:   tok.Hash,
+		TokenPrefix: tok.Prefix,
+		CreatedAt:   now,
+	})
+	if err != nil {
+		return adminTokenCreateOutput{}, fmt.Errorf("create token: %w", err)
+	}
+	return adminTokenCreateOutput{
+		UserID:    userID,
+		TokenID:   tokenID,
+		Email:     user.Email,
+		UserName:  user.Name,
+		TokenName: cfg.TokenName,
+		Token:     tok.Plaintext,
+		Prefix:    tok.Prefix,
+		CreatedAt: now,
+	}, nil
 }
 
 func newAdminAlertsDeliverCommand(
