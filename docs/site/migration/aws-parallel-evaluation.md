@@ -21,8 +21,10 @@ maintainers explicitly approve another plan.
   existing deployment database.
 - Prefer a read-only database URL for the first UI evaluation pass.
 - Keep Terraform-managed production resources read-only during discovery.
-- Do not apply Kubernetes manifests to the production cluster until the
-  manifest diff, routing target, and rollback command have been approved.
+- Do not apply Kubernetes manifests to the production cluster by hand. The
+  evaluator must be described in versioned infrastructure code, reviewed with a
+  Terraform plan, and applied through the same approved operations path as the
+  rest of the Arrow AWS deployment.
 - Do not point Buildkite writers at the evaluator until the database write
   strategy is explicit and approved.
 - Do not use `CONBENCH_AUTH_DISABLED=true` on a shared host.
@@ -68,7 +70,7 @@ Prefer an alternate hostname over a path prefix. The Svelte application and API
 are designed to be served from the root of an origin unless a path-prefix
 deployment is separately tested.
 
-Choose the routing mechanism before applying anything:
+Choose the routing mechanism before writing the infrastructure change:
 
 | Option | Use when | Notes |
 | --- | --- | --- |
@@ -76,10 +78,9 @@ Choose the routing mechanism before applying anything:
 | New Kubernetes `LoadBalancer` Service | Matches the observed Arrow production shape. | Creates a separate ELB. Route53 can point `conbench-v2.arrow-dev.org` at it after approval. |
 | ALB Ingress using repo templates | Matches the v2 Kubernetes template direction. | Requires the AWS load balancer controller and the deployment owner to approve the ingress group, certificate, and DNS update path. |
 
-Because the observed Arrow resources are tagged `ManagedBy=terraform`, prefer a
-reviewed infrastructure change for public routing. Manual `kubectl apply` is
-acceptable only for an explicitly approved temporary evaluator with a recorded
-cleanup command.
+Because the observed Arrow resources are tagged `ManagedBy=terraform`, public
+routing must be created through the Terraform-owning repository. Do not create
+snowflake Kubernetes objects, console DNS records, or one-off host processes.
 
 ## Database Strategy
 
@@ -128,8 +129,9 @@ they are part of a deliberate review bundle.
 ## Kubernetes Evaluator Sketch
 
 Create separate evaluator objects rather than patching the production
-Deployment. The names below are illustrative; keep the real manifests in the
-approved deployment repository or change request.
+Deployment. The names below are illustrative; keep the real resources in the
+Terraform-owning repository so they can be planned, reviewed, applied, and
+destroyed reproducibly.
 
 Minimum evaluator objects:
 
@@ -152,7 +154,7 @@ Do not include `CONBENCH_AUTH_DISABLED`, `CONBENCH_INIT_SCHEMA`, or
 `CONBENCH_SEED`.
 
 For an operator-only smoke before public routing, use port-forwarding from a
-local temporary kubeconfig:
+local temporary kubeconfig after the Terraform-managed objects exist:
 
 ```bash
 kubectl -n default port-forward service/conbench-v2-service 18080:80
@@ -213,18 +215,20 @@ Buildkite jobs can write to the v2 server.
 ## Rollback
 
 The read-only evaluator rollback should be immediate and should not affect the
-Python service. For a Kubernetes evaluator, the rollback should remove only the
-v2 route and v2 objects:
+Python service. For a Kubernetes evaluator, rollback should be a reviewed
+Terraform change that removes only the v2 route and v2 objects:
 
 ```bash
-kubectl -n default delete ingress conbench-v2-ingress --ignore-not-found
-kubectl -n default delete service conbench-v2-service --ignore-not-found
-kubectl -n default delete deployment conbench-v2-deployment --ignore-not-found
+terraform plan \
+  -target=kubernetes_deployment.conbench_v2 \
+  -target=kubernetes_service.conbench_v2 \
+  -target=kubernetes_config_map.conbench_v2 \
+  -target=kubernetes_secret.conbench_v2 \
+  -target=aws_route53_record.conbench_v2
 ```
 
-Then remove the temporary Route53 alias or load-balancer rule through the same
-approved path that created it. Because the first pass uses a read-only role, no
-database cleanup should be required.
+Run the matching approved apply only after reviewing the plan. Because the
+first pass uses a read-only role, no database cleanup should be required.
 
 If a later write-enabled smoke uses a cloned database, preserve the clone until
 maintainers have reviewed submitted runs, Buildkite artifacts, and GitHub
