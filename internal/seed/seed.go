@@ -32,9 +32,29 @@ const (
 
 // Summary reports what a seed run did.
 type Summary struct {
-	Fingerprint string // the seeded history series (empty when skipped)
-	Inserted    int    // results submitted
-	Skipped     bool   // true when the database already held results
+	Fingerprint  string              // the seeded history series (empty when skipped)
+	ProductSmoke ProductSmokeTargets // named targets for API/browser/docs smoke coverage
+	Inserted     int                 // results submitted
+	Skipped      bool                // true when the database already held results
+}
+
+// ProductSmokeTargets names deterministic seed rows used by product smoke tests,
+// docs screenshots, and migration validation. The IDs come from normal ingestion;
+// the run, batch, repository, and commit values are stable seed inputs.
+type ProductSmokeTargets struct {
+	Repository                string
+	Fingerprint               string
+	LatestResultID            string
+	BaselineResultID          string
+	ContenderResultID         string
+	RecentRunID               string
+	RecentBatchID             string
+	CIRegressionRunID         string
+	CIRegressionCommitSHA     string
+	CIActionRequiredRunID     string
+	CIActionRequiredCommitSHA string
+	ErroredRunID              string
+	ErroredResultID           string
 }
 
 // includedCommits are the default-branch commits whose results form the history
@@ -66,16 +86,22 @@ func Run(ctx context.Context, store storage.Store) (Summary, error) {
 	ingester := service.NewIngester(store, commit.MapProvider{Commits: commitMap()})
 	reqs := requests()
 	var fingerprint string
+	resultByLabel := make(map[string]*service.Result, len(reqs))
 	for _, r := range reqs {
 		res, err := ingester.Submit(ctx, r.req)
 		if err != nil {
 			return Summary{}, fmt.Errorf("seed submit %s: %w", r.label, err)
 		}
+		resultByLabel[r.label] = res
 		if r.included {
 			fingerprint = res.HistoryFingerprint
 		}
 	}
-	return Summary{Fingerprint: fingerprint, Inserted: len(reqs)}, nil
+	targets, err := productSmokeTargets(fingerprint, resultByLabel)
+	if err != nil {
+		return Summary{}, err
+	}
+	return Summary{Fingerprint: fingerprint, ProductSmoke: targets, Inserted: len(reqs)}, nil
 }
 
 // DevTokenStore is the slice of the data layer DevToken needs. *db.Store
@@ -139,11 +165,51 @@ func requests() []seedResult {
 	for _, c := range includedCommits {
 		out = append(out, seedResult{label: c.sha, included: true, req: baseReq(c.sha, c.day, trend(c.min))})
 	}
-	// Excluded: an off-branch commit (sha != fork_point_sha).
-	out = append(out, seedResult{label: "feature-branch-1", included: false, req: baseReq("feature-branch-1", 4, trend(1.20))})
+	// Excluded: an off-branch commit (sha != fork_point_sha), shaped as a clear
+	// PR regression against commit-03 for CI report smoke coverage.
+	out = append(out, seedResult{label: "feature-branch-1", included: false, req: baseReq("feature-branch-1", 4, trend(1.80))})
 	// Excluded: an errored run (a missing iteration -> partial result).
 	out = append(out, seedResult{label: "commit-06-broken", included: false, req: baseReq("commit-06-broken", 7, partial(1.00))})
 	return out
+}
+
+func productSmokeTargets(fingerprint string, results map[string]*service.Result) (ProductSmokeTargets, error) {
+	resultID := func(label string) (string, error) {
+		res, ok := results[label]
+		if !ok || res == nil || res.ID == "" {
+			return "", fmt.Errorf("seed target %s missing result id", label)
+		}
+		return res.ID, nil
+	}
+
+	latestID, err := resultID("commit-05")
+	if err != nil {
+		return ProductSmokeTargets{}, err
+	}
+	baselineID, err := resultID("commit-01")
+	if err != nil {
+		return ProductSmokeTargets{}, err
+	}
+	erroredID, err := resultID("commit-06-broken")
+	if err != nil {
+		return ProductSmokeTargets{}, err
+	}
+
+	return ProductSmokeTargets{
+		Repository:                repo,
+		Fingerprint:               fingerprint,
+		LatestResultID:            latestID,
+		BaselineResultID:          baselineID,
+		ContenderResultID:         latestID,
+		RecentRunID:               "run-commit-05",
+		RecentBatchID:             "batch-commit-05",
+		CIRegressionRunID:         "run-feature-branch-1",
+		CIRegressionCommitSHA:     "feature-branch-1",
+		CIActionRequiredRunID:     "run-commit-05",
+		CIActionRequiredCommitSHA: "commit-05",
+		ErroredRunID:              "run-commit-06-broken",
+		ErroredResultID:           erroredID,
+	}, nil
 }
 
 // commitMap gives each seeded sha a real message and timestamp. Included commits

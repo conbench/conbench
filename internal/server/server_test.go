@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,6 +47,83 @@ func TestServerServesSeededHistory(t *testing.T) {
 	var series service.HistorySeries
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &series))
 	assert.Len(t, series.Samples, seed.IncludedHistoryPoints)
+}
+
+// TestServerServesSeededProductSmokeCorpus pins the deterministic seed data as
+// a product-smoke corpus, not just a demo history series. These are the same
+// read surfaces the docs screenshot and browser smoke harnesses need after they
+// move off production-clone-only sample selection.
+func TestServerServesSeededProductSmokeCorpus(t *testing.T) {
+	pool, ctx := dbtest.NewPool(t)
+	store := db.NewStore(pool)
+	s, err := seed.Run(ctx, store)
+	require.NoError(t, err)
+	targets := s.ProductSmoke
+	require.NotEmpty(t, targets.Fingerprint)
+	require.NotEmpty(t, targets.LatestResultID)
+	require.NotEmpty(t, targets.BaselineResultID)
+	require.NotEmpty(t, targets.ContenderResultID)
+	require.NotEmpty(t, targets.RecentRunID)
+	require.NotEmpty(t, targets.RecentBatchID)
+	require.NotEmpty(t, targets.CIRegressionRunID)
+	require.NotEmpty(t, targets.CIRegressionCommitSHA)
+	require.NotEmpty(t, targets.CIActionRequiredRunID)
+	require.NotEmpty(t, targets.CIActionRequiredCommitSHA)
+
+	handler := server.New(store, auth.New("", true, store, nil), commit.LocalProvider{}, noAuthHandler())
+
+	detail := getAPI[service.ResultDetail](t, handler, "/api/benchmark-results/"+url.PathEscape(targets.LatestResultID))
+	assert.Equal(t, targets.LatestResultID, detail.ID)
+	assert.Equal(t, targets.Fingerprint, detail.HistoryFingerprint)
+	assert.Equal(t, "demo-benchmark", detail.Tags["name"])
+
+	recent := getAPI[service.RecentRunsPage](t, handler, "/api/runs/recent?page_size=25")
+	assertRunPresent(t, recent.Runs, targets.RecentRunID, targets.RecentBatchID)
+
+	seriesPage := getAPI[api.SeriesPage](t, handler, "/api/series?fingerprint="+url.QueryEscape(targets.Fingerprint)+"&page_size=1")
+	require.Len(t, seriesPage.Series, 1)
+	assert.Equal(t, targets.Fingerprint, seriesPage.Series[0].HistoryFingerprint)
+	assert.Equal(t, targets.LatestResultID, seriesPage.Series[0].LatestResultID)
+
+	history := getAPI[service.HistorySeries](t, handler, "/api/history?fingerprint="+url.QueryEscape(targets.Fingerprint))
+	require.Len(t, history.Samples, seed.IncludedHistoryPoints)
+	assert.Equal(t, targets.BaselineResultID, history.Samples[0].BenchmarkResultID)
+	assert.Equal(t, targets.ContenderResultID, history.Samples[len(history.Samples)-1].BenchmarkResultID)
+
+	compareQuery := url.Values{
+		"baseline_result_id":  {targets.BaselineResultID},
+		"contender_result_id": {targets.ContenderResultID},
+	}
+	compare := getAPI[service.CompareResult](t, handler, "/api/compare/benchmark-results?"+compareQuery.Encode())
+	assert.Equal(t, targets.BaselineResultID, compare.Baseline.BenchmarkResultID)
+	assert.Equal(t, targets.ContenderResultID, compare.Contender.BenchmarkResultID)
+	require.NotNil(t, compare.Analysis.Pairwise)
+	assert.True(t, compare.Analysis.Pairwise.RegressionIndicated)
+
+	regressionQuery := url.Values{
+		"repository": {targets.Repository},
+		"commit_sha": {targets.CIRegressionCommitSHA},
+		"run_ids":    {targets.CIRegressionRunID},
+		"baseline":   {string(service.CIReportBaselineForkPoint)},
+	}
+	regressionReport := getAPI[service.CIReport](t, handler, "/api/ci/report?"+regressionQuery.Encode())
+	assert.Equal(t, service.CIReportStatusFailure, regressionReport.Status)
+	require.Len(t, regressionReport.Runs, 1)
+	assert.Equal(t, targets.CIRegressionRunID, regressionReport.Runs[0].RunID)
+	require.Len(t, regressionReport.Runs[0].Comparisons, 1)
+	assert.Equal(t, service.CIReportRowStatusRegressed, regressionReport.Runs[0].Comparisons[0].Status)
+
+	actionQuery := url.Values{
+		"repository": {targets.Repository},
+		"commit_sha": {targets.CIActionRequiredCommitSHA},
+		"run_ids":    {targets.CIActionRequiredRunID},
+		"baseline":   {string(service.CIReportBaselineForkPoint)},
+	}
+	actionReport := getAPI[service.CIReport](t, handler, "/api/ci/report?"+actionQuery.Encode())
+	assert.Equal(t, service.CIReportStatusActionRequired, actionReport.Status)
+	require.Len(t, actionReport.Runs, 1)
+	require.NotNil(t, actionReport.Runs[0].BaselineError)
+	assert.Equal(t, service.CIReportBaselineErrorDefaultBranchRun, actionReport.Runs[0].BaselineError.Code)
 }
 
 // TestOpenAPISpec emits the OpenAPI document straight from the huma structs with
@@ -109,4 +187,28 @@ func TestEnsureSchemaApplies(t *testing.T) {
 	require.NoError(t, err, "schema not applied")
 	// Idempotent: a second call is a no-op.
 	require.NoError(t, server.EnsureSchema(ctx, pool), "EnsureSchema (no-op)")
+}
+
+func getAPI[T any](t *testing.T, handler http.Handler, target string) T {
+	t.Helper()
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, target, nil))
+	require.Equal(t, http.StatusOK, rec.Code, "GET %s; body %s", target, rec.Body.String())
+	var out T
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &out), "decode GET %s", target)
+	return out
+}
+
+func assertRunPresent(t *testing.T, runs []service.RecentRunListItem, runID, latestBatchID string) {
+	t.Helper()
+	for _, run := range runs {
+		if run.RunID != runID {
+			continue
+		}
+		require.NotNil(t, run.LatestBatchID)
+		assert.Equal(t, latestBatchID, *run.LatestBatchID)
+		assert.Equal(t, int64(1), run.ResultCount)
+		return
+	}
+	require.Failf(t, "run not found", "recent runs did not include %s", runID)
 }
