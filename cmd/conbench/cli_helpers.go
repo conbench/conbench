@@ -79,11 +79,18 @@ func resolveBearer(flagToken, server string) (string, error) {
 }
 
 func newClient(server string) (*conbench.ClientWithResponses, error) {
-	client, err := conbench.NewClientWithResponses(server)
+	client, err := conbench.NewClientWithResponses(server, conbench.WithHTTPClient(newCLIHTTPClient()))
 	if err != nil {
 		return nil, fmt.Errorf("create client: %w", err)
 	}
 	return client, nil
+}
+
+func newCLIHTTPClient() *http.Client {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.MaxIdleConns = 128
+	transport.MaxIdleConnsPerHost = 64
+	return &http.Client{Transport: transport}
 }
 
 func bearerRequestEditor(bearer string) conbench.RequestEditorFn {

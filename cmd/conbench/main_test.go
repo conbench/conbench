@@ -43,6 +43,16 @@ func noAuthHandler() *api.AuthHandler {
 	return api.NewAuthHandler(nil, nil, auth.NewSessionSigner(""), auth.NewSigner(""), false, "", api.NewCodeStore(), false)
 }
 
+func TestNewCLIHTTPClientKeepsSubmitConnectionsWarm(t *testing.T) {
+	client := newCLIHTTPClient()
+	require.NotNil(t, client)
+	transport, ok := client.Transport.(*http.Transport)
+	require.True(t, ok)
+	assert.GreaterOrEqual(t, transport.MaxIdleConnsPerHost, defaultSubmitJobs)
+	assert.GreaterOrEqual(t, transport.MaxIdleConns, transport.MaxIdleConnsPerHost)
+	assert.NotSame(t, http.DefaultTransport, transport)
+}
+
 func TestUsageErrorsExitTwo(t *testing.T) {
 	tests := []struct {
 		name string
