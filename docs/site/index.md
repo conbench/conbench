@@ -57,5 +57,5 @@ old READMEs, PyPI pages, or release notes.
 
 Apache Arrow maintainers evaluating Buildkite-based migration should also read
 the [Arrow workflow migration](migration/arrow-workflows.md) status page and
-the [AWS sidecar evaluation deployment](migration/aws-sidecar-deployment.md)
+the [AWS parallel evaluation deployment](migration/aws-parallel-evaluation.md)
 runbook.

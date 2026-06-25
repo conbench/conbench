@@ -154,10 +154,10 @@ manifest-rendering helper now lives in `scripts/go_deploy_runtime.sh` so
 deployment owners can source it from their own CI system or use it as a
 reference while moving to a deployment-specific pipeline.
 
-For a temporary evaluator on the same host as an existing Python deployment,
-use the [AWS sidecar evaluation deployment](migration/aws-sidecar-deployment.md)
-runbook. It keeps the legacy service untouched, runs v2 on an alternate port,
-and starts with a read-only database role before any write-enabled smoke.
+For a temporary evaluator beside an existing Python deployment, use the
+[AWS parallel evaluation deployment](migration/aws-parallel-evaluation.md)
+runbook. It keeps the legacy service untouched, uses a separate route, and
+starts with a read-only database role before any write-enabled smoke.
 
 Set `CONBENCH_DEPLOY_VERSION` to the immutable commit SHA or release version
 being deployed before sourcing the helper. The helper refuses to render image

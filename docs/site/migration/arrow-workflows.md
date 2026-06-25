@@ -117,7 +117,7 @@ page describes the read-only production-clone gate. The Buildkite fork's
 contains the detailed Buildkite smoke commands.
 
 For maintainer UI evaluation, use the
-[AWS sidecar deployment runbook](aws-sidecar-deployment.md) to stand up a
+[AWS parallel evaluation deployment runbook](aws-parallel-evaluation.md) to stand up a
 temporary v2 server next to the existing Python deployment without changing the
 legacy service.
 
@@ -148,7 +148,7 @@ Existing data stays in the frozen Postgres schema, but deployment migration is
 operational work. Maintainers should plan for:
 
 - a parallel Conbench v2 deployment pointed at production-shaped data before
-  cutover, following the [AWS sidecar deployment runbook](aws-sidecar-deployment.md)
+  cutover, following the [AWS parallel evaluation deployment runbook](aws-parallel-evaluation.md)
   when evaluating on the existing Arrow infrastructure,
 - OIDC configuration for human login,
 - reporter-token minting and secret rotation for Buildkite,
