@@ -4,22 +4,33 @@ import type { components } from "../api/schema";
 type Client = ReturnType<typeof createConbenchClient>;
 type ResultItem = components["schemas"]["ResultListItem"];
 
+export interface PrimaryTag {
+  key: string;
+  value: string;
+}
+
 export interface BatchResultRow {
   id: string;
+  displayResultId: string;
   resultHref: string;
   trendHref: string;
   runId: string;
+  displayRunId: string;
   runHref: string;
   timestamp: string;
   unit: string | null;
   singleValueSummary: number | null;
   singleValueSummaryType: string;
   historyFingerprint: string;
+  benchmarkName: string;
+  benchmarkTags: Record<string, unknown>;
+  primaryTags: PrimaryTag[];
   hasError: boolean;
 }
 
 export interface BatchRunGroup {
   runId: string;
+  displayRunId: string;
   runHref: string;
   runReason: string | null;
   runTags: Record<string, unknown>;
@@ -103,17 +114,24 @@ function toBatchPage(batchId: string, results: ResultItem[], nextCursor: string 
 }
 
 function toBatchResultRow(result: ResultItem): BatchResultRow {
+  const benchmarkName = cleanString(result.case_name ?? null) ?? compactIdentifier(result.id, 12, 8);
+  const benchmarkTags = result.case_tags ?? {};
   return {
     id: result.id,
+    displayResultId: compactIdentifier(result.id, 12, 8),
     resultHref: `/results/${encodeURIComponent(result.id)}`,
     trendHref: `/series/${encodeURIComponent(result.history_fingerprint)}`,
     runId: result.run_id,
+    displayRunId: compactIdentifier(result.run_id, 12, 8),
     runHref: `/runs/${encodeURIComponent(result.run_id)}`,
     timestamp: result.timestamp,
     unit: result.unit ?? null,
     singleValueSummary: result.single_value_summary ?? null,
     singleValueSummaryType: result.single_value_summary_type,
     historyFingerprint: result.history_fingerprint,
+    benchmarkName,
+    benchmarkTags,
+    primaryTags: primaryTags(benchmarkTags),
     hasError: result.has_error,
   };
 }
@@ -139,6 +157,7 @@ function toBatchRunGroup(runId: string, results: ResultItem[]): BatchRunGroup {
   const historyFingerprints = Array.from(new Set(results.map((row) => row.history_fingerprint)));
   return {
     runId,
+    displayRunId: compactIdentifier(runId, 12, 8),
     runHref: `/runs/${encodeURIComponent(runId)}`,
     runReason: first.run_reason ?? null,
     runTags: first.run_tags ?? {},
@@ -166,4 +185,31 @@ function ciReportHref(repository: string, commitSha: string | null, runId: strin
     baseline: "fork_point",
   });
   return `/ci/report?${params.toString()}`;
+}
+
+const TAG_PRIORITY = ["query_id", "suite", "dataset", "scale_factor", "format", "language", "engine"];
+
+function primaryTags(tags: Record<string, unknown>): PrimaryTag[] {
+  return Object.entries(tags)
+    .filter(([, value]) => value !== null && value !== undefined && value !== "")
+    .sort(([left], [right]) => {
+      const leftIndex = TAG_PRIORITY.indexOf(left);
+      const rightIndex = TAG_PRIORITY.indexOf(right);
+      if (leftIndex >= 0 || rightIndex >= 0) {
+        return (leftIndex < 0 ? TAG_PRIORITY.length : leftIndex) - (rightIndex < 0 ? TAG_PRIORITY.length : rightIndex);
+      }
+      return left.localeCompare(right);
+    })
+    .slice(0, 4)
+    .map(([key, value]) => ({ key, value: String(value) }));
+}
+
+function compactIdentifier(value: string, head: number, tail: number): string {
+  if (value.length <= head + tail + 1) return value;
+  return `${value.slice(0, head)}…${value.slice(-tail)}`;
+}
+
+function cleanString(value: string | null): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed === "" ? null : trimmed;
 }

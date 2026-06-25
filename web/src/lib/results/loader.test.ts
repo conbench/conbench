@@ -1,109 +1,87 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { createConbenchClient } from "../api/client";
-import { DEFAULT_RESULT_LIST_QUERY } from "../router";
 import { loadResultsPage } from "./loader";
 
 type Client = ReturnType<typeof createConbenchClient>;
 
 const result = (id: string, overrides: Record<string, unknown> = {}) => ({
   id,
-  run_id: "run-a",
-  run_reason: "nightly",
-  run_tags: { arch: "x86" },
-  batch_id: "batch-a",
-  timestamp: "2026-01-02T00:00:00Z",
+  run_id: "66f23037065241d6ac22aaeaea96d29b",
+  run_reason: "commit",
+  run_tags: { name: "commit:2315161817ad5dcb94891567e7ac48a35921e05a" },
+  batch_id: "66f23037065241d6ac22aaeaea96d29b-1p",
+  timestamp: "2026-06-04T18:41:00Z",
   unit: "s",
-  single_value_summary: 1.25,
+  single_value_summary: 1.01982,
   single_value_summary_type: "min",
   history_fingerprint: `fp-${id}`,
+  case_name: "tpch",
+  case_tags: {
+    query_id: "TPCH-09",
+    scale_factor: 1,
+    format: "parquet",
+    language: "R",
+    ignored_noise: "not-primary",
+  },
   commit: {
-    hash: "abcdef123456",
+    hash: "2315161817ad5dcb94891567e7ac48a35921e05a",
     repository: "https://github.com/apache/arrow",
-    timestamp: "2026-01-02T00:00:00Z",
+    timestamp: "2026-06-04T18:41:00Z",
   },
   has_error: false,
   ...overrides,
 });
 
-function fakeClient(page: unknown, error: false | { detail: string } = false): {
+function fakeClient(page: unknown): {
   client: Client;
   GET: ReturnType<typeof vi.fn>;
 } {
-  const GET = vi.fn(async () =>
-    error ? { error: { detail: error.detail } } : { data: page },
-  );
+  const GET = vi.fn(async () => ({ data: page }));
   return { client: { GET } as unknown as Client, GET };
 }
 
 describe("loadResultsPage", () => {
-  it("loads recent benchmark results and derives summary links", async () => {
-    const { client, GET } = fakeClient({
-      results: [
-        result("r2", { has_error: true, run_id: "run-b", batch_id: null }),
-        result("r1"),
-      ],
-      next_page_cursor: "cur2",
+  it("derives human-first result row identity from benchmark case metadata", async () => {
+    const { client } = fakeClient({
+      results: [result("06a220d0d94471c480001414453ee7fc")],
+      next_page_cursor: null,
     });
 
     const page = await loadResultsPage(client, {
-      query: DEFAULT_RESULT_LIST_QUERY,
+      query: {
+        runID: "",
+        batchID: "",
+        runReason: "",
+        earliestTimestamp: "",
+        latestTimestamp: "",
+      },
       cursor: null,
     });
 
-    expect(GET).toHaveBeenCalledWith("/api/benchmark-results", {
-      params: { query: { page_size: 100 } },
-    });
-    expect(page).toMatchObject({
-      loadedResults: 2,
-      loadedRuns: 2,
-      loadedBatches: 1,
-      loadedErrors: 1,
-      loadedSeries: 2,
-      nextCursor: "cur2",
-    });
     expect(page.rows[0]).toMatchObject({
-      id: "r2",
-      resultHref: "/results/r2",
-      runHref: "/runs/run-b",
-      batchHref: null,
-      trendHref: "/series/fp-r2",
-      hasError: true,
-    });
-  });
-
-  it("passes filters and cursor to the API", async () => {
-    const { client, GET } = fakeClient({ results: [], next_page_cursor: null });
-    await loadResultsPage(client, {
-      query: {
-        runID: "run-a",
-        batchID: "batch-a",
-        runReason: "nightly",
-        earliestTimestamp: "2026-01-01T00:00:00Z",
-        latestTimestamp: "2026-01-02T00:00:00Z",
+      id: "06a220d0d94471c480001414453ee7fc",
+      displayResultId: "06a220d0d944…453ee7fc",
+      runId: "66f23037065241d6ac22aaeaea96d29b",
+      displayRunId: "66f230370652…ea96d29b",
+      batchId: "66f23037065241d6ac22aaeaea96d29b-1p",
+      displayBatchId: "66f230370652…6d29b-1p",
+      benchmarkName: "tpch",
+      benchmarkTags: {
+        query_id: "TPCH-09",
+        scale_factor: 1,
+        format: "parquet",
+        language: "R",
+        ignored_noise: "not-primary",
       },
-      cursor: "cur1",
+      primaryTags: [
+        { key: "query_id", value: "TPCH-09" },
+        { key: "scale_factor", value: "1" },
+        { key: "format", value: "parquet" },
+        { key: "language", value: "R" },
+      ],
+      repositoryLabel: "apache/arrow",
+      shortCommit: "23151618",
     });
-
-    expect(GET).toHaveBeenCalledWith("/api/benchmark-results", {
-      params: {
-        query: {
-          run_id: "run-a",
-          batch_id: "batch-a",
-          run_reason: "nightly",
-          earliest_timestamp: "2026-01-01T00:00:00Z",
-          latest_timestamp: "2026-01-02T00:00:00Z",
-          page_size: 100,
-          cursor: "cur1",
-        },
-      },
-    });
-  });
-
-  it("throws endpoint detail on failure", async () => {
-    const { client } = fakeClient(null, { detail: "failed to list results" });
-    await expect(loadResultsPage(client, { query: DEFAULT_RESULT_LIST_QUERY, cursor: null })).rejects.toThrow(
-      "failed to list results",
-    );
   });
 });

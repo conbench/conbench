@@ -20,6 +20,13 @@ const result = (id: string, overrides: Record<string, unknown> = {}) => ({
   single_value_summary: 1.25,
   single_value_summary_type: "min",
   history_fingerprint: `fp-${id}`,
+  case_name: "tpch",
+  case_tags: {
+    query_id: "TPCH-09",
+    scale_factor: 1,
+    format: "parquet",
+    language: "R",
+  },
   commit: {
     hash: "abcdef123456",
     repository: "https://github.com/apache/arrow",
@@ -46,19 +53,19 @@ describe("ResultsPage", () => {
       },
     });
 
-    const { container } = render(ResultsPage, { props: { query: DEFAULT_RESULT_LIST_QUERY } });
+    render(ResultsPage, { props: { query: DEFAULT_RESULT_LIST_QUERY } });
 
     await waitFor(() => screen.getByRole("heading", { name: /benchmark results/i }));
     expect(screen.getAllByText(/2 results\+?/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/^2 runs$/i)).toBeInTheDocument();
     expect(screen.getByText(/^1 error$/i)).toBeInTheDocument();
-    expect(container.querySelector(".filter-bar.panel.results-filters")).not.toBeNull();
-    expect(container.querySelector("table.data-table.stacked-table.results-table")).not.toBeNull();
-    expect(screen.getByRole("link", { name: "r2" })).toHaveAttribute("href", "/results/r2");
-    expect(screen.getByRole("link", { name: "run-b" })).toHaveAttribute("href", "/runs/run-b");
-    expect(screen.getByRole("link", { name: "batch-a" })).toHaveAttribute("href", "/batches/batch-a");
-    expect(screen.getByRole("link", { name: /trend for r2/i })).toHaveAttribute("href", "/series/fp-r2");
-    expect(screen.getAllByText("https://github.com/apache/arrow").length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: /tpch/i })[0]).toHaveAttribute("href", "/results/r2");
+    expect(screen.getAllByText("query_id TPCH-09").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("format parquet").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: /run run-b/i })).toHaveAttribute("href", "/runs/run-b");
+    expect(screen.getByRole("link", { name: /batch batch-a/i })).toHaveAttribute("href", "/batches/batch-a");
+    expect(screen.getByRole("link", { name: /trend for tpch result r2/i })).toHaveAttribute("href", "/series/fp-r2");
+    expect(screen.getAllByText("apache/arrow").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /load more/i })).toBeInTheDocument();
   });
 
@@ -67,10 +74,10 @@ describe("ResultsPage", () => {
     GET.mockResolvedValueOnce({ data: { results: [result("r2")], next_page_cursor: null } });
 
     render(ResultsPage, { props: { query: DEFAULT_RESULT_LIST_QUERY } });
-    await waitFor(() => screen.getByRole("link", { name: "r1" }));
+    await waitFor(() => screen.getByText("result r1"));
 
     await fireEvent.click(screen.getByRole("button", { name: /load more/i }));
-    await waitFor(() => expect(screen.getByRole("link", { name: "r2" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("result r2")).toBeInTheDocument());
     expect(screen.queryByRole("button", { name: /load more/i })).toBeNull();
     const secondCall = GET.mock.calls[1]![1] as { params: { query: { cursor?: string } } };
     expect(secondCall.params.query.cursor).toBe("cur2");

@@ -16,6 +16,13 @@ const result = (id: string, overrides: Record<string, unknown> = {}) => ({
   single_value_summary: 1.25,
   single_value_summary_type: "min",
   history_fingerprint: `fp-${id}`,
+  case_name: "tpch",
+  case_tags: {
+    query_id: "TPCH-09",
+    scale_factor: 1,
+    format: "parquet",
+    language: "R",
+  },
   commit: {
     hash: "abcdef123456",
     repository: "https://github.com/apache/arrow",
@@ -78,8 +85,17 @@ describe("loadBatchPage", () => {
     });
     expect(page.rows[0]).toMatchObject({
       id: "r3",
+      displayResultId: "r3",
+      benchmarkName: "tpch",
+      primaryTags: [
+        { key: "query_id", value: "TPCH-09" },
+        { key: "scale_factor", value: "1" },
+        { key: "format", value: "parquet" },
+        { key: "language", value: "R" },
+      ],
       resultHref: "/results/r3",
       trendHref: "/series/fp-r3",
+      displayRunId: "run-b",
       runHref: "/runs/run-b",
       hasError: true,
     });

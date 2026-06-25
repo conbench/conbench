@@ -135,6 +135,10 @@
     return row.unit === null ? value : `${value} ${row.unit}`;
   }
 
+  function tagText(tag: { key: string; value: string }): string {
+    return `${tag.key} ${tag.value}`;
+  }
+
   function plural(n: number, word: string, pluralWord = `${word}s`): string {
     return `${n.toLocaleString()} ${n === 1 ? word : pluralWord}`;
   }
@@ -259,52 +263,78 @@
     <section class="panel table-panel" aria-label="Benchmark results">
       <table class="data-table stacked-table results-table">
         <colgroup>
-          <col class="result-col" />
+          <col class="benchmark-col" />
+          <col class="svs-col" />
+          <col class="status-col" />
           <col class="run-col" />
           <col class="batch-col" />
-          <col class="reason-col" />
-          <col class="status-col" />
-          <col class="svs-col" />
           <col class="commit-col" />
           <col class="time-col" />
           <col class="series-col" />
         </colgroup>
         <thead>
           <tr>
-            <th>Result</th>
+            <th>Benchmark</th>
+            <th>Measurement</th>
+            <th>Status</th>
             <th>Run</th>
             <th>Batch</th>
-            <th>Reason</th>
-            <th>Status</th>
-            <th>SVS</th>
             <th>Commit</th>
             <th>Time</th>
-            <th>Series</th>
+            <th>Open</th>
           </tr>
         </thead>
         <tbody>
           {#each vm.rows as row (row.id)}
             <tr class:error-row={row.hasError}>
-              <td data-label="Result">
-                <a class="row-primary-link mono" href={row.resultHref} onclick={(e) => go(e, row.resultHref)}>{row.id}</a>
+              <td data-label="Benchmark">
+                <a
+                  class="row-primary-link"
+                  href={row.resultHref}
+                  aria-label={`Open result ${row.id} for ${row.benchmarkName}`}
+                  onclick={(e) => go(e, row.resultHref)}
+                >{row.benchmarkName}</a>
+                <div class="row-metadata">
+                  <span class="muted-detail mono" title={row.id}>result {row.displayResultId}</span>
+                  {#each row.primaryTags as tag}
+                    <span class="tag-chip">{tagText(tag)}</span>
+                  {/each}
+                </div>
               </td>
-              <td data-label="Run">
-                <a class="mono" href={row.runHref} onclick={(e) => go(e, row.runHref)}>{row.runId}</a>
+              <td class="numeric" data-label="Measurement">
+                <strong>{formatSVS(row)}</strong>
+                <span class="subtle-inline">{row.singleValueSummaryType}</span>
               </td>
-              <td data-label="Batch">
-                {#if row.batchId && row.batchHref}
-                  <a class="mono" href={row.batchHref} onclick={(e) => go(e, row.batchHref!)}>{row.batchId}</a>
-                {:else}
-                  not set
-                {/if}
-              </td>
-              <td class="wrap-anywhere" data-label="Reason">{row.runReason ?? "not set"}</td>
               <td class="status-cell" data-label="Status">
                 <span class={`status-badge ${row.hasError ? "warning" : "success"}`}>
                   {row.hasError ? "error" : "ok"}
                 </span>
               </td>
-              <td class="numeric" data-label="SVS">{formatSVS(row)} <span class="subtle-inline">{row.singleValueSummaryType}</span></td>
+              <td data-label="Run">
+                <a
+                  class="mono"
+                  href={row.runHref}
+                  aria-label={`Open run ${row.runId}`}
+                  title={row.runId}
+                  onclick={(e) => go(e, row.runHref)}
+                >run {row.displayRunId}</a>
+                {#if row.runReason}
+                  <div class="metadata-line">{row.runReason}</div>
+                {/if}
+              </td>
+              <td data-label="Batch">
+                {#if row.batchId && row.batchHref}
+                  <a
+                    class="mono"
+                    href={row.batchHref}
+                    aria-label={`Open batch ${row.batchId}`}
+                    title={row.batchId}
+                    onclick={(e) => go(e, row.batchHref!)}
+                  >batch {row.displayBatchId}</a>
+                {:else}
+                  not set
+                {/if}
+              </td>
               <td class="commit-cell" data-label="Commit">
                 <span class="identity-stack">
                   {#if row.commitSha !== null}
@@ -313,7 +343,7 @@
                     <span>not set</span>
                   {/if}
                   {#if row.repository !== ""}
-                    <span class="metadata-line">{row.repository}</span>
+                    <span class="metadata-line" title={row.repository}>{row.repositoryLabel}</span>
                   {/if}
                 </span>
               </td>
@@ -322,7 +352,7 @@
                 <a
                   class="button-pill secondary"
                   href={row.trendHref}
-                  aria-label={`trend for ${row.id}`}
+                  aria-label={`trend for ${row.benchmarkName} result ${row.id}`}
                   onclick={(e) => go(e, row.trendHref)}
                 >
                   Trend
@@ -373,20 +403,16 @@
     --stacked-label-width: 82px;
   }
 
-  .result-col {
-    width: 16%;
+  .benchmark-col {
+    width: 30%;
   }
 
   .run-col {
-    width: 15%;
+    width: 16%;
   }
 
   .batch-col {
     width: 13%;
-  }
-
-  .reason-col {
-    width: 10%;
   }
 
   .status-col {
@@ -394,11 +420,11 @@
   }
 
   .svs-col {
-    width: 12%;
+    width: 13%;
   }
 
   .commit-col {
-    width: 16%;
+    width: 12%;
   }
 
   .time-col {
@@ -415,11 +441,35 @@
     min-width: 0;
   }
 
+  .row-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    min-width: 0;
+    margin-top: 4px;
+  }
+
+  .tag-chip {
+    color: var(--c-text-muted);
+    background: var(--c-surface-subtle);
+    border: 1px solid var(--c-border);
+    border-radius: 999px;
+    padding: 1px 6px;
+    font-size: 0.68rem;
+    line-height: 1.35;
+  }
+
   .metadata-line {
     color: var(--c-text-faint);
     font-size: 0.72rem;
     line-height: 1.3;
     overflow-wrap: anywhere;
+  }
+
+  .muted-detail {
+    color: var(--c-text-faint);
+    font-size: 0.72rem;
   }
 
   .numeric {

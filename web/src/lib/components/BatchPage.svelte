@@ -95,6 +95,10 @@
     return row.unit === null ? value : `${value} ${row.unit}`;
   }
 
+  function tagText(tag: { key: string; value: string }): string {
+    return `${tag.key} ${tag.value}`;
+  }
+
   function mergeRunGroups(left: BatchRunGroup[], right: BatchRunGroup[]): BatchRunGroup[] {
     const merged = new Map(
       left.map((run) => [run.runId, { ...run, historyFingerprints: [...run.historyFingerprints] }]),
@@ -223,8 +227,10 @@
                 <a
                   class="row-primary-link mono"
                   href={run.runHref}
+                  aria-label={`Open run ${run.runId}`}
+                  title={run.runId}
                   onclick={(e) => go(e, run.runHref)}
-                >{run.runId}</a>
+                >{run.displayRunId}</a>
               </td>
               <td data-label="Reason" class="wrap-anywhere">{run.runReason ?? "not set"}</td>
               <td data-label="Commit"><span class="mono value-code">{run.shortCommit ?? "not set"}</span></td>
@@ -256,52 +262,64 @@
     <section class="panel table-panel" aria-label="Batch results">
       <table class="data-table stacked-table batch-results-table">
         <colgroup>
-          <col class="result-col" />
-          <col class="run-col" />
-          <col class="status-col" />
+          <col class="benchmark-col" />
           <col class="svs-col" />
+          <col class="status-col" />
+          <col class="run-col" />
           <col class="time-col" />
           <col class="series-col" />
         </colgroup>
         <thead>
           <tr>
-            <th>Result</th>
-            <th>Run</th>
+            <th>Benchmark</th>
+            <th>Measurement</th>
             <th>Status</th>
-            <th>SVS</th>
+            <th>Run</th>
             <th>Time</th>
-            <th>Series</th>
+            <th>Open</th>
           </tr>
         </thead>
         <tbody>
           {#each vm.rows as row (row.id)}
             <tr class:error-row={row.hasError}>
-              <td data-label="Result">
+              <td data-label="Benchmark">
                 <a
-                  class="row-primary-link mono"
+                  class="row-primary-link"
                   href={row.resultHref}
+                  aria-label={`Open result ${row.id} for ${row.benchmarkName}`}
                   onclick={(e) => go(e, row.resultHref)}
-                >{row.id}</a>
+                >{row.benchmarkName}</a>
+                <div class="row-metadata">
+                  <span class="muted-detail mono" title={row.id}>result {row.displayResultId}</span>
+                  {#each row.primaryTags as tag}
+                    <span class="tag-chip">{tagText(tag)}</span>
+                  {/each}
+                </div>
               </td>
-              <td data-label="Run">
-                <a
-                  class="mono"
-                  href={row.runHref}
-                  onclick={(e) => go(e, row.runHref)}
-                >{row.runId}</a>
+              <td data-label="Measurement">
+                <strong>{formatSVS(row)}</strong>
+                <span class="subtle-inline">{row.singleValueSummaryType}</span>
               </td>
               <td data-label="Status">
                 <span class={`status-badge ${row.hasError ? "warning" : "success"}`}>
                   {row.hasError ? "error" : "ok"}
                 </span>
               </td>
-              <td data-label="SVS">{formatSVS(row)} <span class="subtle-inline">{row.singleValueSummaryType}</span></td>
+              <td data-label="Run">
+                <a
+                  class="mono"
+                  href={row.runHref}
+                  aria-label={`Open run ${row.runId}`}
+                  title={row.runId}
+                  onclick={(e) => go(e, row.runHref)}
+                >{row.displayRunId}</a>
+              </td>
               <td data-label="Time">{formatTime(row.timestamp)}</td>
-              <td data-label="Series">
+              <td data-label="Open">
                 <a
                   class="button-pill secondary"
                   href={row.trendHref}
-                  aria-label={`Open series trend for result ${row.id}`}
+                  aria-label={`trend for ${row.benchmarkName} result ${row.id}`}
                   onclick={(e) => go(e, row.trendHref)}
                 >
                   Series trend
@@ -346,17 +364,17 @@
   .batch-runs-table .actions-col {
     width: 22%;
   }
-  .batch-results-table .result-col {
-    width: 26%;
+  .batch-results-table .benchmark-col {
+    width: 38%;
   }
   .batch-results-table .run-col {
-    width: 20%;
+    width: 16%;
   }
   .batch-results-table .status-col {
     width: 10%;
   }
   .batch-results-table .svs-col {
-    width: 18%;
+    width: 14%;
   }
   .batch-results-table .time-col {
     width: 14%;
@@ -367,6 +385,7 @@
   .subtle-inline {
     color: var(--c-text-muted);
     font-size: 0.76rem;
+    margin-left: 4px;
   }
   .context-panel {
     display: flex;
@@ -393,6 +412,27 @@
   }
   .table-actions {
     min-width: 0;
+  }
+  .row-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    min-width: 0;
+    margin-top: 4px;
+  }
+  .muted-detail {
+    color: var(--c-text-faint);
+    font-size: 0.72rem;
+  }
+  .tag-chip {
+    color: var(--c-text-muted);
+    background: var(--c-surface-subtle);
+    border: 1px solid var(--c-border);
+    border-radius: 999px;
+    padding: 1px 6px;
+    font-size: 0.68rem;
+    line-height: 1.35;
   }
   @media (max-width: 1120px) {
     .context-panel {

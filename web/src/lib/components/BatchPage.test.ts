@@ -19,6 +19,13 @@ const result = (id: string, overrides: Record<string, unknown> = {}) => ({
   single_value_summary: 1.25,
   single_value_summary_type: "min",
   history_fingerprint: `fp-${id}`,
+  case_name: "tpch",
+  case_tags: {
+    query_id: "TPCH-09",
+    scale_factor: 1,
+    format: "parquet",
+    language: "R",
+  },
   commit: {
     hash: "abcdef123456",
     repository: "https://github.com/apache/arrow",
@@ -55,13 +62,16 @@ describe("BatchPage", () => {
     expect(screen.getByText(/^1 error$/i)).toBeInTheDocument();
     expect(screen.getByText("3 series")).toBeInTheDocument();
     expect(screen.getAllByText("abcdef12").length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("link", { name: "run-b" })[0]).toHaveAttribute("href", "/runs/run-b");
+    expect(screen.getAllByRole("link", { name: /run-b/i })[0]).toHaveAttribute("href", "/runs/run-b");
     expect(screen.getByRole("link", { name: "Open CI report for run run-b" })).toHaveAttribute(
       "href",
       "/ci/report?repository=https%3A%2F%2Fgithub.com%2Fapache%2Farrow&commit_sha=abcdef123456&run_ids=run-b&baseline=fork_point",
     );
-    expect(screen.getByRole("link", { name: "r3" })).toHaveAttribute("href", "/results/r3");
-    expect(screen.getByRole("link", { name: "Open series trend for result r3" })).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: /tpch/i })[0]).toHaveAttribute("href", "/results/r3");
+    expect(screen.getAllByText("query_id TPCH-09").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("format parquet").length).toBeGreaterThan(0);
+    expect(screen.getByText("result r3")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /trend for tpch result r3/i })).toHaveAttribute(
       "href",
       "/series/fp-r3",
     );
@@ -86,10 +96,10 @@ describe("BatchPage", () => {
     });
 
     render(BatchPage, { props: { batchId: "batch-a" } });
-    await waitFor(() => screen.getByRole("link", { name: "r1" }));
+    await waitFor(() => screen.getByText("result r1"));
 
     await fireEvent.click(screen.getByRole("button", { name: /load more/i }));
-    await waitFor(() => expect(screen.getByRole("link", { name: "r2" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("result r2")).toBeInTheDocument());
     expect(screen.queryByRole("button", { name: /load more/i })).toBeNull();
     const batchContext = screen.getByText("repository").closest("section");
     expect(batchContext).not.toBeNull();
@@ -99,8 +109,8 @@ describe("BatchPage", () => {
     expect(within(batchContext!).queryByText("999999991111")).toBeNull();
     expect(screen.getAllByText("abcdef12").length).toBeGreaterThan(0);
     const runGroups = screen.getByRole("region", { name: /runs in batch/i });
-    expect(within(runGroups).getByRole("link", { name: "run-a" })).toHaveAttribute("href", "/runs/run-a");
-    expect(within(runGroups).getByRole("link", { name: "run-b" })).toHaveAttribute("href", "/runs/run-b");
+    expect(within(runGroups).getByRole("link", { name: /^open run run-a$/i })).toHaveAttribute("href", "/runs/run-a");
+    expect(within(runGroups).getByRole("link", { name: /^open run run-b$/i })).toHaveAttribute("href", "/runs/run-b");
     expect(GET).toHaveBeenLastCalledWith("/api/benchmark-results", {
       params: { query: { batch_id: "batch-a", page_size: 100, cursor: "cur2" } },
     });
@@ -131,10 +141,10 @@ describe("BatchPage", () => {
     });
 
     render(BatchPage, { props: { batchId: "batch-a" } });
-    await waitFor(() => screen.getByRole("link", { name: "r1" }));
+    await waitFor(() => screen.getByText("result r1"));
 
     await fireEvent.click(screen.getByRole("button", { name: /load more/i }));
-    await waitFor(() => expect(screen.getByRole("link", { name: "r2" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("result r2")).toBeInTheDocument());
 
     const runGroups = screen.getByRole("region", { name: /runs in batch/i });
     expect(within(runGroups).getByRole("row", { name: /run-a nightly abcdef12 2 1 0/i })).toBeInTheDocument();
