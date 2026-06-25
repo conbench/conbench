@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
 
   import { createConbenchClient } from "../api/client";
-  import { listRecentRuns, type RecentRunViewModel } from "../home/loader";
+  import { listRecentRuns, type RecentRunAttentionViewModel, type RecentRunViewModel } from "../home/loader";
   import { interceptNavClick, navigate } from "../router";
 
   let { baseUrl = "" }: { baseUrl?: string } = $props();
@@ -36,6 +36,7 @@
   const showReasonColumn = $derived(runs.some((run) => (run.runReason ?? "").trim() !== ""));
   const showRepositoryColumn = $derived(repositoryLabels.length > 1);
   const showErrorsColumn = $derived(totalErrors > 0);
+  const attentionRuns = $derived(runs.filter((run) => run.attention !== null));
 
   function go(e: MouseEvent, href: string) {
     if (!interceptNavClick(e)) return;
@@ -70,6 +71,10 @@
     if (labels.length === 0) return "repository not set";
     if (labels.length === 1) return `repository ${labels[0]}`;
     return plural(labels.length, "repository", "repositories");
+  }
+
+  function attentionStatusLabel(attention: RecentRunAttentionViewModel): string {
+    return attention.status === "failure" ? "Regression" : "Action required";
   }
 </script>
 
@@ -107,6 +112,31 @@
       {/if}
       <span class="summary-item">{repositorySummary(repositoryLabels)}</span>
     </p>
+
+    {#if attentionRuns.length > 0}
+      <section class="attention-panel" aria-labelledby="home-attention-heading">
+        <div class="attention-heading">
+          <h2 id="home-attention-heading">Needs attention</h2>
+          <span>{plural(attentionRuns.length, "run")}</span>
+        </div>
+        <div class="attention-list">
+          {#each attentionRuns as run (run.runId)}
+            {@const attention = run.attention!}
+            <a
+              class={`attention-link ${attention.status}`}
+              href={attention.reportHref}
+              aria-label={`Review CI report for run ${run.runId}`}
+              onclick={(e) => go(e, attention.reportHref)}
+            >
+              <span class={`attention-status ${attention.status}`}>{attentionStatusLabel(attention)}</span>
+              <strong class="mono">{run.displayRunId}</strong>
+              <span>{attention.summaryText}</span>
+              <span class="attention-reason">{attention.statusReason}</span>
+            </a>
+          {/each}
+        </div>
+      </section>
+    {/if}
 
     <section class="panel table-panel" aria-label="Recent runs">
       <table class="data-table stacked-table runs-table">
@@ -266,6 +296,73 @@
   .table-actions {
     min-width: 0;
   }
+  .attention-panel {
+    display: grid;
+    grid-template-columns: minmax(120px, auto) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0;
+    border: 1px solid color-mix(in srgb, var(--c-error) 26%, var(--c-border-muted));
+    border-radius: var(--radius-md);
+    background: var(--c-surface);
+    overflow: hidden;
+  }
+  .attention-heading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 9px 12px;
+    border-right: 1px solid var(--c-border-muted);
+    background: color-mix(in srgb, var(--c-error) 7%, var(--c-surface));
+  }
+  .attention-heading h2 {
+    margin: 0;
+    color: var(--c-text);
+    font-size: 0.86rem;
+    line-height: 1.2;
+  }
+  .attention-heading span {
+    color: var(--c-text-muted);
+    font-size: 0.74rem;
+  }
+  .attention-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0;
+  }
+  .attention-link {
+    min-width: min(100%, 340px);
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    align-content: center;
+    align-items: baseline;
+    gap: 4px 8px;
+    padding: 9px 12px;
+    border-right: 1px solid var(--c-border-muted);
+    color: var(--c-text);
+    text-decoration: none;
+  }
+  .attention-link:hover {
+    background: var(--c-row-hover);
+    color: var(--c-text);
+  }
+  .attention-status {
+    color: var(--c-error);
+    font-size: 0.72rem;
+    font-weight: 750;
+    text-transform: uppercase;
+  }
+  .attention-status.action_required {
+    color: var(--c-warning);
+  }
+  .attention-reason {
+    grid-column: 1 / -1;
+    min-width: 0;
+    color: var(--c-text-muted);
+    font-size: 0.76rem;
+    overflow-wrap: anywhere;
+  }
   .inline-actions {
     display: flex;
     flex-wrap: wrap;
@@ -320,6 +417,21 @@
     white-space: nowrap;
   }
   @media (max-width: 1120px) {
+    .attention-panel {
+      grid-template-columns: 1fr;
+    }
+    .attention-heading {
+      border-right: 0;
+      border-bottom: 1px solid var(--c-border-muted);
+    }
+    .attention-link {
+      min-width: 100%;
+      border-right: 0;
+      border-bottom: 1px solid var(--c-border-muted);
+    }
+    .attention-link:last-child {
+      border-bottom: 0;
+    }
     .numeric {
       text-align: left;
     }

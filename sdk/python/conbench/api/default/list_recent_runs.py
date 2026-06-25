@@ -12,11 +12,14 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     page_size: int | Unset = 25,
+    include_attention: bool | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
 
     params["page_size"] = page_size
+
+    params["include_attention"] = include_attention
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -57,11 +60,14 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     page_size: int | Unset = 25,
+    include_attention: bool | Unset = UNSET,
 ) -> Response[ErrorModel | RecentRunsPage]:
     """List recent benchmark runs
 
     Args:
         page_size (int | Unset): Page size (max 100). Default: 25.
+        include_attention (bool | Unset): Include bounded CI attention summaries for the newest
+            runs.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -73,6 +79,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         page_size=page_size,
+        include_attention=include_attention,
     )
 
     response = client.get_httpx_client().request(
@@ -86,11 +93,14 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     page_size: int | Unset = 25,
+    include_attention: bool | Unset = UNSET,
 ) -> ErrorModel | RecentRunsPage | None:
     """List recent benchmark runs
 
     Args:
         page_size (int | Unset): Page size (max 100). Default: 25.
+        include_attention (bool | Unset): Include bounded CI attention summaries for the newest
+            runs.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -103,6 +113,7 @@ def sync(
     return sync_detailed(
         client=client,
         page_size=page_size,
+        include_attention=include_attention,
     ).parsed
 
 
@@ -110,11 +121,14 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     page_size: int | Unset = 25,
+    include_attention: bool | Unset = UNSET,
 ) -> Response[ErrorModel | RecentRunsPage]:
     """List recent benchmark runs
 
     Args:
         page_size (int | Unset): Page size (max 100). Default: 25.
+        include_attention (bool | Unset): Include bounded CI attention summaries for the newest
+            runs.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -126,6 +140,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         page_size=page_size,
+        include_attention=include_attention,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -137,11 +152,14 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     page_size: int | Unset = 25,
+    include_attention: bool | Unset = UNSET,
 ) -> ErrorModel | RecentRunsPage | None:
     """List recent benchmark runs
 
     Args:
         page_size (int | Unset): Page size (max 100). Default: 25.
+        include_attention (bool | Unset): Include bounded CI attention summaries for the newest
+            runs.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -155,5 +173,6 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             page_size=page_size,
+            include_attention=include_attention,
         )
     ).parsed

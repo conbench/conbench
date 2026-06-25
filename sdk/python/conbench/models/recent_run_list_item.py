@@ -6,8 +6,11 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
+from ..types import UNSET, Unset
+
 if TYPE_CHECKING:
     from ..models.list_commit_type_0 import ListCommitType0
+    from ..models.recent_run_attention import RecentRunAttention
     from ..models.recent_run_list_item_run_tags import RecentRunListItemRunTags
 
 
@@ -32,6 +35,7 @@ class RecentRunListItem:
         run_reason (None | str):
         run_tags (RecentRunListItemRunTags):
         series_count (int):
+        attention (RecentRunAttention | Unset):
     """
 
     batch_count: int
@@ -48,6 +52,7 @@ class RecentRunListItem:
     run_reason: None | str
     run_tags: RecentRunListItemRunTags
     series_count: int
+    attention: RecentRunAttention | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.list_commit_type_0 import ListCommitType0
@@ -87,6 +92,10 @@ class RecentRunListItem:
 
         series_count = self.series_count
 
+        attention: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.attention, Unset):
+            attention = self.attention.to_dict()
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -107,12 +116,15 @@ class RecentRunListItem:
                 "series_count": series_count,
             }
         )
+        if attention is not UNSET:
+            field_dict["attention"] = attention
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.list_commit_type_0 import ListCommitType0
+        from ..models.recent_run_attention import RecentRunAttention
         from ..models.recent_run_list_item_run_tags import RecentRunListItemRunTags
 
         d = dict(src_dict)
@@ -172,6 +184,13 @@ class RecentRunListItem:
 
         series_count = d.pop("series_count")
 
+        _attention = d.pop("attention", UNSET)
+        attention: RecentRunAttention | Unset
+        if isinstance(_attention, Unset):
+            attention = UNSET
+        else:
+            attention = RecentRunAttention.from_dict(_attention)
+
         recent_run_list_item = cls(
             batch_count=batch_count,
             commit=commit,
@@ -187,6 +206,7 @@ class RecentRunListItem:
             run_reason=run_reason,
             run_tags=run_tags,
             series_count=series_count,
+            attention=attention,
         )
 
         return recent_run_list_item

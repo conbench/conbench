@@ -19,22 +19,22 @@ import (
 
 // Defines values for CIReportStatus.
 const (
-	ActionRequired CIReportStatus = "action_required"
-	Failure        CIReportStatus = "failure"
-	Skipped        CIReportStatus = "skipped"
-	Success        CIReportStatus = "success"
+	CIReportStatusActionRequired CIReportStatus = "action_required"
+	CIReportStatusFailure        CIReportStatus = "failure"
+	CIReportStatusSkipped        CIReportStatus = "skipped"
+	CIReportStatusSuccess        CIReportStatus = "success"
 )
 
 // Valid indicates whether the value is a known member of the CIReportStatus enum.
 func (e CIReportStatus) Valid() bool {
 	switch e {
-	case ActionRequired:
+	case CIReportStatusActionRequired:
 		return true
-	case Failure:
+	case CIReportStatusFailure:
 		return true
-	case Skipped:
+	case CIReportStatusSkipped:
 		return true
-	case Success:
+	case CIReportStatusSuccess:
 		return true
 	default:
 		return false
@@ -68,6 +68,30 @@ func (e CIReportComparisonStatus) Valid() bool {
 	case CIReportComparisonStatusRegressed:
 		return true
 	case CIReportComparisonStatusStable:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RecentRunAttentionStatus.
+const (
+	RecentRunAttentionStatusActionRequired RecentRunAttentionStatus = "action_required"
+	RecentRunAttentionStatusFailure        RecentRunAttentionStatus = "failure"
+	RecentRunAttentionStatusSkipped        RecentRunAttentionStatus = "skipped"
+	RecentRunAttentionStatusSuccess        RecentRunAttentionStatus = "success"
+)
+
+// Valid indicates whether the value is a known member of the RecentRunAttentionStatus enum.
+func (e RecentRunAttentionStatus) Valid() bool {
+	switch e {
+	case RecentRunAttentionStatusActionRequired:
+		return true
+	case RecentRunAttentionStatusFailure:
+		return true
+	case RecentRunAttentionStatusSkipped:
+		return true
+	case RecentRunAttentionStatusSuccess:
 		return true
 	default:
 		return false
@@ -544,8 +568,29 @@ type PairwiseAnalysis struct {
 	RegressionIndicated  bool    `json:"regression_indicated"`
 }
 
+// RecentRunAttention defines model for RecentRunAttention.
+type RecentRunAttention struct {
+	ReportUrl    string                    `json:"report_url"`
+	Status       RecentRunAttentionStatus  `json:"status"`
+	StatusReason string                    `json:"status_reason"`
+	Summary      RecentRunAttentionSummary `json:"summary"`
+}
+
+// RecentRunAttentionStatus defines model for RecentRunAttention.Status.
+type RecentRunAttentionStatus string
+
+// RecentRunAttentionSummary defines model for RecentRunAttentionSummary.
+type RecentRunAttentionSummary struct {
+	BenchmarkErrors int64 `json:"benchmark_errors"`
+	Compared        int64 `json:"compared"`
+	MissingBaseline int64 `json:"missing_baseline"`
+	NotComparable   int64 `json:"not_comparable"`
+	Regressions     int64 `json:"regressions"`
+}
+
 // RecentRunListItem defines model for RecentRunListItem.
 type RecentRunListItem struct {
+	Attention      *RecentRunAttention    `json:"attention,omitempty"`
 	BatchCount     int64                  `json:"batch_count"`
 	Commit         *ListCommit            `json:"commit"`
 	CommitSha      *string                `json:"commit_sha"`
@@ -895,6 +940,9 @@ type SubmitResultParams struct {
 type ListRecentRunsParams struct {
 	// PageSize Page size (max 100).
 	PageSize *int64 `form:"page_size,omitempty" json:"page_size,omitempty"`
+
+	// IncludeAttention Include bounded CI attention summaries for the newest runs.
+	IncludeAttention *bool `form:"include_attention,omitempty" json:"include_attention,omitempty"`
 }
 
 // ListSeriesParams defines parameters for ListSeries.
@@ -3012,6 +3060,18 @@ func NewListRecentRunsRequest(server string, params *ListRecentRunsParams) (*htt
 		if params.PageSize != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "page_size", *params.PageSize, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int64"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.IncludeAttention != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "include_attention", *params.IncludeAttention, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {

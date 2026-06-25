@@ -1651,7 +1651,7 @@ func TestPublishCIReportGitHubCreatesCheckAndPRComment(t *testing.T) {
 	report := &conbench.CIReport{
 		Repository:   "https://github.com/org/repo",
 		CommitSha:    &sha,
-		Status:       conbench.Failure,
+		Status:       conbench.CIReportStatusFailure,
 		StatusReason: "regressions detected",
 		ReportUrl:    "https://conbench.example/ci/report?run_ids=run-1",
 		Summary: conbench.CIReportSummary{

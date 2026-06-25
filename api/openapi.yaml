@@ -1116,9 +1116,58 @@ components:
       type:
         - object
         - "null"
+    RecentRunAttention:
+      additionalProperties: false
+      properties:
+        report_url:
+          type: string
+        status:
+          enum:
+            - success
+            - failure
+            - action_required
+            - skipped
+          type: string
+        status_reason:
+          type: string
+        summary:
+          $ref: "#/components/schemas/RecentRunAttentionSummary"
+      required:
+        - status
+        - status_reason
+        - report_url
+        - summary
+      type: object
+    RecentRunAttentionSummary:
+      additionalProperties: false
+      properties:
+        benchmark_errors:
+          format: int64
+          type: integer
+        compared:
+          format: int64
+          type: integer
+        missing_baseline:
+          format: int64
+          type: integer
+        not_comparable:
+          format: int64
+          type: integer
+        regressions:
+          format: int64
+          type: integer
+      required:
+        - compared
+        - regressions
+        - benchmark_errors
+        - missing_baseline
+        - not_comparable
+      type: object
     RecentRunListItem:
       additionalProperties: false
       properties:
+        attention:
+          $ref: "#/components/schemas/RecentRunAttention"
         batch_count:
           format: int64
           type: integer
@@ -2497,6 +2546,13 @@ paths:
             description: Page size (max 100).
             format: int64
             type: integer
+        - description: Include bounded CI attention summaries for the newest runs.
+          explode: false
+          in: query
+          name: include_attention
+          schema:
+            description: Include bounded CI attention summaries for the newest runs.
+            type: boolean
       responses:
         "200":
           content:

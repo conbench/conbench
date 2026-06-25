@@ -881,7 +881,27 @@ export interface components {
             percent_threshold: number;
             regression_indicated: boolean;
         } | null;
+        RecentRunAttention: {
+            report_url: string;
+            /** @enum {string} */
+            status: "success" | "failure" | "action_required" | "skipped";
+            status_reason: string;
+            summary: components["schemas"]["RecentRunAttentionSummary"];
+        };
+        RecentRunAttentionSummary: {
+            /** Format: int64 */
+            benchmark_errors: number;
+            /** Format: int64 */
+            compared: number;
+            /** Format: int64 */
+            missing_baseline: number;
+            /** Format: int64 */
+            not_comparable: number;
+            /** Format: int64 */
+            regressions: number;
+        };
         RecentRunListItem: {
+            attention?: components["schemas"]["RecentRunAttention"];
             /** Format: int64 */
             batch_count: number;
             commit: components["schemas"]["ListCommit"];
@@ -1933,6 +1953,8 @@ export interface operations {
             query?: {
                 /** @description Page size (max 100). */
                 page_size?: number;
+                /** @description Include bounded CI attention summaries for the newest runs. */
+                include_attention?: boolean;
             };
             header?: never;
             path?: never;

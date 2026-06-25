@@ -3,6 +3,7 @@ package api_test
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
@@ -215,4 +216,57 @@ func TestListRecentRunsGroupsResultsByRun(t *testing.T) {
 	assert.Equal(t, "run-b", page.Runs[1].RunID)
 	assert.Equal(t, latestB, page.Runs[1].LatestResult)
 	assert.Equal(t, "https://github.com/org/other", page.Runs[1].Repository)
+}
+
+func TestListRecentRunsCanIncludeActionableAttention(t *testing.T) {
+	tapi, pool, ctx := seedAPI(t)
+	seedResult(t, tapi, seedOpts{runID: "main-run", sha: "c1", ts: day(1), data: []float64{10}})
+	seedResult(t, tapi, seedOpts{runID: "main-run", sha: "c2", ts: day(2), data: []float64{20}})
+	seedResult(t, tapi, seedOpts{runID: "main-run", sha: "c3", ts: day(3), data: []float64{30}})
+	seedResult(t, tapi, seedOpts{runID: "ci-run", runReason: "pull request", sha: "c4", ts: day(4), data: []float64{100}})
+
+	_, err := pool.Exec(ctx, `UPDATE commit SET parent = $1, fork_point_sha = $2 WHERE repository = $3 AND sha = $4`,
+		"c3", "c3", defaultRepo, "c4")
+	require.NoError(t, err)
+
+	resp := tapi.Get("/api/runs/recent?page_size=10")
+	require.Equal(t, http.StatusOK, resp.Code, "recent runs: %s", resp.Body.String())
+	var raw map[string][]map[string]any
+	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &raw))
+	require.NotContains(t, raw["runs"][0], "attention", "attention is opt-in for the home dashboard")
+
+	resp = tapi.Get("/api/runs/recent?page_size=10&include_attention=true")
+	require.Equal(t, http.StatusOK, resp.Code, "recent runs with attention: %s", resp.Body.String())
+	var page struct {
+		Runs []struct {
+			RunID     string `json:"run_id"`
+			Attention *struct {
+				Status       string `json:"status"`
+				StatusReason string `json:"status_reason"`
+				ReportURL    string `json:"report_url"`
+				Summary      struct {
+					Compared        int `json:"compared"`
+					Regressions     int `json:"regressions"`
+					BenchmarkErrors int `json:"benchmark_errors"`
+				} `json:"summary"`
+			} `json:"attention"`
+		} `json:"runs"`
+	}
+	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &page))
+	require.Len(t, page.Runs, 2)
+	assert.Equal(t, "ci-run", page.Runs[0].RunID)
+	if assert.NotNil(t, page.Runs[0].Attention) {
+		assert.Equal(t, "failure", page.Runs[0].Attention.Status)
+		assert.Equal(t, "lookback regression detected", page.Runs[0].Attention.StatusReason)
+		assert.Equal(t, 1, page.Runs[0].Attention.Summary.Compared)
+		assert.Equal(t, 1, page.Runs[0].Attention.Summary.Regressions)
+		assert.Equal(t, 0, page.Runs[0].Attention.Summary.BenchmarkErrors)
+		u, err := url.Parse(page.Runs[0].Attention.ReportURL)
+		require.NoError(t, err)
+		assert.Equal(t, "/ci/report", u.Path)
+		assert.Equal(t, "ci-run", u.Query().Get("run_ids"))
+		assert.Equal(t, "fork_point", u.Query().Get("baseline"))
+	}
+	assert.Equal(t, "main-run", page.Runs[1].RunID)
+	assert.Nil(t, page.Runs[1].Attention, "default-branch runs are not actionable CI attention")
 }

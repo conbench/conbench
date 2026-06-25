@@ -222,7 +222,7 @@ func runCIReportConfig(ctx context.Context, cfg ciReportConfig, stdout io.Writer
 			return codedError{err: err, code: 2}
 		}
 	}
-	if resp.JSON200.Status == conbench.Failure || resp.JSON200.Status == conbench.ActionRequired {
+	if resp.JSON200.Status == conbench.CIReportStatusFailure || resp.JSON200.Status == conbench.CIReportStatusActionRequired {
 		return ciReportStatusError{status: resp.JSON200.Status}
 	}
 	return nil
@@ -345,11 +345,11 @@ func ciReportGitHubPRNumber(ctx context.Context, gh *githubapi.Client, cfg ciRep
 
 func githubCheckConclusion(status conbench.CIReportStatus) string {
 	switch status {
-	case conbench.ActionRequired:
+	case conbench.CIReportStatusActionRequired:
 		return "action_required"
-	case conbench.Failure:
+	case conbench.CIReportStatusFailure:
 		return "failure"
-	case conbench.Skipped:
+	case conbench.CIReportStatusSkipped:
 		return "skipped"
 	default:
 		return "success"
@@ -358,11 +358,11 @@ func githubCheckConclusion(status conbench.CIReportStatus) string {
 
 func githubCheckTitle(report *conbench.CIReport) string {
 	switch report.Status {
-	case conbench.ActionRequired:
+	case conbench.CIReportStatusActionRequired:
 		return "Action required for Conbench report"
-	case conbench.Failure:
+	case conbench.CIReportStatusFailure:
 		return fmt.Sprintf("Found %d benchmark regression%s", report.Summary.Regressions, pluralS(report.Summary.Regressions))
-	case conbench.Skipped:
+	case conbench.CIReportStatusSkipped:
 		return "Conbench report skipped regression verdict"
 	default:
 		return "No benchmark regressions detected"

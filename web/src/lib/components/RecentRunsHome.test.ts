@@ -37,7 +37,27 @@ beforeEach(() => {
 
 describe("RecentRunsHome", () => {
   it("renders recent run summaries with investigation links", async () => {
-    GET.mockResolvedValueOnce({ data: { runs: [run(), run({ run_id: "run-b", error_count: 0 })] } });
+    GET.mockResolvedValueOnce({
+      data: {
+        runs: [
+          run({
+            attention: {
+              status: "failure",
+              status_reason: "lookback regression detected",
+              report_url: "/ci/report?run_ids=run-a&baseline=fork_point",
+              summary: {
+                compared: 4,
+                regressions: 2,
+                benchmark_errors: 0,
+                missing_baseline: 0,
+                not_comparable: 0,
+              },
+            },
+          }),
+          run({ run_id: "run-b", error_count: 0 }),
+        ],
+      },
+    });
 
     render(RecentRunsHome, { props: {} });
 
@@ -47,6 +67,12 @@ describe("RecentRunsHome", () => {
     expect(screen.getByText(/2 runs/i)).toBeInTheDocument();
     expect(screen.getByText(/360 results/i)).toBeInTheDocument();
     expect(screen.getByText(/1 error/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /needs attention/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /review ci report for run run-a/i })).toHaveAttribute(
+      "href",
+      "/ci/report?run_ids=run-a&baseline=fork_point",
+    );
+    expect(screen.getByText("2 regressions")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open run run-a" })).toHaveAttribute("href", "/runs/run-a");
     expect(screen.getAllByRole("link", { name: "Open batch batch-a" })[0]).toHaveAttribute(
       "href",

@@ -38,6 +38,18 @@ describe("listRecentRuns", () => {
             repository: "https://github.com/apache/arrow",
             timestamp: "2026-01-02T00:00:00Z",
           },
+          attention: {
+            status: "failure",
+            status_reason: "lookback regression detected",
+            report_url: "/ci/report?run_ids=run-a&baseline=fork_point",
+            summary: {
+              compared: 4,
+              regressions: 2,
+              benchmark_errors: 0,
+              missing_baseline: 0,
+              not_comparable: 0,
+            },
+          },
         },
       ],
     });
@@ -45,7 +57,7 @@ describe("listRecentRuns", () => {
     const page = await listRecentRuns(client);
 
     expect(GET).toHaveBeenCalledWith("/api/runs/recent", {
-      params: { query: { page_size: 25 } },
+      params: { query: { page_size: 25, include_attention: true } },
     });
     expect(page.runs).toHaveLength(1);
     expect(page.runs[0]).toMatchObject({
@@ -58,6 +70,12 @@ describe("listRecentRuns", () => {
       latestBatchHref: "/batches/batch-a",
       latestResultHref: "/results/result-a",
       shortCommit: "abcdef12",
+    });
+    expect(page.runs[0]!.attention).toMatchObject({
+      status: "failure",
+      statusReason: "lookback regression detected",
+      reportHref: "/ci/report?run_ids=run-a&baseline=fork_point",
+      summaryText: "2 regressions",
     });
     expect(page.runs[0]!.ciReportHref).toBe(
       "/ci/report?repository=https%3A%2F%2Fgithub.com%2Fapache%2Farrow&commit_sha=abcdef123456&run_ids=run-a&baseline=fork_point",

@@ -49,6 +49,9 @@ from .lookback_analysis_type_0 import LookbackAnalysisType0
 from .machine_info import MachineInfo
 from .me_output_body import MeOutputBody
 from .pairwise_analysis_type_0 import PairwiseAnalysisType0
+from .recent_run_attention import RecentRunAttention
+from .recent_run_attention_status import RecentRunAttentionStatus
+from .recent_run_attention_summary import RecentRunAttentionSummary
 from .recent_run_list_item import RecentRunListItem
 from .recent_run_list_item_run_tags import RecentRunListItemRunTags
 from .recent_runs_page import RecentRunsPage
@@ -143,6 +146,9 @@ __all__ = (
     "MachineInfo",
     "MeOutputBody",
     "PairwiseAnalysisType0",
+    "RecentRunAttention",
+    "RecentRunAttentionStatus",
+    "RecentRunAttentionSummary",
     "RecentRunListItem",
     "RecentRunListItemRunTags",
     "RecentRunsPage",

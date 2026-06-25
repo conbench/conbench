@@ -25,6 +25,18 @@ export interface RecentRunViewModel {
   firstResultAt: string;
   lastResultAt: string;
   ciReportHref: string | null;
+  attention: RecentRunAttentionViewModel | null;
+}
+
+export interface RecentRunAttentionViewModel {
+  status: "failure" | "action_required";
+  statusReason: string;
+  reportHref: string;
+  summaryText: string;
+  regressions: number;
+  benchmarkErrors: number;
+  missingBaseline: number;
+  notComparable: number;
 }
 
 export interface RecentRunsViewModel {
@@ -39,7 +51,7 @@ function recentRunsError(res: { error?: { detail?: string } | undefined }): Erro
 
 export async function listRecentRuns(client: Client): Promise<RecentRunsViewModel> {
   const res = await client.GET("/api/runs/recent", {
-    params: { query: { page_size: RECENT_RUNS_PAGE_SIZE } },
+    params: { query: { page_size: RECENT_RUNS_PAGE_SIZE, include_attention: true } },
   });
   if (res.error || !res.data) {
     throw recentRunsError(res);
@@ -72,7 +84,46 @@ function toRecentRunViewModel(run: RecentRun): RecentRunViewModel {
     firstResultAt: run.first_result_at,
     lastResultAt: run.last_result_at,
     ciReportHref: ciReportHref(run.repository, commitSha, run.run_id),
+    attention: toRecentRunAttentionViewModel(run.attention ?? null),
   };
+}
+
+function toRecentRunAttentionViewModel(
+  attention: NonNullable<RecentRun["attention"]> | null,
+): RecentRunAttentionViewModel | null {
+  if (attention === null || attention.status === "success" || attention.status === "skipped") {
+    return null;
+  }
+  return {
+    status: attention.status,
+    statusReason: attention.status_reason,
+    reportHref: attention.report_url,
+    summaryText: attentionSummaryText(attention.summary),
+    regressions: attention.summary.regressions,
+    benchmarkErrors: attention.summary.benchmark_errors,
+    missingBaseline: attention.summary.missing_baseline,
+    notComparable: attention.summary.not_comparable,
+  };
+}
+
+function attentionSummaryText(summary: NonNullable<RecentRun["attention"]>["summary"]): string {
+  if (summary.regressions > 0) {
+    return plural(summary.regressions, "regression");
+  }
+  if (summary.benchmark_errors > 0) {
+    return plural(summary.benchmark_errors, "benchmark error");
+  }
+  if (summary.missing_baseline > 0) {
+    return plural(summary.missing_baseline, "missing baseline", "missing baselines");
+  }
+  if (summary.not_comparable > 0) {
+    return plural(summary.not_comparable, "not comparable row");
+  }
+  return "action required";
+}
+
+function plural(n: number, word: string, pluralWord = `${word}s`): string {
+  return `${n.toLocaleString()} ${n === 1 ? word : pluralWord}`;
 }
 
 function compactIdentifier(value: string, head: number, tail: number): string {
