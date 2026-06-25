@@ -20,6 +20,11 @@ const (
 	profileSmallPageSize      = int64(5)
 	profileMediumPageSize     = int64(10)
 	profileLargePageSize      = int64(50)
+	profileRecentPageSize     = int64(25)
+	profileRecentMaxPageSize  = int64(100)
+	profileRecentCandidateMin = int64(1000)
+	profileRecentCandidateMax = int64(10000)
+	profileRecentFactor       = int64(200)
 	profileExactQ             = "BM_ReadBinaryColumn"
 	profileBroadQ             = "tpch"
 	profileQRecentCommitLimit = int64(320)
@@ -205,6 +210,18 @@ func runProfileHTTP(ctx context.Context, cfg ProfileConfig, samples profileSampl
 
 func profileHTTPCalls(samples profileSamples) []profileHTTPCall {
 	calls := []profileHTTPCall{
+		{
+			name:      "RecentRunsPage25",
+			operation: "GET /api/runs/recent?page_size=25",
+			path:      "/api/runs/recent",
+			query:     url.Values{"page_size": []string{fmt.Sprint(profileRecentPageSize)}},
+		},
+		{
+			name:      "RecentRunsPage100",
+			operation: "GET /api/runs/recent?page_size=100",
+			path:      "/api/runs/recent",
+			query:     url.Values{"page_size": []string{fmt.Sprint(profileRecentMaxPageSize)}},
+		},
 		{
 			name:      "SeriesBrowseDefaultPage5",
 			operation: "GET /api/series?page_size=5",
@@ -535,6 +552,20 @@ func profileRelationSizes(ctx context.Context, db ProfileDB) ([]RelationSize, SQ
 func profileSQLQueries(samples profileSamples) []profileSQLQuery {
 	queries := []profileSQLQuery{
 		{
+			name:      "RecentRunsPage25",
+			operation: "recent runs page 25",
+			sql:       recentRunsProfileSQL,
+			args:      []any{profileRecentCandidateCount(profileRecentPageSize), profileRecentPageSize},
+			explain:   true,
+		},
+		{
+			name:      "RecentRunsPage100",
+			operation: "recent runs page 100",
+			sql:       recentRunsProfileSQL,
+			args:      []any{profileRecentCandidateCount(profileRecentMaxPageSize), profileRecentMaxPageSize},
+			explain:   true,
+		},
+		{
 			name:      "SeriesBrowseDefaultPage5",
 			operation: "series browse default page 5",
 			sql:       seriesProfileDefaultSQL,
@@ -647,6 +678,17 @@ func profileSQLQueries(samples profileSamples) []profileSQLQuery {
 	return queries
 }
 
+func profileRecentCandidateCount(pageSize int64) int64 {
+	limit := pageSize * profileRecentFactor
+	if limit < profileRecentCandidateMin {
+		return profileRecentCandidateMin
+	}
+	if limit > profileRecentCandidateMax {
+		return profileRecentCandidateMax
+	}
+	return limit
+}
+
 var explainFilenamePattern = regexp.MustCompile(`[^a-z0-9]+`)
 
 func ExplainPlanFilename(name string) string {
@@ -682,6 +724,61 @@ WHERE n.nspname = 'public'
   AND c.relkind IN ('r', 'p')
   AND c.relname = ANY($1::text[])
 ORDER BY table_name
+`
+
+const recentRunsProfileSQL = `
+WITH candidate_rows AS MATERIALIZED (
+  SELECT br.run_id, br."timestamp"
+  FROM benchmark_result br
+  ORDER BY br."timestamp" DESC, br.id DESC
+  LIMIT $1::integer
+),
+selected_runs AS MATERIALIZED (
+  SELECT cr.run_id, max(cr."timestamp") AS candidate_last_timestamp
+  FROM candidate_rows cr
+  GROUP BY cr.run_id
+  ORDER BY max(cr."timestamp") DESC, cr.run_id DESC
+  LIMIT $2::integer
+),
+run_agg AS MATERIALIZED (
+  SELECT
+    br.run_id,
+    min(br."timestamp")::timestamp AS first_result_at,
+    max(br."timestamp")::timestamp AS last_result_at,
+    count(*) AS result_count,
+    count(*) FILTER (WHERE br.error IS NOT NULL) AS error_count,
+    count(DISTINCT br.history_fingerprint) AS series_count,
+    count(DISTINCT br.batch_id) FILTER (WHERE br.batch_id IS NOT NULL) AS batch_count
+  FROM benchmark_result br
+  JOIN selected_runs sr ON sr.run_id = br.run_id
+  GROUP BY br.run_id
+)
+SELECT
+  a.run_id,
+  a.first_result_at,
+  a.last_result_at,
+  a.result_count,
+  a.error_count,
+  a.series_count,
+  a.batch_count,
+  latest.id AS latest_result_id,
+  latest.run_reason,
+  latest.run_tags,
+  latest.batch_id AS latest_batch_id,
+  latest.commit_repo_url,
+  c.sha AS commit_sha,
+  c.repository AS commit_repository,
+  c."timestamp" AS commit_timestamp
+FROM run_agg a
+JOIN LATERAL (
+  SELECT br.id, br.run_reason, br.run_tags, br.batch_id, br.commit_repo_url, br.commit_id, br."timestamp"
+  FROM benchmark_result br
+  WHERE br.run_id = a.run_id
+  ORDER BY br."timestamp" DESC, br.id DESC
+  LIMIT 1
+) latest ON true
+LEFT JOIN commit c ON c.id = latest.commit_id
+ORDER BY a.last_result_at DESC, a.run_id DESC
 `
 
 const seriesProfileDefaultSQL = `
