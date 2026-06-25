@@ -18,10 +18,13 @@ export interface SeriesIdentity {
   context: Record<string, unknown>;
   hardwareName: string;
   hardwareHash: string;
+  displayHardwareHash: string;
   repository: string;
+  repositoryLabel: string;
   unit: string | null;
   lessIsBetter: boolean | null;
   fingerprint: string;
+  displayFingerprint: string;
 }
 
 /** TrendSource is the page's entry: a result id (walking-skeleton route) or a
@@ -48,10 +51,13 @@ function identityFromDetail(detail: ResultDetail): SeriesIdentity {
     context: detail.context,
     hardwareName: detail.hardware.name,
     hardwareHash: detail.hardware.hash,
+    displayHardwareHash: compactIdentifier(detail.hardware.hash, 12, 8),
     repository: detail.commit_repo_url,
+    repositoryLabel: formatRepositoryLabel(detail.commit_repo_url),
     unit: detail.unit,
     lessIsBetter: detail.less_is_better,
     fingerprint: detail.history_fingerprint,
+    displayFingerprint: compactIdentifier(detail.history_fingerprint, 12, 8),
   };
 }
 
@@ -64,11 +70,34 @@ function identityFromSeriesItem(item: SeriesListItem): SeriesIdentity {
     context: item.context,
     hardwareName: item.hardware.name,
     hardwareHash: item.hardware.hash,
+    displayHardwareHash: compactIdentifier(item.hardware.hash, 12, 8),
     repository: item.repository,
+    repositoryLabel: formatRepositoryLabel(item.repository),
     unit: item.unit,
     lessIsBetter: item.less_is_better,
     fingerprint: item.history_fingerprint,
+    displayFingerprint: compactIdentifier(item.history_fingerprint, 12, 8),
   };
+}
+
+function compactIdentifier(value: string, head: number, tail: number): string {
+  if (value.length <= head + tail + 1) return value;
+  return `${value.slice(0, head)}…${value.slice(-tail)}`;
+}
+
+function formatRepositoryLabel(repository: string): string {
+  if (repository === "") return "repository not set";
+  let u: URL;
+  try {
+    u = new URL(repository);
+  } catch {
+    return repository;
+  }
+  const path = u.pathname.replace(/^\/+|\/+$/g, "");
+  if (u.hostname === "github.com" || u.hostname === "www.github.com") {
+    return path || u.hostname;
+  }
+  return `${u.hostname}${path === "" ? "" : `/${path}`}`;
 }
 
 function assemble(identity: SeriesIdentity, rawSamples: HistorySample[] | null): TrendViewModel {

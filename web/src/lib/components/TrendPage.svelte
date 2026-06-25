@@ -259,7 +259,7 @@
             {#if tagsText(vm.identity.caseTags) !== ""}<span>{tagsText(vm.identity.caseTags)}</span>{/if}
             {#if tagsText(vm.identity.context) !== ""}<span>{tagsText(vm.identity.context)}</span>{/if}
             <span>hardware: {vm.identity.hardwareName}</span>
-            <span>repo: {vm.identity.repository}</span>
+            <span title={vm.identity.repository}>repo: {vm.identity.repositoryLabel}</span>
             {#if vm.identity.unit !== null}
               <span>
                 unit: {vm.identity.unit}{orientation(vm.identity.lessIsBetter) !== null
@@ -270,8 +270,8 @@
           </div>
         </div>
         <div class="page-meta">
-          <span title={vm.identity.fingerprint}>fp {vm.identity.fingerprint}</span>
-          <span title={vm.identity.hardwareHash}>hardware {vm.identity.hardwareHash}</span>
+          <span title={vm.identity.fingerprint}>series {vm.identity.displayFingerprint}</span>
+          <span title={vm.identity.hardwareHash}>hardware {vm.identity.displayHardwareHash}</span>
         </div>
       </header>
       {#if !vm.unitConsistent}

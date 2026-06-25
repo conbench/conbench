@@ -81,6 +81,34 @@ describe("loadTrend by result", () => {
     expect(vm.unitConsistent).toBe(true);
   });
 
+  it("derives compact trend identity labels from result detail", async () => {
+    const GET = vi.fn(async (url: string) => {
+      if (url === "/api/benchmark-results/{id}") {
+        return {
+          data: {
+            ...detail,
+            hardware: {
+              ...detail.hardware,
+              hash: "0123456789abcdef0123456789abcdef",
+            },
+            commit_repo_url: "https://github.com/apache/arrow",
+            history_fingerprint: "fff41571debd35f721110e6a7d99440a",
+          },
+        };
+      }
+      if (url === "/api/history/{benchmark_result_id}") {
+        return { data: { history_fingerprint: "fp1", samples: [] } };
+      }
+      throw new Error(`unexpected url ${url}`);
+    });
+
+    const vm = await loadTrend({ GET } as unknown as Client, { kind: "result", resultId: "r1" });
+
+    expect(vm.identity.displayFingerprint).toBe("fff41571debd…7d99440a");
+    expect(vm.identity.displayHardwareHash).toBe("0123456789ab…89abcdef");
+    expect(vm.identity.repositoryLabel).toBe("apache/arrow");
+  });
+
   it("throws when the detail load fails", async () => {
     const GET = vi.fn(async () => ({ error: { detail: "boom" } }));
     await expect(
@@ -115,6 +143,9 @@ describe("loadTrend by fingerprint", () => {
       fingerprint: "fp1",
     });
     expect(vm.points).toHaveLength(1);
+    expect(vm.identity.displayFingerprint).toBe("fp1");
+    expect(vm.identity.displayHardwareHash).toBe("hw1");
+    expect(vm.identity.repositoryLabel).toBe("conbench/demo");
   });
 
   it("throws a not-found error for an unknown fingerprint", async () => {
