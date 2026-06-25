@@ -21,6 +21,11 @@ in kata (project `conbench`).
 - Commit repository changes before ending the turn unless the user explicitly
   asks not to commit. Keep unrelated user changes out of commits; stage only
   the paths you changed for the task.
+- Do not add tautological content-matching tests that only assert that strings,
+  labels, headings, or resource names you just wrote are still present. Tests
+  must verify behavior or a meaningful contract: parse structured output when
+  possible, exercise code paths, validate rendered artifacts with an external
+  consumer, or check invariants that would catch a real regression.
 
 ## Go development (new-vision backend)
 
