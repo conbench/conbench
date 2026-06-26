@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
 
   import { createConbenchClient } from "../api/client";
+  import { formatMeasurement } from "../format";
   import { loadRunPage, type RunPageViewModel, type RunResultRow } from "../run/loader";
   import { interceptNavClick, navigate } from "../router";
 
@@ -100,11 +101,7 @@
   }
 
   function formatSVS(row: RunResultRow): string {
-    if (row.singleValueSummary === null) return "not computed";
-    const value = Number.isInteger(row.singleValueSummary)
-      ? row.singleValueSummary.toLocaleString()
-      : row.singleValueSummary.toLocaleString(undefined, { maximumSignificantDigits: 6 });
-    return row.unit === null ? value : `${value} ${row.unit}`;
+    return formatMeasurement(row.singleValueSummary, row.unit, "not computed");
   }
 
   function plural(n: number, word: string, pluralWord = `${word}s`): string {
@@ -280,7 +277,7 @@
                   {/each}
                 </div>
               </td>
-              <td data-label="Measurement">
+              <td data-label="Measurement" class="numeric">
                 <strong>{formatSVS(row)}</strong>
                 <span class="subtle-inline">{row.singleValueSummaryType}</span>
               </td>

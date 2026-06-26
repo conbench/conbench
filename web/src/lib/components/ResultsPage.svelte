@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createConbenchClient } from "../api/client";
+  import { formatMeasurement } from "../format";
   import {
     loadResultsPage,
     type ResultListRow,
@@ -148,11 +149,7 @@
   }
 
   function formatSVS(row: ResultListRow): string {
-    if (row.singleValueSummary === null) return "not computed";
-    const value = Number.isInteger(row.singleValueSummary)
-      ? row.singleValueSummary.toLocaleString()
-      : row.singleValueSummary.toLocaleString(undefined, { maximumSignificantDigits: 6 });
-    return row.unit === null ? value : `${value} ${row.unit}`;
+    return formatMeasurement(row.singleValueSummary, row.unit, "not computed");
   }
 
   function tagText(tag: { key: string; value: string }): string {

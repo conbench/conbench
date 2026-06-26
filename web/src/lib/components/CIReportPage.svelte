@@ -2,6 +2,7 @@
   import { tick } from "svelte";
 
   import { createConbenchClient } from "../api/client";
+  import { formatNumber } from "../format";
   import { hasCIReportSelector, loadCIReport, type CIReport } from "../ci-report/loader";
   import { interceptNavClick, navigate, type CIReportQuery } from "../router";
 
@@ -239,7 +240,7 @@
   }
 
   function numberText(value: number | null): string {
-    return value === null ? "-" : value.toPrecision(5);
+    return value === null ? "-" : formatNumber(value);
   }
 
   function unitText(value: string | null): string {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { formatMeasurement } from "../format";
   import { interceptNavClick } from "../router";
   import type { TableRow } from "../series/transform";
 
@@ -48,7 +49,7 @@
               <span class="msg">{row.commitMessage}</span>
             </span>
           </td>
-          <td class="num" data-label="SVS">{row.svs}{row.unit ? ` ${row.unit}` : ""}</td>
+          <td class="num" data-label="SVS">{formatMeasurement(row.svs, row.unit)}</td>
           <td class="num" data-label="z">{z(row.z)}</td>
           <td class="flags" data-label="flags">{row.flags}</td>
         </tr>

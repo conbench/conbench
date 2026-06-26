@@ -300,9 +300,22 @@
 <style>
   .home-page {
     gap: 12px;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+  }
+  .home-page .table-panel {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
   }
   .runs-table {
     --stacked-label-width: 88px;
+  }
+  .runs-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
   }
   .runs-table .time-col {
     width: 10%;

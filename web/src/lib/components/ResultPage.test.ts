@@ -186,7 +186,8 @@ describe("ResultPage", () => {
   it("shows the error payload for an errored result", async () => {
     mockPage({ ...detail, single_value_summary: null, error: { stack: "trace" } });
     render(ResultPage, { props: { resultId: "r1" } });
-    await waitFor(() => screen.getByText("—"));
+    await waitFor(() => screen.getByRole("heading", { name: "demo-benchmark" }));
+    expect(screen.getByText("SVS (min)").nextElementSibling).toHaveTextContent("—");
     expect(screen.getAllByText(/"stack"/).length).toBeGreaterThan(0);
   });
 

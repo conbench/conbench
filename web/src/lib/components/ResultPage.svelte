@@ -143,7 +143,7 @@
       </div>
       <div class="header-actions">
         <div class="page-meta">
-          <span>SVS {vm.svsText}</span>
+          <span>SVS <span class="numeric-text">{vm.svsText}</span></span>
           <span>{vm.hardwareName} ({vm.hardwareType})</span>
           <span title={vm.runId}>run {vm.displayRunId}</span>
         </div>
@@ -196,14 +196,14 @@
       <h2>Measurement</h2>
       <dl class="compact-dl">
         <dt>SVS ({vm.svsType})</dt>
-        <dd>{vm.svsText}</dd>
+        <dd class="numeric-text">{vm.svsText}</dd>
         {#if vm.iterations !== null}
           <dt>iterations</dt>
-          <dd>{vm.iterations}</dd>
+          <dd class="numeric-text">{vm.iterations}</dd>
         {/if}
         {#each vm.aggregates as agg (agg.label)}
           <dt>{agg.label}</dt>
-          <dd>{agg.value}</dd>
+          <dd class="numeric-text">{agg.value}</dd>
         {/each}
         <dt>less is better</dt>
         <dd>{vm.lessIsBetterText}</dd>

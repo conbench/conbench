@@ -2,6 +2,7 @@
   import { onMount, tick } from "svelte";
 
   import { createConbenchClient } from "../api/client";
+  import { formatMeasurement } from "../format";
   import { loadTrend, type TrendSource, type TrendViewModel } from "../series/loader";
   import {
     flagsText,
@@ -331,7 +332,7 @@
           <button type="button" class="flag-card" onclick={() => jumpToFlag(target)}>
             <span>{target.count} {target.count === 1 ? target.label : `${target.label}s`}</span>
             <strong>{target.point.commitHash}</strong>
-            <span>{target.point.svs}{target.point.unit ? ` ${target.point.unit}` : ""} · {zText(target.point.stats.z)}</span>
+            <span class="numeric-text">{formatMeasurement(target.point.svs, target.point.unit)} · {zText(target.point.stats.z)}</span>
             <span class="jump">Jump to first {target.label}</span>
           </button>
         {/each}
@@ -411,7 +412,7 @@
           <div>
             <span class="eyebrow">selected point</span>
             <strong>{sel.commitHash}</strong>
-            <span class="faint">{sel.svs}{sel.unit ? ` ${sel.unit}` : ""}</span>
+            <span class="faint numeric-text">{formatMeasurement(sel.svs, sel.unit)}</span>
           </div>
           <dl class="point-meta">
             <div>

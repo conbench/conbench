@@ -63,10 +63,14 @@ describe("toBrowseRows", () => {
 });
 
 describe("formatting", () => {
-  it("formatSVS keeps 4 significant digits without trailing zeros", () => {
+  it("formatSVS groups integer measurements without rounding", () => {
+    expect(formatSVS(52651400)).toBe("52,651,400");
+    expect(formatSVS(607800000)).toBe("607,800,000");
+  });
+  it("formatSVS keeps compact decimal precision without trailing zeros", () => {
     expect(formatSVS(1.23456)).toBe("1.235");
     expect(formatSVS(0.0001234567)).toBe("0.0001235");
-    expect(formatSVS(1500)).toBe("1500");
+    expect(formatSVS(1500)).toBe("1,500");
   });
   it("formatDate renders a local short date", () => {
     expect(formatDate("2024-01-07T12:00:00Z", "en-US")).toMatch(/Jan 7, 2024|Jan 8, 2024/);

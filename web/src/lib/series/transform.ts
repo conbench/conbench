@@ -1,5 +1,6 @@
 import type { components } from "../api/schema";
 import { formatDate, formatSVS, windowStartIso } from "../browse/transform";
+import { formatMeasurement } from "../format";
 import type { BrowseWindow, TrendAxis } from "../router";
 
 type HistorySample = components["schemas"]["HistorySample"];
@@ -244,7 +245,7 @@ export function pointTooltip(p: SeriesPoint, locale?: string): TrendTooltip {
     lines.push(p.commitMessage.length > 80 ? `${p.commitMessage.slice(0, 79)}…` : p.commitMessage);
   }
   return {
-    title: `${p.commitHash} · ${p.svs}${p.unit ? ` ${p.unit}` : ""}`,
+    title: `${p.commitHash} · ${formatMeasurement(p.svs, p.unit)}`,
     lines,
   };
 }

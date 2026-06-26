@@ -1,4 +1,5 @@
 import type { components } from "../api/schema";
+import { formatMeasurement, formatNumber } from "../format";
 import type { BrowseWindow } from "../router";
 
 type SeriesListItem = components["schemas"]["SeriesListItem"];
@@ -23,10 +24,10 @@ export interface BrowseRow {
   commitDateText: string;
 }
 
-/** formatSVS renders a value at 4 significant digits with trailing zeros
- * trimmed, mirroring the backend's display rounding. */
+/** formatSVS renders an SVS for dense tables: exact grouped integers and
+ * compact decimal values with trailing zeros trimmed. */
 export function formatSVS(value: number): string {
-  return Number(value.toPrecision(4)).toString();
+  return formatNumber(value);
 }
 
 /** formatDate renders a short local date; datetimes are UTC on the wire and
@@ -58,7 +59,7 @@ export function toBrowseRows(items: SeriesListItem[], locale?: string): BrowseRo
       hardwareKey: item.hardware.hash || item.hardware.id,
       hardwareName: item.hardware.name,
       latestSVS: svs,
-      svsText: svs === null ? "—" : `${formatSVS(svs)}${item.unit === null ? "" : ` ${item.unit}`}`,
+      svsText: formatMeasurement(svs, item.unit),
       pointCount: item.point_count,
       sparkline: item.sparkline ?? [],
       status: item.status,
