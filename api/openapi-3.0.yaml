@@ -1175,6 +1175,14 @@ components:
         - last_result_at
         - commit
       type: object
+    RecentRunRepositoryItem:
+      additionalProperties: false
+      properties:
+        repository:
+          type: string
+      required:
+        - repository
+      type: object
     RecentRunsPage:
       additionalProperties: false
       properties:
@@ -1184,6 +1192,11 @@ components:
           format: uri
           readOnly: true
           type: string
+        repositories:
+          items:
+            $ref: "#/components/schemas/RecentRunRepositoryItem"
+          nullable: true
+          type: array
         runs:
           items:
             $ref: "#/components/schemas/RecentRunListItem"
@@ -1191,6 +1204,7 @@ components:
           type: array
       required:
         - runs
+        - repositories
       type: object
     ResultDetail:
       additionalProperties: false
@@ -2462,6 +2476,13 @@ paths:
           schema:
             description: Include bounded CI attention summaries for the newest runs.
             type: boolean
+        - description: Filter by repository URL.
+          explode: false
+          in: query
+          name: repository
+          schema:
+            description: Filter by repository URL.
+            type: string
       responses:
         "200":
           content:

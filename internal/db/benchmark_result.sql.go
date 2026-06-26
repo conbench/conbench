@@ -443,17 +443,18 @@ func (q *Queries) SelectBenchmarkResults(ctx context.Context, arg SelectBenchmar
 
 const selectRecentRuns = `-- name: SelectRecentRuns :many
 WITH candidate_rows AS MATERIALIZED (
-  SELECT br.run_id, br."timestamp"
+  SELECT br.run_id, br."timestamp", br.commit_repo_url
   FROM benchmark_result br
   ORDER BY br."timestamp" DESC, br.id DESC
-  LIMIT $1
+  LIMIT $2
 ),
 selected_runs AS MATERIALIZED (
   SELECT cr.run_id, max(cr."timestamp") AS candidate_last_timestamp
   FROM candidate_rows cr
+  WHERE ($1::text IS NULL OR cr.commit_repo_url = $1::text)
   GROUP BY cr.run_id
   ORDER BY max(cr."timestamp") DESC, cr.run_id DESC
-  LIMIT $2
+  LIMIT $3
 ),
 run_agg AS MATERIALIZED (
   SELECT
@@ -466,6 +467,7 @@ run_agg AS MATERIALIZED (
     count(DISTINCT br.batch_id) FILTER (WHERE br.batch_id IS NOT NULL) AS batch_count
   FROM benchmark_result br
   JOIN selected_runs sr ON sr.run_id = br.run_id
+  WHERE ($1::text IS NULL OR br.commit_repo_url = $1::text)
   GROUP BY br.run_id
 )
 SELECT
@@ -493,6 +495,7 @@ JOIN LATERAL (
   SELECT br.id, br.run_reason, br.run_tags, br.batch_id, br.commit_repo_url, br.commit_id, br."timestamp"
   FROM benchmark_result br
   WHERE br.run_id = a.run_id
+    AND ($1::text IS NULL OR br.commit_repo_url = $1::text)
   ORDER BY br."timestamp" DESC, br.id DESC
   LIMIT 1
 ) latest ON true
@@ -501,6 +504,7 @@ ORDER BY a.last_result_at DESC, a.run_id DESC
 `
 
 type SelectRecentRunsParams struct {
+	Repository           *string
 	CandidateResultCount int32
 	PageSize             int32
 }
@@ -529,10 +533,12 @@ type SelectRecentRunsRow struct {
 
 // Landing-page run summaries. Discover candidate run IDs from the newest result
 // rows using the timestamp index, then aggregate the selected run IDs exactly via
-// the run_id index. This avoids a full GROUP BY over the entire 100M-row result
-// table while still producing exact counts for the runs shown on the page.
+// the run_id index. Repository filtering is applied after the bounded candidate
+// scan because commit_repo_url is not indexed in the frozen production schema.
+// This keeps the home page fast while still producing exact counts for the runs
+// shown on the page.
 func (q *Queries) SelectRecentRuns(ctx context.Context, arg SelectRecentRunsParams) ([]SelectRecentRunsRow, error) {
-	rows, err := q.db.Query(ctx, selectRecentRuns, arg.CandidateResultCount, arg.PageSize)
+	rows, err := q.db.Query(ctx, selectRecentRuns, arg.Repository, arg.CandidateResultCount, arg.PageSize)
 	if err != nil {
 		return nil, err
 	}

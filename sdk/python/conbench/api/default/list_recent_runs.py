@@ -13,6 +13,7 @@ def _get_kwargs(
     *,
     page_size: int | Unset = 25,
     include_attention: bool | Unset = UNSET,
+    repository: str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -20,6 +21,8 @@ def _get_kwargs(
     params["page_size"] = page_size
 
     params["include_attention"] = include_attention
+
+    params["repository"] = repository
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -61,6 +64,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     page_size: int | Unset = 25,
     include_attention: bool | Unset = UNSET,
+    repository: str | Unset = UNSET,
 ) -> Response[ErrorModel | RecentRunsPage]:
     """List recent benchmark runs
 
@@ -68,6 +72,7 @@ def sync_detailed(
         page_size (int | Unset): Page size (max 100). Default: 25.
         include_attention (bool | Unset): Include bounded CI attention summaries for the newest
             runs.
+        repository (str | Unset): Filter by repository URL.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -80,6 +85,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         page_size=page_size,
         include_attention=include_attention,
+        repository=repository,
     )
 
     response = client.get_httpx_client().request(
@@ -94,6 +100,7 @@ def sync(
     client: AuthenticatedClient | Client,
     page_size: int | Unset = 25,
     include_attention: bool | Unset = UNSET,
+    repository: str | Unset = UNSET,
 ) -> ErrorModel | RecentRunsPage | None:
     """List recent benchmark runs
 
@@ -101,6 +108,7 @@ def sync(
         page_size (int | Unset): Page size (max 100). Default: 25.
         include_attention (bool | Unset): Include bounded CI attention summaries for the newest
             runs.
+        repository (str | Unset): Filter by repository URL.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -114,6 +122,7 @@ def sync(
         client=client,
         page_size=page_size,
         include_attention=include_attention,
+        repository=repository,
     ).parsed
 
 
@@ -122,6 +131,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     page_size: int | Unset = 25,
     include_attention: bool | Unset = UNSET,
+    repository: str | Unset = UNSET,
 ) -> Response[ErrorModel | RecentRunsPage]:
     """List recent benchmark runs
 
@@ -129,6 +139,7 @@ async def asyncio_detailed(
         page_size (int | Unset): Page size (max 100). Default: 25.
         include_attention (bool | Unset): Include bounded CI attention summaries for the newest
             runs.
+        repository (str | Unset): Filter by repository URL.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -141,6 +152,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         page_size=page_size,
         include_attention=include_attention,
+        repository=repository,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -153,6 +165,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     page_size: int | Unset = 25,
     include_attention: bool | Unset = UNSET,
+    repository: str | Unset = UNSET,
 ) -> ErrorModel | RecentRunsPage | None:
     """List recent benchmark runs
 
@@ -160,6 +173,7 @@ async def asyncio(
         page_size (int | Unset): Page size (max 100). Default: 25.
         include_attention (bool | Unset): Include bounded CI attention summaries for the newest
             runs.
+        repository (str | Unset): Filter by repository URL.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -174,5 +188,6 @@ async def asyncio(
             client=client,
             page_size=page_size,
             include_attention=include_attention,
+            repository=repository,
         )
     ).parsed

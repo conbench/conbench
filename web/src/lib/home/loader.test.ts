@@ -18,6 +18,10 @@ function fakeClient(page: unknown, error: false | { detail: string } = false): {
 describe("listRecentRuns", () => {
   it("loads a production-credible recent-run page", async () => {
     const { client, GET } = fakeClient({
+      repositories: [
+        { repository: "https://github.com/apache/arrow" },
+        { repository: "https://github.com/apache/arrow-go" },
+      ],
       runs: [
         {
           run_id: "run-a",
@@ -64,6 +68,10 @@ describe("listRecentRuns", () => {
       params: { query: { page_size: 25, include_attention: true } },
     });
     expect(page.runs).toHaveLength(1);
+    expect(page.repositories).toEqual([
+      { repository: "https://github.com/apache/arrow", label: "apache/arrow" },
+      { repository: "https://github.com/apache/arrow-go", label: "apache/arrow-go" },
+    ]);
     expect(page.runs[0]).toMatchObject({
       runId: "run-a",
       runReason: "nightly",
@@ -92,6 +100,36 @@ describe("listRecentRuns", () => {
     expect(page.runs[0]!.ciReportHref).toBe(
       "/ci/report?repository=https%3A%2F%2Fgithub.com%2Fapache%2Farrow&commit_sha=abcdef123456&run_ids=run-a&baseline=fork_point",
     );
+  });
+
+  it("passes the selected repository to the recent-runs endpoint", async () => {
+    const { client, GET } = fakeClient({
+      repositories: [{ repository: "https://github.com/apache/arrow-go" }],
+      runs: [
+        {
+          ...runPayload(),
+          run_id: "run-arrow-go",
+          repository: "https://github.com/apache/arrow-go",
+          commit: {
+            ...runPayload().commit,
+            repository: "https://github.com/apache/arrow-go",
+          },
+        },
+      ],
+    });
+
+    const page = await listRecentRuns(client, { repository: "https://github.com/apache/arrow-go" });
+
+    expect(GET).toHaveBeenCalledWith("/api/runs/recent", {
+      params: {
+        query: {
+          page_size: 25,
+          include_attention: true,
+          repository: "https://github.com/apache/arrow-go",
+        },
+      },
+    });
+    expect(page.runs.map((run) => run.repository)).toEqual(["https://github.com/apache/arrow-go"]);
   });
 
   it("falls back to stable run identity when commit metadata is sparse", async () => {
@@ -137,7 +175,7 @@ describe("listRecentRuns", () => {
 
   it("treats null runs as an empty page", async () => {
     const { client } = fakeClient({ runs: null });
-    await expect(listRecentRuns(client)).resolves.toEqual({ runs: [] });
+    await expect(listRecentRuns(client)).resolves.toEqual({ runs: [], repositories: [] });
   });
 
   it("throws endpoint detail on failure", async () => {
@@ -145,3 +183,30 @@ describe("listRecentRuns", () => {
     await expect(listRecentRuns(client)).rejects.toThrow("statement timeout");
   });
 });
+
+function runPayload() {
+  return {
+    run_id: "run-a",
+    run_reason: "nightly",
+    run_tags: { arch: "x86" },
+    batch_count: 1,
+    latest_batch_id: "batch-a",
+    result_count: 180,
+    error_count: 1,
+    series_count: 90,
+    latest_result_id: "result-a",
+    repository: "https://github.com/apache/arrow",
+    commit_sha: "abcdef123456",
+    first_result_at: "2026-01-01T00:00:00Z",
+    last_result_at: "2026-01-02T00:00:00Z",
+    commit: {
+      hash: "abcdef123456",
+      repository: "https://github.com/apache/arrow",
+      message: "Improve vector kernel dispatch",
+      author_name: "Contributor A",
+      author_login: "contributor-a",
+      author_avatar: "https://avatars.githubusercontent.com/u/12345?v=4",
+      timestamp: "2026-01-02T00:00:00Z",
+    },
+  };
+}

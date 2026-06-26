@@ -4,6 +4,7 @@ import {
   DEFAULT_TREND_QUERY,
   formatBrowseQuery,
   formatCompareQuery,
+  formatHomeQuery,
   formatResultListQuery,
   formatTrendQuery,
   interceptNavClick,
@@ -11,6 +12,7 @@ import {
   parseBrowseQuery,
   parseCIReportQuery,
   parseCompareQuery,
+  parseHomeQuery,
   parseResultListQuery,
   parseTrendQuery,
 } from "./router";
@@ -53,7 +55,18 @@ describe("browse route", () => {
   it("matches / as the recent-runs home", () => {
     expect(matchRoute("/")).toEqual({
       name: "home",
+      query: { repository: "" },
     });
+  });
+
+  it("parses and formats the home repository selector", () => {
+    const query = { repository: "https://github.com/apache/arrow-go" };
+    expect(matchRoute("/", "?repository=https%3A%2F%2Fgithub.com%2Fapache%2Farrow-go")).toEqual({
+      name: "home",
+      query,
+    });
+    expect(parseHomeQuery(formatHomeQuery(query))).toEqual(query);
+    expect(formatHomeQuery({ repository: "" })).toBe("");
   });
 
   it("matches /series as browse with default query", () => {

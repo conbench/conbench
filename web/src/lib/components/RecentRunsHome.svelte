@@ -2,14 +2,26 @@
   import { onMount } from "svelte";
 
   import { createConbenchClient } from "../api/client";
-  import { listRecentRuns, type RecentRunAttentionViewModel, type RecentRunViewModel } from "../home/loader";
-  import { interceptNavClick, navigate } from "../router";
+  import {
+    listRecentRuns,
+    type RecentRunAttentionViewModel,
+    type RecentRunRepositoryViewModel,
+    type RecentRunViewModel,
+  } from "../home/loader";
+  import { DEFAULT_HOME_QUERY, formatHomeQuery, interceptNavClick, navigate, type HomeQuery } from "../router";
 
-  let { baseUrl = "" }: { baseUrl?: string } = $props();
+  let {
+    baseUrl = "",
+    query = DEFAULT_HOME_QUERY,
+  }: {
+    baseUrl?: string;
+    query?: HomeQuery;
+  } = $props();
 
   const client = $derived(createConbenchClient(baseUrl));
 
   let runs = $state<RecentRunViewModel[]>([]);
+  let repositories = $state<RecentRunRepositoryViewModel[]>([]);
   let loading = $state(true);
   let errorMsg = $state<string | null>(null);
 
@@ -21,8 +33,9 @@
     loading = true;
     errorMsg = null;
     try {
-      const page = await listRecentRuns(client);
+      const page = await listRecentRuns(client, query);
       runs = page.runs;
+      repositories = page.repositories;
     } catch (err) {
       errorMsg = err instanceof Error ? err.message : String(err);
     } finally {
@@ -37,6 +50,12 @@
   const showRepositoryColumn = $derived(repositoryLabels.length > 1);
   const attentionRuns = $derived(runs.filter((run) => run.attention !== null));
   const ATTENTION_WINDOW = 5;
+  const selectedRepositoryLabel = $derived(
+    query.repository === ""
+      ? "All projects"
+      : repositories.find((repository) => repository.repository === query.repository)?.label ??
+        formatRepositoryLabel(query.repository),
+  );
 
   function go(e: MouseEvent, href: string) {
     if (!interceptNavClick(e)) return;
@@ -73,6 +92,26 @@
     return plural(labels.length, "repository", "repositories");
   }
 
+  function formatRepositoryLabel(repository: string): string {
+    if (repository === "") return "not set";
+    try {
+      const u = new URL(repository);
+      const parts = u.pathname.split("/").filter(Boolean);
+      return parts.length >= 2 ? `${parts[0]}/${parts[1]}` : repository;
+    } catch {
+      return repository;
+    }
+  }
+
+  function projectHref(repository: string): string {
+    return `/${formatHomeQuery({ repository })}`;
+  }
+
+  function setRepository(e: Event) {
+    const repository = e.currentTarget instanceof HTMLSelectElement ? e.currentTarget.value : "";
+    navigate(projectHref(repository));
+  }
+
   function attentionStatusLabel(attention: RecentRunAttentionViewModel): string {
     return attention.status === "failure" ? "Regression" : "Action required";
   }
@@ -86,16 +125,31 @@
 <main class="page home-page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">apache/arrow</p>
+      <p class="eyebrow">{selectedRepositoryLabel}</p>
       <h1>CI runs</h1>
     </div>
-    <div class="page-meta">
-      {#if repositoryLabels.length === 1}
-        <span>{repositoryLabels[0]}</span>
-      {:else if repositoryLabels.length > 1}
-        <span>{plural(repositoryLabels.length, "repository", "repositories")}</span>
+    <div class="header-controls">
+      {#if repositories.length > 0}
+        <label class="project-selector">
+          Project
+          <select value={query.repository} onchange={setRepository}>
+            <option value="">All projects</option>
+            {#each repositories as repository (repository.repository)}
+              <option value={repository.repository}>{repository.label}</option>
+            {/each}
+          </select>
+        </label>
       {/if}
-      <span>Newest first</span>
+      <div class="page-meta">
+        {#if query.repository !== ""}
+          <span>{selectedRepositoryLabel}</span>
+        {:else if repositoryLabels.length === 1}
+          <span>{repositoryLabels[0]}</span>
+        {:else if repositoryLabels.length > 1}
+          <span>{plural(repositoryLabels.length, "repository", "repositories")}</span>
+        {/if}
+        <span>Newest first</span>
+      </div>
     </div>
   </header>
 
@@ -316,6 +370,36 @@
     position: sticky;
     top: 0;
     z-index: 1;
+  }
+  .header-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .project-selector {
+    display: grid;
+    gap: 4px;
+    color: var(--c-text-muted);
+    font-size: 0.68rem;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .project-selector select {
+    min-height: 28px;
+    min-width: 180px;
+    max-width: min(48vw, 280px);
+    padding: 0 28px 0 9px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    background: var(--c-surface);
+    color: var(--c-text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
   }
   .runs-table .time-col {
     width: 10%;

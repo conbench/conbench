@@ -107,10 +107,12 @@ LIMIT sqlc.arg('page_size');
 -- name: SelectRecentRuns :many
 -- Landing-page run summaries. Discover candidate run IDs from the newest result
 -- rows using the timestamp index, then aggregate the selected run IDs exactly via
--- the run_id index. This avoids a full GROUP BY over the entire 100M-row result
--- table while still producing exact counts for the runs shown on the page.
+-- the run_id index. Repository filtering is applied after the bounded candidate
+-- scan because commit_repo_url is not indexed in the frozen production schema.
+-- This keeps the home page fast while still producing exact counts for the runs
+-- shown on the page.
 WITH candidate_rows AS MATERIALIZED (
-  SELECT br.run_id, br."timestamp"
+  SELECT br.run_id, br."timestamp", br.commit_repo_url
   FROM benchmark_result br
   ORDER BY br."timestamp" DESC, br.id DESC
   LIMIT sqlc.arg('candidate_result_count')
@@ -118,6 +120,7 @@ WITH candidate_rows AS MATERIALIZED (
 selected_runs AS MATERIALIZED (
   SELECT cr.run_id, max(cr."timestamp") AS candidate_last_timestamp
   FROM candidate_rows cr
+  WHERE (sqlc.narg('repository')::text IS NULL OR cr.commit_repo_url = sqlc.narg('repository')::text)
   GROUP BY cr.run_id
   ORDER BY max(cr."timestamp") DESC, cr.run_id DESC
   LIMIT sqlc.arg('page_size')
@@ -133,6 +136,7 @@ run_agg AS MATERIALIZED (
     count(DISTINCT br.batch_id) FILTER (WHERE br.batch_id IS NOT NULL) AS batch_count
   FROM benchmark_result br
   JOIN selected_runs sr ON sr.run_id = br.run_id
+  WHERE (sqlc.narg('repository')::text IS NULL OR br.commit_repo_url = sqlc.narg('repository')::text)
   GROUP BY br.run_id
 )
 SELECT
@@ -160,6 +164,7 @@ JOIN LATERAL (
   SELECT br.id, br.run_reason, br.run_tags, br.batch_id, br.commit_repo_url, br.commit_id, br."timestamp"
   FROM benchmark_result br
   WHERE br.run_id = a.run_id
+    AND (sqlc.narg('repository')::text IS NULL OR br.commit_repo_url = sqlc.narg('repository')::text)
   ORDER BY br."timestamp" DESC, br.id DESC
   LIMIT 1
 ) latest ON true

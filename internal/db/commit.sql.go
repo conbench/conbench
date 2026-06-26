@@ -93,6 +93,34 @@ func (q *Queries) InsertCommit(ctx context.Context, arg InsertCommitParams) (str
 	return id, err
 }
 
+const selectRecentRunRepositories = `-- name: SelectRecentRunRepositories :many
+SELECT repository
+FROM commit
+WHERE repository <> ''
+GROUP BY repository
+ORDER BY max(timestamp) DESC NULLS LAST, repository ASC
+`
+
+func (q *Queries) SelectRecentRunRepositories(ctx context.Context) ([]string, error) {
+	rows, err := q.db.Query(ctx, selectRecentRunRepositories)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var repository string
+		if err := rows.Scan(&repository); err != nil {
+			return nil, err
+		}
+		items = append(items, repository)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const selectUnknownCommitRepairCandidates = `-- name: SelectUnknownCommitRepairCandidates :many
 SELECT id, sha, repository
 FROM commit

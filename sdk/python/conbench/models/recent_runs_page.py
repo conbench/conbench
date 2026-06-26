@@ -9,6 +9,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.recent_run_list_item import RecentRunListItem
+    from ..models.recent_run_repository_item import RecentRunRepositoryItem
 
 
 T = TypeVar("T", bound="RecentRunsPage")
@@ -18,14 +19,26 @@ T = TypeVar("T", bound="RecentRunsPage")
 class RecentRunsPage:
     """
     Attributes:
+        repositories (list[RecentRunRepositoryItem] | None):
         runs (list[RecentRunListItem] | None):
         schema (str | Unset): A URL to the JSON Schema for this object.
     """
 
+    repositories: list[RecentRunRepositoryItem] | None
     runs: list[RecentRunListItem] | None
     schema: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
+        repositories: list[dict[str, Any]] | None
+        if isinstance(self.repositories, list):
+            repositories = []
+            for repositories_type_0_item_data in self.repositories:
+                repositories_type_0_item = repositories_type_0_item_data.to_dict()
+                repositories.append(repositories_type_0_item)
+
+        else:
+            repositories = self.repositories
+
         runs: list[dict[str, Any]] | None
         if isinstance(self.runs, list):
             runs = []
@@ -42,6 +55,7 @@ class RecentRunsPage:
 
         field_dict.update(
             {
+                "repositories": repositories,
                 "runs": runs,
             }
         )
@@ -53,8 +67,31 @@ class RecentRunsPage:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.recent_run_list_item import RecentRunListItem
+        from ..models.recent_run_repository_item import RecentRunRepositoryItem
 
         d = dict(src_dict)
+
+        def _parse_repositories(data: object) -> list[RecentRunRepositoryItem] | None:
+            if data is None:
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                repositories_type_0 = []
+                _repositories_type_0 = data
+                for repositories_type_0_item_data in _repositories_type_0:
+                    repositories_type_0_item = RecentRunRepositoryItem.from_dict(
+                        repositories_type_0_item_data
+                    )
+
+                    repositories_type_0.append(repositories_type_0_item)
+
+                return repositories_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[RecentRunRepositoryItem] | None, data)
+
+        repositories = _parse_repositories(d.pop("repositories"))
 
         def _parse_runs(data: object) -> list[RecentRunListItem] | None:
             if data is None:
@@ -81,6 +118,7 @@ class RecentRunsPage:
         schema = d.pop("$schema", UNSET)
 
         recent_runs_page = cls(
+            repositories=repositories,
             runs=runs,
             schema=schema,
         )

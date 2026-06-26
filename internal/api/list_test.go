@@ -246,6 +246,45 @@ func TestListRecentRunsGroupsResultsByRun(t *testing.T) {
 	}
 }
 
+func TestListRecentRunsFiltersByRepository(t *testing.T) {
+	tapi, _, _ := seedAPI(t)
+	seedResult(t, tapi, seedOpts{
+		sha:   "c1",
+		ts:    day(1),
+		data:  []float64{10},
+		runID: "run-arrow",
+		repo:  "https://github.com/apache/arrow",
+	})
+	seedResult(t, tapi, seedOpts{
+		sha:   "c2",
+		ts:    day(2),
+		data:  []float64{20},
+		runID: "run-arrow-go",
+		repo:  "https://github.com/apache/arrow-go",
+	})
+
+	resp := tapi.Get("/api/runs/recent?page_size=10&repository=https%3A%2F%2Fgithub.com%2Fapache%2Farrow-go")
+	require.Equal(t, http.StatusOK, resp.Code, "recent runs: %s", resp.Body.String())
+
+	var page struct {
+		Runs []struct {
+			RunID      string `json:"run_id"`
+			Repository string `json:"repository"`
+		} `json:"runs"`
+		Repositories []struct {
+			Repository string `json:"repository"`
+		} `json:"repositories"`
+	}
+	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &page))
+	require.Len(t, page.Runs, 1)
+	assert.Equal(t, "run-arrow-go", page.Runs[0].RunID)
+	assert.Equal(t, "https://github.com/apache/arrow-go", page.Runs[0].Repository)
+	assert.ElementsMatch(t,
+		[]string{"https://github.com/apache/arrow", "https://github.com/apache/arrow-go"},
+		recentRepositoryURLs(page.Repositories),
+	)
+}
+
 func TestListRecentRunsCanIncludeActionableAttention(t *testing.T) {
 	tapi, pool, ctx := seedAPI(t)
 	seedResult(t, tapi, seedOpts{runID: "main-run", sha: "c1", ts: day(1), data: []float64{10}})
@@ -297,4 +336,14 @@ func TestListRecentRunsCanIncludeActionableAttention(t *testing.T) {
 	}
 	assert.Equal(t, "main-run", page.Runs[1].RunID)
 	assert.Nil(t, page.Runs[1].Attention, "default-branch runs are not actionable CI attention")
+}
+
+func recentRepositoryURLs(rows []struct {
+	Repository string `json:"repository"`
+}) []string {
+	out := make([]string, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, row.Repository)
+	}
+	return out
 }

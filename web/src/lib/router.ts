@@ -42,8 +42,13 @@ export interface NotFoundRoute {
   name: "not-found";
 }
 
+export interface HomeQuery {
+  repository: string;
+}
+
 export interface HomeRoute {
   name: "home";
+  query: HomeQuery;
 }
 
 export interface AccountRoute {
@@ -198,6 +203,7 @@ export function formatCompareQuery(query: CompareQuery): string {
 }
 
 export const DEFAULT_BROWSE_QUERY: BrowseQuery = { q: "", hardware: "", repository: "", window: "all" };
+export const DEFAULT_HOME_QUERY: HomeQuery = { repository: "" };
 export const DEFAULT_RESULT_LIST_QUERY: ResultListQuery = {
   runID: "",
   batchID: "",
@@ -207,6 +213,18 @@ export const DEFAULT_RESULT_LIST_QUERY: ResultListQuery = {
 };
 
 const BROWSE_WINDOWS: readonly BrowseWindow[] = ["all", "30d", "3mo", "1y"];
+
+export function parseHomeQuery(search: string): HomeQuery {
+  const params = new URLSearchParams(search);
+  return { repository: params.get("repository") ?? "" };
+}
+
+export function formatHomeQuery(query: HomeQuery): string {
+  const params = new URLSearchParams();
+  if (query.repository !== "") params.set("repository", query.repository);
+  const s = params.toString();
+  return s === "" ? "" : `?${s}`;
+}
 
 /** parseBrowseQuery is total: absent params and unknown window values fall back
  * to the defaults, so a hand-edited URL can never produce an invalid route. */
@@ -299,7 +317,7 @@ function decodePathSegment(raw: string): string | null {
 
 export function matchRoute(pathname: string, search = ""): Route {
   if (pathname === "/" || pathname === "") {
-    return { name: "home" };
+    return { name: "home", query: parseHomeQuery(search) };
   }
   if (pathname === "/series" || pathname === "/series/") {
     return { name: "browse", query: parseBrowseQuery(search) };

@@ -22,6 +22,7 @@ const (
 type RecentRunsQuery struct {
 	PageSize         int
 	IncludeAttention bool
+	Repository       *string
 }
 
 // RecentRunAttention is an opt-in, bounded CI triage summary for a recent run.
@@ -65,7 +66,13 @@ type RecentRunListItem struct {
 
 // RecentRunsPage is the GET /api/runs/recent response.
 type RecentRunsPage struct {
-	Runs []RecentRunListItem `json:"runs"`
+	Runs         []RecentRunListItem       `json:"runs"`
+	Repositories []RecentRunRepositoryItem `json:"repositories"`
+}
+
+// RecentRunRepositoryItem is one project choice for the recent-runs page.
+type RecentRunRepositoryItem struct {
+	Repository string `json:"repository"`
 }
 
 // ListRecentRuns returns grouped summaries for the newest runs.
@@ -79,11 +86,16 @@ func (r *Reader) ListRecentRuns(ctx context.Context, q RecentRunsQuery) (*Recent
 	}
 
 	rows, err := r.store.SelectRecentRuns(ctx, storage.RecentRunsParams{
-		CandidateResultCount: recentRunsCandidateCount(pageSize),
+		CandidateResultCount: recentRunsCandidateCount(pageSize, q.Repository),
 		PageSize:             int32(pageSize),
+		Repository:           q.Repository,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("list recent runs: %w", err)
+	}
+	repositories, err := r.store.SelectRecentRunRepositories(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list recent run repositories: %w", err)
 	}
 
 	items := make([]RecentRunListItem, 0, len(rows))
@@ -97,10 +109,21 @@ func (r *Reader) ListRecentRuns(ctx context.Context, q RecentRunsQuery) (*Recent
 	if q.IncludeAttention {
 		r.attachRecentRunAttention(ctx, items)
 	}
-	return &RecentRunsPage{Runs: items}, nil
+	return &RecentRunsPage{Runs: items, Repositories: recentRunRepositoryItems(repositories)}, nil
 }
 
-func recentRunsCandidateCount(pageSize int) int32 {
+func recentRunRepositoryItems(rows []storage.RecentRunRepositoryRow) []RecentRunRepositoryItem {
+	items := make([]RecentRunRepositoryItem, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, RecentRunRepositoryItem{Repository: row.Repository})
+	}
+	return items
+}
+
+func recentRunsCandidateCount(pageSize int, repository *string) int32 {
+	if repository != nil {
+		return recentRunsCandidateMax
+	}
 	limit := int32(pageSize) * recentRunsCandidateFactor
 	if limit < recentRunsCandidateMin {
 		return recentRunsCandidateMin

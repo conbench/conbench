@@ -3,6 +3,7 @@ import type { components } from "../api/schema";
 
 type Client = ReturnType<typeof createConbenchClient>;
 type RecentRun = components["schemas"]["RecentRunListItem"];
+type RecentRunRepository = { repository: string };
 type RecentRunCommit = NonNullable<RecentRun["commit"]> & {
   message?: string | null;
   author_name?: string | null;
@@ -54,6 +55,16 @@ export interface RecentRunAttentionViewModel {
 
 export interface RecentRunsViewModel {
   runs: RecentRunViewModel[];
+  repositories: RecentRunRepositoryViewModel[];
+}
+
+export interface RecentRunRepositoryViewModel {
+  repository: string;
+  label: string;
+}
+
+export interface RecentRunsQuery {
+  repository: string;
 }
 
 export const RECENT_RUNS_PAGE_SIZE = 25;
@@ -62,14 +73,33 @@ function recentRunsError(res: { error?: { detail?: string } | undefined }): Erro
   return new Error(res.error?.detail ?? "failed to list recent runs");
 }
 
-export async function listRecentRuns(client: Client): Promise<RecentRunsViewModel> {
+export async function listRecentRuns(
+  client: Client,
+  query: RecentRunsQuery = { repository: "" },
+): Promise<RecentRunsViewModel> {
+  const apiQuery: {
+    page_size: number;
+    include_attention: boolean;
+    repository?: string;
+  } = { page_size: RECENT_RUNS_PAGE_SIZE, include_attention: true };
+  if (query.repository !== "") {
+    apiQuery.repository = query.repository;
+  }
   const res = await client.GET("/api/runs/recent", {
-    params: { query: { page_size: RECENT_RUNS_PAGE_SIZE, include_attention: true } },
+    params: { query: apiQuery },
   });
   if (res.error || !res.data) {
     throw recentRunsError(res);
   }
-  return { runs: (res.data.runs ?? []).map(toRecentRunViewModel) };
+  return {
+    runs: (res.data.runs ?? []).map(toRecentRunViewModel),
+    repositories: (((res.data as { repositories?: RecentRunRepository[] }).repositories ?? [])
+      .map(toRecentRunRepositoryViewModel)),
+  };
+}
+
+function toRecentRunRepositoryViewModel(row: RecentRunRepository): RecentRunRepositoryViewModel {
+  return { repository: row.repository, label: formatRepositoryLabel(row.repository) };
 }
 
 function toRecentRunViewModel(run: RecentRun): RecentRunViewModel {

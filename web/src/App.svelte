@@ -39,7 +39,9 @@
 
   <div class="app-content">
     {#if route.name === "home"}
-      <RecentRunsHome />
+      {#key route.query.repository}
+        <RecentRunsHome query={route.query} />
+      {/key}
     {:else if route.name === "browse"}
       <SeriesBrowse query={route.query} />
     {:else if route.name === "series-leaf"}

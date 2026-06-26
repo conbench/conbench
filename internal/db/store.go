@@ -745,11 +745,26 @@ func (s *Store) SelectRecentRuns(ctx context.Context, p storage.RecentRunsParams
 	rows, err := s.q.SelectRecentRuns(ctx, SelectRecentRunsParams{
 		CandidateResultCount: p.CandidateResultCount,
 		PageSize:             p.PageSize,
+		Repository:           p.Repository,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return recentRunRowsFromRows(rows), nil
+}
+
+// SelectRecentRunRepositories returns repositories available for the landing
+// page project selector.
+func (s *Store) SelectRecentRunRepositories(ctx context.Context) ([]storage.RecentRunRepositoryRow, error) {
+	rows, err := s.q.SelectRecentRunRepositories(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]storage.RecentRunRepositoryRow, 0, len(rows))
+	for _, repository := range rows {
+		out = append(out, storage.RecentRunRepositoryRow{Repository: repository})
+	}
+	return out, nil
 }
 
 // SelectSeriesPage returns the filtered, cursor-paginated series list: one row

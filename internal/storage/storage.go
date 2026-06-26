@@ -48,6 +48,7 @@ type Store interface {
 	GetResultForCompare(ctx context.Context, id string) (CompareResultRow, error)
 	SelectBenchmarkResults(ctx context.Context, p ListResultsParams) ([]ResultListRow, error)
 	SelectRecentRuns(ctx context.Context, p RecentRunsParams) ([]RecentRunRow, error)
+	SelectRecentRunRepositories(ctx context.Context) ([]RecentRunRepositoryRow, error)
 	SelectSeriesPage(ctx context.Context, p SeriesListParams) ([]SeriesPageRow, error)
 	SelectSeriesMembers(ctx context.Context, fingerprints []string) ([]HistoryRow, error)
 	SelectCIReportRunsByCommit(ctx context.Context, repository, sha string) ([]CIReportRunRow, error)
@@ -575,6 +576,13 @@ type ResultListRow struct {
 type RecentRunsParams struct {
 	CandidateResultCount int32
 	PageSize             int32
+	Repository           *string
+}
+
+// RecentRunRepositoryRow is one repository with benchmark results for the home
+// page project selector.
+type RecentRunRepositoryRow struct {
+	Repository string
 }
 
 // RecentRunRow is one grouped run for the landing dashboard. Counts are exact

@@ -929,6 +929,9 @@ export interface components {
             /** Format: int64 */
             series_count: number;
         };
+        RecentRunRepositoryItem: {
+            repository: string;
+        };
         RecentRunsPage: {
             /**
              * Format: uri
@@ -936,6 +939,7 @@ export interface components {
              * @example https://example.com/schemas/RecentRunsPage.json
              */
             readonly $schema?: string;
+            repositories: components["schemas"]["RecentRunRepositoryItem"][] | null;
             runs: components["schemas"]["RecentRunListItem"][] | null;
         };
         ResultDetail: {
@@ -1963,6 +1967,8 @@ export interface operations {
                 page_size?: number;
                 /** @description Include bounded CI attention summaries for the newest runs. */
                 include_attention?: boolean;
+                /** @description Filter by repository URL. */
+                repository?: string;
             };
             header?: never;
             path?: never;

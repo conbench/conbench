@@ -43,6 +43,10 @@ describe("RecentRunsHome", () => {
   it("renders CI run triage rows around commit and author identity", async () => {
     GET.mockResolvedValueOnce({
       data: {
+        repositories: [
+          { repository: "https://github.com/apache/arrow" },
+          { repository: "https://github.com/apache/arrow-go" },
+        ],
         runs: [
           run({
             attention: {
@@ -95,6 +99,47 @@ describe("RecentRunsHome", () => {
       "href",
       "/results/result-a",
     );
+  });
+
+  it("renders a project selector for the active repository", async () => {
+    GET.mockResolvedValueOnce({
+      data: {
+        repositories: [
+          { repository: "https://github.com/apache/arrow" },
+          { repository: "https://github.com/apache/arrow-go" },
+        ],
+        runs: [
+          run({
+            run_id: "run-arrow-go",
+            repository: "https://github.com/apache/arrow-go",
+            commit: {
+              ...run().commit,
+              repository: "https://github.com/apache/arrow-go",
+            },
+          }),
+        ],
+      },
+    });
+
+    render(RecentRunsHome, {
+      props: { query: { repository: "https://github.com/apache/arrow-go" } },
+    });
+
+    await waitFor(() => expect(screen.getByRole("heading", { name: /^ci runs$/i })).toBeInTheDocument());
+    const selector = screen.getByLabelText("Project");
+    expect(selector).toHaveValue("https://github.com/apache/arrow-go");
+    expect(screen.getByRole("option", { name: "All projects" })).toHaveValue("");
+    expect(screen.getByRole("option", { name: "apache/arrow" })).toHaveValue("https://github.com/apache/arrow");
+    expect(screen.getByRole("option", { name: "apache/arrow-go" })).toHaveValue("https://github.com/apache/arrow-go");
+    expect(GET).toHaveBeenCalledWith("/api/runs/recent", {
+      params: {
+        query: {
+          page_size: 25,
+          include_attention: true,
+          repository: "https://github.com/apache/arrow-go",
+        },
+      },
+    });
   });
 
   it("uses compact production identifiers without losing full link targets", async () => {

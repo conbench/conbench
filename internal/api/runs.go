@@ -8,8 +8,9 @@ import (
 
 // ListRecentRunsInput is the recent-runs dashboard query.
 type ListRecentRunsInput struct {
-	PageSize         int  `query:"page_size" default:"25" doc:"Page size (max 100)."`
-	IncludeAttention bool `query:"include_attention" doc:"Include bounded CI attention summaries for the newest runs."`
+	PageSize         int    `query:"page_size" default:"25" doc:"Page size (max 100)."`
+	IncludeAttention bool   `query:"include_attention" doc:"Include bounded CI attention summaries for the newest runs."`
+	Repository       string `query:"repository" doc:"Filter by repository URL."`
 }
 
 // ListRecentRunsOutput carries the recent-runs page body.
@@ -18,10 +19,12 @@ type ListRecentRunsOutput struct {
 }
 
 func (h *ReadHandler) getRecentRuns(ctx context.Context, in *ListRecentRunsInput) (*ListRecentRunsOutput, error) {
-	page, err := h.reader.ListRecentRuns(ctx, service.RecentRunsQuery{
+	q := service.RecentRunsQuery{
 		PageSize:         in.PageSize,
 		IncludeAttention: in.IncludeAttention,
-	})
+	}
+	setIfNonEmpty(&q.Repository, in.Repository)
+	page, err := h.reader.ListRecentRuns(ctx, q)
 	if err != nil {
 		return nil, mapReadError(err)
 	}

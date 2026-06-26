@@ -54,6 +54,7 @@ from .recent_run_attention_status import RecentRunAttentionStatus
 from .recent_run_attention_summary import RecentRunAttentionSummary
 from .recent_run_list_item import RecentRunListItem
 from .recent_run_list_item_run_tags import RecentRunListItemRunTags
+from .recent_run_repository_item import RecentRunRepositoryItem
 from .recent_runs_page import RecentRunsPage
 from .result_detail import ResultDetail
 from .result_detail_change_annotations import ResultDetailChangeAnnotations
@@ -152,6 +153,7 @@ __all__ = (
     "RecentRunAttentionSummary",
     "RecentRunListItem",
     "RecentRunListItemRunTags",
+    "RecentRunRepositoryItem",
     "RecentRunsPage",
     "ResultDetail",
     "ResultDetailChangeAnnotations",

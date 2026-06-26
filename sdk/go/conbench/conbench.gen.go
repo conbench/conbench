@@ -611,11 +611,17 @@ type RecentRunListItem struct {
 	SeriesCount    int64                  `json:"series_count"`
 }
 
+// RecentRunRepositoryItem defines model for RecentRunRepositoryItem.
+type RecentRunRepositoryItem struct {
+	Repository string `json:"repository"`
+}
+
 // RecentRunsPage defines model for RecentRunsPage.
 type RecentRunsPage struct {
 	// Schema A URL to the JSON Schema for this object.
-	Schema *string              `json:"$schema,omitempty"`
-	Runs   *[]RecentRunListItem `json:"runs"`
+	Schema       *string                    `json:"$schema,omitempty"`
+	Repositories *[]RecentRunRepositoryItem `json:"repositories"`
+	Runs         *[]RecentRunListItem       `json:"runs"`
 }
 
 // ResultDetail defines model for ResultDetail.
@@ -949,6 +955,9 @@ type ListRecentRunsParams struct {
 
 	// IncludeAttention Include bounded CI attention summaries for the newest runs.
 	IncludeAttention *bool `form:"include_attention,omitempty" json:"include_attention,omitempty"`
+
+	// Repository Filter by repository URL.
+	Repository *string `form:"repository,omitempty" json:"repository,omitempty"`
 }
 
 // ListSeriesParams defines parameters for ListSeries.
@@ -3078,6 +3087,18 @@ func NewListRecentRunsRequest(server string, params *ListRecentRunsParams) (*htt
 		if params.IncludeAttention != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "include_attention", *params.IncludeAttention, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Repository != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "repository", *params.Repository, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {

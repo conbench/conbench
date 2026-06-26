@@ -20,6 +20,13 @@ WHERE repository = $1 AND branch = $2
 ORDER BY timestamp DESC
 LIMIT 1;
 
+-- name: SelectRecentRunRepositories :many
+SELECT repository
+FROM commit
+WHERE repository <> ''
+GROUP BY repository
+ORDER BY max(timestamp) DESC NULLS LAST, repository ASC;
+
 -- name: SelectUnknownCommitRepairCandidates :many
 SELECT id, sha, repository
 FROM commit
