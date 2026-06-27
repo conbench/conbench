@@ -161,6 +161,31 @@ func TestGetHistoryForResult(t *testing.T) {
 	}
 }
 
+func TestGetHistoryIncludesRawMeasurements(t *testing.T) {
+	tapi, _, _ := seedAPI(t)
+	id := seedResult(t, tapi, seedOpts{
+		sha:  "c1",
+		ts:   day(0),
+		unit: "B/s",
+		data: []float64{3.5, 7.25, 5.75},
+	})
+
+	resp := tapi.Get("/api/history/" + id)
+	require.Equal(t, http.StatusOK, resp.Code, "body = %s", resp.Body.String())
+	var raw struct {
+		Samples []struct {
+			BenchmarkResultID string    `json:"benchmark_result_id"`
+			Data              []float64 `json:"data"`
+			SVS               float64   `json:"single_value_summary"`
+		} `json:"samples"`
+	}
+	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &raw))
+	require.Len(t, raw.Samples, 1)
+	assert.Equal(t, id, raw.Samples[0].BenchmarkResultID)
+	assert.Equal(t, []float64{3.5, 7.25, 5.75}, raw.Samples[0].Data)
+	assert.InDelta(t, 7.25, raw.Samples[0].SVS, 1e-12)
+}
+
 func TestGetHistoryByFingerprint(t *testing.T) {
 	tapi, _ := newReadAPI(t)
 	id, fp := submit(t, tapi)

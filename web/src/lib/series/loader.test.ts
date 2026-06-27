@@ -13,6 +13,7 @@ const sample = (id: string, ts: string) => ({
   commit_message: "msg",
   commit_repository: "https://github.com/conbench/demo",
   commit_timestamp: ts,
+  data: null,
   hardware_hash: "hw1",
   mean: 1.1,
   result_timestamp: ts,

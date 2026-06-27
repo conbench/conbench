@@ -86,6 +86,7 @@ describe("markedIndices", () => {
       commit_message: "msg",
       commit_repository: "repo",
       commit_timestamp: `2024-01-0${i + 1}T12:00:00Z`,
+      data: null,
       hardware_hash: "hw1",
       mean: 1.1,
       result_timestamp: `2024-01-0${i + 1}T13:00:00Z`,

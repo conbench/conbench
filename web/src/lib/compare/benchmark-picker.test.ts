@@ -11,6 +11,7 @@ function point(over: Partial<SeriesPoint>): SeriesPoint {
     commitTimestampMs: Date.parse("2024-01-01T00:00:00Z"),
     resultTimestampMs: Date.parse("2024-01-01T00:00:00Z"),
     chartMs: Date.parse("2024-01-01T00:00:00Z"),
+    measurements: [],
     svs: 1,
     unit: "s",
     stats: {

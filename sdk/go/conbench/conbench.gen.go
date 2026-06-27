@@ -478,6 +478,7 @@ type HistorySample struct {
 	CommitMessage          string       `json:"commit_message"`
 	CommitRepository       string       `json:"commit_repository"`
 	CommitTimestamp        *time.Time   `json:"commit_timestamp"`
+	Data                   *[]float64   `json:"data"`
 	HardwareHash           string       `json:"hardware_hash"`
 	Mean                   *float64     `json:"mean"`
 	ResultTimestamp        time.Time    `json:"result_timestamp"`

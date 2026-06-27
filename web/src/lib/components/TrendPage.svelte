@@ -70,6 +70,7 @@
   let all = $derived(vm?.points ?? []);
   let rangeAnchor = $derived(windowAnchorDate(all, new Date()));
   let visible = $derived(windowPoints(all, query.range, rangeAnchor));
+  let currentResultId = $derived(source.kind === "result" ? source.resultId : null);
   let outlierCount = $derived(visible.filter((p) => p.stats.isOutlier).length);
   let stepCount = $derived(visible.filter((p) => p.stats.isStep || p.stats.beginsChange).length);
   let flagTargets = $derived(flaggedPointTargets(visible));
@@ -403,7 +404,14 @@
         </button>
       </p>
     {:else}
-      <SeriesChart points={visible} axis={query.axis} sigma={query.sigma} {selectedIndex} onselect={select} />
+      <SeriesChart
+        points={visible}
+        axis={query.axis}
+        sigma={query.sigma}
+        {selectedIndex}
+        {currentResultId}
+        onselect={select}
+      />
       {#if selected !== null}
         <!-- @const pins the narrowed point: TS narrowing on the nullable $derived
              does not survive into the onclick closure. -->

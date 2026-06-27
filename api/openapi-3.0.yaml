@@ -824,6 +824,12 @@ components:
           format: date-time
           nullable: true
           type: string
+        data:
+          items:
+            format: double
+            type: number
+          nullable: true
+          type: array
         hardware_hash:
           type: string
         mean:
@@ -847,6 +853,7 @@ components:
         - benchmark_result_id
         - result_timestamp
         - mean
+        - data
         - single_value_summary
         - single_value_summary_type
         - unit

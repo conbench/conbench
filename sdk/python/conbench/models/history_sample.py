@@ -22,6 +22,7 @@ class HistorySample:
         commit_message (str):
         commit_repository (str):
         commit_timestamp (datetime.datetime | None):
+        data (list[float] | None):
         hardware_hash (str):
         mean (float | None):
         result_timestamp (datetime.datetime):
@@ -36,6 +37,7 @@ class HistorySample:
     commit_message: str
     commit_repository: str
     commit_timestamp: datetime.datetime | None
+    data: list[float] | None
     hardware_hash: str
     mean: float | None
     result_timestamp: datetime.datetime
@@ -60,6 +62,13 @@ class HistorySample:
             commit_timestamp = self.commit_timestamp.isoformat()
         else:
             commit_timestamp = self.commit_timestamp
+
+        data: list[float] | None
+        if isinstance(self.data, list):
+            data = self.data
+
+        else:
+            data = self.data
 
         hardware_hash = self.hardware_hash
 
@@ -90,6 +99,7 @@ class HistorySample:
                 "commit_message": commit_message,
                 "commit_repository": commit_repository,
                 "commit_timestamp": commit_timestamp,
+                "data": data,
                 "hardware_hash": hardware_hash,
                 "mean": mean,
                 "result_timestamp": result_timestamp,
@@ -129,6 +139,21 @@ class HistorySample:
             return cast(datetime.datetime | None, data)
 
         commit_timestamp = _parse_commit_timestamp(d.pop("commit_timestamp"))
+
+        def _parse_data(data: object) -> list[float] | None:
+            if data is None:
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                data_type_0 = cast(list[float], data)
+
+                return data_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[float] | None, data)
+
+        data = _parse_data(d.pop("data"))
 
         hardware_hash = d.pop("hardware_hash")
 
@@ -175,6 +200,7 @@ class HistorySample:
             commit_message=commit_message,
             commit_repository=commit_repository,
             commit_timestamp=commit_timestamp,
+            data=data,
             hardware_hash=hardware_hash,
             mean=mean,
             result_timestamp=result_timestamp,

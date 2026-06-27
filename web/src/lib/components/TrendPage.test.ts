@@ -39,6 +39,7 @@ const sample = (
   commit_message: "msg",
   commit_repository: "https://github.com/conbench/demo",
   commit_timestamp: ts,
+  data: null,
   hardware_hash: "hw1",
   mean: svs,
   result_timestamp: ts,
@@ -101,6 +102,18 @@ describe("TrendPage", () => {
     expect(screen.getByLabelText(/band/i)).toHaveValue("2");
     expect(screen.getByLabelText(/x-axis/i)).toHaveValue("commit");
     expect(screen.getByRole("link", { name: "sha-r1" })).toBeInTheDocument();
+  });
+
+  it("marks the opened result as the current chart point", async () => {
+    mockResultEntry([
+      sample("older", "2024-01-06T12:00:00Z"),
+      sample("r1", "2024-01-07T12:00:00Z"),
+    ]);
+    render(TrendPage, {
+      props: { source: RESULT_SOURCE, query: { ...DEFAULT_TREND_QUERY, range: "all" } },
+    });
+    await waitFor(() => screen.getByRole("link", { name: "sha-r1" }));
+    expect(document.querySelector(".chart-stub")).toHaveAttribute("data-current-index", "1");
   });
 
   it("uses the shared dashboard shell primitives for context, metrics, and filters", async () => {

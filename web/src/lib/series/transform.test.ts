@@ -41,6 +41,7 @@ function sample(over: Partial<HistorySample> = {}): HistorySample {
     commit_message: "tune the flux capacitor",
     commit_repository: "https://github.com/conbench/demo",
     commit_timestamp: "2024-01-07T12:00:00Z",
+    data: null,
     hardware_hash: "hw1",
     mean: 1.1,
     result_timestamp: "2024-01-07T13:00:00Z",
@@ -73,6 +74,15 @@ describe("toSeriesPoints zscore stats", () => {
     expect(
       toSeriesPoints([sample({ zscorestats: zs({ residual: null }) })])[0]!.stats.z,
     ).toBeNull();
+  });
+
+  it("preserves raw measurement repetitions for chart overlays", () => {
+    const withMeasurements = {
+      ...sample({ single_value_summary: 4.4 }),
+      data: [1.1, 4.4, 3.3],
+    } as HistorySample & { data: number[] };
+    const [p] = toSeriesPoints([withMeasurements]);
+    expect((p as { measurements?: number[] }).measurements).toEqual([1.1, 4.4, 3.3]);
   });
 
   it("falls back to the result timestamp for chartMs when commit time is null", () => {
@@ -161,6 +171,22 @@ describe("trendChartData", () => {
       2,
     );
     expect(values).toEqual([10.0, 100.0]);
+  });
+
+  it("includes raw repetitions in the y range", () => {
+    const values = trendYRangeValues(
+      toSeriesPoints([
+        {
+          ...sample({
+            single_value_summary: 10.0,
+            zscorestats: zs({ rolling_mean: 11.0, rolling_stddev: 1.0 }),
+          }),
+          data: [5.0, 10.0, 20.0],
+        } as HistorySample & { data: number[] },
+      ]),
+      2,
+    );
+    expect(values).toEqual([10.0, 5.0, 10.0, 20.0, 11.0, 13.0, 9.0]);
   });
 });
 

@@ -108,6 +108,7 @@ type HistorySample struct {
 	BenchmarkResultID string       `json:"benchmark_result_id"`
 	ResultTimestamp   time.Time    `json:"result_timestamp"`
 	Mean              *float64     `json:"mean"`
+	Data              []float64    `json:"data"`
 	SVS               float64      `json:"single_value_summary"`
 	SVSType           string       `json:"single_value_summary_type"`
 	Unit              *string      `json:"unit"`
@@ -325,6 +326,7 @@ func (r *Reader) History(ctx context.Context, fingerprint string) (*HistorySerie
 			BenchmarkResultID: row.ID,
 			ResultTimestamp:   row.Timestamp,
 			Mean:              row.Mean,
+			Data:              row.Data,
 			SVS:               svs,
 			SVSType:           svsType,
 			Unit:              row.Unit,

@@ -19,6 +19,7 @@ const rows = toTableRows(
       commit_message: "tune",
       commit_repository: "repo",
       commit_timestamp: "2024-01-07T12:00:00Z",
+      data: null,
       hardware_hash: "hw1",
       mean: 1.1,
       result_timestamp: "2024-01-07T13:00:00Z",

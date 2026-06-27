@@ -12,7 +12,6 @@
     type ValueRange,
   } from "../series/chart-geometry";
   import {
-    outlierIndices,
     pointTooltip,
     segmentSpans,
     stepIndices,
@@ -30,6 +29,7 @@
     sigma = 2,
     height = 280,
     selectedIndex = null,
+    currentResultId = null,
     markedIndices = [],
     onselect,
   }: {
@@ -38,6 +38,7 @@
     sigma?: number;
     height?: number;
     selectedIndex?: number | null;
+    currentResultId?: string | null;
     markedIndices?: number[];
     onselect?: (index: number) => void;
   } = $props();
@@ -90,27 +91,6 @@
       u.ctx.beginPath();
       u.ctx.moveTo(x, u.bbox.top);
       u.ctx.lineTo(x, u.bbox.top + u.bbox.height);
-      u.ctx.stroke();
-    }
-    u.ctx.restore();
-  }
-
-  function drawOutliers(u: uPlot): void {
-    const stroke = cssVar("--c-accent", "#3b82f6");
-    const bg = cssVar("--c-chart-bg", "#ffffff");
-    const xs = u.data[0]!;
-    u.ctx.save();
-    for (const i of outlierIndices(points)) {
-      const p = points[i];
-      if (!p) continue;
-      const cx = u.valToPos(xs[i]!, "x", true);
-      const cy = u.valToPos(p.svs, "y", true);
-      u.ctx.beginPath();
-      u.ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
-      u.ctx.fillStyle = bg;
-      u.ctx.fill();
-      u.ctx.strokeStyle = stroke;
-      u.ctx.lineWidth = 1.5;
       u.ctx.stroke();
     }
     u.ctx.restore();
@@ -254,8 +234,70 @@
     };
   }
 
+  interface OverlayPoint {
+    key: string;
+    x: number;
+    y: number;
+    current: boolean;
+    outlier: boolean;
+  }
+
+  function rawOverlayPoints(): OverlayPoint[] {
+    const { width, height } = plotBox;
+    if (width <= 0 || height <= 0) return [];
+    const range = overlayRange;
+    if (range === null) return [];
+    return points.flatMap((p, i) =>
+      p.measurements.map((value, j) => ({
+        key: `${p.resultId}-raw-${j}`,
+        x: overlayX(p, i),
+        y: overlayY(value, range),
+        current: currentResultId !== null && p.resultId === currentResultId,
+        outlier: false,
+      })),
+    );
+  }
+
+  function svsOverlayPoints(): OverlayPoint[] {
+    const { width, height } = plotBox;
+    if (width <= 0 || height <= 0) return [];
+    const range = overlayRange;
+    if (range === null) return [];
+    return points.map((p, i) => ({
+      key: p.resultId,
+      x: overlayX(p, i),
+      y: overlayY(p.svs, range),
+      current: currentResultId !== null && p.resultId === currentResultId,
+      outlier: p.stats.isOutlier,
+    }));
+  }
+
+  function currentPointPosition(): { x: number; y: number } | null {
+    const i = currentIndex;
+    if (i == null) return null;
+    const p = points[i];
+    if (!p || plotBox.width <= 0 || plotBox.height <= 0) return null;
+    const range = overlayRange;
+    if (range === null) return null;
+    return {
+      x: overlayX(p, i),
+      y: overlayY(p.svs, range),
+    };
+  }
+
   let svsOverlayPath = $derived(svsPath());
   let sigmaBandPaths = $derived(bandPaths());
+  let rawPoints = $derived(rawOverlayPoints());
+  let svsPoints = $derived(svsOverlayPoints());
+  let currentIndex = $derived(
+    currentResultId === null
+      ? null
+      : (() => {
+          const index = points.findIndex((p) => p.resultId === currentResultId);
+          return index < 0 ? null : index;
+        })(),
+  );
+  let currentPoint = $derived(currentPointPosition());
   let hoverPoint = $derived(hoverPointPosition());
 
   function hoveredIndex(u: uPlot): number | null {
@@ -315,7 +357,7 @@
       },
       series: [
         {},
-        { label: "SVS", stroke: accent, width: 2, points: { show: true } },
+        { label: "SVS", stroke: accent, width: 2, points: { show: false } },
         { label: "rolling mean", stroke: meanColor, width: 1.5, dash: [6, 4], points: { show: false } },
         { label: "hi", stroke: "transparent", points: { show: false } },
         { label: "lo", stroke: "transparent", points: { show: false } },
@@ -332,7 +374,7 @@
       hooks: {
         ready: [() => requestAnimationFrame(syncPlotBox)],
         drawClear: [drawSegments],
-        draw: [drawSteps, drawOutliers, drawMarked, drawSelection],
+        draw: [drawSteps, drawMarked, drawSelection],
         setCursor: [
           (u) => {
             const i = hoveredIndex(u);
@@ -400,6 +442,7 @@
     // the table changes the selection or the compare marks change, so the
     // chart marks the same points.
     void selectedIndex;
+    void currentResultId;
     void markedIndices;
     chart?.redraw();
   });
@@ -417,12 +460,16 @@
 <div class="chart-wrap" bind:this={chartWrap} onclick={selectAtCursor}>
   <div class="legend" aria-hidden="true">
     <span><i class="svs"></i>SVS</span>
+    <span><i class="raw"></i>repetitions</span>
+    <span><i class="inlier"></i>inlier</span>
+    <span><i class="outlier"></i>outlier</span>
+    {#if currentResultId !== null}<span><i class="current"></i>current</span>{/if}
     <span><i class="mean"></i>rolling mean</span>
     <span><i class="band"></i>{sigma}σ band</span>
   </div>
   <div class="plot-host" bind:this={plotHost}>
     <div bind:this={host}></div>
-    {#if svsOverlayPath !== "" || sigmaBandPaths.length > 0 || hoverPoint}
+    {#if svsOverlayPath !== "" || sigmaBandPaths.length > 0 || rawPoints.length > 0 || svsPoints.length > 0 || currentPoint || hoverPoint}
       <svg
         class="chart-overlay"
         style={`left:${plotBox.left}px;top:${plotBox.top}px;width:${plotBox.width}px;height:${plotBox.height}px`}
@@ -434,6 +481,31 @@
         {/each}
         {#if svsOverlayPath !== ""}
           <path class="svs-line" d={svsOverlayPath} />
+        {/if}
+        {#each rawPoints as point (point.key)}
+          <circle
+            class:current-raw={point.current}
+            class="raw-point"
+            cx={point.x}
+            cy={point.y}
+            r={point.current ? 2.5 : 1.8}
+          />
+        {/each}
+        {#each svsPoints as point (point.key)}
+          <circle
+            class:outlier={point.outlier}
+            class:inlier={!point.outlier}
+            class="svs-point"
+            cx={point.x}
+            cy={point.y}
+            r={point.outlier ? 4.3 : 3}
+          />
+        {/each}
+        {#if currentPoint}
+          <g class="current-marker">
+            <line x1={currentPoint.x - 8} y1={currentPoint.y - 8} x2={currentPoint.x + 8} y2={currentPoint.y + 8} />
+            <line x1={currentPoint.x + 8} y1={currentPoint.y - 8} x2={currentPoint.x - 8} y2={currentPoint.y + 8} />
+          </g>
         {/if}
         {#if hoverPoint}
           <circle class="hover-point" cx={hoverPoint.x} cy={hoverPoint.y} r="5" />
@@ -488,6 +560,47 @@
   .legend .svs {
     background: var(--c-accent);
   }
+  .legend .raw {
+    width: 7px;
+    height: 7px;
+    background: var(--c-raw-point);
+    border-radius: 50%;
+  }
+  .legend .inlier {
+    width: 7px;
+    height: 7px;
+    background: var(--c-chart-point);
+    border-radius: 50%;
+  }
+  .legend .outlier {
+    width: 7px;
+    height: 7px;
+    background: var(--c-chart-bg);
+    border: 1.5px solid var(--c-warning);
+    border-radius: 50%;
+  }
+  .legend .current {
+    position: relative;
+    width: 10px;
+    height: 10px;
+  }
+  .legend .current::before,
+  .legend .current::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 10px;
+    height: 2px;
+    background: var(--c-current-result);
+    border-radius: 999px;
+  }
+  .legend .current::before {
+    transform: rotate(45deg);
+  }
+  .legend .current::after {
+    transform: rotate(-45deg);
+  }
   .legend .mean {
     background: var(--c-trend-mean);
   }
@@ -513,6 +626,33 @@
     stroke-width: 2;
     stroke-linejoin: round;
     stroke-linecap: round;
+  }
+  .chart-overlay .raw-point {
+    fill: var(--c-raw-point);
+    opacity: 0.68;
+    vector-effect: non-scaling-stroke;
+  }
+  .chart-overlay .raw-point.current-raw {
+    fill: var(--c-current-result);
+    opacity: 0.72;
+  }
+  .chart-overlay .svs-point.inlier {
+    fill: var(--c-chart-point);
+    stroke: color-mix(in srgb, var(--c-chart-bg) 45%, transparent);
+    stroke-width: 0.7;
+    vector-effect: non-scaling-stroke;
+  }
+  .chart-overlay .svs-point.outlier {
+    fill: var(--c-chart-bg);
+    stroke: var(--c-warning);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+  .chart-overlay .current-marker {
+    stroke: var(--c-current-result);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
   }
   .chart-overlay .hover-point {
     fill: var(--c-chart-bg);

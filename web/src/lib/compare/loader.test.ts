@@ -45,6 +45,7 @@ const sample = (id: string, day: number) => ({
   commit_message: "msg",
   commit_repository: "https://github.com/conbench/demo",
   commit_timestamp: `2024-01-0${day}T12:00:00Z`,
+  data: null,
   hardware_hash: "hw1",
   mean: 1.5,
   result_timestamp: `2024-01-0${day}T13:00:00Z`,

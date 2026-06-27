@@ -27,6 +27,7 @@ export interface SeriesPoint {
   resultTimestampMs: number;
   /** chartMs is the plotted instant: commit time, else result (run) time. */
   chartMs: number;
+  measurements: number[];
   svs: number;
   unit: string | null;
   stats: PointStats;
@@ -63,6 +64,11 @@ function toPointStats(zsRaw: ZScoreStats): PointStats {
   };
 }
 
+function sampleMeasurements(sample: HistorySample): number[] {
+  const data = (sample as HistorySample & { data?: number[] | null }).data;
+  return Array.isArray(data) ? data.filter(Number.isFinite) : [];
+}
+
 export function toSeriesPoints(samples: HistorySample[]): SeriesPoint[] {
   return samples.map((s) => ({
     resultId: s.benchmark_result_id,
@@ -71,6 +77,7 @@ export function toSeriesPoints(samples: HistorySample[]): SeriesPoint[] {
     commitTimestampMs: toMs(s.commit_timestamp),
     resultTimestampMs: Date.parse(s.result_timestamp),
     chartMs: Date.parse(s.commit_timestamp ?? s.result_timestamp),
+    measurements: sampleMeasurements(s),
     svs: s.single_value_summary,
     unit: s.unit,
     stats: toPointStats(s.zscorestats),
@@ -172,7 +179,7 @@ export function trendChartData(
 
 export function trendYRangeValues(points: SeriesPoint[], sigma: number): number[] {
   return points.flatMap((p) => {
-    const values = [p.svs];
+    const values = [p.svs, ...p.measurements];
     if (p.stats.rollingMean !== null) {
       values.push(p.stats.rollingMean);
       if (p.stats.rollingStddev !== null) {

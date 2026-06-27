@@ -869,6 +869,13 @@ components:
           type:
             - string
             - "null"
+        data:
+          items:
+            format: double
+            type: number
+          type:
+            - array
+            - "null"
         hardware_hash:
           type: string
         mean:
@@ -894,6 +901,7 @@ components:
         - benchmark_result_id
         - result_timestamp
         - mean
+        - data
         - single_value_summary
         - single_value_summary_type
         - unit

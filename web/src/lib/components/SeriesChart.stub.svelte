@@ -4,7 +4,17 @@
   // page's states, controls, and wiring are testable.
   import type { SeriesPoint } from "../series/transform";
 
-  let { points }: { points: SeriesPoint[] } = $props();
+  let {
+    points,
+    currentResultId = null,
+  }: {
+    points: SeriesPoint[];
+    currentResultId?: string | null;
+  } = $props();
+
+  let currentIndex = $derived(
+    currentResultId === null ? -1 : points.findIndex((p) => p.resultId === currentResultId),
+  );
 </script>
 
-<div class="chart-stub" data-points={points.length}></div>
+<div class="chart-stub" data-points={points.length} data-current-index={currentIndex}></div>

@@ -773,6 +773,7 @@ export interface components {
             commit_repository: string;
             /** Format: date-time */
             commit_timestamp: string | null;
+            data: number[] | null;
             hardware_hash: string;
             /** Format: double */
             mean: number | null;

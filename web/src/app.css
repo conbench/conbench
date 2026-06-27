@@ -44,6 +44,9 @@
   --c-band-fill: rgba(37, 99, 235, 0.16);
   --c-segment-shade: rgba(148, 163, 184, 0.1);
   --c-step-marker: #d97706;
+  --c-chart-point: #1f2937;
+  --c-raw-point: rgba(100, 116, 139, 0.42);
+  --c-current-result: #c026d3;
   --c-chart-bg: #ffffff;
   --c-warn-bg: rgba(217, 119, 6, 0.11);
   --c-warn-text: #92400e;
@@ -95,6 +98,9 @@
   --c-band-fill: rgba(91, 148, 255, 0.22);
   --c-segment-shade: rgba(148, 163, 184, 0.1);
   --c-step-marker: #fbbf24;
+  --c-chart-point: #d8dee9;
+  --c-raw-point: rgba(159, 169, 185, 0.42);
+  --c-current-result: #f0abfc;
   --c-chart-bg: #1a222d;
   --c-warn-bg: rgba(251, 191, 36, 0.16);
   --c-warn-text: #fbbf24;
