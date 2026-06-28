@@ -7,6 +7,7 @@ import {
   indexForCursorValue,
   paddedValueRange,
   tooltipLeftForCursor,
+  tooltipTopForCursor,
 } from "./chart-geometry";
 
 describe("chart geometry", () => {
@@ -55,5 +56,11 @@ describe("chart geometry", () => {
     expect(tooltipLeftForCursor(620, 800, 320)).toBe(472);
     expect(tooltipLeftForCursor(10, 320, 448)).toBe(8);
     expect(tooltipLeftForCursor(300, 320, 448)).toBe(8);
+  });
+
+  it("keeps tooltips below the cursor when there is no room above", () => {
+    expect(tooltipTopForCursor(20, 280, 96)).toEqual({ top: 28, placement: "below" });
+    expect(tooltipTopForCursor(160, 280, 96)).toEqual({ top: 56, placement: "above" });
+    expect(tooltipTopForCursor(140, 150, 128)).toEqual({ top: 14, placement: "clamped" });
   });
 });

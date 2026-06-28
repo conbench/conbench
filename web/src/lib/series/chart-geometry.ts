@@ -67,6 +67,39 @@ export function tooltipLeftForCursor(
   return Math.min(maxLeft, Math.max(minLeft, left + margin));
 }
 
+export type TooltipVerticalPlacement = "above" | "below" | "clamped";
+
+export interface TooltipVerticalPosition {
+  top: number;
+  placement: TooltipVerticalPlacement;
+}
+
+export function tooltipTopForCursor(
+  top: number,
+  containerHeight: number,
+  tooltipHeight = 128,
+  margin = 8,
+): TooltipVerticalPosition {
+  if (!Number.isFinite(top) || !Number.isFinite(containerHeight) || containerHeight <= 0) {
+    return { top: margin, placement: "below" };
+  }
+  const safeTooltipHeight = Number.isFinite(tooltipHeight) && tooltipHeight > 0 ? tooltipHeight : 0;
+  const minTop = margin;
+  const maxTop = Math.max(minTop, containerHeight - safeTooltipHeight - margin);
+  const aboveTop = top - safeTooltipHeight - margin;
+  if (aboveTop >= minTop) {
+    return { top: aboveTop, placement: "above" };
+  }
+  const belowTop = top + margin;
+  if (belowTop <= maxTop) {
+    return { top: belowTop, placement: "below" };
+  }
+  return {
+    top: Math.min(maxTop, Math.max(minTop, top - safeTooltipHeight / 2)),
+    placement: "clamped",
+  };
+}
+
 export function paddedValueRange(
   values: readonly number[],
   padFraction = 0.05,

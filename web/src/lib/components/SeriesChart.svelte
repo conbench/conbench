@@ -9,6 +9,7 @@
     indexForCursorOffset,
     paddedValueRange,
     tooltipLeftForCursor,
+    tooltipTopForCursor,
     type ValueRange,
   } from "../series/chart-geometry";
   import {
@@ -47,6 +48,8 @@
   let plotHost: HTMLDivElement;
   let host: HTMLDivElement;
   let chart: uPlot | undefined;
+  const tooltipEstimatedHeight = 96;
+
   let tip = $state<{ left: number; top: number; vm: TrendTooltip } | null>(null);
   let hoverIndex = $state<number | null>(null);
   let resizeObserver: ResizeObserver | undefined;
@@ -387,7 +390,11 @@
             tip = p
               ? {
                   left: tooltipLeftForCursor(cursorLeft, chartWrap?.clientWidth ?? 0),
-                  top,
+                  top: tooltipTopForCursor(
+                    top,
+                    chartWrap?.clientHeight ?? 0,
+                    tooltipEstimatedHeight,
+                  ).top,
                   vm: pointTooltip(p),
                 }
               : null;
@@ -662,7 +669,6 @@
   }
   .tip {
     position: absolute;
-    transform: translateY(-100%);
     background: #181b24;
     color: #fff;
     font-size: 0.72rem;
