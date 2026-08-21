@@ -526,6 +526,8 @@ type HistoryRow struct {
 	Unit               *string
 	Mean               *float64
 	Data               []float64
+	RunTags            []byte
+	InfoTags           []byte
 	ChangeAnnotations  []byte
 	HardwareHash       string
 	CommitSha          string

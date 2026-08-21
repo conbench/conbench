@@ -186,6 +186,35 @@ func TestGetHistoryIncludesRawMeasurements(t *testing.T) {
 	assert.InDelta(t, 7.25, raw.Samples[0].SVS, 1e-12)
 }
 
+func TestGetHistoryMetadata(t *testing.T) {
+	tapi, _, _ := seedAPI(t)
+	body := validBody()
+	body["run_tags"] = map[string]any{"channel": "nightly"}
+	body["info"] = map[string]any{"build": "release", "revision": 2}
+	body["change_annotations"] = map[string]any{"begins_distribution_change": true}
+	created := tapi.Post("/api/results", "Authorization: Bearer "+testToken, body)
+	require.Equal(t, http.StatusCreated, created.Code, "submit: %s", created.Body.String())
+	var submitted struct {
+		ID string `json:"id"`
+	}
+	require.NoError(t, json.Unmarshal(created.Body.Bytes(), &submitted))
+
+	resp := tapi.Get("/api/history/" + submitted.ID)
+	require.Equal(t, http.StatusOK, resp.Code, "body = %s", resp.Body.String())
+	var raw struct {
+		Samples []struct {
+			RunTags           map[string]any `json:"run_tags"`
+			Info              map[string]any `json:"info"`
+			ChangeAnnotations map[string]any `json:"change_annotations"`
+		} `json:"samples"`
+	}
+	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &raw))
+	require.Len(t, raw.Samples, 1)
+	assert.Equal(t, map[string]any{"channel": "nightly"}, raw.Samples[0].RunTags)
+	assert.Equal(t, map[string]any{"build": "release", "revision": float64(2)}, raw.Samples[0].Info)
+	assert.Equal(t, map[string]any{"begins_distribution_change": true}, raw.Samples[0].ChangeAnnotations)
+}
+
 func TestGetHistoryByFingerprint(t *testing.T) {
 	tapi, _ := newReadAPI(t)
 	id, fp := submit(t, tapi)

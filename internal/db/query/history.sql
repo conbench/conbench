@@ -17,6 +17,8 @@ SELECT
   br.unit,
   br.mean,
   br.data,
+  br.run_tags,
+  inf.tags AS info_tags,
   br.change_annotations,
   hw.hash AS hardware_hash,
   c.sha AS commit_sha,
@@ -24,6 +26,7 @@ SELECT
   c.message AS commit_message,
   c."timestamp" AS commit_timestamp
 FROM benchmark_result br
+JOIN info inf ON inf.id = br.info_id
 JOIN hardware hw ON hw.id = br.hardware_id
 JOIN commit c ON c.id = br.commit_id
 WHERE br.error IS NULL
@@ -50,6 +53,8 @@ SELECT
   br.unit,
   br.mean,
   br.data,
+  br.run_tags,
+  inf.tags AS info_tags,
   br.change_annotations,
   hw.hash AS hardware_hash,
   c.sha AS commit_sha,
@@ -57,6 +62,7 @@ SELECT
   c.message AS commit_message,
   c."timestamp" AS commit_timestamp
 FROM benchmark_result br
+JOIN info inf ON inf.id = br.info_id
 JOIN hardware hw ON hw.id = br.hardware_id
 JOIN commit c ON c.id = br.commit_id
 WHERE br.error IS NULL

@@ -30,6 +30,9 @@ export interface SeriesPoint {
   measurements: number[];
   svs: number;
   unit: string | null;
+  runTags: Record<string, unknown>;
+  info: Record<string, unknown>;
+  changeAnnotations: Record<string, unknown>;
   stats: PointStats;
 }
 
@@ -80,6 +83,9 @@ export function toSeriesPoints(samples: HistorySample[]): SeriesPoint[] {
     measurements: sampleMeasurements(s),
     svs: s.single_value_summary,
     unit: s.unit,
+    runTags: s.run_tags,
+    info: s.info,
+    changeAnnotations: s.change_annotations,
     stats: toPointStats(s.zscorestats),
   }));
 }
@@ -230,6 +236,30 @@ export function segmentSpans(points: SeriesPoint[]): SegmentSpan[] {
 export interface TrendTooltip {
   title: string;
   lines: string[];
+  metadata: string[];
+}
+
+const metadataDisplayLimit = 6;
+
+function metadataValue(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value === null || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return JSON.stringify(value);
+}
+
+function boundaryMetadata(p: SeriesPoint): string[] {
+  if (!p.stats.beginsChange) return [];
+  const entries = [
+    ...Object.entries(p.runTags).map(([key, value]) => `run: ${key}=${metadataValue(value)}`),
+    ...Object.entries(p.info).map(([key, value]) => `info: ${key}=${metadataValue(value)}`),
+  ].sort();
+  if (entries.length <= metadataDisplayLimit) return entries;
+  return [
+    ...entries.slice(0, metadataDisplayLimit),
+    `… +${entries.length - metadataDisplayLimit} more`,
+  ];
 }
 
 /** pointTooltip is the hover view-model. The title keeps the walking-skeleton
@@ -254,6 +284,7 @@ export function pointTooltip(p: SeriesPoint, locale?: string): TrendTooltip {
   return {
     title: `${p.commitHash} · ${formatMeasurement(p.svs, p.unit)}`,
     lines,
+    metadata: boundaryMetadata(p),
   };
 }
 

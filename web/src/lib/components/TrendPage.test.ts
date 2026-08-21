@@ -46,6 +46,9 @@ const sample = (
   single_value_summary: svs,
   single_value_summary_type: "min",
   unit: "s",
+  run_tags: {},
+  info: {},
+  change_annotations: {},
   zscorestats: null,
   ...over,
 });

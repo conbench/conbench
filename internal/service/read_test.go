@@ -153,6 +153,28 @@ func TestHistorySVS(t *testing.T) {
 	}
 }
 
+func TestHistoryMetadata(t *testing.T) {
+	ing, store, _, ctx := newIngester(t)
+	reader := service.NewReader(store)
+	req := machineReq(samples(1, 2, 3), "s")
+	req.RunTags = map[string]any{"channel": "nightly"}
+	req.Info = map[string]any{"build": "release", "revision": 2}
+	req.ChangeAnnotations = map[string]any{"begins_distribution_change": true}
+
+	res, err := ing.Submit(ctx, req)
+	require.NoError(t, err)
+	series, err := reader.History(ctx, res.HistoryFingerprint)
+	require.NoError(t, err)
+	require.Len(t, series.Samples, 1)
+	sample := series.Samples[0]
+	assert.Equal(t, map[string]any{"channel": "nightly"}, sample.RunTags)
+	assert.Equal(t, map[string]any{"build": "release", "revision": float64(2)}, sample.Info)
+	assert.Equal(t, map[string]any{"begins_distribution_change": true}, sample.ChangeAnnotations)
+	require.NotNil(t, sample.ZScoreStats)
+	assert.True(t, sample.ZScoreStats.BeginsDistributionChange)
+	assert.Equal(t, 1, sample.ZScoreStats.SegmentID)
+}
+
 func TestHistoryForResult(t *testing.T) {
 	ing, store, _, ctx := newIngester(t)
 	reader := service.NewReader(store)

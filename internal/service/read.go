@@ -105,19 +105,22 @@ type ResultDetail struct {
 // HistorySample is one point in a history series, a HistorySample subset (no
 // z-score). The single value summary is the plotted value.
 type HistorySample struct {
-	BenchmarkResultID string       `json:"benchmark_result_id"`
-	ResultTimestamp   time.Time    `json:"result_timestamp"`
-	Mean              *float64     `json:"mean"`
-	Data              []float64    `json:"data"`
-	SVS               float64      `json:"single_value_summary"`
-	SVSType           string       `json:"single_value_summary_type"`
-	Unit              *string      `json:"unit"`
-	HardwareHash      string       `json:"hardware_hash"`
-	CommitHash        string       `json:"commit_hash"`
-	CommitRepository  string       `json:"commit_repository"`
-	CommitMessage     string       `json:"commit_message"`
-	CommitTimestamp   *time.Time   `json:"commit_timestamp"`
-	ZScoreStats       *ZScoreStats `json:"zscorestats"`
+	BenchmarkResultID string         `json:"benchmark_result_id"`
+	ResultTimestamp   time.Time      `json:"result_timestamp"`
+	Mean              *float64       `json:"mean"`
+	Data              []float64      `json:"data"`
+	SVS               float64        `json:"single_value_summary"`
+	SVSType           string         `json:"single_value_summary_type"`
+	Unit              *string        `json:"unit"`
+	HardwareHash      string         `json:"hardware_hash"`
+	CommitHash        string         `json:"commit_hash"`
+	CommitRepository  string         `json:"commit_repository"`
+	CommitMessage     string         `json:"commit_message"`
+	CommitTimestamp   *time.Time     `json:"commit_timestamp"`
+	RunTags           map[string]any `json:"run_tags"`
+	Info              map[string]any `json:"info"`
+	ChangeAnnotations map[string]any `json:"change_annotations"`
+	ZScoreStats       *ZScoreStats   `json:"zscorestats"`
 }
 
 // ZScoreStats is the per-point rolling-statistics block (legacy
@@ -313,6 +316,27 @@ func (r *Reader) History(ctx context.Context, fingerprint string) (*HistorySerie
 	singleUnit := true
 	var firstUnit *string
 	for i, row := range rows {
+		runTags, err := jsonObject(row.RunTags)
+		if err != nil {
+			return nil, fmt.Errorf("decode history run tags: %w", err)
+		}
+		if runTags == nil {
+			runTags = map[string]any{}
+		}
+		info, err := jsonObject(row.InfoTags)
+		if err != nil {
+			return nil, fmt.Errorf("decode history info: %w", err)
+		}
+		if info == nil {
+			info = map[string]any{}
+		}
+		changeAnnotations, err := jsonObject(row.ChangeAnnotations)
+		if err != nil {
+			return nil, fmt.Errorf("decode history change annotations: %w", err)
+		}
+		if changeAnnotations == nil {
+			changeAnnotations = map[string]any{}
+		}
 		svs, svsType, err := historySVS(row.Unit, row.Data)
 		if err != nil {
 			return nil, err
@@ -335,6 +359,9 @@ func (r *Reader) History(ctx context.Context, fingerprint string) (*HistorySerie
 			CommitRepository:  row.CommitRepository,
 			CommitMessage:     row.CommitMessage,
 			CommitTimestamp:   row.CommitTimestamp,
+			RunTags:           runTags,
+			Info:              info,
+			ChangeAnnotations: changeAnnotations,
 		})
 		if i == 0 {
 			firstUnit = row.Unit

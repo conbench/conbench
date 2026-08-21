@@ -858,6 +858,9 @@ components:
       properties:
         benchmark_result_id:
           type: string
+        change_annotations:
+          additionalProperties: {}
+          type: object
         commit_hash:
           type: string
         commit_message:
@@ -878,6 +881,9 @@ components:
             - "null"
         hardware_hash:
           type: string
+        info:
+          additionalProperties: {}
+          type: object
         mean:
           format: double
           type:
@@ -886,6 +892,9 @@ components:
         result_timestamp:
           format: date-time
           type: string
+        run_tags:
+          additionalProperties: {}
+          type: object
         single_value_summary:
           format: double
           type: number
@@ -910,6 +919,9 @@ components:
         - commit_repository
         - commit_message
         - commit_timestamp
+        - run_tags
+        - info
+        - change_annotations
         - zscorestats
       type: object
     HistorySeries:

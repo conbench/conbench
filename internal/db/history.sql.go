@@ -18,6 +18,8 @@ SELECT
   br.unit,
   br.mean,
   br.data,
+  br.run_tags,
+  inf.tags AS info_tags,
   br.change_annotations,
   hw.hash AS hardware_hash,
   c.sha AS commit_sha,
@@ -25,6 +27,7 @@ SELECT
   c.message AS commit_message,
   c."timestamp" AS commit_timestamp
 FROM benchmark_result br
+JOIN info inf ON inf.id = br.info_id
 JOIN hardware hw ON hw.id = br.hardware_id
 JOIN commit c ON c.id = br.commit_id
 WHERE br.error IS NULL
@@ -41,6 +44,8 @@ type SelectHistoryForFingerprintRow struct {
 	Unit               *string
 	Mean               *float64
 	Data               []*float64
+	RunTags            []byte
+	InfoTags           []byte
 	ChangeAnnotations  []byte
 	HardwareHash       string
 	CommitSha          string
@@ -76,6 +81,8 @@ func (q *Queries) SelectHistoryForFingerprint(ctx context.Context, historyFinger
 			&i.Unit,
 			&i.Mean,
 			&i.Data,
+			&i.RunTags,
+			&i.InfoTags,
 			&i.ChangeAnnotations,
 			&i.HardwareHash,
 			&i.CommitSha,
@@ -101,6 +108,8 @@ SELECT
   br.unit,
   br.mean,
   br.data,
+  br.run_tags,
+  inf.tags AS info_tags,
   br.change_annotations,
   hw.hash AS hardware_hash,
   c.sha AS commit_sha,
@@ -108,6 +117,7 @@ SELECT
   c.message AS commit_message,
   c."timestamp" AS commit_timestamp
 FROM benchmark_result br
+JOIN info inf ON inf.id = br.info_id
 JOIN hardware hw ON hw.id = br.hardware_id
 JOIN commit c ON c.id = br.commit_id
 WHERE br.error IS NULL
@@ -130,6 +140,8 @@ type SelectHistoryForFingerprintAsOfRow struct {
 	Unit               *string
 	Mean               *float64
 	Data               []*float64
+	RunTags            []byte
+	InfoTags           []byte
 	ChangeAnnotations  []byte
 	HardwareHash       string
 	CommitSha          string
@@ -164,6 +176,8 @@ func (q *Queries) SelectHistoryForFingerprintAsOf(ctx context.Context, arg Selec
 			&i.Unit,
 			&i.Mean,
 			&i.Data,
+			&i.RunTags,
+			&i.InfoTags,
 			&i.ChangeAnnotations,
 			&i.HardwareHash,
 			&i.CommitSha,

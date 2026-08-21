@@ -48,7 +48,7 @@
   let plotHost: HTMLDivElement;
   let host: HTMLDivElement;
   let chart: uPlot | undefined;
-  const tooltipEstimatedHeight = 96;
+  const tooltipEstimatedHeight = 160;
 
   let tip = $state<{ left: number; top: number; vm: TrendTooltip } | null>(null);
   let hoverIndex = $state<number | null>(null);
@@ -525,6 +525,9 @@
       <strong>{tip.vm.title}</strong>
       {#each tip.vm.lines as line, i (i)}
         <div>{line}</div>
+      {/each}
+      {#each tip.vm.metadata as line, i (i)}
+        <div class="tip-metadata">{line}</div>
       {/each}
     </div>
   {/if}

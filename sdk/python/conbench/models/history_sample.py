@@ -7,6 +7,11 @@ from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
 from attrs import define as _attrs_define
 
 if TYPE_CHECKING:
+    from ..models.history_sample_change_annotations import (
+        HistorySampleChangeAnnotations,
+    )
+    from ..models.history_sample_info import HistorySampleInfo
+    from ..models.history_sample_run_tags import HistorySampleRunTags
     from ..models.z_score_stats_type_0 import ZScoreStatsType0
 
 
@@ -18,14 +23,17 @@ class HistorySample:
     """
     Attributes:
         benchmark_result_id (str):
+        change_annotations (HistorySampleChangeAnnotations):
         commit_hash (str):
         commit_message (str):
         commit_repository (str):
         commit_timestamp (datetime.datetime | None):
         data (list[float] | None):
         hardware_hash (str):
+        info (HistorySampleInfo):
         mean (float | None):
         result_timestamp (datetime.datetime):
+        run_tags (HistorySampleRunTags):
         single_value_summary (float):
         single_value_summary_type (str):
         unit (None | str):
@@ -33,14 +41,17 @@ class HistorySample:
     """
 
     benchmark_result_id: str
+    change_annotations: HistorySampleChangeAnnotations
     commit_hash: str
     commit_message: str
     commit_repository: str
     commit_timestamp: datetime.datetime | None
     data: list[float] | None
     hardware_hash: str
+    info: HistorySampleInfo
     mean: float | None
     result_timestamp: datetime.datetime
+    run_tags: HistorySampleRunTags
     single_value_summary: float
     single_value_summary_type: str
     unit: None | str
@@ -50,6 +61,8 @@ class HistorySample:
         from ..models.z_score_stats_type_0 import ZScoreStatsType0
 
         benchmark_result_id = self.benchmark_result_id
+
+        change_annotations = self.change_annotations.to_dict()
 
         commit_hash = self.commit_hash
 
@@ -72,10 +85,14 @@ class HistorySample:
 
         hardware_hash = self.hardware_hash
 
+        info = self.info.to_dict()
+
         mean: float | None
         mean = self.mean
 
         result_timestamp = self.result_timestamp.isoformat()
+
+        run_tags = self.run_tags.to_dict()
 
         single_value_summary = self.single_value_summary
 
@@ -95,14 +112,17 @@ class HistorySample:
         field_dict.update(
             {
                 "benchmark_result_id": benchmark_result_id,
+                "change_annotations": change_annotations,
                 "commit_hash": commit_hash,
                 "commit_message": commit_message,
                 "commit_repository": commit_repository,
                 "commit_timestamp": commit_timestamp,
                 "data": data,
                 "hardware_hash": hardware_hash,
+                "info": info,
                 "mean": mean,
                 "result_timestamp": result_timestamp,
+                "run_tags": run_tags,
                 "single_value_summary": single_value_summary,
                 "single_value_summary_type": single_value_summary_type,
                 "unit": unit,
@@ -114,10 +134,19 @@ class HistorySample:
 
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
+        from ..models.history_sample_change_annotations import (
+            HistorySampleChangeAnnotations,
+        )
+        from ..models.history_sample_info import HistorySampleInfo
+        from ..models.history_sample_run_tags import HistorySampleRunTags
         from ..models.z_score_stats_type_0 import ZScoreStatsType0
 
         d = dict(src_dict)
         benchmark_result_id = d.pop("benchmark_result_id")
+
+        change_annotations = HistorySampleChangeAnnotations.from_dict(
+            d.pop("change_annotations")
+        )
 
         commit_hash = d.pop("commit_hash")
 
@@ -157,6 +186,8 @@ class HistorySample:
 
         hardware_hash = d.pop("hardware_hash")
 
+        info = HistorySampleInfo.from_dict(d.pop("info"))
+
         def _parse_mean(data: object) -> float | None:
             if data is None:
                 return data
@@ -165,6 +196,8 @@ class HistorySample:
         mean = _parse_mean(d.pop("mean"))
 
         result_timestamp = datetime.datetime.fromisoformat(d.pop("result_timestamp"))
+
+        run_tags = HistorySampleRunTags.from_dict(d.pop("run_tags"))
 
         single_value_summary = d.pop("single_value_summary")
 
@@ -196,14 +229,17 @@ class HistorySample:
 
         history_sample = cls(
             benchmark_result_id=benchmark_result_id,
+            change_annotations=change_annotations,
             commit_hash=commit_hash,
             commit_message=commit_message,
             commit_repository=commit_repository,
             commit_timestamp=commit_timestamp,
             data=data,
             hardware_hash=hardware_hash,
+            info=info,
             mean=mean,
             result_timestamp=result_timestamp,
+            run_tags=run_tags,
             single_value_summary=single_value_summary,
             single_value_summary_type=single_value_summary_type,
             unit=unit,

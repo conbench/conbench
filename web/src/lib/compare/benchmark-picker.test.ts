@@ -14,6 +14,9 @@ function point(over: Partial<SeriesPoint>): SeriesPoint {
     measurements: [],
     svs: 1,
     unit: "s",
+    runTags: {},
+    info: {},
+    changeAnnotations: {},
     stats: {
       z: null,
       rollingMean: null,

@@ -20,6 +20,9 @@ const sample = (id: string, ts: string) => ({
   single_value_summary: 1.1,
   single_value_summary_type: "min",
   unit: "s",
+  run_tags: {},
+  info: {},
+  change_annotations: {},
   zscorestats: zsNull,
 });
 

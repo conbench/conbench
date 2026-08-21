@@ -26,6 +26,9 @@ const rows = toTableRows(
       single_value_summary: 1.1,
       single_value_summary_type: "min",
       unit: "s",
+      run_tags: {},
+      info: {},
+      change_annotations: {},
       zscorestats: {
         begins_distribution_change: false,
         is_outlier: true,

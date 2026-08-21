@@ -768,6 +768,9 @@ export interface components {
         };
         HistorySample: {
             benchmark_result_id: string;
+            change_annotations: {
+                [key: string]: unknown;
+            };
             commit_hash: string;
             commit_message: string;
             commit_repository: string;
@@ -775,10 +778,16 @@ export interface components {
             commit_timestamp: string | null;
             data: number[] | null;
             hardware_hash: string;
+            info: {
+                [key: string]: unknown;
+            };
             /** Format: double */
             mean: number | null;
             /** Format: date-time */
             result_timestamp: string;
+            run_tags: {
+                [key: string]: unknown;
+            };
             /** Format: double */
             single_value_summary: number;
             single_value_summary_type: string;

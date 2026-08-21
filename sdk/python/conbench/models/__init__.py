@@ -40,6 +40,9 @@ from .git_hub_info import GitHubInfo
 from .hardware import Hardware
 from .health_output_body import HealthOutputBody
 from .history_sample import HistorySample
+from .history_sample_change_annotations import HistorySampleChangeAnnotations
+from .history_sample_info import HistorySampleInfo
+from .history_sample_run_tags import HistorySampleRunTags
 from .history_series import HistorySeries
 from .list_alert_events_output_body import ListAlertEventsOutputBody
 from .list_alert_rules_output_body import ListAlertRulesOutputBody
@@ -139,6 +142,9 @@ __all__ = (
     "Hardware",
     "HealthOutputBody",
     "HistorySample",
+    "HistorySampleChangeAnnotations",
+    "HistorySampleInfo",
+    "HistorySampleRunTags",
     "HistorySeries",
     "ListAlertEventsOutputBody",
     "ListAlertRulesOutputBody",

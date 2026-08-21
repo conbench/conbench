@@ -49,6 +49,9 @@ function sample(over: Partial<HistorySample> = {}): HistorySample {
     single_value_summary_type: "min",
     unit: "s",
     zscorestats: zs(),
+    run_tags: {},
+    info: {},
+    change_annotations: {},
     ...over,
   };
 }
@@ -268,6 +271,37 @@ describe("pointTooltip", () => {
     expect(tip.title).toBe("abc1234 · 1.1");
     expect(tip.lines.some((l) => l.startsWith("z "))).toBe(false);
     expect(tip.lines.some((l) => l.startsWith("mean "))).toBe(false);
+  });
+
+  it("shows bounded sorted run and info metadata at a distribution boundary", () => {
+    const [p] = toSeriesPoints([
+      sample({
+        run_tags: { distribution: "generation-b", channel: "nightly" },
+        info: { build: "release" },
+        change_annotations: { begins_distribution_change: true },
+        zscorestats: zs({ begins_distribution_change: true, segment_id: 1 }),
+      }),
+    ]);
+    expect(p!.runTags).toEqual({ distribution: "generation-b", channel: "nightly" });
+    expect(p!.info).toEqual({ build: "release" });
+    expect(p!.changeAnnotations).toEqual({ begins_distribution_change: true });
+    expect(pointTooltip(p!).metadata).toEqual([
+      "info: build=release",
+      "run: channel=nightly",
+      "run: distribution=generation-b",
+    ]);
+  });
+
+  it("limits boundary metadata and reports overflow", () => {
+    const [p] = toSeriesPoints([
+      sample({
+        run_tags: { a: 1, b: 2, c: 3, d: 4 },
+        info: { e: 5, f: 6, g: 7 },
+        zscorestats: zs({ begins_distribution_change: true }),
+      }),
+    ]);
+    expect(pointTooltip(p!).metadata).toHaveLength(7);
+    expect(pointTooltip(p!).metadata.at(-1)).toBe("… +1 more");
   });
 });
 
