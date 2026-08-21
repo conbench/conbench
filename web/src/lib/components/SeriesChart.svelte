@@ -1,7 +1,7 @@
 <script lang="ts">
   import uPlot from "uplot";
   import "uplot/dist/uPlot.min.css";
-  import { onDestroy, untrack } from "svelte";
+  import { onDestroy, tick, untrack } from "svelte";
 
   import type { TrendAxis } from "../router";
   import {
@@ -47,10 +47,17 @@
   let chartWrap: HTMLDivElement;
   let plotHost: HTMLDivElement;
   let host: HTMLDivElement;
+  let tooltipElement = $state<HTMLDivElement>();
+  let tooltipRequestID = 0;
   let chart: uPlot | undefined;
-  const tooltipEstimatedHeight = 160;
 
-  let tip = $state<{ left: number; top: number; vm: TrendTooltip } | null>(null);
+  let tip = $state<{
+    left: number;
+    top: number;
+    positioned: boolean;
+    requestID: number;
+    vm: TrendTooltip;
+  } | null>(null);
   let hoverIndex = $state<number | null>(null);
   let resizeObserver: ResizeObserver | undefined;
   let plotBox = $state({ left: 0, top: 0, width: 0, height: 0 });
@@ -328,6 +335,30 @@
     };
   }
 
+  async function showTooltip(p: SeriesPoint, cursorLeft: number, cursorTop: number) {
+    const vm = pointTooltip(p);
+    const requestID = ++tooltipRequestID;
+    tip = {
+      left: tooltipLeftForCursor(cursorLeft, chartWrap?.clientWidth ?? 0),
+      top: 8,
+      positioned: false,
+      requestID,
+      vm,
+    };
+    await tick();
+    if (tip?.requestID !== requestID || !tooltipElement) return;
+    const measuredHeight = tooltipElement.getBoundingClientRect().height;
+    tip = {
+      ...tip,
+      top: tooltipTopForCursor(
+        cursorTop,
+        chartWrap?.clientHeight ?? 0,
+        measuredHeight,
+      ).top,
+      positioned: true,
+    };
+  }
+
   function options(width: number): uPlot.Options {
     const accent = cssVar("--c-accent", "#3b82f6");
     const meanColor = cssVar("--c-trend-mean", "#8b5cf6");
@@ -387,17 +418,11 @@
             const cursorLeft = offset.left + (u.cursor.left ?? 0) + u.bbox.left / dpr;
             const top = offset.top + (u.cursor.top ?? 0) + u.bbox.top / dpr;
             hoverIndex = i;
-            tip = p
-              ? {
-                  left: tooltipLeftForCursor(cursorLeft, chartWrap?.clientWidth ?? 0),
-                  top: tooltipTopForCursor(
-                    top,
-                    chartWrap?.clientHeight ?? 0,
-                    tooltipEstimatedHeight,
-                  ).top,
-                  vm: pointTooltip(p),
-                }
-              : null;
+            if (p) {
+              void showTooltip(p, cursorLeft, top);
+            } else {
+              tip = null;
+            }
           },
         ],
       },
@@ -521,7 +546,11 @@
     {/if}
   </div>
   {#if tip}
-    <div class="tip" style={`left:${tip.left}px;top:${tip.top}px`}>
+    <div
+      class="tip"
+      bind:this={tooltipElement}
+      style={`left:${tip.left}px;top:${tip.top}px;visibility:${tip.positioned ? "visible" : "hidden"}`}
+    >
       <strong>{tip.vm.title}</strong>
       {#each tip.vm.lines as line, i (i)}
         <div>{line}</div>

@@ -2,10 +2,9 @@ package api_test
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -32,20 +31,6 @@ func newAPI(t *testing.T) (humatest.TestAPI, *db.Store, context.Context) {
 	_, tapi := humatest.New(t)
 	h.Register(tapi)
 	return tapi, store, ctx
-}
-
-func canonicalBodySHA256(t *testing.T, body map[string]any) string {
-	t.Helper()
-	payload, err := json.Marshal(body)
-	require.NoError(t, err)
-	var req service.SubmitRequest
-	require.NoError(t, json.Unmarshal(payload, &req))
-	req.SubmissionKey = ""
-	req.SubmissionPayloadSHA256 = ""
-	canonical, err := json.Marshal(req)
-	require.NoError(t, err)
-	digest := sha256.Sum256(canonical)
-	return hex.EncodeToString(digest[:])
 }
 
 // validBody is a well-formed result payload that passes huma schema validation,
@@ -95,16 +80,30 @@ func TestPostResultsSubmissionConflictReturns409(t *testing.T) {
 	tapi, _, _ := newAPI(t)
 	body := validBody()
 	body["submission_key"] = "publisher-0000000000000001"
-	body["submission_payload_sha256"] = canonicalBodySHA256(t, body)
 	first := tapi.Post("/api/results", "Authorization: Bearer "+testToken, body)
 	require.Equal(t, http.StatusCreated, first.Code, "body = %s", first.Body.String())
+	second := tapi.Post("/api/results", "Authorization: Bearer "+testToken, body)
+	require.Equal(t, http.StatusCreated, second.Code, "body = %s", second.Body.String())
+	var firstResult, secondResult struct {
+		ID string `json:"id"`
+	}
+	require.NoError(t, json.Unmarshal(first.Body.Bytes(), &firstResult))
+	require.NoError(t, json.Unmarshal(second.Body.Bytes(), &secondResult))
+	assert.Equal(t, firstResult.ID, secondResult.ID)
 
 	changed := validBody()
 	changed["submission_key"] = body["submission_key"]
 	changed["stats"] = map[string]any{"data": []float64{4, 5, 6}, "unit": "s"}
-	changed["submission_payload_sha256"] = canonicalBodySHA256(t, changed)
 	conflict := tapi.Post("/api/results", "Authorization: Bearer "+testToken, changed)
 	assert.Equal(t, http.StatusConflict, conflict.Code, "body = %s", conflict.Body.String())
+}
+
+func TestPostResultsRejectsOversizedSubmissionKey(t *testing.T) {
+	tapi, _, _ := newAPI(t)
+	body := validBody()
+	body["submission_key"] = strings.Repeat("x", 256)
+	resp := tapi.Post("/api/results", "Authorization: Bearer "+testToken, body)
+	assert.Equal(t, http.StatusUnprocessableEntity, resp.Code, "body = %s", resp.Body.String())
 }
 
 // TestPostResultsGithubBranchAndPRNumber pins the new wire fields: explicit

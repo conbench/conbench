@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -9,7 +10,6 @@ import (
 	"fmt"
 	"maps"
 	"math"
-	"regexp"
 	"strconv"
 
 	"github.com/conbench/conbench/internal/commit"
@@ -43,7 +43,7 @@ type Result struct {
 // ErrSubmissionConflict marks reuse of one idempotency key for different content.
 var ErrSubmissionConflict = errors.New("submission key already exists with different content")
 
-var submissionHashPattern = regexp.MustCompile(`^[0-9a-f]{64}$`)
+const maxSubmissionKeyLength = 255
 
 // Ingester persists a submitted benchmark result. It composes the data layer
 // (get-or-create of the related entities, the result insert), the stats/units/
@@ -66,26 +66,19 @@ func NewIngester(store storage.Store, commits commit.Provider) *Ingester {
 // partial-data error), get-or-create the related entities, resolve the commit,
 // compute the fingerprint, and insert the result row.
 func (i *Ingester) Submit(ctx context.Context, req SubmitRequest) (*Result, error) {
-	canonicalHash, err := canonicalSubmissionPayloadSHA256(req)
-	if err != nil {
-		return nil, err
-	}
-	if (req.SubmissionKey == "") != (req.SubmissionPayloadSHA256 == "") {
-		return nil, &ValidationError{Message: "submission_key and submission_payload_sha256 must be provided together"}
-	}
+	canonicalHash := ""
 	if req.SubmissionKey != "" {
-		if !submissionHashPattern.MatchString(req.SubmissionPayloadSHA256) {
-			return nil, &ValidationError{Message: "submission_payload_sha256 must be a lowercase SHA-256"}
+		if len(req.SubmissionKey) > maxSubmissionKeyLength {
+			return nil, &ValidationError{Message: "submission_key must be at most 255 bytes"}
+		}
+		var err error
+		canonicalHash, err = canonicalSubmissionPayloadSHA256(req)
+		if err != nil {
+			return nil, err
 		}
 		existing, lookupErr := i.store.GetBenchmarkResultBySubmissionKey(ctx, req.SubmissionKey)
 		if lookupErr != nil && !errors.Is(lookupErr, storage.ErrNotFound) {
 			return nil, fmt.Errorf("look up submission key: %w", lookupErr)
-		}
-		if req.SubmissionPayloadSHA256 != canonicalHash {
-			if lookupErr == nil {
-				return nil, ErrSubmissionConflict
-			}
-			return nil, &ValidationError{Message: "submission_payload_sha256 does not match the canonical request"}
 		}
 		if lookupErr == nil {
 			return replaySubmission(existing, canonicalHash)
@@ -157,7 +150,7 @@ func (i *Ingester) Submit(ctx context.Context, req SubmitRequest) (*Result, erro
 		caseID: caseID, contextID: contextID, infoID: infoID,
 		hardwareID: hardwareID, commitID: commitID,
 		repoURL: repoURL, fingerprint: fingerprint,
-	})
+	}, canonicalHash)
 	if err != nil {
 		return nil, err
 	}
@@ -177,9 +170,18 @@ func (i *Ingester) Submit(ctx context.Context, req SubmitRequest) (*Result, erro
 }
 
 func canonicalSubmissionPayloadSHA256(req SubmitRequest) (string, error) {
-	req.SubmissionKey = ""
-	req.SubmissionPayloadSHA256 = ""
 	payload, err := json.Marshal(req)
+	if err != nil {
+		return "", fmt.Errorf("encode submission payload: %w", err)
+	}
+	var canonicalObject map[string]any
+	decoder := json.NewDecoder(bytes.NewReader(payload))
+	decoder.UseNumber()
+	if err := decoder.Decode(&canonicalObject); err != nil {
+		return "", fmt.Errorf("normalize submission payload: %w", err)
+	}
+	delete(canonicalObject, "submission_key")
+	payload, err = json.Marshal(canonicalObject)
 	if err != nil {
 		return "", fmt.Errorf("canonicalize submission payload: %w", err)
 	}
@@ -208,7 +210,7 @@ type insertRefs struct {
 // buildInsertParams assembles the full column set for the result row: request
 // passthroughs, the resolved stats branch, the annotation blobs, and the
 // resolved entity references.
-func buildInsertParams(req SubmitRequest, rs resolved, refs insertRefs) (storage.InsertBenchmarkResultParams, error) {
+func buildInsertParams(req SubmitRequest, rs resolved, refs insertRefs, submissionPayloadSHA256 string) (storage.InsertBenchmarkResultParams, error) {
 	var zero storage.InsertBenchmarkResultParams
 	runTags, err := buildRunTags(req)
 	if err != nil {
@@ -250,7 +252,7 @@ func buildInsertParams(req SubmitRequest, rs resolved, refs insertRefs) (storage
 		OptionalBenchmarkInfo:   obiJSON,
 		ChangeAnnotations:       caJSON,
 		SubmissionKey:           strOrNil(req.SubmissionKey),
-		SubmissionPayloadSHA256: strOrNil(req.SubmissionPayloadSHA256),
+		SubmissionPayloadSHA256: strOrNil(submissionPayloadSHA256),
 	}
 	ins.Mean, ins.Min, ins.Max, ins.Median = rs.aggs.Mean, rs.aggs.Min, rs.aggs.Max, rs.aggs.Median
 	ins.Q1, ins.Q3, ins.Stdev, ins.Iqr = rs.aggs.Q1, rs.aggs.Q3, rs.aggs.Stdev, rs.aggs.Iqr

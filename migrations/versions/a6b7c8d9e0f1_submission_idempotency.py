@@ -26,15 +26,30 @@ def upgrade() -> None:
         "benchmark_result",
         "(submission_key IS NULL AND submission_payload_sha256 IS NULL) OR "
         "(submission_key IS NOT NULL AND submission_payload_sha256 ~ '^[0-9a-f]{64}$')",
+        postgresql_not_valid=True,
     )
+    with op.get_context().autocommit_block():
+        op.create_index(
+            "benchmark_result_submission_key_index",
+            "benchmark_result",
+            ["submission_key"],
+            unique=True,
+            postgresql_concurrently=True,
+            postgresql_where=sa.text("submission_key IS NOT NULL"),
+        )
     op.execute(
-        "CREATE UNIQUE INDEX benchmark_result_submission_key_index "
-        "ON benchmark_result (submission_key) WHERE submission_key IS NOT NULL"
+        "ALTER TABLE benchmark_result VALIDATE CONSTRAINT "
+        "benchmark_result_submission_idempotency_check"
     )
 
 
 def downgrade() -> None:
-    op.drop_index("benchmark_result_submission_key_index", table_name="benchmark_result")
+    with op.get_context().autocommit_block():
+        op.drop_index(
+            "benchmark_result_submission_key_index",
+            table_name="benchmark_result",
+            postgresql_concurrently=True,
+        )
     op.drop_constraint(
         "benchmark_result_submission_idempotency_check",
         "benchmark_result",

@@ -14,22 +14,21 @@ import (
 // SubmitRequest is the POST /api/results body: a subset of the legacy
 // _BenchmarkResultCreateSchema, in the same shape (not a new simplified format).
 type SubmitRequest struct {
-	SubmissionKey           string         `json:"submission_key,omitempty"`
-	SubmissionPayloadSHA256 string         `json:"submission_payload_sha256,omitempty"`
-	Tags                    map[string]any `json:"tags"`
-	Context                 map[string]any `json:"context"`
-	Info                    map[string]any `json:"info,omitempty"`
-	MachineInfo             *MachineInfo   `json:"machine_info,omitempty"`
-	ClusterInfo             *ClusterInfo   `json:"cluster_info,omitempty"`
-	GitHub                  GitHubInfo     `json:"github"`
-	RunID                   string         `json:"run_id"`
-	RunName                 *string        `json:"run_name,omitempty"`
-	RunTags                 map[string]any `json:"run_tags,omitempty"`
-	RunReason               string         `json:"run_reason,omitempty"`
-	BatchID                 string         `json:"batch_id,omitempty"`
-	Timestamp               time.Time      `json:"timestamp"`
-	Stats                   *StatsInput    `json:"stats,omitempty"`
-	Error                   JSONObject     `json:"error,omitzero"`
+	SubmissionKey string         `json:"submission_key,omitempty" maxLength:"255"`
+	Tags          map[string]any `json:"tags"`
+	Context       map[string]any `json:"context"`
+	Info          map[string]any `json:"info,omitempty"`
+	MachineInfo   *MachineInfo   `json:"machine_info,omitempty"`
+	ClusterInfo   *ClusterInfo   `json:"cluster_info,omitempty"`
+	GitHub        GitHubInfo     `json:"github"`
+	RunID         string         `json:"run_id"`
+	RunName       *string        `json:"run_name,omitempty"`
+	RunTags       map[string]any `json:"run_tags,omitempty"`
+	RunReason     string         `json:"run_reason,omitempty"`
+	BatchID       string         `json:"batch_id,omitempty"`
+	Timestamp     time.Time      `json:"timestamp"`
+	Stats         *StatsInput    `json:"stats,omitempty"`
+	Error         JSONObject     `json:"error,omitzero"`
 
 	// The three annotation blobs accept an explicit null as "absent" (approved
 	// deviation: legacy 400s on null, but the stored outcome is identical), so

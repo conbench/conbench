@@ -748,26 +748,25 @@ type SubmitOutputBody struct {
 // SubmitRequest defines model for SubmitRequest.
 type SubmitRequest struct {
 	// Schema A URL to the JSON Schema for this object.
-	Schema                  *string                 `json:"$schema,omitempty"`
-	BatchId                 *string                 `json:"batch_id,omitempty"`
-	ChangeAnnotations       *map[string]interface{} `json:"change_annotations,omitempty"`
-	ClusterInfo             *ClusterInfo            `json:"cluster_info,omitempty"`
-	Context                 map[string]interface{}  `json:"context"`
-	Error                   *map[string]interface{} `json:"error,omitempty"`
-	Github                  GitHubInfo              `json:"github"`
-	Info                    *map[string]interface{} `json:"info,omitempty"`
-	MachineInfo             *MachineInfo            `json:"machine_info,omitempty"`
-	OptionalBenchmarkInfo   *map[string]interface{} `json:"optional_benchmark_info,omitempty"`
-	RunId                   string                  `json:"run_id"`
-	RunName                 *string                 `json:"run_name,omitempty"`
-	RunReason               *string                 `json:"run_reason,omitempty"`
-	RunTags                 *map[string]interface{} `json:"run_tags,omitempty"`
-	Stats                   *StatsInput             `json:"stats,omitempty"`
-	SubmissionKey           *string                 `json:"submission_key,omitempty"`
-	SubmissionPayloadSha256 *string                 `json:"submission_payload_sha256,omitempty"`
-	Tags                    map[string]interface{}  `json:"tags"`
-	Timestamp               time.Time               `json:"timestamp"`
-	Validation              *map[string]interface{} `json:"validation,omitempty"`
+	Schema                *string                 `json:"$schema,omitempty"`
+	BatchId               *string                 `json:"batch_id,omitempty"`
+	ChangeAnnotations     *map[string]interface{} `json:"change_annotations,omitempty"`
+	ClusterInfo           *ClusterInfo            `json:"cluster_info,omitempty"`
+	Context               map[string]interface{}  `json:"context"`
+	Error                 *map[string]interface{} `json:"error,omitempty"`
+	Github                GitHubInfo              `json:"github"`
+	Info                  *map[string]interface{} `json:"info,omitempty"`
+	MachineInfo           *MachineInfo            `json:"machine_info,omitempty"`
+	OptionalBenchmarkInfo *map[string]interface{} `json:"optional_benchmark_info,omitempty"`
+	RunId                 string                  `json:"run_id"`
+	RunName               *string                 `json:"run_name,omitempty"`
+	RunReason             *string                 `json:"run_reason,omitempty"`
+	RunTags               *map[string]interface{} `json:"run_tags,omitempty"`
+	Stats                 *StatsInput             `json:"stats,omitempty"`
+	SubmissionKey         *string                 `json:"submission_key,omitempty"`
+	Tags                  map[string]interface{}  `json:"tags"`
+	Timestamp             time.Time               `json:"timestamp"`
+	Validation            *map[string]interface{} `json:"validation,omitempty"`
 }
 
 // TokenView defines model for TokenView.

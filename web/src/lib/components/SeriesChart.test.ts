@@ -56,11 +56,30 @@ const boundaryPoint: SeriesPoint = {
 
 describe("SeriesChart", () => {
   it("renders generic metadata in a boundary point tooltip", async () => {
-    render(SeriesChart, { props: { points: [boundaryPoint] } });
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+      x: 0,
+      y: 0,
+      top: 0,
+      right: 200,
+      bottom: 40,
+      left: 0,
+      width: 200,
+      height: 40,
+      toJSON: () => ({}),
+    });
+    const { container } = render(SeriesChart, { props: { points: [boundaryPoint] } });
+    const chartWrap = container.querySelector(".chart-wrap");
+    expect(chartWrap).not.toBeNull();
+    Object.defineProperty(chartWrap, "clientHeight", { value: 400 });
+    Object.defineProperty(chartWrap, "clientWidth", { value: 640 });
+    (plotState.instance as { cursor: { top: number } }).cursor.top = 150;
     expect(plotState.cursorHook).toBeTypeOf("function");
     plotState.cursorHook?.(plotState.instance);
     await tick();
+    await tick();
     expect(screen.getByText("info: build=release")).toBeInTheDocument();
     expect(screen.getByText("run: channel=nightly")).toBeInTheDocument();
+    expect(container.querySelector(".tip")).toHaveStyle({ top: "102px", visibility: "visible" });
+    rect.mockRestore();
   });
 });

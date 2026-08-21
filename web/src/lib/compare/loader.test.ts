@@ -52,6 +52,9 @@ const sample = (id: string, day: number) => ({
   single_value_summary: 1.5,
   single_value_summary_type: "min",
   unit: "s",
+  run_tags: {},
+  info: {},
+  change_annotations: {},
   zscorestats: null,
 });
 

@@ -292,11 +292,25 @@ describe("pointTooltip", () => {
     ]);
   });
 
+  it("shows an explicit boundary when mixed units suppress z-score statistics", () => {
+    const [p] = toSeriesPoints([
+      sample({
+        run_tags: { distribution: "generation-b" },
+        change_annotations: { begins_distribution_change: true },
+        zscorestats: null,
+      }),
+    ]);
+    expect(p!.stats.beginsChange).toBe(true);
+    expect(stepIndices([p!])).toEqual([0]);
+    expect(pointTooltip(p!).metadata).toEqual(["run: distribution=generation-b"]);
+  });
+
   it("limits boundary metadata and reports overflow", () => {
     const [p] = toSeriesPoints([
       sample({
         run_tags: { a: 1, b: 2, c: 3, d: 4 },
         info: { e: 5, f: 6, g: 7 },
+        change_annotations: { begins_distribution_change: true },
         zscorestats: zs({ begins_distribution_change: true }),
       }),
     ]);

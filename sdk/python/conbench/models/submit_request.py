@@ -52,7 +52,6 @@ class SubmitRequest:
         run_tags (SubmitRequestRunTags | Unset):
         stats (StatsInput | Unset):
         submission_key (str | Unset):
-        submission_payload_sha256 (str | Unset):
         validation (None | SubmitRequestValidationType0 | Unset):
     """
 
@@ -76,7 +75,6 @@ class SubmitRequest:
     run_tags: SubmitRequestRunTags | Unset = UNSET
     stats: StatsInput | Unset = UNSET
     submission_key: str | Unset = UNSET
-    submission_payload_sha256: str | Unset = UNSET
     validation: None | SubmitRequestValidationType0 | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -152,8 +150,6 @@ class SubmitRequest:
 
         submission_key = self.submission_key
 
-        submission_payload_sha256 = self.submission_payload_sha256
-
         validation: dict[str, Any] | None | Unset
         if isinstance(self.validation, Unset):
             validation = UNSET
@@ -199,8 +195,6 @@ class SubmitRequest:
             field_dict["stats"] = stats
         if submission_key is not UNSET:
             field_dict["submission_key"] = submission_key
-        if submission_payload_sha256 is not UNSET:
-            field_dict["submission_payload_sha256"] = submission_payload_sha256
         if validation is not UNSET:
             field_dict["validation"] = validation
 
@@ -336,8 +330,6 @@ class SubmitRequest:
 
         submission_key = d.pop("submission_key", UNSET)
 
-        submission_payload_sha256 = d.pop("submission_payload_sha256", UNSET)
-
         def _parse_validation(
             data: object,
         ) -> None | SubmitRequestValidationType0 | Unset:
@@ -376,7 +368,6 @@ class SubmitRequest:
             run_tags=run_tags,
             stats=stats,
             submission_key=submission_key,
-            submission_payload_sha256=submission_payload_sha256,
             validation=validation,
         )
 

@@ -1145,7 +1145,6 @@ export interface components {
             };
             stats?: components["schemas"]["StatsInput"];
             submission_key?: string;
-            submission_payload_sha256?: string;
             tags: {
                 [key: string]: unknown;
             };
