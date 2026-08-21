@@ -94,7 +94,10 @@ CREATE TABLE public.benchmark_result (
     commit_id character varying(50),
     hardware_id character varying(50) NOT NULL,
     commit_repo_url text NOT NULL,
-    history_fingerprint text NOT NULL
+    history_fingerprint text NOT NULL,
+    submission_key text,
+    submission_payload_sha256 text,
+    CONSTRAINT benchmark_result_submission_idempotency_check CHECK ((((submission_key IS NULL) AND (submission_payload_sha256 IS NULL)) OR ((submission_key IS NOT NULL) AND (submission_payload_sha256 ~ '^[0-9a-f]{64}$'::text))))
 );
 
 CREATE TABLE public."case" (
@@ -240,6 +243,8 @@ CREATE INDEX benchmark_result_run_id_index ON public.benchmark_result USING btre
 CREATE INDEX benchmark_result_run_id_timestamp_idx ON public.benchmark_result USING btree (run_id, "timestamp") WHERE ("timestamp" >= '2023-11-19 00:00:00'::timestamp without time zone);
 
 CREATE INDEX benchmark_result_run_reason_id_idx ON public.benchmark_result USING btree (run_reason, id) WHERE ("timestamp" >= '2023-06-03 00:00:00'::timestamp without time zone);
+
+CREATE UNIQUE INDEX benchmark_result_submission_key_index ON public.benchmark_result USING btree (submission_key) WHERE (submission_key IS NOT NULL);
 
 CREATE INDEX benchmark_result_timestamp_index ON public.benchmark_result USING btree ("timestamp");
 

@@ -22,6 +22,9 @@ import (
 // to its own not-found error for the API layer.
 var ErrNotFound = errors.New("storage: entity not found")
 
+// ErrConflict marks a unique submission-key race that the service resolves by lookup.
+var ErrConflict = errors.New("storage: entity conflict")
+
 // Store is the persistence port: the get-or-create operations and reads the
 // ingestion and read services need. Implementations own primary-key generation,
 // so the insert-params types below carry no ID.
@@ -36,6 +39,7 @@ type Store interface {
 	// uses it to short-circuit GitHub enrichment for known commits.
 	GetCommitID(ctx context.Context, sha, repository string) (string, error)
 	InsertBenchmarkResult(ctx context.Context, p InsertBenchmarkResultParams) (string, error)
+	GetBenchmarkResultBySubmissionKey(ctx context.Context, key string) (SubmissionResult, error)
 	// UpdateBenchmarkResultChangeAnnotations replaces the change_annotations
 	// column with the service-computed merged object. Missing row -> ErrNotFound.
 	UpdateBenchmarkResultChangeAnnotations(ctx context.Context, id string, changeAnnotations []byte) error
@@ -137,35 +141,45 @@ type UpdateUnknownCommitParams struct {
 // InsertBenchmarkResultParams is the columns for a new benchmark_result row.
 // The adapter generates the primary key, so callers leave it out.
 type InsertBenchmarkResultParams struct {
-	CaseID                string
-	ContextID             string
-	InfoID                string
-	HardwareID            string
-	RunID                 string
-	RunTags               []byte
-	RunReason             *string
-	CommitID              *string
-	CommitRepoUrl         string
-	HistoryFingerprint    string
-	Timestamp             time.Time
-	Unit                  *string
-	TimeUnit              *string
-	BatchID               *string
-	Iterations            *int32
-	Error                 []byte
-	Data                  []*float64
-	Times                 []*float64
-	Mean                  *float64
-	Min                   *float64
-	Max                   *float64
-	Median                *float64
-	Q1                    *float64
-	Q3                    *float64
-	Stdev                 *float64
-	Iqr                   *float64
-	Validation            []byte
-	OptionalBenchmarkInfo []byte
-	ChangeAnnotations     []byte
+	CaseID                  string
+	ContextID               string
+	InfoID                  string
+	HardwareID              string
+	RunID                   string
+	RunTags                 []byte
+	RunReason               *string
+	CommitID                *string
+	CommitRepoUrl           string
+	HistoryFingerprint      string
+	Timestamp               time.Time
+	Unit                    *string
+	TimeUnit                *string
+	BatchID                 *string
+	Iterations              *int32
+	Error                   []byte
+	Data                    []*float64
+	Times                   []*float64
+	Mean                    *float64
+	Min                     *float64
+	Max                     *float64
+	Median                  *float64
+	Q1                      *float64
+	Q3                      *float64
+	Stdev                   *float64
+	Iqr                     *float64
+	Validation              []byte
+	OptionalBenchmarkInfo   []byte
+	ChangeAnnotations       []byte
+	SubmissionKey           *string
+	SubmissionPayloadSHA256 *string
+}
+
+// SubmissionResult is the replay identity stored for an idempotency key.
+type SubmissionResult struct {
+	ID                 string
+	RunID              string
+	HistoryFingerprint string
+	PayloadSHA256      string
 }
 
 // APIToken is a row of the api_token table: a user-attributed write-auth
@@ -421,36 +435,38 @@ type User struct {
 // keys but no joins. The read service uses its history fingerprint to resolve a
 // result's series; the persistence round-trip is also verified against it.
 type BenchmarkResult struct {
-	ID                    string
-	CaseID                string
-	ContextID             string
-	InfoID                string
-	HardwareID            string
-	RunID                 string
-	RunTags               []byte
-	RunReason             *string
-	CommitID              *string
-	CommitRepoUrl         string
-	HistoryFingerprint    string
-	Timestamp             time.Time
-	Unit                  *string
-	TimeUnit              *string
-	BatchID               *string
-	Iterations            *int32
-	Error                 []byte
-	Data                  []*float64
-	Times                 []*float64
-	Mean                  *float64
-	Min                   *float64
-	Max                   *float64
-	Median                *float64
-	Q1                    *float64
-	Q3                    *float64
-	Stdev                 *float64
-	Iqr                   *float64
-	Validation            []byte
-	OptionalBenchmarkInfo []byte
-	ChangeAnnotations     []byte
+	ID                      string
+	CaseID                  string
+	ContextID               string
+	InfoID                  string
+	HardwareID              string
+	RunID                   string
+	RunTags                 []byte
+	RunReason               *string
+	CommitID                *string
+	CommitRepoUrl           string
+	HistoryFingerprint      string
+	Timestamp               time.Time
+	Unit                    *string
+	TimeUnit                *string
+	BatchID                 *string
+	Iterations              *int32
+	Error                   []byte
+	Data                    []*float64
+	Times                   []*float64
+	Mean                    *float64
+	Min                     *float64
+	Max                     *float64
+	Median                  *float64
+	Q1                      *float64
+	Q3                      *float64
+	Stdev                   *float64
+	Iqr                     *float64
+	Validation              []byte
+	OptionalBenchmarkInfo   []byte
+	ChangeAnnotations       []byte
+	SubmissionKey           *string
+	SubmissionPayloadSHA256 *string
 }
 
 // ResultDetailRow is a stored result joined to its case, context, info,

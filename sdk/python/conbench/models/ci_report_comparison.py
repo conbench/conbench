@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -137,7 +137,7 @@ class CIReportComparison:
         return field_dict
 
     @classmethod
-    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+    def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
         from ..models.ci_report_analysis_type_0 import CIReportAnalysisType0
         from ..models.ci_report_baseline_side_type_0 import CIReportBaselineSideType0
         from ..models.ci_report_comparison_context import CIReportComparisonContext

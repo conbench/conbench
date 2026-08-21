@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -51,6 +51,8 @@ class SubmitRequest:
         run_reason (str | Unset):
         run_tags (SubmitRequestRunTags | Unset):
         stats (StatsInput | Unset):
+        submission_key (str | Unset):
+        submission_payload_sha256 (str | Unset):
         validation (None | SubmitRequestValidationType0 | Unset):
     """
 
@@ -73,6 +75,8 @@ class SubmitRequest:
     run_reason: str | Unset = UNSET
     run_tags: SubmitRequestRunTags | Unset = UNSET
     stats: StatsInput | Unset = UNSET
+    submission_key: str | Unset = UNSET
+    submission_payload_sha256: str | Unset = UNSET
     validation: None | SubmitRequestValidationType0 | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -146,6 +150,10 @@ class SubmitRequest:
         if not isinstance(self.stats, Unset):
             stats = self.stats.to_dict()
 
+        submission_key = self.submission_key
+
+        submission_payload_sha256 = self.submission_payload_sha256
+
         validation: dict[str, Any] | None | Unset
         if isinstance(self.validation, Unset):
             validation = UNSET
@@ -189,13 +197,17 @@ class SubmitRequest:
             field_dict["run_tags"] = run_tags
         if stats is not UNSET:
             field_dict["stats"] = stats
+        if submission_key is not UNSET:
+            field_dict["submission_key"] = submission_key
+        if submission_payload_sha256 is not UNSET:
+            field_dict["submission_payload_sha256"] = submission_payload_sha256
         if validation is not UNSET:
             field_dict["validation"] = validation
 
         return field_dict
 
     @classmethod
-    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+    def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
         from ..models.cluster_info import ClusterInfo
         from ..models.git_hub_info import GitHubInfo
         from ..models.machine_info import MachineInfo
@@ -322,6 +334,10 @@ class SubmitRequest:
         else:
             stats = StatsInput.from_dict(_stats)
 
+        submission_key = d.pop("submission_key", UNSET)
+
+        submission_payload_sha256 = d.pop("submission_payload_sha256", UNSET)
+
         def _parse_validation(
             data: object,
         ) -> None | SubmitRequestValidationType0 | Unset:
@@ -359,6 +375,8 @@ class SubmitRequest:
             run_reason=run_reason,
             run_tags=run_tags,
             stats=stats,
+            submission_key=submission_key,
+            submission_payload_sha256=submission_payload_sha256,
             validation=validation,
         )
 

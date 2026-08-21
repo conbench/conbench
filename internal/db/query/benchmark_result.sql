@@ -4,14 +4,15 @@ INSERT INTO benchmark_result (
   run_id, run_tags, run_reason, commit_id, commit_repo_url, history_fingerprint,
   "timestamp", unit, time_unit, batch_id, iterations, error,
   data, times, mean, min, max, median, q1, q3, stdev, iqr,
-  validation, optional_benchmark_info, change_annotations
+  validation, optional_benchmark_info, change_annotations,
+  submission_key, submission_payload_sha256
 )
 VALUES (
   $1, $2, $3, $4, $5,
   $6, $7, $8, $9, $10, $11,
   $12, $13, $14, $15, $16, $17,
   $18, $19, $20, $21, $22, $23, $24, $25, $26, $27,
-  $28, $29, $30
+  $28, $29, $30, $31, $32
 )
 RETURNING id;
 
@@ -30,9 +31,15 @@ SELECT
   run_id, run_tags, run_reason, commit_id, commit_repo_url, history_fingerprint,
   "timestamp", unit, time_unit, batch_id, iterations, error,
   data, times, mean, min, max, median, q1, q3, stdev, iqr,
-  validation, optional_benchmark_info, change_annotations
+  validation, optional_benchmark_info, change_annotations,
+  submission_key, submission_payload_sha256
 FROM benchmark_result
 WHERE id = $1;
+
+-- name: GetBenchmarkResultBySubmissionKey :one
+SELECT id, run_id, history_fingerprint, submission_payload_sha256
+FROM benchmark_result
+WHERE submission_key = $1;
 
 -- name: GetBenchmarkResultDetail :one
 -- The persisted result joined to its related entities, for the result-detail

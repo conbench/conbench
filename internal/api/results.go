@@ -71,6 +71,7 @@ type SubmitInput struct {
 type SubmitOutput struct {
 	Body struct {
 		ID                 string `json:"id"`
+		RunID              string `json:"run_id"`
 		HistoryFingerprint string `json:"history_fingerprint"`
 	}
 }
@@ -82,6 +83,9 @@ func (h *Handler) submit(ctx context.Context, in *SubmitInput) (*SubmitOutput, e
 
 	res, err := h.ingester.Submit(ctx, in.Body)
 	if err != nil {
+		if errors.Is(err, service.ErrSubmissionConflict) {
+			return nil, huma.Error409Conflict("submission key already exists with different content")
+		}
 		var ve *service.ValidationError
 		if errors.As(err, &ve) {
 			return nil, huma.Error422UnprocessableEntity(ve.Message)
@@ -91,6 +95,7 @@ func (h *Handler) submit(ctx context.Context, in *SubmitInput) (*SubmitOutput, e
 
 	out := &SubmitOutput{}
 	out.Body.ID = res.ID
+	out.Body.RunID = res.RunID
 	out.Body.HistoryFingerprint = res.HistoryFingerprint
 	return out, nil
 }

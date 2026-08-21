@@ -69,36 +69,38 @@ type ApiToken struct {
 }
 
 type BenchmarkResult struct {
-	ID                    string
-	CaseID                string
-	ContextID             string
-	RunID                 string
-	Unit                  *string
-	TimeUnit              *string
-	BatchID               *string
-	Timestamp             time.Time
-	Iterations            *int32
-	Min                   *float64
-	Max                   *float64
-	Mean                  *float64
-	Median                *float64
-	Stdev                 *float64
-	Q1                    *float64
-	Q3                    *float64
-	Iqr                   *float64
-	InfoID                string
-	Error                 []byte
-	Data                  []*float64
-	Times                 []*float64
-	Validation            []byte
-	OptionalBenchmarkInfo []byte
-	ChangeAnnotations     []byte
-	RunTags               []byte
-	RunReason             *string
-	CommitID              *string
-	HardwareID            string
-	CommitRepoUrl         string
-	HistoryFingerprint    string
+	ID                      string
+	CaseID                  string
+	ContextID               string
+	RunID                   string
+	Unit                    *string
+	TimeUnit                *string
+	BatchID                 *string
+	Timestamp               time.Time
+	Iterations              *int32
+	Min                     *float64
+	Max                     *float64
+	Mean                    *float64
+	Median                  *float64
+	Stdev                   *float64
+	Q1                      *float64
+	Q3                      *float64
+	Iqr                     *float64
+	InfoID                  string
+	Error                   []byte
+	Data                    []*float64
+	Times                   []*float64
+	Validation              []byte
+	OptionalBenchmarkInfo   []byte
+	ChangeAnnotations       []byte
+	RunTags                 []byte
+	RunReason               *string
+	CommitID                *string
+	HardwareID              string
+	CommitRepoUrl           string
+	HistoryFingerprint      string
+	SubmissionKey           *string
+	SubmissionPayloadSha256 *string
 }
 
 type Case struct {

@@ -1574,8 +1574,11 @@ components:
           type: string
         id:
           type: string
+        run_id:
+          type: string
       required:
         - id
+        - run_id
         - history_fingerprint
       type: object
     SubmitRequest:
@@ -1623,6 +1626,10 @@ components:
           type: object
         stats:
           $ref: "#/components/schemas/StatsInput"
+        submission_key:
+          type: string
+        submission_payload_sha256:
+          type: string
         tags:
           additionalProperties: {}
           type: object

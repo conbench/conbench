@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/conbench/conbench/internal/storage"
 )
@@ -630,7 +631,30 @@ func (s *Store) InsertBenchmarkResult(ctx context.Context, p storage.InsertBench
 	}
 	dbp := toInsertBenchmarkResultParams(p)
 	dbp.ID = id
-	return s.q.InsertBenchmarkResult(ctx, dbp)
+	inserted, err := s.q.InsertBenchmarkResult(ctx, dbp)
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.ConstraintName == "benchmark_result_submission_key_index" {
+		return "", storage.ErrConflict
+	}
+	return inserted, err
+}
+
+// GetBenchmarkResultBySubmissionKey returns the replay identity for a client key.
+func (s *Store) GetBenchmarkResultBySubmissionKey(ctx context.Context, key string) (storage.SubmissionResult, error) {
+	row, err := s.q.GetBenchmarkResultBySubmissionKey(ctx, &key)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return storage.SubmissionResult{}, storage.ErrNotFound
+		}
+		return storage.SubmissionResult{}, err
+	}
+	if row.SubmissionPayloadSha256 == nil {
+		return storage.SubmissionResult{}, errors.New("idempotent result is missing its payload hash")
+	}
+	return storage.SubmissionResult{
+		ID: row.ID, RunID: row.RunID, HistoryFingerprint: row.HistoryFingerprint,
+		PayloadSHA256: *row.SubmissionPayloadSha256,
+	}, nil
 }
 
 // UpdateBenchmarkResultChangeAnnotations replaces the change_annotations

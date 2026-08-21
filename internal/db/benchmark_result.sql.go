@@ -37,42 +37,45 @@ SELECT
   run_id, run_tags, run_reason, commit_id, commit_repo_url, history_fingerprint,
   "timestamp", unit, time_unit, batch_id, iterations, error,
   data, times, mean, min, max, median, q1, q3, stdev, iqr,
-  validation, optional_benchmark_info, change_annotations
+  validation, optional_benchmark_info, change_annotations,
+  submission_key, submission_payload_sha256
 FROM benchmark_result
 WHERE id = $1
 `
 
 type GetBenchmarkResultByIDRow struct {
-	ID                    string
-	CaseID                string
-	ContextID             string
-	InfoID                string
-	HardwareID            string
-	RunID                 string
-	RunTags               []byte
-	RunReason             *string
-	CommitID              *string
-	CommitRepoUrl         string
-	HistoryFingerprint    string
-	Timestamp             time.Time
-	Unit                  *string
-	TimeUnit              *string
-	BatchID               *string
-	Iterations            *int32
-	Error                 []byte
-	Data                  []*float64
-	Times                 []*float64
-	Mean                  *float64
-	Min                   *float64
-	Max                   *float64
-	Median                *float64
-	Q1                    *float64
-	Q3                    *float64
-	Stdev                 *float64
-	Iqr                   *float64
-	Validation            []byte
-	OptionalBenchmarkInfo []byte
-	ChangeAnnotations     []byte
+	ID                      string
+	CaseID                  string
+	ContextID               string
+	InfoID                  string
+	HardwareID              string
+	RunID                   string
+	RunTags                 []byte
+	RunReason               *string
+	CommitID                *string
+	CommitRepoUrl           string
+	HistoryFingerprint      string
+	Timestamp               time.Time
+	Unit                    *string
+	TimeUnit                *string
+	BatchID                 *string
+	Iterations              *int32
+	Error                   []byte
+	Data                    []*float64
+	Times                   []*float64
+	Mean                    *float64
+	Min                     *float64
+	Max                     *float64
+	Median                  *float64
+	Q1                      *float64
+	Q3                      *float64
+	Stdev                   *float64
+	Iqr                     *float64
+	Validation              []byte
+	OptionalBenchmarkInfo   []byte
+	ChangeAnnotations       []byte
+	SubmissionKey           *string
+	SubmissionPayloadSha256 *string
 }
 
 func (q *Queries) GetBenchmarkResultByID(ctx context.Context, id string) (GetBenchmarkResultByIDRow, error) {
@@ -109,6 +112,33 @@ func (q *Queries) GetBenchmarkResultByID(ctx context.Context, id string) (GetBen
 		&i.Validation,
 		&i.OptionalBenchmarkInfo,
 		&i.ChangeAnnotations,
+		&i.SubmissionKey,
+		&i.SubmissionPayloadSha256,
+	)
+	return i, err
+}
+
+const getBenchmarkResultBySubmissionKey = `-- name: GetBenchmarkResultBySubmissionKey :one
+SELECT id, run_id, history_fingerprint, submission_payload_sha256
+FROM benchmark_result
+WHERE submission_key = $1
+`
+
+type GetBenchmarkResultBySubmissionKeyRow struct {
+	ID                      string
+	RunID                   string
+	HistoryFingerprint      string
+	SubmissionPayloadSha256 *string
+}
+
+func (q *Queries) GetBenchmarkResultBySubmissionKey(ctx context.Context, submissionKey *string) (GetBenchmarkResultBySubmissionKeyRow, error) {
+	row := q.db.QueryRow(ctx, getBenchmarkResultBySubmissionKey, submissionKey)
+	var i GetBenchmarkResultBySubmissionKeyRow
+	err := row.Scan(
+		&i.ID,
+		&i.RunID,
+		&i.HistoryFingerprint,
+		&i.SubmissionPayloadSha256,
 	)
 	return i, err
 }
@@ -238,49 +268,52 @@ INSERT INTO benchmark_result (
   run_id, run_tags, run_reason, commit_id, commit_repo_url, history_fingerprint,
   "timestamp", unit, time_unit, batch_id, iterations, error,
   data, times, mean, min, max, median, q1, q3, stdev, iqr,
-  validation, optional_benchmark_info, change_annotations
+  validation, optional_benchmark_info, change_annotations,
+  submission_key, submission_payload_sha256
 )
 VALUES (
   $1, $2, $3, $4, $5,
   $6, $7, $8, $9, $10, $11,
   $12, $13, $14, $15, $16, $17,
   $18, $19, $20, $21, $22, $23, $24, $25, $26, $27,
-  $28, $29, $30
+  $28, $29, $30, $31, $32
 )
 RETURNING id
 `
 
 type InsertBenchmarkResultParams struct {
-	ID                    string
-	CaseID                string
-	ContextID             string
-	InfoID                string
-	HardwareID            string
-	RunID                 string
-	RunTags               []byte
-	RunReason             *string
-	CommitID              *string
-	CommitRepoUrl         string
-	HistoryFingerprint    string
-	Timestamp             time.Time
-	Unit                  *string
-	TimeUnit              *string
-	BatchID               *string
-	Iterations            *int32
-	Error                 []byte
-	Data                  []*float64
-	Times                 []*float64
-	Mean                  *float64
-	Min                   *float64
-	Max                   *float64
-	Median                *float64
-	Q1                    *float64
-	Q3                    *float64
-	Stdev                 *float64
-	Iqr                   *float64
-	Validation            []byte
-	OptionalBenchmarkInfo []byte
-	ChangeAnnotations     []byte
+	ID                      string
+	CaseID                  string
+	ContextID               string
+	InfoID                  string
+	HardwareID              string
+	RunID                   string
+	RunTags                 []byte
+	RunReason               *string
+	CommitID                *string
+	CommitRepoUrl           string
+	HistoryFingerprint      string
+	Timestamp               time.Time
+	Unit                    *string
+	TimeUnit                *string
+	BatchID                 *string
+	Iterations              *int32
+	Error                   []byte
+	Data                    []*float64
+	Times                   []*float64
+	Mean                    *float64
+	Min                     *float64
+	Max                     *float64
+	Median                  *float64
+	Q1                      *float64
+	Q3                      *float64
+	Stdev                   *float64
+	Iqr                     *float64
+	Validation              []byte
+	OptionalBenchmarkInfo   []byte
+	ChangeAnnotations       []byte
+	SubmissionKey           *string
+	SubmissionPayloadSha256 *string
 }
 
 func (q *Queries) InsertBenchmarkResult(ctx context.Context, arg InsertBenchmarkResultParams) (string, error) {
@@ -315,6 +348,8 @@ func (q *Queries) InsertBenchmarkResult(ctx context.Context, arg InsertBenchmark
 		arg.Validation,
 		arg.OptionalBenchmarkInfo,
 		arg.ChangeAnnotations,
+		arg.SubmissionKey,
+		arg.SubmissionPayloadSha256,
 	)
 	var id string
 	err := row.Scan(&id)

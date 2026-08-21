@@ -1099,6 +1099,7 @@ export interface components {
             readonly $schema?: string;
             history_fingerprint: string;
             id: string;
+            run_id: string;
         };
         SubmitRequest: {
             /**
@@ -1133,6 +1134,8 @@ export interface components {
                 [key: string]: unknown;
             };
             stats?: components["schemas"]["StatsInput"];
+            submission_key?: string;
+            submission_payload_sha256?: string;
             tags: {
                 [key: string]: unknown;
             };

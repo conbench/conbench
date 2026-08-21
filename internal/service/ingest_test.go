@@ -2,6 +2,8 @@ package service_test
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -26,6 +28,47 @@ func newIngester(t *testing.T) (*service.Ingester, *db.Store, *pgxpool.Pool, con
 	pool, ctx := dbtest.NewPool(t)
 	store := db.NewStore(pool)
 	return service.NewIngester(store, commit.LocalProvider{}), store, pool, ctx
+}
+
+func TestSubmitIdempotentReplayAndConflict(t *testing.T) {
+	ing, _, _, ctx := newIngester(t)
+	req := machineReq(samples(1, 2, 3), "s")
+	req.SubmissionKey = "publisher-0000000000000001"
+	req.SubmissionPayloadSHA256 = canonicalSubmitPayloadSHA256(t, req)
+
+	first, err := ing.Submit(ctx, req)
+	require.NoError(t, err)
+	second, err := ing.Submit(ctx, req)
+	require.NoError(t, err)
+	assert.Equal(t, first, second)
+	assert.Equal(t, req.RunID, second.RunID)
+
+	changed := req
+	changed.Stats = &service.StatsInput{Data: samples(4, 5, 6), Unit: "s"}
+	changed.SubmissionPayloadSHA256 = canonicalSubmitPayloadSHA256(t, changed)
+	_, err = ing.Submit(ctx, changed)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, service.ErrSubmissionConflict)
+}
+
+func TestSubmitWithoutIdempotencyKeyCreatesIndependentResults(t *testing.T) {
+	ing, _, _, ctx := newIngester(t)
+	req := machineReq(samples(1, 2, 3), "s")
+	first, err := ing.Submit(ctx, req)
+	require.NoError(t, err)
+	second, err := ing.Submit(ctx, req)
+	require.NoError(t, err)
+	assert.NotEqual(t, first.ID, second.ID)
+}
+
+func canonicalSubmitPayloadSHA256(t *testing.T, req service.SubmitRequest) string {
+	t.Helper()
+	req.SubmissionKey = ""
+	req.SubmissionPayloadSHA256 = ""
+	payload, err := json.Marshal(req)
+	require.NoError(t, err)
+	digest := sha256.Sum256(payload)
+	return hex.EncodeToString(digest[:])
 }
 
 // samples wraps float values as the nullable per-iteration slice the payload carries.

@@ -2,6 +2,8 @@ package api_test
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -32,6 +34,20 @@ func newAPI(t *testing.T) (humatest.TestAPI, *db.Store, context.Context) {
 	return tapi, store, ctx
 }
 
+func canonicalBodySHA256(t *testing.T, body map[string]any) string {
+	t.Helper()
+	payload, err := json.Marshal(body)
+	require.NoError(t, err)
+	var req service.SubmitRequest
+	require.NoError(t, json.Unmarshal(payload, &req))
+	req.SubmissionKey = ""
+	req.SubmissionPayloadSHA256 = ""
+	canonical, err := json.Marshal(req)
+	require.NoError(t, err)
+	digest := sha256.Sum256(canonical)
+	return hex.EncodeToString(digest[:])
+}
+
 // validBody is a well-formed result payload that passes huma schema validation,
 // so the service layer (not huma) decides the outcome.
 func validBody() map[string]any {
@@ -59,10 +75,12 @@ func TestPostResultsCreates(t *testing.T) {
 	require.Equal(t, http.StatusCreated, resp.Code, "body = %s", resp.Body.String())
 	var out struct {
 		ID                 string `json:"id"`
+		RunID              string `json:"run_id"`
 		HistoryFingerprint string `json:"history_fingerprint"`
 	}
 	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &out))
 	require.NotEmpty(t, out.ID, "missing fields in response: %s", resp.Body.String())
+	assert.Equal(t, "run-1", out.RunID)
 	require.NotEmpty(t, out.HistoryFingerprint, "missing fields in response: %s", resp.Body.String())
 
 	// The result actually landed in the frozen schema.
@@ -71,6 +89,22 @@ func TestPostResultsCreates(t *testing.T) {
 	if row.Unit == nil || *row.Unit != "s" || len(row.Data) != 3 || row.CommitID == nil {
 		assert.Failf(t, "stored row mismatch", "unit=%v data=%v commit=%v", row.Unit, row.Data, row.CommitID)
 	}
+}
+
+func TestPostResultsSubmissionConflictReturns409(t *testing.T) {
+	tapi, _, _ := newAPI(t)
+	body := validBody()
+	body["submission_key"] = "publisher-0000000000000001"
+	body["submission_payload_sha256"] = canonicalBodySHA256(t, body)
+	first := tapi.Post("/api/results", "Authorization: Bearer "+testToken, body)
+	require.Equal(t, http.StatusCreated, first.Code, "body = %s", first.Body.String())
+
+	changed := validBody()
+	changed["submission_key"] = body["submission_key"]
+	changed["stats"] = map[string]any{"data": []float64{4, 5, 6}, "unit": "s"}
+	changed["submission_payload_sha256"] = canonicalBodySHA256(t, changed)
+	conflict := tapi.Post("/api/results", "Authorization: Bearer "+testToken, changed)
+	assert.Equal(t, http.StatusConflict, conflict.Code, "body = %s", conflict.Body.String())
 }
 
 // TestPostResultsGithubBranchAndPRNumber pins the new wire fields: explicit
