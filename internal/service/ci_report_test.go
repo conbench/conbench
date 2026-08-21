@@ -211,6 +211,34 @@ func TestCIReportBaselineCanReuseContenderRunIDOnAncestorCommit(t *testing.T) {
 	assert.Equal(t, "base", *row.Baseline.CommitSHA)
 }
 
+func TestCIReportCarriesContenderDistributionBoundary(t *testing.T) {
+	_, store, _, ctx := newIngester(t)
+	t0 := time.Date(2024, 1, 22, 0, 0, 0, 0, time.UTC)
+	provider := ciCommitProvider{
+		"base": ciCommitInfo("base", nil, "base", t0),
+		"head": ciCommitInfo("head", new("base"), "head", t0.Add(24*time.Hour)),
+	}
+	ing := service.NewIngester(store, provider)
+	ciSubmit(t, ing, ctx, "baseline-run", "base", 10)
+	contenderReq := machineReq(samples(20, 21, 22), "s")
+	contenderReq.RunID = "ci-run"
+	contenderReq.GitHub.Commit = "head"
+	contenderReq.ChangeAnnotations = map[string]any{"begins_distribution_change": true}
+	_, err := ing.Submit(ctx, contenderReq)
+	require.NoError(t, err)
+
+	report, err := service.NewCIReporter(store, "").Report(ctx, service.CIReportQuery{
+		RunIDs:         []string{"ci-run"},
+		BaselineRunIDs: []string{"baseline-run"},
+	})
+	require.NoError(t, err)
+	require.Len(t, report.Runs, 1)
+	require.Len(t, report.Runs[0].Comparisons, 1)
+	comparison := report.Runs[0].Comparisons[0]
+	assert.True(t, comparison.Contender.BeginsDistributionChange)
+	require.NotNil(t, comparison.Analysis, "manual report still computes the comparison")
+}
+
 func TestCIReportExplicitBaselineRunIDsCompareSelectedRuns(t *testing.T) {
 	_, store, _, ctx := newIngester(t)
 	t0 := time.Date(2024, 1, 25, 0, 0, 0, 0, time.UTC)

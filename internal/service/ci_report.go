@@ -143,14 +143,15 @@ type CIReportAnalysis struct {
 }
 
 type CIReportSide struct {
-	ResultID        string         `json:"result_id"`
-	RunID           string         `json:"run_id"`
-	ResultTimestamp time.Time      `json:"result_timestamp"`
-	CommitSHA       *string        `json:"commit_sha"`
-	CommitTimestamp *time.Time     `json:"commit_timestamp"`
-	Error           map[string]any `json:"error" nullable:"true"`
-	SVS             *float64       `json:"single_value_summary"`
-	SVSType         string         `json:"single_value_summary_type"`
+	ResultID                 string         `json:"result_id"`
+	RunID                    string         `json:"run_id"`
+	ResultTimestamp          time.Time      `json:"result_timestamp"`
+	CommitSHA                *string        `json:"commit_sha"`
+	CommitTimestamp          *time.Time     `json:"commit_timestamp"`
+	Error                    map[string]any `json:"error" nullable:"true"`
+	SVS                      *float64       `json:"single_value_summary"`
+	SVSType                  string         `json:"single_value_summary_type"`
+	BeginsDistributionChange bool           `json:"begins_distribution_change"`
 }
 
 // CIReportBaselineSide is nullable when a contender row has no baseline. It
@@ -878,6 +879,11 @@ func ciReportComparisonBase(row storage.CIReportResultRow) (CIReportComparison, 
 	if err != nil {
 		return CIReportComparison{}, err
 	}
+	contender := ciReportSideFromRow(row)
+	contender.BeginsDistributionChange, err = beginsDistributionChange(row.ChangeAnnotations)
+	if err != nil {
+		return CIReportComparison{}, err
+	}
 	return CIReportComparison{
 		Name:               row.CaseName,
 		Tags:               tags,
@@ -887,7 +893,7 @@ func ciReportComparisonBase(row storage.CIReportResultRow) (CIReportComparison, 
 		HistoryFingerprint: row.HistoryFingerprint,
 		Unit:               row.Unit,
 		LessIsBetter:       lessIsBetterPtr(row.Unit),
-		Contender:          ciReportSideFromRow(row),
+		Contender:          contender,
 		Links: CIReportRowLinks{
 			Result: ciReportResultLink(row.ResultID),
 			Series: ciReportSeriesLink(row.HistoryFingerprint),

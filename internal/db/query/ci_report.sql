@@ -210,7 +210,8 @@ SELECT
   c."timestamp" AS commit_timestamp,
   br.unit,
   br.data,
-  br.error
+  br.error,
+  br.change_annotations
 FROM selected_ids selected
 JOIN benchmark_result br ON br.id = selected.result_id
 JOIN "case" cs ON cs.id = br.case_id

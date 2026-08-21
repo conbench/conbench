@@ -557,6 +557,7 @@ export interface components {
             };
         };
         CIReportSide: {
+            begins_distribution_change: boolean;
             commit_sha: string | null;
             /** Format: date-time */
             commit_timestamp: string | null;

@@ -431,6 +431,8 @@ components:
     CIReportSide:
       additionalProperties: false
       properties:
+        begins_distribution_change:
+          type: boolean
         commit_sha:
           nullable: true
           type: string
@@ -464,6 +466,7 @@ components:
         - error
         - single_value_summary
         - single_value_summary_type
+        - begins_distribution_change
       type: object
     CIReportSummary:
       additionalProperties: false

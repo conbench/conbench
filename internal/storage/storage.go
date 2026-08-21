@@ -730,4 +730,5 @@ type CIReportResultRow struct {
 	Unit               *string
 	Data               []*float64
 	Error              []byte
+	ChangeAnnotations  []byte
 }

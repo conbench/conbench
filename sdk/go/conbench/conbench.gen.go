@@ -295,14 +295,15 @@ type CIReportRun struct {
 
 // CIReportSide defines model for CIReportSide.
 type CIReportSide struct {
-	CommitSha              *string                 `json:"commit_sha"`
-	CommitTimestamp        *time.Time              `json:"commit_timestamp"`
-	Error                  *map[string]interface{} `json:"error"`
-	ResultId               string                  `json:"result_id"`
-	ResultTimestamp        time.Time               `json:"result_timestamp"`
-	RunId                  string                  `json:"run_id"`
-	SingleValueSummary     *float64                `json:"single_value_summary"`
-	SingleValueSummaryType string                  `json:"single_value_summary_type"`
+	BeginsDistributionChange bool                    `json:"begins_distribution_change"`
+	CommitSha                *string                 `json:"commit_sha"`
+	CommitTimestamp          *time.Time              `json:"commit_timestamp"`
+	Error                    *map[string]interface{} `json:"error"`
+	ResultId                 string                  `json:"result_id"`
+	ResultTimestamp          time.Time               `json:"result_timestamp"`
+	RunId                    string                  `json:"run_id"`
+	SingleValueSummary       *float64                `json:"single_value_summary"`
+	SingleValueSummaryType   string                  `json:"single_value_summary_type"`
 }
 
 // CIReportSummary defines model for CIReportSummary.

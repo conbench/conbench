@@ -238,7 +238,8 @@ SELECT
   c."timestamp" AS commit_timestamp,
   br.unit,
   br.data,
-  br.error
+  br.error,
+  br.change_annotations
 FROM selected_ids selected
 JOIN benchmark_result br ON br.id = selected.result_id
 JOIN "case" cs ON cs.id = br.case_id
@@ -278,6 +279,7 @@ type SelectCIReportRowsRow struct {
 	Unit               *string
 	Data               []*float64
 	Error              []byte
+	ChangeAnnotations  []byte
 }
 
 func (q *Queries) SelectCIReportRows(ctx context.Context, arg SelectCIReportRowsParams) ([]SelectCIReportRowsRow, error) {
@@ -316,6 +318,7 @@ func (q *Queries) SelectCIReportRows(ctx context.Context, arg SelectCIReportRows
 			&i.Unit,
 			&i.Data,
 			&i.Error,
+			&i.ChangeAnnotations,
 		); err != nil {
 			return nil, err
 		}

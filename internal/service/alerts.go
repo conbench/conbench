@@ -101,17 +101,63 @@ func (e *AlertEvaluator) evaluateRule(ctx context.Context, rule storage.AlertRul
 		return errors.New("nil CI report")
 	}
 	summary.Evaluated++
+	alertReport := automatedAlertReport(report)
 
-	switch report.Status {
+	switch alertReport.Status {
 	case CIReportStatusFailure:
-		return e.openIfNeeded(ctx, rule, candidate, report, now, summary)
+		return e.openIfNeeded(ctx, rule, candidate, alertReport, now, summary)
 	case CIReportStatusSuccess:
-		return e.resolveIfNeeded(ctx, rule, candidate, report, now, summary)
+		return e.resolveIfNeeded(ctx, rule, candidate, alertReport, now, summary)
 	default:
 		summary.Skipped++
 		_, err = e.touchRule(ctx, rule, now)
 		return err
 	}
+}
+
+// automatedAlertReport removes explicit distribution-boundary contenders from
+// alert status derivation. The source report remains unchanged for manual CI
+// report consumers.
+func automatedAlertReport(report *CIReport) *CIReport {
+	comparisons := make([]CIReportComparison, 0, len(report.Comparisons))
+	for _, comparison := range report.Comparisons {
+		if !comparison.Contender.BeginsDistributionChange {
+			comparisons = append(comparisons, comparison)
+		}
+	}
+	if len(comparisons) == len(report.Comparisons) {
+		return report
+	}
+
+	filtered := *report
+	filtered.Comparisons = comparisons
+	filtered.Runs = make([]CIReportRun, len(report.Runs))
+	for i, run := range report.Runs {
+		filtered.Runs[i] = run
+		filtered.Runs[i].Comparisons = make([]CIReportComparison, 0, len(run.Comparisons))
+		for _, comparison := range run.Comparisons {
+			if !comparison.Contender.BeginsDistributionChange {
+				filtered.Runs[i].Comparisons = append(filtered.Runs[i].Comparisons, comparison)
+			}
+		}
+	}
+	filtered.Summary = CIReportSummary{
+		Runs:              report.Summary.Runs,
+		MissingRuns:       report.Summary.MissingRuns,
+		ContenderResults:  len(comparisons),
+		commitlessRuns:    report.Summary.commitlessRuns,
+		baselineErrors:    report.Summary.baselineErrors,
+		baselineActionErr: report.Summary.baselineActionErr,
+	}
+	if len(comparisons) == 0 {
+		filtered.Status = CIReportStatusSkipped
+		filtered.StatusReason = "all contender rows begin a distribution change"
+		return &filtered
+	}
+	filtered.deriveSummaryFromComparisons()
+	filtered.Status = filtered.deriveStatus()
+	filtered.StatusReason = filtered.deriveStatusReason()
+	return &filtered
 }
 
 func (e *AlertEvaluator) openIfNeeded(

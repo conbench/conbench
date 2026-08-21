@@ -17,6 +17,7 @@ T = TypeVar("T", bound="CIReportSide")
 class CIReportSide:
     """
     Attributes:
+        begins_distribution_change (bool):
         commit_sha (None | str):
         commit_timestamp (datetime.datetime | None):
         error (CIReportSideErrorType0 | None):
@@ -27,6 +28,7 @@ class CIReportSide:
         single_value_summary_type (str):
     """
 
+    begins_distribution_change: bool
     commit_sha: None | str
     commit_timestamp: datetime.datetime | None
     error: CIReportSideErrorType0 | None
@@ -38,6 +40,8 @@ class CIReportSide:
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.ci_report_side_error_type_0 import CIReportSideErrorType0
+
+        begins_distribution_change = self.begins_distribution_change
 
         commit_sha: None | str
         commit_sha = self.commit_sha
@@ -69,6 +73,7 @@ class CIReportSide:
 
         field_dict.update(
             {
+                "begins_distribution_change": begins_distribution_change,
                 "commit_sha": commit_sha,
                 "commit_timestamp": commit_timestamp,
                 "error": error,
@@ -87,6 +92,7 @@ class CIReportSide:
         from ..models.ci_report_side_error_type_0 import CIReportSideErrorType0
 
         d = dict(src_dict)
+        begins_distribution_change = d.pop("begins_distribution_change")
 
         def _parse_commit_sha(data: object) -> None | str:
             if data is None:
@@ -143,6 +149,7 @@ class CIReportSide:
         single_value_summary_type = d.pop("single_value_summary_type")
 
         ci_report_side = cls(
+            begins_distribution_change=begins_distribution_change,
             commit_sha=commit_sha,
             commit_timestamp=commit_timestamp,
             error=error,

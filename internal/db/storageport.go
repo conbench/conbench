@@ -688,6 +688,7 @@ func ciReportResultRowsFromRows(rows []SelectCIReportRowsRow) []storage.CIReport
 			Unit:               r.Unit,
 			Data:               r.Data,
 			Error:              r.Error,
+			ChangeAnnotations:  r.ChangeAnnotations,
 		}
 	}
 	return out

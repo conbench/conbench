@@ -96,6 +96,57 @@ func TestAlertEvaluatorReportsRuleFailuresAndContinues(t *testing.T) {
 	assert.Equal(t, "bad-report", summary.Failures[0].RuleID)
 }
 
+func TestAlertEvaluatorIgnoresBoundaryRegressionAndEvaluatesStableRows(t *testing.T) {
+	ctx := context.Background()
+	store := newFakeAlertStore(storage.AlertRule{
+		ID: "rule-1", Repository: "https://github.com/org/repo",
+		Baseline: string(service.CIReportBaselineParent), Threshold: 5, ThresholdZ: 5,
+		Enabled: true, State: storage.AlertRuleStateInactive,
+	})
+	reporter := &fakeAlertReporter{next: &service.CIReport{
+		Status: service.CIReportStatusFailure, StatusReason: "lookback regression detected",
+		Summary: service.CIReportSummary{ContenderResults: 2, Compared: 2, Analyzed: 2, Regressions: 1},
+		Comparisons: []service.CIReportComparison{
+			{Status: service.CIReportRowStatusRegressed, Contender: service.CIReportSide{BeginsDistributionChange: true}},
+			{Status: service.CIReportRowStatusStable, Contender: service.CIReportSide{}},
+		},
+	}}
+	evaluator := service.NewAlertEvaluator(store, reporter, fixedAlertNow)
+
+	summary, err := evaluator.Evaluate(ctx, service.AlertEvaluationOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, 1, summary.Evaluated)
+	assert.Equal(t, 1, summary.Unchanged)
+	assert.Zero(t, summary.Opened)
+	assert.Empty(t, store.events)
+	assert.Equal(t, storage.AlertRuleStateInactive, store.rules["rule-1"].State)
+}
+
+func TestAlertEvaluatorSkipsAllBoundaryRowsWithoutResolving(t *testing.T) {
+	ctx := context.Background()
+	store := newFakeAlertStore(storage.AlertRule{
+		ID: "rule-1", Repository: "https://github.com/org/repo",
+		Baseline: string(service.CIReportBaselineParent), Threshold: 5, ThresholdZ: 5,
+		Enabled: true, State: storage.AlertRuleStateOpen,
+	})
+	reporter := &fakeAlertReporter{next: &service.CIReport{
+		Status: service.CIReportStatusFailure, StatusReason: "lookback regression detected",
+		Summary: service.CIReportSummary{ContenderResults: 1, Compared: 1, Analyzed: 1, Regressions: 1},
+		Comparisons: []service.CIReportComparison{
+			{Status: service.CIReportRowStatusRegressed, Contender: service.CIReportSide{BeginsDistributionChange: true}},
+		},
+	}}
+	evaluator := service.NewAlertEvaluator(store, reporter, fixedAlertNow)
+
+	summary, err := evaluator.Evaluate(ctx, service.AlertEvaluationOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, 1, summary.Evaluated)
+	assert.Equal(t, 1, summary.Skipped)
+	assert.Zero(t, summary.Resolved)
+	assert.Empty(t, store.events)
+	assert.Equal(t, storage.AlertRuleStateOpen, store.rules["rule-1"].State)
+}
+
 func TestAlertEvaluatorConstrainsDuplicateRunIDByCommit(t *testing.T) {
 	_, store, pool, ctx := newIngester(t)
 	t0 := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
