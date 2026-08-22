@@ -710,6 +710,8 @@
     pointer-events: none;
     width: max-content;
     max-width: min(28rem, calc(100% - 16px));
+    max-height: calc(100% - 16px);
+    overflow-y: auto;
     white-space: normal;
     overflow-wrap: anywhere;
     z-index: 3;

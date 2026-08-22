@@ -11,6 +11,7 @@ import (
 	"maps"
 	"math"
 	"strconv"
+	"unicode/utf8"
 
 	"github.com/conbench/conbench/internal/commit"
 	"github.com/conbench/conbench/internal/hardware"
@@ -68,8 +69,8 @@ func NewIngester(store storage.Store, commits commit.Provider) *Ingester {
 func (i *Ingester) Submit(ctx context.Context, req SubmitRequest) (*Result, error) {
 	canonicalHash := ""
 	if req.SubmissionKey != "" {
-		if len(req.SubmissionKey) > maxSubmissionKeyLength {
-			return nil, &ValidationError{Message: "submission_key must be at most 255 bytes"}
+		if utf8.RuneCountInString(req.SubmissionKey) > maxSubmissionKeyLength {
+			return nil, &ValidationError{Message: "submission_key must be at most 255 characters"}
 		}
 		var err error
 		canonicalHash, err = canonicalSubmissionPayloadSHA256(req)

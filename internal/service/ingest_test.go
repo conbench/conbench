@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -55,6 +56,15 @@ func TestSubmitWithoutIdempotencyKeyCreatesIndependentResults(t *testing.T) {
 	second, err := ing.Submit(ctx, req)
 	require.NoError(t, err)
 	assert.NotEqual(t, first.ID, second.ID)
+}
+
+func TestSubmitAcceptsMaximumLengthUnicodeIdempotencyKey(t *testing.T) {
+	ing, _, _, ctx := newIngester(t)
+	req := machineReq(samples(1, 2, 3), "s")
+	req.SubmissionKey = strings.Repeat("é", 255)
+
+	_, err := ing.Submit(ctx, req)
+	require.NoError(t, err)
 }
 
 // samples wraps float values as the nullable per-iteration slice the payload carries.
